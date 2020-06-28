@@ -13,10 +13,6 @@ body {
   display: none;
 }
 
-input[type="checkbox"]:disabled
-{
-  opacity: .3;
-}
 
 div#content {
   background-color: #dddddd;

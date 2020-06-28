@@ -1,0 +1,86 @@
+
+# Get access token from : settings/developers settings/Personal Access Settings 
+# (set repo=on)
+USER='JanAxelsson'
+TOKEN=f749ea8473a1afb417dc78f674369ec77b5fa62c
+
+#
+# LIST 
+#
+    
+    # User Info
+    curl -H "Authorization: token $TOKEN" https://api.github.com
+    
+    # List Repos (long)
+    curl -H "Authorization: token $TOKEN" https://api.github.com/user/repos
+    
+    
+    # List Repos (short)
+    curl -H "Authorization: token $TOKEN" https://api.github.com/user/repos> /tmp/list; grep full_name /tmp/list | cut -d: -f2 | cut -d, -f1
+    
+
+    # List Branches   (from folder in a local repository)
+    git branch # local
+    git branch -r # local
+    
+    # List Remote Branches API
+    curl -H "Authorization: token $TOKEN" https://api.github.com/repos/JanAxelsson/imlook4d/branches 
+    curl  -H "Authorization: token $TOKEN" https://api.github.com/repos/JanAxelsson/Simultan/branches 
+    
+
+#
+# CREATE remote
+#    
+    
+    # Create a new private repo   
+    curl -i \
+      -H "Authorization: token $TOKEN" \
+      -H "Accept: application/vnd.github.nebula-preview+json" \
+      -d '{"name" : "Hello-World5","private" : true,"description" : "Created from Pragma-git"}'  \
+      https://api.github.com/user/repos  
+
+      
+    # Create a new private repo  
+    NEW_REPO="Pragma-git" 
+    
+    F1="\"name\" : \"$NEW_REPO\""
+    F2='"private" : true'
+    F3='"description" : "Created with Pragma-git"'
+    JSON="{$F1,$F2,$F3}"
+    
+    curl -i \
+      -H "Authorization: token $TOKEN" \
+      -H "Accept: application/vnd.github.nebula-preview+json" \
+      -d "$JSON"  \
+      https://api.github.com/user/repos 
+     
+#
+# CONNECT local to remote
+#     
+    # https://help.github.com/en/github/importing-your-projects-to-github/adding-an-existing-project-to-github-using-the-command-line
+
+    git remote add origin https://$USER:$TOKEN@github.com/$USER/$NEW_REPO
+    git push -u origin master
+
+
+
+#
+# DELETE remote
+#       
+      
+    # DANGEROUS Delete a repo (delete_repo=on when setting access token)
+    DELETE_REPO="TEST2" 
+    curl -i \
+      -X 'DELETE' \
+      -H "Authorization: token $TOKEN" \
+      -H "Accept: application/vnd.github.nebula-preview+json" \
+      "https://api.github.com/repos/$USER/$DELETE_REPO"
+
+
+
+#
+# INSTALL NW
+#
+
+
+

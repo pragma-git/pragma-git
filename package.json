@@ -15,5 +15,9 @@
   },
   "scripts": {
     "start": "nw ."
+  },
+  "dependencies": {
+    "nodegit": "^0.26.5",
+    "simple-git": "^2.11.0"
   }
 }

@@ -1,102 +1,70 @@
-// Init
-var gui = require("nw.gui");
-
-// Response
-
-storeButtonClicked =  function() {
-    sequentialStart(); 
-}
-async function sequentialStart(){
-  setStatusBar('Start git commit');
-  console.log('==SEQUENTIAL START==')
-
-  // 1. Execution gets here almost instantly
-  try{
-      const commit = await gitCommit('/Users/jan/Desktop/TEMP/Test-git', readMessage(), '/tmp/Pragma-git-log.txt') 
-      console.log(commit) 
-      setStatusBar('Start git commit');
-    }catch(e){
-        console.log(e)
-        setStatusBar(e.toString());
-        return
-    }
-
-  
-  const slow = await resolveAfter1Seconds()
-  console.log(slow) // 2. this runs 2 seconds after 1.
-  setStatusBar('Middle');
-
-  const fast = await resolveAfter1Seconds()
-  console.log(fast) // 3. this runs 3 seconds after 1.
-  setStatusBar('End');
-  
-}
-function gitCommit( path, message, last_log_file) {
-    var failed = false;
+// ---------
+// INIT
+// ---------
+    var gui = require("nw.gui");
     
-    // Prepare external command
-    var nwGui = require('nw.gui')
-    , nwShell = nwGui.Shell
-    , child_process = require('child_process')
-    , exec = child_process.exec
-    , execSync = child_process.execSync
-    , execFile = child_process.execFile
-    , execFileSync = child_process.execFileSync;
+    const simpleGit = require('simple-git')('/Users/jan/Desktop/TEMP/Test-git');  // npm install simple-git
+    // Docs : https://www.npmjs.com/package/simple-git
+    //        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
     
-    console.log("Starting git commit")
-    
-    // Run asynchronous code
-    const gitCommitPromise = 
-        new Promise(function ourAsyncWork(resolve, reject){
-            try{
-                //execSync("cd '/Users/jan/Desktop/TEMP/Test-git' ;git commit -a -m 'test message' > /tmp/Pragma-git-log.txt");
-                execSync("cd " +  path + ";git commit -a -m '" + message + "' > " + last_log_file);
-                resolve("Done!");
-            }catch(e){
-                reject(new Error("Git commit error1"));
-                failed = true;
-            }
-        })
-        .then( function(returnedValue){
-            console.log(returnedValue);
-        })
-        .catch( function(error){
-            console.log(error);
-            setStatusBar('Git commit error2');  // Overridden by setStatusBar in calling function 
-            // TODO find reason and write it out
-        }
-    );
-        
-    // Throw error (so calling function can terminate downstream calls)  
-    if (failed == true ){
-        throw 'Git commit error3';
-    }
+    // Timer
+    gitStatus();
+    var timerId = setInterval(() => gitStatus(), 2000);
+
+
+// ---------
+// FUNCTIONS
+// ---------
+
+// Git commands
+async function gitStatus(){
+    var status_data;  
+       
+    await simpleGit.status((err, log) => {console.log(log); status_data = log})
+    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+
+    var currentBranch = status_data.current;
+    var currentDir = simpleGit._executor.cwd;
+    var filename = currentDir.replace(/^.*[\\\/]/, '');
+    setTitleBar( filename + '  (' + currentBranch + ')');
 }
-function resolveAfter1Seconds() {
-  console.log("starting fast promise")
-  return new Promise(resolve => {
-    setTimeout(function() {
-      resolve("fast")
-      console.log("fast promise is done")
-    }, 1000)
-  })
+async function gitAddAndCommit( message){
+    var status_data;     
+    var path = '.'; // All
+    await simpleGit.add( path, (err, log) => {console.log(log); status_data = log});
+    await simpleGit.commit( message, {'--all' : null} , (err, log) => {console.log(log); status_data = log});
+    gitStatus();
 }
 
 // Statusbar
-function updateStatusBar( message){
-    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + message;
+function updateStatusBar( text){
+    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
     document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
     console.log('updateStatusBar = ' + newmessage);
 }
-function setStatusBar( message){
-    document.getElementById('bottom-titlebar-text').innerHTML = message;
-    console.log('setStatusBar = ' + message);
+function setStatusBar( text){
+    document.getElementById('bottom-titlebar-text').innerHTML = text;
+    console.log('setStatusBar = ' + text);
 }
+function setTitleBar( text){
+    document.getElementById('top-titlebar-text').innerHTML = text;
+    console.log('setStatusBar = ' + text);
+}
+
 // Read message
 function readMessage( ){
     return document.getElementById('message').value;
     
 }
+
+// ---------
+// CALLBACKS
+// ---------
+
+// Response
+storeButtonClicked =  function() {    
+    gitAddAndCommit( readMessage());
+}  
 
 // Window functions
 window.onfocus = function() { 
