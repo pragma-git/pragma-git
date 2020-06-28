@@ -1,0 +1,49 @@
+<html>
+<head>
+  <title>Frameless Window</title>
+
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <script src="titlebar.js"></script>
+  <script src="frameless_window.js"></script>
+</head>
+
+<body>
+    <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
+      <div class="top-titlebar-icon"> <img id="top-titlebaricon" src="top-titlebar.png"> </div>
+      <div class="top-titlebar-text">Top Titlebar</div>
+      <div class="top-titlebar-close-button"><img id="top-titlebar-close-button" src="button_close.png"></div>
+      <div class="top-titlebar-divider"></div> 
+    </div>
+
+  
+  
+  
+    <div id="content">
+        
+      <div id="inner-content">
+          
+          <div id="message-wrapper" >
+             <textarea class="message" id="message"> Add description
+             </textarea>
+          </div>
+          
+          <div class="store-button" >
+              <button id="store-button" onclick="storeButtonClicked()">Store</button>
+          </div>
+          
+          <div style="clear: both;"></div>
+          
+
+    
+      </div>
+    </div>
+    
+    <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
+      <div class="bottom-titlebar-icon"><img id="bottom-titlebaricon" src="bottom-titlebar.png"></div>
+      <div id="bottom-titlebar-text" class="bottom-titlebar-text">Bottom Titlebar</div>
+      <div class="bottom-titlebar-close-button"><img id="bottom-titlebar-close-button" src="button_close.png"></div>
+      <div class="bottom-titlebar-divider"></div>
+    </div>
+  
+</body>
+</html>
