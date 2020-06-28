@@ -44,16 +44,18 @@ function updateContentStyle() {
 
   var titlebar = document.getElementById("top-titlebar");
   if (titlebar) {
-    height -= titlebar.offsetHeight;
+    height -= titlebar.offsetHeight + 36 + 2;
     top += titlebar.offsetHeight;
   }
   titlebar = document.getElementById("bottom-titlebar");
  
+  // Adjust content width by border
+  width -=   6 ; // Width in content border
 
   var contentStyle = "position: absolute; ";
   contentStyle += "left: " + left + "px; ";
   contentStyle += "top: " + top + "px; ";
   contentStyle += "width: " + width + "px; ";
-  contentStyle += "height: " + height + "px; ";
+  contentStyle += "height: " + height  + "px; ";
   content.setAttribute("style", contentStyle);
 }

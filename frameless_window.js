@@ -98,10 +98,26 @@ function readMessage( ){
 // CALLBACKS
 // ---------
 
-// Response
+// User actions
 storeButtonClicked =  function() {    
     gitAddAndCommit( readMessage());
 }  
+function dropFile(e) {
+    e.preventDefault();
+    
+    const item = e.dataTransfer.items[0];
+    const entry = item.webkitGetAsEntry();
+    if (entry.isFile) {
+        const file = item.getAsFile();
+        console.log( 'Dropped file = ' + file.path );
+    } else if (entry.isDirectory) {
+        const dir = item.getAsFile();
+        console.log( 'Dropped folder = ' + dir.path );
+    }
+        
+    return false;
+};
+
 
 // Window functions
 window.onfocus = function() { 

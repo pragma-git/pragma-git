@@ -7,6 +7,46 @@
   <script src="frameless_window.js"></script>
 </head>
 
+
+
+    <!-- Drop folder border-->
+    <style>
+      #content { border: 3px solid #dddddd; }
+      #content.hover  { border: 3px dashed #333; }
+    </style>
+    
+    
+    <!-- Drop folder initiate script-->    
+    <script>
+
+      //Same as $(document).ready();
+      function ready(fn) {
+        if (document.readyState != 'loading'){
+          fn();
+        } else {
+          document.addEventListener('DOMContentLoaded', fn);
+        }
+      }
+
+      //When the page has loaded, run this code
+      ready( function(){
+            // prevent default behavior from changing page on dropped file
+            window.ondragover = function(e) { e.preventDefault(); return false };
+            // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
+            window.ondrop = function(e) { e.preventDefault(); return false };
+    
+            const holder = document.getElementById('content');
+            holder.ondragover = function () { this.className = 'hover'; return false; };
+            holder.ondragleave = function () { this.className = ''; return false; };
+            
+            holder.ondrop = dropFile; // See frameless_window.js
+
+      });
+  </script>
+
+
+
+
 <body>
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
       <div class="top-titlebar-icon"> <img id="top-titlebaricon" src="top-titlebar.png"> </div>
