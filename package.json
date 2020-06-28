@@ -9,9 +9,9 @@
     "frame": false,
     "position": "center",
     "width": 360,
-    "height": 300,
+    "height": 150,
     "min_width": 220,
-    "min_height": 220
+    "min_height": 120
   },
   "scripts": {
     "start": "nw ."
