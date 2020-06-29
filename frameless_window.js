@@ -41,9 +41,13 @@
     // Get toplevel for git : git rev-parse --show-toplevel (could be useful to stop user from giving wrong folder)
     
     // TODO : Open questions
-    // - How to setup remote repository ?
+    // - Add push to remote if setup
+    // - Make settings dialog
+    // - Save settings when closing (remember position on screen and check if on screen)
+    // - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
+    // - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
     // - How to switch branch
-    // - How to pull ?
+    // - How to pull ? Auto-pull before push ?
     // - How to merge ?
     // - How to initialize git-flow ?
     // - How to checkout
