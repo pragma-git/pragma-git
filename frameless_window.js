@@ -100,11 +100,29 @@ async function gitStatus(){
 }
 async function gitAddAndCommit( message){
     var status_data;     
-    var path = '.'; // All
+    
+    setStatusBar( 'Adding files');
+    var path = '.'; // Add all
     await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result); status_data = result});
+    await waitTime( 1000);
+    
+    setStatusBar( 'Commiting files');
     await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
+    await waitTime( 1000);
+    
     gitStatus();
 }
+
+function waitTime( delay) {
+  console.log("starting fast promise")
+  return new Promise(resolve => {
+    setTimeout(function() {
+      resolve("fast")
+      console.log("fast promise is done")
+    }, delay)
+  })
+}
+
 
 // Os commands
 function mkdir(dir){
