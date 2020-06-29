@@ -36,7 +36,7 @@
 async function gitStatus(){
     // Read git status
     var status_data;  
-    await simpleGit.status((err, log) => {console.log(log); status_data = log})
+    await simpleGit.status((err, result) => {console.log(result); status_data = result})
     setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
 
     // Get name of current branch
@@ -51,16 +51,16 @@ async function gitStatus(){
     //
     // 1) Get name of Repo
     //var rawOut; 
-    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, log) => {console.log(log); rawOut = log})
+    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, result) => {console.log(result); rawOut = result})
     //var repoName = rawOut.replace(/^.*[\\\/]/, '');
     
     // 2) Get list of all settings in local 
     //var listOut; 
-    //await simpleGit.raw([ 'config', '--list'], (err, log) => {console.log(log); listOut = log})
+    //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
     //
     // 3) Get list of local branches
     //var branchList;
-    //await simpleGit.branch(['--list'], (err, log) => {console.log(log); branchList = log.all})
+    //await simpleGit.branch(['--list'], (err, result) => {console.log(result); branchList = result.all})
     
   
     setTitleBar( foldername + '  (<u>' + currentBranch + '</u>)'  );
@@ -68,8 +68,8 @@ async function gitStatus(){
 async function gitAddAndCommit( message){
     var status_data;     
     var path = '.'; // All
-    await simpleGit.add( path, (err, log) => {console.log(log); status_data = log});
-    await simpleGit.commit( message, {'--all' : null} , (err, log) => {console.log(log); status_data = log});
+    await simpleGit.add( path, (err, result) => {console.log(result); status_data = result});
+    await simpleGit.commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
     gitStatus();
 }
 
