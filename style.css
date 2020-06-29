@@ -7,6 +7,10 @@ html {
 body {
   margin: 0px;
   padding: 0px;
+  overflow: scroll;
+  background-color: #dddddd;
+}
+  
 }
 
 ::-webkit-scrollbar-thumb {
@@ -18,6 +22,7 @@ div#content {
   background-color: #dddddd;
   margin: 0px;
   padding: 0px;
+  height: 100%;
 }
 
 div#inner-content {
@@ -63,6 +68,7 @@ div#message-wrapper{
   left: 6px;
   margin-top: 6px;
   margin-bottom: 6px;
+  -webkit-app-region: no-drag;
 }
 
 .top-titlebar-text,
@@ -78,7 +84,7 @@ div#message-wrapper{
 }
 
 .top-titlebar-close-button,
-.bottom-titlebar-close-button {
+.bottom-titlebar-settings-button {
   position: absolute;
   right: 11px;
   width: 17px;

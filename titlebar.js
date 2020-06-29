@@ -1,5 +1,5 @@
 function closeWindow() {
-  window.close();
+  gui.App.closeAllWindows();
 }
 
 function updateImageUrl(image_id, new_image_url) {
@@ -8,12 +8,6 @@ function updateImageUrl(image_id, new_image_url) {
     image.src = new_image_url;
 }
 
-function createImage(image_id, image_url) {
-  var image = document.createElement("img");
-  image.setAttribute("id", image_id);
-  image.src = image_url;
-  return image;
-}
 
 function focusTitlebars(focus) {
   var bg_color = focus ? "#3a3d3d" : "#7a7c7c";
