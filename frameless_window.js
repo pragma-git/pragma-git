@@ -1,3 +1,24 @@
+
+
+
+// TODO : Open questions
+// - Add push to remote if setup
+// - Make settings dialog
+// - Save settings when closing (remember position on screen and check if on screen)
+// - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
+// - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
+// - How to switch branch
+// - How to pull ? Auto-pull before push ?
+// - How to merge ?
+// - How to initialize git-flow ?
+// - How to checkout
+// - How to handle change in checkout which is not HEAD ?  Auto-create branch ?
+
+// Docs : https://www.npmjs.com/package/simple-git
+//        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+
+
+
 // ---------
 // INIT
 // ---------
@@ -34,31 +55,10 @@
     var repoSettings = {}; 
     repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
     
-    
-    
-    // May be split : simpleGit = require('simple-git'); simpleGit('/Users/jan/Desktop/TEMP/Test-git').api-function......
-    //
-    // Get toplevel for git : git rev-parse --show-toplevel (could be useful to stop user from giving wrong folder)
-    
-    // TODO : Open questions
-    // - Add push to remote if setup
-    // - Make settings dialog
-    // - Save settings when closing (remember position on screen and check if on screen)
-    // - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
-    // - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
-    // - How to switch branch
-    // - How to pull ? Auto-pull before push ?
-    // - How to merge ?
-    // - How to initialize git-flow ?
-    // - How to checkout
-    // - How to handle change in checkout which is not HEAD ?  Auto-create branch ?
-    
-    // Docs : https://www.npmjs.com/package/simple-git
-    //        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
-    
+  
     // Timer
     gitStatus();
-    var timerId = setInterval(() => gitStatus(), 2000);
+    var timer = setInterval(() => gitStatus(), 2000);
 
 
 // ---------
@@ -99,6 +99,7 @@ async function gitStatus(){
     //var branchList;
     //await simpleGit.branch(['--list'], (err, result) => {console.log(result); branchList = result.all})
     
+
   
     setTitleBar( foldername + '  (<u>' + currentBranch + '</u>)'  );
 }
