@@ -3,8 +3,10 @@
 // ---------
 
     var gui = require("nw.gui");
+    const simpleGit = require('simple-git');  // npm install simple-git
     
-    const simpleGit = require('simple-git')('/Users/jan/Desktop/TEMP/Test-git');  // npm install simple-git
+    var repoSettings = {}; // Declare a struct
+    repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
     
     // May be split : simpleGit = require('simple-git'); simpleGit('/Users/jan/Desktop/TEMP/Test-git').api-function......
     //
@@ -36,7 +38,11 @@
 async function gitStatus(){
     // Read git status
     var status_data;  
-    await simpleGit.status((err, result) => {console.log(result); status_data = result})
+    try{
+        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('ERROR');
+    }
     setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
 
     // Get name of current branch
@@ -44,7 +50,7 @@ async function gitStatus(){
 
 
     // Get name of local folder  
-    var currentDir = simpleGit._executor.cwd;    
+    var currentDir = simpleGit(repoSettings.localFolder)._executor.cwd;    
     var foldername = currentDir.replace(/^.*[\\\/]/, '');
     
     // KEEP HERE: May be useful in future 
@@ -68,8 +74,8 @@ async function gitStatus(){
 async function gitAddAndCommit( message){
     var status_data;     
     var path = '.'; // All
-    await simpleGit.add( path, (err, result) => {console.log(result); status_data = result});
-    await simpleGit.commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
+    await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result); status_data = result});
+    await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
     gitStatus();
 }
 
@@ -91,7 +97,6 @@ function setTitleBar( text){
 // Read message
 function readMessage( ){
     return document.getElementById('message').value;
-    
 }
 
 // ---------
@@ -102,20 +107,34 @@ function readMessage( ){
 storeButtonClicked =  function() {    
     gitAddAndCommit( readMessage());
 }  
-function dropFile(e) {
+async function dropFile(e) {
     e.preventDefault();
+    
+    // Reset css 
+    document.getElementById('content').className = '';
     
     const item = e.dataTransfer.items[0];
     const entry = item.webkitGetAsEntry();
+    
+    var file = item.getAsFile().path;
+    var folder = file; // Guess that a folder was dropped 
+    
+    // 
     if (entry.isFile) {
-        const file = item.getAsFile();
-        console.log( 'Dropped file = ' + file.path );
-    } else if (entry.isDirectory) {
-        const dir = item.getAsFile();
-        console.log( 'Dropped folder = ' + dir.path );
-    }
-        
-    return false;
+        folder = require('path').dirname(file); // Correct, because file was dropped
+        console.log( 'Folder = ' + folder );
+    } 
+    // Find top folder in local repo
+    var topFolder;
+    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+    topFolder = topFolder.replace('\n', ''); // Remove ending EOL
+    
+    // Set global
+    repoSettings.localFolder = topFolder;
+    console.log( 'Git  folder = ' + repoSettings.localFolder );
+    
+    // Update immediately
+    gitStatus();
 };
 
 
