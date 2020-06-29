@@ -103,7 +103,7 @@ async function gitStatus(){
   
     setTitleBar( foldername + '  (<u>' + currentBranch + '</u>)'  );
 }
-async function gitAddAndCommit( message){
+async function gitAddCommitAndPush( message){
     var status_data;     
     
     setStatusBar( 'Adding files');
@@ -115,6 +115,10 @@ async function gitAddAndCommit( message){
     await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
     await waitTime( 1000);
     
+    setStatusBar( 'Pushing files');
+    await simpleGit(repoSettings.localFolder).push(  (err, result) => {console.log(result); status_data = result});  // TODO : Fails if remote repo doesn't exist
+    await waitTime( 1000);  
+        
     gitStatus();
 }
 
@@ -179,7 +183,7 @@ settingsDialog =  function() {
 }
 
 storeButtonClicked =  function() {    
-    gitAddAndCommit( readMessage());
+    gitAddCommitAndPush( readMessage());
 }  
 async function dropFile(e) {
     e.preventDefault();
