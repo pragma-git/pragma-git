@@ -80,13 +80,25 @@
 
     <div id="content">
         <div id="inner-content">
+            
+            <div class="arrow_buttons">
+                <dl>
+                    <dd><img id="up_arrow" src="up-arrow.png" height="17" width="17"></dd>
+                    <dd><img id="down_arrow" src="down-arrow.png" height="17" width="17"></dd>
+                </dl>
+
+             </div>
+             
+            
             <div id="message-wrapper" >
                  <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatusFromText();" placeholder="Add description..."></textarea>
             </div>
             
+            
             <div class="store-button" >
                 <button id="store-button" onclick="storeButtonClicked()" disabled >Store</button>
             </div>
+            
             
             <div style="clear: both;"></div>
         </div>

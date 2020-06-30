@@ -34,9 +34,21 @@ div#inner-content {
 
 
 div#message-wrapper{
-  width: 80%;
+  width: 70%;
   float: left;
   margin-right: 6px;
+}
+
+.arrow_buttons{
+  float: left; 
+  height: 36px;
+  width: 36px;
+  vertical-align: top;
+}
+
+.up_arrow,
+.down_arrow{
+  vertical-align: top;
 }
 
 
