@@ -3,12 +3,12 @@
 //
 // Debug with chrome:
 //   http://127.0.0.1:9222/
+//
+//   Stop timer in console : clearInterval(timer)
 
 
 // TODO : Open questions
-// - Add push to remote if setup
 // - Make settings dialog
-// - Save settings when closing (remember position on screen and check if on screen)
 // - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
 // - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
 // - How to switch branch
@@ -41,8 +41,7 @@
     var settingsFile = settingsDir + pathsep + 'repo.json';    
        
     // json settings
-    var jsonData = {};
-    loadSettings(settingsFile);
+    var jsonData = loadSettings(settingsFile);
 
 
     // Collect settings
@@ -64,6 +63,10 @@ async function gitStatus(){
     // Read git status
     var status_data;  
     try{
+        // Understand this: 
+        // - simpleGit(dir).status( handler_function)
+        // - handler_function is defined as an anonymous function with arrow ('=>') notation
+        // - the two outputs from status are input variables to the anonymous function.
         await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in gitStatus()');
@@ -114,17 +117,17 @@ async function gitAddCommitAndPush( message){
     // Add all files
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
-    await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result); status_data = result});
+    await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result) });
     await waitTime( 1000);
     
     // Commit including deleted
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
+    await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
     await waitTime( 1000);
     
     // Push (and create remote branch if not existing)
-    setStatusBar( 'Pushing files  (to ' + remoteBranch + ')');
-    await simpleGit(repoSettings.localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result); status_data = result});  // TODO : Fails if remote repo doesn't exist
+    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+    await simpleGit(repoSettings.localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
     await waitTime( 1000);  
         
     gitStatus();
@@ -141,7 +144,7 @@ function waitTime( delay) {
 }
 
 
-// Os commands
+// OS commands
 function mkdir(dir){
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
@@ -163,9 +166,16 @@ function setTitleBar( text){
     console.log('setStatusBar = ' + text);
 }
 
-// Read message
+// Message
 function readMessage( ){
     return document.getElementById('message').value;
+}
+function writeMessage( message, placeholder){
+    if (placeholder){
+        document.getElementById('message').placeholder = message;
+    }else{
+        document.getElementById('message').value = message;
+    }
 }
 
 // Settings
@@ -188,7 +198,6 @@ function loadSettings(settingsFile){
         jsonData = JSON.parse(jsonString);
     }catch(err){
         // Defaults
-        
         jsonData = {};
         jsonData.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
         jsonData.homedir = os.homedir();
@@ -222,6 +231,7 @@ function loadSettings(settingsFile){
         console.log('Error setting window position and size');
         console.log(err);
     }
+    return jsonData;
 }
 
 // ---------
@@ -245,7 +255,15 @@ settingsDialog =  function() {
     
     // TODO : Here settings can be done.  For instance remote git linking
 }
-storeButtonClicked =  function() {    
+setStoreButtonEnableStatus = function() {
+    const message = readMessage();
+    if (message.length == 0){
+        document.getElementById('store-button').disabled = true;
+    }else{
+        document.getElementById('store-button').disabled = false;
+    }
+}
+storeButtonClicked =  function() { 
     gitAddCommitAndPush( readMessage());
 }  
 async function dropFile(e) {
