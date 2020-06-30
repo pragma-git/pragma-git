@@ -87,7 +87,7 @@ async function unComittedFiles(){
  
     // If no files to commit
     var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0){
         uncommitedFiles = true;
     }  
     return uncommitedFiles;
@@ -253,8 +253,10 @@ async function  writeTimedMessage( message, placeholder, time){
     writeMessage( message, placeholder);
     await waitTime( time).catch({});
     
-    // Restore old message
-    writeMessage( oldMessage, placeholder);
+    // Restore old message (if user hasn't written something in the wait time
+    if ( document.getElementById('message').length == 0 ){
+        writeMessage( oldMessage, placeholder);
+    }
     
     // Restart timer
     isPaused = false;  
@@ -394,37 +396,58 @@ function repoClicked(){
     gitStatus();
 }
 async function branchClicked(){
-    // Determine local branches
-    var branchList;
+    
+    // Determine status of local repository
+    var status_data;  
     try{
-        await simpleGit(repoSettings.localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
-    }catch(err){        
-        console.log('Error in branchClicked()');
+        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in unComittedFiles,  calling  gitStatus()');
         console.log(err);
     }
-    
-    // Cycle through local branches
-    branchNumber = branchNumber + 1;
-    var numberOfBranches = jsonData.repos.length;
-    if (branchNumber >= numberOfBranches){
-        branchNumber = 0;
-    }
-    branchName = branchList[branchNumber];
+ 
+    // Determine if no files to commit
+    var uncommitedFiles = false;
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0){
+        uncommitedFiles = true;
+    }  
 
-    // Checkout branch
-    if (unComittedFiles()  ){
+
+    // Checkout branch  /  Warn about uncommited
+    if ( uncommitedFiles ){
         // Let user know that they need to commit before changing branch
         await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and store ...', true, WAIT_TIME)
+        
     }else{
+            
+        // Determine local branches
+        var branchList;
+        try{
+            isPaused = true;
+            await simpleGit(repoSettings.localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
+        }catch(err){        
+            console.log('Error determining local branches, in branchClicked()');
+            console.log(err);
+        }
+        
+        // Cycle through local branches
+        branchNumber = branchNumber + 1;
+        var numberOfBranches = jsonData.repos.length;
+        if (branchNumber >= numberOfBranches){
+            branchNumber = 0;
+        }
+        branchName = branchList[branchNumber];
+
+    
+        // Checkout local branch
         try{
             await simpleGit(repoSettings.localFolder).checkout(branchName, (err, result) => {console.log(result)} );
         }catch(err){        
-            console.log('Error in branchClicked()  checkout of branch = ' + branchName);
+            console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
             console.log(err);
         }   
     }
 
-    console.log('branch clicked');
     console.log(branchList);
  
     gitStatus();
