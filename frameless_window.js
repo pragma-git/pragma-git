@@ -1,4 +1,8 @@
-
+// Start :
+//   /Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222  .
+//
+// Debug with chrome:
+//   http://127.0.0.1:9222/
 
 
 // TODO : Open questions
@@ -38,19 +42,9 @@
        
     // json settings
     var jsonData = {};
-    jsonData["localFolder"] = '/Users/jan/Desktop/TEMP/Test-git';
-    jsonData["homedir"] = os.homedir();
-    
-    jsonData["repos"] = []; // Array with repos
-    jsonData["repos"][0] = {}; 
-    jsonData["repos"][0]["localFolder"] = '/Users/jan/Desktop/TEMP/Test-git';
-    jsonData["repos"][1] = {}; 
-    jsonData["repos"][1]["localFolder"] = '/Users/jan/Documents/Projects/Pragma-git/Pragma-git';
-    
-    var jsonString = JSON.stringify(jsonData, null, 2);
-    fs.writeFileSync(settingsFile, jsonString);
-    
-    
+    loadSettings(settingsFile);
+
+
     // Collect settings
     var repoSettings = {}; 
     repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
@@ -72,7 +66,8 @@ async function gitStatus(){
     try{
         await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
-        console.log('ERROR');
+        console.log('Error in gitStatus()');
+        console.log(err);
     }
     setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
 
@@ -106,17 +101,30 @@ async function gitStatus(){
 async function gitAddCommitAndPush( message){
     var status_data;     
     
+    // Read current branch
+    try{
+        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in gitStatus()');
+        console.log(err);
+    }
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    
+    // Add all files
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
     await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result); status_data = result});
     await waitTime( 1000);
     
-    setStatusBar( 'Commiting files');
+    // Commit including deleted
+    setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result); status_data = result});
     await waitTime( 1000);
     
-    setStatusBar( 'Pushing files');
-    await simpleGit(repoSettings.localFolder).push(  (err, result) => {console.log(result); status_data = result});  // TODO : Fails if remote repo doesn't exist
+    // Push (and create remote branch if not existing)
+    setStatusBar( 'Pushing files  (to ' + remoteBranch + ')');
+    await simpleGit(repoSettings.localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result); status_data = result});  // TODO : Fails if remote repo doesn't exist
     await waitTime( 1000);  
         
     gitStatus();
@@ -160,6 +168,62 @@ function readMessage( ){
     return document.getElementById('message').value;
 }
 
+// Settings
+function saveSettings(){
+    
+    // Update current window position
+        win = gui.Window.get();
+        jsonData.position.x = win.x;
+        jsonData.position.y = win.y;
+        jsonData.position.width = win.width;
+        jsonData.position.height = win.height;  
+    
+    // Save settings
+    var jsonString = JSON.stringify(jsonData, null, 2);
+    fs.writeFileSync(settingsFile, jsonString);
+}
+function loadSettings(settingsFile){
+    try{
+        jsonString = fs.readFileSync(settingsFile);
+        jsonData = JSON.parse(jsonString);
+    }catch(err){
+        // Defaults
+        
+        jsonData = {};
+        jsonData.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
+        jsonData.homedir = os.homedir();
+        
+        jsonData.repos = [];
+        jsonData.repos[0] = {}; 
+        jsonData.repos[0].localFolder = '/Users/jan/Desktop/TEMP/Test-git';
+        jsonData.repos[1] = {}; 
+        jsonData.repos[1].localFolder = '/Users/jan/Documents/Projects/Pragma-git/Pragma-git';
+
+    }
+    
+    // Move window
+    try{
+        // Validate position on screen
+        if ( (jsonData.position.x + jsonData.position.width) > screen.width ) {
+            jsonData.position.x = screen.availLeft;
+        }
+        
+        if ( (jsonData.position.y + jsonData.position.height) > screen.height ){
+            jsonData.position.y = screen.availTop;
+        }
+        
+        // Position and size window
+        win = gui.Window.get();
+        win.moveTo( jsonData.position.x, jsonData.position.y);
+        win.resizeTo( jsonData.position.width, jsonData.position.height);
+
+        
+    }catch(err){
+        console.log('Error setting window position and size');
+        console.log(err);
+    }
+}
+
 // ---------
 // CALLBACKS
 // ---------
@@ -181,7 +245,6 @@ settingsDialog =  function() {
     
     // TODO : Here settings can be done.  For instance remote git linking
 }
-
 storeButtonClicked =  function() {    
     gitAddCommitAndPush( readMessage());
 }  
@@ -214,9 +277,71 @@ async function dropFile(e) {
     // Update immediately
     gitStatus();
 };
+function closeWindow() {
+    // Store window position
+    jsonData["position"] = {}; // New level
+    jsonData["position"]["x"] = gui.Window.get().x;
+    jsonData["position"]["y"] = gui.Window.get().y;
+    jsonData["position"]["height"] = gui.Window.get().height;
+    jsonData["position"]["width"] = gui.Window.get().width;
+    
+    saveSettings();
+    gui.App.closeAllWindows();
+}
 
+// Html
+function updateImageUrl(image_id, new_image_url) {
+  var image = document.getElementById(image_id);
+  if (image)
+    image.src = new_image_url;
+}
+function focusTitlebars(focus) {
+  var bg_color = focus ? "#3a3d3d" : "#7a7c7c";
+    
+  var titlebar = document.getElementById("top-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("bottom-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("left-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("right-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+}
+function updateContentStyle() {
+  var content = document.getElementById("content");
+  if (!content)
+    return;
 
-// Window functions
+  var left = 0;
+  var top = 0;
+  var width = window.outerWidth;
+  var height = window.outerHeight;
+
+  var titlebar = document.getElementById("top-titlebar");
+  if (titlebar) {
+    height -= titlebar.offsetHeight + 36 + 2;
+    top += titlebar.offsetHeight;
+  }
+  titlebar = document.getElementById("bottom-titlebar");
+ 
+  // Adjust content width by border
+  width -=   6 ; // Width in content border
+
+  var contentStyle = "position: absolute; ";
+  contentStyle += "left: " + left + "px; ";
+  contentStyle += "top: " + top + "px; ";
+  contentStyle += "width: " + width + "px; ";
+  contentStyle += "height: " + height  + "px; ";
+  content.setAttribute("style", contentStyle);
+}
+
+// ------
+// EVENTS
+// ------
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
