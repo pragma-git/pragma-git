@@ -5,6 +5,8 @@
 //   http://127.0.0.1:9222/
 //
 //   Stop timer in console : clearInterval(timer)
+//
+// Secret if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
 
 
 // TODO : Open questions
@@ -146,6 +148,7 @@ async function gitAddCommitAndPush( message){
     gitStatus();
 }
 
+// Test
 function waitTime( delay) {
   console.log("starting fast promise")
   return new Promise(resolve => {
@@ -156,7 +159,6 @@ function waitTime( delay) {
   })
 }
 
-
 // OS commands
 function mkdir(dir){
     if (!fs.existsSync(dir)){
@@ -164,7 +166,7 @@ function mkdir(dir){
     }
 }
 
-// Statusbar
+// Utility functions
 function updateStatusBar( text){
     newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
     document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
@@ -177,6 +179,15 @@ function setStatusBar( text){
 function setTitleBar( id, text){
     document.getElementById(id).innerHTML = text;
     console.log('setTitleBar (element ' + id + ') = ' + text);
+}
+
+function setStoreButtonEnableStatusFromText() {
+    // Enable if message text 
+    var message = readMessage();
+    setStoreButtonEnableStatus( (message.length > 0 ));
+}
+function setStoreButtonEnableStatus( enableStatus) {
+    document.getElementById('store-button').disabled = !enableStatus;
 }
 
 // Message
@@ -252,66 +263,7 @@ function loadSettings(settingsFile){
 // CALLBACKS
 // ---------
 
-// User actions
-function showAbout() {    
-    console.log('About button pressed');
-    
-    about_win = gui.Window.open('about.html#/new_page', {
-        position: 'center',
-        width: 600,
-        height: 600
-    });
-    
-    // gui.Window.get().y  // Gets position of my gui window
-}
-function settingsDialog() {    
-    console.log('settings dialog pressed');
-    
-    // TODO : Here settings can be done.  For instance remote git linking
-}
-
-function setStoreButtonEnableStatusFromText() {
-    // Enable if message text 
-    var message = readMessage();
-    setStoreButtonEnableStatus( (message.length > 0 ));
-}
-function setStoreButtonEnableStatus( enableStatus) {
-    document.getElementById('store-button').disabled = !enableStatus;
-}
-function storeButtonClicked() { 
-    gitAddCommitAndPush( readMessage());
-}  
-
-async function dropFile(e) {
-    e.preventDefault();
-    
-    // Reset css 
-    document.getElementById('content').className = '';
-    
-    const item = e.dataTransfer.items[0];
-    const entry = item.webkitGetAsEntry();
-    
-    var file = item.getAsFile().path;
-    var folder = file; // Guess that a folder was dropped 
-    
-    // 
-    if (entry.isFile) {
-        folder = require('path').dirname(file); // Correct, because file was dropped
-        console.log( 'Folder = ' + folder );
-    } 
-    // Find top folder in local repo
-    var topFolder;
-    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
-    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-    
-    // Set global
-    repoSettings.localFolder = topFolder;
-    console.log( 'Git  folder = ' + repoSettings.localFolder );
-    
-    // Update immediately
-    gitStatus();
-};
-
+// Title bar
 function closeWindow() {
     // Store window position
     jsonData["position"] = {}; // New level
@@ -324,7 +276,6 @@ function closeWindow() {
     gui.App.closeAllWindows();
 }
 
-// Html
 function updateImageUrl(image_id, new_image_url) {
   var image = document.getElementById(image_id);
   if (image)
@@ -372,6 +323,67 @@ function updateContentStyle() {
   contentStyle += "width: " + width + "px; ";
   contentStyle += "height: " + height  + "px; ";
   content.setAttribute("style", contentStyle);
+}
+
+function repoClicked(){
+    console.log('repo clicked');
+}
+function branchClicked(){
+    console.log('branch clicked');
+}
+
+
+// Content
+async function dropFile(e) {
+    e.preventDefault();
+    
+    // Reset css 
+    document.getElementById('content').className = '';
+    
+    const item = e.dataTransfer.items[0];
+    const entry = item.webkitGetAsEntry();
+    
+    var file = item.getAsFile().path;
+    var folder = file; // Guess that a folder was dropped 
+    
+    // 
+    if (entry.isFile) {
+        folder = require('path').dirname(file); // Correct, because file was dropped
+        console.log( 'Folder = ' + folder );
+    } 
+    // Find top folder in local repo
+    var topFolder;
+    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+    
+    // Set global
+    repoSettings.localFolder = topFolder;
+    console.log( 'Git  folder = ' + repoSettings.localFolder );
+    
+    // Update immediately
+    gitStatus();
+};
+function storeButtonClicked() { 
+    gitAddCommitAndPush( readMessage());
+}  
+
+
+// Status bar
+function showAbout() {    
+    console.log('About button pressed');
+    
+    about_win = gui.Window.open('about.html#/new_page', {
+        position: 'center',
+        width: 600,
+        height: 600
+    });
+    
+    // gui.Window.get().y  // Gets position of my gui window
+}
+function settingsDialog() {    
+    console.log('settings dialog pressed');
+    
+    // TODO : Here settings can be done.  For instance remote git linking
 }
 
 // ------
