@@ -54,6 +54,13 @@
     // Timer
     gitStatus();
     var timer = setInterval(() => gitStatus(), 2000);
+    
+    // PositionalPointers
+    var repoNumber = 0;
+    var branchNumber = 0;
+    
+    var branchName;
+    
 
 
 // ---------
@@ -326,10 +333,45 @@ function updateContentStyle() {
 }
 
 function repoClicked(){
-    console.log('repo clicked');
+    // Cycle through stored repos
+    repoNumber = repoNumber + 1;
+    var numberOfRepos = jsonData.repos.length;
+    if (repoNumber >= numberOfRepos){
+        repoNumber = 0;
+    }
+    repoSettings.localFolder = jsonData.repos[repoNumber].localFolder;
+    gitStatus();
 }
-function branchClicked(){
+async function branchClicked(){
+    // Determine local branches
+    var branchList;
+    try{
+        await simpleGit(repoSettings.localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
+    }catch(err){        
+        console.log('Error in branchClicked()');
+        console.log(err);
+    }
+    
+    // Cycle through local branches
+    branchNumber = branchNumber + 1;
+    var numberOfBranches = jsonData.repos.length;
+    if (branchNumber >= numberOfBranches){
+        branchNumber = 0;
+    }
+    branchName = branchList[branchNumber];
+
+    // Checkout branch
+    try{
+        await simpleGit(repoSettings.localFolder).checkout(branchName, (err, result) => {console.log(result)} );
+    }catch(err){        
+        console.log('Error in branchClicked()  checkout of branch = ' + branchName);
+        console.log(err);
+    }    
+    
     console.log('branch clicked');
+    console.log(branchList);
+ 
+    gitStatus();
 }
 
 
