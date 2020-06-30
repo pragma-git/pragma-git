@@ -58,7 +58,10 @@
             src="top-titlebar.png">
             </div>
           
-        <div id="top-titlebar-text" class="top-titlebar-text">Top Titlebar</div>
+        <div id="top-titlebar-text" class="top-titlebar-text">
+            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" onclick="writeMessage( 'repo clicked', true)" ></div>
+            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" onclick="writeMessage( 'branch clicked', true)" ></div>
+        </div>
         
         <div class="top-titlebar-close-button">
             <img id="top-titlebar-close-button" 
@@ -78,11 +81,11 @@
     <div id="content">
         <div id="inner-content">
             <div id="message-wrapper" >
-                 <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatus();" placeholder="Add description..."></textarea>
+                 <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatusFromText();" placeholder="Add description..."></textarea>
             </div>
             
             <div class="store-button" >
-                <button id="store-button" onclick="storeButtonClicked()"disabled >Store</button>
+                <button id="store-button" onclick="storeButtonClicked()" disabled >Store</button>
             </div>
             
             <div style="clear: both;"></div>

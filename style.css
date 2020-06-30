@@ -71,7 +71,6 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
-.top-titlebar-text,
 .bottom-titlebar-text {
   position: absolute;
   left: 32px;
@@ -82,6 +81,28 @@ div#message-wrapper{
   font-size: 11pt;
   color: #ffffff;
 }
+
+.top-titlebar-text{
+  position: absolute;
+  left: 32px;
+  width: 80%;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  font-family: Arial;
+  font-size: 11pt;
+  color: #ffffff;
+  text-align: left
+}
+
+
+.top-titlebar-repo-text,
+.top-titlebar-branch-text{
+  display:inline-block;
+  font-family: Arial;
+  font-size: 11pt;
+  color: #ffffff;
+}
+
 
 .top-titlebar-close-button,
 .bottom-titlebar-settings-button {
@@ -120,6 +141,4 @@ div#message-wrapper{
 
 .store-button{
   float: left; 
-  -webkit-app-region: no-drag;
-  -webkit-user-select: none;
 }

@@ -72,11 +72,23 @@ async function gitStatus(){
         console.log('Error in gitStatus()');
         console.log(err);
     }
+ 
+    // If no files to commit
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+        setStoreButtonEnableStatus( false );
+        writeMessage( 'No changed files to store', true); // Write to placeholder
+    }else {
+        var message = readMessage();
+        if (message.length == 0){
+            writeMessage( 'Add description...', true);
+        }
+    }
+    
+    // Status
     setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-
+   
     // Get name of current branch
     var currentBranch = status_data.current;
-
 
     // Get name of local folder  
     var currentDir = simpleGit(repoSettings.localFolder)._executor.cwd;    
@@ -99,7 +111,8 @@ async function gitStatus(){
     
 
   
-    setTitleBar( foldername + '  (<u>' + currentBranch + '</u>)'  );
+    setTitleBar( 'top-titlebar-repo-text', foldername   );
+    setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
 }
 async function gitAddCommitAndPush( message){
     var status_data;     
@@ -161,9 +174,9 @@ function setStatusBar( text){
     document.getElementById('bottom-titlebar-text').innerHTML = text;
     console.log('setStatusBar = ' + text);
 }
-function setTitleBar( text){
-    document.getElementById('top-titlebar-text').innerHTML = text;
-    console.log('setStatusBar = ' + text);
+function setTitleBar( id, text){
+    document.getElementById(id).innerHTML = text;
+    console.log('setTitleBar (element ' + id + ') = ' + text);
 }
 
 // Message
@@ -172,6 +185,7 @@ function readMessage( ){
 }
 function writeMessage( message, placeholder){
     if (placeholder){
+        document.getElementById('message').value = "";
         document.getElementById('message').placeholder = message;
     }else{
         document.getElementById('message').value = message;
@@ -239,7 +253,7 @@ function loadSettings(settingsFile){
 // ---------
 
 // User actions
-showAbout =  function() {    
+function showAbout() {    
     console.log('About button pressed');
     
     about_win = gui.Window.open('about.html#/new_page', {
@@ -250,22 +264,24 @@ showAbout =  function() {
     
     // gui.Window.get().y  // Gets position of my gui window
 }
-settingsDialog =  function() {    
+function settingsDialog() {    
     console.log('settings dialog pressed');
     
     // TODO : Here settings can be done.  For instance remote git linking
 }
-setStoreButtonEnableStatus = function() {
-    const message = readMessage();
-    if (message.length == 0){
-        document.getElementById('store-button').disabled = true;
-    }else{
-        document.getElementById('store-button').disabled = false;
-    }
+
+function setStoreButtonEnableStatusFromText() {
+    // Enable if message text 
+    var message = readMessage();
+    setStoreButtonEnableStatus( (message.length > 0 ));
 }
-storeButtonClicked =  function() { 
+function setStoreButtonEnableStatus( enableStatus) {
+    document.getElementById('store-button').disabled = !enableStatus;
+}
+function storeButtonClicked() { 
     gitAddCommitAndPush( readMessage());
 }  
+
 async function dropFile(e) {
     e.preventDefault();
     
@@ -295,6 +311,7 @@ async function dropFile(e) {
     // Update immediately
     gitStatus();
 };
+
 function closeWindow() {
     // Store window position
     jsonData["position"] = {}; // New level
