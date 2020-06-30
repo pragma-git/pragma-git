@@ -76,22 +76,6 @@
 // FUNCTIONS
 // ---------
 
-async function unComittedFiles(){
-    var status_data;  
-    try{
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-    }catch(err){
-        console.log('Error in unComittedFiles,  calling  gitStatus()');
-        console.log(err);
-    }
- 
-    // If no files to commit
-    var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-        uncommitedFiles = true;
-    }  
-    return uncommitedFiles;
-}
 
 // Git commands
 async function gitStatus(){
@@ -140,10 +124,7 @@ async function gitStatus(){
     // 2) Get list of all settings in local 
     //var listOut; 
     //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
-    //
-    // 3) Get list of local branches
-    //var branchList;
-    //await simpleGit.branch(['--list'], (err, result) => {console.log(result); branchList = result.all})
+
     
 
   
@@ -180,6 +161,22 @@ async function gitAddCommitAndPush( message){
     await waitTime( 1000);  
         
     gitStatus();
+}
+async function unComittedFiles(){
+    var status_data;  
+    try{
+        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in unComittedFiles,  calling  gitStatus()');
+        console.log(err);
+    }
+ 
+    // If no files to commit
+    var uncommitedFiles = false;
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+        uncommitedFiles = true;
+    }  
+    return uncommitedFiles;
 }
 
 // Test
@@ -478,10 +475,22 @@ function showAbout() {
     
     // gui.Window.get().y  // Gets position of my gui window
 }
-function settingsDialog() {    
+async function settingsDialog() {    
     console.log('settings dialog pressed');
     
     // TODO : Here settings can be done.  For instance remote git linking
+    
+    var output;
+    try{
+        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); output = result;} );
+    }catch(err){        
+        console.log('Error in branchClicked()  checkout of branch = ' + branchName);
+        console.log(err);
+    }   
+    
+    var history = output.ListLogSummary.all;
+
+    
 }
 
 // ------
