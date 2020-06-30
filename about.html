@@ -15,8 +15,10 @@
     
         <hr>
      
-        <h4>Intro</h4>     
-                       
+        <h3>Git started</h3>     
+ 
+        <h4>Intro</h4>
+                               
             <p>The aim of this app is to be a user-friendly revision control client. 
              It fits people working on their own projects, or that find git overwhelming. 
              The app uses git behind the scene, and is therefore fully compatible and 
@@ -26,42 +28,52 @@
          <h4>Drag and drop folder</h4>
             
             <p>Dragging a project's folder onto the app's window makes it available for version control.  
-            If the folder is not prepared (as a git repository), the user is asked to allow the folder to be prepared.
+            If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize it for git.
             </p>       
             
             
          <h4>Store version with description </h4>
              
             <p>The current states of the project's files are given a text description, and stored by clicking the "STORE" button.
-            This is in contrast to the complicated (*) sequence of git commands normally used. 
             </p>
             
- 
-        <hr>   
+         <hr>    
             
+         <h3>Advanced </h3>
+             
+            <p><u>Repositories</u> : You can have multiple active project folders (repositories). 
+            You switch by clicking the name (the first text in the title bar), to change to next project in the list.
+            </p>
+              
+            <p><u>Branches</u> : You can have multiple branches of your work, that you can switch between. 
+            You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
+            </p>           
+            
+        <hr>   
+              
+            
+         <h4>Installation </h4>
+             
+            <p><u>Git</u> : The code relies on the standard installation of git 
+            (<a href=https://www.atlassian.com/git/tutorials/install-git' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a>)
+            </p>
+        
+            
+        <hr>             
         <h4>Acknowledgements</h4>
             
-             <p>This program is written with <a href='https://nwjs.io'>NW.js</a>,
-             and the nw code is based on the <a href='https://github.com/zcbenz/nw-sample-apps'>nw-sample-apps examples. </a> 
-             </p>
-             
-    
-        <hr>
-             
-        <h4>Footnotes</h4>
-            
             <dl>
-              <dt>(*) Store performs the following sequence of git commands : </dt>
-                <dd>- git add .</dd>
-                <dd>- git commit -all</dd>
-                <dd>- git pull (if remote repository is linked)</dd>
-                <dd>- git push(if remote repository is linked)</dd>
+              <dt>This program could not have been written without the following input and code </dt>
+                <dd>- <a href='https://nwjs.io' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">NW.js</a></dd>
+                <dd>- <a href='https://github.com/zcbenz/nw-sample-apps' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">nw-sample-apps examples</a></dd>
+                <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd>
               <dt></dt>
                 <dd></dd>
             </dl>
-            
-            
+             
+    
         <hr>
+
             
     
         <br>   <!--  empty row at bottom  -->
