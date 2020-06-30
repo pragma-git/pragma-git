@@ -29,6 +29,7 @@
 // INIT
 // ---------
 
+    const WAIT_TIME = 5000; // Time to wait for brief messages being shown (for instance in message field)
 
     var gui = require("nw.gui");    
     var os = require('os');
@@ -53,8 +54,16 @@
   
     // Timer
     gitStatus();
-    var timer = setInterval(() => gitStatus(), 2000);
+    //var timer = setInterval(() => gitStatus(), 2000);
     
+    var isPaused = false;
+    
+    var timer = window.setInterval(function() {
+        if(!isPaused) {
+            gitStatus();
+        }
+    }, 2000);
+
     // PositionalPointers
     var repoNumber = 0;
     var branchNumber = 0;
@@ -66,6 +75,23 @@
 // ---------
 // FUNCTIONS
 // ---------
+
+async function unComittedFiles(){
+    var status_data;  
+    try{
+        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in unComittedFiles,  calling  gitStatus()');
+        console.log(err);
+    }
+ 
+    // If no files to commit
+    var uncommitedFiles = false;
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+        uncommitedFiles = true;
+    }  
+    return uncommitedFiles;
+}
 
 // Git commands
 async function gitStatus(){
@@ -87,6 +113,7 @@ async function gitStatus(){
         setStoreButtonEnableStatus( false );
         writeMessage( 'No changed files to store', true); // Write to placeholder
     }else {
+        // Tell the user to add a description
         var message = readMessage();
         if (message.length == 0){
             writeMessage( 'Add description...', true);
@@ -157,11 +184,12 @@ async function gitAddCommitAndPush( message){
 
 // Test
 function waitTime( delay) {
-  console.log("starting fast promise")
+// Delay in milliseconds
+  console.log("starting delay ")
   return new Promise(resolve => {
     setTimeout(function() {
-      resolve("fast")
-      console.log("fast promise is done")
+      resolve("delay ")
+      console.log("delay is done")
     }, delay)
   })
 }
@@ -209,6 +237,29 @@ function writeMessage( message, placeholder){
         document.getElementById('message').value = message;
     }
 }
+async function  writeTimedMessage( message, placeholder, time){
+    // Give the user the time to read the message, then restore previous message
+    
+    // Pause timer
+    isPaused = true;
+    
+    // Store old message
+    var oldMessage = document.getElementById('message').value;
+    if (placeholder){
+        oldMessage = document.getElementById('message').placeholder;
+    }
+    
+    // Show new message and wait
+    writeMessage( message, placeholder);
+    await waitTime( time).catch({});
+    
+    // Restore old message
+    writeMessage( oldMessage, placeholder);
+    
+    // Restart timer
+    isPaused = false;  
+} 
+
 
 // Settings
 function saveSettings(){
@@ -361,13 +412,18 @@ async function branchClicked(){
     branchName = branchList[branchNumber];
 
     // Checkout branch
-    try{
-        await simpleGit(repoSettings.localFolder).checkout(branchName, (err, result) => {console.log(result)} );
-    }catch(err){        
-        console.log('Error in branchClicked()  checkout of branch = ' + branchName);
-        console.log(err);
-    }    
-    
+    if (unComittedFiles()  ){
+        // Let user know that they need to commit before changing branch
+        await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and store ...', true, WAIT_TIME)
+    }else{
+        try{
+            await simpleGit(repoSettings.localFolder).checkout(branchName, (err, result) => {console.log(result)} );
+        }catch(err){        
+            console.log('Error in branchClicked()  checkout of branch = ' + branchName);
+            console.log(err);
+        }   
+    }
+
     console.log('branch clicked');
     console.log(branchList);
  
