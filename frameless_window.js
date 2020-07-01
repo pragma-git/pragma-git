@@ -213,7 +213,6 @@ async function unComittedFiles(){
     return uncommitedFiles;
 }
 
-// Test
 function waitTime( delay) {
 // Delay in milliseconds
   console.log("starting delay ")
@@ -551,19 +550,23 @@ async function upArrowClicked(){
     
     var numberOfBranches = jsonData.repos.length;
     if (historyNumber < 0){
-        historyNumber = 0
-    }
-    
-    // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-    var historyString = ( history[historyNumber].date).substring( 11,11+8) 
-    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
-    + os.EOL 
-    + history[historyNumber].message;
-    
-    // Display
-    writeMessage( historyString, true);
-    historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
-    
+        // Leave history browsing
+        historyNumber = -1;
+        historyBeingBrowsed = false;
+        gitStatus();
+    }else{
+        // Show history
+        
+        // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+        var historyString = ( history[historyNumber].date).substring( 11,11+8) 
+        + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
+        + os.EOL 
+        + history[historyNumber].message;
+        
+        // Display
+        writeMessage( historyString, true);
+        historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
+        }
 }
 
 // Content
