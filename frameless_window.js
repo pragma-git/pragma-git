@@ -477,6 +477,12 @@ async function branchClicked(){
     gitStatus();
 }
 
+function downArrowClicked(){
+    console.log('downarrow clicked');
+}
+function upArrowClicked(){
+    console.log('uparrow clicked');
+}
 
 // Content
 async function dropFile(e) {

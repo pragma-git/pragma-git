@@ -86,10 +86,22 @@
                     <td>
                         <table id="arrow_table">               
                         <tr>
-                            <td><img id="up_arrow" src="images/up-arrow.png" height="17" width="17"></td> 
+                            <td>
+                                <img id="up-arrow"  height="17" width="17" 
+                                onclick="upArrowClicked();" 
+                                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                                src="images/up-arrow.png">
+                            </td> 
                         </tr>            
                         <tr>
-                            <td><img id="down_arrow" src="images/down-arrow.png" height="17" width="17"></td>
+                            <td>
+                                <img id="down-arrow"  height="17" width="17" 
+                                onclick="downArrowClicked();" 
+                                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                                src="images/down-arrow.png">
+                            </td> 
                         </tr>
                         </table>
                     </td>
