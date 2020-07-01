@@ -183,6 +183,7 @@ async function gitAddCommitAndPush( message){
     await simpleGit(repoSettings.localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
     await waitTime( 1000);  
         
+    writeMessage('',false);  // Remove this message  
     gitStatus();
 }
 async function unComittedFiles(){
@@ -386,7 +387,7 @@ function updateContentStyle() {
     
     var left = 0;
     var top = 0;
-    var width = window.outerWidth;
+    var width = window.outerWidth; 
     var height = window.outerHeight;
     
     var titlebar = document.getElementById("top-titlebar");
