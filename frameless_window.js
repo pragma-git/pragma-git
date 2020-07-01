@@ -67,8 +67,11 @@
     // PositionalPointers
     var repoNumber = 0;
     var branchNumber = 0;
+    var historyNumber = -1;
     
     var branchName;
+    
+    var historyBeingBrowsed = false;
     
 
 
@@ -108,17 +111,21 @@ async function gitStatus(){
         console.log(err);
     }
  
-    // If no files to commit
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-        setStoreButtonEnableStatus( false );
-        writeMessage( 'No changed files to store', true); // Write to placeholder
-    }else {
-        // Tell the user to add a description
-        var message = readMessage();
-        if (message.length == 0){
-            writeMessage( 'Add description...', true);
+    // Update message text placeholder
+    if (!historyBeingBrowsed){
+        if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+            setStoreButtonEnableStatus( false );
+            writeMessage( 'No changed files to store', true); // Write to placeholder
+        }else {
+            // Tell the user to add a description
+            var message = readMessage();
+            if (message.length == 0){
+                writeMessage( 'Add description...', true);
+            }
         }
+        
     }
+
     
     // Status
     setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
@@ -418,6 +425,10 @@ function repoClicked(){
     }
     repoSettings.localFolder = jsonData.repos[repoNumber].localFolder;
     gitStatus();
+        
+    // Reset some variables
+    historyNumber = -1;
+    historyBeingBrowsed = false;
 }
 async function branchClicked(){
     
@@ -475,13 +486,74 @@ async function branchClicked(){
     console.log(branchList);
  
     gitStatus();
+    
+    // Reset some variables
+    historyNumber = -1;
+    historyBeingBrowsed = false;
 }
 
-function downArrowClicked(){
-    console.log('downarrow clicked');
+async function downArrowClicked(){
+    console.log('down arrow clicked');
+    
+    // Get log
+    var history;
+    try{
+        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+    }catch(err){        
+        console.log(err);
+    }   
+
+    // Cycle through history
+    var numberOfHistorySteps = history.length;
+    historyNumber = historyNumber + 1;
+    
+    var numberOfBranches = jsonData.repos.length;
+    if (historyNumber >= numberOfHistorySteps){
+        historyNumber = 0;
+    }
+    
+    // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+    var historyString = ( history[historyNumber].date).substring( 11,11+8) 
+    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
+    + os.EOL 
+    + history[historyNumber].message;
+    
+    // Display
+    writeMessage( historyString, true);
+    historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
+    
 }
-function upArrowClicked(){
-    console.log('uparrow clicked');
+ 
+async function upArrowClicked(){
+    console.log('up arrow clicked');
+    
+    // Get log
+    var history;
+    try{
+        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+    }catch(err){        
+        console.log(err);
+    }   
+
+    // Cycle through history
+    var numberOfHistorySteps = history.length;
+    historyNumber = historyNumber - 1;
+    
+    var numberOfBranches = jsonData.repos.length;
+    if (historyNumber < 0){
+        historyNumber = 0
+    }
+    
+    // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+    var historyString = ( history[historyNumber].date).substring( 11,11+8) 
+    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
+    + os.EOL 
+    + history[historyNumber].message;
+    
+    // Display
+    writeMessage( historyString, true);
+    historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
+    
 }
 
 // Content
@@ -540,7 +612,6 @@ async function settingsDialog() {
     try{
         await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); output = result;} );
     }catch(err){        
-        console.log('Error in branchClicked()  checkout of branch = ' + branchName);
         console.log(err);
     }   
     
