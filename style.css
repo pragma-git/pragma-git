@@ -28,9 +28,11 @@ div#content {
 }
 
 div#inner-content {
-  margin: 0px;
+  margin: 10px;
   width:auto;
 }
+
+
 
 table#outer_table {
   width: auto;
