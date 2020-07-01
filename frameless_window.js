@@ -342,10 +342,6 @@ function loadSettings(settingsFile){
         jsonData.homedir = os.homedir();
         
         jsonData.repos = [];
-        jsonData.repos[0] = {}; 
-        jsonData.repos[0].localFolder = '/Users/jan/Desktop/TEMP/Test-git';
-        jsonData.repos[1] = {}; 
-        jsonData.repos[1].localFolder = '/Users/jan/Documents/Projects/Pragma-git/Pragma-git';
 
     }
     
@@ -625,6 +621,8 @@ async function dropFile(e) {
         
         // Assume problem is that folder was not a repository
         
+        // Create new repository
+        
         var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
         var string = 'This folder is not a repository.'+ os.EOL;
         string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
@@ -634,9 +632,23 @@ async function dropFile(e) {
             gitInitRepo( folder);
         }
         
-        
-        
+        // Find folder
+        try{
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+            topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+        }catch(error){
+
+        }
     }
+    
+    // Add folder to jsonData
+    var index = jsonData.repos.length;
+    jsonData.repos[index] = {}; 
+    jsonData.repos[index].localFolder = topFolder;
+    
+    // Set to current
+    branchNumber = index;
+    branchName = topFolder;
 
     // Set global
     repoSettings.localFolder = topFolder;
