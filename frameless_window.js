@@ -39,6 +39,8 @@
 // INIT
 // ---------
 
+    global.globalString = "This can be accessed anywhere!";
+
     const WAIT_TIME = 5000; // Time to wait for brief messages being shown (for instance in message field)
 
     var gui = require("nw.gui");    
@@ -83,6 +85,8 @@
     
     var historyBeingBrowsed = false;
     
+    
+    updateContentStyle();
 
 
 // ---------
@@ -620,6 +624,22 @@ function showAbout() {
     
     // gui.Window.get().y  // Gets position of my gui window
 }
+function confirmationDialog(text) {    
+    console.log('confirmationDialog called');
+    
+    var dialog_win = gui.Window.open('confirmationDialog.html#/new_page', {
+        position: 'center',
+        width: 300,
+        height: 100
+    });
+    
+    
+    global.confirmationDialog_win = dialog_win;  // TODO: This was an attempt, but not working.  I cannot get a handle to the DOM, so can't inject the text.
+    
+    console.log('Opened Confirmation Dialog');
+}
+
+
 async function settingsDialog() {    
     console.log('settings dialog pressed');
     
@@ -658,7 +678,7 @@ window.onresize = function() {
 window.onload = function() {
   var win = nw.Window.get();
   win.setAlwaysOnTop(true);
-  
+ 
+  gui.Window.get().show(); 
   updateContentStyle();
-  gui.Window.get().show();
 };
