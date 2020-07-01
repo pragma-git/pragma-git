@@ -202,6 +202,24 @@ async function gitAddCommitAndPush( message){
     writeMessage('',false);  // Remove this message  
     gitStatus();
 }
+async function gitInitRepo( folder){
+    var status_data;     
+    
+    // Read current branch
+    try{
+        setStatusBar( 'Initializing repository ');
+        await simpleGit(folder).init((err, result) => {console.log(result); console.log(err);status_data = result})
+        await waitTime( 1000);
+        gitAddCommitAndPush( 'First commit')
+    }catch(err){
+        console.log('Error in gitInitRepo()');
+        console.log(err);
+    }
+
+    // Remove this message  
+    writeMessage('',false);  
+    gitStatus();
+}
 async function unComittedFiles(){
     var status_data;  
     try{
@@ -594,14 +612,32 @@ async function dropFile(e) {
     } 
     
     
-    // TODO : If not a repository -- ask to initialize !
-    // Fix text in about.html
+    // Check if repository -- ask to initialize if needed
+    // TODO: Fix text in about.html
+
     
-    // Find top folder in local repo
+    // Find folder in local repo
     var topFolder;
-    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
-    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-    
+    try{
+        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+    }catch(error){
+        
+        // Assume problem is that folder was not a repository
+        
+        var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
+        var string = 'This folder is not a repository.'+ os.EOL;
+        string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
+        string += 'The name of the repository will be "' + nameOfFolder + '" ';
+        
+        if ( confirmationDialog(string) ) {
+            gitInitRepo( folder);
+        }
+        
+        
+        
+    }
+
     // Set global
     repoSettings.localFolder = topFolder;
     console.log( 'Git  folder = ' + repoSettings.localFolder );
@@ -621,7 +657,8 @@ function showAbout() {
     about_win = gui.Window.open('about.html#/new_page', {
         position: 'center',
         width: 600,
-        height: 450
+        height: 450,
+        
     });
     
     // gui.Window.get().y  // Gets position of my gui window
@@ -629,16 +666,16 @@ function showAbout() {
 function confirmationDialog(text) {    
     console.log('confirmationDialog called');
     
-    var dialog_win = gui.Window.open('confirmationDialog.html#/new_page', {
-        position: 'center',
-        width: 300,
-        height: 100
-    });
-    
-    
-    global.confirmationDialog_win = dialog_win;  // TODO: This was an attempt, but not working.  I cannot get a handle to the DOM, so can't inject the text.
-    
+    //var dialog_win = gui.Window.open('confirmationDialog.html#/new_page', {
+        //position: 'center',
+        //width: 300,
+        //height: 100,
+        //focus: true
+    //});
+
     console.log('Opened Confirmation Dialog');
+    
+    return confirm(text);
 }
 
 
