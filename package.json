@@ -8,10 +8,10 @@
     "toolbar": false,
     "frame": false,
     "position": "center",
-    "width": 360,
-    "height": 150,
-    "min_width": 220,
-    "min_height": 120
+    "width": 460,
+    "height": 140,
+    "min_width": 350,
+    "min_height": 140
   },
   "scripts": {
     "start": "nw ."

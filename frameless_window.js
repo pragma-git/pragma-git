@@ -4,25 +4,35 @@
 // Debug with chrome:
 //   http://127.0.0.1:9222/
 //
-//   Stop timer in console : clearInterval(timer)
+//   Stop timer in console :  isPaused = true
 //
-// Secret if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
+// Secret : if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
 
+/*
+ TODO : Open questions
+ - Make settings dialog
+ 
+ - Dropped folder, if not repository, dialog to ask if allowed to initialize
 
-// TODO : Open questions
-// - Make settings dialog
-// - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
-// - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
-// - How to switch branch
-// - How to pull ? Auto-pull before push ?
-// - How to merge ?
-// - How to initialize git-flow ?
-// - How to checkout
-// - How to handle change in checkout which is not HEAD ?  Auto-create branch ?
+ - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
+ - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
 
-// Docs : https://www.npmjs.com/package/simple-git
-//        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+ - See list of files clicking on Modified / New / Deleted
+ 
+ - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
+ - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
 
+ - How to pull ? Auto-pull before push ?
+ - How to merge ?
+
+ - How to initialize git-flow ?
+
+ - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
+ - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
+
+ Docs : https://www.npmjs.com/package/simple-git
+        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+*/
 
 
 // ---------
@@ -524,7 +534,6 @@ async function downArrowClicked(){
     historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
     
 }
- 
 async function upArrowClicked(){
     console.log('up arrow clicked');
     
@@ -569,12 +578,16 @@ async function dropFile(e) {
     
     var file = item.getAsFile().path;
     var folder = file; // Guess that a folder was dropped 
-    
-    // 
+
     if (entry.isFile) {
         folder = require('path').dirname(file); // Correct, because file was dropped
         console.log( 'Folder = ' + folder );
     } 
+    
+    
+    // TODO : If not a repository -- ask to initialize !
+    // Fix text in about.html
+    
     // Find top folder in local repo
     var topFolder;
     await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
@@ -599,7 +612,7 @@ function showAbout() {
     about_win = gui.Window.open('about.html#/new_page', {
         position: 'center',
         width: 600,
-        height: 600
+        height: 450
     });
     
     // gui.Window.get().y  // Gets position of my gui window
@@ -619,6 +632,10 @@ async function settingsDialog() {
     var history = output.ListLogSummary.all;
 
     
+}
+function folderClicked(){
+    console.log('Folder clicked');
+    gui.Shell.showItemInFolder(repoSettings.localFolder);
 }
 
 // ------

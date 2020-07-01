@@ -51,24 +51,37 @@
     
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
         <div class="top-titlebar-icon"> 
-            <img id="top-titlebar-icon" 
-            onclick="showAbout();" 
-            onmouseover="updateImageUrl('top-titlebar-icon', 'images/top-titlebar_hover.png');" 
-            onmouseout="updateImageUrl('top-titlebar-icon', 'images/top-titlebar.png');" 
-            src="images/top-titlebar.png">
+            <img id="top-titlebar-icon"    height="17" width="17"  
+                onclick="showAbout();" 
+                onmouseover="updateImageUrl('top-titlebar-icon', 'images/questionmark_hover.png');" 
+                onmouseout="updateImageUrl('top-titlebar-icon', 'images/questionmark.png');" 
+                src="images/questionmark.png">
             </div>
-          
-        <div id="top-titlebar-text" class="top-titlebar-text">
-            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" onclick="repoClicked()" ></div>
-            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" onclick="branchClicked()" ></div>
-        </div>
+            
+
+            <div id="top-titlebar-text" class="top-titlebar-text">
+                
+                <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
+                    onclick="repoClicked()" 
+                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+                </div>
+                
+                <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                    onclick="branchClicked()" 
+                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+                </div>  
+                 
+            </div>     
+
         
         <div class="top-titlebar-close-button">
             <img id="top-titlebar-close-button" 
-            onclick="closeWindow();" 
-            onmouseover="updateImageUrl('top-titlebar-close-button', 'images/button_close_hover.png');" 
-            onmouseout="updateImageUrl('top-titlebar-close-button', 'images/button_close.png');" 
-            src="images/button_close.png">
+                onclick="closeWindow();" 
+                onmouseover="updateImageUrl('top-titlebar-close-button', 'images/button_close_hover.png');" 
+                onmouseout="updateImageUrl('top-titlebar-close-button', 'images/button_close.png');" 
+                src="images/button_close.png">
             </div>
           
         <div class="top-titlebar-divider"></div> 
@@ -124,23 +137,24 @@
     
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
         <div class="bottom-titlebar-icon">
-            <img id="bottom-titlebaricon" src="images/bottom-titlebar.png">
-        </div>
+            <img id="bottom-titlebar-icon"  height="17" width="17"
+                onclick="folderClicked()" 
+                onmouseover="updateImageUrl('bottom-titlebar-icon', 'images/folder_hover.png');" 
+                onmouseout="updateImageUrl('bottom-titlebar-icon', 'images/folder.png');" 
+                src="images/folder.png">
+            </div>
+            
+ 
             
         <div id="bottom-titlebar-text" class="bottom-titlebar-text">Bottom Titlebar</div>
-        
-        <!--
-        <div class="bottom-folder-icon">
-            <img id="bottom-folder-icon" src="images/folder.png"  height="17" width="17" >
-        </div>
-        -->
+
         
         <div class="bottom-titlebar-settings-button">
             <img id="bottom-titlebar-settings-button"  height="17" width="17"
-            onclick="settingsDialog()" 
-            onmouseover="updateImageUrl('bottom-titlebar-settings-button', 'images/settings_hover.png');" 
-            onmouseout="updateImageUrl('bottom-titlebar-settings-button', 'images/settings.png');" 
-            src="images/settings.png">
+                onclick="settingsDialog()" 
+                onmouseover="updateImageUrl('bottom-titlebar-settings-button', 'images/settings_hover.png');" 
+                onmouseout="updateImageUrl('bottom-titlebar-settings-button', 'images/settings.png');" 
+                src="images/settings.png">
             </div>
         
         <div class="bottom-titlebar-divider"></div>

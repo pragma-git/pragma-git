@@ -16,36 +16,67 @@
         <hr>
      
         <h3>Git started</h3>     
- 
+        
+        
         <h4>Intro</h4>
                                
-            <p>The aim of this app is to be a user-friendly revision control client. 
+            <p>This app aims to be a user-friendly revision control client. 
              It fits people working on their own projects, or that find git overwhelming. 
-             The app uses git behind the scene, and is therefore fully compatible and 
-             can be used interchangeably together with other git softwares.
             </p>
+                               
+            <p> The app uses "git" behind the scene, and is therefore fully compatible and 
+             can be used interchangeably together with other git softwares.
+            </p>            
             
-         <h4>Drag and drop folder</h4>
+            
+         <h4>Start working - drop a folder</h4>
             
             <p>Dragging a project's folder onto the app's window makes it available for version control.  
-            If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize it for git.
             </p>       
             
-            
-         <h4>Store version with description </h4>
-             
-            <p>The current states of the project's files are given a text description, and stored by clicking the "STORE" button.
-            </p>
-            
-            
-         <h4>View history </h4>
-             
-            <p>The down arrow displays older stored descriptions. The up arrow returns towards newer descriptions
-            </p>
+            <p>(TODO: If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize it for git.)
+            </p>  
+                 
                         
+         <h4>Clickable items</h4>
+            
+             <dl>
+              <dt>Most things can be clicked.  The icons means :</dt>
+                <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
+                <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
+                <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
+                <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older descriptions </dd>
+                <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer descriptions   </dd>
+              <dt></dt>
+            </dl>  
+            
+             <p>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below).
+            </p>
+                   
+                                  
+         <h4>Store version with description </h4>
+             <p>
+                The status bar 
+                <img style='vertical-align:middle;' src="images/statusbar_filled_in.png"  height="24" > 
+                shows the number of changed files in the project. If all numbers are zero, you have no changed files. 
+                If one ore more of the numbers are non-zero (as in the figure), it shows that you are working. 
+            </p>
+                
+             <p>
+                When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
+                you may store a named revision of the project. The nice thing about the revision control system is, 
+                that you can later retrieve your whole project as it was at this point in time.
+            </p>
+                    
+            <p>
+                To store a revision of the changed files, a text description is filled in, and then the button  
+                <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > is pressed.
+            </p>
+      
          <hr>    
             
-         <h3>Advanced </h3>
+            
+         <h3 id="Advanced">Advanced </h3>
              
             <p><u>Repositories</u> : You can have multiple active project folders (repositories). 
             You switch by clicking the name (the first text in the title bar), to change to next project in the list.
@@ -74,7 +105,6 @@
                 <dd>- <a href='https://github.com/zcbenz/nw-sample-apps' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">nw-sample-apps examples</a></dd>
                 <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd>
               <dt></dt>
-                <dd></dd>
             </dl>
              
     
