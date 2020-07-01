@@ -7,6 +7,8 @@
 //   Stop timer in console :  isPaused = true
 //
 // Secret : if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
+//
+// Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
 
 /*
  TODO : Open questions
@@ -677,8 +679,16 @@ window.onresize = function() {
 };
 window.onload = function() {
   var win = nw.Window.get();
-  win.setAlwaysOnTop(true);
  
-  gui.Window.get().show(); 
-  updateContentStyle();
+  
+  // Fix for overshoot of content outside window
+  updateContentStyle(); 
+  if (document.getElementById('content').offsetWidth > window.innerWidth){
+    win.reload();
+  }
+  win.show(); 
+  
+  focusTitlebars(true);
+  win.setAlwaysOnTop(true);
+
 };
