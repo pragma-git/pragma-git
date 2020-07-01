@@ -371,31 +371,42 @@ function focusTitlebars(focus) {
     titlebar.style.backgroundColor = bg_color;
 }
 function updateContentStyle() {
-  var content = document.getElementById("content");
-  if (!content)
+    
+    // This is to make statusbar and titlebar position well
+    var content = document.getElementById("content");
+    if (!content)
     return;
+    
+    var left = 0;
+    var top = 0;
+    var width = window.outerWidth;
+    var height = window.outerHeight;
+    
+    var titlebar = document.getElementById("top-titlebar");
+    if (titlebar) {
+        height -= titlebar.offsetHeight + 36 + 2;
+        top += titlebar.offsetHeight;
+    }
+    titlebar = document.getElementById("bottom-titlebar");
+    
+    // Adjust content width by border
+    width -=   6 ; // Width in content border
+    
+    var contentStyle = "position: absolute; ";
+    contentStyle += "left: " + left + "px; ";
+    contentStyle += "top: " + top + "px; ";
+    contentStyle += "width: " + width + "px; ";
+    contentStyle += "height: " + height  + "px; ";
+    content.setAttribute("style", contentStyle);
+    
+    // This is to make message textarea follow window resize
+    var message_area = document.getElementById("message");
+    var message_area_style = "height: " + (height -8).toString() + "px; ";
+    message_area_style += "width: 100%; " ;
+    message_area_style += "resize: none; " ;
+    message_area.setAttribute("style", message_area_style);
 
-  var left = 0;
-  var top = 0;
-  var width = window.outerWidth;
-  var height = window.outerHeight;
-
-  var titlebar = document.getElementById("top-titlebar");
-  if (titlebar) {
-    height -= titlebar.offsetHeight + 36 + 2;
-    top += titlebar.offsetHeight;
-  }
-  titlebar = document.getElementById("bottom-titlebar");
- 
-  // Adjust content width by border
-  width -=   6 ; // Width in content border
-
-  var contentStyle = "position: absolute; ";
-  contentStyle += "left: " + left + "px; ";
-  contentStyle += "top: " + top + "px; ";
-  contentStyle += "width: " + width + "px; ";
-  contentStyle += "height: " + height  + "px; ";
-  content.setAttribute("style", contentStyle);
+  
 }
 
 function repoClicked(){

@@ -7,6 +7,8 @@ html {
 body {
   margin: 0px;
   padding: 0px;
+  width: 100%;
+  height: 100%;
   overflow: scroll;
   background-color: #dddddd;
 }
@@ -22,34 +24,45 @@ div#content {
   background-color: #dddddd;
   margin: 0px;
   padding: 0px;
-  height: 100%;
+
 }
 
 div#inner-content {
-  background-color: #dddddd;
-  margin: 10px;
+  margin: 0px;
+  width:auto;
+}
+
+table#outer_table {
   width: auto;
   height: auto;
 }
 
+td {
+  width: auto;
+  height: auto; 
+}
 
-div#message-wrapper{
-  width: 70%;
-  float: left;
+.message_column{
+  width: 100%;
   margin-right: 6px;
 }
 
-.arrow_buttons{
-  float: left; 
-  height: 36px;
-  width: 36px;
-  vertical-align: top;
+
+.message{
+  width: 100%; 
+  height: 100%; 
+  resize: none;
 }
 
-.up_arrow,
-.down_arrow{
-  vertical-align: top;
+
+div#message-wrapper{
+  margin-right: 6px;
 }
+
+.store-button{
+  float: left; 
+}
+
 
 
 .top-titlebar {
@@ -147,11 +160,3 @@ div#message-wrapper{
 }
 
 
-.message{
-  width: 100%; 
-  max-width: 100%;
-}
-
-.store-button{
-  float: left; 
-}

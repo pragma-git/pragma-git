@@ -11,7 +11,7 @@
         #content { border: 3px solid #dddddd; }
         #content.hover  { border: 3px dashed #333; }
     </style>
-    
+
     
     <!-- Drop folder initiate script-->    
     <script>
@@ -80,27 +80,29 @@
 
     <div id="content">
         <div id="inner-content">
-            
-            <div class="arrow_buttons">
-                <dl>
-                    <dd><img id="up_arrow" src="up-arrow.png" height="17" width="17"></dd>
-                    <dd><img id="down_arrow" src="down-arrow.png" height="17" width="17"></dd>
-                </dl>
+                    
+            <table id="outer_table">
+                <tr>
+                    <td>
+                        <table id="arrow_table">               
+                        <tr>
+                            <td><img id="up_arrow" src="images/up-arrow.png" height="17" width="17"></td> 
+                        </tr>            
+                        <tr>
+                            <td><img id="down_arrow" src="images/down-arrow.png" height="17" width="17"></td>
+                        </tr>
+                        </table>
+                    </td>
+                    <td class="message_column">
+                        <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatusFromText();" placeholder="Add description..."></textarea>
+                        </td>
+                    <td>
+                        <button id="store-button" onclick="storeButtonClicked()" disabled >Store</button>
+                    </td>
+                </tr>
+            </table>
 
-             </div>
-             
-            
-            <div id="message-wrapper" >
-                 <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatusFromText();" placeholder="Add description..."></textarea>
-            </div>
-            
-            
-            <div class="store-button" >
-                <button id="store-button" onclick="storeButtonClicked()" disabled >Store</button>
-            </div>
-            
-            
-            <div style="clear: both;"></div>
+
         </div>
     </div>
 
