@@ -711,47 +711,46 @@ async function dropFile(e) {
     } 
 
     
-    // Find top folder in local repo
+    // Find top folder in initialized local repo
     var topFolder;
+    
     try{
-        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
-        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-    }catch(error){
+        var isRepo;
+        await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
         
-        // Assume problem is that folder was not a repository
+        console.log('dropFolder CHECK IF REPO = ' + isRepo);
         
-        // Create new repository
-        
-        var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
-        var string = 'This folder is not a repository.'+ os.EOL;
-        string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
-        string += 'The name of the repository will be "' + nameOfFolder + '" ';
-        
-        if ( confirmationDialog(string) ) {
-            console.log( 'dropFile : Got permission to create a new repository in folder path = ' + folder + '    nameOfFolder = ' + nameOfFolder);
-            //gitInitRepo( folder);
-        //}
-        
-        // Find folder
-        try{
-            console.log( 'dropFile : find top folder asking repository (from folder=' + folder + ')');
-            //await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+        // If not a repo
+        if (!isRepo){
+            // Ask permisson to init repo
+            var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
+            var string = 'This folder is not a repository.'+ os.EOL;
+            string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
+            string += 'The name of the repository will be "' + nameOfFolder + '" ';
             
-            //await waitTime(2000);
-            await simpleGit(folder).init( onInit );
-            //await waitTime(2000);
-            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-
-            function onInit(err, initResult) { }
-            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-            
-            
-            
-            topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-        }catch(error){
-
+            // Create repo
+            if ( confirmationDialog(string) ) {
+                await simpleGit(folder).init( onInit );
+                await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+    
+                function onInit(err, initResult) { }
+                function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+    
+                topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            }else{
+                // bail out if rejected permission
+                return 
+            }
         }
-    } // new
+        
+        // Find top folder of Repo
+        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+
+    }catch(error){
+        console.log(error);
     }
     
     // Add folder last in  state array
