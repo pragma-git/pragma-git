@@ -92,7 +92,6 @@
         state =
         {
           "localFolder": "/Users/jan/Desktop/TEMP/Test-git",
-          "homedir": "/Users/jan",
           repoNumber: 0,
           branchNumber: 0
           "repos": [
@@ -404,8 +403,6 @@ function loadSettings(settingsFile){
         console.log('Error loading settings -- setting defaults');
         // Defaults
         state = {};
-        state.homedir = os.homedir();
-        
         
         state.repoNumber = -1; // Indicate that no repos exist yet
         state.branchNumber = 0;
