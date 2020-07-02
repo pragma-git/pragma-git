@@ -10,8 +10,8 @@
 //
 // Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
 
-/*
- * ISSUES
+/* ISSUES
+ * 
  * - Drop a non-initialized file, and it isn't added to gui (but it is initialized)
  * - Fresh start : has git-test hard-coded.
  * - state.repos[state.repoNumber].localFolder  should be replaced with  state.repos[index].localFolder
@@ -27,11 +27,10 @@
  * digit
  * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
  * agit -- Agit is the short form o agitated. It refers to people who looks so mean or somewhat close to a yeti. It can also refer to people who looks so stressed and fucked up. 
- * /
-
-
-/*
- TODO : Open questions
+ */
+/* TODO
+ * 
+ * Open questions
  * 
  * - Clean duplicates in repo list
  - Make settings dialog
