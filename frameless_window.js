@@ -12,20 +12,18 @@
 
 /* ISSUES
  * 
- * - state.repos[state.repoNumber].localFolder  should be replaced with  state.repos[index].localFolder
- * - use state.repoNumber to index a repo in the state  (instead of  state.repos[state.repoNumber].localFolder)
  * 
  * /
  * 
  * /* Namnförslag
- * gitenough 
- * gitsy (finns)
- * legit
- * gitta / gitaH
  * digit
- * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
+ * gitenough 
+ * legit
  * agit -- Agit is the short form o agitated. It refers to people who looks so mean or somewhat close to a yeti. It can also refer to people who looks so stressed and fucked up. 
- */
+ * gitsy (finns)
+ * gitta / gitaH
+ * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
+  */
 /* TODO
  * 
  * Open questions
@@ -81,11 +79,11 @@
         var state = loadSettings(settingsFile); // json settings
         var localState = [];
         localState.historyNumber = -1;
-        localState.branchNumber = 0;  // TODO : ändra kod till att läsa state.branchNumber här
+        localState.branchNumber = 0;  // TODO : ändra kod till att läsa localState.branchNumber här
         
         // (repo and branch)
         // state.repoNumber = 0;
-        // state.branchNumber = 0;   // TODO : det här ska inte sparas -- ta bort i kod.  
+        // localState.branchNumber = 0;   // TODO : det här ska inte sparas -- ta bort i kod.  
         // state.branchName;  // TODO : ska inte användas.  Börja här och ta bort om det används.
         /* Example :
         
@@ -93,7 +91,6 @@
         {
           "localFolder": "/Users/jan/Desktop/TEMP/Test-git",
           repoNumber: 0,
-          branchNumber: 0
           "repos": [
             {},
             {
@@ -111,7 +108,7 @@
         
         
         // (modes)
-        var isPaused = true; // Update loop, true = running
+        var isPaused = false; // Update loop, true = running
         var historyBrowsingMode = false; 
  
     
@@ -405,7 +402,7 @@ function loadSettings(settingsFile){
         state = {};
         
         state.repoNumber = -1; // Indicate that no repos exist yet
-        state.branchNumber = 0;
+        localState.branchNumber = 0;
         
         state.repos = [];
         
@@ -566,12 +563,12 @@ async function branchClicked(){
         }
         
         // Cycle through local branches
-        state.branchNumber = state.branchNumber + 1;
+        localState.branchNumber = localState.branchNumber + 1;
         var numberOfBranches = state.repos.length;
-        if (state.branchNumber >= numberOfBranches){
-            state.branchNumber = 0;
+        if (localState.branchNumber >= numberOfBranches){
+            localState.branchNumber = 0;
         }
-        var branchName = branchList[state.branchNumber];
+        var branchName = branchList[localState.branchNumber];
 
     
         // Checkout local branch
@@ -736,7 +733,7 @@ async function dropFile(e) {
     
     // Set to current
     state.repoNumber = index;
-    state.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
+    localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
 
     // Set global
     state.repos[state.repoNumber].localFolder = topFolder;
