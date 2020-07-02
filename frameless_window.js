@@ -728,16 +728,30 @@ async function dropFile(e) {
         string += 'The name of the repository will be "' + nameOfFolder + '" ';
         
         if ( confirmationDialog(string) ) {
-            gitInitRepo( folder);
-        }
+            console.log( 'dropFile : Got permission to create a new repository in folder path = ' + folder + '    nameOfFolder = ' + nameOfFolder);
+            //gitInitRepo( folder);
+        //}
         
         // Find folder
         try{
-            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+            console.log( 'dropFile : find top folder asking repository (from folder=' + folder + ')');
+            //await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
+            
+            //await waitTime(2000);
+            await simpleGit(folder).init( onInit );
+            //await waitTime(2000);
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+
+            function onInit(err, initResult) { }
+            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+            
+            
+            
             topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
         }catch(error){
 
         }
+    } // new
     }
     
     // Add folder last in  state array
