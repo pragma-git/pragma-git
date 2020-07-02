@@ -14,9 +14,9 @@
  * ISSUES
  * - Drop a non-initialized file, and it isn't added to gui (but it is initialized)
  * - Fresh start : has git-test hard-coded.
- * - repoSettings.localFolder  should be replaced with  state.repos[index].localFolder
- * - use repoNumber to index a repo in the state  (instead of  repoSettings.localFolder)
- * - Introduce state.repos[index].branchName
+ * - state.repos[state.repoNumber].localFolder  should be replaced with  state.repos[index].localFolder
+ * - use state.repoNumber to index a repo in the state  (instead of  state.repos[state.repoNumber].localFolder)
+ * - Introduce state.repos[index].state.branchName
  * 
  * /
  * 
@@ -32,6 +32,8 @@
 
 /*
  TODO : Open questions
+ * 
+ * - Clean duplicates in repo list
  - Make settings dialog
  
  - Dropped folder, if not repository, dialog to ask if allowed to initialize
@@ -61,7 +63,6 @@
 // INIT
 // ---------
 
-
     // Import Modules
         var gui = require("nw.gui");    
         var os = require('os');
@@ -83,21 +84,45 @@
     
     // State variables
         var state = loadSettings(settingsFile); // json settings
+        var localState = [];
+        localState.historyNumber = -1;
+        localState.branchNumber = 0;  // TODO : ändra kod till att läsa state.branchNumber här
         
         // (repo and branch)
-        var repoNumber = 0;
-        var branchNumber = 0;
-        var historyNumber = -1;
-        var branchName;
+        // state.repoNumber = 0;
+        // state.branchNumber = 0;   // TODO : det här ska inte sparas -- ta bort i kod.  
+        // state.branchName;  // TODO : ska inte användas.  Börja här och ta bort om det används.
+        /* Example :
+        
+        state =
+        {
+          "localFolder": "/Users/jan/Desktop/TEMP/Test-git",
+          "homedir": "/Users/jan",
+          repoNumber: 0,
+          branchNumber: 0
+          "repos": [
+            {},
+            {
+              "localFolder": "/Users/jan/Documents/NoMachine"
+            }
+          ],
+          "position": {
+            "x": 97,
+            "y": 40,
+            "height": 140,
+            "width": 460
+          }
+        }
+        */
+        
         
         // (modes)
-        var isPaused = false; // Update loop, true = running
+        var isPaused = true; // Update loop, true = running
         var historyBrowsingMode = false; 
  
     
     // Collect settings
         var repoSettings = {}; 
-        repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
    
         
     // Initiate GUI update loop 
@@ -117,7 +142,7 @@
 async function unComittedFiles(){
     var status_data;  
     try{
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in unComittedFiles,  calling  gitStatus()');
         console.log(err);
@@ -140,10 +165,11 @@ async function gitStatus(){
         // - simpleGit(dir).status( handler_function)
         // - handler_function is defined as an anonymous function with arrow ('=>') notation
         // - the two outputs from status are input variables to the anonymous function.
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
+        return;
     }
  
     // Update message text placeholder
@@ -169,7 +195,7 @@ async function gitStatus(){
     var currentBranch = status_data.current;
 
     // Get name of local folder  
-    var currentDir = simpleGit(repoSettings.localFolder)._executor.cwd;    
+    var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
     var foldername = currentDir.replace(/^.*[\\\/]/, '');
     
     // KEEP HERE: May be useful in future 
@@ -194,7 +220,7 @@ async function gitAddCommitAndPush( message){
     
     // Read current branch
     try{
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
@@ -205,17 +231,17 @@ async function gitAddCommitAndPush( message){
     // Add all files
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
-    await simpleGit(repoSettings.localFolder).add( path, (err, result) => {console.log(result) });
+    await simpleGit(state.repos[state.repoNumber].localFolder).add( path, (err, result) => {console.log(result) });
     await waitTime( 1000);
     
     // Commit including deleted
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    await simpleGit(repoSettings.localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
+    await simpleGit(state.repos[state.repoNumber].localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
     await waitTime( 1000);
     
     // Push (and create remote branch if not existing)
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    await simpleGit(repoSettings.localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
+    await simpleGit(state.repos[state.repoNumber].localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
     await waitTime( 1000);  
         
     writeMessage('',false);  // Remove this message  
@@ -242,7 +268,7 @@ async function gitInitRepo( folder){
 async function unComittedFiles(){
     var status_data;  
     try{
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in unComittedFiles,  calling  gitStatus()');
         console.log(err);
@@ -296,6 +322,45 @@ function setStoreButtonEnableStatusFromText() {
 }
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
+}
+
+function cleanDuplicates( myArray, objectField ){
+    // Removes all elements in "myArray"  where the field "objectField" are duplicates
+    //
+    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
+    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
+    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
+    
+    // Display the list of array objects 
+    console.log(myArray); 
+
+    // Declare a new array 
+    let newArray = []; 
+      
+    // Declare an empty object 
+    let uniqueObject = {}; 
+      
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        // Extract the title 
+        objTitle = myArray[i][objectField]; 
+
+        // Use the title as the index 
+        uniqueObject[objTitle] = myArray[i]; 
+    } 
+      
+    // Loop to push unique object into array 
+    for (i in uniqueObject) { 
+        newArray.push(uniqueObject[i]); 
+    } 
+      
+    // Display the unique objects 
+    console.log(newArray); 
+
+
+
+    return newArray;
 }
 
 // Message
@@ -354,17 +419,38 @@ function loadSettings(settingsFile){
     try{
         jsonString = fs.readFileSync(settingsFile);
         state = JSON.parse(jsonString);
+        
+        console.log('Input json file');
+        console.log(state);
+    
     }catch(err){
+        console.log('Error loading settings -- setting defaults');
         // Defaults
         state = {};
-        state.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
         state.homedir = os.homedir();
         
+        
+        state.repoNumber = -1; // Indicate that no repos exist yet
+        state.branchNumber = 0;
+        
         state.repos = [];
+        
+        console.log(err);
 
     }
     
-    // Move window
+    
+    // Clean duplicate in state.repos based on name "localFolder"
+    state.repos = cleanDuplicates( state.repos, 'localFolder' );
+    console.log('State after cleaning duplicates');
+    console.log(state);
+    
+    if ( state.repoNumber > state.repos.length ){
+        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
+    }
+    
+    
+    // Place window
     try{
         // Validate position on screen
         if ( (state.position.x + state.position.width) > screen.width ) {
@@ -467,16 +553,15 @@ function updateContentStyle() {
 
 function repoClicked(){
     // Cycle through stored repos
-    repoNumber = repoNumber + 1;
+    state.repoNumber = state.repoNumber + 1;
     var numberOfRepos = state.repos.length;
-    if (repoNumber >= numberOfRepos){
-        repoNumber = 0;
+    if (state.repoNumber >= numberOfRepos){
+        state.repoNumber = 0;
     }
-    repoSettings.localFolder = state.repos[repoNumber].localFolder;
     gitStatus();
         
     // Reset some variables
-    historyNumber = -1;
+    localState.historyNumber = -1;
     historyBrowsingMode = false;
 }
 async function branchClicked(){
@@ -484,7 +569,7 @@ async function branchClicked(){
     // Determine status of local repository
     var status_data;  
     try{
-        await simpleGit(repoSettings.localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
     }catch(err){
         console.log('Error in unComittedFiles,  calling  gitStatus()');
         console.log(err);
@@ -508,24 +593,24 @@ async function branchClicked(){
         var branchList;
         try{
             isPaused = true;
-            await simpleGit(repoSettings.localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
+            await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
         }catch(err){        
             console.log('Error determining local branches, in branchClicked()');
             console.log(err);
         }
         
         // Cycle through local branches
-        branchNumber = branchNumber + 1;
+        state.branchNumber = state.branchNumber + 1;
         var numberOfBranches = state.repos.length;
-        if (branchNumber >= numberOfBranches){
-            branchNumber = 0;
+        if (state.branchNumber >= numberOfBranches){
+            state.branchNumber = 0;
         }
-        branchName = branchList[branchNumber];
+        var branchName = branchList[state.branchNumber];
 
     
         // Checkout local branch
         try{
-            await simpleGit(repoSettings.localFolder).checkout(branchName, (err, result) => {console.log(result)} );
+            await simpleGit(state.repos[state.repoNumber].localFolder).checkout(branchName, (err, result) => {console.log(result)} );
         }catch(err){        
             console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
             console.log(err);
@@ -537,7 +622,7 @@ async function branchClicked(){
     gitStatus();
     
     // Reset some variables
-    historyNumber = -1;
+    localState.historyNumber = -1;
     historyBrowsingMode = false;
 }
 
@@ -547,25 +632,25 @@ async function downArrowClicked(){
     // Get log
     var history;
     try{
-        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
     }catch(err){        
         console.log(err);
     }   
 
     // Cycle through history
     var numberOfHistorySteps = history.length;
-    historyNumber = historyNumber + 1;
+    localState.historyNumber = localState.historyNumber + 1;
     
     var numberOfBranches = state.repos.length;
-    if (historyNumber >= numberOfHistorySteps){
-        historyNumber = 0;
+    if (localState.historyNumber >= numberOfHistorySteps){
+        localState.historyNumber = 0;
     }
     
     // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-    var historyString = ( history[historyNumber].date).substring( 11,11+8) 
-    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
+    var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
+    + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
     + os.EOL 
-    + history[historyNumber].message;
+    + history[localState.historyNumber].message;
     
     // Display
     writeMessage( historyString, true);
@@ -578,29 +663,29 @@ async function upArrowClicked(){
     // Get log
     var history;
     try{
-        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
     }catch(err){        
         console.log(err);
     }   
 
     // Cycle through history
     var numberOfHistorySteps = history.length;
-    historyNumber = historyNumber - 1;
+    localState.historyNumber = localState.historyNumber - 1;
     
     var numberOfBranches = state.repos.length;
-    if (historyNumber < 0){
+    if (localState.historyNumber < 0){
         // Leave history browsing
-        historyNumber = -1;
+        localState.historyNumber = -1;
         historyBrowsingMode = false;
         gitStatus();
     }else{
         // Show history
         
         // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-        var historyString = ( history[historyNumber].date).substring( 11,11+8) 
-        + ' (' + ( history[historyNumber].date).substring( 0,10) + ')'
+        var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
+        + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
         + os.EOL 
-        + history[historyNumber].message;
+        + history[localState.historyNumber].message;
         
         // Display
         writeMessage( historyString, true);
@@ -625,13 +710,9 @@ async function dropFile(e) {
         folder = require('path').dirname(file); // Correct, because file was dropped
         console.log( 'Folder = ' + folder );
     } 
-    
-    
-    // Check if repository -- ask to initialize if needed
-    // TODO: Fix text in about.html
 
     
-    // Find folder in local repo
+    // Find top folder in local repo
     var topFolder;
     try{
         await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], (err, result) => {console.log(result); topFolder = result});
@@ -660,21 +741,51 @@ async function dropFile(e) {
         }
     }
     
-    // Add folder to state
+    // Add folder last in  state array
     var index = state.repos.length;
     state.repos[index] = {}; 
     state.repos[index].localFolder = topFolder;
     
+    // Clean duplicates from state based on name "localFolder"
+    state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+    try{
+        // Set index to match the folder you added
+        index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+    }catch(err){
+        index = state.repos.length; // Highest should be last added
+    }
+    
     // Set to current
-    branchNumber = index;
-    branchName = topFolder;
+    state.repoNumber = index;
+    state.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
 
     // Set global
-    repoSettings.localFolder = topFolder;
-    console.log( 'Git  folder = ' + repoSettings.localFolder );
+    state.repos[state.repoNumber].localFolder = topFolder;
+    console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
     
     // Update immediately
     gitStatus();
+    
+    //
+    // Local function definitions
+    //
+    
+    function findObjectIndex( myArray, objectField, stringToFind ){
+        
+        var foundIndex; //last found index
+        // Loop for the array elements 
+        for (let i in myArray) { 
+    
+            if (stringToFind === myArray[i][objectField]){
+                foundIndex = i;
+            }
+        } 
+        
+        return foundIndex;
+    }
+
+
+    
 };
 function storeButtonClicked() { 
     gitAddCommitAndPush( readMessage());
@@ -717,7 +828,7 @@ async function settingsDialog() {
     
     var output;
     try{
-        await simpleGit(repoSettings.localFolder).log( (err, result) => {console.log(result); output = result;} );
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); output = result;} );
     }catch(err){        
         console.log(err);
     }   
@@ -728,7 +839,7 @@ async function settingsDialog() {
 }
 function folderClicked(){
     console.log('Folder clicked');
-    gui.Shell.showItemInFolder(repoSettings.localFolder);
+    gui.Shell.showItemInFolder(state.repos[state.repoNumber].localFolder);
 }
 
 // ------
@@ -759,4 +870,7 @@ window.onload = function() {
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
 
+
+
+win.showDevTools();
 };
