@@ -31,7 +31,6 @@
  * 
  * Open questions
  * 
- * - Clean duplicates in repo list
  * - Make settings dialog
  * 
  * - Rewrite simpleGit commands as in dropFile()
@@ -865,11 +864,11 @@ function closeWindowHandler(a) {
 
     
     // Store window position
-    state["position"] = {}; // New level
-    state["position"]["x"] = gui.Window.get().x;
-    state["position"]["y"] = gui.Window.get().y;
-    state["position"]["height"] = gui.Window.get().height;
-    state["position"]["width"] = gui.Window.get().width;
+    state.position = {}; // New level
+    state.position.x = gui.Window.get().x;
+    state.position.y  = gui.Window.get().y;
+    state.position.height = gui.Window.get().height;
+    state.position.width = gui.Window.get().width;
     
     saveSettings();
     gui.App.closeAllWindows();
