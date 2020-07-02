@@ -12,8 +12,6 @@
 
 /* ISSUES
  * 
- * - Drop a non-initialized file, and it isn't added to gui (but it is initialized)
- * - Fresh start : has git-test hard-coded.
  * - state.repos[state.repoNumber].localFolder  should be replaced with  state.repos[index].localFolder
  * - use state.repoNumber to index a repo in the state  (instead of  state.repos[state.repoNumber].localFolder)
  * - Introduce state.repos[index].state.branchName
@@ -21,6 +19,7 @@
  * /
  * 
  * /* Namnförslag
+ * gitenough 
  * gitsy (finns)
  * legit
  * gitta / gitaH
@@ -33,28 +32,27 @@
  * Open questions
  * 
  * - Clean duplicates in repo list
- - Make settings dialog
- 
- - Dropped folder, if not repository, dialog to ask if allowed to initialize
-
- - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
- - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
-
- - See list of files clicking on Modified / New / Deleted
- 
- - See if I can use simple-git.js Promise version (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd )
- - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
-
- - How to pull ? Auto-pull before push ?
- - How to merge ?
-
- - How to initialize git-flow ?
-
- - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
- - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
-
- Docs : https://www.npmjs.com/package/simple-git
-        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+ * - Make settings dialog
+ * 
+ * - Rewrite simpleGit commands as in dropFile()
+ *
+ * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
+ * - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
+ *
+ * - See list of files clicking on Modified / New / Deleted
+ * 
+ * - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
+ * 
+ * - How to pull ? Auto-pull before push ?
+ * - How to merge ?
+ * 
+ * - How to initialize git-flow ?
+ * 
+ * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
+ * - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
+ * 
+ * Docs : https://www.npmjs.com/package/simple-git
+ *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
 
 
@@ -244,24 +242,6 @@ async function gitAddCommitAndPush( message){
     await waitTime( 1000);  
         
     writeMessage('',false);  // Remove this message  
-    gitStatus();
-}
-async function gitInitRepo( folder){
-    var status_data;     
-    
-    // Read current branch
-    try{
-        setStatusBar( 'Initializing repository ');
-        await simpleGit(folder).init((err, result) => {console.log(result); console.log(err);status_data = result})
-        await waitTime( 1000);
-        gitAddCommitAndPush( 'First commit')
-    }catch(err){
-        console.log('Error in gitInitRepo()');
-        console.log(err);
-    }
-
-    // Remove this message  
-    writeMessage('',false);  
     gitStatus();
 }
 async function unComittedFiles(){
@@ -479,15 +459,7 @@ function loadSettings(settingsFile){
 
 // Title bar
 function closeWindow() {
-    // Store window position
-    state["position"] = {}; // New level
-    state["position"]["x"] = gui.Window.get().x;
-    state["position"]["y"] = gui.Window.get().y;
-    state["position"]["height"] = gui.Window.get().height;
-    state["position"]["width"] = gui.Window.get().width;
-    
-    saveSettings();
-    gui.App.closeAllWindows();
+
 }
 
 function updateImageUrl(image_id, new_image_url) {
@@ -870,7 +842,7 @@ window.onresize = function() {
 };
 window.onload = function() {
   var win = nw.Window.get();
- 
+
   
   // Fix for overshoot of content outside window
   updateContentStyle(); 
@@ -881,8 +853,41 @@ window.onload = function() {
   
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
+  
+  
+  // Listen to main window's close event
+  nw.Window.get().on('close', closeWindowHandler);
 
+};
+
+function closeWindowHandler(a) {
+    console.log('Close argument = ' + a);  
+
+    
+    // Store window position
+    state["position"] = {}; // New level
+    state["position"]["x"] = gui.Window.get().x;
+    state["position"]["y"] = gui.Window.get().y;
+    state["position"]["height"] = gui.Window.get().height;
+    state["position"]["width"] = gui.Window.get().width;
+    
+    saveSettings();
+    gui.App.closeAllWindows();
+      
+      
+    // Hide the window to give user the feeling of closing immediately
+    this.hide();
+
+    // If the new window is still open then close it.
+    if (win !== null) {
+      win.close(true);
+    }
+
+    // After closing the new window, close the main window.
+    this.close(true);
+}
+  
 
 
 win.showDevTools();
-};
+
