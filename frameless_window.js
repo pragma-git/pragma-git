@@ -14,7 +14,6 @@
  * 
  * - state.repos[state.repoNumber].localFolder  should be replaced with  state.repos[index].localFolder
  * - use state.repoNumber to index a repo in the state  (instead of  state.repos[state.repoNumber].localFolder)
- * - Introduce state.repos[index].state.branchName
  * 
  * /
  * 
