@@ -11,6 +11,26 @@
 // Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
 
 /*
+ * ISSUES
+ * - Drop a non-initialized file, and it isn't added to gui (but it is initialized)
+ * - Fresh start : has git-test hard-coded.
+ * - repoSettings.localFolder  should be replaced with  state.repos[index].localFolder
+ * - use repoNumber to index a repo in the state  (instead of  repoSettings.localFolder)
+ * - Introduce state.repos[index].branchName
+ * 
+ * /
+ * 
+ * /* Namnförslag
+ * gitsy (finns)
+ * legit
+ * gitta / gitaH
+ * digit
+ * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
+ * agit -- Agit is the short form o agitated. It refers to people who looks so mean or somewhat close to a yeti. It can also refer to people who looks so stressed and fucked up. 
+ * /
+
+
+/*
  TODO : Open questions
  - Make settings dialog
  
@@ -41,54 +61,53 @@
 // INIT
 // ---------
 
-    global.globalString = "This can be accessed anywhere!";
 
-    const WAIT_TIME = 5000; // Time to wait for brief messages being shown (for instance in message field)
-
-    var gui = require("nw.gui");    
-    var os = require('os');
-    var fs = require('fs');
-    const simpleGit = require('simple-git');  // npm install simple-git
+    // Import Modules
+        var gui = require("nw.gui");    
+        var os = require('os');
+        var fs = require('fs');
+        const simpleGit = require('simple-git');  // npm install simple-git
+     
+    
+    // Constants 
+        const WAIT_TIME = 5000; // Time to wait for brief messages being shown (for instance in message field)
+        global.globalString = "This can be accessed anywhere!";
+        const pathsep = require('path').sep;  // Os-dependent path separator
+        const tmpdir = os.tmpdir();
  
-    const pathsep = require('path').sep;  // Os-dependent path separator
-    const tmpdir = os.tmpdir();
       
     // Files & folders
-    var settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
-    var settingsFile = settingsDir + pathsep + 'repo.json';    
-       
-    // json settings
-    var jsonData = loadSettings(settingsFile);
-
-
+        var settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
+        var settingsFile = settingsDir + pathsep + 'repo.json';    
+        
+    
+    // State variables
+        var state = loadSettings(settingsFile); // json settings
+        
+        // (repo and branch)
+        var repoNumber = 0;
+        var branchNumber = 0;
+        var historyNumber = -1;
+        var branchName;
+        
+        // (modes)
+        var isPaused = false; // Update loop, true = running
+        var historyBrowsingMode = false; 
+ 
+    
     // Collect settings
-    var repoSettings = {}; 
-    repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
-    
-  
-    // Timer
-    gitStatus();
-    //var timer = setInterval(() => gitStatus(), 2000);
-    
-    var isPaused = false;
-    
-    var timer = window.setInterval(function() {
-        if(!isPaused) {
-            gitStatus();
-        }
-    }, 2000);
+        var repoSettings = {}; 
+        repoSettings.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
+   
+        
+    // Initiate GUI update loop 
+        gitStatus(); // Immediate update
+        var timer = window.setInterval(function() {
+            if(!isPaused) {
+                gitStatus();
+            }
+        }, 2000);
 
-    // PositionalPointers
-    var repoNumber = 0;
-    var branchNumber = 0;
-    var historyNumber = -1;
-    
-    var branchName;
-    
-    var historyBeingBrowsed = false;
-    
-    
-    updateContentStyle();
 
 
 // ---------
@@ -128,7 +147,7 @@ async function gitStatus(){
     }
  
     // Update message text placeholder
-    if (!historyBeingBrowsed){
+    if (!historyBrowsingMode){
         if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
             setStoreButtonEnableStatus( false );
             writeMessage( 'No changed files to store', true); // Write to placeholder
@@ -322,51 +341,51 @@ function saveSettings(){
     
     // Update current window position
         win = gui.Window.get();
-        jsonData.position.x = win.x;
-        jsonData.position.y = win.y;
-        jsonData.position.width = win.width;
-        jsonData.position.height = win.height;  
+        state.position.x = win.x;
+        state.position.y = win.y;
+        state.position.width = win.width;
+        state.position.height = win.height;  
     
     // Save settings
-    var jsonString = JSON.stringify(jsonData, null, 2);
+    var jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
 }
 function loadSettings(settingsFile){
     try{
         jsonString = fs.readFileSync(settingsFile);
-        jsonData = JSON.parse(jsonString);
+        state = JSON.parse(jsonString);
     }catch(err){
         // Defaults
-        jsonData = {};
-        jsonData.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
-        jsonData.homedir = os.homedir();
+        state = {};
+        state.localFolder = '/Users/jan/Desktop/TEMP/Test-git';
+        state.homedir = os.homedir();
         
-        jsonData.repos = [];
+        state.repos = [];
 
     }
     
     // Move window
     try{
         // Validate position on screen
-        if ( (jsonData.position.x + jsonData.position.width) > screen.width ) {
-            jsonData.position.x = screen.availLeft;
+        if ( (state.position.x + state.position.width) > screen.width ) {
+            state.position.x = screen.availLeft;
         }
         
-        if ( (jsonData.position.y + jsonData.position.height) > screen.height ){
-            jsonData.position.y = screen.availTop;
+        if ( (state.position.y + state.position.height) > screen.height ){
+            state.position.y = screen.availTop;
         }
         
         // Position and size window
         win = gui.Window.get();
-        win.moveTo( jsonData.position.x, jsonData.position.y);
-        win.resizeTo( jsonData.position.width, jsonData.position.height);
+        win.moveTo( state.position.x, state.position.y);
+        win.resizeTo( state.position.width, state.position.height);
 
         
     }catch(err){
         console.log('Error setting window position and size');
         console.log(err);
     }
-    return jsonData;
+    return state;
 }
 
 // ---------
@@ -376,11 +395,11 @@ function loadSettings(settingsFile){
 // Title bar
 function closeWindow() {
     // Store window position
-    jsonData["position"] = {}; // New level
-    jsonData["position"]["x"] = gui.Window.get().x;
-    jsonData["position"]["y"] = gui.Window.get().y;
-    jsonData["position"]["height"] = gui.Window.get().height;
-    jsonData["position"]["width"] = gui.Window.get().width;
+    state["position"] = {}; // New level
+    state["position"]["x"] = gui.Window.get().x;
+    state["position"]["y"] = gui.Window.get().y;
+    state["position"]["height"] = gui.Window.get().height;
+    state["position"]["width"] = gui.Window.get().width;
     
     saveSettings();
     gui.App.closeAllWindows();
@@ -449,16 +468,16 @@ function updateContentStyle() {
 function repoClicked(){
     // Cycle through stored repos
     repoNumber = repoNumber + 1;
-    var numberOfRepos = jsonData.repos.length;
+    var numberOfRepos = state.repos.length;
     if (repoNumber >= numberOfRepos){
         repoNumber = 0;
     }
-    repoSettings.localFolder = jsonData.repos[repoNumber].localFolder;
+    repoSettings.localFolder = state.repos[repoNumber].localFolder;
     gitStatus();
         
     // Reset some variables
     historyNumber = -1;
-    historyBeingBrowsed = false;
+    historyBrowsingMode = false;
 }
 async function branchClicked(){
     
@@ -497,7 +516,7 @@ async function branchClicked(){
         
         // Cycle through local branches
         branchNumber = branchNumber + 1;
-        var numberOfBranches = jsonData.repos.length;
+        var numberOfBranches = state.repos.length;
         if (branchNumber >= numberOfBranches){
             branchNumber = 0;
         }
@@ -519,7 +538,7 @@ async function branchClicked(){
     
     // Reset some variables
     historyNumber = -1;
-    historyBeingBrowsed = false;
+    historyBrowsingMode = false;
 }
 
 async function downArrowClicked(){
@@ -537,7 +556,7 @@ async function downArrowClicked(){
     var numberOfHistorySteps = history.length;
     historyNumber = historyNumber + 1;
     
-    var numberOfBranches = jsonData.repos.length;
+    var numberOfBranches = state.repos.length;
     if (historyNumber >= numberOfHistorySteps){
         historyNumber = 0;
     }
@@ -550,7 +569,7 @@ async function downArrowClicked(){
     
     // Display
     writeMessage( historyString, true);
-    historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
+    historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
     
 }
 async function upArrowClicked(){
@@ -568,11 +587,11 @@ async function upArrowClicked(){
     var numberOfHistorySteps = history.length;
     historyNumber = historyNumber - 1;
     
-    var numberOfBranches = jsonData.repos.length;
+    var numberOfBranches = state.repos.length;
     if (historyNumber < 0){
         // Leave history browsing
         historyNumber = -1;
-        historyBeingBrowsed = false;
+        historyBrowsingMode = false;
         gitStatus();
     }else{
         // Show history
@@ -585,7 +604,7 @@ async function upArrowClicked(){
         
         // Display
         writeMessage( historyString, true);
-        historyBeingBrowsed = true; // Mark history being browsed, to stop timer update of message
+        historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
         }
 }
 
@@ -641,10 +660,10 @@ async function dropFile(e) {
         }
     }
     
-    // Add folder to jsonData
-    var index = jsonData.repos.length;
-    jsonData.repos[index] = {}; 
-    jsonData.repos[index].localFolder = topFolder;
+    // Add folder to state
+    var index = state.repos.length;
+    state.repos[index] = {}; 
+    state.repos[index].localFolder = topFolder;
     
     // Set to current
     branchNumber = index;
