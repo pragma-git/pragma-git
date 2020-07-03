@@ -621,14 +621,20 @@ async function downArrowClicked(){
     
     // Defaults if error
     historyBrowsingMode = false; 
-    localState.historyNumber = -1; 
     try{
         // Cycle through history
+        console.log('downArrowClicked - Cycle through history');
         var numberOfHistorySteps = history.length;
         localState.historyNumber = localState.historyNumber + 1;
+        console.log('downArrowClicked - numberOfHistorySteps, localState');
+        console.log(numberOfHistorySteps);
+        console.log(localState);
         
         var numberOfBranches = state.repos.length;
+        console.log('downArrowClicked - numberOfBranches');
+        console.log(numberOfBranches);
         if (localState.historyNumber >= numberOfHistorySteps){
+            console.log('downArrowClicked - setting localState.historyNumber = 0');
             localState.historyNumber = 0;
         }
         
@@ -642,7 +648,8 @@ async function downArrowClicked(){
         writeMessage( historyString, true);
         historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
     }catch(err){       
-        // Lands here if no repositories defined 
+        // Lands here if no repositories defined  or other errors 
+        localState.historyNumber = -1;
         console.log(err);
     }    
 }
