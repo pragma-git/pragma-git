@@ -11,6 +11,9 @@
           border: 1px solid black;
           border-collapse: collapse;
         }
+        iframe {
+          width: 100%;
+        }
     </style>
 
 <body>
@@ -19,18 +22,18 @@
             
         <div id="inner-content">
                 
-            <h2>Settings</h2>
+            <h2 id="header_Settings">Settings </h2>
         
             <hr>
          
             <h3>Repositories from list</h3>     
             
+            <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
+            <h4 id="header_Forget">Forget : </h4>
+
+            <table id="settingsTable" style="width:100%"> </table>
+               
             
-            <h4>Forget : </h4>
-            
-            <table id="settingsTable">
-    
-            </table>
      
         
             <br>   <!--  empty row at bottom  -->

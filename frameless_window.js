@@ -28,12 +28,14 @@
  * 
  * Open questions
  * 
- * - Make settings dialog
- * 
  * - Rewrite simpleGit commands as in dropFile()
  *
- * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
- * - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
+ * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
+ * 
+ * - How to handle change in checkout which is not HEAD (detached head)?  
+ *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
+ *   2) Dialog to ask if create new branch or move to top ?  
+ *   3) Instead: save as non-git in separate folder ? That would be easier to understand.
  *
  * - See list of files clicking on Modified / New / Deleted
  * 
@@ -43,9 +45,6 @@
  * - How to merge ?
  * 
  * - How to initialize git-flow ?
- * 
- * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)
- * - How to handle change in checkout which is not HEAD (detached head)?  Auto-create branch ? Dialog to ask if create new branch or move to top ?
  * 
  * Docs : https://www.npmjs.com/package/simple-git
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
@@ -193,7 +192,7 @@ async function gitStatus(){
     if (status_data != null) {
         setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
     }else{
-        setStatusBar('');
+        setStatusBar(' ');
     }
 
     // Get name of local folder

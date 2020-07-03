@@ -27,15 +27,25 @@ function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
-            
-    let table = document.querySelector("table");
-    let data = Object.keys(state.repos[0]);
-    console.log('Settings - data :');
-    console.log(data);
-    generateTable( document, table, state.repos); // generate the table first
-    generateTableHead( document, table, data);    // then the head
     
+    // Create table if there are any repos
+    if (state.repos.length > 0){                   
+        document.getElementById("header_Forget").style.visibility = "visible"; 
+        document.getElementById("emptyTable_iFrame").style.height ="0px";
+        
+        let table = document.querySelector("table");
+        let data = Object.keys(state.repos[0]);
+        console.log('Settings - data :');
+        console.log(data);
+        generateTable( document, table, state.repos); // generate the table first
+        generateTableHead( document, table, data);    // then the head
+    }else{ 
+        // Hide "Forget"-header, and show message for empty repo      
+        //document.getElementById("settingsTable") = "";
+        document.getElementById("header_Forget").style.visibility = "collapse"; 
+        document.getElementById("emptyTable_iFrame").style.height ="auto"; 
 
+   }
 
 }
      
