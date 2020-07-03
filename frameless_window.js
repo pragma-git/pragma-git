@@ -76,10 +76,10 @@
         
     
     // State variables
-        var state = loadSettings(settingsFile); // json settings
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  // TODO : ändra kod till att läsa localState.branchNumber här
+        var state = loadSettings(settingsFile); // json settings
         
         // (repo and branch)
         // state.repoNumber = 0;
