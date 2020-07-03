@@ -51,7 +51,7 @@
 */
 
 var devTools = false;
-var isPaused = true; // Update loop, true = running
+var isPaused = false; // Update loop, true = running
 
 // ---------
 // INIT
@@ -173,10 +173,12 @@ async function gitStatus(){
     try{
         if (!historyBrowsingMode){
             if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+                document.getElementById('message').disabled=true;  // Disable text input
                 setStoreButtonEnableStatus( false );
                 writeMessage( 'No changed files to store', true); // Write to placeholder
             }else {
                 // Tell the user to add a description
+                document.getElementById('message').disabled=false;  // Enable text input
                 var message = readMessage();
                 if (message.length == 0){
                     writeMessage( 'Add description...', true);
