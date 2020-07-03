@@ -18,11 +18,11 @@
     
         //Same as $(document).ready();
         function ready(fn) {
-        if (document.readyState != 'loading'){
-            fn();
-        } else {
-            document.addEventListener('DOMContentLoaded', fn);
-        }
+            if (document.readyState != 'loading'){
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
         }
     
         //When the page has loaded, run this code
@@ -151,7 +151,7 @@
         
         <div class="bottom-titlebar-settings-button">
             <img id="bottom-titlebar-settings-button"  height="17" width="17"
-                onclick="settingsDialog()" 
+                onclick="showSettings()" 
                 onmouseover="updateImageUrl('bottom-titlebar-settings-button', 'images/settings_hover.png');" 
                 onmouseout="updateImageUrl('bottom-titlebar-settings-button', 'images/settings.png');" 
                 src="images/settings.png">

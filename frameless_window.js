@@ -68,6 +68,9 @@
         global.globalString = "This can be accessed anywhere!";
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
+        
+    // Handles to windows
+        var settings_win;
  
       
     // Files & folders
@@ -108,7 +111,7 @@
         
         
         // (modes)
-        var isPaused = false; // Update loop, true = running
+        var isPaused = true; // Update loop, true = running
         var historyBrowsingMode = false; 
  
     
@@ -598,27 +601,34 @@ async function downArrowClicked(){
         await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
     }catch(err){        
         console.log(err);
-    }   
-
-    // Cycle through history
-    var numberOfHistorySteps = history.length;
-    localState.historyNumber = localState.historyNumber + 1;
-    
-    var numberOfBranches = state.repos.length;
-    if (localState.historyNumber >= numberOfHistorySteps){
-        localState.historyNumber = 0;
     }
     
-    // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-    var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
-    + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
-    + os.EOL 
-    + history[localState.historyNumber].message;
-    
-    // Display
-    writeMessage( historyString, true);
-    historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
-    
+    // Defaults if error
+    historyBrowsingMode = false; 
+    localState.historyNumber = -1; 
+    try{
+        // Cycle through history
+        var numberOfHistorySteps = history.length;
+        localState.historyNumber = localState.historyNumber + 1;
+        
+        var numberOfBranches = state.repos.length;
+        if (localState.historyNumber >= numberOfHistorySteps){
+            localState.historyNumber = 0;
+        }
+        
+        // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+        var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
+        + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+        + os.EOL 
+        + history[localState.historyNumber].message;
+        
+        // Display
+        writeMessage( historyString, true);
+        historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
+    }catch(err){       
+        // Lands here if no repositories defined 
+        console.log(err);
+    }    
 }
 async function upArrowClicked(){
     console.log('up arrow clicked');
@@ -779,7 +789,6 @@ function showAbout() {
         
     });
     
-    // gui.Window.get().y  // Gets position of my gui window
 }
 function confirmationDialog(text) {    
     console.log('confirmationDialog called');
@@ -795,32 +804,31 @@ function confirmationDialog(text) {
     
     return confirm(text);
 }
+function showSettings() {    
+    console.log('Settings button pressed');
+    var settings_win = gui.Window.open('settings.html#/new_page' ,
+        {
+            position: 'center',
+            width: 600,
+            height: 700,
+            title: "Settings"
+        }
+        ); 
+    console.log(settings_win);
+    
+    // Make state available to new window
+    global.state = state;
+ return   
+};
 
-
-async function settingsDialog() {    
-    console.log('settings dialog pressed');
-    
-    // TODO : Here settings can be done.  For instance remote git linking
-    
-    var output;
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); output = result;} );
-    }catch(err){        
-        console.log(err);
-    }   
-    
-    var history = output.ListLogSummary.all;
-
-    
-}
 function folderClicked(){
     console.log('Folder clicked');
     gui.Shell.showItemInFolder(state.repos[state.repoNumber].localFolder);
 }
 
-// ------
-// EVENTS
-// ------
+// -------------
+// WINDOW EVENTS
+// -------------
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);

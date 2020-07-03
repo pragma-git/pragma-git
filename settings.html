@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Settings</title>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <script src="settings.js"></script>
+
+    </head>
+    
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+    </style>
+
+<body>
+     
+    <div id="content">
+            
+        <div id="inner-content">
+                
+            <h2>Settings</h2>
+        
+            <hr>
+         
+            <h3>Repositories from list</h3>     
+            
+            
+            <h4>Forget : </h4>
+            
+            <table id="settingsTable">
+    
+            </table>
+     
+        
+            <br>   <!--  empty row at bottom  -->
+    
+        </div>
+    </div>
+
+
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        console.log('settings.html :DOM fully loaded and parsed');
+        injectIntoSettingsJs(document);
+        }
+    );
+</script>
+    
+  
+
+</body>
+</html>
