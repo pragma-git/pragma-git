@@ -50,8 +50,8 @@
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
 
-var devTools = true;
-var isPaused = false; // Update loop, true = running
+var devTools = false;
+var isPaused = true; // Update loop, true = running
 
 // ---------
 // INIT
