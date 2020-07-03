@@ -861,18 +861,30 @@ window.onblur = function() {
   focusTitlebars(false);
 };
 window.onresize = function() {
+  win.reload();
   updateContentStyle();
 };
 window.onload = function() {
   var win = nw.Window.get();
 
   
-  // Fix for overshoot of content outside window
+  //// Fix for overshoot of content outside window
+  //if (document.getElementById('content').offsetWidth > window.innerWidth){
+    //win.reload();
+    //updateContentStyle(); 
+  //}
+  
+  //// Fix if content is much smaller than window
+  //if ( ( document.getElementById('content').offsetWidth + 30) < window.innerWidth){
+    //win.reload();
+    //updateContentStyle(); 
+  //}
+   
+  
+  
   updateContentStyle(); 
-  if (document.getElementById('content').offsetWidth > window.innerWidth){
-    win.reload();
-  }
-  win.show(); 
+  win.show();
+  //updateContentStyle(); 
   
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
