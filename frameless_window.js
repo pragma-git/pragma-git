@@ -111,7 +111,7 @@
         
         
         // (modes)
-        var isPaused = true; // Update loop, true = running
+        var isPaused = false; // Update loop, true = running
         var historyBrowsingMode = false; 
  
     
@@ -154,44 +154,57 @@ async function unComittedFiles(){
 async function gitStatus(){
     // Read git status
     var status_data;  
+    var currentBranch = ""; // Empty default, will show blank if branch not found
     try{
         // Understand this: 
         // - simpleGit(dir).status( handler_function)
         // - handler_function is defined as an anonymous function with arrow ('=>') notation
         // - the two outputs from status are input variables to the anonymous function.
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result});
+        currentBranch = status_data.current;  // Name of current branch
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
-        return;
+        
     }
  
     // Update message text placeholder
-    if (!historyBrowsingMode){
-        if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-            setStoreButtonEnableStatus( false );
-            writeMessage( 'No changed files to store', true); // Write to placeholder
-        }else {
-            // Tell the user to add a description
-            var message = readMessage();
-            if (message.length == 0){
-                writeMessage( 'Add description...', true);
+    try{
+        if (!historyBrowsingMode){
+            if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+                setStoreButtonEnableStatus( false );
+                writeMessage( 'No changed files to store', true); // Write to placeholder
+            }else {
+                // Tell the user to add a description
+                var message = readMessage();
+                if (message.length == 0){
+                    writeMessage( 'Add description...', true);
+                }
             }
-        }
+            
+        }    
+    }catch(err){
+        console.log('Error in gitStatus()');
+        console.log(err);
         
     }
-
     
-    // Status
-    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-   
-    // Get name of current branch
-    var currentBranch = status_data.current;
+    // Set Status-bar
+    if (status_data != null) {
+        setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+    }else{
+        setStatusBar('');
+    }
 
-    // Get name of local folder  
-    var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
-    var foldername = currentDir.replace(/^.*[\\\/]/, '');
-    
+    // Get name of local folder
+    var foldername = ""; 
+    try{
+        var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
+        foldername = currentDir.replace(/^.*[\\\/]/, '');
+     }catch(err){
+        console.log('Error in gitStatus() - Get name of local folder');
+        console.log(err);
+    }   
     // KEEP HERE: May be useful in future 
     //
     // 1) Get name of Repo
@@ -204,10 +217,14 @@ async function gitStatus(){
     //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
 
     
-
-  
+    // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
     setTitleBar( 'top-titlebar-repo-text', foldername   );
-    setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+    if (currentBranch.length == 0){
+        setTitleBar( 'top-titlebar-branch-text', '' );
+    }else{
+        setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+    }
+    
 }
 async function gitAddCommitAndPush( message){
     var status_data;     
