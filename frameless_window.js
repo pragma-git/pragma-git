@@ -50,6 +50,8 @@
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
 
+var devTools = true;
+var isPaused = false; // Update loop, true = running
 
 // ---------
 // INIT
@@ -110,7 +112,7 @@
         
         
         // (modes)
-        var isPaused = false; // Update loop, true = running
+        //var isPaused = false; // Update loop, true = running
         var historyBrowsingMode = false; 
  
     
@@ -852,6 +854,7 @@ function folderClicked(){
 // -------------
 // WINDOW EVENTS
 // -------------
+
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
@@ -861,24 +864,19 @@ window.onblur = function() {
   focusTitlebars(false);
 };
 window.onresize = function() {
-  win.reload();
+  //win.reload();
   updateContentStyle();
 };
 window.onload = function() {
   var win = nw.Window.get();
 
   
-  //// Fix for overshoot of content outside window
-  //if (document.getElementById('content').offsetWidth > window.innerWidth){
-    //win.reload();
-    //updateContentStyle(); 
-  //}
-  
-  //// Fix if content is much smaller than window
-  //if ( ( document.getElementById('content').offsetWidth + 30) < window.innerWidth){
-    //win.reload();
-    //updateContentStyle(); 
-  //}
+  // Fix for overshoot of content outside window
+  if (document.getElementById('content').offsetWidth > window.innerWidth){
+    win.reload();
+    updateContentStyle(); 
+  }
+
    
   
   
@@ -892,6 +890,10 @@ window.onload = function() {
   
   // Listen to main window's close event
   nw.Window.get().on('close', closeWindowHandler);
+  
+  if (devTools == true){
+      win.showDevTools();  // WARNING : causes redraw issues on startup
+  }
 
 };
 
@@ -923,6 +925,4 @@ function closeWindowHandler(a) {
 }
   
 
-
-win.showDevTools();
 
