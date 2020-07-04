@@ -1,8 +1,8 @@
 {
-  "name": "Frameless-Window",
+  "name": "Pragma-git",
   "description": "Chrome platform app.",
   "version": "0.1.0",
-  "main": "frameless_window.html",
+  "main": "app.html",
   "window": {
     "show": false,
     "toolbar": false,
