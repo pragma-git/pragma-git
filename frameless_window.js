@@ -882,7 +882,7 @@ window.onload = function() {
   }
 
    
-  
+  win.width = win.width +1; // Try to force redraw -- to fix the layout problems
   
   updateContentStyle(); 
   win.show();
