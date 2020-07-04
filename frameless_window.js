@@ -1,14 +1,17 @@
-// Start :
-//   /Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222  .
-//
-// Debug with chrome:
-//   http://127.0.0.1:9222/
-//
-//   Stop timer in console :  isPaused = true
-//
-// Secret : if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
-//
-// Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
+/* START :
+ * ------
+ * 
+ *   /Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222  .
+ *
+ * Debug with chrome:
+ *   http://127.0.0.1:9222/
+ *
+ *   Stop timer in console :  isPaused = true
+ *
+ * Secret : if onClick doesn't work on html-element, add this to CSS :  -webkit-app-region: no-drag;
+ *
+ * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
+ */
 
 /* ISSUES
  * ------
@@ -83,16 +86,11 @@
  *                          - Store-button = disabled
  *                          - placeholder = shows history   
  */
-/* clickCallback
- * -------------
- * 
- * Callbacks from html are pointed to one function "_callback",
- * which redistributes the call to its handler
- * 
- */
 
+
+// Define DEBUG features
 var devTools = false;
-var isPaused = false; // Update loop, true = running
+var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 // ---------
 // INIT
@@ -371,7 +369,7 @@ function _callback( name){
         localState.historyNumber = -1;
         historyBrowsingMode = false;
     }
-    function showAbout() {    
+    function showAbout(){    
         console.log('About button pressed');
         
         about_win = gui.Window.open('about.html#/new_page', {
@@ -382,7 +380,7 @@ function _callback( name){
         });
         
     }
-    function closeWindow(a) {
+    function closeWindow(a){
         console.log('Close argument = ' + a);  
         
         // Store window position
@@ -493,7 +491,7 @@ function _callback( name){
             historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
             }
     }
-    function messageKeyUpEvent() { // message key
+    function messageKeyUpEvent() { 
         // Enable if message text 
         var message = readMessage();
         setStoreButtonEnableStatus( (message.length > 0 ));
