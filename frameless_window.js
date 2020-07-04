@@ -175,24 +175,7 @@ var isPaused = false; // Update loop, true = running
 // FUNCTIONS
 // ---------
 
-async function unComittedFiles(){
-    var status_data;  
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-    }catch(err){
-        console.log('Error in unComittedFiles,  calling  _mainLoop()');
-        console.log(err);
-    }
- 
-    // If no files to commit
-    var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0){
-        uncommitedFiles = true;
-    }  
-    return uncommitedFiles;
-}
-
-// Git commands
+// main functions
 async function _mainLoop(){
     // Read git status
     var status_data;  
@@ -270,246 +253,8 @@ async function _mainLoop(){
     }else{
         setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
     }
-    
-}
-async function gitAddCommitAndPush( message){
-    var status_data;     
-    
-    // Read current branch
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-    }
-    var currentBranch = status_data.current;
-    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
-    
-    // Add all files
-    setStatusBar( 'Adding files');
-    var path = '.'; // Add all
-    await simpleGit(state.repos[state.repoNumber].localFolder).add( path, (err, result) => {console.log(result) });
-    await waitTime( 1000);
-    
-    // Commit including deleted
-    setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
-    await waitTime( 1000);
-    
-    // Push (and create remote branch if not existing)
-    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
-    await waitTime( 1000);  
-        
-    writeMessage('',false);  // Remove this message  
-    _mainLoop();
-}
-async function unComittedFiles(){
-    var status_data;  
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-    }catch(err){
-        console.log('Error in unComittedFiles,  calling  _mainLoop()');
-        console.log(err);
-    }
- 
-    // If no files to commit
-    var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-        uncommitedFiles = true;
-    }  
-    return uncommitedFiles;
-}
-
-function waitTime( delay) {
-// Delay in milliseconds
-  console.log("starting delay ")
-  return new Promise(resolve => {
-    setTimeout(function() {
-      resolve("delay ")
-      console.log("delay is done")
-    }, delay)
-  })
-}
-
-// OS commands
-function mkdir(dir){
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
-    }
-}
-
-// Utility functions
-function updateStatusBar( text){
-    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
-    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
-    console.log('updateStatusBar = ' + newmessage);
-}
-function setStatusBar( text){
-    document.getElementById('bottom-titlebar-text').innerHTML = text;
-    console.log('setStatusBar = ' + text);
-}
-function setTitleBar( id, text){
-    document.getElementById(id).innerHTML = text;
-    console.log('setTitleBar (element ' + id + ') = ' + text);
-}
-
-function setStoreButtonEnableStatus( enableStatus) {
-    document.getElementById('store-button').disabled = !enableStatus;
-}
-
-function cleanDuplicates( myArray, objectField ){
-    // Removes all elements in "myArray"  where the field "objectField" are duplicates
-    //
-    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
-    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
-    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
-    
-    // Display the list of array objects 
-    console.log(myArray); 
-
-    // Declare a new array 
-    let newArray = []; 
-      
-    // Declare an empty object 
-    let uniqueObject = {}; 
-      
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        // Extract the title 
-        objTitle = myArray[i][objectField]; 
-
-        // Use the title as the index 
-        uniqueObject[objTitle] = myArray[i]; 
-    } 
-      
-    // Loop to push unique object into array 
-    for (i in uniqueObject) { 
-        newArray.push(uniqueObject[i]); 
-    } 
-      
-    // Display the unique objects 
-    console.log(newArray); 
-
-
-
-    return newArray;
-}
-
-// Message
-function readMessage( ){
-    return document.getElementById('message').value;
-}
-function writeMessage( message, placeholder){
-    if (placeholder){
-        document.getElementById('message').value = "";
-        document.getElementById('message').placeholder = message;
-    }else{
-        document.getElementById('message').value = message;
-    }
-}
-async function  writeTimedMessage( message, placeholder, time){
-    // Give the user the time to read the message, then restore previous message
-    
-    // Pause timer
-    isPaused = true;
-    
-    // Store old message
-    var oldMessage = document.getElementById('message').value;
-    if (placeholder){
-        oldMessage = document.getElementById('message').placeholder;
-    }
-    
-    // Show new message and wait
-    writeMessage( message, placeholder);
-    await waitTime( time).catch({});
-    
-    // Restore old message (if user hasn't written something in the wait time
-    if ( document.getElementById('message').length == 0 ){
-        writeMessage( oldMessage, placeholder);
-    }
-    
-    // Restart timer
-    isPaused = false;  
+// ================= END _MAINLOOP =================     
 } 
-
-
-// Settings
-function saveSettings(){
-    
-    // Update current window position
-        win = gui.Window.get();
-        state.position.x = win.x;
-        state.position.y = win.y;
-        state.position.width = win.width;
-        state.position.height = win.height;  
-    
-    // Save settings
-    var jsonString = JSON.stringify(state, null, 2);
-    fs.writeFileSync(settingsFile, jsonString);
-}
-function loadSettings(settingsFile){
-    try{
-        jsonString = fs.readFileSync(settingsFile);
-        state = JSON.parse(jsonString);
-        
-        console.log('Input json file');
-        console.log(state);
-    
-    }catch(err){
-        console.log('Error loading settings -- setting defaults');
-        // Defaults
-        state = {};
-        
-        state.repoNumber = -1; // Indicate that no repos exist yet
-        localState.branchNumber = 0;
-        
-        state.repos = [];
-        
-        console.log(err);
-
-    }
-    
-    
-    // Clean duplicate in state.repos based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );
-    console.log('State after cleaning duplicates');
-    console.log(state);
-    
-    if ( state.repoNumber > state.repos.length ){
-        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
-    }
-    
-    
-    // Place window
-    try{
-        // Validate position on screen
-        if ( (state.position.x + state.position.width) > screen.width ) {
-            state.position.x = screen.availLeft;
-        }
-        
-        if ( (state.position.y + state.position.height) > screen.height ){
-            state.position.y = screen.availTop;
-        }
-        
-        // Position and size window
-        win = gui.Window.get();
-        win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height);
-
-        
-    }catch(err){
-        console.log('Error setting window position and size');
-        console.log(err);
-    }
-    return state;
-}
-
-// ---------
-// CALLBACKS
-// ---------
-
 function _callback( name){
     console.log('_callback with argument = ' + name);
     switch(name) {
@@ -540,10 +285,16 @@ function _callback( name){
       case 'clicked-about':
         showAbout();
         break;
+      case 'clicked-close-button':
+        closeWindow();
+        break;
       default:
         // code block
     }
-    
+
+    // ---------------
+    // LOCAL FUNCTIONS
+    // ---------------
 
     // title-bar
     function repoClicked(){
@@ -631,6 +382,32 @@ function _callback( name){
         });
         
     }
+    function closeWindow(a) {
+        console.log('Close argument = ' + a);  
+        
+        // Store window position
+        state.position = {}; // New level
+        state.position.x = gui.Window.get().x;
+        state.position.y  = gui.Window.get().y;
+        state.position.height = gui.Window.get().height;
+        state.position.width = gui.Window.get().width;
+        
+        saveSettings();
+        gui.App.closeAllWindows();
+          
+        // Hide the window to give user the feeling of closing immediately
+        this.hide();
+    
+        // If the new window is still open then close it.
+        if (win !== null) {
+          win.close(true)
+        }
+    
+        // After closing the new window, close the main window.
+        this.close(true);
+    }   
+
+
     // main window
     function storeButtonClicked() { 
     gitAddCommitAndPush( readMessage());
@@ -743,99 +520,8 @@ function _callback( name){
         global.state = state;
      return   
     };
-
-}
-
-// Title bar
-
-function updateImageUrl(image_id, new_image_url) {
-  var image = document.getElementById(image_id);
-  if (image)
-    image.src = new_image_url;
-}
-function focusTitlebars(focus) {
-  var bg_color = focus ? "#3a3d3d" : "#7a7c7c";
-    
-  var titlebar = document.getElementById("top-titlebar");
-  if (titlebar)
-    titlebar.style.backgroundColor = bg_color;
-  titlebar = document.getElementById("bottom-titlebar");
-  if (titlebar)
-    titlebar.style.backgroundColor = bg_color;
-  titlebar = document.getElementById("left-titlebar");
-  if (titlebar)
-    titlebar.style.backgroundColor = bg_color;
-  titlebar = document.getElementById("right-titlebar");
-  if (titlebar)
-    titlebar.style.backgroundColor = bg_color;
-}
-function updateContentStyle() {
-    
-    // This is to make statusbar and titlebar position well
-    var content = document.getElementById("content");
-    if (!content)
-    return;
-    
-    var left = 0;
-    var top = 0;
-    var width = window.outerWidth; 
-    var height = window.outerHeight;
-    
-    var titlebar = document.getElementById("top-titlebar");
-    if (titlebar) {
-        height -= titlebar.offsetHeight + 36 + 2;
-        top += titlebar.offsetHeight;
-    }
-    titlebar = document.getElementById("bottom-titlebar");
-    
-    // Adjust content width by border
-    width -=   6 ; // Width in content border
-    
-    var contentStyle = "position: absolute; ";
-    contentStyle += "left: " + left + "px; ";
-    contentStyle += "top: " + top + "px; ";
-    contentStyle += "width: " + width + "px; ";
-    contentStyle += "height: " + height  + "px; ";
-    content.setAttribute("style", contentStyle);
-    
-    // This is to make message textarea follow window resize
-    var message_area = document.getElementById("message");
-    var message_area_style = "height: " + (height - 28).toString() + "px; ";
-    message_area_style += "width: 100%; " ;
-    message_area_style += "resize: none; " ;
-    message_area.setAttribute("style", message_area_style);
-
-  
-}
-
-function closeWindowHandler(a) {
-        console.log('Close argument = ' + a);  
-    
-        
-        // Store window position
-        state.position = {}; // New level
-        state.position.x = gui.Window.get().x;
-        state.position.y  = gui.Window.get().y;
-        state.position.height = gui.Window.get().height;
-        state.position.width = gui.Window.get().width;
-        
-        saveSettings();
-        gui.App.closeAllWindows();
-          
-          
-        // Hide the window to give user the feeling of closing immediately
-        this.hide();
-    
-        // If the new window is still open then close it.
-        if (win !== null) {
-          win.close(true);
-        }
-    
-        // After closing the new window, close the main window.
-        this.close(true);
-    }   
-
-// Content
+// ================= END CALLBACK ================= 
+} 
 async function dropFile(e) {
     e.preventDefault();
     
@@ -943,7 +629,59 @@ async function dropFile(e) {
     
 };
 
-// Status bar
+
+// Git commands
+async function gitAddCommitAndPush( message){
+    var status_data;     
+    
+    // Read current branch
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in _mainLoop()');
+        console.log(err);
+    }
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    
+    // Add all files
+    setStatusBar( 'Adding files');
+    var path = '.'; // Add all
+    await simpleGit(state.repos[state.repoNumber].localFolder).add( path, (err, result) => {console.log(result) });
+    await waitTime( 1000);
+    
+    // Commit including deleted
+    setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
+    await simpleGit(state.repos[state.repoNumber].localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
+    await waitTime( 1000);
+    
+    // Push (and create remote branch if not existing)
+    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+    await simpleGit(state.repos[state.repoNumber].localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
+    await waitTime( 1000);  
+        
+    writeMessage('',false);  // Remove this message  
+    _mainLoop();
+}
+async function unComittedFiles(){
+    var status_data;  
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+    }catch(err){
+        console.log('Error in unComittedFiles,  calling  _mainLoop()');
+        console.log(err);
+    }
+ 
+    // If no files to commit
+    var uncommitedFiles = false;
+    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
+        uncommitedFiles = true;
+    }  
+    return uncommitedFiles;
+}
+
+
+// Utility functions
 function confirmationDialog(text) {    
     console.log('confirmationDialog called');
     
@@ -958,6 +696,250 @@ function confirmationDialog(text) {
     
     return confirm(text);
 }
+
+function waitTime( delay) {
+// Delay in milliseconds
+  console.log("starting delay ")
+  return new Promise(resolve => {
+    setTimeout(function() {
+      resolve("delay ")
+      console.log("delay is done")
+    }, delay)
+  })
+}
+
+function mkdir(dir){
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+}
+
+function updateStatusBar( text){
+    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
+    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
+    console.log('updateStatusBar = ' + newmessage);
+}
+function setStatusBar( text){
+    document.getElementById('bottom-titlebar-text').innerHTML = text;
+    console.log('setStatusBar = ' + text);
+}
+function setTitleBar( id, text){
+    document.getElementById(id).innerHTML = text;
+    console.log('setTitleBar (element ' + id + ') = ' + text);
+}
+
+function setStoreButtonEnableStatus( enableStatus) {
+    document.getElementById('store-button').disabled = !enableStatus;
+}
+
+function cleanDuplicates( myArray, objectField ){
+    // Removes all elements in "myArray"  where the field "objectField" are duplicates
+    //
+    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
+    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
+    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
+    
+    // Display the list of array objects 
+    console.log(myArray); 
+
+    // Declare a new array 
+    let newArray = []; 
+      
+    // Declare an empty object 
+    let uniqueObject = {}; 
+      
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        // Extract the title 
+        objTitle = myArray[i][objectField]; 
+
+        // Use the title as the index 
+        uniqueObject[objTitle] = myArray[i]; 
+    } 
+      
+    // Loop to push unique object into array 
+    for (i in uniqueObject) { 
+        newArray.push(uniqueObject[i]); 
+    } 
+      
+    // Display the unique objects 
+    console.log(newArray); 
+
+
+
+    return newArray;
+}
+
+// Settings
+function saveSettings(){
+    
+    // Update current window position
+        win = gui.Window.get();
+        state.position.x = win.x;
+        state.position.y = win.y;
+        state.position.width = win.width;
+        state.position.height = win.height;  
+    
+    // Save settings
+    var jsonString = JSON.stringify(state, null, 2);
+    fs.writeFileSync(settingsFile, jsonString);
+}
+function loadSettings(settingsFile){
+    try{
+        jsonString = fs.readFileSync(settingsFile);
+        state = JSON.parse(jsonString);
+        
+        console.log('Input json file');
+        console.log(state);
+    
+    }catch(err){
+        console.log('Error loading settings -- setting defaults');
+        // Defaults
+        state = {};
+        
+        state.repoNumber = -1; // Indicate that no repos exist yet
+        localState.branchNumber = 0;
+        
+        state.repos = [];
+        
+        console.log(err);
+
+    }
+    
+    
+    // Clean duplicate in state.repos based on name "localFolder"
+    state.repos = cleanDuplicates( state.repos, 'localFolder' );
+    console.log('State after cleaning duplicates');
+    console.log(state);
+    
+    if ( state.repoNumber > state.repos.length ){
+        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
+    }
+    
+    
+    // Place window
+    try{
+        // Validate position on screen
+        if ( (state.position.x + state.position.width) > screen.width ) {
+            state.position.x = screen.availLeft;
+        }
+        
+        if ( (state.position.y + state.position.height) > screen.height ){
+            state.position.y = screen.availTop;
+        }
+        
+        // Position and size window
+        win = gui.Window.get();
+        win.moveTo( state.position.x, state.position.y);
+        win.resizeTo( state.position.width, state.position.height);
+
+        
+    }catch(err){
+        console.log('Error setting window position and size');
+        console.log(err);
+    }
+    return state;
+}
+
+// Title bar
+function updateImageUrl(image_id, new_image_url) {
+  var image = document.getElementById(image_id);
+  if (image)
+    image.src = new_image_url;
+}
+function focusTitlebars(focus) {
+  var bg_color = focus ? "#3a3d3d" : "#7a7c7c";
+    
+  var titlebar = document.getElementById("top-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("bottom-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("left-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+  titlebar = document.getElementById("right-titlebar");
+  if (titlebar)
+    titlebar.style.backgroundColor = bg_color;
+}
+function updateContentStyle() {
+    
+    // This is to make statusbar and titlebar position well
+    var content = document.getElementById("content");
+    if (!content)
+    return;
+    
+    var left = 0;
+    var top = 0;
+    var width = window.outerWidth; 
+    var height = window.outerHeight;
+    
+    var titlebar = document.getElementById("top-titlebar");
+    if (titlebar) {
+        height -= titlebar.offsetHeight + 36 + 2;
+        top += titlebar.offsetHeight;
+    }
+    titlebar = document.getElementById("bottom-titlebar");
+    
+    // Adjust content width by border
+    width -=   6 ; // Width in content border
+    
+    var contentStyle = "position: absolute; ";
+    contentStyle += "left: " + left + "px; ";
+    contentStyle += "top: " + top + "px; ";
+    contentStyle += "width: " + width + "px; ";
+    contentStyle += "height: " + height  + "px; ";
+    content.setAttribute("style", contentStyle);
+    
+    // This is to make message textarea follow window resize
+    var message_area = document.getElementById("message");
+    var message_area_style = "height: " + (height - 28).toString() + "px; ";
+    message_area_style += "width: 100%; " ;
+    message_area_style += "resize: none; " ;
+    message_area.setAttribute("style", message_area_style);
+
+  
+}
+
+// Message
+function readMessage( ){
+    return document.getElementById('message').value;
+}
+function writeMessage( message, placeholder){
+    if (placeholder){
+        document.getElementById('message').value = "";
+        document.getElementById('message').placeholder = message;
+    }else{
+        document.getElementById('message').value = message;
+    }
+}
+async function  writeTimedMessage( message, placeholder, time){
+    // Give the user the time to read the message, then restore previous message
+    
+    // Pause timer
+    isPaused = true;
+    
+    // Store old message
+    var oldMessage = document.getElementById('message').value;
+    if (placeholder){
+        oldMessage = document.getElementById('message').placeholder;
+    }
+    
+    // Show new message and wait
+    writeMessage( message, placeholder);
+    await waitTime( time).catch({});
+    
+    // Restore old message (if user hasn't written something in the wait time
+    if ( document.getElementById('message').length == 0 ){
+        writeMessage( oldMessage, placeholder);
+    }
+    
+    // Restart timer
+    isPaused = false;  
+} 
+
 
 // -------------
 // WINDOW EVENTS
@@ -997,7 +979,7 @@ window.onload = function() {
   
   
   // Listen to main window's close event
-  nw.Window.get().on('close', closeWindowHandler);
+  //nw.Window.get().on('close', closeWindowHandler);
   
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup
