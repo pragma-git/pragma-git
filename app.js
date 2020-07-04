@@ -65,22 +65,24 @@
  * Display is updated by calling function update()
  * which is also called from td function run by timer
  * 
- * setMode(modeString); for instance : setMode('EMPTY')
+ * setMode(modeString); for instance : setMode('DEFAULT')
  * 
  * Mode Strings :
  * --------------
  * 
- * EMPTY                    no git repositories
+ * DEFAULT                    no git repositories
  *                          - Store-button = disabled
  *                          - placeholder = "Drop folder on window to get started"
  *         
- * NOFILES_TO_COMMIT        standing on a repository and branch, but no files to update
+ * NO_FILES_TO_COMMIT        standing on a repository and branch, but no files to update
  *                          - Store-button = disabled
+ * 
  *                          - placeholder = "No changed files to store"
- * FILES_TO_COMMIT_NOTEXT   No text has been input yet
+ * CHANGED_FILES   No text has been input yet
  *                          - Store-button = disabled
+ * 
  *                          - placeholder = "Add description ..."
- * FILES_TO_COMMIT_TEXT     At least one character written
+ * CHANGED_FILES_TEXT_ENTERED     At least one character written
  *                          - Store-button = enabled
  *                          - placeholder = disabled (automatically)
  * HISTORY 
@@ -96,65 +98,10 @@
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
-function _setMode( modeName){
-    console.log('setMode - called with input modeName = ' + modeName);
-    
-    switch(modeName) {
-      case 'EMPTY':
-      
-        break;
-      case 'NOFILES_TO_COMMIT':
-      
-        break;
-      case 'FILES_TO_COMMIT_NOTEXT':
-      
-        break;
-      case 'FILES_TO_COMMIT_TEXT':
-      
-        break;
-      case 'HISTORY':
-      
-        break;
-      case 'SETTINGS':
-      
-        break;
-      default:
-        console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
-    }
-    
-    
-    
-}
 
-/* Always on 
- * 
- * "about-icon"
- * "top-titlebar-repo-text"
- * "top-titlebar-branch-text"
- * "top-titlebar-close-icon"
- * 
- * "up-arrow"
- * "down-arrow"
- * 
- * "content"
- * "inner-content"
- * "outer_table"
- * 
- * "bottom-titlebar-folder-icon"
- * "bottom-titlebar-text"
- * "bottom-titlebar-settings-icon"
- * 
- * Modified 
- * 
- * "message"
- * "store-button"
- */
-
-
-
-// ---------
+// -----
 // INIT
-// ---------
+// -----
 
     // Import Modules
         var gui = require("nw.gui");    
@@ -182,41 +129,10 @@ function _setMode( modeName){
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  // TODO : ändra kod till att läsa localState.branchNumber här
-        localState.mode = 'EMPTY'; // Default (changed with _setMode function)
+        localState.mode = 'DEFAULT'; // Default (changed with _setMode function)
         
         var state = loadSettings(settingsFile); // json settings
-        
-        // (repo and branch)
-        // state.repoNumber = 0;
-        // localState.branchNumber = 0;   // TODO : det här ska inte sparas -- ta bort i kod.  
-        // state.branchName;  // TODO : ska inte användas.  Börja här och ta bort om det används.
-        /* Example :
-        
-        state =
-        {
-          "localFolder": "/Users/jan/Desktop/TEMP/Test-git",
-          repoNumber: 0,
-          "repos": [
-            {},
-            {
-              "localFolder": "/Users/jan/Documents/NoMachine"
-            }
-          ],
-          "position": {
-            "x": 97,
-            "y": 40,
-            "height": 140,
-            "width": 460
-          }
-        }
-        */
-        
-        
-        // (modes)
-        //var isPaused = false; // Update loop, true = running
-        var historyBrowsingMode = false; 
- 
-    
+
     // Collect settings
         var repoSettings = {}; 
    
@@ -230,93 +146,13 @@ function _setMode( modeName){
         }, 2000);
 
 
-
 // ---------
 // FUNCTIONS
 // ---------
 
 // main functions
-async function _mainLoop(){
-    // Read git status
-    var status_data;  
-    var currentBranch = ""; // Empty default, will show blank if branch not found
-    try{
-        // Understand this: 
-        // - simpleGit(dir).status( handler_function)
-        // - handler_function is defined as an anonymous function with arrow ('=>') notation
-        // - the two outputs from status are input variables to the anonymous function.
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result});
-        currentBranch = status_data.current;  // Name of current branch
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-        
-    }
- 
-    // Update message text placeholder
-    try{
-        if (!historyBrowsingMode){
-            if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-                document.getElementById('message').disabled=true;  // Disable text input
-                document.getElementById('message').readOnly=true;  // Allow copy from it
-                setStoreButtonEnableStatus( false );
-                writeMessage( 'No changed files to store', true); // Write to placeholder
-            }else {
-                // Tell the user to add a description
-                document.getElementById('message').disabled=false;  // Enable text input
-                document.getElementById('message').readOnly=false;  // Allow copy from it
-                var message = readMessage();
-                if (message.length == 0){
-                    writeMessage( 'Add description...', true);
-                }
-            }
-            
-        }    
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-        
-    }
-    
-    // Set Status-bar
-    if (status_data != null) {
-        setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-    }else{
-        setStatusBar(' ');
-    }
-
-    // Get name of local folder
-    var foldername = ""; 
-    try{
-        var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
-        foldername = currentDir.replace(/^.*[\\\/]/, '');
-     }catch(err){
-        console.log('Error in _mainLoop() - Get name of local folder');
-        console.log(err);
-    }   
-    // KEEP HERE: May be useful in future 
-    //
-    // 1) Get name of Repo
-    //var rawOut; 
-    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, result) => {console.log(result); rawOut = result})
-    //var repoName = rawOut.replace(/^.*[\\\/]/, '');
-    
-    // 2) Get list of all settings in local 
-    //var listOut; 
-    //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
-
-    
-    // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
-    setTitleBar( 'top-titlebar-repo-text', foldername   );
-    if (currentBranch.length == 0){
-        setTitleBar( 'top-titlebar-branch-text', '' );
-    }else{
-        setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-    }
-// ================= END _MAINLOOP =================     
-} 
 function _callback( name){
-    console.log('_callback with argument = ' + name);
+    console.log('_callback = ' + name);
     switch(name) {
       case 'clicked-store-button':
         storeButtonClicked();
@@ -368,7 +204,6 @@ function _callback( name){
             
         // Reset some variables
         localState.historyNumber = -1;
-        historyBrowsingMode = false;
     }
     async function branchClicked(){
         
@@ -391,7 +226,7 @@ function _callback( name){
         // Checkout branch  /  Warn about uncommited
         if ( uncommitedFiles ){
             // Let user know that they need to commit before changing branch
-            await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and store ...', true, WAIT_TIME)
+            await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
             
         }else{
                 
@@ -429,7 +264,6 @@ function _callback( name){
         
         // Reset some variables
         localState.historyNumber = -1;
-        historyBrowsingMode = false;
     }
     function showAbout(){    
         console.log('About button pressed');
@@ -470,7 +304,7 @@ function _callback( name){
 
     // main window
     function storeButtonClicked() { 
-    gitAddCommitAndPush( readMessage());
+        gitAddCommitAndPush( readMessage());
 }  
     async function downArrowClicked(){
         
@@ -484,9 +318,10 @@ function _callback( name){
             console.log(err);
         }
         
-        // Defaults if error
-        historyBrowsingMode = false; 
+
         try{
+            _setMode('HISTORY');
+            
             // Cycle through history
             console.log('downArrowClicked - Cycle through history');
             var numberOfHistorySteps = history.length;
@@ -511,9 +346,10 @@ function _callback( name){
             
             // Display
             writeMessage( historyString, true);
-            historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
+            
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
+            _setMode('DEFAULT');
             localState.historyNumber = -1;
             console.log(err);
         }    
@@ -537,10 +373,11 @@ function _callback( name){
         if (localState.historyNumber < 0){
             // Leave history browsing
             localState.historyNumber = -1;
-            historyBrowsingMode = false;
+            _setMode('DEFAULT');
             _mainLoop();
         }else{
             // Show history
+            _setMode('HISTORY');
             
             // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
             var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
@@ -550,13 +387,25 @@ function _callback( name){
             
             // Display
             writeMessage( historyString, true);
-            historyBrowsingMode = true; // Mark history being browsed, to stop timer update of message
             }
     }
     function messageKeyUpEvent() { 
         // Enable if message text 
-        var message = readMessage();
-        setStoreButtonEnableStatus( (message.length > 0 ));
+        //var message = readMessage();
+        //setStoreButtonEnableStatus( (message.length > 0 ));
+        
+        // Bail out if read-only
+        if ( document.getElementById("message").readOnly == true ){
+            return
+        }
+        
+        // It should be safe to assume that CHANGED_FILES of some sort -- otherwise
+        if (readMessage().length > 0 ){
+            _setMode( 'CHANGED_FILES_TEXT_ENTERED');
+        }else{
+            _setMode( 'CHANGED_FILES');
+        }
+        
     }
  
     // status-bar
@@ -688,15 +537,193 @@ async function dropFile(e) {
 
     
 };
+async function _mainLoop(){
+    
+    // Bail out for modes that do not depend on git status 
+    if ( getMode() == 'HISTORY'){
+        return
+    }
+    if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
+        return
+    }
+    if (state.repos.length == 0){ // Capture if there are no repos
+        _setMode('DEFAULT');
+        return
+    }
+    
+    
+    // Determine if changed files (from git status)
+    var status_data;  
+    var currentBranch = ""; // Empty default, will show blank if branch not found
+    try{
+        // Understand this: 
+        // - simpleGit(dir).status( handler_function)
+        // - handler_function is defined as an anonymous function with arrow ('=>') notation
+        // - the two outputs from status are input variables to the anonymous function.
+        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result});
+        currentBranch = status_data.current;  // Name of current branch
+    }catch(err){
+        console.log('Error in _mainLoop()');
+        console.log(err);
+
+    }
+
+    // Set mode 
+    try{
+        let changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
+        if ( changedFiles ){
+            _setMode('CHANGED_FILES');
+        }else{
+            _setMode('NO_FILES_TO_COMMIT');
+        }        
+    }catch(err){
+        console.log('Error in _mainLoop()');
+        console.log(err);
+        
+    }
+    
+    // Set Status-bar
+    try{
+        if (status_data != null) {
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+        }else{
+            setStatusBar(' ');
+        }
+    }catch(err){
+        console.log('Error in _mainLoop()');
+        console.log(err);
+        
+    }
+
+
+    //
+    // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
+    //
+    
+    // Get name of local folder
+    var foldername = ""; 
+    try{
+        var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
+        foldername = currentDir.replace(/^.*[\\\/]/, '');
+     }catch(err){
+        console.log('Error in _mainLoop() - Get name of local folder');
+        console.log(err);
+    }   
+
+    setTitleBar( 'top-titlebar-repo-text', foldername   );
+    if (currentBranch.length == 0){
+        setTitleBar( 'top-titlebar-branch-text', '' );
+    }else{
+        setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+    }
+    
+    
+    // KEEP HERE: May be useful in future 
+    //
+    // 1) Get name of Repo
+    //var rawOut; 
+    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, result) => {console.log(result); rawOut = result})
+    //var repoName = rawOut.replace(/^.*[\\\/]/, '');
+    
+    // 2) Get list of all settings in local 
+    //var listOut; 
+    //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
+        
+  
+// ================= END _MAINLOOP =================     
+} 
+function _setMode( modeName){
+ /* Called from the following :
+ * 
+ * 'DEFAULT':                       _mainLoop, repoClicked, branchClicked, downArrowClicked, upArrowClicked
+ * 'NO_FILES_TO_COMMIT' :           _mainLoop
+ * 'CHANGED_FILES':                 _mainLoop, messageKeyUpEvent
+ * 'CHANGED_FILES_TEXT_ENTERED' :   messageKeyUpEvent
+ * 'HISTORY':                       downArrowClicked, upArrowClicked
+ * 'SETTINGS':
+ * 
+ */
+    
+    
+    let currentMode= getMode();
+    console.log('setMode = ' + modeName + ' ( from current mode = ' + currentMode);
+    
+    
+    switch(modeName) {
+        case 'DEFAULT':
+            if (currentMode ==  'DEFAULT') { return};
+            document.getElementById('store-button').disabled = true;
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
+            document.getElementById("message").readOnly = true;
+            
+            setTitleBar( 'top-titlebar-repo-text', ''  );
+            setTitleBar( 'top-titlebar-branch-text', '' );
+            break;
+            
+        case 'NO_FILES_TO_COMMIT':
+            // set by _mainLoop
+            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            document.getElementById('store-button').disabled = true;
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = "No changed files to store";            
+            document.getElementById("message").readOnly = true;
+            break;
+            
+        case 'CHANGED_FILES':
+            // set by _mainLoop
+            if (currentMode ==  'CHANGED_FILES') { return};
+            document.getElementById('store-button').disabled = true;
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = "You have changed files." + os.EOL + "Add description and press Store";        
+            document.getElementById("message").readOnly = false;
+            break;
+            
+        case 'CHANGED_FILES_TEXT_ENTERED':
+            // set by messageKeyUpEvent
+            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
+            document.getElementById('store-button').disabled = false;
+            //document.getElementById('message').value = "";
+            //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
+            document.getElementById("message").readOnly = false;
+            break;
+            
+        case 'HISTORY':
+            // set by downArrowClicked and upArrowClicked
+            if (currentMode ==  'HISTORY') { return};
+            document.getElementById('store-button').disabled = true;
+            // Text not fixed
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = "TODO";    
+            document.getElementById ("message").readOnly = true;
+            break;
+            
+        case 'SETTINGS':
+            if (currentMode ==  'SETTINGS') { return};
+            document.getElementById('store-button').disabled = true;
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = "TODO ";    
+            document.getElementById("message").readOnly = true;
+            break;
+            
+        default:
+            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+        }
+    
+    // Remember mode
+    localState.mode = modeName;
+}
 
 
 // Git commands
 async function gitAddCommitAndPush( message){
     var status_data;     
     
+    
     // Read current branch
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        _setMode('CHANGED_FILES');
     }catch(err){
         console.log('Error in _mainLoop()');
         console.log(err);
@@ -742,6 +769,10 @@ async function unComittedFiles(){
 
 
 // Utility functions
+function getMode(){
+    return localState.mode;
+}
+
 function confirmationDialog(text) {    
     console.log('confirmationDialog called');
     

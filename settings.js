@@ -109,7 +109,7 @@ function forgetButtonClicked(event){
     // Point repoNumber to first repo in list
     state.repoNumber = 0;
     
-    if ( state.repoNumber.length == null){
+    if ( state.repos.length == null){
         state.repoNumber - 1;
     }
 
