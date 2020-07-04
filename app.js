@@ -138,12 +138,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
    
         
     // Initiate GUI update loop 
-        _mainLoop(); // Immediate update
-        var timer = window.setInterval(function() {
-            if(!isPaused) {
-                _mainLoop();
-            }
-        }, 2000);
+        _mainLoop(); // Immediate 
+        var timer = _loopTimer( 2000);
 
 
 // ---------
@@ -151,6 +147,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 
 // main functions
+
 function _callback( name){
     console.log('_callback = ' + name);
     switch(name) {
@@ -345,7 +342,7 @@ function _callback( name){
             + history[localState.historyNumber].message;
             
             // Display
-            writeMessage( historyString, true);
+            writeMessage( historyString, false);
             
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
@@ -386,7 +383,7 @@ function _callback( name){
             + history[localState.historyNumber].message;
             
             // Display
-            writeMessage( historyString, true);
+            writeMessage( historyString, false);
             }
     }
     function messageKeyUpEvent() { 
@@ -537,6 +534,14 @@ async function dropFile(e) {
 
     
 };
+function _loopTimer( delayInMs){
+    var timer = window.setInterval(function() {
+            if(!isPaused) {
+                _mainLoop();
+            }
+        }, delayInMs);
+    return timer
+}
 async function _mainLoop(){
     
     // Bail out for modes that do not depend on git status 
