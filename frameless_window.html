@@ -52,7 +52,7 @@
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
         <div class="top-titlebar-icon"> 
             <img id="top-titlebar-icon"    height="17" width="17"  
-                onclick="showAbout();" 
+                onclick="_callback('clicked-about');" 
                 onmouseover="updateImageUrl('top-titlebar-icon', 'images/questionmark_hover.png');" 
                 onmouseout="updateImageUrl('top-titlebar-icon', 'images/questionmark.png');" 
                 src="images/questionmark.png">
@@ -62,13 +62,13 @@
             <div id="top-titlebar-text" class="top-titlebar-text">
                 
                 <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                    onclick="repoClicked()" 
+                    onclick="_callback('clicked-repo')" 
                     onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
                     onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
                 </div>
                 
                 <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                    onclick="branchClicked()" 
+                    onclick="_callback('clicked-branch')" 
                     onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                     onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
                 </div>  
@@ -101,7 +101,7 @@
                         <tr>
                             <td>
                                 <img id="up-arrow"  height="17" width="17" 
-                                onclick="upArrowClicked();" 
+                                onclick="_callback( 'clicked-up-arrow')" 
                                 onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
                                 onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
                                 src="images/up-arrow.png">
@@ -110,7 +110,7 @@
                         <tr>
                             <td>
                                 <img id="down-arrow"  height="17" width="17" 
-                                onclick="downArrowClicked();" 
+                                onclick="_callback( 'clicked-down-arrow')"  
                                 onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
                                 onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
                                 src="images/down-arrow.png">
@@ -119,10 +119,12 @@
                         </table>
                     </td>
                     <td class="message_column">
-                        <textarea class="message" id="message"  onkeyup="setStoreButtonEnableStatusFromText();" placeholder="Add description..."></textarea>
+                        <textarea class="message" id="message"  
+                            onkeyup="_callback( 'message_key_up');" 
+                            placeholder="Add description..."></textarea>
                         </td>
                     <td>
-                        <button id="store-button" onclick="storeButtonClicked()" disabled >Store</button>
+                        <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
                     </td>
                 </tr>
             </table>
@@ -138,7 +140,7 @@
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
         <div class="bottom-titlebar-icon">
             <img id="bottom-titlebar-icon"  height="17" width="17"
-                onclick="folderClicked()" 
+                onclick="_callback('clicked-folder')" 
                 onmouseover="updateImageUrl('bottom-titlebar-icon', 'images/folder_hover.png');" 
                 onmouseout="updateImageUrl('bottom-titlebar-icon', 'images/folder.png');" 
                 src="images/folder.png">
@@ -151,7 +153,7 @@
         
         <div class="bottom-titlebar-settings-button">
             <img id="bottom-titlebar-settings-button"  height="17" width="17"
-                onclick="showSettings()" 
+                onclick="_callback('clicked-settings')"
                 onmouseover="updateImageUrl('bottom-titlebar-settings-button', 'images/settings_hover.png');" 
                 onmouseout="updateImageUrl('bottom-titlebar-settings-button', 'images/settings.png');" 
                 src="images/settings.png">
