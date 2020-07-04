@@ -34,6 +34,10 @@
  * 
  * - Rewrite simpleGit commands as in dropFile()
  *
+ * - Add pull from remote (icon in title-bar after "repo(branch)"
+ * 
+ * - How to handle local changes when pulling ?  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes )
+ *
  * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
  * - How to handle change in checkout which is not HEAD (detached head)?  
@@ -92,6 +96,62 @@
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
+function _setMode( modeName){
+    console.log('setMode - called with input modeName = ' + modeName);
+    
+    switch(modeName) {
+      case 'EMPTY':
+      
+        break;
+      case 'NOFILES_TO_COMMIT':
+      
+        break;
+      case 'FILES_TO_COMMIT_NOTEXT':
+      
+        break;
+      case 'FILES_TO_COMMIT_TEXT':
+      
+        break;
+      case 'HISTORY':
+      
+        break;
+      case 'SETTINGS':
+      
+        break;
+      default:
+        console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+    }
+    
+    
+    
+}
+
+/* Always on 
+ * 
+ * "about-icon"
+ * "top-titlebar-repo-text"
+ * "top-titlebar-branch-text"
+ * "top-titlebar-close-icon"
+ * 
+ * "up-arrow"
+ * "down-arrow"
+ * 
+ * "content"
+ * "inner-content"
+ * "outer_table"
+ * 
+ * "bottom-titlebar-folder-icon"
+ * "bottom-titlebar-text"
+ * "bottom-titlebar-settings-icon"
+ * 
+ * Modified 
+ * 
+ * "message"
+ * "store-button"
+ */
+
+
+
 // ---------
 // INIT
 // ---------
@@ -122,6 +182,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  // TODO : ändra kod till att läsa localState.branchNumber här
+        localState.mode = 'EMPTY'; // Default (changed with _setMode function)
+        
         var state = loadSettings(settingsFile); // json settings
         
         // (repo and branch)

@@ -91,8 +91,8 @@ div#message-wrapper{
   -webkit-app-region: drag;
 }
 
-.top-titlebar-icon,
-.bottom-titlebar-icon {
+.about-icon,
+.bottom-titlebar-folder-icon {
   position: absolute;
   left: 6px;
   margin-top: 6px;
@@ -134,8 +134,8 @@ div#message-wrapper{
 }
 
 
-.top-titlebar-close-button,
-.bottom-titlebar-settings-button {
+.top-titlebar-close-icon,
+.bottom-titlebar-settings-icon {
   position: absolute;
   right: 11px;
   width: 17px;
