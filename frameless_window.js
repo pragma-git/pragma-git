@@ -174,11 +174,13 @@ async function gitStatus(){
         if (!historyBrowsingMode){
             if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
                 document.getElementById('message').disabled=true;  // Disable text input
+                document.getElementById('message').readOnly=true;  // Allow copy from it
                 setStoreButtonEnableStatus( false );
                 writeMessage( 'No changed files to store', true); // Write to placeholder
             }else {
                 // Tell the user to add a description
                 document.getElementById('message').disabled=false;  // Enable text input
+                document.getElementById('message').readOnly=false;  // Allow copy from it
                 var message = readMessage();
                 if (message.length == 0){
                     writeMessage( 'Add description...', true);
