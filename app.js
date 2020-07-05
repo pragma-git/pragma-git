@@ -121,7 +121,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
  
       
     // Files & folders
-        var settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
+        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
         var settingsFile = settingsDir + pathsep + 'repo.json';    
         
     
@@ -549,7 +549,7 @@ function _loopTimer( delayInMs){
     // LOCAL FUNCTIONS
     // ---------------
     
-    function run_timer(){ 
+    async function run_timer(){ 
         // Bail out if isPaused = true
         if(isPaused) {
             return;
@@ -569,7 +569,7 @@ function _loopTimer( delayInMs){
         }   
         
         
-        var git_status = gitStatus();
+        let  git_status = await gitStatus();
         
         switch( modeName ) {
         case 'DEFAULT':
