@@ -68,6 +68,8 @@
  * Mode Strings :
  * --------------
  * 
+ * UNKNOWN                    let _setMode determine correct mode
+ * 
  * DEFAULT                    no git repositories
  *                          - Store-button = disabled
  *                          - placeholder = "Drop folder on window to get started"
@@ -127,7 +129,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
-        localState.mode = 'DEFAULT'; // Default (changed with _setMode function)
+        localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         
         var state = loadSettings(settingsFile); // json settings
 
@@ -306,10 +308,8 @@ function _callback( name, event){
         if (state.repoNumber >= numberOfRepos){
             state.repoNumber = 0;
         }
-        _mainLoop();
-            
-        // Reset some variables
-        localState.historyNumber = -1;
+        
+        _setMode('UNKNOWN');
     }
     async function branchClicked(){
         
@@ -555,21 +555,23 @@ function _loopTimer( delayInMs){
             return;
         }
         
+        let modeName = getMode();
+        
         // Handle 
-        if ( getMode() == 'HISTORY'){
+        if ( modeName == 'HISTORY'){
             return
         }
-        if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
+        if ( modeName == 'CHANGED_FILES_TEXT_ENTERED'){
             return
         }
         if (state.repos.length == 0){ // Capture if there are no repos
-            _setMode('DEFAULT');
+            modeName = _setMode('DEFAULT');
         }   
         
         
         var git_status = gitStatus();
         
-        switch( getMode() ) {
+        switch( modeName ) {
         case 'DEFAULT':
 
             break;
@@ -624,9 +626,7 @@ async function _mainLoop(){
     if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
         return
     }
-    if (state.repos.length == 0){ // Capture if there are no repos
-        _setMode('DEFAULT');
-    }
+
     
     // git data
     let status_data = await gitStatus();    
@@ -690,10 +690,11 @@ async function _mainLoop(){
   
 // ================= END _MAINLOOP =================     
 } 
-function _setMode( modeName){
+async function _setMode( modeName){
  /* Called from the following :
  * 
- * 'DEFAULT':                       _mainLoop, repoClicked, branchClicked, downArrowClicked, upArrowClicked
+ * 'UNKNOWN':                       (let _setMode determine mode by itself)
+ * 'DEFAULT':                       _mainLoop, repoClicked, branchClicked, downArrowClicked, upArrowClicked  (used for empty repo list)
  * 'NO_FILES_TO_COMMIT' :           _mainLoop
  * 'CHANGED_FILES':                 _mainLoop, messageKeyUpEvent
  * 'CHANGED_FILES_TEXT_ENTERED' :   messageKeyUpEvent
@@ -707,7 +708,55 @@ function _setMode( modeName){
     console.log('setMode = ' + modeName + ' ( from current mode = ' + currentMode);
     
     
-    switch(modeName) {
+    switch(modeName) {        
+        case 'UNKNOWN': 
+            {
+                // Reset some localState variables (and let the found mode correct)
+                let copyOfLocalState = localState;  // Backup localState
+                localState.historyNumber = -1;      // Guess that not in history browsing mode
+                
+                // Sources used to determinine mode
+                let status_data = []; 
+                try{
+                    status_data = await gitStatus();
+                }catch(err){
+                    status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
+                }
+                
+                
+                let messageLength = readMessage().length;
+                let numberOfRepos = state.repos.length;
+                let historyNumberPointer = localState.historyNumber;
+                
+                // Fallback guess
+                let newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
+                
+                
+                // DEFAULT
+                if ( numberOfRepos == 0 ){ 
+                    newModeName = 'DEFAULT'; 
+                    break;
+                }       
+                
+                // CHANGED_FILES 
+                // CHANGED_FILES_TEXT_ENTERED
+                if ( status_data.changedFiles ){   
+                    if ( messageLength  > 0 ) { newModeName = 'CHANGED_FILES_TEXT_ENTERED' }
+                    if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' }
+                    break;
+                }                 
+                
+                // HISTORY
+                if ( historyNumberPointer > -1 ){ 
+                    newModeName = 'HISTORY'; 
+                    localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing number
+                    break;
+                }  
+    
+                _setMode( newModeName);
+                break;
+            }
+            
         case 'DEFAULT':
             //if (currentMode ==  'DEFAULT') { return};
             document.getElementById('store-button').disabled = true;
@@ -770,18 +819,30 @@ function _setMode( modeName){
     
     // Remember mode
     localState.mode = modeName;
+    
+    _mainLoop();
+    
+    return modeName;  // In case I want to use it with return variable
 }
 
 
 // Git commands
 async function gitStatus(){
     // Determine if changed files (from git status)
-    var status_data;  
-    var currentBranch = ""; // Empty default, will show blank if branch not found
+    let status_data = [] ;  
+    status_data.changedFiles = false;
+    status_data.current = "";
+    
+    // Make safe for empty repos
+    if (state.repos.length == 0){ return status_data}
+    if (state.repoNumber > (state.repos.length -1) ){ return status_data}
+    
     try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status(onStatus);
+        await simpleGit( state.repos[state.repoNumber].localFolder)
+            .status( onStatus);
         function onStatus(err, result ){ console.log(result); console.log(err);status_data = result }
         
+        status_data.changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
         console.log('gitStatus -----');
         console.log(status_data);
         status_data.current;  // Name of current branch
@@ -790,10 +851,7 @@ async function gitStatus(){
         console.log(err);
 
     }
-
-    status_data.changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
-
-    
+ 
     // return fields : 
     //      changedFiles (boolean) 
     //      modified, not_added, deleted (integers)
@@ -924,6 +982,9 @@ function setStatusBar( text){
     console.log('setStatusBar = ' + text);
 }
 function setTitleBar( id, text){
+    if (text.length == 0){
+        text = " ";
+    }
     document.getElementById(id).innerHTML = text;
     console.log('setTitleBar (element ' + id + ') = ' + text);
 }
