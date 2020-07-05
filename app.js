@@ -128,7 +128,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // State variables
         var localState = [];
         localState.historyNumber = -1;
-        localState.branchNumber = 0;  // TODO : ändra kod till att läsa localState.branchNumber här
+        localState.branchNumber = 0;  
         localState.mode = 'DEFAULT'; // Default (changed with _setMode function)
         
         var state = loadSettings(settingsFile); // json settings
@@ -183,7 +183,7 @@ function _callback( name, event){
         break;
       case 'file-dropped':
         atest( event); 
-        dropFile2( event); 
+        dropFile( event); 
         break;
       default:
         // code block
@@ -197,7 +197,7 @@ function _callback( name, event){
         console.log('ATEST = ' + event);
         
     };
-    async function dropFile2(e) {
+    async function dropFile(e) {
     e.preventDefault();
     
     // Reset css 
@@ -563,7 +563,6 @@ async function _mainLoop(){
     }
     if (state.repos.length == 0){ // Capture if there are no repos
         _setMode('DEFAULT');
-        return
     }
     
     
@@ -666,7 +665,7 @@ function _setMode( modeName){
     
     switch(modeName) {
         case 'DEFAULT':
-            if (currentMode ==  'DEFAULT') { return};
+            //if (currentMode ==  'DEFAULT') { return};
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
