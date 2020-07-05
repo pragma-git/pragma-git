@@ -31,8 +31,6 @@
  * ----
  * 
  * Open questions
- * 
- * - Rewrite simpleGit commands as in dropFile()
  *
  * - Add pull from remote (icon in title-bar after "repo(branch)"
  * 
@@ -182,7 +180,6 @@ function _callback( name, event){
         closeWindow();
         break;
       case 'file-dropped':
-        atest( event); 
         dropFile( event); 
         break;
       default:
@@ -192,11 +189,7 @@ function _callback( name, event){
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-    
-    function atest(event){
-        console.log('ATEST = ' + event);
-        
-    };
+
     async function dropFile(e) {
     e.preventDefault();
     
@@ -236,9 +229,9 @@ function _callback( name, event){
             // Create repo
             if ( confirmationDialog(string) ) {
                 await simpleGit(folder).init( onInit );
-                await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-    
                 function onInit(err, initResult) { }
+                
+                await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
                 function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
     
                 topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
@@ -323,18 +316,15 @@ function _callback( name, event){
         // Determine status of local repository
         var status_data;  
         try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+            status_data = await gitStatus();
         }catch(err){
             console.log('Error in unComittedFiles,  calling  _mainLoop()');
             console.log(err);
         }
      
         // Determine if no files to commit
-        var uncommitedFiles = false;
-        if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0){
-            uncommitedFiles = true;
-        }  
-    
+        var uncommitedFiles = status_data.changedFiles;
+
     
         // Checkout branch  /  Warn about uncommited
         if ( uncommitedFiles ){
@@ -347,7 +337,7 @@ function _callback( name, event){
             var branchList;
             try{
                 isPaused = true;
-                await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
+                branchList = await gitBranchList();
             }catch(err){        
                 console.log('Error determining local branches, in branchClicked()');
                 console.log(err);
@@ -364,11 +354,13 @@ function _callback( name, event){
         
             // Checkout local branch
             try{
-                await simpleGit(state.repos[state.repoNumber].localFolder).checkout(branchName, (err, result) => {console.log(result)} );
+                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+                function onCheckout(err, result){console.log(result)} 
+
             }catch(err){        
                 console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
                 console.log(err);
-            }   
+            }  
         }
     
         console.log(branchList);
@@ -425,8 +417,10 @@ function _callback( name, event){
         
         // Get log
         var history;
-        try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+        try{              
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( onHistory);
+            function onHistory(err, result){console.log(result); history = result.all;} 
+                
         }catch(err){        
             console.log(err);
         }
@@ -473,7 +467,8 @@ function _callback( name, event){
         // Get log
         var history;
         try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( onHistory);
+            function onHistory(err, result){console.log(result); history = result.all;} 
         }catch(err){        
             console.log(err);
         }   
@@ -784,10 +779,6 @@ async function gitStatus(){
     var status_data;  
     var currentBranch = ""; // Empty default, will show blank if branch not found
     try{
-        // Understand this: 
-        // - simpleGit(dir).status( handler_function)
-        // - handler_function is defined as an anonymous function with arrow ('=>') notation
-        // - the two outputs from status are input variables to the anonymous function.
         await simpleGit(state.repos[state.repoNumber].localFolder).status(onStatus);
         function onStatus(err, result ){ console.log(result); console.log(err);status_data = result }
         
@@ -808,6 +799,20 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     return status_data;  
 }
+async function gitBranchList(){
+    let branchList;
+    
+    try{
+        isPaused = true;
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
+        function onBranchList(err, result ){console.log(result); branchList = result.all};
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+    }
+    return branchList
+}
+
 async function gitLocalFolder(){
     
     let gitFolders = [];
@@ -833,7 +838,7 @@ async function gitAddCommitAndPush( message){
     
     // Read current branch
     try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        status_data = await gitStatus();
         _setMode('CHANGED_FILES');
     }catch(err){
         console.log('Error in _mainLoop()');
@@ -845,39 +850,29 @@ async function gitAddCommitAndPush( message){
     // Add all files
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
-    await simpleGit(state.repos[state.repoNumber].localFolder).add( path, (err, result) => {console.log(result) });
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .add( path, onAdd );
+    function onAdd(err, result) {console.log(result) }
     await waitTime( 1000);
     
     // Commit including deleted
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .commit( message, {'--all' : null} , onCommit);
+    function onCommit(err, result) {console.log(result) };
+    function onCommit(err, result) {console.log(result) };
     await waitTime( 1000);
     
     // Push (and create remote branch if not existing)
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .push( remoteBranch, {'--set-upstream' : null}, onPush);
+    function onPush(err, result) {console.log(result) };
     await waitTime( 1000);  
         
     writeMessage('',false);  // Remove this message  
     _mainLoop();
 }
-async function unComittedFiles(){
-    var status_data;  
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-    }catch(err){
-        console.log('Error in unComittedFiles,  calling  _mainLoop()');
-        console.log(err);
-    }
- 
-    // If no files to commit
-    var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-        uncommitedFiles = true;
-    }  
-    return uncommitedFiles;
-}
-
 
 // Utility functions
 function getMode(){
@@ -901,12 +896,15 @@ function confirmationDialog(text) {
 
 function waitTime( delay) {
 // Delay in milliseconds
-  console.log("starting delay ")
-  return new Promise(resolve => {
-    setTimeout(function() {
-      resolve("delay ")
-      console.log("delay is done")
-    }, delay)
+   console.log("starting delay ")
+   return new Promise( resolve => {
+        setTimeout(
+            function() {
+                    resolve("delay ")
+                    console.log("delay is done")
+            }
+            , delay
+        )
   })
 }
 
