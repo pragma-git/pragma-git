@@ -95,7 +95,7 @@
 
 
 // Define DEBUG features
-var devTools = false;
+var devTools = true;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
@@ -545,13 +545,81 @@ function _callback( name, event){
 // ================= END CALLBACK ================= 
 } 
 function _loopTimer( delayInMs){
-    var timer = window.setInterval(function() {
-            if(!isPaused) {
-                _mainLoop();
-            }
-        }, delayInMs);
+    
+    // Define timer
+    var timer = window.setInterval( run_timer, delayInMs );
     return timer
+    
+    // ---------------
+    // LOCAL FUNCTIONS
+    // ---------------
+    
+    function run_timer(){ 
+        // Bail out if isPaused = true
+        if(isPaused) {
+            return;
+        }
+        
+        // Handle 
+        if ( getMode() == 'HISTORY'){
+            return
+        }
+        if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
+            return
+        }
+        if (state.repos.length == 0){ // Capture if there are no repos
+            _setMode('DEFAULT');
+        }   
+        
+        
+        var git_status = gitStatus();
+        
+        switch( getMode() ) {
+        case 'DEFAULT':
+
+            break;
+            
+        case 'NO_FILES_TO_COMMIT':
+
+
+            break;
+            
+        case 'CHANGED_FILES':
+
+
+            break;
+            
+        case 'CHANGED_FILES_TEXT_ENTERED':
+            return
+
+            break;
+            
+        case 'HISTORY':
+            return
+
+            break;
+            
+        case 'SETTINGS':
+
+
+            break;
+            
+        default:
+            console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+        }    
+            
+        
+        
+        
+        
+        _mainLoop();
+        
+        
+        
+    };
 }
+
+
 async function _mainLoop(){
     
     // Bail out for modes that do not depend on git status 
@@ -565,27 +633,18 @@ async function _mainLoop(){
         _setMode('DEFAULT');
     }
     
+    // git data
+    let status_data = await gitStatus();    
+    let currentBranch = status_data.current;
+    let folderStruct = await gitLocalFolder();
+    let folder = folderStruct.folderName;
     
-    // Determine if changed files (from git status)
-    var status_data;  
-    var currentBranch = ""; // Empty default, will show blank if branch not found
-    try{
-        // Understand this: 
-        // - simpleGit(dir).status( handler_function)
-        // - handler_function is defined as an anonymous function with arrow ('=>') notation
-        // - the two outputs from status are input variables to the anonymous function.
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result});
-        currentBranch = status_data.current;  // Name of current branch
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-
-    }
+    console.log(status_data);
+    //console.log(currentBranch);
 
     // Set mode 
     try{
-        let changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
-        if ( changedFiles ){
+        if ( status_data.changedFiles ){
             _setMode('CHANGED_FILES');
         }else{
             _setMode('NO_FILES_TO_COMMIT');
@@ -613,18 +672,8 @@ async function _mainLoop(){
     //
     // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
     //
-    
-    // Get name of local folder
-    var foldername = ""; 
-    try{
-        var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
-        foldername = currentDir.replace(/^.*[\\\/]/, '');
-     }catch(err){
-        console.log('Error in _mainLoop() - Get name of local folder');
-        console.log(err);
-    }   
+    setTitleBar( 'top-titlebar-repo-text', folder   );
 
-    setTitleBar( 'top-titlebar-repo-text', foldername   );
     if (currentBranch.length == 0){
         setTitleBar( 'top-titlebar-branch-text', '' );
     }else{
@@ -730,6 +779,54 @@ function _setMode( modeName){
 
 
 // Git commands
+async function gitStatus(){
+    // Determine if changed files (from git status)
+    var status_data;  
+    var currentBranch = ""; // Empty default, will show blank if branch not found
+    try{
+        // Understand this: 
+        // - simpleGit(dir).status( handler_function)
+        // - handler_function is defined as an anonymous function with arrow ('=>') notation
+        // - the two outputs from status are input variables to the anonymous function.
+        await simpleGit(state.repos[state.repoNumber].localFolder).status(onStatus);
+        function onStatus(err, result ){ console.log(result); console.log(err);status_data = result }
+        
+        console.log('gitStatus -----');
+        console.log(status_data);
+        status_data.current;  // Name of current branch
+    }catch(err){
+        console.log('Error in _mainLoop()');
+        console.log(err);
+
+    }
+
+    status_data.changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
+
+    
+    // return fields : 
+    //      changedFiles (boolean) 
+    //      modified, not_added, deleted (integers)
+    return status_data;  
+}
+async function gitLocalFolder(){
+    
+    let gitFolders = [];
+
+    try{
+        gitFolders.folderPath = await simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
+        gitFolders.folderName = gitFolders.folderPath.replace(/^.*[\\\/]/, '');
+     }catch(err){
+        gitFolders.folderName = ""; 
+        gitFolders.folderPath = ""; 
+        
+        console.log('gitLocalFolder - Error getting name of local folder');
+        console.log(err);
+    } 
+    // return fields : 
+    //    foldername, folderPath
+    return gitFolders;
+    
+}
 async function gitAddCommitAndPush( message){
     var status_data;     
     
