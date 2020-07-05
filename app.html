@@ -36,7 +36,7 @@
             holder.ondragover = function () { this.className = 'hover'; return false; };
             holder.ondragleave = function () { this.className = ''; return false; };
             
-            holder.ondrop = dropFile; // See app.js
+            holder.ondrop = function(e) {  _callback('file-dropped', e); return false }; // See app.js
         
         });
     </script>
