@@ -16,7 +16,7 @@
         }
     </style>
 
-<body>
+<body onunload="window.onclose()"> 
      
     <div id="content">
             
@@ -46,6 +46,11 @@
     window.addEventListener('DOMContentLoaded', (event) => {
         console.log('settings.html :DOM fully loaded and parsed');
         injectIntoSettingsJs(document);
+        }
+    );
+    window.addEventListener('unload', (event) => {
+        console.log('settings.html :DOM fully unloaded -- maybe window closed ');
+        closeWindow(window);
         }
     );
 </script>

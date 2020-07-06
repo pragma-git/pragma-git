@@ -55,47 +55,68 @@
  * Docs : https://www.npmjs.com/package/simple-git
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
-/* MODES
- * -----
+/* TECHNICAL OVERVIEW
+ * ------------------
  * 
- * Active mode is stored in localState.mode
+ * The program is run by the following functions : 
+ * _loopTimer runs and calls _update 
+ * _update() updates the display and handle which mode is used internally. 
+ * _setMode( modeString) sets the mode up. for instance : _setMode('DEFAULT')
+ * _callback handles user clicks, and will change mode according to the functionality of the user callback. 
+ *           Some callbacks call _update() directly for immediate update
  * 
- * Display is updated by calling function update()
- * which is also called from td function run by timer
+ * The app has multiple modes, which display and handle things differently.
+ * For instance, textarea can have text, placeholder and read-only text, depending on mode. 
  * 
- * _setMode(modeString); for instance : _setMode('DEFAULT')
  * 
  * Mode Strings :
  * --------------
  * 
- * UNKNOWN                    let _setMode determine correct mode
+ * UNKNOWN                    lets _setMode determine correct mode
  * 
  * DEFAULT                    no git repositories
- *                          - Store-button = disabled
- *                          - placeholder = "Drop folder on window to get started"
+ *                            - Store-button = disabled
+ *                            - placeholder = "Drop folder on window to get started"
  *         
  * NO_FILES_TO_COMMIT        standing on a repository and branch, but no files to update
- *                          - Store-button = disabled
+ *                            - Store-button = disabled
+ *                            - placeholder = "No changed files to store"
  * 
- *                          - placeholder = "No changed files to store"
- * CHANGED_FILES   No text has been input yet
- *                          - Store-button = disabled
+ * CHANGED_FILES             No text has been input yet
+ *                           - Store-button = disabled
+ *                           - placeholder = "Add description ..."
  * 
- *                          - placeholder = "Add description ..."
  * CHANGED_FILES_TEXT_ENTERED     At least one character written
- *                          - Store-button = enabled
- *                          - placeholder = disabled (automatically)
+ *                           - Store-button = enabled
+ *                           - placeholder = disabled (automatically)
  * HISTORY 
- *                          - Store-button = disabled
- *                          - placeholder = shows history             
+ *                           - Store-button = disabled
+ *                           - placeholder = shows history             
  * SETTINGS             
- *                          - Store-button = disabled
- *                          - placeholder = shows history   
+ *                           - Store-button = disabled
+ *                           - placeholder = shows history   
+ * 
+ * State
+ * -----
+ * There are two variables that are global to all windows
+ * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/repo.json)
+ * - localState              - contains state data (historyNumber, branchNumber, mode) which is not saved to file
+ * 
+ * 
+ * Setting dialog
+ * --------------
+ * Communicates the following to the main window using global variables : 
+ * - state.repos and state.repoNumber
+ * - localState.mode
+ * where the _update() makes sure to handle this information
+ * 
+ * 
+ * 
  */
 
 
 // Define DEBUG features
-var devTools = true;
+var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
@@ -130,11 +151,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
-        //global.localState; // expose to other files in project
         
-        //var state = loadSettings(settingsFile); // json settings
-        //global.state = state;
+        
+    // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
+        global.localState = localState;   
 
     // Collect settings
         var repoSettings = {}; 
@@ -526,8 +547,16 @@ function _callback( name, event){
     }
     function showSettings() {    
         console.log('Settings button pressed');
-        var settings_win = gui.Window.open('settings.html#/new_page' ,
+        
+        if ( getMode() == 'SETTINGS' ){
+            return
+        }
+        
+        _setMode('SETTINGS');
+        
+        settings_win = gui.Window.open('settings.html#/new_page' ,
             {
+                id: 'settingsWindowId',
                 position: 'center',
                 width: 600,
                 height: 700,
@@ -535,17 +564,12 @@ function _callback( name, event){
             }
             ); 
         console.log(settings_win);
-        _setMode('SETTINGS');
-        //global.state = state;
      return   
     };
 // ================= END CALLBACK ================= 
 } 
 async function _loopTimer( delayInMs){
-
-    await _setMode(localState.mode); // Run _setMode once when timer started
-    await _update();
-
+    
     // Define timer
     let timer = window.setInterval( _update, delayInMs );
     return timer
@@ -554,11 +578,11 @@ async function _loopTimer( delayInMs){
     
 }
 async function _update(){ 
-    console.log('_loopTimer ' + new Date().toLocaleTimeString())
     // Bail out if isPaused = true
     if(isPaused) {
         return;
     }
+    console.log('_loopTimer ' + new Date().toLocaleTimeString())
     
     let modeName = getMode();
     console.log('_loopTimer  = ' + modeName );
@@ -609,12 +633,15 @@ async function _update(){
             break;
             
         case 'SETTINGS':
-            //setTitleBar( 'top-titlebar-repo-text', folder );
-            //setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
             try{
-                //setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             }catch(err){
-                // status_data non-existing, which can happen if gitStatus above fails
+                await _setMode('UNKNOWN');
+                setStatusBar(' ');
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '' );
             }
             
             break;
@@ -622,6 +649,8 @@ async function _update(){
         default:
             console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
     }    
+    
+    return true
 
   
 };
@@ -768,7 +797,7 @@ async function _setMode( inputModeName){
             if (currentMode ==  'SETTINGS') { return};
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "";    
+            document.getElementById('message').placeholder = "You are in settings mode." + os.EOL + "Edit in settings dialog window";    
             document.getElementById("message").readOnly = true;
             break;
             
@@ -976,7 +1005,7 @@ function setTitleBar( id, text){
         text = " ";
     }
     document.getElementById(id).innerHTML = text;
-    console.log('setTitleBar (element ' + id + ') = ' + text);
+    //console.log('setTitleBar (element ' + id + ') = ' + text);
 }
 function updateImageUrl(image_id, new_image_url) {
   var image = document.getElementById(image_id);
@@ -1091,8 +1120,11 @@ function updateStatusBar( text){
     console.log('updateStatusBar = ' + newmessage);
 }
 function setStatusBar( text){
-    document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')';
-    console.log('setStatusBar = ' + text);
+    if (devTools){
+        document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+    }else {
+        document.getElementById('bottom-titlebar-text').innerHTML = text;
+    }
 }
 
 // Settings
@@ -1218,6 +1250,7 @@ window.onload = function() {
       win.showDevTools();  // WARNING : causes redraw issues on startup
   }
   
+  _setMode('UNKNOWN');
   _update();
 
 

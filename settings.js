@@ -4,6 +4,7 @@
 // ---------
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var state = global.state; // internal copy of global.state
+var localState = global.localState; 
 
 var win
 
@@ -126,6 +127,12 @@ function forgetButtonClicked(event){
     //generateTable( document, table, state.repos); // generate the table first
 }
 
+function closeWindow(){
+    
+    // Return
+    localState.mode = 'UNKNOWN';
+    
+}
  
  // NOTES :
     
