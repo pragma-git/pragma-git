@@ -582,14 +582,13 @@ async function _update(){
     if(isPaused) {
         return;
     }
-    console.log('_loopTimer ' + new Date().toLocaleTimeString())
     
+    // Variables
     let modeName = getMode();
-    console.log('_loopTimer  = ' + modeName );
-    
     let  status_data;
     let  folder;
     
+    // DEFAULT is special case with git
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         status_data = await gitStatus();
         let result = await gitLocalFolder();
@@ -612,18 +611,30 @@ async function _update(){
             setTitleBar( 'top-titlebar-repo-text', folder );
             setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
             setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+            // If not correct mode, fix :
+            if (status_data.changedFiles){
+                _setMode('UNKNOWN');
+            }
             break;
             
         case 'CHANGED_FILES':
             setTitleBar( 'top-titlebar-repo-text', folder );
             setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
+            // If not correct mode, fix :
+            if (!status_data.changedFiles){
+                _setMode('UNKNOWN');
+            }
             break;
             
         case 'CHANGED_FILES_TEXT_ENTERED':
             setTitleBar( 'top-titlebar-repo-text', folder );
             setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
             setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+            // If not correct mode, fix :
+            if (!status_data.changedFiles){
+                _setMode('UNKNOWN');
+            }
             break;
             
         case 'HISTORY':
