@@ -63,7 +63,7 @@
  * Display is updated by calling function update()
  * which is also called from td function run by timer
  * 
- * setMode(modeString); for instance : setMode('DEFAULT')
+ * _setMode(modeString); for instance : _setMode('DEFAULT')
  * 
  * Mode Strings :
  * --------------
@@ -130,16 +130,18 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
+        //global.localState; // expose to other files in project
         
-        var state = loadSettings(settingsFile); // json settings
+        //var state = loadSettings(settingsFile); // json settings
+        //global.state = state;
+        global.state = loadSettings(settingsFile); // json settings
 
     // Collect settings
         var repoSettings = {}; 
    
         
     // Initiate GUI update loop 
-        _mainLoop(); // Immediate 
-        var timer = _loopTimer( 2000);
+        var timer = _loopTimer( 1000);
 
 
 // ---------
@@ -147,7 +149,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 
 // main functions
-
 function _callback( name, event){
     console.log('_callback = ' + name);
     switch(name) {
@@ -193,111 +194,112 @@ function _callback( name, event){
     // ---------------
 
     async function dropFile(e) {
-    e.preventDefault();
-    
-    // Reset css 
-    document.getElementById('content').className = '';
-    
-    const item = e.dataTransfer.items[0];
-    const entry = item.webkitGetAsEntry();
-    
-    var file = item.getAsFile().path;
-    var folder = file; // Guess that a folder was dropped 
-
-    if (entry.isFile) {
-        folder = require('path').dirname(file); // Correct, because file was dropped
-        console.log( 'Folder = ' + folder );
-    } 
-
-    
-    // Find top folder in initialized local repo
-    var topFolder;
-    
-    try{
-        var isRepo;
-        await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+        e.preventDefault();
         
-        console.log('dropFolder CHECK IF REPO = ' + isRepo);
+        // Reset css 
+        document.getElementById('content').className = '';
         
-        // If not a repo
-        if (!isRepo){
-            // Ask permisson to init repo
-            var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
-            var string = 'This folder is not a repository.'+ os.EOL;
-            string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
-            string += 'The name of the repository will be "' + nameOfFolder + '" ';
+        const item = e.dataTransfer.items[0];
+        const entry = item.webkitGetAsEntry();
+        
+        var file = item.getAsFile().path;
+        var folder = file; // Guess that a folder was dropped 
+    
+        if (entry.isFile) {
+            folder = require('path').dirname(file); // Correct, because file was dropped
+            console.log( 'Folder = ' + folder );
+        } 
+    
+        
+        // Find top folder in initialized local repo
+        var topFolder;
+        
+        try{
+            var isRepo;
+            await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
             
-            // Create repo
-            if ( confirmationDialog(string) ) {
-                await simpleGit(folder).init( onInit );
-                function onInit(err, initResult) { }
+            console.log('dropFolder CHECK IF REPO = ' + isRepo);
+            
+            // If not a repo
+            if (!isRepo){
+                // Ask permisson to init repo
+                var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
+                var string = 'This folder is not a repository.'+ os.EOL;
+                string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
+                string += 'The name of the repository will be "' + nameOfFolder + '" ';
                 
-                await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-                function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-    
-                topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-            }else{
-                // bail out if rejected permission
-                return 
+                // Create repo
+                if ( confirmationDialog(string) ) {
+                    await simpleGit(folder).init( onInit );
+                    function onInit(err, initResult) { }
+                    
+                    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+                    function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+        
+                    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+                }else{
+                    // bail out if rejected permission
+                    return 
+                }
             }
+            
+            // Find top folder of Repo
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+            topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+    
+        }catch(error){
+            console.log(error);
         }
         
-        // Find top folder of Repo
-        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-
-    }catch(error){
-        console.log(error);
-    }
-    
-    // Add folder last in  state array
-    var index = state.repos.length;
-    state.repos[index] = {}; 
-    state.repos[index].localFolder = topFolder;
-    
-    // Clean duplicates from state based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
-    try{
-        // Set index to match the folder you added
-        index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
-    }catch(err){
-        index = state.repos.length; // Highest should be last added
-    }
-    
-    // Set to current
-    state.repoNumber = index;
-    localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
-
-    // Set global
-    state.repos[state.repoNumber].localFolder = topFolder;
-    console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
-    
-    // Update immediately
-    _mainLoop();
-    
-    //
-    // Local function definitions
-    //
-    
-    function findObjectIndex( myArray, objectField, stringToFind ){
+        // Add folder last in  state array
+        var index = state.repos.length;
+        state.repos[index] = {}; 
+        state.repos[index].localFolder = topFolder;
         
-        var foundIndex; //last found index
-        // Loop for the array elements 
-        for (let i in myArray) { 
-    
-            if (stringToFind === myArray[i][objectField]){
-                foundIndex = i;
-            }
-        } 
+        // Clean duplicates from state based on name "localFolder"
+        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        try{
+            // Set index to match the folder you added
+            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+        }catch(err){
+            index = state.repos.length; // Highest should be last added
+        }
         
-        return foundIndex;
-    }
-
-
+        // Set to current
+        state.repoNumber = index;
+        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
     
-};
+        // Set global
+        state.repos[state.repoNumber].localFolder = topFolder;
+        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+        
+        //
+        // Local function definitions
+        //
+        
+        function findObjectIndex( myArray, objectField, stringToFind ){
+            
+            var foundIndex; //last found index
+            // Loop for the array elements 
+            for (let i in myArray) { 
+        
+                if (stringToFind === myArray[i][objectField]){
+                    foundIndex = i;
+                }
+            } 
+            
+            return foundIndex;
+        }
+    
+    
+    
+    };
 
 
     // title-bar
@@ -330,13 +332,13 @@ function _callback( name, event){
         if ( uncommitedFiles ){
             // Let user know that they need to commit before changing branch
             await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
+            _setMode('UNKNOWN');
             
         }else{
                 
             // Determine local branches
             var branchList;
             try{
-                isPaused = true;
                 branchList = await gitBranchList();
             }catch(err){        
                 console.log('Error determining local branches, in branchClicked()');
@@ -345,7 +347,7 @@ function _callback( name, event){
             
             // Cycle through local branches
             localState.branchNumber = localState.branchNumber + 1;
-            var numberOfBranches = state.repos.length;
+            var numberOfBranches = branchList.length;
             if (localState.branchNumber >= numberOfBranches){
                 localState.branchNumber = 0;
             }
@@ -365,7 +367,7 @@ function _callback( name, event){
     
         console.log(branchList);
      
-        _mainLoop();
+        await _update()
         
         // Reset some variables
         localState.historyNumber = -1;
@@ -427,7 +429,7 @@ function _callback( name, event){
         
 
         try{
-            _setMode('HISTORY');
+            await _setMode('HISTORY');
             
             // Cycle through history
             console.log('downArrowClicked - Cycle through history');
@@ -456,7 +458,7 @@ function _callback( name, event){
             
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
-            _setMode('DEFAULT');
+            await _setMode('UNKNOWN');
             localState.historyNumber = -1;
             console.log(err);
         }    
@@ -481,8 +483,9 @@ function _callback( name, event){
         if (localState.historyNumber < 0){
             // Leave history browsing
             localState.historyNumber = -1;
-            _setMode('DEFAULT');
-            _mainLoop();
+            writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
+            _setMode('UNKNOWN');
+            await _update()
         }else{
             // Show history
             _setMode('HISTORY');
@@ -532,165 +535,88 @@ function _callback( name, event){
             }
             ); 
         console.log(settings_win);
-        
-        // Make state available to new window
-        global.state = state;
+        _setMode('SETTINGS');
+        //global.state = state;
      return   
     };
 // ================= END CALLBACK ================= 
 } 
-function _loopTimer( delayInMs){
-    
-    // Define timer
-    var timer = window.setInterval( run_timer, delayInMs );
-    return timer
-    
-    // ---------------
-    // LOCAL FUNCTIONS
-    // ---------------
-    
-    async function run_timer(){ 
-        // Bail out if isPaused = true
-        if(isPaused) {
-            return;
-        }
-        
-        let modeName = getMode();
-        
-        // Handle 
-        if ( modeName == 'HISTORY'){
-            return
-        }
-        if ( modeName == 'CHANGED_FILES_TEXT_ENTERED'){
-            return
-        }
-        if (state.repos.length == 0){ // Capture if there are no repos
-            modeName = _setMode('DEFAULT');
-        }   
-        
-        
-        let  git_status = await gitStatus();
-        
-        switch( modeName ) {
-        case 'DEFAULT':
+async function _loopTimer( delayInMs){
 
+    await _setMode(localState.mode); // Run _setMode once when timer started
+    await _update();
+
+    // Define timer
+    let timer = window.setInterval( _update(), delayInMs );
+    return timer
+}
+async function _update(){ 
+    // Bail out if isPaused = true
+    if(isPaused) {
+        return;
+    }
+    
+    let modeName = getMode();
+    console.log('_loopTimer / run_timer - mode = ' + modeName );
+    
+    let  status_data;
+    let  folder;
+    
+    if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
+        status_data = await gitStatus();
+        let result = await gitLocalFolder();
+        folder = result.folderName;
+        console.log('_loopTimer / run_timer - folder = ' + folder );
+    }
+    
+    switch( modeName ) {        
+        case 'UNKNOWN':
+            _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
+            break;
+            
+        case 'DEFAULT':
+            setTitleBar( 'top-titlebar-repo-text', ' ' );
+            setTitleBar( 'top-titlebar-branch-text', ' ' );
+            setStatusBar(' ');
             break;
             
         case 'NO_FILES_TO_COMMIT':
-
-
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             break;
             
         case 'CHANGED_FILES':
-
-
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             break;
             
         case 'CHANGED_FILES_TEXT_ENTERED':
-            return
-
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             break;
             
         case 'HISTORY':
-            return
-
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             break;
             
         case 'SETTINGS':
-
-
+            setTitleBar( 'top-titlebar-repo-text', folder );
+            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
             break;
             
         default:
             console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
-        }    
-            
-        
-        
-        
-        
-        _mainLoop();
-        
-        
-        
-    };
-}
+    }    
 
-
-async function _mainLoop(){
-    
-    // Bail out for modes that do not depend on git status 
-    if ( getMode() == 'HISTORY'){
-        return
-    }
-    if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
-        return
-    }
-
-    
-    // git data
-    let status_data = await gitStatus();    
-    let currentBranch = status_data.current;
-    let folderStruct = await gitLocalFolder();
-    let folder = folderStruct.folderName;
-    
-    console.log(status_data);
-    //console.log(currentBranch);
-
-    // Set mode 
-    try{
-        if ( status_data.changedFiles ){
-            _setMode('CHANGED_FILES');
-        }else{
-            _setMode('NO_FILES_TO_COMMIT');
-        }        
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-        
-    }
-    
-    // Set Status-bar
-    try{
-        if (status_data != null) {
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-        }else{
-            setStatusBar(' ');
-        }
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-        
-    }
-
-
-    //
-    // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
-    //
-    setTitleBar( 'top-titlebar-repo-text', folder   );
-
-    if (currentBranch.length == 0){
-        setTitleBar( 'top-titlebar-branch-text', '' );
-    }else{
-        setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-    }
-    
-    
-    // KEEP HERE: May be useful in future 
-    //
-    // 1) Get name of Repo
-    //var rawOut; 
-    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, result) => {console.log(result); rawOut = result})
-    //var repoName = rawOut.replace(/^.*[\\\/]/, '');
-    
-    // 2) Get list of all settings in local 
-    //var listOut; 
-    //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
-        
   
-// ================= END _MAINLOOP =================     
-} 
-async function _setMode( modeName){
+};
+async function _setMode( inputModeName){
  /* Called from the following :
  * 
  * 'UNKNOWN':                       (let _setMode determine mode by itself)
@@ -702,63 +628,82 @@ async function _setMode( modeName){
  * 'SETTINGS':
  * 
  */
+    var newModeName;
+    
+    let currentMode = await getMode();
+    console.log('setMode = ' + inputModeName + ' ( from current mode )= ' + currentMode + ')');
+    
+   
     
     
-    let currentMode= getMode();
-    console.log('setMode = ' + modeName + ' ( from current mode = ' + currentMode);
-    
-    
-    switch(modeName) {        
+    switch(inputModeName) {        
         case 'UNKNOWN': 
             {
+                // Fallback guess
+                newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
+                
                 // Reset some localState variables (and let the found mode correct)
                 let copyOfLocalState = localState;  // Backup localState
                 localState.historyNumber = -1;      // Guess that not in history browsing mode
                 
                 // Sources used to determinine mode
+                let messageLength = readMessage().length;
+                let numberOfRepos = state.repos.length;
+                let historyNumberPointer = localState.historyNumber;
                 let status_data = []; 
+                
+                // Populate  status_data
                 try{
                     status_data = await gitStatus();
                 }catch(err){
                     status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
                 }
-                
-                
-                let messageLength = readMessage().length;
-                let numberOfRepos = state.repos.length;
-                let historyNumberPointer = localState.historyNumber;
-                
-                // Fallback guess
-                let newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
+
+                // Log sources to determine mode
+                console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
+                console.log(status_data);  
+                console.log(messageLength);
+                console.log(numberOfRepos);
+                console.log(historyNumberPointer);
                 
                 
                 // DEFAULT
                 if ( numberOfRepos == 0 ){ 
-                    newModeName = 'DEFAULT'; 
+                    newModeName = 'DEFAULT';  
+                    _setMode( newModeName);
                     break;
                 }       
                 
+                // NO_FILES_TO_COMMIT
+                 if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
+                    newModeName = 'NO_FILES_TO_COMMIT'; 
+                    _setMode( newModeName);
+                    break;
+                }          
+                         
                 // CHANGED_FILES 
                 // CHANGED_FILES_TEXT_ENTERED
-                if ( status_data.changedFiles ){   
+                if ( status_data.changedFiles== true){   
                     if ( messageLength  > 0 ) { newModeName = 'CHANGED_FILES_TEXT_ENTERED' }
-                    if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' }
+                    if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' } 
+                    _setMode( newModeName);
                     break;
                 }                 
                 
                 // HISTORY
                 if ( historyNumberPointer > -1 ){ 
                     newModeName = 'HISTORY'; 
-                    localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing number
+                    localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
+                    _setMode( newModeName);
                     break;
                 }  
-    
-                _setMode( newModeName);
+
                 break;
             }
             
         case 'DEFAULT':
             //if (currentMode ==  'DEFAULT') { return};
+            newModeName = 'DEFAULT';
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
@@ -770,6 +715,7 @@ async function _setMode( modeName){
             
         case 'NO_FILES_TO_COMMIT':
             // set by _mainLoop
+            newModeName = 'NO_FILES_TO_COMMIT';
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
@@ -779,7 +725,8 @@ async function _setMode( modeName){
             
         case 'CHANGED_FILES':
             // set by _mainLoop
-            if (currentMode ==  'CHANGED_FILES') { return};
+            newModeName = 'CHANGED_FILES';
+            //if (currentMode ==  'CHANGED_FILES') { return};
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "You have changed files." + os.EOL + "Add description and press Store";        
@@ -788,6 +735,7 @@ async function _setMode( modeName){
             
         case 'CHANGED_FILES_TEXT_ENTERED':
             // set by messageKeyUpEvent
+            newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
             document.getElementById('store-button').disabled = false;
             //document.getElementById('message').value = "";
@@ -797,34 +745,37 @@ async function _setMode( modeName){
             
         case 'HISTORY':
             // set by downArrowClicked and upArrowClicked
+            newModeName = 'HISTORY';
             if (currentMode ==  'HISTORY') { return};
             document.getElementById('store-button').disabled = true;
             // Text not fixed
             document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "TODO";    
+            document.getElementById('message').placeholder = "";    
             document.getElementById ("message").readOnly = true;
             break;
             
         case 'SETTINGS':
+            newModeName = 'SETTINGS';
             if (currentMode ==  'SETTINGS') { return};
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "TODO ";    
+            document.getElementById('message').placeholder = "";    
             document.getElementById("message").readOnly = true;
             break;
             
         default:
-            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + inputModeName);
         }
-    
+        
+     console.log('setMode result : setMode = ' + newModeName + ' ( from current mode )= ' + currentMode + ')');
+      
     // Remember mode
-    localState.mode = modeName;
-    
-    _mainLoop();
-    
-    return modeName;  // In case I want to use it with return variable
-}
+    localState.mode = newModeName;
 
+    await _update()
+    
+    return newModeName;  // In case I want to use it with return variable
+}
 
 // Git commands
 async function gitStatus(){
@@ -861,7 +812,6 @@ async function gitBranchList(){
     let branchList;
     
     try{
-        isPaused = true;
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
         function onBranchList(err, result ){console.log(result); branchList = result.all};
     }catch(err){        
@@ -870,7 +820,6 @@ async function gitBranchList(){
     }
     return branchList
 }
-
 async function gitLocalFolder(){
     
     let gitFolders = [];
@@ -897,7 +846,6 @@ async function gitAddCommitAndPush( message){
     // Read current branch
     try{
         status_data = await gitStatus();
-        _setMode('CHANGED_FILES');
     }catch(err){
         console.log('Error in _mainLoop()');
         console.log(err);
@@ -910,33 +858,37 @@ async function gitAddCommitAndPush( message){
     var path = '.'; // Add all
     await simpleGit( state.repos[state.repoNumber].localFolder )
         .add( path, onAdd );
+        
     function onAdd(err, result) {console.log(result) }
+    
     await waitTime( 1000);
     
     // Commit including deleted
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     await simpleGit( state.repos[state.repoNumber].localFolder )
         .commit( message, {'--all' : null} , onCommit);
+        
     function onCommit(err, result) {console.log(result) };
-    function onCommit(err, result) {console.log(result) };
+    
     await waitTime( 1000);
     
     // Push (and create remote branch if not existing)
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
     await simpleGit( state.repos[state.repoNumber].localFolder )
         .push( remoteBranch, {'--set-upstream' : null}, onPush);
+        
     function onPush(err, result) {console.log(result) };
+    
     await waitTime( 1000);  
         
     writeMessage('',false);  // Remove this message  
-    _mainLoop();
+    await _update()
 }
 
 // Utility functions
 function getMode(){
     return localState.mode;
 }
-
 function confirmationDialog(text) {    
     console.log('confirmationDialog called');
     
@@ -951,7 +903,6 @@ function confirmationDialog(text) {
     
     return confirm(text);
 }
-
 function waitTime( delay) {
 // Delay in milliseconds
    console.log("starting delay ")
@@ -965,34 +916,11 @@ function waitTime( delay) {
         )
   })
 }
-
 function mkdir(dir){
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
     }
 }
-
-function updateStatusBar( text){
-    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
-    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
-    console.log('updateStatusBar = ' + newmessage);
-}
-function setStatusBar( text){
-    document.getElementById('bottom-titlebar-text').innerHTML = text;
-    console.log('setStatusBar = ' + text);
-}
-function setTitleBar( id, text){
-    if (text.length == 0){
-        text = " ";
-    }
-    document.getElementById(id).innerHTML = text;
-    console.log('setTitleBar (element ' + id + ') = ' + text);
-}
-
-function setStoreButtonEnableStatus( enableStatus) {
-    document.getElementById('store-button').disabled = !enableStatus;
-}
-
 function cleanDuplicates( myArray, objectField ){
     // Removes all elements in "myArray"  where the field "objectField" are duplicates
     //
@@ -1032,78 +960,14 @@ function cleanDuplicates( myArray, objectField ){
     return newArray;
 }
 
-// Settings
-function saveSettings(){
-    
-    // Update current window position
-        win = gui.Window.get();
-        state.position.x = win.x;
-        state.position.y = win.y;
-        state.position.width = win.width;
-        state.position.height = win.height;  
-    
-    // Save settings
-    var jsonString = JSON.stringify(state, null, 2);
-    fs.writeFileSync(settingsFile, jsonString);
-}
-function loadSettings(settingsFile){
-    try{
-        jsonString = fs.readFileSync(settingsFile);
-        state = JSON.parse(jsonString);
-        
-        console.log('Input json file');
-        console.log(state);
-    
-    }catch(err){
-        console.log('Error loading settings -- setting defaults');
-        // Defaults
-        state = {};
-        
-        state.repoNumber = -1; // Indicate that no repos exist yet
-        localState.branchNumber = 0;
-        
-        state.repos = [];
-        
-        console.log(err);
-
-    }
-    
-    
-    // Clean duplicate in state.repos based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );
-    console.log('State after cleaning duplicates');
-    console.log(state);
-    
-    if ( state.repoNumber > state.repos.length ){
-        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
-    }
-    
-    
-    // Place window
-    try{
-        // Validate position on screen
-        if ( (state.position.x + state.position.width) > screen.width ) {
-            state.position.x = screen.availLeft;
-        }
-        
-        if ( (state.position.y + state.position.height) > screen.height ){
-            state.position.y = screen.availTop;
-        }
-        
-        // Position and size window
-        win = gui.Window.get();
-        win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height);
-
-        
-    }catch(err){
-        console.log('Error setting window position and size');
-        console.log(err);
-    }
-    return state;
-}
-
 // Title bar
+function setTitleBar( id, text){
+    if (text.length == 0){
+        text = " ";
+    }
+    document.getElementById(id).innerHTML = text;
+    console.log('setTitleBar (element ' + id + ') = ' + text);
+}
 function updateImageUrl(image_id, new_image_url) {
   var image = document.getElementById(image_id);
   if (image)
@@ -1200,12 +1064,104 @@ async function  writeTimedMessage( message, placeholder, time){
     // Restart timer
     isPaused = false;  
 } 
+function setStoreButtonEnableStatus( enableStatus) {
+    document.getElementById('store-button').disabled = !enableStatus;
+}
 
+// Statusbar
+function updateStatusBar( text){
+    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
+    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
+    console.log('updateStatusBar = ' + newmessage);
+}
+function setStatusBar( text){
+    document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')';
+    console.log('setStatusBar = ' + text);
+}
+
+// Settings
+function saveSettings(){
+    
+    // Update current window position
+        win = gui.Window.get();
+        state.position.x = win.x;
+        state.position.y = win.y;
+        state.position.width = win.width;
+        state.position.height = win.height;  
+    
+    // Save settings
+    var jsonString = JSON.stringify(state, null, 2);
+    fs.writeFileSync(settingsFile, jsonString);
+}
+function loadSettings(settingsFile){
+    try{
+        jsonString = fs.readFileSync(settingsFile);
+        state = JSON.parse(jsonString);
+        
+        console.log('Input json file');
+        console.log(state);
+        
+        // Sanity check on repoNumber
+        if ( state.repoNumber >= state.repos.length ){
+            state.repoNumber = 0;
+        }        
+        // Sanity check on repoNumber
+        if ( state.repos.length == 0){
+            state.repoNumber = -1;
+        }
+    
+    }catch(err){
+        console.log('Error loading settings -- setting defaults');
+        // Defaults
+        state = {};
+        
+        state.repoNumber = -1; // Indicate that no repos exist yet
+        localState.branchNumber = 0;
+        
+        state.repos = [];
+        
+        console.log(err);
+
+    }
+    
+    
+    // Clean duplicate in state.repos based on name "localFolder"
+    state.repos = cleanDuplicates( state.repos, 'localFolder' );
+    console.log('State after cleaning duplicates');
+    console.log(state);
+    
+    if ( state.repoNumber > state.repos.length ){
+        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
+    }
+    
+    
+    // Place window
+    try{
+        // Validate position on screen
+        if ( (state.position.x + state.position.width) > screen.width ) {
+            state.position.x = screen.availLeft;
+        }
+        
+        if ( (state.position.y + state.position.height) > screen.height ){
+            state.position.y = screen.availTop;
+        }
+        
+        // Position and size window
+        win = gui.Window.get();
+        win.moveTo( state.position.x, state.position.y);
+        win.resizeTo( state.position.width, state.position.height);
+
+        
+    }catch(err){
+        console.log('Error setting window position and size');
+        console.log(err);
+    }
+    return state;
+}
 
 // -------------
 // WINDOW EVENTS
 // -------------
-
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
@@ -1245,6 +1201,9 @@ window.onload = function() {
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup
   }
+  
+  _update();
+
 
 };
 

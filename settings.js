@@ -109,8 +109,9 @@ function forgetButtonClicked(event){
     // Point repoNumber to first repo in list
     state.repoNumber = 0;
     
-    if ( state.repos.length == null){
+    if ( state.repos.length == 0){
         state.repoNumber - 1;
+        //global.localState.mode = 'UNKNOWN';  // exposed variable from app.js
     }
 
     
