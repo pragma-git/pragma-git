@@ -81,6 +81,7 @@ function generateTable(document, table, data) {
         }
         // Add column of checkboxes
         let cell = row.insertCell();
+        cell.setAttribute("class", 'settingsActionCell');
         
         var button = document.createElement('button');
         button.setAttribute("id", index);

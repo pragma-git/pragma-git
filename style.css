@@ -46,6 +46,10 @@ td {
   height: auto; 
 }
 
+.settingsActionCell{
+  text-align: center;
+}
+
 .message_column{
   width: 100%;
   margin-right: 6px;
