@@ -547,17 +547,21 @@ async function _loopTimer( delayInMs){
     await _update();
 
     // Define timer
-    let timer = window.setInterval( _update(), delayInMs );
+    let timer = window.setInterval( _update, delayInMs );
     return timer
+    
+
+    
 }
 async function _update(){ 
+    console.log('_loopTimer ' + new Date().toLocaleTimeString())
     // Bail out if isPaused = true
     if(isPaused) {
         return;
     }
     
     let modeName = getMode();
-    console.log('_loopTimer / run_timer - mode = ' + modeName );
+    console.log('_loopTimer  = ' + modeName );
     
     let  status_data;
     let  folder;
@@ -605,9 +609,14 @@ async function _update(){
             break;
             
         case 'SETTINGS':
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+            //setTitleBar( 'top-titlebar-repo-text', folder );
+            //setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+            try{
+                //setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+            }catch(err){
+                // status_data non-existing, which can happen if gitStatus above fails
+            }
+            
             break;
             
         default:
@@ -882,6 +891,7 @@ async function gitAddCommitAndPush( message){
     await waitTime( 1000);  
         
     writeMessage('',false);  // Remove this message  
+    _setMode('UNKNOWN');
     await _update()
 }
 
@@ -1030,7 +1040,13 @@ function updateContentStyle() {
 
 // Message
 function readMessage( ){
-    return document.getElementById('message').value;
+    try{
+        return document.getElementById('message').value;
+    }catch(err){
+        console.log(err);
+        return '';
+    }
+    
 }
 function writeMessage( message, placeholder){
     if (placeholder){

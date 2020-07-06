@@ -110,7 +110,8 @@ function forgetButtonClicked(event){
     state.repoNumber = 0;
     
     if ( state.repos.length == 0){
-        state.repoNumber - 1;
+        let tempRepoNumber = -1;
+        state.repoNumber = tempRepoNumber;
         //global.localState.mode = 'UNKNOWN';  // exposed variable from app.js
     }
 
