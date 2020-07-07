@@ -16,7 +16,8 @@
 /* ISSUES
  * ------
  * 
- * /
+ * - check correct characters in add branch name (settings.js)  :https://wincent.com/wiki/Legal_Git_branch_names
+ *   Maybe online validation of text ?
  * 
  * /* Namnförslag
  * digit
@@ -31,6 +32,10 @@
  * ----
  * 
  * Open questions
+ * 
+ * - Fix so that setting remote URL repo works.  Also test how passwords may come in.  (one solution to always add credentials : https://stackoverflow.com/questions/55061954/simple-git-requesting-username-and-password-on-each-git-command)
+ * 
+ * - Hide branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
  * - Add pull from remote (icon in title-bar after "repo(branch)"
  * 
