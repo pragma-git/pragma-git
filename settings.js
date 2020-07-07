@@ -63,7 +63,7 @@ async function createHtmlTable(document){
             //document.getElementById("header_Forget").style.visibility = "visible"; 
             document.getElementById("emptyTable_iFrame").style.height ="0px";
             
-            let table = document.getElementById("settingsTable");
+            let table = document.getElementById("settingsTableBody");
             let data = Object.keys(state.repos[0]);
             console.log('Settings - data repos:');
             console.log(data);
@@ -73,7 +73,7 @@ async function createHtmlTable(document){
             document.getElementById("branch_Modify").style.visibility = "visible"; 
             document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
             
-            let table2 = document.getElementById("branchesTable");
+            let table2 = document.getElementById("branchesTableBody");
             let data2 = Object.keys(state.repos[0]);
             console.log('Settings - data branches:');
             console.log(data2);
@@ -86,10 +86,11 @@ async function createHtmlTable(document){
         
         
     }else{ 
-        // Hide "Forget"-header, and show message for empty repo      
-        //document.getElementById("settingsTable") = "";
+
+        // Hide everything that does not apply to empty folder   
+        document.getElementById('hide').style.display = "none";
         
-        //document.getElementById("header_Forget").style.visibility = "collapse"; 
+        
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
 
    }
@@ -197,8 +198,7 @@ function forgetButtonClicked(event){
 
     
     // Replace table 
-    document.getElementById("settingsTable").innerHTML = ""; 
-    document.getElementById("settingsTable").innerHTML = ""; 
+    document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
     
 

@@ -63,15 +63,17 @@
             <h3>Projects in your list </h3>     
                 
                 <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-                
+ <div id="hide">               
                 <h4 id="header_Forget">Forget repositories: </h4>
                 <p>(you can add them again by dropping a folder into the main window) </p>
     
-                <table id="settingsTable" style="width:100%"> 
+                <table style="width:100%"> 
                     <thead><tr>
                         <th class="left">Local folder</th>
                         <th class="right">action</th>
                     </tr></thead>
+                    <tbody id="settingsTableBody" >
+                    </tbody>
                 </table>
                 
 
@@ -80,22 +82,23 @@
             
             <h3>Branches in selected project </h3>  
             
-                <p> Current project folder : <span id="currentRepo"></span></p>
+                <p> <u>Current project folder</u> : <span id="currentRepo"></span></p>
             
                 <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
                 
                 <h4 id="branch_Modify">Modify branch : </h4>
                     
-                <table id="branchesTable" style="width:100%"> 
+                <table style="width:100%"> 
                     <thead ><tr>
                         <th class="left">Branch</th>
                         <th class="right">action</th>
-                    </tr></thead>
+                    <tbody id="branchesTableBody">
+                    </tbody>
                 </table>           
 
             <br>   <!--  empty row at bottom  -->
             <br>   <!--  empty row at bottom  -->
-          
+ </div>           
             <h3>Software behavior</h3>     
             
                 <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
