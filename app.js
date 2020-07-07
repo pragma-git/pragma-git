@@ -887,6 +887,7 @@ async function gitStatus(){
     return status_data;  
 }
 async function gitBranchList(){
+    // Made available for other scripts by export command
     let branchList;
     
     try{

@@ -1,22 +1,56 @@
 <html>
     <head>
         <title>Settings</title>
-        <link rel="stylesheet" type="text/css" href="style.css" />
         <script src="settings.js"></script>
-
     </head>
     
     <style>
-        table, th, td {
-          border: 1px solid black;
-          border-collapse: collapse;
+        body{
+            font-family: Arial;
+            font-size: 11pt;
         }
-        iframe {
-          width: 100%;
+
+        
+        th{
+            background-color: #444;
+            color: #fff;
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
         }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        td{
+            padding: 6px;
+        }
+        .left{
+            text-align:left;
+        }
+        .right{
+            text-align:right;   
+        }
+        h2, h3{
+            text-align:center;   
+        }
+        h4{
+            text-align:left;   
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+    
+        iframe{
+            width: 100%;
+        }
+        
+        
     </style>
 
-<body onunload="window.onclose()"> 
+<body> 
      
     <div id="content">
             
@@ -26,15 +60,41 @@
         
             <hr>
          
-            <h3>Modify repositories from your list </h3>     
+            <h3>Projects in your list </h3>     
                 
                 <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-                <h4 id="header_Forget">Forget repositories: </h4>
-    
-                <table id="settingsTable" style="width:100%"> </table>
                 
-                (you can add them again by dropping a folder into the main window) 
-                   
+                <h4 id="header_Forget">Forget repositories: </h4>
+                <p>(you can add them again by dropping a folder into the main window) </p>
+    
+                <table id="settingsTable" style="width:100%"> 
+                    <thead><tr>
+                        <th class="left">Local folder</th>
+                        <th class="right">action</th>
+                    </tr></thead>
+                </table>
+                
+
+            <br>   <!--  empty row at bottom  -->
+            <br>   <!--  empty row at bottom  -->
+            
+            <h3>Branches in selected project </h3>  
+            
+                <p> Current project folder : <span id="currentRepo"></span></p>
+            
+                <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
+                
+                <h4 id="branch_Modify">Modify branch : </h4>
+                    
+                <table id="branchesTable" style="width:100%"> 
+                    <thead ><tr>
+                        <th class="left">Branch</th>
+                        <th class="right">action</th>
+                    </tr></thead>
+                </table>           
+
+            <br>   <!--  empty row at bottom  -->
+            <br>   <!--  empty row at bottom  -->
           
             <h3>Software behavior</h3>     
             

@@ -3,6 +3,12 @@
 // INIT
 // ---------
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var os = require('os');
+        
+const simpleGit = require('simple-git');  
+
+
+
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
@@ -25,8 +31,7 @@ function _callback( name, event){
       default:
         // code block
     }
-    
-    
+  
 }
 
 function injectIntoSettingsJs(document) {
@@ -44,64 +49,86 @@ function injectIntoSettingsJs(document) {
     createHtmlTable(document);
 
 };
-function createHtmlTable(document){
+
+async function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
     
     // Create table if there are any repos
-    if (state.repos.length > 0){                   
-        document.getElementById("header_Forget").style.visibility = "visible"; 
-        document.getElementById("emptyTable_iFrame").style.height ="0px";
+    if (state.repos.length > 0){        
         
-        let table = document.querySelector("table");
-        let data = Object.keys(state.repos[0]);
-        console.log('Settings - data :');
-        console.log(data);
-        generateTable( document, table, state.repos); // generate the table first
-        generateTableHead( document, table, data);    // then the head
+        // Repo table           
+            //document.getElementById("header_Forget").style.visibility = "visible"; 
+            document.getElementById("emptyTable_iFrame").style.height ="0px";
+            
+            let table = document.getElementById("settingsTable");
+            let data = Object.keys(state.repos[0]);
+            console.log('Settings - data repos:');
+            console.log(data);
+            generateRepoTable( document, table, state.repos); // generate the table first
+            
+        // Current branch table
+            document.getElementById("branch_Modify").style.visibility = "visible"; 
+            document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
+            
+            let table2 = document.getElementById("branchesTable");
+            let data2 = Object.keys(state.repos[0]);
+            console.log('Settings - data branches:');
+            console.log(data2);
+            let branchList = await gitBranchList();
+            generateBranchTable( document, table2, branchList); // generate the table first
+            
+        
+        // Show current repo
+        document.getElementById("currentRepo").innerHTML = state.repos[state.repoNumber].localFolder;
+        
+        
     }else{ 
         // Hide "Forget"-header, and show message for empty repo      
         //document.getElementById("settingsTable") = "";
-        document.getElementById("header_Forget").style.visibility = "collapse"; 
+        
+        //document.getElementById("header_Forget").style.visibility = "collapse"; 
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
 
    }
+   
+   //
+   // Local functions
+   //
+   async function gitBranchList(){
+    // Made available for other scripts by export command
+    let branchList;
+    
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
+        function onBranchList(err, result ){console.log(result); branchList = result.all};
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+    }
+    return branchList
+}
+
 
 }
-function generateTableHead(document, table, data) {
-    // Inspired and copied from  https://www.valentinog.com/blog/html-table/
-    let thead = table.createTHead();
-    let row = thead.insertRow();
-    for (let key of data) {
-        let th = document.createElement("th");
-        let text = document.createTextNode(key);
-        th.appendChild(text);
-        row.appendChild(th);
-        console.log(table);
-    }
-    // Add column header
-    let th = document.createElement("th");
-    let text = document.createTextNode('action');
-    th.appendChild( text);
-    row.appendChild(th);
-    console.log(table);
-}
-    
-function generateTable(document, table, data) {
+function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
+    
+    // Loop rows in data
     for (let element of data) {
         console.log('Element = ' + element );
         let row = table.insertRow();
         for (key in element) {
              let cell = row.insertCell();
+             cell.setAttribute("class", 'left');
              let text = document.createTextNode(element[key]);
              cell.appendChild(text);
         }
-        // Add column of checkboxes
+        // Add column of buttons
         let cell = row.insertCell();
-        cell.setAttribute("class", 'settingsActionCell');
+        cell.setAttribute("class", 'right');
         
         var button = document.createElement('button');
         button.setAttribute("id", index);
@@ -113,6 +140,38 @@ function generateTable(document, table, data) {
     }
     console.log(table);
 }
+function generateBranchTable(document, table, branchlist) {
+    var index = 0; // Used to create button-IDs
+    
+    // Loop rows in data
+    for (let element of branchlist) {
+        console.log('Element = ' + element );
+        let row = table.insertRow();
+        //for (key in element) {
+             let cell = row.insertCell();
+             cell.setAttribute("class", 'left');
+             let text = document.createTextNode(element);
+             cell.appendChild(text);
+        //}
+        
+        // Add column of buttons
+        let cell2 = row.insertCell();
+        cell2.setAttribute("class", 'right');
+        
+        var button = document.createElement('button');
+        button.setAttribute("id", index);
+        button.innerHTML = 'Delete';
+        
+        // Hide button and callback
+        button.style.display = "none";  
+        //button.onclick = branchButtonClicked;  
+
+        cell2.appendChild(button);
+        index ++;
+    }
+    console.log(table);
+}
+
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
@@ -139,12 +198,13 @@ function forgetButtonClicked(event){
     
     // Replace table 
     document.getElementById("settingsTable").innerHTML = ""; 
+    document.getElementById("settingsTable").innerHTML = ""; 
     createHtmlTable(document);
     
 
     console.log('Settings - updating table :');
     
-    //generateTable( document, table, state.repos); // generate the table first
+    //generateRepoTable( document, table, state.repos); // generate the table first
 }
 function closeWindow(){
     
