@@ -953,7 +953,8 @@ async function gitAddCommitAndPush( message){
     // Push (and create remote branch if not existing)
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
     await simpleGit( state.repos[state.repoNumber].localFolder )
-        .push( remoteBranch, {'--set-upstream' : null}, onPush);
+        //.push( remoteBranch, currentBranch, {'--set-upstream' : null}, onPush);
+        .push( 'origin', currentBranch,{'--set-upstream' : null}, onPush);
         
     function onPush(err, result) {console.log(result) };
     
