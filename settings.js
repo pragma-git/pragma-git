@@ -67,6 +67,24 @@ async function createHtmlTable(document){
             let data = Object.keys(state.repos[0]);
             console.log('Settings - data repos:');
             console.log(data);
+            
+            
+                
+            // Ammend data with a field for remote repo
+            for (let i in state.repos) {
+                let configList;
+                try{
+                    configList = await gitConfigList( state.repos[i].localFolder ); 
+                    state.repos[i].remoteURL = configList["remote.origin.url"];
+                    console.log( state.repos[i].localFolder);
+                    console.log( configList["remote.origin.url"]);   
+                }catch(err){
+                    configList = [];
+                    console.log( state.repos[i].localFolder);
+                    console.log( 'Caught error');
+                }
+            }   
+            
             generateRepoTable( document, table, state.repos); // generate the table first
             
         // Current branch table
@@ -98,24 +116,42 @@ async function createHtmlTable(document){
    //
    // Local functions
    //
+    async function gitConfigList( localFolder ){
+    let configList;
+    
+    // git -C /Users/jan/Documents/Projects/Pragma-git/Pragma-git  config  --get remote.origin.url 
+    try{
+        await simpleGit(localFolder).listConfig(onConfigList);
+        //await simpleGit(state.repos[state.repoNumber].localFolder).raw({ 'config': null, '--get': null, 'remote.origin.url' : null}, onConfigList);
+        function onConfigList(err, result ){console.log(result); configList = result.all};
+        console.log(configList);
+        
+    }catch(err){        
+        console.log('Error determining remote URL, in gitConfigList');
+        console.log(err);
+    }
+    return configList
+    }
+   
+   
    async function gitBranchList(){
-    // Made available for other scripts by export command
     let branchList;
     
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
         function onBranchList(err, result ){console.log(result); branchList = result.all};
     }catch(err){        
-        console.log('Error determining local branches, in branchClicked()');
+        console.log('Error determining local branches, in gitBranchList');
         console.log(err);
     }
     return branchList
-}
+    }
 
 
 }
 function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
+ 
     
     // Loop rows in data
     for (let element of data) {
