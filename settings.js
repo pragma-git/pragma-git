@@ -17,22 +17,104 @@ var win
 // ---------
 // FUNCTIONS
 // ---------     
-function _callback( name, event){
+async function _callback( name, event){
+    
+    let id = event.id;
+    let value, table, data2, localFolder, branchList;
+    
     console.log('_callback = ' + name);
     switch(name) {
-      case 'checkboxChanged':
+    case 'checkboxChanged':
         console.log('checkboxChanged');
         console.log(event);
-        let field = event.id;
-        let value = event.checked;
-        state[field] = value;
+        value = event.checked;
+        state[id] = value;
         break;
+        
+    case 'repoRadiobuttonChanged':
+        console.log('repoRadiobuttonChanged');
+        console.log(event);
+        value = event.checked;
+        
+        // Replace table 
+        document.getElementById("branchesTableBody").innerHTML = ""; 
+        
+         // Display changes
+        table = document.getElementById("branchesTableBody");
+        data2 = Object.keys(state.repos[id]);
+        localFolder = state.repos[id].localFolder;
+        branchList = await gitBranchList( localFolder);
+        generateBranchTable( document, table, branchList); // generate the table first
+        
+        // Show current repo
+        document.getElementById("currentRepo").innerHTML = localFolder;
+        
+        break;
+        
+    case 'addBranchButtonPressed':
+    
+        console.log('addBranchButtonPressed');
+        console.log(event);
+        
+        let branchName = document.getElementById('branchNameTextarea').value;
+        localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
+        await gitCreateBranch( localFolder, branchName);
+        
+        // Display changes
+        table = document.getElementById("branchesTableBody");
+        data2 = Object.keys(state.repos[0]);  // Used for headers
+        
+        branchList = await gitBranchList( localFolder);
+        
+        document.getElementById('branchNameTextarea').value = ""; // Clear text field
+        
+        
+        document.getElementById("branchesTableBody").innerHTML = ""; 
+        generateBranchTable( document, table, branchList); // generate the new branch table 
+        
+        break;
+
+    case 'remoteURLChanged':
+    
+        console.log('remoteURLChanged');
+        console.log(event);
+        value = event.checked;
+        break;
+
 
       default:
         // code block
     }
   
 }
+   
+async function gitBranchList( folderName){
+    let branchList;
+    
+    try{
+        await simpleGit( folderName).branch(['--list'], onBranchList);
+        function onBranchList(err, result ){console.log(result); branchList = result.all};
+    }catch(err){        
+        console.log('Error determining local branches, in gitBranchList');
+        console.log(err);
+    }
+    return branchList
+}
+   
+async function gitCreateBranch( folder, branchName){
+    
+    try{
+        const commands = [ 'branch', branchName];
+        await simpleGit( folder).raw(  commands, onCreateBranch);
+        function onCreateBranch(err, result ){console.log(result);};
+    }catch(err){        
+        console.log('Error creating local branches, in gitCreateBranch');
+        console.log(err);
+    }
+
+}
+
+
 
 function injectIntoSettingsJs(document) {
     win = gui.Window.get();
@@ -86,22 +168,12 @@ async function createHtmlTable(document){
             }   
             
             generateRepoTable( document, table, state.repos); // generate the table first
+ 
             
-        // Current branch table
-            //document.getElementById("branch_Modify").style.visibility = "visible"; 
+        // Current branch table 
             document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
             
-            let table2 = document.getElementById("branchesTableBody");
-            let data2 = Object.keys(state.repos[0]);
-            console.log('Settings - data branches:');
-            console.log(data2);
-            let branchList = await gitBranchList();
-            generateBranchTable( document, table2, branchList); // generate the table first
-            
-        
-        // Show current repo
-        document.getElementById("currentRepo").innerHTML = state.repos[state.repoNumber].localFolder;
-        
+        // branch table is generated inside generateRepoTable
         
     }else{ 
 
@@ -131,25 +203,15 @@ async function createHtmlTable(document){
     return configList
     }
    
-   
-   async function gitBranchList(){
-    let branchList;
-    
-    try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
-        function onBranchList(err, result ){console.log(result); branchList = result.all};
-    }catch(err){        
-        console.log('Error determining local branches, in gitBranchList');
-        console.log(err);
-    }
-    return branchList
-    }
+
 
 
 }
 function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
- 
+    let currentRepoFolder = state.repos[state.repoNumber].localFolder;
+    
+    let foundIndex = 0;  // index matching currentRepoFolder
     
     // Loop rows in data
     for (let element of data) {
@@ -158,12 +220,55 @@ function generateRepoTable(document, table, data) {
         //
         // Add repos to table
         //
-        let cell, text, button, textarea
+        let cell, text, button, textarea, radiobutton
         let row = table.insertRow();
-              
-        // Add column of buttons
+        
+
+         //  Into table cell : Column Repo-path with radiobuttons
         cell = row.insertCell();
-        cell.setAttribute("class", 'action');
+        cell.setAttribute("class", 'localFolder');
+        
+
+        var radiobox = document.createElement('input');
+        radiobox.setAttribute("name", "repoGroup");
+        radiobox.setAttribute("onclick", "_callback('repoRadiobuttonChanged',this)");
+        radiobox.type = 'radio';
+        radiobox.id = index;
+        radiobox.value = 'email';
+        
+        var label = document.createElement('label')
+        label.htmlFor = index;
+        var description = document.createTextNode(element.localFolder);
+        label.appendChild(description);
+        
+        var newline = document.createElement('br');
+        
+        cell.appendChild(radiobox);
+        cell.appendChild(label);
+        cell.appendChild(newline);
+        
+        // Set radio-button to current repo
+        if ( currentRepoFolder == element.localFolder){
+            radiobox.setAttribute("checked", true);
+            foundIndex = index;
+        }
+
+          
+         //  Into table cell :  Remote URL textarea
+        cell = row.insertCell();
+        cell.setAttribute("class", 'remoteURL');
+        
+        textarea = document.createElement('textarea');
+        textarea.setAttribute("id", index);
+        textarea.innerHTML = element.remoteURL;
+        textarea.onclick = 'onchange="_callback("remoteURLChanged",this)'; // TODO :
+
+        cell.appendChild(textarea);
+        
+                      
+        // Into table cell :  button
+        cell = row.insertCell();
+        cell.setAttribute("class", 'repoAction');
         
         button = document.createElement('button');
         button.setAttribute("id", index);
@@ -173,27 +278,17 @@ function generateRepoTable(document, table, data) {
         cell.appendChild(button);
         
     
-         //  Column Repo-path
-        cell = row.insertCell();
-        cell.setAttribute("class", 'localFolder');
-        text = document.createTextNode( element.localFolder );
-        cell.appendChild(text);
-
-          
-         //  Column Remote URL textarea
-        cell = row.insertCell();
-        cell.setAttribute("class", 'remoteURL');
-        
-        textarea = document.createElement('textarea');
-        textarea.setAttribute("id", index);
-        textarea.innerHTML = element.remoteURL;
-        //textarea.onclick = forgetButtonClicked;
-
-        cell.appendChild(textarea);
  
         // counter update
         index ++;
     }
+    
+    // Draw branch by simulating click
+    let event =[];
+    event.id = foundIndex; // Simulate first clicked
+    _callback( "repoRadiobuttonChanged", event);
+
+    
     console.log(table);
 }
 function generateBranchTable(document, table, branchlist) {
@@ -211,9 +306,9 @@ function generateBranchTable(document, table, branchlist) {
         let row = table.insertRow();
         
         
-        // Add column of buttons
+        // Into table cell :  button
         cell = row.insertCell();
-        cell.setAttribute("class", 'action');
+        cell.setAttribute("class", 'branchAction');
         
         button = document.createElement('button');
         button.setAttribute("id", index);
@@ -221,12 +316,12 @@ function generateBranchTable(document, table, branchlist) {
         button.onclick = forgetButtonClicked;
         cell.appendChild(button);
         
-        // Hide button and callback
+            // Hide button and callback
         button.style.display = "none";  
         button.onclick = forgetButtonClicked;  
         
     
-         //  Column Branch name textarea
+         // Into table cell :   Branch name text
         cell = row.insertCell();
         cell.setAttribute("class", 'branchName');
         text = document.createTextNode( element );
@@ -243,27 +338,24 @@ function generateBranchTable(document, table, branchlist) {
     //
     let row = table.insertRow();
     
+    // Into table cell :  button
     cell = row.insertCell();
     cell.setAttribute("class", 'action');
     
     button = document.createElement('button');
-    button.setAttribute("id", index);
+    button.setAttribute("id", "addBranchButtonPressed");
     button.innerHTML = 'Add';
-    button.onclick = forgetButtonClicked;
+    button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
     cell.appendChild(button);
     
-    // Hide button and callback
-    //button.style.display = "none";  
-    button.onclick = forgetButtonClicked;     
+      
     
-    
-    
-      //  Column Branch name textarea
+    // Into table cell :   Branch name textarea
     cell = row.insertCell();
     cell.setAttribute("class", 'branchName');
     
     textarea = document.createElement('textarea');
-    textarea.setAttribute("id", index);
+    textarea.setAttribute("id", 'branchNameTextarea');
     textarea.innerHTML = "";
     //textarea.onclick = forgetButtonClicked;
     
@@ -299,6 +391,7 @@ function forgetButtonClicked(event){
     // Replace table 
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
+
     
 
     console.log('Settings - updating table :');

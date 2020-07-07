@@ -33,17 +33,23 @@
         h2{
             text-align:center;   
         }
-        h3, h4{
+        .left, h3, h4{
             text-align:left;   
+        }
+        .right{
+            text-align:right;   
         }
         textarea{ 
             width: 100%;
         }
         iframe{
             width: 100%;
-        }
-        
-        .action {
+        }    
+        .repoAction {
+          width: 15%;
+          text-align:right; 
+        }   
+        .branchAction {
           width: 15%
         }
         .localFolder {
@@ -88,9 +94,9 @@
     
                 <table style="width:100%"> 
                     <thead><tr>
-                        <th class="action">action</th>
                         <th class="localFolder">Local folder</th>
                         <th class="remoteURL">Remote repository</th>
+                        <th class="repoAction">action</th>
                     </tr></thead>
                     <tbody id="settingsTableBody" >
                     </tbody>
@@ -116,7 +122,7 @@
                     
                 <table style="width:100%"> 
                     <thead ><tr>
-                        <th class="action">action</th>
+                        <th class="branchAction">action</th>
                         <th class="localFolder">Branch</th>
                     <tbody id="branchesTableBody">
                     </tbody>
