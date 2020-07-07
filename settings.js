@@ -10,7 +10,25 @@ var win
 
 // ---------
 // FUNCTIONS
-// ---------        
+// ---------     
+function _callback( name, event){
+    console.log('_callback = ' + name);
+    switch(name) {
+      case 'checkboxChanged':
+        console.log('checkboxChanged');
+        console.log(event);
+        let field = event.id;
+        let value = event.checked;
+        state[field] = value;
+        break;
+
+      default:
+        // code block
+    }
+    
+    
+}
+
 function injectIntoSettingsJs(document) {
     win = gui.Window.get();
     
@@ -18,11 +36,14 @@ function injectIntoSettingsJs(document) {
     console.log('Settings - state :');  
     console.log(global.state);
     
-
+    // Set values according to state variable
+    document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
+    document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
+    
+    // Build repo table
     createHtmlTable(document);
 
 };
-
 function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
@@ -49,9 +70,8 @@ function createHtmlTable(document){
    }
 
 }
-     
-// Inspired and copied from  https://www.valentinog.com/blog/html-table/
 function generateTableHead(document, table, data) {
+    // Inspired and copied from  https://www.valentinog.com/blog/html-table/
     let thead = table.createTHead();
     let row = thead.insertRow();
     for (let key of data) {
@@ -68,7 +88,7 @@ function generateTableHead(document, table, data) {
     row.appendChild(th);
     console.log(table);
 }
-       
+    
 function generateTable(document, table, data) {
     var index = 0; // Used to create button-IDs
     for (let element of data) {
@@ -93,7 +113,6 @@ function generateTable(document, table, data) {
     }
     console.log(table);
 }
-
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
@@ -127,7 +146,6 @@ function forgetButtonClicked(event){
     
     //generateTable( document, table, state.repos); // generate the table first
 }
-
 function closeWindow(){
     
     // Return

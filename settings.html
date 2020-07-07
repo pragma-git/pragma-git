@@ -26,15 +26,25 @@
         
             <hr>
          
-            <h3>Repositories from list</h3>     
+            <h3>Modify repositories from your list </h3>     
+                
+                <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
+                <h4 id="header_Forget">Forget repositories: </h4>
+    
+                <table id="settingsTable" style="width:100%"> </table>
+                
+                (you can add them again by dropping a folder into the main window) 
+                   
+          
+            <h3>Software behavior</h3>     
             
-            <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-            <h4 id="header_Forget">Forget : </h4>
+                <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="alwaysOnTop"> Main window always on top</label><br>
+                
+                <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="forceCommitBeforeBranchChange"> Force you to Store change, before changing branch</label><br>
+            
 
-            <table id="settingsTable" style="width:100%"> </table>
-               
-            
-     
         
             <br>   <!--  empty row at bottom  -->
     

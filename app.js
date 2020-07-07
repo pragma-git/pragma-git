@@ -113,7 +113,21 @@
  * 
  * 
  */
+/* BUILD
+ 
+ Using nw-builder (https://www.npmjs.com/package/nw-builder)
+ 
+ * MacOS :
+ ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild -p osx64 -o ~/Pragma-git  ~/Documents/Projects/Pragma-git/Pragma-git
+ 
+ * All Platforms :
+~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild \
+  --platforms win32,win64,osx64,linux32,linux64 \
+  --buildDir ~/Pragma-git \
+  --name Pragma-git \
+  ~/Documents/Projects/Pragma-git/Pragma-git
 
+ */
 
 // Define DEBUG features
 var devTools = false;
@@ -150,6 +164,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
+        localState.settings = false;  // True when settings window is open
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         
         
@@ -349,8 +364,8 @@ function _callback( name, event){
         var uncommitedFiles = status_data.changedFiles;
 
     
-        // Checkout branch  /  Warn about uncommited
-        if ( uncommitedFiles ){
+        // Checkout branch  /  Warn about uncommited (if that setting is enabled)
+        if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
             // Let user know that they need to commit before changing branch
             await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
             _setMode('UNKNOWN');
@@ -564,6 +579,7 @@ function _callback( name, event){
             }
             ); 
         console.log(settings_win);
+        localState.settings = true;
      return   
     };
 // ================= END CALLBACK ================= 
@@ -594,6 +610,12 @@ async function _update(){
         let result = await gitLocalFolder();
         folder = result.folderName;
         console.log('_loopTimer / run_timer - folder = ' + folder );
+    }
+    
+    // If left settings window
+    if ( localState.settings && (modeName != 'SETTINGS') ){
+        localState.settings = false;
+        updateWithNewSettings();
     }
     
     switch( modeName ) {        
@@ -663,7 +685,14 @@ async function _update(){
     
     return true
 
-  
+    //
+    // Local functions
+    //
+    function updateWithNewSettings(){
+        //Called when left settings window
+        win.setAlwaysOnTop( state.alwaysOnTop );
+        saveSettings();
+    }
 };
 async function _setMode( inputModeName){
  /* Called from the following :
