@@ -119,10 +119,8 @@ async function createHtmlTable(document){
     async function gitConfigList( localFolder ){
     let configList;
     
-    // git -C /Users/jan/Documents/Projects/Pragma-git/Pragma-git  config  --get remote.origin.url 
     try{
         await simpleGit(localFolder).listConfig(onConfigList);
-        //await simpleGit(state.repos[state.repoNumber].localFolder).raw({ 'config': null, '--get': null, 'remote.origin.url' : null}, onConfigList);
         function onConfigList(err, result ){console.log(result); configList = result.all};
         console.log(configList);
         
@@ -163,6 +161,8 @@ function generateRepoTable(document, table, data) {
              let text = document.createTextNode(element[key]);
              cell.appendChild(text);
         }
+        
+        
         // Add column of buttons
         let cell = row.insertCell();
         cell.setAttribute("class", 'right');
