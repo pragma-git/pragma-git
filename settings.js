@@ -88,7 +88,7 @@ async function createHtmlTable(document){
             generateRepoTable( document, table, state.repos); // generate the table first
             
         // Current branch table
-            document.getElementById("branch_Modify").style.visibility = "visible"; 
+            //document.getElementById("branch_Modify").style.visibility = "visible"; 
             document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
             
             let table2 = document.getElementById("branchesTableBody");
@@ -154,59 +154,122 @@ function generateRepoTable(document, table, data) {
     // Loop rows in data
     for (let element of data) {
         console.log('Element = ' + element );
+ 
+        //
+        // Add repos to table
+        //
+        let cell, text, button, textarea
         let row = table.insertRow();
-        for (key in element) {
-             let cell = row.insertCell();
-             cell.setAttribute("class", 'left');
-             let text = document.createTextNode(element[key]);
-             cell.appendChild(text);
-        }
-        
-        
+              
         // Add column of buttons
-        let cell = row.insertCell();
-        cell.setAttribute("class", 'right');
+        cell = row.insertCell();
+        cell.setAttribute("class", 'action');
         
-        var button = document.createElement('button');
+        button = document.createElement('button');
         button.setAttribute("id", index);
         button.innerHTML = 'Forget';
         button.onclick = forgetButtonClicked;
 
         cell.appendChild(button);
+        
+    
+         //  Column Repo-path
+        cell = row.insertCell();
+        cell.setAttribute("class", 'localFolder');
+        text = document.createTextNode( element.localFolder );
+        cell.appendChild(text);
+
+          
+         //  Column Remote URL textarea
+        cell = row.insertCell();
+        cell.setAttribute("class", 'remoteURL');
+        
+        textarea = document.createElement('textarea');
+        textarea.setAttribute("id", index);
+        textarea.innerHTML = element.remoteURL;
+        //textarea.onclick = forgetButtonClicked;
+
+        cell.appendChild(textarea);
+ 
+        // counter update
         index ++;
     }
     console.log(table);
 }
 function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
-    
+    let cell, text, button;
+ 
+ 
+    //
+    // Add branches to table
+    //
+       
     // Loop rows in data
     for (let element of branchlist) {
         console.log('Element = ' + element );
         let row = table.insertRow();
-        //for (key in element) {
-             let cell = row.insertCell();
-             cell.setAttribute("class", 'left');
-             let text = document.createTextNode(element);
-             cell.appendChild(text);
-        //}
+        
         
         // Add column of buttons
-        let cell2 = row.insertCell();
-        cell2.setAttribute("class", 'right');
+        cell = row.insertCell();
+        cell.setAttribute("class", 'action');
         
-        var button = document.createElement('button');
+        button = document.createElement('button');
         button.setAttribute("id", index);
         button.innerHTML = 'Delete';
+        button.onclick = forgetButtonClicked;
+        cell.appendChild(button);
         
         // Hide button and callback
         button.style.display = "none";  
-        //button.onclick = branchButtonClicked;  
+        button.onclick = forgetButtonClicked;  
+        
+    
+         //  Column Branch name textarea
+        cell = row.insertCell();
+        cell.setAttribute("class", 'branchName');
+        text = document.createTextNode( element );
+        cell.appendChild(text);
 
-        cell2.appendChild(button);
+
+
         index ++;
     }
     console.log(table);
+    
+    //
+    // Add branch (extra row at end)
+    //
+    let row = table.insertRow();
+    
+    cell = row.insertCell();
+    cell.setAttribute("class", 'action');
+    
+    button = document.createElement('button');
+    button.setAttribute("id", index);
+    button.innerHTML = 'Add';
+    button.onclick = forgetButtonClicked;
+    cell.appendChild(button);
+    
+    // Hide button and callback
+    //button.style.display = "none";  
+    button.onclick = forgetButtonClicked;     
+    
+    
+    
+      //  Column Branch name textarea
+    cell = row.insertCell();
+    cell.setAttribute("class", 'branchName');
+    
+    textarea = document.createElement('textarea');
+    textarea.setAttribute("id", index);
+    textarea.innerHTML = "";
+    //textarea.onclick = forgetButtonClicked;
+    
+    cell.appendChild(textarea);
+
+   
 }
 
 function forgetButtonClicked(event){
