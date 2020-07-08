@@ -1235,6 +1235,8 @@ function saveSettings(){
     fs.writeFileSync(settingsFile, jsonString);
 }
 function loadSettings(settingsFile){
+
+    
     try{
         jsonString = fs.readFileSync(settingsFile);
         state = JSON.parse(jsonString);
@@ -1260,6 +1262,9 @@ function loadSettings(settingsFile){
         localState.branchNumber = 0;
         
         state.repos = [];
+        
+        state.alwaysOnTop = true;
+        state.forceCommitBeforeBranchChange = true;
         
         console.log(err);
 
