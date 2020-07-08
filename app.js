@@ -287,8 +287,20 @@ function _callback( name, event){
                     
                     await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
                     function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+                    
+                    //await gitAddCommitAndPush( 'First commit');
         
                     topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+                    
+                // Initial commit
+                    setStatusBar( 'Initial commit');
+                    await simpleGit( state.repos[state.repoNumber].localFolder )
+                        .commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+                        
+                    function onCommit(err, result) {console.log(result) };
+                    
+                    await waitTime( 1000);
+                    
                 }else{
                     // bail out if rejected permission
                     return 
@@ -655,6 +667,18 @@ async function _update(){
             break;
             
         case 'CHANGED_FILES':
+            try{
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
+                // If not correct mode, fix :
+                if (!status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+            }catch(err){
+                console.log('update --  case "CHANGED_FILES" caught error');
+                _setMode('UNKNOWN');
+            }
             setTitleBar( 'top-titlebar-repo-text', folder );
             setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
             setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
@@ -748,12 +772,12 @@ async function _setMode( inputModeName){
                 // Populate  status_data
                 try{
                     status_data = await gitStatus();
+                    console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
                 }catch(err){
                     status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
                 }
 
                 // Log sources to determine mode
-                console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
                 console.log(status_data);  
                 console.log(messageLength);
                 console.log(numberOfRepos);
@@ -768,10 +792,14 @@ async function _setMode( inputModeName){
                 }       
                 
                 // NO_FILES_TO_COMMIT
-                 if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
-                    newModeName = 'NO_FILES_TO_COMMIT'; 
-                    _setMode( newModeName);
-                    break;
+                try{
+                    if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
+                        newModeName = 'NO_FILES_TO_COMMIT'; 
+                        _setMode( newModeName);
+                        break;
+                    }
+                }catch(err){
+                    console.log('_setMode --  case "CHANGED_FILES" caught error');
                 }          
                          
                 // CHANGED_FILES 
