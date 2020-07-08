@@ -282,24 +282,32 @@ function _callback( name, event){
                 
                 // Create repo
                 if ( confirmationDialog(string) ) {
+                    
+                    setStatusBar( 'Initializing git');
+                    
                     await simpleGit(folder).init( onInit );
                     function onInit(err, initResult) { }
                     
                     await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
                     function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
                     
+                    await waitTime( 1000);
+                    
                     //await gitAddCommitAndPush( 'First commit');
         
                     topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
                     
-                // Initial commit
+                    // Initial commit
                     setStatusBar( 'Initial commit');
-                    await simpleGit( state.repos[state.repoNumber].localFolder )
-                        .commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+                    let outputData;
+                    await simpleGit( folder )
+                        .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
+                        //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
                         
-                    function onCommit(err, result) {console.log(result) };
+                    function onCommit(err, result) {console.log(result); outputData = result };
                     
                     await waitTime( 1000);
+                    console.log(outputData);
                     
                 }else{
                     // bail out if rejected permission
