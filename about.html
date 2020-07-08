@@ -126,27 +126,34 @@
          
          
          <h4>Adding remote repository </h4> 
-         
-         <p>A remote repository is a git which your work can be mirrored to.  This software automatically pushes changes to the remote repository, when
-            you press the Store button.  
-         </p>
-         
-         <p>There are multiple remote repositories you can use on internet, where one popular site is 
-            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
-         </p>
-         
-        <p> Get an account, go to the web interface, and create a new repository.  
-            You will get a link on the format <code>https://github.com/JanAxelssonTest/test3.git</code> which you need to copy.    
-        </p>
-                   
-         <p>Once you have got a repository, you add this remote repository from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
-            The format is (same as your copied link, but with <code>user:password</code>, and an <code>@</code>-sign added) : <br>
-            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.
-            Here,  
-            <code>USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> are exchanged  <br>
-            with their proper values.  For instance :<br>
-            <code  style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/imlook4d</code>
-         </p>                      
+             
+             <p>A remote repository is a git which your work can be mirrored to.  This software automatically pushes changes to the remote repository, when
+                you press the Store button.  
+             </p>
+             
+             <p>There are multiple remote repositories you can use on internet, where one popular site is 
+                <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+             </p>
+             
+            <p> Get an account, go to the web interface, and create a new repository.  
+                You will get a link on the format <code>https://github.com/JanAxelssonTest/test3.git</code> which you need to copy.    
+            </p>
+                       
+             <p>Using this link, you add the remote repository from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
+                The link is entered in the text-field under "Remote repository" with the format (same as your copied link, but with <code>user:password</code>, and an <code>@</code>-sign added) : <br>
+                <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+                Here,  
+                <code>USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> are exchanged  <br>
+                with their proper values.  For instance :<br>
+                <code  style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/imlook4d</code>
+             </p>  
+             
+                                    
+             <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button.
+                If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
+                <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button again.
+             </p>                      
+                                
             
          <h2>Installation </h2>
              
