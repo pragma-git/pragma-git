@@ -15,7 +15,12 @@
         }        
         h2, h3{
             text-align:center;   
+        }       
+        code{
+            color: #006400; 
+            font-size: 11pt;  
         }
+
 
         
     </style>
@@ -37,11 +42,11 @@
         <h4>Intro</h4>
                                
             <p>This app aims to be a user-friendly revision control client. 
-             It fits people working on their own projects, or that find git overwhelming. 
+                It fits people working on their own projects, or that find git overwhelming. 
             </p>
                                
             <p> The app uses "git" behind the scene, and is therefore fully compatible and 
-             can be used interchangeably together with other git softwares.
+                can be used interchangeably together with other git softwares.
             </p>            
             
             
@@ -66,7 +71,7 @@
               <dt></dt>
             </dl>  
             
-             <p>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below).
+            <p>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below).
             </p>
                    
                                   
@@ -105,27 +110,53 @@
             
             
          <h3 id="Advanced">Advanced </h3>
+         
+         <h4>Multiple repositories and branches </h4>    
              
-            <p><u>Repositories</u> : You can have multiple active project folders (repositories). 
-            You switch by clicking the name (the first text in the title bar), to change to next project in the list.
+            <p><u>Repositories</u> : You can have multiple active project folders (repositories), added by drag-and drop as described above. 
+                You switch by clicking the name (the first text in the title bar), to change to next project in the list.
             </p>
               
             <p><u>Branches</u> : You can have multiple branches of your work, that you can switch between. 
-            You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
+                You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
             </p>           
+             <p>Branches can be created from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">
+                where a new branch can be created.  TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  
+            </p>             
+         
+         
+         <h4>Adding remote repository </h4> 
+         
+         <p>A remote repository is a git which your work can be mirrored to.  This software automatically pushes changes to the remote repository, when
+            you press the Store button.  
+         </p>
+         
+         <p>There are multiple remote repositories you can use on internet, where one popular site is 
+            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+         </p>
+         
+        <p> Get an account, go to the web interface, and create a new repository.  
+            You will get a link on the format <code>https://github.com/JanAxelssonTest/test3.git</code> which you need to copy.    
+        </p>
+                   
+         <p>Once you have got a repository, you add this remote repository from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
+            The format is (same as your copied link, but with <code>user:password</code>, and an <code>@</code>-sign added) : <br>
+            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+            Here,  
+            <code>USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> are exchanged  <br>
+            with their proper values.  For instance :<br>
+            <code  style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/imlook4d</code>
+         </p>                      
             
-        <hr>   
-              
-            
-         <h4>Installation </h4>
+         <h2>Installation </h2>
              
-            <p><u>Git</u> : The code relies on the standard installation of git 
-            (<a href=https://www.atlassian.com/git/tutorials/install-git' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a>)
+            <p><u>Git</u> : The code relies on the standard installation of git. 
+                (<a href=https://www.atlassian.com/git/tutorials/install-git' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a>)
             </p>
         
             
         <hr>             
-        <h4>Acknowledgements</h4>
+        <h2>Credits</h2>
             
             <dl>
               <dt>This program could not have been written without the following input and code </dt>

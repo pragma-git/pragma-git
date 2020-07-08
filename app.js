@@ -33,7 +33,7 @@
  * 
  * Open questions
  * 
- * - Fix so that setting remote URL repo works.  Also test how passwords may come in.  (one solution to always add credentials : https://stackoverflow.com/questions/55061954/simple-git-requesting-username-and-password-on-each-git-command)
+ * - Test if git is installed
  * 
  * - Hide branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
@@ -133,6 +133,16 @@
   ~/Documents/Projects/Pragma-git/Pragma-git
 
  */
+
+/* New repo
+ *  
+ * Create github repo
+ * Drop files and initialize (TODO: initialize and do first commmit)
+ * Make first commit
+ * git remote add origin https://github.com/JanAxelssonTest/test3.git  // git push -u origin master denied
+ * git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test3.git 
+ * git push -u origin master
+ */ 
 
 // Define DEBUG features
 var devTools = false;

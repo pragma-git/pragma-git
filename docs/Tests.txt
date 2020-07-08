@@ -61,6 +61,18 @@ TOKEN=f749ea8473a1afb417dc78f674369ec77b5fa62c
 
     git remote add origin https://$USER:$TOKEN@github.com/$USER/$NEW_REPO
     git push -u origin master
+    
+    
+    # Eller långa varianten från github när man gör nytt repo
+        echo "# test" >> README.md
+        git init
+        git add README.md
+        git commit -m "first commit"
+        git remote add origin https://github.com/JanAxelssonTest/test.git
+        git push -u origin master
+        
+    # Modify url
+        git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
 
 
 

@@ -74,13 +74,52 @@ async function _callback( name, event){
         
         break;
 
-    case 'remoteURLChanged':
-    
-        console.log('remoteURLChanged');
-        console.log(event);
-        value = event.checked;
-        break;
 
+    case 'setButtonClicked':
+    
+        console.log('setButtonClicked');
+        console.log(event);
+        value = event.value;
+        
+        let realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
+        let textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
+        localFolder = state.repos[ realId].localFolder;  
+        
+        // Make black, to show user that something happened (if green or red before
+        document.getElementById(textareaId).style.color='grey';
+        
+        // Set remote url
+        const newUrl = document.getElementById(textareaId).value;
+        try{
+            const commands = [ 'remote', 'set-url','origin', newUrl];
+            await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
+            function onSetRemoteUrl(err, result ){console.log(result) };
+            
+            // Set if change didn't cause error (doesn't matter if URL works)
+            state.repos[realId].remoteURL = newUrl;
+        }catch(err){
+            console.log('Repository set URL failed');
+            console.log(err);
+            document.getElementById(textareaId).style.color='orange';
+        }        
+        
+        
+        // Test if remote works
+        try{
+            await simpleGit( localFolder).listRemote( onListRemote);
+            function onListRemote(err, result ){console.log(result) };
+            document.getElementById(textareaId).style.color='green';
+
+        }catch(err){
+            console.log('Repository test failed');
+            console.log(err);
+            document.getElementById(textareaId).style.color='red';
+        }
+        
+
+        // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
+        
+        break;
 
       default:
         // code block
@@ -254,16 +293,23 @@ function generateRepoTable(document, table, data) {
         }
 
           
-         //  Into table cell :  Remote URL textarea
+         //  Into table cell :  Remote URL textarea + button
         cell = row.insertCell();
         cell.setAttribute("class", 'remoteURL');
         
         textarea = document.createElement('textarea');
-        textarea.setAttribute("id", index);
-        textarea.innerHTML = element.remoteURL;
-        textarea.onclick = 'onchange="_callback("remoteURLChanged",this)'; // TODO :
-
+        textarea.setAttribute("id", index + 10000);
+        textarea.value = element.remoteURL;
         cell.appendChild(textarea);
+        
+            // Test-button
+        cell = row.insertCell();
+        cell.setAttribute("class", 'setURL');
+        button = document.createElement('button');
+        button.setAttribute("id", index + 20000);
+        button.innerHTML = 'Set';
+        button.setAttribute("onclick", "_callback('setButtonClicked',this)");
+        cell.appendChild(button);
         
                       
         // Into table cell :  button
