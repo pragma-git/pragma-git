@@ -914,6 +914,33 @@ async function _setMode( inputModeName){
 }
 
 // Git commands
+ function gitIsInstalled(){
+    var isInstalled = false;
+    var resultMessage = "";
+    try{
+         simpleGit().raw([ 'version'], test );
+        function test(err, result){ 
+            console.log(result); 
+            resultMessage = result;
+            isInstalled = true;
+        }; 
+    }catch(err){
+        console.log(err); 
+    }
+
+    // Alert dialog if not installed
+    if ( !state.git ){
+        var string = 'Cannot find "git" !'+ os.EOL;
+        string += ' ' + os.EOL;
+        string += 'Please make sure "git" is installed. ' + os.EOL;
+        string += 'See manual for help (question mark icon in top-left corner of the main window) ' ;
+        
+        alert(string);
+    }
+
+    return isInstalled;
+
+}
 async function gitStatus(){
     // Determine if changed files (from git status)
     let status_data = [] ;  
@@ -1241,7 +1268,7 @@ function saveSettings(){
     var jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
 }
-function loadSettings(settingsFile){
+async function loadSettings(settingsFile){
 
     
     try{
@@ -1309,6 +1336,10 @@ function loadSettings(settingsFile){
         console.log('Error setting window position and size');
         console.log(err);
     }
+    
+
+
+    
     return state;
 }
 
@@ -1349,7 +1380,7 @@ window.onload = function() {
   
   
   // Listen to main window's close event
-  //nw.Window.get().on('close', closeWindowHandler);
+  nw.Window.get().on('close', closeWindowHandler);
   
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup
@@ -1357,7 +1388,9 @@ window.onload = function() {
   
   _setMode('UNKNOWN');
   _update();
-
+  
+  // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
+  setTimeout(gitIsInstalled, 2000);
 
 };
 
