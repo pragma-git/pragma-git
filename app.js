@@ -33,9 +33,11 @@
  * 
  * Open questions
  * 
+ * - Pull 
+ * 
  * - Test if git is installed
  * 
- * - Hide branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
+ * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
  * - Add pull from remote (icon in title-bar after "repo(branch)"
  * 
@@ -254,6 +256,7 @@ function _callback( name, event){
         const entry = item.webkitGetAsEntry();
         
         var file = item.getAsFile().path;
+        file = file.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
         var folder = file; // Guess that a folder was dropped 
     
         if (entry.isFile) {
@@ -318,7 +321,8 @@ function _callback( name, event){
             // Find top folder of Repo
             await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
             function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-            topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
     
         }catch(error){
             console.log(error);
@@ -776,6 +780,7 @@ async function _setMode( inputModeName){
                 let numberOfRepos = state.repos.length;
                 let historyNumberPointer = localState.historyNumber;
                 let status_data = []; 
+                status_data.changedFiles = false;
                 
                 // Populate  status_data
                 try{
