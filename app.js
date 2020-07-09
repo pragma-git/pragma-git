@@ -33,9 +33,11 @@
  * 
  * Open questions
  * 
+ * - Test if git is installed
+ * 
  * - Pull 
  * 
- * - Test if git is installed
+ * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
