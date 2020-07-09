@@ -1268,7 +1268,7 @@ function saveSettings(){
     var jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
 }
-async function loadSettings(settingsFile){
+function loadSettings(settingsFile){
 
     
     try{
@@ -1380,7 +1380,7 @@ window.onload = function() {
   
   
   // Listen to main window's close event
-  nw.Window.get().on('close', closeWindowHandler);
+  nw.Window.get().on('close', closeWindow);
   
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup
