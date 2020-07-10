@@ -33,7 +33,12 @@
  * 
  * Open questions
  * 
- * - Pull 
+ * - Git clone from within the Settings ?
+ * 
+ * - Merge conflicts with external tool : git difftool -y file
+ * - Identify conflicts git status field: simple-git(folder).status .conflicted; Array of files being in conflict (there is a conflict if length>0)
+ * - Maybe add a 
+ *
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
@@ -991,6 +996,7 @@ async function gitStatus(){
     // return fields : 
     //      changedFiles (boolean) 
     //      modified, not_added, deleted (integers)
+    //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     return status_data;  
 }
 async function gitBranchList(){
