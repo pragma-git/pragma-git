@@ -393,25 +393,34 @@ function generateRepoTable(document, table, data) {
         let row = table.insertRow();
 
 
-
         // Into table cell :  Folder dialog
+        var div1 = document.createElement("div");
+        div1.style.float = "left";
+        
+        
         cell = row.insertCell();
         cell.setAttribute("class", 'repoAction');
         
         button = document.createElement('button');
         button.setAttribute("id", "folderSelectButton");  // ID
         button.innerHTML = 'Select folder';
+        button.style.verticalAlign = "middle";
         //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
-        cell.appendChild(button);  
+        
+        div1.appendChild(button);
+        cell.appendChild(div1);  
 
 
          //  Into table cell :  Local folder
         //cell = row.insertCell();
+        var div2 = document.createElement("div");
+        div2.style.float = "left";
+        
         cell.setAttribute("class", 'localFolder');
         textarea = document.createElement('textarea');
-        textarea.setAttribute("style", 'float:left; line-height:1.2');
         textarea.setAttribute("id", "cloneLocalFolder");  // ID
-        cell.appendChild(textarea);
+        div2.appendChild(textarea);
+        cell.appendChild(div2);
 
 
          //  Into table cell :  Remote URL textarea + button
