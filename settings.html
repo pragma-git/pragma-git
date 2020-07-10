@@ -116,7 +116,17 @@
                     <tbody id="settingsTableBody" >
                     </tbody>
                 </table>
-                
+
+ 
+                <!--  Hidden open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
+                <input id = "cloneFolderInputButton" 
+                    type="file" nwdirectory directory multiple="false" 
+                    style='visibility: hidden;' 
+                    onchange="_callback('folderSelectButtonPressed',this)" 
+                    name="img"/> 
+ 
+                    
+                </script>
 
             <br> 
             <br> 

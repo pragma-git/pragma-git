@@ -20,167 +20,223 @@ var win
 async function _callback( name, event){
     
     let id = event.id;
-    let value, table, data2, localFolder, branchList;
+    let value, table, data2, branchList;
+    var localFolder;
     let textareaId, realId;
     let newUrl;
     
     console.log('_callback = ' + name);
     switch(name) {
-    case 'checkboxChanged':
-        console.log('checkboxChanged');
-        console.log(event);
-        value = event.checked;
-        state[id] = value;
-        break;
         
-    case 'repoRadiobuttonChanged':
-        console.log('repoRadiobuttonChanged');
-        console.log(event);
-        value = event.checked;
         
-        // Replace table 
-        document.getElementById("branchesTableBody").innerHTML = ""; 
-        
-         // Display changes
-        table = document.getElementById("branchesTableBody");
-        data2 = Object.keys(state.repos[id]);
-        localFolder = state.repos[id].localFolder;
-        branchList = await gitBranchList( localFolder);
-        generateBranchTable( document, table, branchList); // generate the table first
-        
-        // Show current repo
-        document.getElementById("currentRepo").innerHTML = localFolder;
-        
-        break;
-        
-    case 'addBranchButtonPressed':
+        case 'checkboxChanged':
+            console.log('checkboxChanged');
+            console.log(event);
+            value = event.checked;
+            state[id] = value;
+            break;
     
-        console.log('addBranchButtonPressed');
-        console.log(event);
-        
-        let branchName = document.getElementById('branchNameTextarea').value;
-        localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
-        await gitCreateBranch( localFolder, branchName);
-        
-        // Display changes
-        table = document.getElementById("branchesTableBody");
-        data2 = Object.keys(state.repos[0]);  // Used for headers
-        
-        branchList = await gitBranchList( localFolder);
-        
-        document.getElementById('branchNameTextarea').value = ""; // Clear text field
-        
-        
-        document.getElementById("branchesTableBody").innerHTML = ""; 
-        generateBranchTable( document, table, branchList); // generate the new branch table 
-        
-        break;
 
-
-    case 'setButtonClicked':
+            
+        case 'folderSelectButtonPressed' :
+            console.log('Selected folder = ');
+            console.log(event.value);
+            console.log(event);
+            
+            let localFolder = event.value;
+            
+            // I know that the last row has index same as length of number of repos
+            document.getElementById(state.repos.length).value = localFolder;
+        
+            break;
     
-        console.log('setButtonClicked');
-        console.log(event);
-        value = event.value;
-        
-        realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
-        textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-        
-        
-        // Make black, to show user that something happened (if green or red before
-        document.getElementById(textareaId).style.color='grey';
-        
-        
-        //  Testing URL for cloning (last realId) => skip the add remote
-        if ( realId <  state.repos.length ){
+
             
-            localFolder = state.repos[ realId].localFolder;  
+        case 'cloneButtonPressed' :
+            console.log('cloneButtonPressed');
             
-            // Set remote url
-            newUrl = document.getElementById(textareaId).value;
-            try{
-                const commands = [ 'remote', 'set-url','origin', newUrl];
-                await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
-                function onSetRemoteUrl(err, result ){console.log(result) };
+            // I know that the last row has index same as length of number of repos
+            id = state.repos.length;
+            
+            let folder = document.getElementById(id).value;  // ID 3
+            let URL = document.getElementById( id + 10000).value; // ID 10003
+            
+            await gitClone( folder, URL);
+        
+            break;
+
+            
+        case 'repoRadiobuttonChanged':
+            console.log('repoRadiobuttonChanged');
+            console.log(event);
+            value = event.checked;
+            
+            // Replace table 
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            
+             // Display changes
+            table = document.getElementById("branchesTableBody");
+            data2 = Object.keys(state.repos[id]);
+            localFolder = state.repos[id].localFolder;
+            branchList = await gitBranchList( localFolder);
+            generateBranchTable( document, table, branchList); // generate the table first
+            
+            // Show current repo
+            document.getElementById("currentRepo").innerHTML = localFolder;
+            
+            break;
+ 
+ 
+            
+        case 'addBranchButtonPressed':
+        
+            console.log('addBranchButtonPressed');
+            console.log(event);
+            
+            let branchName = document.getElementById('branchNameTextarea').value;
+            localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
+            await gitCreateBranch( localFolder, branchName);
+            
+            // Display changes
+            table = document.getElementById("branchesTableBody");
+            data2 = Object.keys(state.repos[0]);  // Used for headers
+            
+            branchList = await gitBranchList( localFolder);
+            
+            document.getElementById('branchNameTextarea').value = ""; // Clear text field
+            
+            
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            generateBranchTable( document, table, branchList); // generate the new branch table 
+            
+            break;
+    
+ 
+    
+        case 'setButtonClicked':
+        
+            console.log('setButtonClicked');
+            console.log(event);
+            value = event.value;
+            
+            realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
+            textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
+            
+            
+            // Make black, to show user that something happened (if green or red before
+            document.getElementById(textareaId).style.color='grey';
+            
+            
+            //  Testing URL for cloning (last realId) => skip the add remote
+            if ( realId <  state.repos.length ){
                 
-                // Set if change didn't cause error (doesn't matter if URL works)
-                state.repos[realId].remoteURL = newUrl;
+                localFolder = state.repos[ realId].localFolder;  
+                
+                // Set remote url
+                newUrl = document.getElementById(textareaId).value;
+                try{
+                    const commands = [ 'remote', 'set-url','origin', newUrl];
+                    await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
+                    function onSetRemoteUrl(err, result ){console.log(result) };
+                    
+                    // Set if change didn't cause error (doesn't matter if URL works)
+                    state.repos[realId].remoteURL = newUrl;
+                }catch(err){
+                    console.log('Repository set URL failed');
+                    console.log(err);
+                    document.getElementById(textareaId).style.color='orange';
+                }           
+                
+            }
+
+            // Test if remote works
+            try{
+                await simpleGit( ).listRemote( onListRemote);
+                function onListRemote(err, result ){console.log(result) };
+                document.getElementById(textareaId).style.color='green';
+    
             }catch(err){
-                console.log('Repository set URL failed');
+                console.log('Repository test failed');
                 console.log(err);
-                document.getElementById(textareaId).style.color='orange';
-            }           
+                document.getElementById(textareaId).style.color='red';
+            }
             
-        }
-
-        
-        
-        // Test if remote works
-        try{
-            await simpleGit( ).listRemote( onListRemote);
-            function onListRemote(err, result ){console.log(result) };
-            document.getElementById(textareaId).style.color='green';
-
-        }catch(err){
-            console.log('Repository test failed');
-            console.log(err);
-            document.getElementById(textareaId).style.color='red';
-        }
-        
-
-        // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
-        
-        break;
-
     
-    case 'cloneButtonPressed':
-    
-        console.log('setButtonClicked');
-        console.log(event);
-        value = event.value;
-        
-        realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
-        textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-        localFolder = state.repos[ realId].localFolder;  
-        
-        // Make black, to show user that something happened (if green or red before
-        document.getElementById(textareaId).style.color='grey';
-        
-        // Set remote url
-        newUrl = document.getElementById(textareaId).value;
-        try{
-            const commands = [ 'remote', 'set-url','origin', newUrl];
-            await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
-            function onSetRemoteUrl(err, result ){console.log(result) };
+            // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
             
-            // Set if change didn't cause error (doesn't matter if URL works)
-            state.repos[realId].remoteURL = newUrl;
-        }catch(err){
-            console.log('Repository set URL failed');
-            console.log(err);
-            document.getElementById(textareaId).style.color='orange';
-        }        
-        
-        
-        // Test if remote works
-        try{
-            await simpleGit( ).listRemote( onListRemote);
-            function onListRemote(err, result ){console.log(result) };
-            document.getElementById(textareaId).style.color='green';
+            break;
 
-        }catch(err){
-            console.log('Repository test failed');
-            console.log(err);
-            document.getElementById(textareaId).style.color='red';
-        }
-        
 
-        // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
-        
-        break;
-    }
+    } // End switch
 }
-   
+ 
+  
+async function gitClone( folderName, repoURL){
+
+
+        await simpleGit( folderName).clone(  repoURL, onClone);
+        function onClone(err, result ){console.log(result) }; 
+        
+        
+        
+//TODO :
+
+// - clones fine . Fix output result
+// - clones into subfolder.  Move into the new subfolder, add repository (like dropFile,  but make it programmed)
+// - update Settings tables, so one can see that it worked.
+
+//example :
+// /Users/jan/Desktop/TEMP/cloned-TestJanAxelssonTest/
+// https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test3.git
+
+
+
+        
+        
+        
+        
+ 
+ 
+        
+        //// Make black, to show user that something happened (if green or red before
+        //document.getElementById(textareaId).style.color='grey';
+        
+        //// Set remote url
+        //newUrl = document.getElementById(textareaId).value;
+        //try{
+            //const commands = [ 'remote', 'set-url','origin', newUrl];
+            //await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
+            //function onSetRemoteUrl(err, result ){console.log(result) };
+            
+            //// Set if change didn't cause error (doesn't matter if URL works)
+            //state.repos[realId].remoteURL = newUrl;
+        //}catch(err){
+            //console.log('Repository set URL failed');
+            //console.log(err);
+            //document.getElementById(textareaId).style.color='orange';
+        //}        
+        
+        
+        //// Test if remote works
+        //try{
+            //await simpleGit( ).listRemote( onListRemote);
+            //function onListRemote(err, result ){console.log(result) };
+            //document.getElementById(textareaId).style.color='green';
+
+        //}catch(err){
+            //console.log('Repository test failed');
+            //console.log(err);
+            //document.getElementById(textareaId).style.color='red';
+        //}
+        
+
+
+    
+
+
+} 
+
+  
 async function gitBranchList( folderName){
     let branchList;
     
@@ -403,6 +459,9 @@ function generateRepoTable(document, table, data) {
         // Into first cell : put a small table inside first cell
         cell = row.insertCell();
         
+      
+            
+        
             // Into table cell :  Folder dialog
 
             innerCell = innerTableRow.insertCell();
@@ -412,7 +471,7 @@ function generateRepoTable(document, table, data) {
             button.setAttribute("id", "folderSelectButton");  // ID
             button.innerHTML = 'Folder';
             button.style.verticalAlign = "middle";
-            //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
+            button.setAttribute('onclick','document.getElementById("cloneFolderInputButton").click();');   // This calls the hidden folder dialog input-element in settings.html
             innerCell.appendChild(button);  
     
              //  Into table cell :  Local folder
@@ -420,7 +479,7 @@ function generateRepoTable(document, table, data) {
             innerCell.setAttribute("class", 'cloneLocalFolder');
             
             textarea = document.createElement('textarea');
-            textarea.setAttribute("id", "cloneLocalFolder");  // ID
+            textarea.setAttribute("id", index);  // ID  
             
             innerCell.appendChild(textarea);
                
@@ -548,6 +607,7 @@ function generateBranchTable(document, table, branchlist) {
 
    
 }
+
 
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
