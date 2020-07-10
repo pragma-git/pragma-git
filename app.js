@@ -227,12 +227,10 @@ function _callback( name, event){
         folderClicked();
         break;
       case 'clicked-push-button':
-        //folderClicked();
         gitPush();
         break;
       case 'clicked-pull-button':
-        //folderClicked();
-        console.log('TODO : implement pull functionality (clicked-pull-button)');
+        gitPull();
         break;
         
         
@@ -675,6 +673,13 @@ async function _update(){
         document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
     }
     
+    // Update Pull button
+    if (status_data.behind > 0){
+        document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+    }else{
+        document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden'
+    }
+        
     switch( modeName ) {        
         case 'UNKNOWN':
             _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
@@ -1095,6 +1100,39 @@ async function gitPush(){
     await waitTime( 1000);  
 
 }
+async function gitPull(){
+    
+    var error = "";
+    // Read current branch
+    try{
+        status_data = await gitStatus();
+    }catch(err){
+    }
+    
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+
+    // Pull
+    if (status_data.behind > 0){
+        setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
+
+        try{
+            await simpleGit( state.repos[state.repoNumber].localFolder ).pull( onPull);
+            function onPull(err, result) {console.log(result) };
+            
+            await writeTimedMessage( 'Successfully pulled files from remote' + os.EOL + error, true, WAIT_TIME);
+        }catch(err){
+            console.log('Error in gitPull()');
+            console.log(err);
+            error = err;
+            await writeTimedMessage( 'Failure pulling files from remote ' + os.EOL + error, true, WAIT_TIME);
+        }
+        _setMode('UNKNOWN');
+    }else {
+        writeTimedMessage( 'No files can be pulled from remote' + os.EOL + error, true, WAIT_TIME);
+    }
+
+}
 
 // Utility functions
 function getMode(){
@@ -1263,15 +1301,17 @@ async function  writeTimedMessage( message, placeholder, time){
     // Pause timer
     isPaused = true;
     
+    
     // Store old message
-    var oldMessage = document.getElementById('message').value;
-    if (placeholder){
-        oldMessage = document.getElementById('message').placeholder;
-    }
+    var oldMessage_value = document.getElementById('message').value;
+    var oldMessage_placeholder = document.getElementById('message').placeholder;
     
     // Show new message and wait
     writeMessage( message, placeholder);
     await waitTime( time).catch({});
+    
+    document.getElementById('message').value = oldMessage_value;
+    document.getElementById('message').placeholder = oldMessage_placeholder;
     
     // Restore old message (if user hasn't written something in the wait time
     if ( document.getElementById('message').length == 0 ){
