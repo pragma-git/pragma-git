@@ -148,13 +148,23 @@
             <!--  Software settings -->
             
             <h3>Software behavior</h3>     
-            
+                
+            <h4>Visual</h4>  
+                   
+                <!--  Always on top -->
                 <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="alwaysOnTop"> Main window always on top</label><br>
                 
+            <h4>Git</h4>  
+                <!--  Force commit before branch change -->
                 <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="forceCommitBeforeBranchChange"> Force you to Store change, before changing branch</label><br>
+                
+                 <!--  Auto-push to remote -->
+                <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="autoPushToRemote"> Automatically push to remote when pressing Store</label><br>
             
+           
 
         
             <br>   

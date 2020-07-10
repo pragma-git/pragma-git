@@ -228,6 +228,18 @@ function _callback( name, event){
       case 'clicked-folder':
         folderClicked();
         break;
+      case 'clicked-push-button':
+        //folderClicked();
+        gitPush();
+        break;
+      case 'clicked-pull-button':
+        //folderClicked();
+        console.log('TODO : implement pull functionality (clicked-pull-button)');
+        break;
+        
+        
+        
+        
       case 'clicked-settings':
         showSettings();
         break;
@@ -650,13 +662,19 @@ async function _update(){
         status_data = await gitStatus();
         let result = await gitLocalFolder();
         folder = result.folderName;
-        console.log('_loopTimer / run_timer - folder = ' + folder );
     }
     
     // If left settings window
     if ( localState.settings && (modeName != 'SETTINGS') ){
         localState.settings = false;
         updateWithNewSettings();
+    }
+    
+    // Update Push button
+    if (status_data.ahead > 0){
+        document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+    }else{
+        document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
     }
     
     switch( modeName ) {        
@@ -787,7 +805,7 @@ async function _setMode( inputModeName){
                 // Populate  status_data
                 try{
                     status_data = await gitStatus();
-                    console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
+                    //console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
                 }catch(err){
                     status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
                 }
@@ -954,11 +972,10 @@ async function gitStatus(){
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder)
             .status( onStatus);
-        function onStatus(err, result ){ console.log(result); console.log(err);status_data = result }
+        function onStatus(err, result ){  status_data = result }
         
         status_data.changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
-        console.log('gitStatus -----');
-        console.log(status_data);
+        //console.log(status_data);
         status_data.current;  // Name of current branch
     }catch(err){
         console.log('Error in _mainLoop()');
@@ -1036,19 +1053,47 @@ async function gitAddCommitAndPush( message){
     
     await waitTime( 1000);
     
-    // Push (and create remote branch if not existing)
-    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    await simpleGit( state.repos[state.repoNumber].localFolder )
-        //.push( remoteBranch, currentBranch, {'--set-upstream' : null}, onPush);
-        .push( 'origin', currentBranch,{'--set-upstream' : null}, onPush);
+    if (state.autoPushToRemote){
+        //// Push (and create remote branch if not existing)
+        //setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+        //await simpleGit( state.repos[state.repoNumber].localFolder )
+            ////.push( remoteBranch, currentBranch, {'--set-upstream' : null}, onPush);
+            //.push( 'origin', currentBranch,{'--set-upstream' : null}, onPush);
+            
+        //function onPush(err, result) {console.log(result) };
         
+        //await waitTime( 1000);  
+        await gitPush();
+      
+    }
+      
+    // Finish up
+    writeMessage('',false);  // Remove this message  
+    _setMode('UNKNOWN');  
+    await _update()
+}
+
+async function gitPush(){
+    
+    // Read current branch
+    try{
+        status_data = await gitStatus();
+    }catch(err){
+        console.log('Error in gitPush()');
+        console.log(err);
+    }
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    
+
+    // Push
+    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+    
+    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null}, onPush);
     function onPush(err, result) {console.log(result) };
     
     await waitTime( 1000);  
-        
-    writeMessage('',false);  // Remove this message  
-    _setMode('UNKNOWN');
-    await _update()
+
 }
 
 // Utility functions
@@ -1299,6 +1344,7 @@ function loadSettings(settingsFile){
         
         state.alwaysOnTop = true;
         state.forceCommitBeforeBranchChange = true;
+        state.autoPushToRemote = true;
         
         console.log(err);
 
@@ -1378,9 +1424,6 @@ window.onload = function() {
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
   
-  
-  // Listen to main window's close event
-  nw.Window.get().on('close', closeWindow);
   
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup

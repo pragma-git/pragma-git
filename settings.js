@@ -165,6 +165,7 @@ function injectIntoSettingsJs(document) {
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
+    document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
     
     // Build repo table
     createHtmlTable(document);
