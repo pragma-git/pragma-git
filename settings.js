@@ -21,6 +21,8 @@ async function _callback( name, event){
     
     let id = event.id;
     let value, table, data2, localFolder, branchList;
+    let textareaId, realId;
+    let newUrl;
     
     console.log('_callback = ' + name);
     switch(name) {
@@ -81,15 +83,71 @@ async function _callback( name, event){
         console.log(event);
         value = event.value;
         
-        let realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
-        let textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
+        realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
+        textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
+        
+        
+        // Make black, to show user that something happened (if green or red before
+        document.getElementById(textareaId).style.color='grey';
+        
+        
+        //  Testing URL for cloning (last realId) => skip the add remote
+        if ( realId <  state.repos.length ){
+            
+            localFolder = state.repos[ realId].localFolder;  
+            
+            // Set remote url
+            newUrl = document.getElementById(textareaId).value;
+            try{
+                const commands = [ 'remote', 'set-url','origin', newUrl];
+                await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
+                function onSetRemoteUrl(err, result ){console.log(result) };
+                
+                // Set if change didn't cause error (doesn't matter if URL works)
+                state.repos[realId].remoteURL = newUrl;
+            }catch(err){
+                console.log('Repository set URL failed');
+                console.log(err);
+                document.getElementById(textareaId).style.color='orange';
+            }           
+            
+        }
+
+        
+        
+        // Test if remote works
+        try{
+            await simpleGit( ).listRemote( onListRemote);
+            function onListRemote(err, result ){console.log(result) };
+            document.getElementById(textareaId).style.color='green';
+
+        }catch(err){
+            console.log('Repository test failed');
+            console.log(err);
+            document.getElementById(textareaId).style.color='red';
+        }
+        
+
+        // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
+        
+        break;
+
+    
+    case 'cloneButtonPressed':
+    
+        console.log('setButtonClicked');
+        console.log(event);
+        value = event.value;
+        
+        realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
+        textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
         localFolder = state.repos[ realId].localFolder;  
         
         // Make black, to show user that something happened (if green or red before
         document.getElementById(textareaId).style.color='grey';
         
         // Set remote url
-        const newUrl = document.getElementById(textareaId).value;
+        newUrl = document.getElementById(textareaId).value;
         try{
             const commands = [ 'remote', 'set-url','origin', newUrl];
             await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
@@ -106,7 +164,7 @@ async function _callback( name, event){
         
         // Test if remote works
         try{
-            await simpleGit( localFolder).listRemote( onListRemote);
+            await simpleGit( ).listRemote( onListRemote);
             function onListRemote(err, result ){console.log(result) };
             document.getElementById(textareaId).style.color='green';
 
@@ -120,11 +178,7 @@ async function _callback( name, event){
         // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
         
         break;
-
-      default:
-        // code block
     }
-  
 }
    
 async function gitBranchList( folderName){
@@ -253,82 +307,153 @@ function generateRepoTable(document, table, data) {
     
     let foundIndex = 0;  // index matching currentRepoFolder
     
-    // Loop rows in data
-    for (let element of data) {
-        console.log('Element = ' + element );
- 
-        //
-        // Add repos to table
-        //
+    //
+    // Add repos to table
+    //
+               
+        // Loop rows in data
+        for (let element of data) {
+            console.log('Element = ' + element );
+     
+    
+            let cell, text, button, textarea, radiobutton
+            let row = table.insertRow();
+            
+    
+             //  Into table cell : Column Repo-path with radiobuttons
+            cell = row.insertCell();
+            cell.setAttribute("class", 'localFolder');
+            
+    
+            var radiobox = document.createElement('input');
+            radiobox.setAttribute("name", "repoGroup");
+            radiobox.setAttribute("onclick", "_callback('repoRadiobuttonChanged',this)");
+            radiobox.type = 'radio';
+            radiobox.id = index;
+            radiobox.value = 'email';
+            
+            var label = document.createElement('label')
+            label.htmlFor = index;
+            var description = document.createTextNode(element.localFolder);
+            label.appendChild(description);
+            
+            var newline = document.createElement('br');
+            
+            cell.appendChild(radiobox);
+            cell.appendChild(label);
+            cell.appendChild(newline);
+            
+            // Set radio-button to current repo
+            if ( currentRepoFolder == element.localFolder){
+                radiobox.setAttribute("checked", true);
+                foundIndex = index;
+            }
+    
+              
+             //  Into table cell :  Remote URL textarea + button
+            cell = row.insertCell();
+            cell.setAttribute("class", 'remoteURL');
+            
+            textarea = document.createElement('textarea');
+            textarea.setAttribute("id", index + 10000);
+            textarea.value = element.remoteURL;
+            cell.appendChild(textarea);
+            
+                // Test-button
+            cell = row.insertCell();
+            cell.setAttribute("class", 'setURL');
+            button = document.createElement('button');
+            button.setAttribute("id", index + 20000);
+            button.innerHTML = 'Set';
+            button.setAttribute("onclick", "_callback('setButtonClicked',this)");
+            cell.appendChild(button);
+            
+                          
+            // Into table cell :  button
+            cell = row.insertCell();
+            cell.setAttribute("class", 'repoAction');
+            
+            button = document.createElement('button');
+            button.setAttribute("id", index);
+            button.innerHTML = 'Forget';
+            button.onclick = forgetButtonClicked;
+    
+            cell.appendChild(button);
+            
+        
+     
+            // counter update
+            index ++;
+        }
+    //
+    // Add input for cloning
+    //
+
         let cell, text, button, textarea, radiobutton
         let row = table.insertRow();
-        
 
-         //  Into table cell : Column Repo-path with radiobuttons
+
+
+        // Into table cell :  Folder dialog
         cell = row.insertCell();
+        cell.setAttribute("class", 'repoAction');
+        
+        button = document.createElement('button');
+        button.setAttribute("id", "folderSelectButton");  // ID
+        button.innerHTML = 'Select folder';
+        //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
+        cell.appendChild(button);  
+
+
+         //  Into table cell :  Local folder
+        //cell = row.insertCell();
         cell.setAttribute("class", 'localFolder');
-        
+        textarea = document.createElement('textarea');
+        textarea.setAttribute("style", 'float:left; line-height:1.2');
+        textarea.setAttribute("id", "cloneLocalFolder");  // ID
+        cell.appendChild(textarea);
 
-        var radiobox = document.createElement('input');
-        radiobox.setAttribute("name", "repoGroup");
-        radiobox.setAttribute("onclick", "_callback('repoRadiobuttonChanged',this)");
-        radiobox.type = 'radio';
-        radiobox.id = index;
-        radiobox.value = 'email';
-        
-        var label = document.createElement('label')
-        label.htmlFor = index;
-        var description = document.createTextNode(element.localFolder);
-        label.appendChild(description);
-        
-        var newline = document.createElement('br');
-        
-        cell.appendChild(radiobox);
-        cell.appendChild(label);
-        cell.appendChild(newline);
-        
-        // Set radio-button to current repo
-        if ( currentRepoFolder == element.localFolder){
-            radiobox.setAttribute("checked", true);
-            foundIndex = index;
-        }
 
-          
          //  Into table cell :  Remote URL textarea + button
         cell = row.insertCell();
         cell.setAttribute("class", 'remoteURL');
         
         textarea = document.createElement('textarea');
-        textarea.setAttribute("id", index + 10000);
-        textarea.value = element.remoteURL;
+        textarea.setAttribute("id", index + 10000);  // ID
         cell.appendChild(textarea);
         
             // Test-button
         cell = row.insertCell();
         cell.setAttribute("class", 'setURL');
         button = document.createElement('button');
-        button.setAttribute("id", index + 20000);
-        button.innerHTML = 'Set';
+        button.setAttribute("id", index + 20000);  // ID
+        button.innerHTML = 'Test';
         button.setAttribute("onclick", "_callback('setButtonClicked',this)");
         cell.appendChild(button);
-        
-                      
+ 
         // Into table cell :  button
         cell = row.insertCell();
         cell.setAttribute("class", 'repoAction');
         
         button = document.createElement('button');
-        button.setAttribute("id", index);
-        button.innerHTML = 'Forget';
-        button.onclick = forgetButtonClicked;
-
-        cell.appendChild(button);
+        button.setAttribute("id", "cloneButton");  // ID
+        button.innerHTML = 'Clone';
+        button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
+        cell.appendChild(button);       
+                      
+        //// Into table cell :  button
+        //cell = row.insertCell();
+        //cell.setAttribute("class", 'repoAction');
         
+        //button = document.createElement('button');
+        //button.setAttribute("id", index);
+        //button.innerHTML = 'Forget';
+        //button.onclick = forgetButtonClicked;
+
+        //cell.appendChild(button);
+           
+  //<input id="folder-open-dialog" type="file" nwdirectory nwworkingdir="" nwdirectorydesc="Please select a folder" role="hidden" />  
     
- 
-        // counter update
-        index ++;
-    }
     
     // Draw branch by simulating click
     let event =[];
