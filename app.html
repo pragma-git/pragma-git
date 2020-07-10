@@ -26,37 +26,58 @@
             <img id="about-icon"    height="17" width="17"  
                 onclick="_callback('clicked-about');" 
                 onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
-                onmouseout="updateImageUrl('about-icon', 'images/questionmark.png');" 
+                onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
                 src="images/questionmark.png">
-            </div>
+
+        </div>
             
 
-            <div id="top-titlebar-text" class="top-titlebar-text">
-                
-                <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                    onclick="_callback('clicked-repo')" 
-                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
-                </div>
-                
-                <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                    onclick="_callback('clicked-branch')" 
-                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-                </div>  
-                 
-            </div>     
+        <div id="top-titlebar-text" class="top-titlebar-text">
+            
+            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
+                onclick="_callback('clicked-repo')" 
+                onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+            </div>
+            
+            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                onclick="_callback('clicked-branch')" 
+                onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+            </div>  
 
-        
-        <div class="top-titlebar-close-icon">
+ 
+        </div>     
+
+                <!-- NOTE : set absolute positions in style.css -->
+        <div class="top-titlebar-pull-icon">
+            <img id="top-titlebar-pull-icon" height="17" width="17" 
+                onclick="_callback('clicked-close-button')" 
+                onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-pull-icon', 'images/pull.png');" 
+                src="images/pull.png">
+        </div>   
+                    
+        <div class="top-titlebar-push-icon">
+            <img id="top-titlebar-push-icon"   height="17" width="17" 
+                onclick="_callback('clicked-close-button')" 
+                onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
+                src="images/push.png">
+        </div> 
+   
+                  
+        <div class="top-titlebar-close-icon">            
             <img id="top-titlebar-close-icon" 
                 onclick="_callback('clicked-close-button')" 
                 onmouseover="updateImageUrl('top-titlebar-close-icon', 'images/button_close_hover.png');" 
-                onmouseout="updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
                 src="images/button_close.png">
-            </div>
+        </div>
+        
           
         <div class="top-titlebar-divider"></div> 
+        
     </div>
 
 

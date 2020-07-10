@@ -95,8 +95,7 @@ div#message-wrapper{
   -webkit-app-region: drag;
 }
 
-.about-icon,
-.bottom-titlebar-folder-icon {
+.about-icon, .bottom-titlebar-folder-icon, .aaa, .bbb{
   position: absolute;
   left: 6px;
   margin-top: 6px;
@@ -137,6 +136,27 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
+.top-titlebar-push-icon
+ {
+  position: absolute;
+  right: 90px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-pull-icon
+ {
+  position: absolute;
+  right: 120px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
 
 .top-titlebar-close-icon,
 .bottom-titlebar-settings-icon {
