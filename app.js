@@ -33,8 +33,6 @@
  * 
  * Open questions
  * 
- * - Test if git is installed
- * 
  * - Pull 
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
@@ -932,11 +930,11 @@ async function _setMode( inputModeName){
 }
 
 // Git commands
- function gitIsInstalled(){
+ async function gitIsInstalled(){
     var isInstalled = false;
     var resultMessage = "";
     try{
-         simpleGit().raw([ 'version'], test );
+        await simpleGit().raw([ 'version'], test );
         function test(err, result){ 
             console.log(result); 
             resultMessage = result;
@@ -947,7 +945,7 @@ async function _setMode( inputModeName){
     }
 
     // Alert dialog if not installed
-    if ( !state.git ){
+    if ( !isInstalled){
         var string = 'Cannot find "git" !'+ os.EOL;
         string += ' ' + os.EOL;
         string += 'Please make sure "git" is installed. ' + os.EOL;
@@ -955,6 +953,8 @@ async function _setMode( inputModeName){
         
         alert(string);
     }
+    
+    state.git = isInstalled;
 
     return isInstalled;
 
