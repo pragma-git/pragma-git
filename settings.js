@@ -391,36 +391,40 @@ function generateRepoTable(document, table, data) {
 
         let cell, text, button, textarea, radiobutton
         let row = table.insertRow();
-
-
-        // Into table cell :  Folder dialog
-        var div1 = document.createElement("div");
-        div1.style.float = "left";
         
+        // Inner table
+        let innerCell;
+        let innerTable = document.createElement("table");
+        innerTable.setAttribute("id", 'cloneTable');
         
+        let innerTableRow = innerTable.insertRow();
+        innerTableRow.setAttribute("class", 'cloneTableRow');
+        
+        // Into first cell : put a small table inside first cell
         cell = row.insertCell();
-        cell.setAttribute("class", 'repoAction');
         
-        button = document.createElement('button');
-        button.setAttribute("id", "folderSelectButton");  // ID
-        button.innerHTML = 'Select folder';
-        button.style.verticalAlign = "middle";
-        //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
-        
-        div1.appendChild(button);
-        cell.appendChild(div1);  
+            // Into table cell :  Folder dialog
 
-
-         //  Into table cell :  Local folder
-        //cell = row.insertCell();
-        var div2 = document.createElement("div");
-        div2.style.float = "left";
-        
-        cell.setAttribute("class", 'localFolder');
-        textarea = document.createElement('textarea');
-        textarea.setAttribute("id", "cloneLocalFolder");  // ID
-        div2.appendChild(textarea);
-        cell.appendChild(div2);
+            innerCell = innerTableRow.insertCell();
+            innerCell.setAttribute("class", 'action');
+            
+            button = document.createElement('button');
+            button.setAttribute("id", "folderSelectButton");  // ID
+            button.innerHTML = 'Folder';
+            button.style.verticalAlign = "middle";
+            //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
+            innerCell.appendChild(button);  
+    
+             //  Into table cell :  Local folder
+            innerCell = innerTableRow.insertCell();
+            innerCell.setAttribute("class", 'cloneLocalFolder');
+            
+            textarea = document.createElement('textarea');
+            textarea.setAttribute("id", "cloneLocalFolder");  // ID
+            
+            innerCell.appendChild(textarea);
+               
+        cell.appendChild(innerTable); 
 
 
          //  Into table cell :  Remote URL textarea + button
