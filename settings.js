@@ -173,7 +173,6 @@ async function _callback( name, event){
     } // End switch
 }
  
-  
 async function gitClone( folderName, repoURL){
      
     //example :
@@ -204,6 +203,7 @@ async function gitClone( folderName, repoURL){
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
         
+        // THIS DID CAUSE PROBLEMS
         // Clean duplicates from state based on name "localFolder"
         //state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         
@@ -215,7 +215,7 @@ async function gitClone( folderName, repoURL){
         //}
         
         // Set to current
-        state.repoNumber = index;
+        state.repoNumber = index;  // Found that it could become a string sometimes
         localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
     
         // Set global
@@ -223,7 +223,7 @@ async function gitClone( folderName, repoURL){
         state.repos[state.repoNumber].remoteURL = document.getElementById( index + 10000).value;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
 
-    }catch(err){ 
+    }catch(err){
         console.log(err);
         return
     }
@@ -233,22 +233,8 @@ async function gitClone( folderName, repoURL){
     createHtmlTable(document);
 
         
-    //// Test if remote works
-    //try{
-        //await simpleGit( ).listRemote( onListRemote);
-        //function onListRemote(err, result ){console.log(result) };
-        //document.getElementById(textareaId).style.color='green';
-
-    //}catch(err){
-        //console.log('Repository test failed');
-        //console.log(err);
-        //document.getElementById(textareaId).style.color='red';
-    //}
-        
 
 } 
-
-  
 async function gitBranchList( folderName){
     let branchList;
     
@@ -261,7 +247,6 @@ async function gitBranchList( folderName){
     }
     return branchList
 }
-   
 async function gitCreateBranch( folder, branchName){
     
     try{
@@ -274,8 +259,6 @@ async function gitCreateBranch( folder, branchName){
     }
 
 }
-
-
 
 function injectIntoSettingsJs(document) {
     win = gui.Window.get();
@@ -619,8 +602,6 @@ function generateBranchTable(document, table, branchlist) {
 
    
 }
-
-
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
@@ -661,7 +642,61 @@ function closeWindow(){
     localState.mode = 'UNKNOWN';
     
 }
- 
+
+// Utility
+function cleanDuplicates( myArray, objectField ){
+    // Removes all elements in "myArray"  where the field "objectField" are duplicates
+    //
+    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
+    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
+    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
+    
+    // Display the list of array objects 
+    console.log(myArray); 
+
+    // Declare a new array 
+    let newArray = []; 
+      
+    // Declare an empty object 
+    let uniqueObject = {}; 
+      
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        // Extract the title 
+        objTitle = myArray[i][objectField]; 
+
+        // Use the title as the index 
+        uniqueObject[objTitle] = myArray[i]; 
+    } 
+      
+    // Loop to push unique object into array 
+    for (i in uniqueObject) { 
+        newArray.push(uniqueObject[i]); 
+    } 
+      
+    // Display the unique objects 
+    console.log(newArray); 
+
+
+
+    return newArray;
+}
+function findObjectIndex( myArray, objectField, stringToFind ){
+    
+    var foundIndex; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        if (stringToFind === myArray[i][objectField]){
+            foundIndex = i;
+        }
+    } 
+    
+    return Number(foundIndex);
+}
+
+
  // NOTES :
     
     // Find all open windows
