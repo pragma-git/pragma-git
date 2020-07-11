@@ -38,9 +38,14 @@ async function _callback( name, event){
             state[id] = value;
             break;
     
-
+        case 'folderSelectButton' :
+            //This calls the hidden folder dialog input-element in settings.html
+            document.getElementById("cloneFolderInputButton").click();
+            
+            break;       
             
         case 'folderSelectButtonPressed' :
+            //This should be called when hidden input-element is changed (see id="cloneFolderInputButton", in settings.html)
             console.log('Selected folder = ');
             console.log(event.value);
             console.log(event);
@@ -203,16 +208,15 @@ async function gitClone( folderName, repoURL){
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
         
-        // THIS DID CAUSE PROBLEMS
         // Clean duplicates from state based on name "localFolder"
-        //state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         
-        //try{
-            //// Set index to match the folder you added
-            //index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
-        //}catch(err){
-            //index = state.repos.length; // Highest should be last added
-        //}
+        try{
+            // Set index to match the folder you added
+            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+        }catch(err){
+            index = state.repos.length; // Highest should be last added
+        }
         
         // Set to current
         state.repoNumber = index;  // Found that it could become a string sometimes
@@ -229,6 +233,8 @@ async function gitClone( folderName, repoURL){
     }
     
     // Update Settings display
+    document.getElementById("folderSelectButton").setAttribute("id", "dummy"); // Take away this id, before making a new button with same id
+    
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
 
@@ -466,9 +472,11 @@ function generateRepoTable(document, table, data) {
             button.setAttribute("id", "folderSelectButton");  // ID
             button.innerHTML = 'Folder';
             button.style.verticalAlign = "middle";
-            button.setAttribute('onclick','document.getElementById("cloneFolderInputButton").click();');   // This calls the hidden folder dialog input-element in settings.html
+            
+            button.setAttribute('onclick', '_callback("folderSelectButton",this)' ); 
+            
             innerCell.appendChild(button);  
-    
+ 
              //  Into table cell :  Local folder
             innerCell = innerTableRow.insertCell();
             innerCell.setAttribute("class", 'cloneLocalFolder');
@@ -643,7 +651,7 @@ function closeWindow(){
     
 }
 
-// Utility
+// Utility (these are newer in settings.js)
 function cleanDuplicates( myArray, objectField ){
     // Removes all elements in "myArray"  where the field "objectField" are duplicates
     //
