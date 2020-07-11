@@ -723,10 +723,10 @@ async function _update(){
     
     // Update Pull button
         try{
-            if (status_data.ahead > 0){
-                document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+            if (status_data.behind > 0){
+                document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
             }else{
-                document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
+                document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden'
             }
         }catch(err){  
             console.log(err);
@@ -1048,6 +1048,8 @@ async function gitStatus(){
         status_data.not_added = [];
         status_data.deleted = [];
         status_data.changedFiles = false;
+        status_data.ahead = 0;
+        status_data.behind = 0;
 
     }
  
