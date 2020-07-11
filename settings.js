@@ -4,7 +4,8 @@
 // ---------
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
-
+var fs = require('fs');
+        
 const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git');  
@@ -400,6 +401,8 @@ function generateRepoTable(document, table, data) {
             cell.appendChild(label);
             cell.appendChild(newline);
             
+
+            
             // Set radio-button to current repo
             if ( currentRepoFolder == element.localFolder){
                 radiobox.setAttribute("checked", true);
@@ -436,6 +439,15 @@ function generateRepoTable(document, table, data) {
             button.onclick = forgetButtonClicked;
     
             cell.appendChild(button);
+            
+            
+            // Check if localFolder exists -- make red otherwise
+            if (!fs.existsSync(element.localFolder)) {
+                label.style.color = 'red';
+            }
+            
+            
+            
             
         
      
