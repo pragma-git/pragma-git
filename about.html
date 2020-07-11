@@ -31,11 +31,13 @@
 <div id="content">
         
     <div id="inner-content">
+ <!-------------------------------------------------------------------------------------------->                                  
             
         <h2>About</h2>
     
         <hr>
-     
+        
+ <!-------------------------------------------------------------------------------------------->                                  
         <h3>Git started</h3>     
         
         
@@ -58,7 +60,7 @@
             <p>If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize the folder for git.
             </p>  
                  
-                        
+ <!-------------------------------------------------------------------------------------------->                                  
          <h4>Clickable items</h4>
             
              <dl>
@@ -79,7 +81,7 @@
             <p>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below).
             </p>
                    
-                                  
+ <!-------------------------------------------------------------------------------------------->                                  
          <h4>Store version with short description </h4>
              <p>
                 The status bar 
@@ -97,7 +99,8 @@
                 To store a revision of the changed files, you fill in a descriptive text, and the button  
                 <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active.  Press the button to store your revision.
             </p>
-                                   
+            
+ <!-------------------------------------------------------------------------------------------->                                  
          <h4>Store version with longer description </h4>                    
             <p> The description may be more than one line. If you use multiple lines, 
                 the first line is a brief description (like a title). The next line is an empty line. 
@@ -110,9 +113,11 @@
             </p>     
          <hr>    
             
+ <!-------------------------------------------------------------------------------------------->                                  
             
          <h3 id="Advanced">Advanced </h3>
-         
+ 
+ <!-------------------------------------------------------------------------------------------->                                           
          <h4>Multiple repositories and branches </h4>    
              
             <p><u>Repositories</u> : You can have multiple active project folders (repositories), added by drag-and drop as described above. 
@@ -126,14 +131,15 @@
                 where a new branch can be created.  TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  
             </p>             
          
-         
+ <!-------------------------------------------------------------------------------------------->                                           
          <h4>Adding remote repository </h4> 
              
-             <p>A remote repository is a git which your work can be mirrored to.  This software automatically pushes changes to the remote repository, when
-                you press the Store button.  
+             <p>A remote repository is a place where your work can be mirrored to.  
+                The default setting is that the software automatically pushes changes to the remote repository, 
+                when you press the Store button.  
              </p>
              
-             <p>There are multiple remote repositories you can use on internet, where one popular site is 
+             <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
                 <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
              </p>
              
@@ -154,9 +160,41 @@
              <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button.
                 If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
                 <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button again.
-             </p>                      
+             </p>     
+                              
+ <!-------------------------------------------------------------------------------------------->                                           
+         <h4>Cloning remote repository </h4> 
+              
+             <p>You can clone a remote repository.  This is especially useful if you work on several computers,
+             and would like to use a common data set.
+             </p>
+                                                         
+             
+             <p>Cloning is performed from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
+             The top table is a list of your open repositories, and at the end of this table there is a row where you can add the required information.
+             </p>
+             
+             
+            The following steps are performed, to clone a remote repository to a local folder on your computer :
+            <ol>
+                <li> Click <img style='vertical-align:middle;' src="images/folder_button.png"  height="24" > to select a folder on your computer, 
+                where you want the cloned repository stored </li>
+                
+                <li> The text area to the left, will show the selected path </li>
+                
+                <li> In the column "Remote repository", you fill in the path (which you get from gitHub, or some other source) </li>
+                
+                <li> Verify that the repository can be reached by clicking <img style='vertical-align:middle;' src="images/test_button.png"   height="24" > </li>
+            
+                <li> Press <img style='vertical-align:middle;' src="images/clone_button.png"   height="24" > to perform the cloning, that is, 
+                to copy the data from the remote repository, and set up the connection between your folder and the remote repository</li>
+
+            </ol>  
                                 
             
+ <!-------------------------------------------------------------------------------------------->                                  
+
+         <hr>            
          <h2>Installation </h2>
              
             <p><u>Git</u> : The code relies on the standard installation of git 
@@ -165,6 +203,7 @@
         
             
         <hr>             
+ <!-------------------------------------------------------------------------------------------->                                  
         <h2>Credits</h2>
             
             <dl>
@@ -186,6 +225,7 @@
     </div>
 </div>
 
+ <!-------------------------------------------------------------------------------------------->                                  
   
 </body>
 </html>

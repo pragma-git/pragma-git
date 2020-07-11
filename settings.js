@@ -4,6 +4,8 @@
 // ---------
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
+
+const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git');  
 
@@ -21,7 +23,7 @@ async function _callback( name, event){
     
     let id = event.id;
     let value, table, data2, branchList;
-    var localFolder;
+    var localFolder = "";
     let textareaId, realId;
     let newUrl;
     
@@ -77,12 +79,13 @@ async function _callback( name, event){
              // Display changes
             table = document.getElementById("branchesTableBody");
             data2 = Object.keys(state.repos[id]);
-            localFolder = state.repos[id].localFolder;
-            branchList = await gitBranchList( localFolder);
+            let myLocalFolder = state.repos[id].localFolder;
+            //localFolder = state.repos[id].localFolder;
+            branchList = await gitBranchList( myLocalFolder);
             generateBranchTable( document, table, branchList); // generate the table first
             
             // Show current repo
-            document.getElementById("currentRepo").innerHTML = localFolder;
+            document.getElementById("currentRepo").innerHTML = myLocalFolder;
             
             break;
  
@@ -172,67 +175,76 @@ async function _callback( name, event){
  
   
 async function gitClone( folderName, repoURL){
+     
+    //example :
+    // /Users/jan/Desktop/TEMP/cloned-TestJanAxelssonTest/
+    // https://github.com/JanAxelssonTest/test3.git
+    
+    
+    // Combine URL and folder name => repo folder
+    let repoWithExtension = repoURL.replace(/^.*[\\\/]/, '');
+    let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
+    let topFolder = folderName + pathsep + repoName;
 
-
+    // Clone
+    try{
         await simpleGit( folderName).clone(  repoURL, onClone);
-        function onClone(err, result ){console.log(result) }; 
+        function onClone(error, result ){console.log(result);console.log(error) }; 
+    }catch(err){ 
+        console.log(err);
+        return
+    }
         
-        
-        
-//TODO :
-
-// - clones fine . Fix output result
-// - clones into subfolder.  Move into the new subfolder, add repository (like dropFile,  but make it programmed)
-// - update Settings tables, so one can see that it worked.
-
-//example :
-// /Users/jan/Desktop/TEMP/cloned-TestJanAxelssonTest/
-// https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test3.git
-
-
+    // Add this repo to state
+    try{
 
         
+        // Add folder last in  state array
+        var index = state.repos.length;
+        state.repos[index] = {}; 
+        state.repos[index].localFolder = topFolder;
         
+        // Clean duplicates from state based on name "localFolder"
+        //state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         
-        
- 
- 
-        
-        //// Make black, to show user that something happened (if green or red before
-        //document.getElementById(textareaId).style.color='grey';
-        
-        //// Set remote url
-        //newUrl = document.getElementById(textareaId).value;
         //try{
-            //const commands = [ 'remote', 'set-url','origin', newUrl];
-            //await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
-            //function onSetRemoteUrl(err, result ){console.log(result) };
-            
-            //// Set if change didn't cause error (doesn't matter if URL works)
-            //state.repos[realId].remoteURL = newUrl;
+            //// Set index to match the folder you added
+            //index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
         //}catch(err){
-            //console.log('Repository set URL failed');
-            //console.log(err);
-            //document.getElementById(textareaId).style.color='orange';
-        //}        
-        
-        
-        //// Test if remote works
-        //try{
-            //await simpleGit( ).listRemote( onListRemote);
-            //function onListRemote(err, result ){console.log(result) };
-            //document.getElementById(textareaId).style.color='green';
-
-        //}catch(err){
-            //console.log('Repository test failed');
-            //console.log(err);
-            //document.getElementById(textareaId).style.color='red';
+            //index = state.repos.length; // Highest should be last added
         //}
         
-
-
+        // Set to current
+        state.repoNumber = index;
+        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
     
+        // Set global
+        state.repos[state.repoNumber].localFolder = topFolder;
+        state.repos[state.repoNumber].remoteURL = document.getElementById( index + 10000).value;
+        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
 
+    }catch(err){ 
+        console.log(err);
+        return
+    }
+    
+    // Update Settings display
+    document.getElementById("settingsTableBody").innerHTML = ""; 
+    createHtmlTable(document);
+
+        
+    //// Test if remote works
+    //try{
+        //await simpleGit( ).listRemote( onListRemote);
+        //function onListRemote(err, result ){console.log(result) };
+        //document.getElementById(textareaId).style.color='green';
+
+    //}catch(err){
+        //console.log('Repository test failed');
+        //console.log(err);
+        //document.getElementById(textareaId).style.color='red';
+    //}
+        
 
 } 
 
