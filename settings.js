@@ -99,7 +99,7 @@ async function _callback( name, event){
             document.getElementById("currentRepo").innerHTML = myLocalFolder;
             
             // Set state (so it will be updated in main program)
-            state.repoNumber = id;
+            state.repoNumber = Number(id);  // id can be a string
             
             break;
  
