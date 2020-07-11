@@ -653,115 +653,166 @@ async function _update(){
         return;
     }
     
+    let currentBranch = "";
+    
     // Variables
     let modeName = getMode();
-    let  status_data;
-    let  folder;
+    let  status_data = [];
+    let  folder = "";
+    let fullFolderPath = state.repos[ state.repoNumber].localFolder;
     
-    // DEFAULT is special case with git
+    // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
-        status_data = await gitStatus();
-        let result = await gitLocalFolder();
-        folder = result.folderName;
+        try{
+            status_data = await gitStatus();
+            let result = await gitLocalFolder();
+            folder = result.folderName;
+            currentBranch = status_data.current; 
+        }catch(err){
+            console.log(err);
+
+        }
+
     }
+    
+    
+    // Validate repo and folder :
+
+    
+    // Check if localFolder exists 
+    if (fs.existsSync( fullFolderPath ) ) {
+        // If folder exists, I am allowed to check if repo
+        
+        // Check if repository 
+        var isRepo;
+        await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
+        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+        
+        if (!isRepo) {
+            folder = "(not a repo) " + folder;
+            currentBranch = "";
+        }
+    }else{    
+        let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
+        folder = "(not a folder) " + nameOfFolder;
+    }
+            
+    
+    
+    
+    
+    
     
     // If left settings window
-    if ( localState.settings && (modeName != 'SETTINGS') ){
-        localState.settings = false;
-        updateWithNewSettings();
-    }
+        if ( localState.settings && (modeName != 'SETTINGS') ){
+            localState.settings = false;
+            updateWithNewSettings();
+        }
     
     // Update Push button
-    if (status_data.ahead > 0){
-        document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
-    }else{
-        document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
-    }
+        try{
+            if (status_data.ahead > 0){
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+
     
     // Update Pull button
-    if (status_data.behind > 0){
-        document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
-    }else{
-        document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden'
-    }
-        
-    switch( modeName ) {        
-        case 'UNKNOWN':
-            _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
-            break;
-            
-        case 'DEFAULT':
-            setTitleBar( 'top-titlebar-repo-text', ' ' );
-            setTitleBar( 'top-titlebar-branch-text', ' ' );
-            setStatusBar(' ');
-            break;
-            
-        case 'NO_FILES_TO_COMMIT':
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-            // If not correct mode, fix :
-            if (status_data.changedFiles){
-                _setMode('UNKNOWN');
+        try{
+            if (status_data.ahead > 0){
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
             }
-            break;
+        }catch(err){  
+            console.log(err);
+        }
+        
+        
+    
+    // mode -dependent :
             
-        case 'CHANGED_FILES':
-            try{
+        switch( modeName ) {        
+            case 'UNKNOWN':
+                _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
+                break;
+                
+            case 'DEFAULT':
+                setTitleBar( 'top-titlebar-repo-text', ' ' );
+                setTitleBar( 'top-titlebar-branch-text', ' ' );
+                setStatusBar(' ');
+                break;
+                
+            case 'NO_FILES_TO_COMMIT':
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                // If not correct mode, fix :
+                if (status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+                break;
+                
+            case 'CHANGED_FILES':
+                try{
+                    setTitleBar( 'top-titlebar-repo-text', folder );
+                    setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
+                    // If not correct mode, fix :
+                    if (!status_data.changedFiles){
+                        _setMode('UNKNOWN');
+                    }
+                }catch(err){
+                    console.log('update --  case "CHANGED_FILES" caught error');
+                    _setMode('UNKNOWN');
+                }
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
                     _setMode('UNKNOWN');
                 }
-            }catch(err){
-                console.log('update --  case "CHANGED_FILES" caught error');
-                _setMode('UNKNOWN');
-            }
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
-            // If not correct mode, fix :
-            if (!status_data.changedFiles){
-                _setMode('UNKNOWN');
-            }
-            break;
-            
-        case 'CHANGED_FILES_TEXT_ENTERED':
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-            // If not correct mode, fix :
-            if (!status_data.changedFiles){
-                _setMode('UNKNOWN');
-            }
-            break;
-            
-        case 'HISTORY':
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-            break;
-            
-        case 'SETTINGS':
-            setTitleBar( 'top-titlebar-repo-text', folder );
-            setTitleBar( 'top-titlebar-branch-text', '  (<u>' + status_data.current + '</u>)' );
-            try{
-                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-            }catch(err){
-                await _setMode('UNKNOWN');
-                setStatusBar(' ');
+                break;
+                
+            case 'CHANGED_FILES_TEXT_ENTERED':
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '' );
-            }
-            
-            break;
-            
-        default:
-            console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
-    }    
-    
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                // If not correct mode, fix :
+                if (!status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+                break;
+                
+            case 'HISTORY':
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                break;
+                
+            case 'SETTINGS':
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                try{
+                    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                }catch(err){
+                    await _setMode('UNKNOWN');
+                    setStatusBar(' ');
+                    setTitleBar( 'top-titlebar-repo-text', folder );
+                    setTitleBar( 'top-titlebar-branch-text', '' );
+                }
+                
+                break;
+                
+            default:
+                console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+        }    
+    // return
     return true
 
     //
@@ -988,8 +1039,15 @@ async function gitStatus(){
         //console.log(status_data);
         status_data.current;  // Name of current branch
     }catch(err){
-        console.log('Error in _mainLoop()');
+        console.log('Error in gitStatus()');
         console.log(err);
+        
+        // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
+        status_data = [];
+        status_data.modified = []; // zero length
+        status_data.not_added = [];
+        status_data.deleted = [];
+        status_data.changedFiles = false;
 
     }
  

@@ -87,11 +87,19 @@ async function _callback( name, event){
             data2 = Object.keys(state.repos[id]);
             let myLocalFolder = state.repos[id].localFolder;
             //localFolder = state.repos[id].localFolder;
-            branchList = await gitBranchList( myLocalFolder);
-            generateBranchTable( document, table, branchList); // generate the table first
+            
+            try{
+                branchList = await gitBranchList( myLocalFolder);
+                generateBranchTable( document, table, branchList); // generate the table first
+            }catch(err){
+                // Probably no branches, because repo does not exist
+            }
             
             // Show current repo
             document.getElementById("currentRepo").innerHTML = myLocalFolder;
+            
+            // Set state (so it will be updated in main program)
+            state.repoNumber = id;
             
             break;
  
@@ -359,7 +367,7 @@ async function createHtmlTable(document){
 
 
 }
-function generateRepoTable(document, table, data) {
+async function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
     let currentRepoFolder = state.repos[state.repoNumber].localFolder;
     
@@ -440,13 +448,32 @@ function generateRepoTable(document, table, data) {
     
             cell.appendChild(button);
             
+            //
+            // Validate repo and folder
+            //
             
+
+
+                             
             // Check if localFolder exists -- make red otherwise
-            if (!fs.existsSync(element.localFolder)) {
+            if (fs.existsSync(element.localFolder)) {
+                // If folder exists, I am allowed to check if repo
+                
+                // Check if repository -- make red otherwise
+                var isRepo;
+                await simpleGit(element.localFolder).checkIsRepo(onCheckIsRepo);
+                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                if (!isRepo) {
+                    label.style.color = 'red';
+                    label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
+                }
+            }else{    
+                // localFolder missiong -- make red 
                 label.style.color = 'red';
+                label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
             }
             
-            
+      
             
             
         
