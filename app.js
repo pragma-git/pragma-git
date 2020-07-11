@@ -541,7 +541,10 @@ function _callback( name, event){
             var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
             + os.EOL 
-            + history[localState.historyNumber].message;
+            + history[localState.historyNumber].message
+            + os.EOL 
+            + os.EOL 
+            + history[localState.historyNumber].body;
             
             // Display
             writeMessage( historyString, false);
@@ -584,7 +587,10 @@ function _callback( name, event){
             var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
             + os.EOL 
-            + history[localState.historyNumber].message;
+            + history[localState.historyNumber].message
+            + os.EOL 
+            + os.EOL 
+            + history[localState.historyNumber].body;
             
             // Display
             writeMessage( historyString, false);
