@@ -99,13 +99,11 @@
  <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->  
      
        
-            <!--  REPOSITORY TABLE -->
-              
-<!--
-            <h4 id="header_Forget">Forget repositories: </h4>
--->
+            
+            
                 <p>(you can add them again by dropping a folder into the main window) </p>
-    
+                
+                <!--  REPOSITORY TABLE -->
                 <table style="width:100%"> 
                     <thead><tr>
                         <th class="localFolder">Local folder</th>
@@ -116,29 +114,30 @@
                     <tbody id="settingsTableBody" >
                     </tbody>
                 </table>
-                
-                <div id="resultRepo" style="display:none">  
+            
+                <!--  REPOSITORY RESULT -->    
+                <div id="resultRepo" style="display:none"> 
+                    <img src="images/error_icon.png" style="float:left;padding: 6px;vertical-align:middle;" height="32" width="32">
                     <h3 id="resultRepoTitle"></h3>
                     <p id="resultRepoMessage"></p>
                 </div>
 
- 
-                <!--  Hidden open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
+                    
+                <!--  HIDDEN -->
+                
                 <input id = "cloneFolderInputButton" 
                     type="file" nwdirectory directory multiple="false" 
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
-                    name="img"/> 
- 
-                    
-                </script>
+                    name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
+             
 
             <br> 
             <br> 
             
             
 
-            <!--  BRANCH TABLE -->
+            
                         
             <h3>Branches in selected project </h3>  
             
@@ -146,10 +145,8 @@
             
                 <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
                 
-<!--
-                <h4 id="branch_Modify">Modify branch : </h4>
--->
-                    
+
+                <!--  BRANCH TABLE -->  
                 <table style="width:100%"> 
                     <thead ><tr>
                         <th class="branchAction">Action</th>
@@ -158,8 +155,9 @@
                     </tbody>
                 </table>    
                 
-                                
-                <div id="resultBranch"  style="display:none">  
+                <!--  BRANCH RESULT -->                    
+                <div id="resultBranch"  style="display:none"> 
+                    <img src="images/error_icon.png" style="float:left;padding: 6px;vertical-align:middle;" height="32" width="32">
                     <h3 id="resultBranchTitle"> </h3>
                     <p id="resultBranchMessage"></p>
                 </div>       
@@ -198,8 +196,13 @@
         
             <br>   
     
-        </div>
-    </div>
+        </div><!-- inner-content --> 
+    </div><!-- content --> 
+
+
+
+
+                    
 
 
 <script>

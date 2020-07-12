@@ -24,9 +24,13 @@ var win
 // Callbacks 
 async function _callback( name, event){
     
+    // Hide all messages
+    hideMesssage('resultRepo');
+    hideMesssage('resultBranch');
+    
     let id = event.id;
     let value, table, data2, branchList;
-    var localFolder = "";
+    //var localFolder = "";
     let textareaId, realId;
     let newUrl;
     
@@ -137,10 +141,12 @@ async function _callback( name, event){
  
     
         case 'setButtonClicked':
+            // Both for Set button, and for Test button used in cloning
         
             console.log('setButtonClicked');
             console.log(event);
             value = event.value;
+            
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
@@ -153,13 +159,13 @@ async function _callback( name, event){
             //  Testing URL for cloning (last realId) => skip the add remote
             if ( realId <  state.repos.length ){
                 
-                localFolder = state.repos[ realId].localFolder;  
-                
+                let localFolder3 = state.repos[ realId].localFolder; 
+
                 // Set remote url
                 newUrl = document.getElementById(textareaId).value;
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
-                    await simpleGit( localFolder).raw(  commands, onSetRemoteUrl);
+                    await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){console.log(result) };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
@@ -169,12 +175,17 @@ async function _callback( name, event){
                     console.log(err);
                     document.getElementById(textareaId).style.color='orange';
                 }           
-                
             }
 
             // Test if remote works
             try{
-                await simpleGit( ).listRemote( onListRemote);
+                let remoteURL = document.getElementById(textareaId).value;
+                //await simpleGit().listRemote( remoteURL, onListRemote);
+                
+                    const commands = [ 'ls-remote', remoteURL];
+                    await simpleGit().raw(  commands, onListRemote);
+                    function onSetRemoteUrl(err, result ){console.log(result) };
+                
                 function onListRemote(err, result ){console.log(result) };
                 document.getElementById(textareaId).style.color='green';
     
