@@ -47,6 +47,7 @@ async function _callback( name, event){
     
         case 'folderSelectButton' :
             //This calls the hidden folder dialog input-element in settings.html
+            document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
             document.getElementById("cloneFolderInputButton").click();
             
             break;       
