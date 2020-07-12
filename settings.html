@@ -94,12 +94,12 @@
                 <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
 
                 
- <!--  This div hides verything enclosed if empty repos list -->  
-                
- <div id="hide">  
+
+ <!--  TABLES  -->                 
+ <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->  
      
        
-            <!--  Table repositories -->
+            <!--  REPOSITORY TABLE -->
               
 <!--
             <h4 id="header_Forget">Forget repositories: </h4>
@@ -116,6 +116,11 @@
                     <tbody id="settingsTableBody" >
                     </tbody>
                 </table>
+                
+                <div id="resultRepo" style="display:none">  
+                    <h3 id="resultRepoTitle"></h3>
+                    <p id="resultRepoMessage"></p>
+                </div>
 
  
                 <!--  Hidden open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
@@ -133,7 +138,7 @@
             
             
 
-            <!--  Table branches -->
+            <!--  BRANCH TABLE -->
                         
             <h3>Branches in selected project </h3>  
             
@@ -151,7 +156,13 @@
                         <th class="localFolder">Branch</th>
                     <tbody id="branchesTableBody">
                     </tbody>
-                </table>           
+                </table>    
+                
+                                
+                <div id="resultBranch"  style="display:none">  
+                    <h3 id="resultBranchTitle"> </h3>
+                    <p id="resultBranchMessage"></p>
+                </div>       
 
             <br>  
             <br>  

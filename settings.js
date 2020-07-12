@@ -19,7 +19,9 @@ var win
 
 // ---------
 // FUNCTIONS
-// ---------     
+// ---------    
+
+// Callbacks 
 async function _callback( name, event){
     
     let id = event.id;
@@ -110,15 +112,19 @@ async function _callback( name, event){
             console.log('addBranchButtonPressed');
             console.log(event);
             
+
             let branchName = document.getElementById('branchNameTextarea').value;
-            localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
-            await gitCreateBranch( localFolder, branchName);
+            let localFolder2 = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
+            await gitCreateBranch( localFolder2, branchName);
+
+            
+        
             
             // Display changes
             table = document.getElementById("branchesTableBody");
             data2 = Object.keys(state.repos[0]);  // Used for headers
             
-            branchList = await gitBranchList( localFolder);
+            branchList = await gitBranchList( localFolder2);
             
             document.getElementById('branchNameTextarea').value = ""; // Clear text field
             
@@ -186,7 +192,48 @@ async function _callback( name, event){
 
     } // End switch
 }
- 
+function forgetButtonClicked(event){
+    let index = event.currentTarget.getAttribute('id');
+    console.log('Settings - button clicked');
+    console.log('Settings - event id = ' + index);
+
+
+    console.log('Settings - state.repos before and after removal of clicked element : ');
+    console.log(state.repos);
+    
+    console.log('Settings - removing index = ' + index);
+    state.repos.splice(index,1); // Remove index
+    console.log(state.repos);
+
+    
+    // Point repoNumber to first repo in list
+    state.repoNumber = 0;
+    
+    if ( state.repos.length == 0){
+        let tempRepoNumber = -1;
+        state.repoNumber = tempRepoNumber;
+        //global.localState.mode = 'UNKNOWN';  // exposed variable from app.js
+    }
+
+    
+    // Replace table 
+    document.getElementById("settingsTableBody").innerHTML = ""; 
+    createHtmlTable(document);
+
+    
+
+    console.log('Settings - updating table :');
+    
+    //generateRepoTable( document, table, state.repos); // generate the table first
+}
+function closeWindow(){
+    
+    // Return
+    localState.mode = 'UNKNOWN';
+    
+}
+
+// Git
 async function gitClone( folderName, repoURL){
      
     //example :
@@ -205,6 +252,7 @@ async function gitClone( folderName, repoURL){
         function onClone(error, result ){console.log(result);console.log(error) }; 
     }catch(err){ 
         console.log(err);
+        displayMessage('resultRepo', 'Failed cloning', err)
         return
     }
         
@@ -269,12 +317,14 @@ async function gitCreateBranch( folder, branchName){
         await simpleGit( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){console.log(result);};
     }catch(err){        
+        displayMessage('resultBranch', 'Failed creating branch', err);
         console.log('Error creating local branches, in gitCreateBranch');
         console.log(err);
     }
 
 }
 
+// Start initiated from settings.html
 function injectIntoSettingsJs(document) {
     win = gui.Window.get();
     
@@ -292,6 +342,7 @@ function injectIntoSettingsJs(document) {
 
 };
 
+// Draw
 async function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
@@ -649,44 +700,22 @@ function generateBranchTable(document, table, branchlist) {
 
    
 }
-function forgetButtonClicked(event){
-    let index = event.currentTarget.getAttribute('id');
-    console.log('Settings - button clicked');
-    console.log('Settings - event id = ' + index);
 
-
-    console.log('Settings - state.repos before and after removal of clicked element : ');
-    console.log(state.repos);
+function displayMessage(divId, title, message){
+    // Writes into div in settins.html
+    // Example:
+    //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
+    let titleId = divId + 'Title';
+    let messageId = divId + 'Message';
     
-    console.log('Settings - removing index = ' + index);
-    state.repos.splice(index,1); // Remove index
-    console.log(state.repos);
-
+    document.getElementById(titleId).innerHTML = title;
+    document.getElementById(messageId).innerHTML = message;
     
-    // Point repoNumber to first repo in list
-    state.repoNumber = 0;
-    
-    if ( state.repos.length == 0){
-        let tempRepoNumber = -1;
-        state.repoNumber = tempRepoNumber;
-        //global.localState.mode = 'UNKNOWN';  // exposed variable from app.js
-    }
-
-    
-    // Replace table 
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    createHtmlTable(document);
-
-    
-
-    console.log('Settings - updating table :');
-    
-    //generateRepoTable( document, table, state.repos); // generate the table first
+    // Show message
+    document.getElementById(divId).style.display = '';
 }
-function closeWindow(){
-    
-    // Return
-    localState.mode = 'UNKNOWN';
+function hideMesssage(divId){
+    document.getElementById(divId).style.display = 'none';
     
 }
 
