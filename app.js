@@ -245,8 +245,9 @@ async function _callback( name, event){
         break;      
       case 'clickedMergeContextualMenu' :
         let selectedBranch = event;
-        console.log('clickedMergeContextualMenu, event = ' + selectedBranch);
-        gitMerge(selectedBranch); 
+        console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
+        console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
+        gitMerge( event.currentBranch, event.selectedBranch); 
         break;
       case 'clicked-settings':
         showSettings();
@@ -399,7 +400,9 @@ async function _callback( name, event){
         // Add names of all branches
         for (var i = 0; i < menuItems.length; ++i) {
             if (currentBranch != menuItems[i]){
-                let myEvent = menuItems[i];
+                let myEvent = [];
+                myEvent.selectedBranch = menuItems[i];
+                myEvent.currentBranch = currentBranch;
                 menu.append(
                     new gui.MenuItem(
                         { 
@@ -418,7 +421,17 @@ async function _callback( name, event){
         
         // Add Cancel line
         menu.append(new gui.MenuItem({ type: 'separator' }));
-        menu.append(new gui.MenuItem({ label: 'CANCEL merge' }));
+        //menu.append(new gui.MenuItem({ label: 'CANCEL merge' }));
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'CANCEL merge', 
+                    click: () => { console.log('Contextual menu -- clicked CANCEL');} 
+                } 
+            )
+        );
+        
+        
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
@@ -1283,9 +1296,10 @@ async function gitPull(){
     }
 
 }
-async function gitMerge(branchName){
-    // input branchName = branch to merge into current branch
-    console.log('gitMerge, merge current branch with ' + branchName);
+async function gitMerge(currentBranchName, selectedBranchName){
+
+    console.log('gitMerge, merge branch = ' + selectedBranchName);
+    console.log('gitMerge, into current branch =  ' + currentBranchName);
 }
 
 // Utility functions
