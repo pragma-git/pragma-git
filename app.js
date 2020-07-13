@@ -244,9 +244,9 @@ async function _callback( name, event){
         mergeClicked();
         break;      
       case 'clickedMergeContextualMenu' :
-        // gitMerge();  TODO: make this function
-        console.log('clickedMergeContextualMenu');
-        console.log(arguments);
+        let selectedBranch = event;
+        console.log('clickedMergeContextualMenu, event = ' + selectedBranch);
+        gitMerge(selectedBranch); 
         break;
       case 'clicked-settings':
         showSettings();
@@ -399,11 +399,12 @@ async function _callback( name, event){
         // Add names of all branches
         for (var i = 0; i < menuItems.length; ++i) {
             if (currentBranch != menuItems[i]){
+                let myEvent = menuItems[i];
                 menu.append(
                     new gui.MenuItem(
                         { 
                             label: menuItems[i], 
-                            click: () => { console.log('called submenu = ' + menuItems[i]); console.log(this);_callback('clickedMergeContextualMenu',menuItems[i]);} 
+                            click: () => { _callback('clickedMergeContextualMenu',myEvent);} 
                         } 
                     )
                 );
@@ -420,16 +421,9 @@ async function _callback( name, event){
         menu.append(new gui.MenuItem({ label: 'CANCEL merge' }));
 
         // Popup as context menu
-        //let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        //await menu.popup(pos.left, pos.top + 24);
+        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        await menu.popup(pos.left, pos.top + 24);
                 
-        document.querySelector('#top-titlebar-merge-icon').addEventListener('contextmenu', (event) => {
-                event.preventDefault(); 
-                menu.popup(event.x, event.y); 
-                console.log('contextmenu eventlistener');
-                console.log(event);
-                return false;
-            });
 
     }
  
@@ -1288,6 +1282,10 @@ async function gitPull(){
         writeTimedMessage( 'No files can be pulled from remote' + os.EOL + error, true, WAIT_TIME);
     }
 
+}
+async function gitMerge(branchName){
+    // input branchName = branch to merge into current branch
+    console.log('gitMerge, merge current branch with ' + branchName);
 }
 
 // Utility functions
