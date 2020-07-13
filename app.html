@@ -50,6 +50,16 @@
         </div>     
 
                 <!-- NOTE : set absolute positions in style.css -->
+                                     
+        <div class="top-titlebar-merge-icon">
+            <img id="top-titlebar-merge-icon"   height="17" width="17" 
+                onclick="_callback('clicked-merge-button')" 
+                onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
+                src="images/merge.png">
+        </div> 
+                
+                
         <div class="top-titlebar-pull-icon">
             <img id="top-titlebar-pull-icon" height="17" width="17" 
                 onclick="_callback('clicked-pull-button')" 
@@ -57,7 +67,8 @@
                 onmouseout= "updateImageUrl('top-titlebar-pull-icon', 'images/pull.png');" 
                 src="images/pull.png">
         </div>   
-                    
+
+                           
         <div class="top-titlebar-push-icon">
             <img id="top-titlebar-push-icon"   height="17" width="17" 
                 onclick="_callback('clicked-push-button')" 

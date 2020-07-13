@@ -209,8 +209,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // FUNCTIONS
 // ---------
 
-// main functions
-function _callback( name, event){
+// Main functions
+async function _callback( name, event){
     console.log('_callback = ' + name);
     switch(name) {
       case 'clicked-store-button':
@@ -240,7 +240,9 @@ function _callback( name, event){
       case 'clicked-pull-button':
         gitPull();
         break;
-        
+      case 'clicked-merge-button':
+        mergeClicked();
+        break;        
         
         
         
@@ -263,136 +265,6 @@ function _callback( name, event){
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-
-    async function dropFile(e) {
-        e.preventDefault();
-        
-        // Reset css 
-        document.getElementById('content').className = '';
-        
-        const item = e.dataTransfer.items[0];
-        const entry = item.webkitGetAsEntry();
-        
-        var file = item.getAsFile().path;
-        file = file.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
-        var folder = file; // Guess that a folder was dropped 
-    
-        if (entry.isFile) {
-            folder = require('path').dirname(file); // Correct, because file was dropped
-            console.log( 'Folder = ' + folder );
-        } 
-    
-        
-        // Find top folder in initialized local repo
-        var topFolder;
-        
-        try{
-            var isRepo;
-            await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
-            
-            console.log('dropFolder CHECK IF REPO = ' + isRepo);
-            
-            // If not a repo
-            if (!isRepo){
-                // Ask permisson to init repo
-                var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
-                var string = 'This folder is not a repository.'+ os.EOL;
-                string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
-                string += 'The name of the repository will be "' + nameOfFolder + '" ';
-                
-                // Create repo
-                if ( confirmationDialog(string) ) {
-                    
-                    setStatusBar( 'Initializing git');
-                    
-                    await simpleGit(folder).init( onInit );
-                    function onInit(err, initResult) { }
-                    
-                    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-                    function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-                    
-                    await waitTime( 1000);
-                    
-                    //await gitAddCommitAndPush( 'First commit');
-        
-                    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-                    
-                    // Initial commit
-                    setStatusBar( 'Initial commit');
-                    let outputData;
-                    await simpleGit( folder )
-                        .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-                        //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
-                        
-                    function onCommit(err, result) {console.log(result); outputData = result };
-                    
-                    await waitTime( 1000);
-                    console.log(outputData);
-                    
-                }else{
-                    // bail out if rejected permission
-                    return 
-                }
-            }
-            
-            // Find top folder of Repo
-            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
-    
-        }catch(error){
-            console.log(error);
-        }
-        
-        // Add folder last in  state array
-        var index = state.repos.length;
-        state.repos[index] = {}; 
-        state.repos[index].localFolder = topFolder;
-        
-        // Clean duplicates from state based on name "localFolder"
-        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
-        try{
-            // Set index to match the folder you added
-            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
-        }catch(err){
-            index = state.repos.length; // Highest should be last added
-        }
-        
-        // Set to current
-        state.repoNumber = index;
-        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
-    
-        // Set global
-        state.repos[state.repoNumber].localFolder = topFolder;
-        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
-        
-        // Update immediately
-        await _setMode('UNKNOWN');
-        await _update();
-        
-        //
-        // Local function definitions
-        //
-        
-        function findObjectIndex( myArray, objectField, stringToFind ){
-            
-            var foundIndex; //last found index
-            // Loop for the array elements 
-            for (let i in myArray) { 
-        
-                if (stringToFind === myArray[i][objectField]){
-                    foundIndex = i;
-                }
-            } 
-            
-            return foundIndex;
-        }
-    
-    
-    
-    };
 
 
     // title-bar
@@ -500,8 +372,49 @@ function _callback( name, event){
         // After closing the new window, close the main window.
         this.close(true);
     }   
+    async function mergeClicked(){
+              
+        // Create an empty context menu
+        var menu = new nw.Menu();
+        
+        let branchList = await gitBranchList();
+        let currentBranch = " ";
+        
+        try{
+            let status_data = await gitStatus();
+            currentBranch = status_data.current;
+            console.log(currentBranch);
+        }catch(err){
+            console.log('Failed reading current branch');
+        }
+  
+        let menuItems = branchList;
+        
+        // Add context menu title-row
+        menu.append(new nw.MenuItem({ label: 'Merge selected into "' + currentBranch +'"', enabled : false }));
+        menu.append(new nw.MenuItem({ type: 'separator' }));
+                
+        // Add names of all branches
+        for (var i = 0; i < menuItems.length; ++i) {
+            if (currentBranch != menuItems[i]){
+                menu.append(new nw.MenuItem({ label: menuItems[i] }));
+                console.log(menuItems[i]);
+            }else{
+                console.log('Skipped current branch = ' + menuItems[i]);
+            }
 
+        }
+        
+        // Add Cancel line
+        menu.append(new nw.MenuItem({ type: 'separator' }));
+        menu.append(new nw.MenuItem({ label: 'CANCEL merge' }));
+        
+        // Popup as context menu
+        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        menu.popup(pos.left, pos.top + 24);
 
+    }
+ 
     // main window
     function storeButtonClicked() { 
         gitAddCommitAndPush( readMessage());
@@ -639,7 +552,136 @@ function _callback( name, event){
         }
         
     }
- 
+    async function dropFile(e) {
+        e.preventDefault();
+        
+        // Reset css 
+        document.getElementById('content').className = '';
+        
+        const item = e.dataTransfer.items[0];
+        const entry = item.webkitGetAsEntry();
+        
+        var file = item.getAsFile().path;
+        file = file.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+        var folder = file; // Guess that a folder was dropped 
+    
+        if (entry.isFile) {
+            folder = require('path').dirname(file); // Correct, because file was dropped
+            console.log( 'Folder = ' + folder );
+        } 
+    
+        
+        // Find top folder in initialized local repo
+        var topFolder;
+        
+        try{
+            var isRepo;
+            await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+            
+            console.log('dropFolder CHECK IF REPO = ' + isRepo);
+            
+            // If not a repo
+            if (!isRepo){
+                // Ask permisson to init repo
+                var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
+                var string = 'This folder is not a repository.'+ os.EOL;
+                string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
+                string += 'The name of the repository will be "' + nameOfFolder + '" ';
+                
+                // Create repo
+                if ( confirmationDialog(string) ) {
+                    
+                    setStatusBar( 'Initializing git');
+                    
+                    await simpleGit(folder).init( onInit );
+                    function onInit(err, initResult) { }
+                    
+                    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+                    function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+                    
+                    await waitTime( 1000);
+                    
+                    //await gitAddCommitAndPush( 'First commit');
+        
+                    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+                    
+                    // Initial commit
+                    setStatusBar( 'Initial commit');
+                    let outputData;
+                    await simpleGit( folder )
+                        .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
+                        //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+                        
+                    function onCommit(err, result) {console.log(result); outputData = result };
+                    
+                    await waitTime( 1000);
+                    console.log(outputData);
+                    
+                }else{
+                    // bail out if rejected permission
+                    return 
+                }
+            }
+            
+            // Find top folder of Repo
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+    
+        }catch(error){
+            console.log(error);
+        }
+        
+        // Add folder last in  state array
+        var index = state.repos.length;
+        state.repos[index] = {}; 
+        state.repos[index].localFolder = topFolder;
+        
+        // Clean duplicates from state based on name "localFolder"
+        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        try{
+            // Set index to match the folder you added
+            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+        }catch(err){
+            index = state.repos.length; // Highest should be last added
+        }
+        
+        // Set to current
+        state.repoNumber = index;
+        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
+    
+        // Set global
+        state.repos[state.repoNumber].localFolder = topFolder;
+        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+        
+        //
+        // Local function definitions
+        //
+        
+        function findObjectIndex( myArray, objectField, stringToFind ){
+            
+            var foundIndex; //last found index
+            // Loop for the array elements 
+            for (let i in myArray) { 
+        
+                if (stringToFind === myArray[i][objectField]){
+                    foundIndex = i;
+                }
+            } 
+            
+            return foundIndex;
+        }
+    
+    
+    
+    };
+
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
@@ -1022,7 +1064,7 @@ async function _setMode( inputModeName){
 }
 
 // Git commands
- async function gitIsInstalled(){
+async function gitIsInstalled(){
     var isInstalled = false;
     var resultMessage = "";
     try{
@@ -1091,7 +1133,6 @@ async function gitStatus(){
     return status_data;  
 }
 async function gitBranchList(){
-    // Made available for other scripts by export command
     let branchList;
     
     try{

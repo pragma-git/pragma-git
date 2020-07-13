@@ -157,6 +157,16 @@ div#message-wrapper{
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
 }
+.top-titlebar-merge-icon
+ {
+  position: absolute;
+  right: 150px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
 
 .top-titlebar-close-icon,
 .bottom-titlebar-settings-icon {
