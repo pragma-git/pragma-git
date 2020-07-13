@@ -142,8 +142,12 @@ async function _callback( name, event){
  
     
         case 'setButtonClicked':
-            // Both for Set button, and for Test button used in cloning
-        
+            // For :
+            // - Set button
+            // - Test button used in cloning
+ 
+            let isSetButton = event.innerHTML == "Set";    
+               
             console.log('setButtonClicked');
             console.log(event);
             value = event.value;
@@ -151,14 +155,14 @@ async function _callback( name, event){
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-            
+        
             
             // Make black, to show user that something happened (if green or red before
             document.getElementById(textareaId).style.color='grey';
             
             
-            //  Testing URL for cloning (last realId) => skip the add remote
-            if ( realId <  state.repos.length ){
+            //  Set remote URL 
+            if ( isSetButton ){
                 
                 let localFolder3 = state.repos[ realId].localFolder; 
 
@@ -167,18 +171,19 @@ async function _callback( name, event){
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
                     await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){console.log(result) };
+                    function onSetRemoteUrl(err, result ){console.log(result);console.log(err)  };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
                 }catch(err){
+                    displayMessage('resultRepo', 'Failed setting remote URL', err)
                     console.log('Repository set URL failed');
                     console.log(err);
                     document.getElementById(textareaId).style.color='orange';
                 }           
             }
 
-            // Test if remote works
+            // Test if remote URL works
             try{
                 let remoteURL = document.getElementById(textareaId).value;
                 //await simpleGit().listRemote( remoteURL, onListRemote);
@@ -191,11 +196,12 @@ async function _callback( name, event){
                 document.getElementById(textareaId).style.color='green';
     
             }catch(err){
+                displayMessage('resultRepo', 'Failed verifying remote URL', err)
                 console.log('Repository test failed');
                 console.log(err);
                 document.getElementById(textareaId).style.color='red';
             }
-            
+
     
             // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
             
