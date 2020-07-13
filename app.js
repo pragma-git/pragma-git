@@ -32,8 +32,11 @@
  * ----
  * 
  * Open questions
+ *
+ * Merge: git merge branch_name # Merges branch_name into current repo (so workflow is to change into repo, and the pick up the branch you wish to merge-in)
+ * 1) Switch to branch
+ * 2) Somehow indicate which branch to set (maybe have a branch clicker that pops up
  * 
- * - Git clone from within the Settings ?
  * 
  * - Merge conflicts with external tool : git difftool -y file
  * - Identify conflicts git status field: simple-git(folder).status .conflicted; Array of files being in conflict (there is a conflict if length>0)
@@ -510,7 +513,7 @@ function _callback( name, event){
         // Get log
         var history;
         try{              
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( onHistory);
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'],onHistory);
             function onHistory(err, result){console.log(result); history = result.all;} 
                 
         }catch(err){        
