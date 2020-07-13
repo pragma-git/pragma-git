@@ -33,9 +33,8 @@
  * 
  * Open questions
  *
- * Merge: git merge branch_name # Merges branch_name into current repo (so workflow is to change into repo, and the pick up the branch you wish to merge-in)
- * 1) Switch to branch
- * 2) Somehow indicate which branch to set (maybe have a branch clicker that pops up
+ * - Make merge work
+ * - Make merge-button show only when merge is safe (branch should be commited)
  * 
  * 
  * - Merge conflicts with external tool : git difftool -y file
@@ -212,6 +211,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // Main functions
 async function _callback( name, event){
     console.log('_callback = ' + name);
+    console.log(event);
     switch(name) {
       case 'clicked-store-button':
         storeButtonClicked();
@@ -242,10 +242,12 @@ async function _callback( name, event){
         break;
       case 'clicked-merge-button':
         mergeClicked();
-        break;        
-        
-        
-        
+        break;      
+      case 'clickedMergeContextualMenu' :
+        // gitMerge();  TODO: make this function
+        console.log('clickedMergeContextualMenu');
+        console.log(arguments);
+        break;
       case 'clicked-settings':
         showSettings();
         break;
@@ -375,7 +377,7 @@ async function _callback( name, event){
     async function mergeClicked(){
               
         // Create an empty context menu
-        var menu = new nw.Menu();
+        var menu = new gui.Menu();
         
         let branchList = await gitBranchList();
         let currentBranch = " ";
@@ -391,27 +393,43 @@ async function _callback( name, event){
         let menuItems = branchList;
         
         // Add context menu title-row
-        menu.append(new nw.MenuItem({ label: 'Merge selected into "' + currentBranch +'"', enabled : false }));
-        menu.append(new nw.MenuItem({ type: 'separator' }));
+        menu.append(new gui.MenuItem({ label: 'Merge selected into "' + currentBranch +'"', enabled : false }));
+        menu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
         for (var i = 0; i < menuItems.length; ++i) {
             if (currentBranch != menuItems[i]){
-                menu.append(new nw.MenuItem({ label: menuItems[i] }));
+                menu.append(
+                    new gui.MenuItem(
+                        { 
+                            label: menuItems[i], 
+                            click: () => { console.log('called submenu = ' + menuItems[i]); console.log(this);_callback('clickedMergeContextualMenu',menuItems[i]);} 
+                        } 
+                    )
+                );
                 console.log(menuItems[i]);
             }else{
                 console.log('Skipped current branch = ' + menuItems[i]);
             }
 
         }
+  
         
         // Add Cancel line
-        menu.append(new nw.MenuItem({ type: 'separator' }));
-        menu.append(new nw.MenuItem({ label: 'CANCEL merge' }));
-        
+        menu.append(new gui.MenuItem({ type: 'separator' }));
+        menu.append(new gui.MenuItem({ label: 'CANCEL merge' }));
+
         // Popup as context menu
-        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        menu.popup(pos.left, pos.top + 24);
+        //let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        //await menu.popup(pos.left, pos.top + 24);
+                
+        document.querySelector('#top-titlebar-merge-icon').addEventListener('contextmenu', (event) => {
+                event.preventDefault(); 
+                menu.popup(event.x, event.y); 
+                console.log('contextmenu eventlistener');
+                console.log(event);
+                return false;
+            });
 
     }
  
