@@ -510,16 +510,31 @@ function _callback( name, event){
         
         console.log('down arrow clicked');
         
+        localState.historyNumber = localState.historyNumber + 1;
+        
         // Get log
         var history;
         try{              
             await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'],onHistory);
-            function onHistory(err, result){console.log(result); history = result.all;} 
+            function onHistory(err, result){console.log(result);console.log(err); history = result.all;} 
                 
         }catch(err){        
             console.log(err);
         }
         
+        // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
+        var historyBranchesAtPoint = ""; // Do not comment out this row !
+        //try{              
+            //await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--contains', history[localState.historyNumber + 1].hash], onHistoryBranches );
+            //function onHistoryBranches(err, result){console.log(result);console.log(err); historyBranchesAtPoint = result.all;} 
+            //historyBranchesAtPoint = ' [ ' + historyBranchesAtPoint + ' ]'; 
+                
+        //}catch(err){        
+            //console.log(err);
+            //console.log(historyBranchesAtPoint )       
+        //}
+               
+
 
         try{
             await _setMode('HISTORY');
@@ -527,7 +542,6 @@ function _callback( name, event){
             // Cycle through history
             console.log('downArrowClicked - Cycle through history');
             var numberOfHistorySteps = history.length;
-            localState.historyNumber = localState.historyNumber + 1;
             console.log('downArrowClicked - numberOfHistorySteps, localState');
             console.log(numberOfHistorySteps);
             console.log(localState);
@@ -540,14 +554,21 @@ function _callback( name, event){
                 localState.historyNumber = 0;
             }
             
-            // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
+            
+            // Branches on this commit
+            historyString += historyBranchesAtPoint;
+
+            // Message
+            historyString += os.EOL 
             + os.EOL 
             + history[localState.historyNumber].message
             + os.EOL 
             + os.EOL 
             + history[localState.historyNumber].body;
+            
             
             // Display
             writeMessage( historyString, false);
@@ -587,13 +608,14 @@ function _callback( name, event){
             _setMode('HISTORY');
             
             // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
+            var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            + os.EOL 
             + os.EOL 
             + history[localState.historyNumber].message
             + os.EOL 
             + os.EOL 
-            + history[localState.historyNumber].body;
+            + history[localState.historyNumber].body;  
             
             // Display
             writeMessage( historyString, false);
