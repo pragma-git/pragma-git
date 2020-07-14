@@ -394,7 +394,7 @@ async function _callback( name, event){
         let menuItems = branchList;
         
         // Add context menu title-row
-        menu.append(new gui.MenuItem({ label: 'Merge selected into "' + currentBranch +'"', enabled : false }));
+        menu.append(new gui.MenuItem({ label: 'Merge (selected one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
@@ -417,7 +417,8 @@ async function _callback( name, event){
             }
 
         }
-  
+ 
+        menu.append(new gui.MenuItem({ label: '... into "' + currentBranch +'"', enabled : false })); 
         
         // Add Cancel line
         menu.append(new gui.MenuItem({ type: 'separator' }));
@@ -1296,10 +1297,26 @@ async function gitPull(){
     }
 
 }
-async function gitMerge(currentBranchName, selectedBranchName){
+async function gitMerge( currentBranchName, selectedBranchName){
 
     console.log('gitMerge, merge branch = ' + selectedBranchName);
     console.log('gitMerge, into current branch =  ' + currentBranchName);
+    
+    await waitTime( 1000);
+    
+    // Commit including deleted
+    setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .mergeFromTo( selectedBranchName, currentBranchName, {} , onMerge);
+        
+    function onMerge(err, result) {console.log(result) };
+   
+    await waitTime( 1000);    
+      
+    // Finish up
+    writeMessage('',false);  // Remove this message  
+    _setMode('UNKNOWN');  
+    await _update()
 }
 
 // Utility functions
