@@ -1453,11 +1453,11 @@ function updateContentStyle() {
     content.setAttribute("style", contentStyle);
     
     // This is to make message textarea follow window resize
-    var message_area = document.getElementById("message");
-    var message_area_style = "height: " + (height - 28).toString() + "px; ";
-    message_area_style += "width: 100%; " ;
-    message_area_style += "resize: none; " ;
-    message_area.setAttribute("style", message_area_style);
+    //var message_area = document.getElementById("message");
+    //var message_area_style = "height: " + (height - 28 - 8).toString() + "px; ";
+    //message_area_style += "width: 100%; " ;
+    //message_area_style += "resize: none; " ;
+    //message_area.setAttribute("style", message_area_style);
 
   
 }

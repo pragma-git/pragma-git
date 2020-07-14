@@ -30,7 +30,8 @@ div#content {
 }
 
 div#inner-content {
-  margin: 10px;
+  margin: 0px;
+  height: inherit;
   width:auto;
 }
 
@@ -38,12 +39,17 @@ div#inner-content {
 
 table#outer_table {
   width: auto;
-  height: auto;
+  height: inherit;
+}
+
+tr#output_row {
+  width: auto;
+  height: fit-content;
 }
 
 td {
   width: auto;
-  height: auto; 
+  height: auto;
 }
 
 .settingsActionCell{
