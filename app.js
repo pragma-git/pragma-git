@@ -488,9 +488,9 @@ async function _callback( name, event){
             var numberOfBranches = state.repos.length;
             console.log('downArrowClicked - numberOfBranches');
             console.log(numberOfBranches);
-            if (localState.historyNumber >= numberOfHistorySteps){
+            if (localState.historyNumber == numberOfHistorySteps){
                 console.log('downArrowClicked - setting localState.historyNumber = 0');
-                localState.historyNumber = 0;
+                localState.historyNumber = numberOfHistorySteps -1; // Set to last
             }
             
             // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
@@ -507,7 +507,6 @@ async function _callback( name, event){
             + os.EOL 
             + os.EOL 
             + history[localState.historyNumber].body;
-            
             
             // Display
             writeMessage( historyString, false);
