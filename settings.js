@@ -110,8 +110,22 @@ async function _callback( name, event){
             
             break;
  
- 
+         
+        case 'newBranchNameKeyUp':
+
+            let string = document.getElementById("branchNameTextarea").value;
+            // Remove ^~?:*[\ 
+            string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
+            // Remove more
+            string = string.replace( ' ', ''); // Removing space
+            string = string.replace( '..', '.'); // Removing consecutive dots@{
+            string = string.replace( '@{', '@'); // Stop sequence @{
             
+            
+            document.getElementById("branchNameTextarea").value = string;
+            break;        
+ 
+           
         case 'addBranchButtonPressed':
         
             console.log('addBranchButtonPressed');
@@ -721,6 +735,7 @@ function generateBranchTable(document, table, branchlist) {
     
     textarea = document.createElement('textarea');
     textarea.setAttribute("id", 'branchNameTextarea');
+    textarea.setAttribute( "onkeyup", "_callback('newBranchNameKeyUp', this);");  
     textarea.innerHTML = "";
     //textarea.onclick = forgetButtonClicked;
     
