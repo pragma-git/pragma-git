@@ -101,7 +101,7 @@
        
             
             
-                <p>(you can add them again by dropping a folder into the main window) </p>
+                <p><i>(you can add them again by dropping a folder into the main window) </i></p>
                 
                 <!--  REPOSITORY TABLE -->
                 <table style="width:100%"> 
@@ -189,6 +189,19 @@
                  <!--  Auto-push to remote -->
                 <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="autoPushToRemote"> Auto-push to remote when Store clicked</label><br>
+             
+             
+            
+                
+            <h4>External tools</h4>  
+            
+                <p><i>(typically the same in both fields ) </i></p>
+            
+                <label for="gitDiffTool"> Diff tool</label><br>
+                <textarea id="gitDiffTool" style="width:30%" placeholder="Name of diff tool"></textarea><br><br>
+                
+                <label for="gitMergeTool"> Merge tool</label><br>
+                <textarea id="gitMergeTool" style="width:30%" placeholder="Name of merge tool"></textarea><br><br>
             
            
 

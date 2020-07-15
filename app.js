@@ -1570,6 +1570,9 @@ function loadSettings(settingsFile){
         state.forceCommitBeforeBranchChange = true;
         state.autoPushToRemote = true;
         
+        state.tools.difftool = "";
+        state.tools.mergetool = "";
+        
         console.log(err);
 
     }

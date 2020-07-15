@@ -246,6 +246,13 @@ function forgetButtonClicked(event){
 }
 function closeWindow(){
     
+    // Read fields into state
+    if ( !('tools' in state) ){
+        state.tools = {};
+    }
+    state.tools.difftool = document.getElementById('gitDiffTool').value;
+    state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    
     // Return
     localState.mode = 'UNKNOWN';
     
