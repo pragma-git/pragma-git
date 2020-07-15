@@ -362,6 +362,9 @@ function injectIntoSettingsJs(document) {
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
     
+    document.getElementById('gitDiffTool').value = state.tools.difftool;
+    document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    
     // Build repo table
     createHtmlTable(document);
 

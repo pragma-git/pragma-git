@@ -19,11 +19,13 @@ cd $REPO
 # Change file A in master
 git switch 'master'
 echo 'A changed from master' > A
+echo 'B changed from master' > B
 git commit -a -m 'Emod'
 
 # Change file A in second
 git switch 'second'
 echo 'A changed from second' > A
+echo 'B changed from second' > B
 git commit -a -m 'Gmod'
 
 # End in master

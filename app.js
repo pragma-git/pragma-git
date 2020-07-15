@@ -34,7 +34,7 @@
  * Open questions
  *
  * - Make merge work
- * - Make merge-button show only when merge is safe (branch should be commited)
+ * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
  * 
  * - Merge conflicts with external tool : git difftool -y file
@@ -257,6 +257,9 @@ async function _callback( name, event){
         break;
       case 'clicked-close-button':
         closeWindow();
+        break;
+      case 'clicked-status-text' :
+        gitResolveConflicts( state.repos[state.repoNumber].localFolder );
         break;
       case 'file-dropped':
         dropFile( event); 
@@ -848,7 +851,7 @@ async function _update(){
             case 'NO_FILES_TO_COMMIT':
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                setStatusBar( fileStatusString( status_data));
                 // If not correct mode, fix :
                 if (status_data.changedFiles){
                     _setMode('UNKNOWN');
@@ -859,7 +862,7 @@ async function _update(){
                 try{
                     setTitleBar( 'top-titlebar-repo-text', folder );
                     setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-                    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
+                    setStatusBar( fileStatusString( status_data));            
                     // If not correct mode, fix :
                     if (!status_data.changedFiles){
                         _setMode('UNKNOWN');
@@ -870,7 +873,7 @@ async function _update(){
                 }
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);            
+                setStatusBar( fileStatusString( status_data));            
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
                     _setMode('UNKNOWN');
@@ -880,7 +883,7 @@ async function _update(){
             case 'CHANGED_FILES_TEXT_ENTERED':
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                setStatusBar( fileStatusString( status_data));
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
                     _setMode('UNKNOWN');
@@ -890,7 +893,7 @@ async function _update(){
             case 'HISTORY':
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-                setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
+                setStatusBar( fileStatusString( status_data));
                 break;
                 
             case 'SETTINGS':
@@ -902,7 +905,7 @@ async function _update(){
                     await _setMode('UNKNOWN');
                     setStatusBar(' ');
                     setTitleBar( 'top-titlebar-repo-text', folder );
-                    setTitleBar( 'top-titlebar-branch-text', '' );
+                    setStatusBar( fileStatusString( status_data));
                 }
                 
                 break;
@@ -921,6 +924,20 @@ async function _update(){
         win.setAlwaysOnTop( state.alwaysOnTop );
         saveSettings();
     }
+    
+    function fileStatusString( status_data){
+        try{
+            if (status_data.conflicted.length > 0){
+                return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
+            }else{
+                return 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length;
+
+            }
+        }catch(err){
+            
+        }
+        
+    };
 };
 async function _setMode( inputModeName){
  /* Called from the following :
@@ -1303,21 +1320,64 @@ async function gitMerge( currentBranchName, selectedBranchName){
     
     await waitTime( 1000);
     
-    // Commit including deleted
-    setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
-    await simpleGit( state.repos[state.repoNumber].localFolder )
-        .mergeFromTo( selectedBranchName, currentBranchName, {} , onMerge);
+    let mergeResult;  
+    let mergeError;  // mergeError.conflicts
+    
+    // Merge
+    try{
+        setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .mergeFromTo( selectedBranchName, currentBranchName, {} , onMerge);
+            
+        function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err };
+       
+        await waitTime( 1000);  
+    }catch(err){
+        console.log('gitMerge failed');
         
-    function onMerge(err, result) {console.log(result) };
-   
-    await waitTime( 1000);    
+    }
+  
       
     // Finish up
     writeMessage('',false);  // Remove this message  
     _setMode('UNKNOWN');  
     await _update()
 }
+async function gitResolveConflicts( folder){
+    let tool = state.tools.mergetool;
+    let command = [  
+        'mergetool', 
+        '--gui' , 
+        '--tool=' + tool 
+    ];
+    try{
+        // Store conflicting file names
+        
+        // Resolve with external merge tool
+        writeMessage( 'Resolving conflicts');
+        await simpleGit( folder).raw(command, onResolveConflict );
+        function onResolveConflict(err, result){ console.log(result); console.log(err) };
+        await waitTime( 1000);
+        
+        // TODO (A) : clean out *.orig  backup files created by git mergetool
+        //
+        // I would like to remove all *.orig for the conflicting files once conflict resolved
+        //
+        // 1) store the conflicting files names : in "localState.conflict.repo[repoNumber].conflicting_files before merge
+        //
+        // 2) Then remove files.orig if conflict is resolved
+        //
+        
+        // TODO (B) : Write message text "Merged  selectedBranch  into  currentBranch "  (replace with names)
+        
+        
+    }catch(err){
+        // If external diff tool does not exist => write messate about this
+        
+    }
 
+    
+}
 // Utility functions
 function getMode(){
     return localState.mode;

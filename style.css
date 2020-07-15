@@ -118,6 +118,7 @@ div#message-wrapper{
   font-family: Arial;
   font-size: 11pt;
   color: #ffffff;
+  -webkit-app-region: no-drag;
 }
 
 .top-titlebar-text{
