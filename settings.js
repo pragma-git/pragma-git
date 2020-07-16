@@ -373,11 +373,16 @@ function injectIntoSettingsJs(document) {
     
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
+    document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
-    
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    
+    // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
+        if ( ! win.canSetVisibleOnAllWorkspaces() ){
+            document.getElementById('onAllWorkspaces').disabled = true;
+        }
     
     // Build repo table
     createHtmlTable(document);

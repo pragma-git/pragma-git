@@ -928,7 +928,21 @@ async function _update(){
     //
     function updateWithNewSettings(){
         //Called when left settings window
+        //
+        // NOTE : To implement a new setting that affects the gui, 
+        // add code to these places :
+        // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
+        // - app.js/loadSettings                           -- applies when starting app.js
+        // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+        // - settings.html                                 -- where the form element for the setting is shown
+        
+        
         win.setAlwaysOnTop( state.alwaysOnTop );
+        
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+        }
         saveSettings();
     }
     
@@ -1395,6 +1409,7 @@ async function gitResolveConflicts( folder){
 
     
 }
+
 // Utility functions
 function getMode(){
     return localState.mode;
@@ -1690,6 +1705,11 @@ function loadSettings(settingsFile){
         win = gui.Window.get();
         win.moveTo( state.position.x, state.position.y);
         win.resizeTo( state.position.width, state.position.height);
+        
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+        }
 
         
     }catch(err){
