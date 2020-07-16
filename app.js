@@ -16,23 +16,30 @@
 /* ISSUES
  * ------
  * 
- * - check correct characters in add branch name (settings.js)  :https://wincent.com/wiki/Legal_Git_branch_names
- *   Maybe online validation of text ?
- * 
  * /* Namnförslag
- * digit
- * gitenough 
- * legit
- * agit -- Agit is the short form o agitated. It refers to people who looks so mean or somewhat close to a yeti. It can also refer to people who looks so stressed and fucked up. 
- * gitsy (finns)
- * gitta / gitaH
- * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
-  */
+ * Pragma-git
+ * 
+ * Opposites to Pragmatic :
+ * 
+ * impractical
+ * unrealistic  
+ * idealistic
+ * unreasonable
+ * inefficient
+ * irrational
+ * visionary
+ * sentimental
+ * romantic
+ * theoretical
+ * excited
+ * 
+*/
 /* TODO
  * ----
  * 
  * Open questions
  *
+ * - Merge -- hande deleted files
  * - Make merge work
  * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
@@ -1577,6 +1584,16 @@ async function  writeTimedMessage( message, placeholder, time){
 } 
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
+}
+
+// Output row (below message)
+function writeOutputRow( htmltext){
+    document.getElementById("output_row").style.visibility = 'visible';
+    document.getElementById("output_text").innerHTML = htmltext;
+}
+function clearOutputRow( ){
+    document.getElementById("output_row").style.visibility = 'collapsed';
+    document.getElementById("output_text").innerHTML = '';
 }
 
 // Statusbar

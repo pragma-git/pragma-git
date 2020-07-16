@@ -22,6 +22,8 @@
     <!-- Top titlebar -->    
     
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
+                
+        <!-- Icon About  --> 
         <div class="about-icon"> 
             <img id="about-icon"    height="17" width="17"  
                 onclick="_callback('clicked-about');" 
@@ -34,12 +36,14 @@
 
         <div id="top-titlebar-text" class="top-titlebar-text">
             
+            <!-- Text Repo  --> 
             <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
                 onclick="_callback('clicked-repo')" 
                 onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
             </div>
             
+            <!-- Text Branch  --> 
             <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
                 onclick="_callback('clicked-branch')" 
                 onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
@@ -49,8 +53,9 @@
  
         </div>     
 
-                <!-- NOTE : set absolute positions in style.css -->
+        <!-- NOTE : set absolute positions in style.css -->
                                      
+        <!-- Icon Merge  -->                             
         <div class="top-titlebar-merge-icon">
             <img id="top-titlebar-merge-icon"   height="17" width="17" 
                 onclick="_callback('clicked-merge-button')" 
@@ -59,7 +64,8 @@
                 src="images/merge.png">
         </div> 
                 
-                
+                        
+        <!-- Icon Pull  --> 
         <div class="top-titlebar-pull-icon">
             <img id="top-titlebar-pull-icon" height="17" width="17" 
                 onclick="_callback('clicked-pull-button')" 
@@ -68,7 +74,8 @@
                 src="images/pull.png">
         </div>   
 
-                           
+                   
+        <!-- Icon Push  -->         
         <div class="top-titlebar-push-icon">
             <img id="top-titlebar-push-icon"   height="17" width="17" 
                 onclick="_callback('clicked-push-button')" 
@@ -77,7 +84,8 @@
                 src="images/push.png">
         </div> 
    
-                  
+        
+        <!-- Icon Close  -->           
         <div class="top-titlebar-close-icon">            
             <img id="top-titlebar-close-icon" 
                 onclick="_callback('clicked-close-button')" 
@@ -100,6 +108,7 @@
                     
             <table id="outer_table">
                 <tr>
+                    <!-- History arrows  --> 
                     <td>
                         <table id="arrow_table">               
                         <tr>
@@ -122,14 +131,18 @@
                         </tr>
                         </table>
                     </td>
+                    
+                    <!-- Message textarea  --> 
                     <td class="message_column">
                         <textarea class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
                     </td>
+                    <!-- Store button  --> 
                     <td>
                         <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
                     </td>
                 </tr>
                 
+                <!-- Collapsable html output  --> 
                 <tr id="output_row" style="visibility:collapse">
                     <td></td>
                     <td>
@@ -151,6 +164,8 @@
     <!-- Bottom titlebar -->    
     
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
+        
+        <!-- Icon Folder  -->  
         <div class="bottom-titlebar-folder-icon">
             <img id="bottom-titlebar-folder-icon"  height="17" width="17"
                 onclick="_callback('clicked-folder')" 
@@ -160,12 +175,12 @@
             </div>
             
  
-            
+         <!-- Text Status  -->     
         <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
                 onclick="_callback('clicked-status-text')">
             </div>
 
-        
+        <!-- Icon Settings  -->  
         <div class="bottom-titlebar-settings-icon">
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
                 onclick="_callback('clicked-settings')"
