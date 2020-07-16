@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Resolve Conflicts</title>
+    
+    <script src="resolveConflicts.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+        }
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+    
+    
+    </style>
+ 
+    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          color: white;
+          font-weight: bold;
+          float: right;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+        }
+    </style>
+    
+       
+
+    
+</head>
+<body>
+    
+    <h2>Resolve Conflicts</h2>
+    
+    <p>There are conflicts that needs manual input to be resolved.  Open each section, and resolve the conflicts.  Press "Conflicts Resolved" button when done.
+    </p>
+    
+    <!--  CONFLICTING FILES --> 
+    <button class="collapsible">Conflicting files :</button>
+    
+ 
+    <div class="content">
+      
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">File with conflict</th>
+            </tr></thead>
+            <tbody id="conflictingTableBody" >
+            </tbody>
+        </table>
+        
+                
+         <br>
+         <button id="resolveAllConflictsButton" onclick="_callback('resolveAllConflictsButton',this)" style="vertical-align: middle;">Resolve all conflicting files</button>
+
+         <br>
+    
+  
+
+    </div><br>
+    
+    <!--  DELETED FILES -->     
+    <button class="collapsible">Deleted files</button>
+    <div class="content">        
+      
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">Deleted file (un-check to keep file)</th>
+            </tr></thead>
+            <tbody id="deletedTableBody" >
+            </tbody>
+        </table>
+
+    </div><br>
+    
+    <!--  CONFLICTS RESOLVED  --> 
+    <button id="conflictsResolvedButton" onclick="_callback('conflictsResolvedButton',this)" style="vertical-align: middle;">Conflicts Resolved</button>
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+        });
+    }
+</script>
+
+
+<!--  Onload, call javascript file  --> 
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        console.log('resolveConflicts.html :DOM fully loaded and parsed');
+        injectIntoSettingsJs(document);
+        }
+    );
+    window.addEventListener('unload', (event) => {
+        console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
+        closeWindow(window);
+        }
+    );
+</script>
+    
+  
+
+
+</body>
+</html>
+

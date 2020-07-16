@@ -266,7 +266,8 @@ async function _callback( name, event){
         closeWindow();
         break;
       case 'clicked-status-text' :
-        gitResolveConflicts( state.repos[state.repoNumber].localFolder );
+        //gitResolveConflicts( state.repos[state.repoNumber].localFolder );
+        resolveConflicts(state.repos[state.repoNumber].localFolder);
         break;
       case 'file-dropped':
         dropFile( event); 
@@ -723,6 +724,7 @@ async function _callback( name, event){
         gui.Shell.showItemInFolder(state.repos[state.repoNumber].localFolder);
     }
     function showSettings() {    
+        
         console.log('Settings button pressed');
         
         if ( getMode() == 'SETTINGS' ){
@@ -743,6 +745,20 @@ async function _callback( name, event){
         console.log(settings_win);
         localState.settings = true;
      return   
+    };
+
+    function resolveConflicts( folder){
+        resolve_win = gui.Window.open('resolveConflicts.html#/new_page' ,
+            {
+                id: 'resolveConflictsWindowId',
+                position: 'center',
+                width: 600,
+                height: 700,
+                title: "Resolve Conflicts"
+            }
+            ); 
+        console.log(settings_win);
+        localState.settings = true;
     };
 // ================= END CALLBACK ================= 
 } 
