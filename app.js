@@ -900,8 +900,8 @@ async function _update(){
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 try{
-                    setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-                }catch(err){
+                    setStatusBar( fileStatusString( status_data));
+                 }catch(err){
                     await _setMode('UNKNOWN');
                     setStatusBar(' ');
                     setTitleBar( 'top-titlebar-repo-text', folder );
@@ -930,7 +930,10 @@ async function _update(){
             if (status_data.conflicted.length > 0){
                 return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
             }else{
-                return 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length;
+                return 'Modified = ' 
+                + status_data.modified.length 
+                + ' |  New = ' + ( status_data.not_added.length + status_data.created.length )
+                + ' |  Deleted = ' + status_data.deleted.length;
 
             }
         }catch(err){
@@ -1150,9 +1153,15 @@ async function gitStatus(){
             .status( onStatus);
         function onStatus(err, result ){  status_data = result }
         
-        status_data.changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
+        // New files can be not_added (user created them) or created (git merge created them)
+        status_data.changedFiles = ( 
+            (status_data.modified.length 
+            + status_data.not_added.length 
+            + status_data.created.length
+            + status_data.deleted.length) > 0);
         //console.log(status_data);
         status_data.current;  // Name of current branch
+        
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
@@ -1161,6 +1170,7 @@ async function gitStatus(){
         status_data = [];
         status_data.modified = []; // zero length
         status_data.not_added = [];
+        status_data.created = [];
         status_data.deleted = [];
         status_data.changedFiles = false;
         status_data.ahead = 0;
