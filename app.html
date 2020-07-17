@@ -211,6 +211,7 @@
         ready( function(){
             // prevent default behavior from changing page on dropped file
             window.ondragover = function(e) { e.preventDefault(); return false };
+            
             // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
             window.ondrop = function(e) { e.preventDefault(); return false };
         

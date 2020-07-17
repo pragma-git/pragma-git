@@ -84,7 +84,7 @@
     </p>
     
     <!--  CONFLICTING FILES --> 
-    <button class="collapsible">Conflicting files :</button>
+    <button class="collapsible" id="collapsibleConflict">1) Conflicting files :</button>
     
  
     <div class="content">
@@ -99,8 +99,12 @@
         
                 
          <br>
-         <button id="resolveAllConflictsButton" onclick="_callback('resolveAllConflictsButton',this)" style="vertical-align: middle;">Resolve all conflicting files</button>
-
+         <button id="resolveAllConflictsButton" 
+                onclick="_callback('resolveAllConflictsButton',this)" 
+                style="vertical-align: middle;">
+                Solve conflicting files 
+            </button> 
+            (one after another) using external merge tool
          <br>
     
   
@@ -108,7 +112,7 @@
     </div><br>
     
     <!--  DELETED FILES -->     
-    <button class="collapsible">Deleted files</button>
+    <button class="collapsible" id="collapsibleDeleted">2) Deleted files</button>
     <div class="content">        
       
         <table style="width:100%"> 
@@ -118,11 +122,38 @@
             <tbody id="deletedTableBody" >
             </tbody>
         </table>
+        
+        <br>
+        <button id="resolveAllDeletedButton" 
+            onclick="_callback('resolveAllDeletedButton',this)" 
+            style="vertical-align: middle;">
+            Delete checked files (keep others)
+        </button>
+        <br>
 
     </div><br>
     
     <!--  CONFLICTS RESOLVED  --> 
-    <button id="conflictsResolvedButton" onclick="_callback('conflictsResolvedButton',this)" style="vertical-align: middle;">Conflicts Resolved</button>
+    <button class="collapsible" id="collapsibleConflict">3) Accept changes</button>
+    
+    <div class="content">      
+        <br>
+        <button id="conflictsResolvedButton" 
+            onclick="_callback('conflictsResolvedButton',this)" 
+            style="vertical-align: middle;">
+            Click to accept
+        </button>
+        
+        <button id="undoMergeButton" 
+            onclick="_callback('undoMergeButton',this)" 
+            style="vertical-align: middle;">
+            Undo Merge
+        </button>
+        
+        <br>
+        
+    </div><br>
+
 
 
 <!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
@@ -148,14 +179,19 @@
 
 <!--  Onload, call javascript file  --> 
 <script>
-    window.addEventListener('DOMContentLoaded', (event) => {
-        console.log('resolveConflicts.html :DOM fully loaded and parsed');
-        injectIntoSettingsJs(document);
+
+    window.addEventListener(
+        'DOMContentLoaded', 
+        (event) => {
+            console.log('resolveConflicts.html :DOM fully loaded and parsed');
+            injectIntoJs(document);
         }
     );
-    window.addEventListener('unload', (event) => {
-        console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
-        closeWindow(window);
+    window.addEventListener(
+        'unload', 
+        (event) => {
+            console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
         }
     );
 </script>

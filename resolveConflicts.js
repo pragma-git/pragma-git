@@ -1,4 +1,8 @@
 
+// Define DEBUG features
+var devTools = true;
+var isPaused = false; // Stop timer. In console, type :  isPaused = true
+
 // ---------
 // INIT
 // ---------
@@ -17,15 +21,32 @@ var localState = global.localState;
 
 var win
 
+const delayInMs = 1000;
+
+// Initiate GUI update loop 
+var timer = _loopTimer( 1000);
+
+// Storage of paths to backup files
+const backupExtension = '.orig';
+var origConflictingFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
+
 // ---------
 // FUNCTIONS
 // ---------    
 
 // Start initiated from settings.html
-async function injectIntoSettingsJs(document) {
+async function injectIntoJs(document) {
+
+    
     console.log('resolveConflicts.js entered');
     win = gui.Window.get();
     let status_data;
+    
+          
+    if (devTools == true){
+        win.showDevTools();  // WARNING : causes redraw issues on startup
+    }
+
     
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
@@ -34,236 +55,334 @@ async function injectIntoSettingsJs(document) {
         
     }
 
-    createConflictingFileTable(document, status_data);
-    createDeletedFileTable(document, status_data);
+    // Draw tables, and store found files 
+    let a = createConflictingFileTable(document, status_data);
+    let b = createDeletedFileTable(document, status_data);
+    origConflictingFiles = a.concat(b);
 
 };
 
-// Callbacks 
+// Main functions 
 async function _callback( name, event){
-    
-    // Hide all messages
-    hideMesssage('resultRepo');
-    hideMesssage('resultBranch');
-    
+
     let id = event.id;
-    let value, table, data2, branchList;
-    //var localFolder = "";
-    let textareaId, realId;
-    let newUrl;
     
     console.log('_callback = ' + name);
     switch(name) {
         
         
-        case 'checkboxChanged':
-            console.log('checkboxChanged');
+        case 'resolveAllConflictsButton':
+            console.log('resolveAllConflictsButton');
             console.log(event);
-            value = event.checked;
-            state[id] = value;
+            gitResolveConflicts( state.repos[state.repoNumber].localFolder);
             break;
-    
-        case 'folderSelectButton' :
-            //This calls the hidden folder dialog input-element in settings.html
-            document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
-            document.getElementById("cloneFolderInputButton").click();
-            
-            break;       
-            
-        case 'folderSelectButtonPressed' :
-            //This should be called when hidden input-element is changed (see id="cloneFolderInputButton", in settings.html)
-            console.log('Selected folder = ');
-            console.log(event.value);
-            console.log(event);
-            
-            let localFolder = event.value;
-            
-            // I know that the last row has index same as length of number of repos
-            document.getElementById(state.repos.length).value = localFolder;
-        
-            break;
-    
-
-            
-        case 'cloneButtonPressed' :
-            console.log('cloneButtonPressed');
-            
-            // I know that the last row has index same as length of number of repos
-            id = state.repos.length;
-            
-            let folder = document.getElementById(id).value;  // ID 3
-            let URL = document.getElementById( id + 10000).value; // ID 10003
-            
-            await gitClone( folder, URL);
-        
-            break;
-
-            
-        case 'repoRadiobuttonChanged':
-            console.log('repoRadiobuttonChanged');
-            console.log(event);
-            value = event.checked;
-            
-            // Replace table 
-            document.getElementById("branchesTableBody").innerHTML = ""; 
-            
-             // Display changes
-            table = document.getElementById("branchesTableBody");
-            data2 = Object.keys(state.repos[id]);
-            let myLocalFolder = state.repos[id].localFolder;
-            //localFolder = state.repos[id].localFolder;
-            
-            try{
-                branchList = await gitBranchList( myLocalFolder);
-                generateBranchTable( document, table, branchList); // generate the table first
-            }catch(err){
-                // Probably no branches, because repo does not exist
-            }
-            
-            // Show current repo
-            document.getElementById("currentRepo").innerHTML = myLocalFolder;
-            
-            // Set state (so it will be updated in main program)
-            state.repoNumber = Number(id);  // id can be a string
-            
-            break;
- 
-         
-        case 'newBranchNameKeyUp':
-
-            let string = document.getElementById("branchNameTextarea").value;
-            // Remove ^~?:*[\ 
-            string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
-            // Remove more
-            string = string.replace( ' ', ''); // Removing space
-            string = string.replace( '..', '.'); // Removing consecutive dots@{
-            string = string.replace( '@{', '@'); // Stop sequence @{
-            
-            
-            document.getElementById("branchNameTextarea").value = string;
-            break;        
- 
-           
-        case 'addBranchButtonPressed':
-        
-            console.log('addBranchButtonPressed');
-            console.log(event);
-            
-
-            let branchName = document.getElementById('branchNameTextarea').value;
-            let localFolder2 = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
-            await gitCreateBranch( localFolder2, branchName);
-
             
         
-            
-            // Display changes
-            table = document.getElementById("branchesTableBody");
-            data2 = Object.keys(state.repos[0]);  // Used for headers
-            
-            branchList = await gitBranchList( localFolder2);
-            
-            document.getElementById('branchNameTextarea').value = ""; // Clear text field
-            
-            
-            document.getElementById("branchesTableBody").innerHTML = ""; 
-            generateBranchTable( document, table, branchList); // generate the new branch table 
-            
-            break;
-    
- 
-    
-        case 'setButtonClicked':
-            // For :
-            // - Set button
-            // - Test button used in cloning
- 
-            let isSetButton = event.innerHTML == "Set";    
-               
-            console.log('setButtonClicked');
+        case 'resolveAllDeletedButton':
+            console.log('resolveAllDeletedButton');
             console.log(event);
-            value = event.value;
+            gitResolveDeletions( state.repos[state.repoNumber].localFolder);
+            break;
+     
+        case 'conflictsResolvedButton':
+            console.log('conflictsResolvedButton');
+            console.log(event);
+            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            break;
             
-            
-            realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
-            textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-        
-            
-            // Make black, to show user that something happened (if green or red before
-            document.getElementById(textareaId).style.color='grey';
-            
-            
-            //  Set remote URL 
-            if ( isSetButton ){
-                
-                let localFolder3 = state.repos[ realId].localFolder; 
-
-                // Set remote url
-                newUrl = document.getElementById(textareaId).value;
-                try{
-                    const commands = [ 'remote', 'set-url','origin', newUrl];
-                    await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){console.log(result);console.log(err)  };
-                    
-                    // Set if change didn't cause error (doesn't matter if URL works)
-                    state.repos[realId].remoteURL = newUrl;
-                }catch(err){
-                    displayMessage('resultRepo', 'Failed setting remote URL', err)
-                    console.log('Repository set URL failed');
-                    console.log(err);
-                    document.getElementById(textareaId).style.color='orange';
-                }           
-            }
-
-            // Test if remote URL works
-            try{
-                let remoteURL = document.getElementById(textareaId).value;
-                //await simpleGit().listRemote( remoteURL, onListRemote);
-                
-                    const commands = [ 'ls-remote', remoteURL];
-                    await simpleGit().raw(  commands, onListRemote);
-                    function onSetRemoteUrl(err, result ){console.log(result) };
-                
-                function onListRemote(err, result ){console.log(result) };
-                document.getElementById(textareaId).style.color='green';
-    
-            }catch(err){
-                displayMessage('resultRepo', 'Failed verifying remote URL', err)
-                console.log('Repository test failed');
-                console.log(err);
-                document.getElementById(textareaId).style.color='red';
-            }
-
-    
-            // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
-            
+        case 'undoMergeButton':
+            console.log('undoMergeButton');
+            console.log(event);
+            gitUndoMerge( state.repos[state.repoNumber].localFolder);
             break;
 
 
     } // End switch
+    
+    // ---------------
+    // LOCAL FUNCTIONS
+    // ---------------
+
+    
+    async function gitResolveConflicts( folder){
+        let tool = state.tools.mergetool;
+        let command = [  
+            'mergetool', 
+            '--gui' , 
+            '--tool=' + tool 
+        ];
+        try{
+            // Store conflicting file names
+            console.log('gitResolveConflicts -- Resolving conflicting files');
+            
+            // Resolve with external merge tool
+            //writeMessage( 'Resolving conflicts');
+            await simpleGit( folder).raw(command, onResolveConflict );
+            function onResolveConflict(err, result){ console.log(result); console.log(err) };
+            //await waitTime( 1000);
+            
+            console.log('gitResolveConflicts -- Finished resolving conflicting files');
+            
+            // TODO (A) : clean out *.orig  backup files created by git mergetool
+            //
+            // I would like to remove all *.orig for the conflicting files once conflict resolved
+            //
+            // 1) store the conflicting files names : in "localState.conflict.repo[repoNumber].conflicting_files before merge
+            //
+            // 2) Then remove files.orig if conflict is resolved
+            //
+            
+            // TODO (B) : Write message text "Merged  selectedBranch  into  currentBranch "  (replace with names)
+            
+            
+        }catch(err){
+            console.log('gitResolveConflicts -- caught error ');
+            console.log(err);
+            // If external diff tool does not exist => write messate about this
+            
+        }
+        
+        // Update table
+        let status_data;
+        try{
+            console.log('gitResolveConflicts -- update table getting status');
+            await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+            function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+            
+            console.log('gitResolveConflicts -- redraw table ');
+            createConflictingFileTable(document, status_data)
+        }catch(err){
+            console.log('gitResolveConflicts -- error redrawing table');
+            console.log(err);
+        }
+        
+        
+    }
+    async function gitResolveDeletions( folder){
+        
+        var tbody = document.getElementById("deletedTableBody");
+        for (var i = 0, row; row = tbody.rows[i]; i++) {
+           //iterate through rows (accessed using the "row" variable assigned in the for loop)
+           
+            let fileName = row.cells[0].getElementsByTagName('label')[0].innerText;
+            let checked  = row.cells[0].getElementsByTagName('input')[0].checked;
+            
+            if (checked){
+                // Remove
+                try{
+                    // Store conflicting file names
+                    console.log('gitResolveDeletions -- deleting file = ' +fileName);
+                    await simpleGit( folder).rm(fileName, onDelete );
+                    function onDelete(err, result){ console.log(result); console.log(err) };
+        
+                }catch(err){
+                    console.log('gitResolveDeletions -- caught error deleting file = ' +fileName);
+                    console.log(err);
+                }
+            }else{
+                // Add
+                try{
+                    // Store conflicting file names
+                    console.log('gitResolveDeletions -- add file = ' +fileName);
+                    await simpleGit( folder).add(fileName, onAdd );
+                    function onAdd(err, result){ console.log(result); console.log(err) };
+        
+                }catch(err){
+                    console.log('gitResolveDeletions -- caught error adding file = ' +fileName);
+                    console.log(err);
+                }                
+            }
+
+            
+        }
+        
+
+        //try{
+            //// Store conflicting file names
+            //console.log('gitResolveDeletions -- Resolving conflicting files');
+            
+            //// Resolve with external merge tool
+            ////writeMessage( 'Resolving conflicts');
+            //await simpleGit( folder).raw(command, onResolveConflict );
+            //function onResolveConflict(err, result){ console.log(result); console.log(err) };
+
+        //}catch(err){
+            //console.log('gitResolveDeletions -- caught error ');
+            //console.log(err);
+            //// If external diff tool does not exist => write messate about this
+            
+        //}
+        
+        // Update table
+        let status_data;
+        try{
+            console.log('gitResolveDeletions -- update table getting status');
+            await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+            function onStatus(err, result ){ 
+                status_data = result; 
+                console.log(result); 
+                console.log(err) 
+                createDeletedFileTable(document, status_data); 
+            };
+            
+            console.log('gitResolveDeletions -- redraw table ');
+            createDeletedFileTable(document, status_data)
+        }catch(err){
+            console.log('gitResolveDeletions -- error redrawing table');
+            console.log(err);
+        }
+        
+        
+    }
+    function gitDeleteBackups( folder){
+        
+        // Remove .orig
+        for (let i in origConflictingFiles) {
+            try {
+                let file = folder + pathsep + origConflictingFiles[i] + backupExtension;
+                console.log('gitDeleteBackups -- deleting file = ' + file);
+                fs.unlinkSync(file)
+                //file removed
+            }catch(err) {
+                console.log('gitDeleteBackups -- failed deleting file');
+                console.log(err)
+            }
+        }
+         
+        // Remove _BACKUP_nnnn, _BASE_nnnn, B_LOCAL_nnnn, B_REMOTE_nnnn
+        // - BASE is the first commit down the tree the two branches split off from. It is the first common ancestor. Often it is useful to have this to help decide which of the newer commits you want.
+        // - LOCAL is your local file, the one in the current branch you are standing on.
+        // - REMOTE is the remote file, of the branch you are merging into your common on.
+        
+        // Take the originally conflicting files one-by-one
+        for (let i in origConflictingFiles) {
+
+            
+            try {
+                            
+                let path = folder + pathsep + origConflictingFiles[i];
+                let directory = path.match(/(.*)[\/\\]/)[1]||'';
+                let fileName = path.split(/^.*[\\\/]/).pop();
+                
+                // Look for files that start with fileName followed by "_"
+                let filesInThisFolder = fs.readdirSync(directory);
+                for (let j in filesInThisFolder) {
+                    if ( filesInThisFolder[j].startsWith(fileName + '_')  ){
+                        // Identified as A_BASE_12345 etc, should be removed :
+                        console.log('Found matching file = ' + filesInThisFolder[j]);
+                        let file = folder + pathsep + filesInThisFolder[j];
+                        fs.unlinkSync(file);
+                    }
+
+                }
+
+            }catch(err) {
+                console.log('gitDeleteBackups -- failed deleting file');
+                console.log(err)
+            }
+        }
+               
+    }
+    async function gitUndoMerge( folder){
+        let tool = state.tools.mergetool;
+        let command = [  
+            'mergetool', 
+            '--gui' , 
+            '--tool=' + tool 
+        ];
+        try{
+            // Store conflicting file names
+            console.log('gitUndoMerge -- entered');
+            
+            // Resolve with external merge tool
+            //writeMessage( 'Resolving conflicts');
+            await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            function onUndoMerge(err, result){ console.log(result); console.log(err) };
+            //await waitTime( 1000);
+            
+            console.log('gitUndoMerge -- Finished ');
+            
+        }catch(err){
+            console.log('gitUndoMerge -- caught error ');
+            console.log(err);
+        }
+        
+        // Close window
+        closeWindow();
+
+        
+    }
+
+
+// ================= END CALLBACK =================  
 }
+async function _loopTimer( delayInMs){
+    
+    // Define timer
+    let timer = window.setInterval( _update, delayInMs );
+    return timer
+    
+
+    
+}
+async function _update(){
+    if(isPaused) {
+        return;
+    }
+    
+    
+    let folder = state.repos[state.repoNumber].localFolder;
+    let status_data;
+    try{
+        await simpleGit( folder).status( onStatus );
+        function onStatus(err, result ){ 
+            status_data = result; 
+            console.log(result); 
+            console.log(err);
+            createConflictingFileTable(document, status_data);
+            // createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
+        };
+    }catch(err){
+        
+    }
+    
+}
+
 function closeWindow(){
 
     // Return
     localState.mode = 'UNKNOWN';
+    
+    win.close();
     
 }
 
 // Draw
 function createConflictingFileTable(document, status_data) {
     var index = 0; 
-    let table = document.getElementById('conflictingTableBody'); // table body
     let cell, row;
+    let foundFiles = [];
+    
+    // Old tbody
+    let old_tbody = document.getElementById('conflictingTableBody');
 
+    // Make  a new tbody
+    let tbody = document.createElement("tbody"); // Empty tbody
+    tbody.setAttribute('id','conflictingTableBody');
+
+    // Fill tbody with content
     for (let i in status_data.files) {
         let fileStruct = status_data.files[i];
         if ( fileStruct.working_dir == 'U' ){
+            
+            // remember found file
+            foundFiles.push(fileStruct.path);
             console.log( fileStruct.path);
             
-            let row = table.insertRow();
+            let row = tbody.insertRow();
 
             
-             // Into table cell :   path
+             // Into tbody cell :   path
             cell = row.insertCell();
             text = document.createTextNode( fileStruct.path );
             cell.appendChild(text);
@@ -271,18 +390,36 @@ function createConflictingFileTable(document, status_data) {
         } 
         index = index + 1;
     }
+    
+    // Replace old tbody content with new tbody
+    old_tbody.parentNode.replaceChild(tbody, old_tbody);
+    
+    //document.getElementById('collapsibleConflict').click();  // Open collapsed section
+    
+    return foundFiles;
 }
 function createDeletedFileTable(document, status_data) {
     var index = 10000; // Checkbox id
-    let table = document.getElementById('deletedTableBody'); // table body
     let cell, row;
-    
+    let foundFiles = [];
+        
+    // Old tbody
+    let old_tbody = document.getElementById('deletedTableBody');
+
+    // Make  a new tbody
+    let tbody = document.createElement("tbody"); // Empty tbody
+    tbody.setAttribute('id','deletedTableBody');
+
+    // Fill tbody with content
     for (let i in status_data.files) { 
         let fileStruct = status_data.files[i];
         if ( fileStruct.working_dir == 'D' ){
             console.log( fileStruct.path);
             
-            let row = table.insertRow();
+            // Remember found file
+            foundFiles.push(fileStruct.path);
+            
+            let row = tbody.insertRow();
 
             //
             // First cell
@@ -318,8 +455,12 @@ function createDeletedFileTable(document, status_data) {
         } 
         index = index + 1;
     }
+        
+    // Replace old tbody content with new tbody
+    old_tbody.parentNode.replaceChild(tbody, old_tbody);
 
-   
-
-   
+    //document.getElementById('collapsibleDeleted').click();  // Open collapsed section
+    
+    return foundFiles;
 }
+

@@ -1390,41 +1390,6 @@ async function gitMerge( currentBranchName, selectedBranchName){
     _setMode('UNKNOWN');  
     await _update()
 }
-async function gitResolveConflicts( folder){
-    let tool = state.tools.mergetool;
-    let command = [  
-        'mergetool', 
-        '--gui' , 
-        '--tool=' + tool 
-    ];
-    try{
-        // Store conflicting file names
-        
-        // Resolve with external merge tool
-        writeMessage( 'Resolving conflicts');
-        await simpleGit( folder).raw(command, onResolveConflict );
-        function onResolveConflict(err, result){ console.log(result); console.log(err) };
-        await waitTime( 1000);
-        
-        // TODO (A) : clean out *.orig  backup files created by git mergetool
-        //
-        // I would like to remove all *.orig for the conflicting files once conflict resolved
-        //
-        // 1) store the conflicting files names : in "localState.conflict.repo[repoNumber].conflicting_files before merge
-        //
-        // 2) Then remove files.orig if conflict is resolved
-        //
-        
-        // TODO (B) : Write message text "Merged  selectedBranch  into  currentBranch "  (replace with names)
-        
-        
-    }catch(err){
-        // If external diff tool does not exist => write messate about this
-        
-    }
-
-    
-}
 
 // Utility functions
 function getMode(){
