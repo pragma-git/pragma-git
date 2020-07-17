@@ -80,15 +80,19 @@
     
     <h2>Resolve Conflicts</h2>
     
-    <p>There are conflicts that needs manual input to be resolved.  Open each section, and resolve the conflicts.  Press "Conflicts Resolved" button when done.
+    <p>There are conflicts that needs manual input to be resolved.  
+    Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
+    In the last section, accept changes, or undo the merge.
     </p>
     
-    <!--  CONFLICTING FILES --> 
+    <!--  1) CONFLICTING FILES --> 
     <button class="collapsible" id="collapsibleConflict">1) Conflicting files :</button>
     
  
     <div class="content">
-      
+        <p>These files have changes that conflicts.  This could for instance be differences in the same row.
+        </p>    
+              
         <table style="width:100%"> 
             <thead><tr>
                 <th class="path">File with conflict</th>
@@ -111,9 +115,12 @@
 
     </div><br>
     
-    <!--  DELETED FILES -->     
+    <!--  2) DELETED FILES -->     
     <button class="collapsible" id="collapsibleDeleted">2) Deleted files</button>
-    <div class="content">        
+    <div class="content">    
+        <p>Files in your current branch were deleted in the branch you merge with.
+        You can chose to delete them (checked) or keep the existing files (uncheck)
+        </p>    
       
         <table style="width:100%"> 
             <thead><tr>
@@ -133,10 +140,18 @@
 
     </div><br>
     
-    <!--  CONFLICTS RESOLVED  --> 
-    <button class="collapsible" id="collapsibleConflict">3) Accept changes</button>
+    <!--  3) CONFLICTS RESOLVED  --> 
+    <button class="collapsible" id="collapsibleResolved">3) Accept changes</button>
     
-    <div class="content">      
+    <div class="content">    
+        <p>This last step removes different backup files, and accepts the changes in previous steps.  
+        You may also undo the whole merge.
+        </p>
+         
+        <p>After leaving this window, write a description, and press Store.
+        </p>
+        
+          
         <br>
         <button id="conflictsResolvedButton" 
             onclick="_callback('conflictsResolvedButton',this)" 

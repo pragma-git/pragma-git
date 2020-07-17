@@ -18,19 +18,22 @@ cd $REPO
 
 # Change files in master
 git switch 'master'
-echo 'A changed from master' > A
+echo 'A2 changed from master' > 'A-folder/A2'
+git add 'A-folder/A2'
 echo 'B changed from master' > B
-git commit -a -m 'Emod'
+git commit -a -m 'Emod' 
 
 # Change files in second
 git switch 'second'
-echo 'A changed from second' > A
-echo 'B changed from second' > B
+echo 'A2 changed from second' > 'A-folder/A2'
+git add 'A-folder/A2'
+
 rm B # Extra : remove one file
 
 git commit -a -m 'Gmod'
 
-# End in master
+
+# Switch to master
 git switch 'master'
 
 

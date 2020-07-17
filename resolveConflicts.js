@@ -57,7 +57,14 @@ async function injectIntoJs(document) {
 
     // Draw tables, and store found files 
     let a = createConflictingFileTable(document, status_data);
+    document.getElementById('collapsibleConflict').click();  // Open collapsed section 1)
+    
     let b = createDeletedFileTable(document, status_data);
+    document.getElementById('collapsibleDeleted').click();   // Open collapsed section 2)
+    
+    document.getElementById('collapsibleResolved').click();  // Open collapsed section 3)
+    
+    // Store conflicting file-list
     origConflictingFiles = a.concat(b);
 
 };
@@ -394,8 +401,6 @@ function createConflictingFileTable(document, status_data) {
     // Replace old tbody content with new tbody
     old_tbody.parentNode.replaceChild(tbody, old_tbody);
     
-    //document.getElementById('collapsibleConflict').click();  // Open collapsed section
-    
     return foundFiles;
 }
 function createDeletedFileTable(document, status_data) {
@@ -459,7 +464,6 @@ function createDeletedFileTable(document, status_data) {
     // Replace old tbody content with new tbody
     old_tbody.parentNode.replaceChild(tbody, old_tbody);
 
-    //document.getElementById('collapsibleDeleted').click();  // Open collapsed section
     
     return foundFiles;
 }

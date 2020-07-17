@@ -5,13 +5,11 @@
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
-        
-const pathsep = require('path').sep;  // Os-dependent path separator
-        
 const simpleGit = require('simple-git');  
+       
+const pathsep = require('path').sep;  // Os-dependent path separator
 
-
-
+// Global for whole app
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
