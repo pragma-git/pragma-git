@@ -40,6 +40,15 @@ async function injectIntoJs(document) {
     
     console.log('resolveConflicts.js entered');
     win = gui.Window.get();
+    
+    // For systems that have multiple workspaces (virtual screens)
+    if ( win.canSetVisibleOnAllWorkspaces() ){
+        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+    }
+    
+    
+    
+    
     let status_data;
     
           

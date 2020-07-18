@@ -39,19 +39,24 @@
  * 
  * Open questions
  * 
- * - auto-fetch every minute
+ * - Conflict -- jump directly into resolve window instead of showing in status bar ?  
  * 
- * - logic with push button ( now it shows if behind even without anything to push )
+ * - Conflicting window, show on all workspaces if main window setting is that
  * 
  * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
- *
+ * - See list of files clicking on Modified / New / Deleted
+ *   Click on Modified should list all modified.  Click on file should jump into diff-tool.  
+ *   How to unstage a file ?
+ * 
+ * - Pull button - hide if changed files
+ *   (OR :  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes ) )
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  * 
- * - How to handle local changes when pulling ?  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes )
+
  *
  * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
@@ -60,7 +65,7 @@
  *   2) Dialog to ask if create new branch or move to top ?  
  *   3) Instead: save as non-git in separate folder ? That would be easier to understand.
  *
- * - See list of files clicking on Modified / New / Deleted
+ * 
  * 
  * - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
  * 
