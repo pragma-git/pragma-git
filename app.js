@@ -39,9 +39,7 @@
  * 
  * Open questions
  * 
- * - Conflict -- jump directly into resolve window instead of showing in status bar ?  
- * 
- * - Conflicting window, show on all workspaces if main window setting is that
+ * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
  * 
  * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
@@ -458,6 +456,8 @@ async function _callback( name, event){
 
         }
  
+        
+        menu.append(new gui.MenuItem({ type: 'separator' }));
         menu.append(new gui.MenuItem({ label: '... into "' + currentBranch +'"', enabled : false })); 
         
         // Add Cancel line
