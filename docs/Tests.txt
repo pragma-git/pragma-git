@@ -2,7 +2,7 @@
 # Get access token from : settings/developers settings/Personal Access Settings 
 # (set repo=on)
 USER='JanAxelsson'
-TOKEN=f749ea8473a1afb417dc78f674369ec77b5fa62c
+TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
 
 #
 # LIST 

@@ -38,22 +38,18 @@
  * ----
  * 
  * Open questions
- *
- * - Merge -- hande deleted files
- * - Make merge work
+ * 
+ * - auto-fetch every minute
+ * 
+ * - logic with push button ( now it shows if behind even without anything to push )
+ * 
  * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
- * 
- * - Merge conflicts with external tool : git difftool -y file
- * - Identify conflicts git status field: simple-git(folder).status .conflicted; Array of files being in conflict (there is a conflict if length>0)
- * - Maybe add a 
  *
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
- *
- * - Add pull from remote (icon in title-bar after "repo(branch)"
  * 
  * - How to handle local changes when pulling ?  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes )
  *
@@ -76,6 +72,32 @@
  * Docs : https://www.npmjs.com/package/simple-git
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
+/* TESTS
+ * 
+ * 1) Succesful merges
+ * 
+ * setup : make_three_filled_branches.command 
+ * Pragma-git : Stand in "master". Merge-button "second"
+ *  
+ * Expected : /tmp/threeBranches  "second" successfully merged into "master"
+ *   
+ * 
+ * 2) Merge conflict
+ * 
+ * setup : create_merge_conflict.command
+ * Pragma-git : Stand in "master". Merge-button "second"
+ * 
+ * Expected : /tmp/threeBranches is in conflict with A-folder/A2 being changed, and B deleted in "second". 
+ * 
+ * 
+ * 3) Pull 
+ * 
+ * setup : create_pull_conflict.command
+ * Pragma-git : Stand in "master". Pull button should be visible; press it.
+ * 
+ * Expected : /tmp/threeBranches is in conflict with remote master.  
+ * 
+ */
 /* TECHNICAL OVERVIEW
  * ------------------
  * 
@@ -843,7 +865,6 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
-
     
     // Update Pull button
         try{
