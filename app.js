@@ -53,8 +53,6 @@
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
- * 
-
  *
  * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
@@ -316,6 +314,9 @@ async function _callback( name, event){
         if (state.repoNumber >= numberOfRepos){
             state.repoNumber = 0;
         }
+        
+        // Update remote info immediately
+        gitFetch();  
         
         _setMode('UNKNOWN');
     }
