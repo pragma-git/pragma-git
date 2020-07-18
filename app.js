@@ -229,8 +229,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var repoSettings = {}; 
    
         
-    // Initiate GUI update loop 
-        var timer = _loopTimer( 1000);
+    // Initiate asynchronous loops
+        const seconds = 1000; // milliseconds per second
+        var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
+        var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
 
 
 // ---------
@@ -784,12 +786,19 @@ async function _callback( name, event){
     };
 // ================= END CALLBACK ================= 
 } 
-async function _loopTimer( delayInMs){
+async function _loopTimer( timerName, delayInMs){
     
-    // Define timer
-    let timer = window.setInterval( _update, delayInMs );
-    return timer
+    // Define timer  
+    switch( timerName ) {        
+        case 'update-loop':    
+            return window.setInterval( _update, delayInMs );
+            break;
     
+        case 'fetch-loop':    
+            return window.setInterval( gitFetch, delayInMs );
+            break;
+
+    }
 
     
 }
@@ -1347,6 +1356,24 @@ async function gitPush(){
     
     await waitTime( 1000);  
 
+}
+async function gitFetch(){
+    console.log('Running gitFetch()');
+     
+    var error = "";
+
+    // Fetch
+     try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+        function onFetch(err, result) {console.log(result) };
+        
+    }catch(err){
+        console.log('Error in gitFetch()');
+        console.log(err);
+        error = err;
+        await writeTimedMessage( 'Failure fetching from remote ' + os.EOL + error, true, WAIT_TIME);
+    }
+  
 }
 async function gitPull(){
     

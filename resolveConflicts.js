@@ -288,6 +288,9 @@ async function _callback( name, event){
                 console.log(err)
             }
         }
+        
+        // Close window
+        closeWindow();
                
     }
     async function gitUndoMerge( folder){
