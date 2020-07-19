@@ -128,6 +128,11 @@ async function _callback( name, event){
             // could also be between staged and last commit
             // or between staged and working-gree
             // How should I handle this ?
+            //
+            // Maybe always update index before a comparison (https://git-scm.com/docs/git-add) ,
+            // => two cases left  
+            // 1) compare index with last commit (if staged)
+            // 2) compare working_tree with last commit (if not staged)
              
             let status_data;
             try{
@@ -142,10 +147,22 @@ async function _callback( name, event){
      
      
         case 'discardLink':
+        // TODO : make a discard (git checkout filename)
+        // Make question dialog if this is allowed
             console.log('discardLink');
             console.log(event);
             
             file = event;        
+        
+            break;
+            
+            
+            
+        case 'radioButtonChanged' :
+            // TODO : stage or unstage depending on what happened
+            // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
+        
+        
         
             break;
 
@@ -260,7 +277,7 @@ function createFileTable(document, status_data) {
             // Checkbox
             var checkbox = document.createElement('input');
             checkbox.setAttribute("name", "repoGroup");
-            checkbox.setAttribute("onclick", "_callback('repoRadiobuttonChanged', '" + file + "' );" ) ; // Quotes around file
+            checkbox.setAttribute("onclick", "_callback('radioButtonChanged', '" + file + "' );" ) ; // Quotes around file
             checkbox.type = 'checkbox';
             checkbox.id = index;
             checkbox.checked = true;
