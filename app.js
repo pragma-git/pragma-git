@@ -220,6 +220,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.branchNumber = 0;  
         localState.settings = false;  // True when settings window is open
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
+        localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
         
     // Expose these to all windows 
@@ -291,8 +292,13 @@ async function _callback( name, event){
         closeWindow();
         break;
       case 'clicked-status-text' :
-        //gitResolveConflicts( state.repos[state.repoNumber].localFolder );
-        resolveConflicts(state.repos[state.repoNumber].localFolder);
+        let status_data = await gitStatus();
+        if (status_data.conflicted.length > 0){
+            resolveConflicts(state.repos[state.repoNumber].localFolder);
+        }else{
+            listChanged();
+        }
+        
         break;
       case 'file-dropped':
         dropFile( event); 
@@ -788,7 +794,19 @@ async function _callback( name, event){
             }
             ); 
         console.log(settings_win);
-        localState.settings = true;
+    };
+    
+    function listChanged(){
+        resolve_win = gui.Window.open('listChanged.html#/new_page' ,
+            {
+                id: 'listChangedId',
+                position: 'center',
+                width: 600,
+                height: 700,
+                title: "List Changed Files"
+            }
+            ); 
+        console.log(settings_win);        
     };
 // ================= END CALLBACK ================= 
 } 
@@ -1289,6 +1307,10 @@ async function gitLocalFolder(){
     
 }
 async function gitAddCommitAndPush( message){
+    
+    // TODO : localState.staged should override auto-stage
+    
+    
     var status_data;     
     
     
@@ -1336,6 +1358,7 @@ async function gitAddCommitAndPush( message){
     }
       
     // Finish up
+    localState.unstaged = [];
     writeMessage('',false);  // Remove this message  
     _setMode('UNKNOWN');  
     await _update()

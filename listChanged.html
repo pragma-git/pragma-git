@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Changed files</title>
+    
+    <script src="listChanged.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+        }
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+    
+    
+    </style>
+ 
+    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          color: white;
+          font-weight: bold;
+          float: right;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+        }
+    </style>
+    
+       
+
+    
+</head>
+<body>
+    
+    <h2>Changed files</h2>
+    
+    <p>
+        
+    </p>
+    
+    <!--  CHANGED FILES --> 
+    <button class="collapsible" id="listFiles">Files that will be stored :</button>
+    
+ 
+    <div class="content">
+        <p>These files have been changed.  Checked files are selected to be stored when clicking Store-button. 
+        </p>    
+              
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">Changed files</th>
+            </tr></thead>
+            <tbody id="listFilesTableBody" >
+            </tbody>
+        </table>
+        
+                        
+         <br>
+         <button id="applySelectedFilesButton" 
+                onclick="_callback('applySelectedFilesButton',this)" 
+                style="vertical-align: middle;">
+                Select 
+            </button> 
+         <br>
+    
+        
+
+    </div><br>
+
+
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+        });
+    }
+</script>
+
+
+<!--  Onload, call javascript file  --> 
+<script>
+
+    window.addEventListener(
+        'DOMContentLoaded', 
+        (event) => {
+            console.log('listChanged.html :DOM fully loaded and parsed');
+            injectIntoJs(document);
+        }
+    );
+    window.addEventListener(
+        'unload', 
+        (event) => {
+            console.log('listChanged.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+        }
+    );
+</script>
+    
+  
+
+
+</body>
+</html>
+
