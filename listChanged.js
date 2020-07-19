@@ -85,11 +85,8 @@ async function _callback( name, event){
             console.log(event);
             
             localState.unstaged = makeListOfUnstagedFiles();
-            
-            
-            //
-            // This will be done once again after pressing Store (in case something has happened)
-            //
+
+            // Note : This will be done once again after pressing Store (in case something has happened)
                
             // Add all files to index
             var path = '.'; // Add all
@@ -97,20 +94,13 @@ async function _callback( name, event){
                 .add( path, onAdd );   
             function onAdd(err, result) {console.log(result) ;console.log(err); }
             
-            
             // Remove localState.unstaged from index
             for (let file of localState.unstaged) {
                  await simpleGit( state.repos[state.repoNumber].localFolder )
                 .raw( [  'reset', '--', file ] , onReset); 
             }
             function onReset(err, result) {console.log(result) ;console.log(err);}
-                    
-                    
-                    
-            
-            
-            
-            
+
             closeWindow();
             break;
             
@@ -130,10 +120,15 @@ async function _callback( name, event){
                 '--tool',
                 tool,
                 '--',
-                file 
+                file
             ];
             
-            
+            // TODO :
+            // now - compares working-tree with last commit
+            // could also be between staged and last commit
+            // or between staged and working-gree
+            // How should I handle this ?
+             
             let status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder).raw(command, onGitDiff );
@@ -142,14 +137,17 @@ async function _callback( name, event){
                 console.log('diffLink -- caught error ');
                 console.log(err);
             }
-            
-            
-            
-            
-            
+
             break;
      
-
+     
+        case 'discardLink':
+            console.log('discardLink');
+            console.log(event);
+            
+            file = event;        
+        
+            break;
 
     } // End switch
     
