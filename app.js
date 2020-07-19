@@ -43,9 +43,7 @@
  * 
  * - Make merge-button show only when merge is safe (current branch should be commited)
  * 
- * - See list of files clicking on Modified / New / Deleted
- *   Click on Modified should list all modified.  Click on file should jump into diff-tool.  
- *   How to unstage a file ?
+ * - Settings -- add test button for diff and merge tools
  * 
  * - Pull button - hide if changed files
  *   (OR :  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes ) )
