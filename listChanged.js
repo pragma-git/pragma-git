@@ -1,6 +1,6 @@
 
 // Define DEBUG features
-var devTools = true;
+var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 // ---------
@@ -64,6 +64,7 @@ async function injectIntoJs(document) {
         
     }
 
+
     // Draw table
     origFiles = createFileTable(document, status_data);
     document.getElementById('listFiles').click();  // Open collapsed section 
@@ -84,6 +85,31 @@ async function _callback( name, event){
             console.log(event);
             
             localState.unstaged = makeListOfUnstagedFiles();
+            
+            
+            //
+            // This will be done once again after pressing Store (in case something has happened)
+            //
+               
+            // Add all files to index
+            var path = '.'; // Add all
+            await simpleGit( state.repos[state.repoNumber].localFolder )
+                .add( path, onAdd );   
+            function onAdd(err, result) {console.log(result) ;console.log(err); }
+            
+            
+            // Remove localState.unstaged from index
+            for (var file of localState.unstaged) {
+                 await simpleGit( state.repos[state.repoNumber].localFolder )
+                .raw( [  'reset', '--', file ] , onReset); 
+            }
+            function onReset(err, result) {console.log(result) ;console.log(err);}
+                    
+                    
+                    
+            
+            
+            
             
             closeWindow();
             break;
@@ -127,7 +153,7 @@ async function _callback( name, event){
                 //columns would be accessed using the "col" variable assigned in the for loop
             
                 let isChecked = col.children[0].checked;
-                let file  = col.children[1].innerText
+                let file  = col.children[1].innerText;
                 if (isChecked == false) {
                     unStaged.push(file);
                 }
@@ -199,11 +225,15 @@ function createFileTable(document, status_data) {
     // Fill tbody with content
     for (let i in status_data.files) { 
         let fileStruct = status_data.files[i];
+        let file = fileStruct.path;
+        file = file.replace(/"|_/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
-        console.log( fileStruct.path);
+        let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
+        
+        console.log( '[' + XY + '] ' + fileStruct.path);
         
         // Remember found file
-        foundFiles.push(fileStruct.path);
+        foundFiles.push(file);
         
         let row = tbody.insertRow();
 
@@ -225,8 +255,29 @@ function createFileTable(document, status_data) {
             // Label
             var label = document.createElement('label')
             label.htmlFor = index;
+            switch (XY) {
+                case "D " :
+                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
+                    break;
+                case " D" :
+                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
+                    break;
+                case "M " :
+                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    break;
+                case " M" :
+                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    break;
+                case "A " :
+                    label.setAttribute("class","added"); // index+work_dir "A " "??"
+                    break;
+                case "??" :
+                    label.setAttribute("class","added"); // untracked (lets view it as added)
+                    break;
             
-            var description = document.createTextNode( fileStruct.path);
+            }
+            
+            var description = document.createTextNode( file);
             label.appendChild(description);
             
             var newline = document.createElement('br');
@@ -236,7 +287,7 @@ function createFileTable(document, status_data) {
             cell.appendChild(newline);
             
             // Adjust checkbox value according to localState.unstaged
-            if ( localState.unstaged.includes(fileStruct.path) ){
+            if ( localState.unstaged.includes(file) ){
                 checkbox.checked = false;
             }
         

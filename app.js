@@ -1323,22 +1323,32 @@ async function gitAddCommitAndPush( message){
     }
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+
     
-    // Add all files
+    // Add all files to index
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
     await simpleGit( state.repos[state.repoNumber].localFolder )
-        .add( path, onAdd );
-        
+        .add( path, onAdd );   
     function onAdd(err, result) {console.log(result) }
+    
+    
+    // Remove localState.unstaged from index
+    for (var file of localState.unstaged) {
+         await simpleGit( state.repos[state.repoNumber].localFolder )
+        .raw( [  'reset', '--', file ] , onReset); 
+    }
+    function onReset(err, result) {console.log(result) }
+   
     
     await waitTime( 1000);
     
-    // Commit including deleted
+    // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
+    //await simpleGit( state.repos[state.repoNumber].localFolder )
+        //.commit( message, {'--all' : null} , onCommit);
     await simpleGit( state.repos[state.repoNumber].localFolder )
-        .commit( message, {'--all' : null} , onCommit);
-        
+        .commit( message, onCommit);        
     function onCommit(err, result) {console.log(result) };
     
     await waitTime( 1000);
