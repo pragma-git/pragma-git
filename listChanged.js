@@ -99,7 +99,7 @@ async function _callback( name, event){
             
             
             // Remove localState.unstaged from index
-            for (var file of localState.unstaged) {
+            for (let file of localState.unstaged) {
                  await simpleGit( state.repos[state.repoNumber].localFolder )
                 .raw( [  'reset', '--', file ] , onReset); 
             }
@@ -115,23 +115,40 @@ async function _callback( name, event){
             break;
             
         
-        //case 'resolveAllDeletedButton':
-            //console.log('resolveAllDeletedButton');
-            //console.log(event);
-            //gitResolveDeletions( state.repos[state.repoNumber].localFolder);
-            //break;
-     
-        //case 'conflictsResolvedButton':
-            //console.log('conflictsResolvedButton');
-            //console.log(event);
-            //gitDeleteBackups( state.repos[state.repoNumber].localFolder);
-            //break;
+        case 'diffLink':
+            console.log('diffLink');
+            console.log(event);
             
-        //case 'undoMergeButton':
-            //console.log('undoMergeButton');
-            //console.log(event);
-            //gitUndoMerge( state.repos[state.repoNumber].localFolder);
-            //break;
+            let file = event;
+            file = file.replace('/','//');
+            
+            let tool = state.tools.difftool;
+
+            command = [  
+                'difftool',
+                '-y',  
+                '--tool',
+                tool,
+                '--',
+                file 
+            ];
+            
+            
+            let status_data;
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command, onGitDiff );
+                function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+            }catch(err){
+                console.log('diffLink -- caught error ');
+                console.log(err);
+            }
+            
+            
+            
+            
+            
+            break;
+     
 
 
     } // End switch
@@ -148,18 +165,17 @@ async function _callback( name, event){
         for (var i = 0, row; row = table.rows[i]; i++) {
             //iterate through rows
             //rows would be accessed using the "row" variable assigned in the for loop
-            for (var j = 0, col; col = row.cells[j]; j++) {
-                //iterate through columns
-                //columns would be accessed using the "col" variable assigned in the for loop
             
-                let isChecked = col.children[0].checked;
-                let file  = col.children[1].innerText;
-                if (isChecked == false) {
-                    unStaged.push(file);
-                }
+            let col = row.cells[0]; // First column
+        
+            let isChecked = col.children[0].checked;
+            let file  = col.children[1].innerText;
+            if (isChecked == false) {
+                unStaged.push(file);
+            }
 
-                console.log(col);
-           }  
+            console.log(col);
+
         }
 
         return unStaged;
@@ -226,7 +242,7 @@ function createFileTable(document, status_data) {
     for (let i in status_data.files) { 
         let fileStruct = status_data.files[i];
         let file = fileStruct.path;
-        file = file.replace(/"|_/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
+        file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
         let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
         
@@ -238,7 +254,7 @@ function createFileTable(document, status_data) {
         let row = tbody.insertRow();
 
         //
-        // First cell
+        // Filename + icon + checkbox (First cell)
         //
             cell = row.insertCell();
             cell.setAttribute("class", 'localFolder');
@@ -246,7 +262,7 @@ function createFileTable(document, status_data) {
             // Checkbox
             var checkbox = document.createElement('input');
             checkbox.setAttribute("name", "repoGroup");
-            checkbox.setAttribute("onclick", "_callback('repoRadiobuttonChanged',this)");
+            checkbox.setAttribute("onclick", "_callback('repoRadiobuttonChanged', '" + file + "' );" ) ; // Quotes around file
             checkbox.type = 'checkbox';
             checkbox.id = index;
             checkbox.checked = true;
@@ -279,18 +295,42 @@ function createFileTable(document, status_data) {
             
             var description = document.createTextNode( file);
             label.appendChild(description);
+
+
             
             var newline = document.createElement('br');
             
+            // Add to cell
             cell.appendChild(checkbox);
             cell.appendChild(label);
             cell.appendChild(newline);
+
+            
+            
             
             // Adjust checkbox value according to localState.unstaged
             if ( localState.unstaged.includes(file) ){
                 checkbox.checked = false;
             }
-        
+            
+        //
+        // Second cell
+        //      
+            cell = row.insertCell();
+            
+            // Make diff link 
+            var diffLink = document.createElement('span');
+            diffLink.setAttribute('style', "color: blue; cursor: pointer");
+            diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
+            diffLink.textContent=" (diff)";
+            cell.appendChild(diffLink);  
+             
+            // Make discard changes 
+            var discardLink = document.createElement('span');
+            discardLink.setAttribute('style', "color: blue; cursor: pointer");
+            discardLink.setAttribute('onclick', "_callback('discardLink'," + "'"  + file + "')");
+            discardLink.textContent=" (restore)";
+            cell.appendChild(discardLink);             
             
             
         index = index + 1;
