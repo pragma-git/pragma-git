@@ -116,8 +116,12 @@
     
  
     <div class="content">
-        <p>The following files have been changed.  Selected files are stored after clicking Store (button in main window). 
+        <p>All changed files will be stored, when pressing the Store-button. 
         </p>    
+        
+        <p>As an exception to this rule, an un-checked file will be skipped in the next Store operation 
+        </p>    
+              
               
         <table style="width:100%"> 
             <thead><tr>
@@ -140,6 +144,29 @@
         
 
     </div><br>
+
+
+<!--  Warning dialog for restore  --> 
+
+<dialog id="restoreDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p>This will remove all changes, and restore the file to its stored state.  Do your really want to discard the changes? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('restoreDialog').close();_callback('discardLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('restoreDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+ 
+<script>  <!--  selectedFile used in dialog   -->
+    var selectedFile;  // Will be set when clicking "restore" (dynamically generated links from javascript)
+</script>
+
+
+  
 
 
 
@@ -167,6 +194,7 @@
 
 <!--  Onload, call javascript file  --> 
 <script>
+
 
     window.addEventListener(
         'DOMContentLoaded', 

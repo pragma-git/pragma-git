@@ -38,7 +38,8 @@ var origFiles = [];  // Store files found to be conflicting.  Use to remove .ori
 async function injectIntoJs(document) {
 
     
-    console.log('resolveConflicts.js entered');
+    console.log('listChanged.js entered');
+    console.log('listChanged.js entered');
     win = gui.Window.get();
     
     // For systems that have multiple workspaces (virtual screens)
@@ -56,17 +57,8 @@ async function injectIntoJs(document) {
         win.showDevTools();  // WARNING : causes redraw issues on startup
     }
 
-    
-    try{
-        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-    }catch(err){
-        
-    }
-
-
     // Draw table
-    origFiles = createFileTable(document, status_data);
+    origFiles = createFileTable();
     document.getElementById('listFiles').click();  // Open collapsed section 
 
 };
@@ -75,6 +67,7 @@ async function injectIntoJs(document) {
 async function _callback( name, event){
 
     let id = event.id;
+    let file;
     
     console.log('_callback = ' + name);
     switch(name) {
@@ -109,7 +102,7 @@ async function _callback( name, event){
             console.log('diffLink');
             console.log(event);
             
-            let file = event;
+            file = event;
             file = file.replace('/','//');
             
             let tool = state.tools.difftool;
@@ -125,19 +118,18 @@ async function _callback( name, event){
                 file
             ];
 
-             
+            // Git Status
             let status_data;
             try{
-             
                 simpleGit( state.repos[state.repoNumber].localFolder)
                     .raw(command, onGitDiff );
                     function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
-
-                
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
             }
+            
+            origFiles = createFileTable();  // Update table
 
             break;
      
@@ -148,8 +140,27 @@ async function _callback( name, event){
             console.log('discardLink');
             console.log(event);
             
-            file = event;        
-        
+            file = event;   
+            try{
+                
+                // Unstage (may not be needed, but no harm)
+                 await simpleGit( state.repos[state.repoNumber].localFolder )
+                    .raw( [  'reset', '--', file ] , onReset); 
+                    function onReset(err, result) {console.log(result) }
+             
+                // Checkout, to discard changes
+                simpleGit( state.repos[state.repoNumber].localFolder)
+                    .checkout(file, onGitCheckout );
+                    function onGitCheckout(err, result){ console.log(result); console.log(err);  };
+
+                
+            }catch(err){
+                console.log('diffLink -- caught error ');
+                console.log(err);
+            }
+            
+
+            origFiles = createFileTable(); // Redraw, and update origFiles;
             break;
             
             
@@ -251,10 +262,22 @@ function closeWindow(){
 }
 
 // Draw
-function createFileTable(document, status_data) {
+async function createFileTable() {
+
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
+    
+    let status_data;
+    
+    // Git Status
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+    }catch(err){
+        console.log("createFileTable -- Error getting git status" );
+        return
+    }
         
     // Old tbody
     let old_tbody = document.getElementById('listFilesTableBody');
@@ -293,6 +316,7 @@ function createFileTable(document, status_data) {
             checkbox.id = index;
             checkbox.checked = true;
             
+            let typeOfChanged;
             
             // Label
             var label = document.createElement('label')
@@ -300,21 +324,27 @@ function createFileTable(document, status_data) {
             switch (XY) {
                 case "D " :
                     label.setAttribute("class","deleted"); // index+work_dir "D " " D"
+                    typeOfChanged = 'deleted';
                     break;
                 case " D" :
                     label.setAttribute("class","deleted"); // index+work_dir "D " " D"
+                    typeOfChanged = 'deleted';
                     break;
                 case "M " :
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    typeOfChanged = 'modified';
                     break;
                 case " M" :
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    typeOfChanged = 'modified';
                     break;
                 case "A " :
                     label.setAttribute("class","added"); // index+work_dir "A " "??"
+                    typeOfChanged = 'added';
                     break;
                 case "??" :
                     label.setAttribute("class","added"); // untracked (lets view it as added)
+                    typeOfChanged = 'added';
                     break;
             
             }
@@ -345,12 +375,16 @@ function createFileTable(document, status_data) {
             diffLink.textContent=" (diff)";
             cell.appendChild(diffLink);  
              
-            // Make discard changes 
-            var discardLink = document.createElement('span');
-            discardLink.setAttribute('style', "color: blue; cursor: pointer");
-            discardLink.setAttribute('onclick', "_callback('discardLink'," + "'"  + file + "')");
-            discardLink.textContent=" (restore)";
-            cell.appendChild(discardLink);             
+            // Make restore changes (only if modified or deleted)
+            if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
+                var discardLink = document.createElement('span');
+                discardLink.setAttribute('style', "color: blue; cursor: pointer");
+                discardLink.setAttribute('onclick',
+                    "selectedFile = '"  + file + "';" + 
+                    "document.getElementById('restoreDialog').show();" );  // Opens dialog from html-page
+                discardLink.textContent=" (restore)";
+                cell.appendChild(discardLink);         
+            }     
             
             
         index = index + 1;

@@ -1337,7 +1337,6 @@ async function gitAddCommitAndPush( message){
         .raw( [  'reset', '--', file ] , onReset); 
     }
     function onReset(err, result) {console.log(result) }
-   
     
     await waitTime( 1000);
     
