@@ -88,7 +88,7 @@ async function _callback( name, event){
 
             // Note : This will be done once again after pressing Store (in case something has happened)
                
-            // Add all files to index
+            // Add all files to index (all newest versions of working-tree files will be in index)
             var path = '.'; // Add all
             await simpleGit( state.repos[state.repoNumber].localFolder )
                 .add( path, onAdd );   
@@ -114,30 +114,26 @@ async function _callback( name, event){
             
             let tool = state.tools.difftool;
 
+            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
             command = [  
                 'difftool',
                 '-y',  
                 '--tool',
                 tool,
+                'HEAD',
                 '--',
                 file
             ];
-            
-            // TODO :
-            // now - compares working-tree with last commit
-            // could also be between staged and last commit
-            // or between staged and working-gree
-            // How should I handle this ?
-            //
-            // Maybe always update index before a comparison (https://git-scm.com/docs/git-add) ,
-            // => two cases left  
-            // 1) compare index with last commit (if staged)
-            // 2) compare working_tree with last commit (if not staged)
+
              
             let status_data;
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command, onGitDiff );
-                function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+             
+                simpleGit( state.repos[state.repoNumber].localFolder)
+                    .raw(command, onGitDiff );
+                    function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+
+                
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
@@ -161,9 +157,23 @@ async function _callback( name, event){
         case 'radioButtonChanged' :
             // TODO : stage or unstage depending on what happened
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
-        
-        
-        
+            
+            let checked = event.checked;
+            let file2 = event.parentElement.innerText;
+            //file2 = '"' + file2 + '"';
+            
+            if ( checked ) {
+                await simpleGit( state.repos[state.repoNumber].localFolder )
+                .add( [file2], onAdd );   
+    
+            } else {
+                 await simpleGit( state.repos[state.repoNumber].localFolder )
+                .raw( [  'reset', '--', file2 ] , onReset); 
+            }
+            // Local functions
+            function onAdd(err, result) {console.log(result) ;console.log(err);}
+            function onReset(err, result) {console.log(result) ;console.log(err);}
+
             break;
 
     } // End switch
@@ -276,8 +286,9 @@ function createFileTable(document, status_data) {
             
             // Checkbox
             var checkbox = document.createElement('input');
-            checkbox.setAttribute("name", "repoGroup");
-            checkbox.setAttribute("onclick", "_callback('radioButtonChanged', '" + file + "' );" ) ; // Quotes around file
+            checkbox.setAttribute("name", "fileGroup");
+            //checkbox.setAttribute("onclick", "_callback('radioButtonChanged', '" + file + "' );" ) ; // Quotes around file
+            checkbox.setAttribute("onclick", "_callback('radioButtonChanged', this );" ) ; // Quotes around file
             checkbox.type = 'checkbox';
             checkbox.id = index;
             checkbox.checked = true;
@@ -311,18 +322,12 @@ function createFileTable(document, status_data) {
             var description = document.createTextNode( file);
             label.appendChild(description);
 
-
-            
-            var newline = document.createElement('br');
             
             // Add to cell
             cell.appendChild(checkbox);
             cell.appendChild(label);
-            cell.appendChild(newline);
 
-            
-            
-            
+
             // Adjust checkbox value according to localState.unstaged
             if ( localState.unstaged.includes(file) ){
                 checkbox.checked = false;
