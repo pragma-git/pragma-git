@@ -39,7 +39,6 @@ async function injectIntoJs(document) {
 
     
     console.log('listChanged.js entered');
-    console.log('listChanged.js entered');
     win = gui.Window.get();
     
     // For systems that have multiple workspaces (virtual screens)
@@ -48,9 +47,16 @@ async function injectIntoJs(document) {
     }
     
     
-    
-    
     let status_data;
+    
+    // Git Status
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+    }catch(err){
+        console.log("createFileTable -- Error getting git status" );
+        return
+    }
     
           
     if (devTools == true){
@@ -58,7 +64,7 @@ async function injectIntoJs(document) {
     }
 
     // Draw table
-    origFiles = createFileTable();
+    origFiles = createFileTable(status_data);
     document.getElementById('listFiles').click();  // Open collapsed section 
 
 };
@@ -68,6 +74,7 @@ async function _callback( name, event){
 
     let id = event.id;
     let file;
+    let status_data;
     
     console.log('_callback = ' + name);
     switch(name) {
@@ -119,7 +126,7 @@ async function _callback( name, event){
             ];
 
             // Git Status
-            let status_data;
+            status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder)
                     .raw(command, onGitDiff );
@@ -128,8 +135,7 @@ async function _callback( name, event){
                 console.log('diffLink -- caught error ');
                 console.log(err);
             }
-            
-            origFiles = createFileTable();  // Update table
+        
 
             break;
      
@@ -158,9 +164,18 @@ async function _callback( name, event){
                 console.log('diffLink -- caught error ');
                 console.log(err);
             }
-            
+                
+    
+            // Git Status
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+            }catch(err){
+                console.log("createFileTable -- Error getting git status" );
+                return
+            }
 
-            origFiles = createFileTable(); // Redraw, and update origFiles;
+            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
             
             
@@ -262,22 +277,12 @@ function closeWindow(){
 }
 
 // Draw
-async function createFileTable() {
+function createFileTable(status_data) {
 
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
-    
-    let status_data;
-    
-    // Git Status
-    try{
-        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-    }catch(err){
-        console.log("createFileTable -- Error getting git status" );
-        return
-    }
+
         
     // Old tbody
     let old_tbody = document.getElementById('listFilesTableBody');
