@@ -164,11 +164,34 @@ div#message-wrapper{
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
 }
+
 .top-titlebar-merge-icon
  {
   position: absolute;
   right: 150px;
   width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-stash-icon
+ {
+  position: absolute;
+  right: 180px;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-stash_pop-icon
+ {
+  position: absolute;
+  right: 210px;
+  width: auto;
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
