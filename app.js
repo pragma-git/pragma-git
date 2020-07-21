@@ -268,6 +268,12 @@ async function _callback( name, event){
       case 'clicked-folder':
         folderClicked();
         break;
+      case 'clicked-stash-button':
+        gitStash();
+        break;        
+      case 'clicked-stash_pop-button':
+        gitStashPop();
+        break;       
       case 'clicked-push-button':
         gitPush();
         break;
@@ -1453,6 +1459,35 @@ async function gitAddCommitAndPush( message){
     writeMessage('',false);  // Remove this message  
     _setMode('UNKNOWN');  
     await _update()
+}
+
+async function gitStash(){
+    // Stash
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
+        function onStash(err, result) {console.log(result);console.log(err) };
+    
+    }catch(err){
+        console.log('Error in gitStash()');
+        console.log(err);
+    }
+ 
+    setStatusBar( 'Stashing files');
+    await waitTime( 1000);      
+}
+async function gitStashPop(){
+    // Stash pop
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['pop'], onStashPop);
+        function onStashPop(err, result) {console.log(result);console.log(err) };
+    
+    }catch(err){
+        console.log('Error in gitStashPop()');
+        console.log(err);
+    }
+ 
+    setStatusBar( 'Retrieving stashed files');
+    await waitTime( 1000);        
 }
 
 async function gitPush(){
