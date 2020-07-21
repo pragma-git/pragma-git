@@ -235,37 +235,37 @@ async function _callback( name, event){
 
 // ================= END CALLBACK =================  
 }
-async function _loopTimer( delayInMs){
+//async function _loopTimer( delayInMs){
     
-    // Define timer
-    let timer = window.setInterval( _update, delayInMs );
-    return timer
+    //// Define timer
+    //let timer = window.setInterval( _update, delayInMs );
+    //return timer
     
 
     
-}
-async function _update(){
-    if(isPaused) {
-        return;
-    }
+//}
+//async function _update(){
+    //if(isPaused) {
+        //return;
+    //}
     
     
-    let folder = state.repos[state.repoNumber].localFolder;
-    let status_data;
-    try{
-        await simpleGit( folder).status( onStatus );
-        function onStatus(err, result ){ 
-            status_data = result; 
-            console.log(result); 
-            console.log(err);
-            createConflictingFileTable(document, status_data);
-            // createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
-        };
-    }catch(err){
+    //let folder = state.repos[state.repoNumber].localFolder;
+    //let status_data;
+    //try{
+        //await simpleGit( folder).status( onStatus );
+        //function onStatus(err, result ){ 
+            //status_data = result; 
+            //console.log(result); 
+            //console.log(err);
+            //createConflictingFileTable(document, status_data);
+            //// createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
+        //};
+    //}catch(err){
         
-    }
+    //}
     
-}
+//}
 
 function closeWindow(){
 

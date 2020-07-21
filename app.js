@@ -521,8 +521,6 @@ async function _callback( name, event){
 
 
         try{
-            await _setMode('HISTORY');
-            
             // Cycle through history
             console.log('downArrowClicked - Cycle through history');
             var numberOfHistorySteps = history.length;
@@ -537,6 +535,9 @@ async function _callback( name, event){
                 console.log('downArrowClicked - setting localState.historyNumber = 0');
                 localState.historyNumber = numberOfHistorySteps -1; // Set to last
             }
+            
+            
+            localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
             // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
             var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
@@ -554,8 +555,12 @@ async function _callback( name, event){
             + history[localState.historyNumber].body;
             
             // Display
+            localState.mode = 'HISTORY';
             writeMessage( historyString, false);
             
+            status_data = await gitShow(localState.historyHash);
+            setStatusBar( fileStatusString( status_data));
+
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
             await _setMode('UNKNOWN');
@@ -588,7 +593,9 @@ async function _callback( name, event){
             await _update()
         }else{
             // Show history
-            _setMode('HISTORY');
+            //_setMode('HISTORY');
+            
+            localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
             // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
             var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
@@ -600,9 +607,17 @@ async function _callback( name, event){
             + os.EOL 
             + history[localState.historyNumber].body;  
             
-            // Display
+            // Display            
+            localState.mode = 'HISTORY';
             writeMessage( historyString, false);
-            }
+            
+            status_data = await gitShow(localState.historyHash);
+            setStatusBar( fileStatusString( status_data));    
+                  
+            // Store hash
+            
+            localState.historyHash = history[localState.historyNumber].hash;
+        }
     }
     function messageKeyUpEvent() { 
         // Enable if message text 
@@ -829,6 +844,7 @@ async function _update(){
     if(isPaused) {
         return;
     }
+    console.log('Update start');
     
     let currentBranch = "";
     
@@ -938,10 +954,6 @@ async function _update(){
                     setTitleBar( 'top-titlebar-repo-text', folder );
                     setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                     setStatusBar( fileStatusString( status_data));            
-                    // If not correct mode, fix :
-                    if (!status_data.changedFiles){
-                        _setMode('UNKNOWN');
-                    }
                 }catch(err){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
@@ -966,6 +978,24 @@ async function _update(){
                 break;
                 
             case 'HISTORY':
+            
+            
+            
+                let status;
+                let hash = localState.historyHash;
+            
+                try{
+                    status_data = await gitShow(hash);
+                }catch(err){
+                    console.log('fileStatus -- caught error');
+                    console.log(err);
+                }
+                console.log(status);
+            
+            
+            
+            
+            
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
@@ -989,6 +1019,8 @@ async function _update(){
                 console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
         }    
     // return
+    
+    console.log('Update stop');
     return true
 
     //
@@ -1013,23 +1045,7 @@ async function _update(){
         }
         saveSettings();
     }
-    
-    function fileStatusString( status_data){
-        try{
-            if (status_data.conflicted.length > 0){
-                return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
-            }else{
-                return 'Modified = ' 
-                + status_data.modified.length 
-                + ' |  New = ' + ( status_data.not_added.length + status_data.created.length )
-                + ' |  Deleted = ' + status_data.deleted.length;
 
-            }
-        }catch(err){
-            
-        }
-        
-    };
 };
 async function _setMode( inputModeName){
  /* Called from the following :
@@ -1272,6 +1288,64 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     return status_data;  
+}
+async function gitShow(commit){
+    
+    let showStatus;
+    let outputStatus = []; // Will build a struct on this
+    outputStatus.added = [];
+    outputStatus.deleted = [];
+    outputStatus.modified = [];
+    
+    let hash = localState.historyHash;
+    
+    try{
+        // Read status
+        await simpleGit(state.repos[state.repoNumber].localFolder).show( ['--name-status','--oneline',hash], onWhatChanged);
+        function onWhatChanged(err, result){ console.log(result); showStatus = result } 
+        console.log('fileStatus -- hash = ' + hash);
+        
+        let splitLines = showStatus.split(/\r?\n/); 
+        
+        for (let i = 1; i < splitLines.length; i++) { 
+            let line = splitLines[i];  // Example "M       listChanged.html"
+            
+            if (line.length > 0)  // Last line may be empty from the git show command
+            {   
+                // Split into type and file name  
+                let type = line.substring(0,1);  // "M"
+                let fileName = line.substring(1).trim(); // "listChanged.html"
+                
+                switch (type){
+
+                    case "A" :
+                        outputStatus.added.push(fileName);
+                        break;
+                    
+                    case "D" :
+                        outputStatus.deleted.push(fileName);
+                        break;
+                    
+                    case "M" :
+                        outputStatus.modified.push(fileName);
+                        break;
+                }
+                
+                
+                console.log('split = ' + line);
+            }
+        }
+
+        
+        
+        
+    }catch(err){
+        console.log('fileStatus -- caught error');
+        console.log(err);
+    }
+    
+    return outputStatus;
+    
 }
 async function gitBranchList(){
     let branchList;
@@ -1689,6 +1763,33 @@ function setStatusBar( text){
         document.getElementById('bottom-titlebar-text').innerHTML = text;
     }
 }
+function fileStatusString( status_data){
+    
+    if (localState.mode == 'HISTORY'){
+        // Work on hash from current history pointer
+        
+        return 'Modified = ' 
+        + status_data.modified.length 
+        + ' |  New = ' + ( status_data.added.length )
+        + ' |  Deleted = ' + status_data.deleted.length;
+        
+    }else{
+        // Normal operation, work on git status from HEAD
+        try{
+            if (status_data.conflicted.length > 0){
+                return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
+            }else{
+                return 'Modified = ' 
+                + status_data.modified.length 
+                + ' |  New = ' + ( status_data.not_added.length + status_data.created.length )
+                + ' |  Deleted = ' + status_data.deleted.length;
+
+            }
+        }catch(err){
+            
+        }
+    }
+};
 
 // Settings
 function saveSettings(){
