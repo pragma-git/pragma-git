@@ -58,6 +58,11 @@ async function injectIntoJs(document) {
         return
     }
     
+    // if localState.mode='HISTORY', override
+    if (localState.mode == 'HISTORY'){
+        status_data = localState.history_status_data;  // Set by main app.js
+    }
+    
           
     if (devTools == true){
         win.showDevTools();  // WARNING : causes redraw issues on startup
@@ -70,11 +75,13 @@ async function injectIntoJs(document) {
 };
 
 // Main functions 
-async function _callback( name, event){
+async function _callback( name, event, event2){
 
     let id = event.id;
     let file;
+    let commit;
     let status_data;
+    let tool;
     
     console.log('_callback = ' + name);
     switch(name) {
@@ -103,7 +110,47 @@ async function _callback( name, event){
 
             closeWindow();
             break;
+           
+ 
+         case 'diffLinkHistory':
+         
+            // Three inputs
+            console.log('diffLinkHistory');
+            console.log(event);
             
+            commit = event;
+            file = event2;
+            
+            file = file.replace('/','//');
+            
+            tool = state.tools.difftool;
+
+            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
+            command = [  
+                'difftool',
+                '-y',  
+                '--tool',
+                tool,
+                commit + "^:" + file,
+                commit + ":" + file
+            ];
+
+            // Git Status
+            status_data;
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder)
+                    .raw(command, onGitDiff );
+                    function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+            }catch(err){
+                console.log('diffLinkHistory -- caught error ');
+                console.log(err);
+            }
+        
+
+            break;
+ 
+ 
+ 
         
         case 'diffLink':
             console.log('diffLink');
@@ -112,7 +159,7 @@ async function _callback( name, event){
             file = event;
             file = file.replace('/','//');
             
-            let tool = state.tools.difftool;
+            tool = state.tools.difftool;
 
             // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
             command = [  
@@ -307,23 +354,30 @@ function createFileTable(status_data) {
         let row = tbody.insertRow();
 
         //
-        // Filename + icon + checkbox (First cell)
+        // First cell  --  Filename + icon + checkbox 
         //
             cell = row.insertCell();
             cell.setAttribute("class", 'localFolder');
             
-            // Checkbox
-            var checkbox = document.createElement('input');
-            checkbox.setAttribute("name", "fileGroup");
-            //checkbox.setAttribute("onclick", "_callback('radioButtonChanged', '" + file + "' );" ) ; // Quotes around file
-            checkbox.setAttribute("onclick", "_callback('radioButtonChanged', this );" ) ; // Quotes around file
-            checkbox.type = 'checkbox';
-            checkbox.id = index;
-            checkbox.checked = true;
-            
+            // Add checkbox to cell 
+            if (localState.mode != 'HISTORY'){
+                var checkbox = document.createElement('input');
+                checkbox.setAttribute("name", "fileGroup");
+                checkbox.setAttribute("onclick", "_callback('radioButtonChanged', this );" ) ; // Quotes around file
+                checkbox.type = 'checkbox';
+                checkbox.id = index;
+                checkbox.checked = true;
+                cell.appendChild(checkbox);
+                
+                // Adjust checkbox value according to localState.unstaged
+                if ( localState.unstaged.includes(file) ){
+                    checkbox.checked = false;
+                }   
+            }
+
+            // Label
             let typeOfChanged;
             
-            // Label
             var label = document.createElement('label')
             label.htmlFor = index;
             switch (XY) {
@@ -353,43 +407,69 @@ function createFileTable(status_data) {
                     break;
             
             }
-            
             var description = document.createTextNode( file);
             label.appendChild(description);
 
-            
-            // Add to cell
-            cell.appendChild(checkbox);
             cell.appendChild(label);
-
-
-            // Adjust checkbox value according to localState.unstaged
-            if ( localState.unstaged.includes(file) ){
-                checkbox.checked = false;
-            }
-            
+  
         //
-        // Second cell
+        // Second cell  --  action links 
         //      
             cell = row.insertCell();
             
-            // Make diff link 
-            var diffLink = document.createElement('span');
-            diffLink.setAttribute('style', "color: blue; cursor: pointer");
-            diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
-            diffLink.textContent=" (diff)";
-            cell.appendChild(diffLink);  
+            if (localState.mode == 'HISTORY'){
+                // diff-link for history vs previous history
+                let commit = localState.historyHash;
+                cell.appendChild( diffLinkHistory( document, commit, file) );
+                
+            }else{ // NOT HISTORY
+                // diff-link for working_dir and staged vs HEAD
+                cell.appendChild( diffLink( document, file));
+                 
+                // Make restore link (only if modified or deleted) (TODO: now for history)
+                if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
+                    var discardLink = document.createElement('span');
+                    discardLink.setAttribute('style', "color: blue; cursor: pointer");
+                    discardLink.setAttribute('onclick',
+                        "selectedFile = '"  + file + "';" + 
+                        "document.getElementById('restoreDialog').show();" );  // Opens dialog from html-page
+                    discardLink.textContent=" (restore)";
+                    cell.appendChild(discardLink);         
+                }   
+                  
+            }
+            //
+            // Internal functions
+            //
+            function diffLink(document, file){
+                // Make diff link (work_dir)
+                var diffLink = document.createElement('span');
+                if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
+                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
+                    diffLink.textContent=" (diff)";
+                    return  diffLink;
+                }else{
+                    diffLink.innerHTML="";
+                    return  diffLink;
+                }
+            };
              
-            // Make restore changes (only if modified or deleted)
-            if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
-                var discardLink = document.createElement('span');
-                discardLink.setAttribute('style', "color: blue; cursor: pointer");
-                discardLink.setAttribute('onclick',
-                    "selectedFile = '"  + file + "';" + 
-                    "document.getElementById('restoreDialog').show();" );  // Opens dialog from html-page
-                discardLink.textContent=" (restore)";
-                cell.appendChild(discardLink);         
-            }     
+            function diffLinkHistory(document, commit, file){
+                // Make diff link (history)
+                var diffLink = document.createElement('span');
+                if (typeOfChanged == 'modified'){  // two files to compare only in modified (only one file in deleted or added)
+                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
+                    diffLink.textContent=" (diff)";
+                    return  diffLink;
+                }else{
+                    diffLink.innerHTML="";
+                    return  diffLink;
+                }
+            };            
+            // ================= END  Internal functions  in  createFileTable =================
+
             
             
         index = index + 1;

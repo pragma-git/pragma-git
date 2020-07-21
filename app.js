@@ -39,6 +39,9 @@
  * 
  * Open questions
  * 
+ * - History browsing, click changed files
+ *   - should show diff relative previous commit (instead of relative unstaged as for current work_dir)
+ * 
  * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
  * 
  * - Make merge-button show only when merge is safe (current branch should be commited)
@@ -843,9 +846,7 @@ async function _update(){
     // Bail out if isPaused = true
     if(isPaused) {
         return;
-    }
-    console.log('Update start');
-    
+    }    
     let currentBranch = "";
     
     // Variables
@@ -1019,9 +1020,7 @@ async function _update(){
                 console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
         }    
     // return
-    
-    console.log('Update stop');
-    return true
+        return true
 
     //
     // Local functions
@@ -1293,9 +1292,13 @@ async function gitShow(commit){
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
+    
+    // TODO : questionable if needed (3 lines)
     outputStatus.added = [];
     outputStatus.deleted = [];
     outputStatus.modified = [];
+    
+    outputStatus.files = [];
     
     let hash = localState.historyHash;
     
@@ -1330,7 +1333,7 @@ async function gitShow(commit){
                         outputStatus.modified.push(fileName);
                         break;
                 }
-                
+                outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                 
                 console.log('split = ' + line);
             }
@@ -1343,6 +1346,9 @@ async function gitShow(commit){
         console.log('fileStatus -- caught error');
         console.log(err);
     }
+    
+    // Store in localState
+    localState.history_status_data = outputStatus;
     
     return outputStatus;
     
