@@ -543,14 +543,14 @@ async function _callback( name, event){
             localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
             // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
             
             // Branches on this commit
-            historyString += historyBranchesAtPoint;
+            localState.historyString += historyBranchesAtPoint;
 
             // Message
-            historyString += os.EOL 
+            localState.historyString += os.EOL 
             + os.EOL 
             + history[localState.historyNumber].message
             + os.EOL 
@@ -559,7 +559,7 @@ async function _callback( name, event){
             
             // Display
             localState.mode = 'HISTORY';
-            writeMessage( historyString, false);
+            writeMessage( localState.historyString, false);
             
             status_data = await gitShow(localState.historyHash);
             setStatusBar( fileStatusString( status_data));
@@ -591,6 +591,7 @@ async function _callback( name, event){
         if (localState.historyNumber < 0){
             // Leave history browsing
             localState.historyNumber = -1;
+            localState.historyString = "";
             writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
             _setMode('UNKNOWN');
             await _update()
@@ -601,7 +602,7 @@ async function _callback( name, event){
             localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
             // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
             + os.EOL 
             + os.EOL 
@@ -612,7 +613,7 @@ async function _callback( name, event){
             
             // Display            
             localState.mode = 'HISTORY';
-            writeMessage( historyString, false);
+            writeMessage( localState.historyString, false);
             
             status_data = await gitShow(localState.historyHash);
             setStatusBar( fileStatusString( status_data));    
@@ -994,7 +995,7 @@ async function _update(){
                 console.log(status);
             
             
-            
+                writeMessage( localState.historyString, false);
             
             
                 setTitleBar( 'top-titlebar-repo-text', folder );
@@ -1074,7 +1075,7 @@ async function _setMode( inputModeName){
                 
                 // Reset some localState variables (and let the found mode correct)
                 let copyOfLocalState = localState;  // Backup localState
-                localState.historyNumber = -1;      // Guess that not in history browsing mode
+                ////localState.historyNumber = -1;      // Guess that not in history browsing mode
                 
                 // Sources used to determinine mode
                 let messageLength = readMessage().length;
@@ -1115,7 +1116,17 @@ async function _setMode( inputModeName){
                 }catch(err){
                     console.log('_setMode --  case "CHANGED_FILES" caught error');
                 }          
-                         
+                 
+                 
+                // HISTORY
+                if ( historyNumberPointer > -1 ){ 
+                    newModeName = 'HISTORY'; 
+                    //localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
+                    _setMode( newModeName);
+                    break;
+                }  
+                
+                                        
                 // CHANGED_FILES 
                 // CHANGED_FILES_TEXT_ENTERED
                 if ( status_data.changedFiles== true){   
@@ -1124,14 +1135,7 @@ async function _setMode( inputModeName){
                     _setMode( newModeName);
                     break;
                 }                 
-                
-                // HISTORY
-                if ( historyNumberPointer > -1 ){ 
-                    newModeName = 'HISTORY'; 
-                    localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
-                    _setMode( newModeName);
-                    break;
-                }  
+
 
                 break;
             }
