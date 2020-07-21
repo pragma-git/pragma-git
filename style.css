@@ -176,7 +176,7 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
-.top-titlebar-stash-icon
+.top-titlebar-stash_pop-icon
  {
   position: absolute;
   right: 180px;
@@ -186,17 +186,17 @@ div#message-wrapper{
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
 }
-
-.top-titlebar-stash_pop-icon
+.top-titlebar-stash-icon
  {
   position: absolute;
-  right: 210px;
+  right: 215px;
   width: auto;
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
 }
+
 
 .top-titlebar-close-icon,
 .bottom-titlebar-settings-icon {
