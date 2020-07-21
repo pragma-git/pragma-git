@@ -139,8 +139,8 @@ async function _callback( name, event, event2){
             status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onGitDiff );
-                    function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+                    .raw(command, onStatus );
+                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
             }catch(err){
                 console.log('diffLinkHistory -- caught error ');
                 console.log(err);
@@ -176,8 +176,8 @@ async function _callback( name, event, event2){
             status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onGitDiff );
-                    function onGitDiff(err, result){ console.log(result); console.log(err); status_data = result; };
+                    .raw(command, onStatus );
+                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
@@ -188,8 +188,6 @@ async function _callback( name, event, event2){
      
      
         case 'discardLink':
-        // TODO : make a discard (git checkout filename)
-        // Make question dialog if this is allowed
             console.log('discardLink');
             console.log(event);
             
@@ -208,7 +206,7 @@ async function _callback( name, event, event2){
 
                 
             }catch(err){
-                console.log('diffLink -- caught error ');
+                console.log('discardLink -- caught error ');
                 console.log(err);
             }
                 
@@ -218,13 +216,50 @@ async function _callback( name, event, event2){
                 await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
                 function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
             }catch(err){
-                console.log("createFileTable -- Error getting git status" );
+                console.log("discardLink -- Error " );
+                console.log(err);
                 return
             }
 
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
+      
+     
+        case 'deleteLink':
+            console.log('deleteLink');
+            console.log(event);
             
+            file = event;   
+            try{
+                 
+                // Unstage (may not be needed, but no harm)
+                 await simpleGit( state.repos[state.repoNumber].localFolder )
+                    .raw( [  'reset', '--', file ] , onReset); 
+                    function onReset(err, result) {console.log(result) }
+                    
+                // Delete from file system                   
+                let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
+                console.log('deleteLink -- deleting file = ' + filePath);
+                fs.unlinkSync(filePath)
+  
+            }catch(err){
+                console.log('deleteLink -- caught error ');
+                console.log(err);
+            }
+                
+    
+            // Git Status
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+            }catch(err){
+                console.log("deleteLink -- Error " );
+                console.log(err);
+                return
+            }
+
+            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            break;           
             
             
         case 'radioButtonChanged' :
@@ -426,7 +461,7 @@ function createFileTable(status_data) {
                 // diff-link for working_dir and staged vs HEAD
                 cell.appendChild( diffLink( document, file));
                  
-                // Make restore link (only if modified or deleted) (TODO: now for history)
+                // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
                     var discardLink = document.createElement('span');
                     discardLink.setAttribute('style', "color: blue; cursor: pointer");
@@ -436,7 +471,17 @@ function createFileTable(status_data) {
                     discardLink.textContent=" (restore)";
                     cell.appendChild(discardLink);         
                 }   
-                  
+                
+                // Make delete link (only if modified or added) 
+                if (typeOfChanged == 'modified' || typeOfChanged == 'added'){  
+                    var discardLink = document.createElement('span');
+                    discardLink.setAttribute('style', "color: blue; cursor: pointer");
+                    discardLink.setAttribute('onclick',
+                        "selectedFile = '"  + file + "';" + 
+                        "document.getElementById('deleteDialog').show();" );  // Opens dialog from html-page
+                    discardLink.textContent=" (delete)";
+                    cell.appendChild(discardLink);         
+                }                     
             }
             //
             // Internal functions

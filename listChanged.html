@@ -116,13 +116,7 @@
     
  
     <div class="content">
-        <p>The default is that changed files will be stored (when pressing the Store-button). 
-        </p>    
-        
-        <p>There is an exception to this rule : Un-checked files will be skipped in the next Store operation 
-        </p>    
-              
-              
+           
         <table style="width:100%"> 
             <thead><tr>
                 <th class="path">Changed files</th>
@@ -137,13 +131,25 @@
          <button id="applySelectedFilesButton" 
                 onclick="_callback('applySelectedFilesButton',this)" 
                 style="vertical-align: middle;">
-                Select 
+                Selected will be stored
             </button> 
          <br>
-    
-        
 
     </div><br>
+        
+    <button class="collapsible" id="instructions">Instructions :</button>
+    
+    <div class="content">
+        <ul>
+            <li>The default is that changed files will be stored (when pressing the Store-button)</li>
+            <li>There is an exception to this rule : Un-checked files will be skipped in the next Store operation </li>
+        
+        </ul>
+    </div>
+              
+       
+        
+
 
 
 <!--  Warning dialog for restore  --> 
@@ -156,6 +162,20 @@
     </button>   
     <button id="no"
         onclick="document.getElementById('restoreDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+<!--  Warning dialog for delete  --> 
+
+<dialog id="deleteDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p>This will delete the file on disk.  Do your really want to delete ? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('deleteDialog').close();_callback('deleteLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('deleteDialog').close();selectedFile='';">
         No
     </button>  
 </dialog>  
