@@ -483,9 +483,8 @@ function createFileTable(status_data) {
                     cell.appendChild(discardLink);         
                 }                     
             }
-            //
             // Internal functions
-            //
+            
             function diffLink(document, file){
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');
@@ -512,7 +511,17 @@ function createFileTable(status_data) {
                     diffLink.innerHTML="";
                     return  diffLink;
                 }
-            };            
+            };    
+            
+        //
+        // Button
+        //      
+        
+            if (localState.mode == 'HISTORY'){            
+                document.getElementById("applyButtonDiv").style.display = "none"; 
+                document.getElementById("applyButtonDiv").style.height= '0px';      
+                
+            }
             // ================= END  Internal functions  in  createFileTable =================
 
             
