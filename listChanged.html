@@ -137,14 +137,30 @@
 
     </div><br>
         
+    <!--  INSTRUCTIONS --> 
     <button class="collapsible" id="instructions">Instructions :</button>
     
     <div class="content">
-        <ul>
-            <li>The default is that changed files will be stored (when pressing the Store-button)</li>
-            <li>There is an exception to this rule : Un-checked files will be skipped in the next Store operation </li>
+        <p>
+        <b>Skipping files </b>:<br>
+        Pragma-git assumes that you wish to store all files you are working with.  
+        This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
+        </p>
         
-        </ul>
+        <p>On occasion you may wish to exclude a file from the next Store operation.
+        In this window, you  <i>de-select</i> the files you want to skip. You then press the "Selected will be stored" button" to show Pragma-git your intent
+        </p>     
+          
+                    
+        <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+        
+        <p><b>Other file operations </b>: </p>     
+          
+        <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
+        <p><b>diff</b> opens the external diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
+        <p><b>restore</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+        <p><b>delete</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+
     </div>
               
        

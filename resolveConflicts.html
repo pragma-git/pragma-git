@@ -79,19 +79,12 @@
 <body>
     
     <h2>Resolve Conflicts</h2>
-    
-    <p>There are conflicts that needs manual input to be resolved.  
-    Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
-    In the last section, accept changes, or undo the merge.
-    </p>
+
     
     <!--  1) CONFLICTING FILES --> 
     <button class="collapsible" id="collapsibleConflict">1) Conflicting files :</button>
-    
- 
     <div class="content">
-        <p>These files have changes that conflicts.  This could for instance be differences in the same row.
-        </p>    
+
               
         <table style="width:100%"> 
             <thead><tr>
@@ -142,7 +135,6 @@
     
     <!--  3) CONFLICTS RESOLVED  --> 
     <button class="collapsible" id="collapsibleResolved">3) Accept changes</button>
-    
     <div class="content">    
         <p>This last step removes different backup files, and accepts the changes in previous steps.  
         You may also undo the whole merge.
@@ -166,6 +158,42 @@
         </button>
         
         <br>
+        
+    </div><br>
+    
+    
+
+    <!--  INSTRUCTIONS  -->     
+    <button class="collapsible" id="collapsibleConflict">Instructions</button>
+    <div class="content">
+        
+        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted in one place, or
+         that there are differences in the same row.  Both these cases needs a manual choice which change to keep.
+        </p>   
+        
+        <p><b>This window has a stepwise approach</b> : <br>  
+        Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
+        </p>
+         
+        <p><b>Section "1) Conflicting files"</b> : <br>  
+        Resolve the conflicts one section at a time. This is initiated by the "Solve conflicting files" button, which starts an external merge tool (see Requirements, below)
+        </p>
+        
+        <p><b>Section "2) Deleted files"</b> : <br>  
+        Files that you are working on were deleted in the place you are merging from.  Typically this is the intention to delete them (checked box),
+        but in case you prefer to keep your files, uncheck the box. 
+        </p>
+        
+        <p><b>Section "3) Accept changes"</b> : <br>  
+        This is your last chance to change your mind.  <br>
+        Press "Undo Merge" in case you do not accept. <br>
+        Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)<br>
+        NOTE : After this you now can work on, or you wish to give a description and press the Store button in the main window
+        </p>
+        
+        <p><b>Requirements</b> : <br>  
+        This window uses the external merge tool, which you define in the settings window.  
+        </p>
         
     </div><br>
 
