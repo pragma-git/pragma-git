@@ -1110,7 +1110,16 @@ async function _setMode( inputModeName){
                     newModeName = 'DEFAULT';  
                     _setMode( newModeName);
                     break;
-                }       
+                }     
+                
+                                 
+                // HISTORY
+                if ( historyNumberPointer > -1 ){ 
+                    newModeName = 'HISTORY'; 
+                    //localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
+                    _setMode( newModeName);
+                    break;
+                }    
                 
                 // NO_FILES_TO_COMMIT
                 try{
@@ -1123,16 +1132,7 @@ async function _setMode( inputModeName){
                     console.log('_setMode --  case "CHANGED_FILES" caught error');
                 }          
                  
-                 
-                // HISTORY
-                if ( historyNumberPointer > -1 ){ 
-                    newModeName = 'HISTORY'; 
-                    //localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
-                    _setMode( newModeName);
-                    break;
-                }  
-                
-                                        
+                     
                 // CHANGED_FILES 
                 // CHANGED_FILES_TEXT_ENTERED
                 if ( status_data.changedFiles== true){   
