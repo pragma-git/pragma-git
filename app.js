@@ -1081,7 +1081,7 @@ async function _setMode( inputModeName){
                 
                 // Reset some localState variables (and let the found mode correct)
                 let copyOfLocalState = localState;  // Backup localState
-                ////localState.historyNumber = -1;      // Guess that not in history browsing mode
+                localState.historyNumber = -1;      // Guess that not in history browsing mode
                 
                 // Sources used to determinine mode
                 let messageLength = readMessage().length;
@@ -1104,22 +1104,17 @@ async function _setMode( inputModeName){
                 console.log(numberOfRepos);
                 console.log(historyNumberPointer);
                 
-                
+                // Clean values that destroy working-out mode
+                if (currentMode == 'HISTORY'){
+                    document.getElementById('message').value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
+                }
+       
                 // DEFAULT
                 if ( numberOfRepos == 0 ){ 
                     newModeName = 'DEFAULT';  
                     _setMode( newModeName);
                     break;
                 }     
-                
-                                 
-                // HISTORY
-                if ( historyNumberPointer > -1 ){ 
-                    newModeName = 'HISTORY'; 
-                    //localState.historyNumber = copyOfLocalState.historyNumber; // Keep existing     
-                    _setMode( newModeName);
-                    break;
-                }    
                 
                 // NO_FILES_TO_COMMIT
                 try{
@@ -1183,7 +1178,7 @@ async function _setMode( inputModeName){
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
             document.getElementById('store-button').disabled = false;
-            //document.getElementById('message').value = "";
+            //document.getElementById('message').value = "";  // Don't want to destory typed text
             //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
             document.getElementById("message").readOnly = false;
             break;
