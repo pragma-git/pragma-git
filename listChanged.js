@@ -71,6 +71,17 @@ async function injectIntoJs(document) {
     // Draw table
     origFiles = createFileTable(status_data);
     document.getElementById('listFiles').click();  // Open collapsed section 
+    
+    
+    // Change text that does not match History mode 
+    if (localState.mode == 'HISTORY'){
+        document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
+        document.getElementById('listFiles').innerText = 'Files changed since previous revision :';  // Correct title to match historical file changes
+    }else{
+        document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
+    }
+    
+    // Set table header according to mode
 
 };
 
@@ -352,7 +363,6 @@ async function _callback( name, event, event2){
 function closeWindow(){
 
     // Return
-    localState.mode = 'UNKNOWN';
     
     win.close();
     
