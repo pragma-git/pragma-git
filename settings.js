@@ -726,7 +726,7 @@ function generateBranchTable(document, table, branchlist) {
     
     button = document.createElement('button');
     button.setAttribute("id", "addBranchButtonPressed");
-    button.innerHTML = 'Add';
+    button.innerHTML = 'Add branch';
     button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
     cell.appendChild(button);
     

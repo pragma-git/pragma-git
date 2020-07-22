@@ -36,7 +36,10 @@
             padding: 6px;
         }
         h2{
-            text-align:center;   
+            text-align:left; 
+        }
+        .instructHeader{
+            color: CornflowerBlue; 
         }
         .left, h3, h4{
             text-align:left;   
@@ -78,6 +81,47 @@
         
         
     </style>
+    
+     
+    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          color: white;
+          font-weight: bold;
+          float: right;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+        }
+    </style>
+    
+    
 
 <body> 
      
@@ -88,8 +132,6 @@
             <h2 id="header_Settings">Settings </h2>
         
             <hr>
-         
-            <h3>Projects in your list </h3>     
                 
                 <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
 
@@ -100,7 +142,12 @@
      
        
             
-            
+    <!--  REPO SETTINGS -- foldable header--> 
+    <button class="collapsible" id="listFiles">Repository settings :</button> 
+                
+        <div class="content"> 
+        <h3>Repository table </h3>  
+              
                 <p><i>(you can add them again by dropping a folder into the main window) </i></p>
                 
                 <!--  REPOSITORY TABLE -->
@@ -161,19 +208,19 @@
                     <p id="resultBranchMessage"></p>
                 </div>       
 
-            <br>  
-            <br>  
             
-            
+        </div>    
             
  </div>
+<br>  
   <!--  End hiding part  -->
 
 
- 
-            <!--  Software settings -->
-            
-            <h3>Software behavior</h3>     
+       
+    <!--  SOFTWARE SETTINGS -- foldable header--> 
+    <button class="collapsible" id="listFiles">Software settings :</button> 
+                
+        <div class="content">              
                 
             <h4>Visual</h4>  
                    
@@ -210,12 +257,118 @@
         
             <br>   
     
+        </div><!-- foldable content -->
+        <br>  
+        
+    <!--  INSTRUCTIONS  -->     
+    <button class="collapsible" id="collapsibleConflict">Instructions</button>
+        <div class="content"> 
+            
+            <p><b>The settings sections </b> can be folded / unfolded. Click on the + or - sign to the right.<br>  
+            </p>
+    <hr>             
+            <h2 class="instructHeader">Section : "Repository Settings"</h2> 
+    <hr>                
+                <p>The repository settings have two parts : 
+                    <dl>
+                        <dd><b>A : Repository table </b> , where you may select one of the repositories you have defined </dd>
+                        <dd><b>B : "Branches in selected repository" table</b> , which shows the branches that exist in the selected repository  </dd>
+                    </dl>     
+                </p>
+                
+    <hr>            
+                <h3>A - part I : The "Repository table"  &mdash;  top rows</h3> 
+                
+                    <p>All rows, except the last row, shows the settings for the repositories you have defined so far. </p>
+                    
+                    <p><b>The first column</b> "Local folder" shows the path to your active repositories, on your local pc.  The radio-button, can be used to select one 
+                    row, and the second table below shows the branches in that selected repository</p>
+                    
+                    
+                    <p><b>The second column</b> "Remote repository" shows the address to a connected remote repository.  If this is not defined, then you work with a local repository (
+                    which is fine as long as you have a backup plan)</p>
+                    
+                    <p><b>The third column</b> has the "Set" button, which is used to test that the remote repository can be connected to, and at the same time storing the address</p>
+         
+                    <p><b>The forth column</b> has the "Forget" button, which is used remove the selected row from the list 
+                    (it can always be added again, just as you did the first time by dropping the folder on the main window)</p>
+         
+    <hr>
+                <h3>A - part II : The "Repository table", cloning  &mdash;  last row</h3>  
+                
+                    Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).
+                    
+                     <p><b>Setting up clone </b> is very similar to adding the remote repository, above.<br> 
+                    The cloning is set up in the last row of the "Repository table", and you define a local folder and the repository address from which you wish to copy. 
+                    
+                    </p>
+                    
+                    <ol>
+                    <li><b>The "Folder" button </b> is used to select the folder, into which the cloned repository is copied.  
+                    <li><b>The  text field in the "Remote repository" column </b> is used to define the remote repository address (url)   
+                    <li><b>The  "Test" button </b> is used to verify that you can connect to the defined remote repository  
+                    <li><b>The  "Clone" button </b> makes a copy of the remote repository in the selected folder, and connects your local copy to the remote repository
+                    </ol>    
+                    
+    <hr>
+
+                <h3>B : The "Branches in selected repository"</h3>  
+                
+                    <p>The branches for a selected repository (in the repository table) are listed in all but the last row.</p>
+                    <p>In the last row, you can add a new branch, by typing its name, and pressing the "Add branch" button.  
+                    The branch name cannot contain all characters, so the text field stops you from typing forbidden characters </p>
+                
+    <hr>
+            
+            <h2 class="instructHeader">Section "Software Settings"</h2> 
+    <hr>                 
+                <p>These are the software settings : 
+                    <dl>
+                        <dt><b>Visual</b></dt>
+                            <dd><b>- Always on top </b> , makes the main window always be on top of other program windows </dd>
+                            <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
+                            <br>
+                        <dt><b>Git</b></dt>
+                            <dd><b>- Branch change not allowed, for un-Stored data </b> : Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
+                            <dd><b>- Auto-push to remote when Store clicked </b> : The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
+                            <br>
+                        <dt><b>External tools</b></dt>
+                            <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
+                            <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
+                     </dl>     
+                </p>
+                <br>
+                <br>
+            
+        </div><!-- foldable content -->
+
+    
+        
         </div><!-- inner-content --> 
     </div><!-- content --> 
 
 
 
 
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+        });
+    }
+</script>
                     
 
 
