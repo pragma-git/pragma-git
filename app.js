@@ -598,6 +598,7 @@ async function _callback( name, event){
             // Leave history browsing
             localState.historyNumber = -1;
             localState.historyString = "";
+            localState.historyHash = "";
             writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
             _setMode('UNKNOWN');
             await _update()
