@@ -39,7 +39,7 @@
  * 
  * Open questions
  * 
- * - Checkout (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
+ * -- Checkout (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
  * - How to handle history if checked-out ?  Best to be able to move up and down -- but needs to indicate that not head.  Maybe text "Detached head -- warning behind branch name"
  *   Click on this warning to jump to that place in history
@@ -51,7 +51,7 @@
  *   2) Dialog to ask if create new branch or move to top ?  
  *   3) Extra button - "To new branch", and open a dialog for new branch name
  *  
- * - Settings, branches.  Add Delete branch button (with warning dialog)
+ * -- Settings, branches.  Add Delete branch button (with warning dialog)
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
@@ -352,7 +352,6 @@ async function _callback( name, event){
         if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
             // Let user know that they need to commit before changing branch
             await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
-            _setMode('UNKNOWN');
             
         }else{
                 
@@ -387,7 +386,8 @@ async function _callback( name, event){
     
         console.log(branchList);
      
-        await _update()
+        _setMode('UNKNOWN');
+       //await _update()
         
         // Reset some variables
         localState.historyNumber = -1;
@@ -496,12 +496,29 @@ async function _callback( name, event){
     }
  
     // main window
-    function storeButtonClicked() { 
-        gitAddCommitAndPush( readMessage());
+    async function storeButtonClicked() { 
+        // Could be called for Store operation, or History Checkout operation
+        if ( getMode() == 'HISTORY' ){
+            // Checkout this commit (into a detached HEAD)
+            try{             
+                console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
+                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
+                function onDetachedHead(err, result){console.log(result);console.log(err); history = result.all;} 
+                    
+            }catch(err){        
+                console.log(err);
+            }
+            
+        }else{
+            gitAddCommitAndPush( readMessage());
+        }
+        
 }  
     async function downArrowClicked(){
         
         console.log('down arrow clicked');
+        
+        
         
         localState.historyNumber = localState.historyNumber + 1;
         
@@ -564,7 +581,8 @@ async function _callback( name, event){
             + history[localState.historyNumber].body;
             
             // Display
-            localState.mode = 'HISTORY';
+            //localState.mode = 'HISTORY';
+            _setMode('HISTORY');
             writeMessage( localState.historyString, false);
             
             status_data = await gitShow(localState.historyHash);
@@ -1115,6 +1133,8 @@ async function _setMode( inputModeName){
                 // Clean values that destroy working-out mode
                 if (currentMode == 'HISTORY'){
                     document.getElementById('message').value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
+                    localState.historyString = "";
+                    localState.historyHash = "";
                 }
        
                 // DEFAULT
@@ -1152,6 +1172,7 @@ async function _setMode( inputModeName){
         case 'DEFAULT':
             //if (currentMode ==  'DEFAULT') { return};
             newModeName = 'DEFAULT';
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
@@ -1165,6 +1186,7 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "No changed files to store";            
@@ -1175,6 +1197,7 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
             //if (currentMode ==  'CHANGED_FILES') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "You have changed files." + os.EOL + "Add description and press Store";        
@@ -1185,6 +1208,7 @@ async function _setMode( inputModeName){
             // set by messageKeyUpEvent
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = false;
             //document.getElementById('message').value = "";  // Don't want to destory typed text
             //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
@@ -1195,7 +1219,8 @@ async function _setMode( inputModeName){
             // set by downArrowClicked and upArrowClicked
             newModeName = 'HISTORY';
             if (currentMode ==  'HISTORY') { return};
-            document.getElementById('store-button').disabled = true;
+            document.getElementById("store-button").innerHTML="Checkout";// Set button
+            document.getElementById('store-button').disabled = false;
             // Text not fixed
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "";    
@@ -1205,6 +1230,7 @@ async function _setMode( inputModeName){
         case 'SETTINGS':
             newModeName = 'SETTINGS';
             if (currentMode ==  'SETTINGS') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
             document.getElementById('message').placeholder = "You are in settings mode." + os.EOL + "Edit in settings dialog window";    

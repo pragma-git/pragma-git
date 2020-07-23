@@ -188,7 +188,38 @@
         <hr>               
      
  <!-------------------------------------------------------------------------------------------->                                  
-           
+          <h4>History, and checkout </h4>    
+             
+            <p><u>Browsing history</u> : As described above, the arrow buttons let you browse back in time.
+            </p>
+            
+            <p>When you view an old commit, the "Store-button" is changed into a "Checkout" button.  
+            Pressing "Checkout" sets the files in the project to the same state as it was when Stored. This is useful if you wish to test your work as it was at this time point.
+            If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
+            </p>
+            
+            <p><u>Detached HEAD branch</u> : The branch-name in the title bar is changed to "HEAD", which in git language is referred to as a "detached HEAD".
+            That means, that once you move to another branch, the detached branch can't be easily found again.  
+            </p>
+            
+            <p><u>Modified files in HEAD branch</u> : 
+            If you have modified any files from this checkout and want to keep your changes, you need to move those changes to an existing branch.
+            </p>
+                        
+            <p><u>Not Stored files</u> : The easiest way to do move modified (but not Stored) files from a detached HEAD is : 
+                <ol>
+                    <li>Press the stash button <img 'vertical-align:middle;' src="images/stash_black.png"  height="17" width="17"> </li>
+                    <li>Click on the branch name (HEAD), until you are at the branch where you wish to add your changes to</li>
+                    <li>Press the retrieve stash button <img 'vertical-align:middle;' src="images/stash_pop_black.png"  height="17" width="17"></li>
+                </ol>
+            </p>
+            
+            TODO : how to handle commited files in detached HEAD?  
+                        
+        <br>
+        <hr>               
+     
+ <!-------------------------------------------------------------------------------------------->             
          <h2>Installation </h2>
         <hr>             
  <!-------------------------------------------------------------------------------------------->                  
