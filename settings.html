@@ -236,11 +236,11 @@
             <h4>Git</h4>  
                 <!--  Force commit before branch change -->
                 <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="forceCommitBeforeBranchChange"> Branch change not allowed, for un-Stored data.</label><br>
+                <label for="forceCommitBeforeBranchChange"> Branch change not allowed, for changed files</label><br>
                 
                  <!--  Auto-push to remote -->
                 <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="autoPushToRemote"> Auto-push to remote when Store clicked</label><br>
+                <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
              
              
               
@@ -329,7 +329,7 @@
                             <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
                             <br>
                         <dt><b>Git</b></dt>
-                            <dd><b>- Branch change not allowed, for un-Stored data </b> : Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
+                            <dd><b>- Branch change not allowed, for changed files </b> : Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
                             <dd><b>- Auto-push to remote when Store clicked </b> : The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
                             <br>
                         <dt><b>External tools</b></dt>

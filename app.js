@@ -898,11 +898,7 @@ async function _update(){
         folder = "(not a folder) " + nameOfFolder;
     }
             
-    
-    
-    
-    
-    
+
     
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){
@@ -910,7 +906,7 @@ async function _update(){
             updateWithNewSettings();
         }
     
-    // Update Push button
+    // Update Push button (show if ahead of remote)
         try{
             if (status_data.ahead > 0){
                 document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
@@ -921,7 +917,7 @@ async function _update(){
             console.log(err);
         }
     
-    // Update Pull button
+    // Update Pull button (show if behind remote)
         try{
             if (status_data.behind > 0){
                 document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
@@ -932,7 +928,18 @@ async function _update(){
             console.log(err);
         }
         
-        
+     
+    // Update Merge button (hide if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden'
+            }else{
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+           
     
     // mode -dependent :
             
