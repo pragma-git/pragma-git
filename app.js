@@ -39,35 +39,35 @@
  * 
  * Open questions
  * 
- * - History browsing, click changed files
- *   - should show diff relative previous commit (instead of relative unstaged as for current work_dir)
+ * - Checkout (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
- * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
+ * - How to handle history if checked-out ?  Best to be able to move up and down -- but needs to indicate that not head.  Maybe text "Detached head -- warning behind branch name"
+ *   Click on this warning to jump to that place in history
  * 
- * - Make merge-button show only when merge is safe (current branch should be commited)
+ * - Maybe different color in detached head history text, compared to other history (red?)
  * 
- * - Settings -- add test button for diff and merge tools
- * 
- * - Pull button - hide if changed files
- *   (OR :  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes ) )
+ * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
+ *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
+ *   2) Dialog to ask if create new branch or move to top ?  
+ *   3) Extra button - "To new branch", and open a dialog for new branch name
+ *  
+ * - Settings, branches.  Add Delete branch button (with warning dialog)
  * 
  * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
  * 
+ * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
+ * 
+ * - Settings -- add test button for diff and merge tools
+ * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
- * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
- * - How to handle change in checkout which is not HEAD (detached head)?  
- *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
- *   2) Dialog to ask if create new branch or move to top ?  
- *   3) Instead: save as non-git in separate folder ? That would be easier to understand.
- *
  * 
+ * - add scribble area (note) for each branch and repo
+ * 
+ * - add script-button row (configurable from settings for each repository)
  * 
  * - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
- * 
- * - How to pull ? Auto-pull before push ?
- * - How to merge ?
  * 
  * - How to initialize git-flow ?
  * 
