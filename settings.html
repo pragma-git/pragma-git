@@ -78,6 +78,10 @@
           width: 8%;
           text-align:right; 
         } 
+        code{
+            color: #006400; 
+            font-size: 11pt;  
+        }
         
         
     </style>
@@ -264,11 +268,16 @@
     <button class="collapsible" id="collapsibleConflict">Instructions</button>
         <div class="content"> 
             
+             <!-------------------------------------------------------------------------------------------->  
             <p><b>The settings sections </b> can be folded / unfolded. Click on the + or - sign to the right.<br>  
             </p>
-    <hr>             
-            <h2 class="instructHeader">Section : "Repository Settings"</h2> 
-    <hr>                
+            <hr>    
+             <!-------------------------------------------------------------------------------------------->   
+                    
+            <h2 class="instructHeader">Section : "Repository Settings"</h2>
+            <hr>    
+             <!-------------------------------------------------------------------------------------------->  
+            
                 <p>The repository settings have two parts : 
                     <dl>
                         <dd><b>A : Repository table </b> , where you may select one of the repositories you have defined </dd>
@@ -276,7 +285,9 @@
                     </dl>     
                 </p>
                 
-    <hr>            
+                <hr>                
+                <!-------------------------------------------------------------------------------------------->     
+           
                 <h3>A - part I : The "Repository table"  &mdash;  top rows</h3> 
                 
                     <p>All rows, except the last row, shows the settings for the repositories you have defined so far. </p>
@@ -293,7 +304,9 @@
                     <p><b>The forth column</b> has the "Forget" button, which is used remove the selected row from the list 
                     (it can always be added again, just as you did the first time by dropping the folder on the main window)</p>
          
-    <hr>
+                <hr>    
+            
+                <!--------------------------------------------------------------------------------------------> 
                 <h3>A - part II : The "Repository table", cloning  &mdash;  last row</h3>  
                 
                     Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).
@@ -310,7 +323,52 @@
                     <li><b>The  "Clone" button </b> makes a copy of the remote repository in the selected folder, and connects your local copy to the remote repository
                     </ol>    
                     
-    <hr>
+                <hr>  
+            
+                <!--------------------------------------------------------------------------------------------> 
+                <h3>Some words about remote repositories</h3>  
+                
+                It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
+                This section describes how to set up user-names and passwords for remote repositories.
+            
+                    
+                 <h4>Creating an account </h4> 
+                     
+                     
+                     <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
+                        <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+                     </p>
+                     
+                    <p> Get an account, go to the web interface, and create a new repository.  
+                        You will get a link on the format 
+                        <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
+                        which you need to copy.    
+                    </p>
+                    
+                    
+                 <h4>Using your link (address / url) </h4> 
+                     
+                                                    
+                     <p>Paste the link to your repository into the text-field under "Remote repository". 
+                        Modify by adding <code>user:password</code>, and an <code>@</code>-sign added : <br>
+                        <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.<br>
+                        In the pasted link,  <br>
+                        <code style = "margin-left: 15px">USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> <br>
+                        are exchanged with their proper values.  For instance :<br>
+                        <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
+                     </p>  
+                     
+                                            
+                     <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button.
+                        If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
+                        "Set" button again.
+                     </p>     
+                                             
+                     <p>Adjust your remote repository text until the "Set" button creates a green text, then it should work.
+                     </p>         
+                     
+                <hr>           
+                <!--------------------------------------------------------------------------------------------> 
 
                 <h3>B : The "Branches in selected repository"</h3>  
                 
@@ -318,10 +376,12 @@
                     <p>In the last row, you can add a new branch, by typing its name, and pressing the "Add branch" button.  
                     The branch name cannot contain all characters, so the text field stops you from typing forbidden characters </p>
                 
-    <hr>
+                <hr>               
+            <!--------------------------------------------------------------------------------------------> 
             
             <h2 class="instructHeader">Section "Software Settings"</h2> 
-    <hr>                 
+            <hr>                                 
+            <!--------------------------------------------------------------------------------------------> 
                 <p>These are the software settings : 
                     <dl>
                         <dt><b>Visual</b></dt>

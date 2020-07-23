@@ -38,8 +38,10 @@
         <hr>
         
  <!-------------------------------------------------------------------------------------------->                                  
-        <h3>Git started</h3>     
-        
+        <h3>Git started</h3>   
+        <hr>  
+
+ <!-------------------------------------------------------------------------------------------->         
         
         <h4>Intro</h4>
                                
@@ -49,9 +51,21 @@
                                
             <p> The app uses "git" behind the scene, and is therefore fully compatible and 
                 can be used interchangeably together with other git softwares.
-            </p>            
+            </p>  
+        <hr>          
+
+ <!-------------------------------------------------------------------------------------------->             
+        <h4>Help</h4>
+                               
+            <p>Help for the main window is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            </p>
+                               
+            <p>Instructions for opened windows are found at the bottom of each window, and can be read by clicking on the word "Instructions"
+            </p>  
+        <hr>          
             
-            
+    
+ <!-------------------------------------------------------------------------------------------->             
          <h4>Start working - drop a folder</h4>
             
             <p>Dragging a project's folder onto the app's window makes it available for version control.  
@@ -59,44 +73,64 @@
             
             <p>If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize the folder for git.
             </p>  
-                 
+         
+        <hr>           
  <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Clickable items</h4>
+         <h4>Clickable icons</h4>
             
              <dl>
-              <dt>Most things can be clicked.  The icons means :</dt>
+              <dt>Most things can be clicked :</dt>
                 <dd>&nbsp;</dd>
-                <dd><i>These buttons are always visible :</i></dd>
-                <dd>&nbsp;</dd>
+                <dt><i>These buttons are always visible :</i></dt>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
-                <dd>&nbsp;</dd>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
-                <dd>&nbsp;</dd>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
-                <dd>&nbsp;</dd>
-                <dd>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below)</dd>
-                <dd>&nbsp;</dd>
-                <dd><i>These buttons are visible only when they can be used :</i></dd>
-                <dd>&nbsp;</dd>
-                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual update (pull) from remote repository possible</dd>
+                    <dd>&nbsp;</dd>
+                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (put away) your working files. Similar to temporary Store, but leaves no trace in the revision history</dd>
+                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
+                    <dd>&nbsp;</dd>
+                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
+                    <dd>&nbsp;</dd>
+                    
+                <dt><i>These buttons are visible only when they can be used :</i></dt>
+                    <dd>&nbsp;</dd>
+                <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
+                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository</dd>
                 <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
-                <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch from dropdown menu, into current branch. 
                 </dd>
               
 
-            </dl>  
+            </dl> 
+        <hr>    
+                 
+ <!-------------------------------------------------------------------------------------------->                                  
+         <h4>Title and status bars</h4>
 
-                   
+            <p> <img style='vertical-align:middle;' src="images/top-title-bar.png"  height="24"> (the top title bar)<br>
+            displays the name of your current repository (in this example "MyFolder"), and the name of the current branch (in this case "master").
+            Both the repository, and the branch names can be clicked to cycle through your repositories and branches, respectively.
+            </p>
+                        
+            <p> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
+            shows the number of modified files.  Clicking on this area opens a list of modified files in a new window.
+            In this new window, you may also see what changes have been done, restore to last saved, or delete a file.
+            </p>
+                         
+            <p> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
+            can show up instead of above status of changed files. 
+            This may happen under special circumstances after a "merge", "pull" or "stash retrieve" action.  
+            What it means is that Pragma-git needs your help to clarify what is your intention with files changed in different ways in two different locations.
+            Click on this area to open a "conflict resolution window", that guides you through this process.
+            </p>    
+        <hr>      
+
  <!-------------------------------------------------------------------------------------------->                                  
          <h4>Store version with short description </h4>
-             <p>
-                The status bar 
-                <img style='vertical-align:middle;' src="images/statusbar_filled_in.png"  height="24" > 
-                shows the number of modified, new, and deleted files in the project. 
-            </p>
-                
              <p>
                 When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
                 you may store a named revision of the project. The nice thing about the revision control system is, 
@@ -106,7 +140,8 @@
             <p>
                 To store a revision of the changed files, you fill in a descriptive text, and the button  
                 <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active.  Press the button to store your revision.
-            </p>
+            </p> 
+        <hr>  
             
  <!-------------------------------------------------------------------------------------------->                                  
          <h4>Store version with longer description </h4>                    
@@ -123,7 +158,8 @@
             
  <!-------------------------------------------------------------------------------------------->                                  
             
-         <h3 id="Advanced">Advanced </h3>
+         <h3 id="Advanced">Advanced </h3>  
+        <hr>     
  
  <!-------------------------------------------------------------------------------------------->                                           
          <h4>Multiple repositories and branches </h4>    
@@ -131,84 +167,37 @@
             <p><u>Repositories</u> : You can have multiple active project folders (repositories), added by drag-and drop as described above. 
                 You switch by clicking the name (the first text in the title bar), to change to next project in the list.
             </p>
-              
+            
+            <p>Repositories can also be created by cloning from an existing remote repository (see Instructions section, at the 
+            settings page  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">).
+            </p>
+            
+            <p>Repositories can also be removed from the list in the program, also that from the settings window  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">).
+            </p>
+                                      
             <p><u>Branches</u> : You can have multiple branches of your work, that you can switch between. 
                 You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
             </p>           
              <p>Branches can be created from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">
-                where a new branch can be created.  TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  
-            </p>             
-         
- <!-------------------------------------------------------------------------------------------->                                           
-         <h4>Adding remote repository </h4> 
-             
-             <p>A remote repository is a place where your work can be mirrored to.  
-                The default setting is that the software automatically pushes changes to the remote repository, 
-                when you press the Store button.  
-             </p>
-             
-             <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
-                <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
-             </p>
-             
-            <p> Get an account, go to the web interface, and create a new repository.  
-                You will get a link on the format <code>https://github.com/JanAxelssonTest/test3.git</code> which you need to copy.    
-            </p>
-                       
-             <p>Using this link, you add the remote repository from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
-                The link is entered in the text-field under "Remote repository" with the format (same as your copied link, but with <code>user:password</code>, and an <code>@</code>-sign added) : <br>
-                <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.
-                Here,  
-                <code>USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> are exchanged  <br>
-                with their proper values.  For instance :<br>
-                <code  style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/imlook4d</code>
-             </p>  
-             
-                                    
-             <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button.
-                If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
-                <img style='vertical-align:middle;' src="images/seturl-button.png"  height="24" > button again.
-             </p>     
-                              
- <!-------------------------------------------------------------------------------------------->                                           
-         <h4>Cloning remote repository </h4> 
-              
-             <p>You can clone a remote repository.  This is especially useful if you work on several computers,
-             and would like to use a common data set.
-             </p>
-                                                         
-             
-             <p>Cloning is performed from the Settings dialog <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">.
-             The top table is a list of your open repositories, and at the end of this table there is a row where you can add the required information.
-             </p>
-             
-             
-            The following steps are performed, to clone a remote repository to a local folder on your computer :
-            <ol>
-                <li> Click <img style='vertical-align:middle;' src="images/folder_button.png"  height="24" > to select a folder on your computer, 
-                where you want the cloned repository stored </li>
-                
-                <li> The text area to the left, will show the selected path </li>
-                
-                <li> In the column "Remote repository", you fill in the path (which you get from gitHub, or some other source) </li>
-                
-                <li> Verify that the repository can be reached by clicking <img style='vertical-align:middle;' src="images/test_button.png"   height="24" > </li>
-            
-                <li> Press <img style='vertical-align:middle;' src="images/clone_button.png"   height="24" > to perform the cloning, that is, 
-                to copy the data from the remote repository, and set up the connection between your folder and the remote repository</li>
-
-            </ol>  
-                                
-            
+                where a new branch can be created.   <!-- TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  -->   
+            </p>     
+        <hr>               
+     
  <!-------------------------------------------------------------------------------------------->                                  
-
-         <hr>            
+           
          <h2>Installation </h2>
-             
+        <hr>             
+ <!-------------------------------------------------------------------------------------------->                  
             <p><u>Git</u> : The code relies on the standard installation of git 
                 (<a href='https://git-scm.com/downloads' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">download link</a>)
             </p>
-        
+            
+            <p><u>Diff and Merge tool</u> : An external Diff and Merge tool needs to be installed.  This is done in the settings window. 
+            There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+            are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+            Meld exists for Windows, Mac, and Linux, but there are many platform specific that may be equally good, or even suit you better.
+            </p>
+                
             
         <hr>             
  <!-------------------------------------------------------------------------------------------->                                  
