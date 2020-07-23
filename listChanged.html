@@ -168,11 +168,7 @@
             Pragma-git assumes that you wish to store all files you are working with.  
             This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
             </p>
-            
-            <p>On occasion you may wish to exclude a file from the next Store operation.
-            In this window, you  <i>de-select</i> the files you want to skip. You then press the "Selected will be stored" button" to show Pragma-git your intent
-            </p>     
-              
+       
                         
             <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
             
@@ -182,6 +178,12 @@
             <p><b>(diff)</b> opens the external diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
             <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
             <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+            
+            
+            <p>Not all options are available for every type of change.  
+            For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
+            Therefore the "diff" linke will not be visible.
+            The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
     
         </div>
     
