@@ -39,16 +39,18 @@
  * 
  * Open questions
  * 
+ * - mimimize button "-" icon
+ * 
+ * - stop file lists & about.html from open more than one window
+ * - let file lists, about.html and conflict windows follow "show on all virtual desktops" (just as settings does)
+ * 
+ * 
  * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
  *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
  *   2) Dialog to ask if create new branch or move to top ?  
  *   3) Extra button - "To new branch", and open a dialog for new branch name
  *  
  * -- Settings, branches.  Add Delete branch button (with warning dialog)
- * 
- * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
- * 
- * - Diff -- allow dir view (--dir-diff) with a new button / link
  * 
  * - Settings -- add test button for diff and merge tools
  * 

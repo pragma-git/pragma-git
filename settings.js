@@ -75,6 +75,9 @@ async function _callback( name, event){
             let URL = document.getElementById( id + 10000).value; // ID 10003
             
             await gitClone( folder, URL);
+            
+            
+            increaseDivSize('foldableDiv1');
         
             break;
 
@@ -149,6 +152,8 @@ async function _callback( name, event){
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
+            increaseDivSize('foldableDiv1');
+            
             break;
     
  
@@ -221,6 +226,14 @@ async function _callback( name, event){
 
 
     } // End switch
+    
+    //
+    // Local functions
+    //
+    function  increaseDivSize(id){
+        let content = document.getElementById(id);
+         content.style.maxHeight = content.scrollHeight + "px";
+    };
 }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
