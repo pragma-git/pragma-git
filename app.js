@@ -879,9 +879,9 @@ async function _update(){
     if(isPaused) {
         return;
     }    
-    let currentBranch = "";
     
     // Variables
+    let currentBranch = "";
     let modeName = getMode();
     let  status_data = [];
     let  folder = "";
@@ -901,10 +901,8 @@ async function _update(){
 
     }
     
-    
     // Validate repo and folder :
-
-    
+ 
     // Check if localFolder exists 
     if (fs.existsSync( fullFolderPath ) ) {
         // If folder exists, I am allowed to check if repo
@@ -921,9 +919,7 @@ async function _update(){
     }else{    
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
-    }
-            
-
+    }      
     
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){
@@ -953,7 +949,6 @@ async function _update(){
             console.log(err);
         }
         
-     
     // Update Merge button (hide if uncomitted files)
         try{
             if (status_data.changedFiles){
@@ -965,21 +960,21 @@ async function _update(){
             console.log(err);
         }
            
-    
     // mode -dependent :
-            
         switch( modeName ) {        
-            case 'UNKNOWN':
+            case 'UNKNOWN': {  
                 _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
                 break;
+            }
                 
-            case 'DEFAULT':
+            case 'DEFAULT': {  
                 setTitleBar( 'top-titlebar-repo-text', ' ' );
                 setTitleBar( 'top-titlebar-branch-text', ' ' );
                 setStatusBar(' ');
                 break;
+            }
                 
-            case 'NO_FILES_TO_COMMIT':
+            case 'NO_FILES_TO_COMMIT': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
@@ -988,8 +983,9 @@ async function _update(){
                     _setMode('UNKNOWN');
                 }
                 break;
+            }
                 
-            case 'CHANGED_FILES':
+            case 'CHANGED_FILES': {  
                 try{
                     setTitleBar( 'top-titlebar-repo-text', folder );
                     setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
@@ -1006,8 +1002,9 @@ async function _update(){
                     _setMode('UNKNOWN');
                 }
                 break;
+            }
                 
-            case 'CHANGED_FILES_TEXT_ENTERED':
+            case 'CHANGED_FILES_TEXT_ENTERED': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
@@ -1016,11 +1013,10 @@ async function _update(){
                     _setMode('UNKNOWN');
                 }
                 break;
+            }
                 
-            case 'HISTORY':
-            
-            
-            
+            case 'HISTORY': {  
+
                 let status;
                 let hash = localState.historyHash;
             
@@ -1040,8 +1036,9 @@ async function _update(){
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
                 break;
+            }
                 
-            case 'SETTINGS':
+            case 'SETTINGS': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 try{
@@ -1054,9 +1051,10 @@ async function _update(){
                 }
                 
                 break;
-                
-            default:
+            }
+            default: {
                 console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+            }
         }    
     // return
         return true
@@ -1106,8 +1104,7 @@ async function _setMode( inputModeName){
     
     
     switch(inputModeName) {        
-        case 'UNKNOWN': 
-            {
+        case 'UNKNOWN': {
                 // Fallback guess
                 newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
                 
@@ -1175,7 +1172,7 @@ async function _setMode( inputModeName){
                 break;
             }
             
-        case 'DEFAULT':
+        case 'DEFAULT': {
             //if (currentMode ==  'DEFAULT') { return};
             newModeName = 'DEFAULT';
             document.getElementById("store-button").innerHTML="Store";// Set button
@@ -1187,8 +1184,9 @@ async function _setMode( inputModeName){
             setTitleBar( 'top-titlebar-repo-text', ''  );
             setTitleBar( 'top-titlebar-branch-text', '' );
             break;
+        }
             
-        case 'NO_FILES_TO_COMMIT':
+        case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
@@ -1198,8 +1196,9 @@ async function _setMode( inputModeName){
             document.getElementById('message').placeholder = "No changed files to store";            
             document.getElementById("message").readOnly = true;
             break;
+        }
             
-        case 'CHANGED_FILES':
+        case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
             //if (currentMode ==  'CHANGED_FILES') { return};
@@ -1209,8 +1208,9 @@ async function _setMode( inputModeName){
             document.getElementById('message').placeholder = "You have changed files." + os.EOL + "Add description and press Store";        
             document.getElementById("message").readOnly = false;
             break;
+        }
             
-        case 'CHANGED_FILES_TEXT_ENTERED':
+        case 'CHANGED_FILES_TEXT_ENTERED': {
             // set by messageKeyUpEvent
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
@@ -1220,8 +1220,9 @@ async function _setMode( inputModeName){
             //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
             document.getElementById("message").readOnly = false;
             break;
+        }
             
-        case 'HISTORY':
+        case 'HISTORY': {
             // set by downArrowClicked and upArrowClicked
             newModeName = 'HISTORY';
             if (currentMode ==  'HISTORY') { return};
@@ -1232,8 +1233,9 @@ async function _setMode( inputModeName){
             document.getElementById('message').placeholder = "";    
             document.getElementById ("message").readOnly = true;
             break;
+        }
             
-        case 'SETTINGS':
+        case 'SETTINGS': {
             newModeName = 'SETTINGS';
             if (currentMode ==  'SETTINGS') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
@@ -1242,12 +1244,15 @@ async function _setMode( inputModeName){
             document.getElementById('message').placeholder = "You are in settings mode." + os.EOL + "Edit in settings dialog window";    
             document.getElementById("message").readOnly = true;
             break;
-            
-        default:
-            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + inputModeName);
         }
         
-     console.log('setMode result : setMode = ' + newModeName + ' ( from current mode )= ' + currentMode + ')');
+        default: {
+            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + inputModeName);
+        }
+    
+    }
+        
+    console.log('setMode result : setMode = ' + newModeName + ' ( from current mode )= ' + currentMode + ')');
       
     // Remember mode
     localState.mode = newModeName;
