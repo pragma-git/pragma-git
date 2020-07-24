@@ -96,9 +96,8 @@ async function _callback( name, event, event2){
     
     console.log('_callback = ' + name);
     switch(name) {
-        
-        
-        case 'applySelectedFilesButton':
+       
+        case 'applySelectedFilesButton': {
             console.log('applySelectedFilesButton');
             console.log(event);
             
@@ -121,9 +120,67 @@ async function _callback( name, event, event2){
 
             closeWindow();
             break;
-           
- 
-         case 'diffLinkHistory':
+        }
+         
+        case 'diffLinkAll' : {
+            console.log('diffLinkAll');
+            console.log(event);
+            
+            tool = state.tools.difftool;
+
+            
+            // Prepare command  --  Can be either history mode, or normal mode
+            if (localState.mode == 'HISTORY') {
+                // History
+                console.log('diffLinkAll -- history');
+                
+                commit = event;
+
+                tool = state.tools.difftool;
+    
+                // Prepare for git diff with previous commit and selected commit in history log
+                command = [  
+                    'difftool',  
+                    '--tool',
+                    tool,
+                    '--dir-diff',
+                    commit + "^" ,
+                    commit
+                ];  
+                    
+                
+            } else {
+                // Not history
+                console.log('diffLinkAll -- normal');
+                
+                // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
+                command = [  
+                    'difftool',
+                    '--tool',
+                    tool,
+                    '--dir-diff',
+                    'HEAD'
+                ];
+            }
+       
+            // Git 
+            status_data;
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder)
+                    .raw(command, onStatus );
+                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+            }catch(err){
+                console.log('diffLink -- caught error ');
+                console.log(err);
+            }
+            
+            
+            
+            
+            break;
+        }
+
+        case 'diffLinkHistory': {
          
             // Three inputs
             console.log('diffLinkHistory');
@@ -136,7 +193,7 @@ async function _callback( name, event, event2){
             
             tool = state.tools.difftool;
 
-            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
+            // Prepare for git diff with previous commit and selected commit in history log
             command = [  
                 'difftool',
                 '-y',  
@@ -146,7 +203,7 @@ async function _callback( name, event, event2){
                 commit + ":" + file
             ];
 
-            // Git Status
+            // Git 
             status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder)
@@ -159,11 +216,9 @@ async function _callback( name, event, event2){
         
 
             break;
+        }
  
- 
- 
-        
-        case 'diffLink':
+        case 'diffLink': {
             console.log('diffLink');
             console.log(event);
             
@@ -183,7 +238,7 @@ async function _callback( name, event, event2){
                 file
             ];
 
-            // Git Status
+            // Git 
             status_data;
             try{
                 simpleGit( state.repos[state.repoNumber].localFolder)
@@ -196,9 +251,9 @@ async function _callback( name, event, event2){
         
 
             break;
-     
-     
-        case 'discardLink':
+        }
+ 
+        case 'discardLink': {
             console.log('discardLink');
             console.log(event);
             
@@ -234,9 +289,9 @@ async function _callback( name, event, event2){
 
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
-      
-     
-        case 'deleteLink':
+        }
+
+        case 'deleteLink': {
             console.log('deleteLink');
             console.log(event);
             
@@ -270,10 +325,10 @@ async function _callback( name, event, event2){
             }
 
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
-            break;           
-            
-            
-        case 'radioButtonChanged' :
+            break;
+        }           
+        
+        case 'radioButtonChanged' : {
             // TODO : stage or unstage depending on what happened
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
             
@@ -294,6 +349,7 @@ async function _callback( name, event, event2){
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
             break;
+        }
 
     } // End switch
     
@@ -378,6 +434,16 @@ function createFileTable(status_data) {
         
     // Old tbody
     let old_tbody = document.getElementById('listFilesTableBody');
+
+
+    // Table header (change onClick for history mode)
+    if (localState.mode == 'HISTORY'){
+        let commit = localState.historyHash;
+        document.getElementById('diffAllSpan').setAttribute( 
+            "onClick", 
+            "_callback('diffLinkAll', " + "'" + commit  + "') " 
+            );  // Send commit hash for history
+    }
 
     // Make  a new tbody
     let tbody = document.createElement("tbody"); // Empty tbody
