@@ -129,7 +129,7 @@
 
 <body> 
      
-    <div id="content">
+    <div id="outer-content">
             
         <div id="inner-content">
                 
@@ -147,7 +147,7 @@
        
             
     <!--  REPO SETTINGS -- foldable header--> 
-    <button class="collapsible" id="listFiles">Repository settings :</button> 
+    <button class="collapsible" id="listRepos">Repository settings :</button> 
                 
         <div class="content"> 
         <h3>Repository table </h3>  
@@ -197,11 +197,11 @@
                 
 
                 <!--  BRANCH TABLE -->  
-                <table style="width:100%"> 
+                <table style="width:100%;"> 
                     <thead ><tr>
                         <th class="branchAction">Action</th>
                         <th class="localFolder">Branch</th>
-                    <tbody id="branchesTableBody">
+                    <tbody id="branchesTableBody"  style="min-height: 100% !important;">
                     </tbody>
                 </table>    
                 
