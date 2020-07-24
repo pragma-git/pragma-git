@@ -504,6 +504,12 @@ async function _callback( name, event){
                 console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
                 await simpleGit(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
                 function onDetachedHead(err, result){console.log(result);console.log(err); history = result.all;} 
+                
+                // Set historyNumber to top
+                localState.historyNumber = -1;
+                
+                // Leave history mode
+                _setMode('UNKNOWN');
                     
             }catch(err){        
                 console.log(err);
