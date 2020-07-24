@@ -39,6 +39,8 @@
  * 
  * Open questions
  * 
+ * - Conflict placeholder message -- Now same  messager as changed files -> dangerous, because you can Store and thus take all changes wihtout conflict resolution.
+ *   Fix a CONFLICT mode, and its own placeholder ?
  * 
  * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
  *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
@@ -47,10 +49,9 @@
  *  
  * -- Settings, branches.  Add Delete branch button (with warning dialog)
  * 
- * - Show the commit message for current commit in placeholder, with text like : You are working on the revison : ....
- *   Cache message-title (when changing repo, branch, ...).  await gitShow('HEAD') gives short hash + title.
- * 
  * - Conflict -- jump directly into resolve window instead of showing in status bar ?  Maybe introduce mode "MERGECONFLICT ?
+ * 
+ * - Diff -- allow dir view (--dir-diff) with a new button / link
  * 
  * - Settings -- add test button for diff and merge tools
  * 
@@ -393,7 +394,7 @@ async function _callback( name, event){
         about_win = gui.Window.open('about.html#/new_page', {
             position: 'center',
             width: 600,
-            height: 450,
+            height: 700,
             
         });
         
