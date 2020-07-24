@@ -39,9 +39,6 @@
  * 
  * Open questions
  * 
- * - Conflict placeholder message -- Now same  messager as changed files -> dangerous, because you can Store and thus take all changes wihtout conflict resolution.
- *   Fix a CONFLICT mode, and its own placeholder ?
- * 
  * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
  *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
  *   2) Dialog to ask if create new branch or move to top ?  
@@ -135,7 +132,11 @@
  *                           - placeholder = shows history             
  * SETTINGS             
  *                           - Store-button = disabled
- *                           - placeholder = shows history   
+ *                           - placeholder = shows hints   
+ * 
+ * CONFLICT                  
+ *                           - Store-button = disabled
+ *                           - placeholder = shows hints   
  * 
  * State
  * -----
@@ -215,7 +216,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
-        localState.settings = false;  // True when settings window is open
+        localState.settings = false;        // True when settings window is open
+        localState.conflictsWindow = false; // True when conflicts window is open
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
@@ -493,10 +495,15 @@ async function _callback( name, event){
  
     // main window
     async function storeButtonClicked() { 
-        // Could be called for Store operation, or History Checkout operation
+        
+        // Could be called for Store, or History Checkout 
+        
         if ( getMode() == 'HISTORY' ){
-            // Checkout this commit (into a detached HEAD)
-            try{             
+            // History
+            
+            try{
+                
+                // Checkout this commit (into a detached HEAD)             
                 console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
                 await simpleGit(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
                 function onDetachedHead(err, result){console.log(result);console.log(err); history = result.all;} 
@@ -512,6 +519,7 @@ async function _callback( name, event){
             }
             
         }else{
+            // Store
             gitAddCommitAndPush( readMessage());
         }
         
@@ -823,11 +831,16 @@ async function _callback( name, event){
             }
             ); 
         console.log(settings_win);
-        localState.settings = true;
+        localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
      return   
     };
 
     function resolveConflicts( folder){
+               
+        if ( localState.conflictsWindow == true ){
+            return
+        }
+        
         resolve_win = gui.Window.open('resolveConflicts.html#/new_page' ,
             {
                 id: 'resolveConflictsWindowId',
@@ -837,7 +850,8 @@ async function _callback( name, event){
                 title: "Resolve Conflicts"
             }
             ); 
-        console.log(settings_win);
+        console.log(resolve_win);
+        localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
     };
     
     function listChanged(){
@@ -918,11 +932,16 @@ async function _update(){
     }      
     
     // If left settings window
-        if ( localState.settings && (modeName != 'SETTINGS') ){
+        if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
             localState.settings = false;
             updateWithNewSettings();
         }
     
+    // If left conflicts window
+        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
+            localState.conflictsWindow = false;
+        }
+            
     // Update Push button (show if ahead of remote)
         try{
             if (status_data.ahead > 0){
@@ -956,7 +975,7 @@ async function _update(){
             console.log(err);
         }
            
-    // mode -dependent :
+    // mode - dependent :
         switch( modeName ) {        
             case 'UNKNOWN': {  
                 _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
@@ -1048,6 +1067,18 @@ async function _update(){
                 
                 break;
             }
+            
+                            
+            case 'CONFLICT': {  
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' ); 
+                    setStatusBar( fileStatusString( status_data)); 
+
+                console.log('_update -- CONFLICT mode');
+                console.log(status);
+
+            }
+            
             default: {
                 console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
             }
@@ -1156,8 +1187,15 @@ async function _setMode( inputModeName){
                     newModeName = 'DEFAULT';  
                     _setMode( newModeName);
                     break;
+                }    
+                   
+                // CONFLICT
+                if (status_data.conflicted.length > 0){ 
+                    newModeName = 'CONFLICT';  
+                    _setMode( newModeName);
+                    break;
                 }     
-                
+ 
                 // NO_FILES_TO_COMMIT
                 try{
                     if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
@@ -1177,8 +1215,8 @@ async function _setMode( inputModeName){
                     if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' } 
                     _setMode( newModeName);
                     break;
-                }      
-
+                }   
+                
                 break;
             }
             
@@ -1251,15 +1289,31 @@ async function _setMode( inputModeName){
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "You are in settings mode." + os.EOL + "- Unfold a settings section ..." + os.EOL + "- Close window when done";    
+            document.getElementById('message').placeholder = 
+                "You are in settings mode." + os.EOL + 
+                "- Unfold a settings section ..." + os.EOL + 
+                "- Close window when done";    
+            document.getElementById("message").readOnly = true;
+            break;
+        }
+            
+        case 'CONFLICT': {
+            newModeName = 'CONFLICT';
+            if (currentMode ==  'CONFLICT') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = true;
+            document.getElementById('message').value = "";
+            document.getElementById('message').placeholder = 
+                "There is a file conflict to resolve" + os.EOL + 
+                "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
+                "- Write a message, and press Store when done";    
             document.getElementById("message").readOnly = true;
             break;
         }
         
         default: {
             console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + inputModeName);
-        }
-    
+        }    
     }
         
     console.log('setMode result : setMode = ' + newModeName + ' ( from current mode )= ' + currentMode + ')');
@@ -1633,14 +1687,14 @@ async function gitMerge( currentBranchName, selectedBranchName){
        
         await waitTime( 1000);  
     }catch(err){
-        console.log('gitMerge failed');
-        
+        console.log('gitMerge failed');     
     }
   
       
     // Finish up
     writeMessage('',false);  // Remove this message  
-    _setMode('UNKNOWN');  
+    
+    _setMode('UNKNOWN');
     await _update()
 }
 
@@ -1873,6 +1927,7 @@ function fileStatusString( status_data){
         try{
             if (status_data.conflicted.length > 0){
                 return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
+                
             }else{
                 return 'Modified = ' 
                 + status_data.modified.length 
