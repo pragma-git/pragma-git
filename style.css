@@ -197,12 +197,24 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
+#top-titlebar-minimize-icon{
+  position: absolute;
+  right: 24px;
+  width: 14px; /* Make more narrow than image for better proportions */
+  -webkit-app-region: no-drag;
+}
 
-.top-titlebar-close-icon,
-.bottom-titlebar-settings-icon {
+#top-titlebar-close-icon{
+  position: absolute;
+  right: 0px;
+  width: 17px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-close-field,
+.bottom-titlebar-settings-field {
   position: absolute;
   right: 11px;
-  width: 17px;
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;

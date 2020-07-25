@@ -104,10 +104,21 @@
                 onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
                 src="images/push.png">
         </div> 
-   
+    
+
         
-        <!-- Icon Close  -->           
-        <div class="top-titlebar-close-icon">            
+        <!-- Top right icons  -->           
+        <div class="top-titlebar-close-field">  
+                    
+            <!-- Icon Minimize  -->                     
+            <img id="top-titlebar-minimize-icon"    height="17" width="17" 
+                onclick="_callback('clicked-minimize-button')" 
+                onmouseover="updateImageUrl('top-titlebar-minimize-icon', 'images/minimize_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-minimize-icon', 'images/minimize.png');" 
+                src="images/minimize.png">
+ 
+            
+            <!-- Icon Close  -->              
             <img id="top-titlebar-close-icon" 
                 onclick="_callback('clicked-close-button')" 
                 onmouseover="updateImageUrl('top-titlebar-close-icon', 'images/button_close_hover.png');" 
@@ -202,7 +213,7 @@
             </div>
 
         <!-- Icon Settings  -->  
-        <div class="bottom-titlebar-settings-icon">
+        <div class="bottom-titlebar-settings-field">
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
                 onclick="_callback('clicked-settings')"
                 onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 

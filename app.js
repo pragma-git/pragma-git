@@ -250,6 +250,9 @@ async function _callback( name, event){
       case 'clicked-store-button':
         storeButtonClicked();
         break;
+      case 'clicked-minimize-button':
+        win.minimize();
+        break;
       case 'message_key_up':
         messageKeyUpEvent();
         break;
