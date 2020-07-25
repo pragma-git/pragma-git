@@ -39,8 +39,6 @@
  * 
  * Open questions
  * 
- * - mimimize button "-" icon
- * 
  * - stop file lists & about.html from open more than one window
  * - let file lists, about.html and conflict windows follow "show on all virtual desktops" (just as settings does)
  * 
@@ -218,10 +216,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
-        localState.settings = false;        // True when settings window is open
-        localState.conflictsWindow = false; // True when conflicts window is open
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
+        
+        localState.settings = false;        // True when settings window is open
+        localState.conflictsWindow = false; // True when conflicts window is open
+        localState.fileListWindow = false; // True when conflicts window is open
+        localState.aboutWindow = false; // True when conflicts window is open
         
         
     // Expose these to all windows 
@@ -302,12 +303,19 @@ async function _callback( name, event){
         closeWindow();
         break;
       case 'clicked-status-text' :
+        if (localState.fileListWindow == true) {
+                return
+            }
+            
         let status_data = await gitStatus();
+        
         if (status_data.conflicted.length > 0){
             resolveConflicts(state.repos[state.repoNumber].localFolder);
         }else{
             listChanged();
         }
+        
+        localState.fileListWindow = true;
         
         break;
       case 'file-dropped':
@@ -398,12 +406,30 @@ async function _callback( name, event){
     function showAbout(){    
         console.log('About button pressed');
         
-        about_win = gui.Window.open('about.html#/new_page', {
-            position: 'center',
-            width: 600,
-            height: 700,
-            
-        });
+                
+        if ( localState.aboutWindow == true ){
+            return
+        }
+        
+        // Open new window -- and create closed-callback
+        let about_win = gui.Window.open(
+            'about.html#/new_page', 
+            {   position: 'center',
+                width: 600,
+                height: 700   
+            },
+            function(cWindows){ //Callback 
+                cWindows.on('closed', 
+                    function(){
+                        localState.aboutWindow = false;
+                        cWindows = null;  // dereference
+                    }
+                )
+            }
+        );
+
+        // Show that window is open
+        localState.aboutWindow = true;
         
     }
     function closeWindow(a){
