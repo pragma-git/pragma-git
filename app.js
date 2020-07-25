@@ -1273,7 +1273,7 @@ async function _setMode( inputModeName){
         case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
-            document.getElementById('message').placeholder = '"' + HEAD_title ; //+ '"' + os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            document.getElementById('message').placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
