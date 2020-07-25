@@ -965,7 +965,11 @@ async function _update(){
     }else{    
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
-    }      
+    }   
+    
+    //
+    // SET ICON VISIBILITY
+    //   
     
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
@@ -1010,6 +1014,10 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
+        
+    //
+    // WRITE TITLE-BAR, STATUS-BAR, MESSAGE (history only)
+    //    
            
     // mode - dependent :
         switch( modeName ) {        
@@ -1156,6 +1164,7 @@ async function _setMode( inputModeName){
  * 'CHANGED_FILES_TEXT_ENTERED' :   messageKeyUpEvent
  * 'HISTORY':                       downArrowClicked, upArrowClicked
  * 'SETTINGS':
+ * 'CONFLICT'
  * 
  */
     var newModeName;
@@ -1181,7 +1190,11 @@ async function _setMode( inputModeName){
     }
 
     
-    switch(inputModeName) {        
+    switch(inputModeName) {  
+              
+        //
+        // UNKNOWN - DETERMINE MODE
+        //      
         case 'UNKNOWN': {
                 // Fallback guess
                 newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
@@ -1255,7 +1268,14 @@ async function _setMode( inputModeName){
                 
                 break;
             }
-            
+                
+        //
+        // KNOWN MODE - UPDATE display state
+        //            
+        // - Store button -- enabled/disabled  Store/Checkout
+        // - Message      -- placeholder/writeable/
+        // 
+        // all following
         case 'DEFAULT': {
             //if (currentMode ==  'DEFAULT') { return};
             newModeName = 'DEFAULT';
