@@ -378,6 +378,12 @@ async function gitCreateBranch( folder, branchName){
 function injectIntoSettingsJs(document) {
     win = gui.Window.get();
     
+  
+    // For systems that have multiple workspaces (virtual screens)
+    if ( win.canSetVisibleOnAllWorkspaces() ){
+        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+    }
+    
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
     console.log(global.state);

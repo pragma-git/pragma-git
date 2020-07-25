@@ -418,11 +418,20 @@ async function _callback( name, event){
                 width: 600,
                 height: 700   
             },
-            function(cWindows){ //Callback 
+            function(cWindows){ 
                 cWindows.on('closed', 
                     function(){
                         localState.aboutWindow = false;
                         cWindows = null;  // dereference
+                    }
+                );
+                
+                cWindows.on('loaded', 
+                    function(){
+                         // For systems that have multiple workspaces (virtual screens)
+                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                        }
                     }
                 )
             }
