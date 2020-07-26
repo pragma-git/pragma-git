@@ -60,7 +60,8 @@
             <p>Help for the main window is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
             </p>
                                
-            <p>Instructions for opened windows are found at the bottom of each window, and can be read by clicking on the word "Instructions"
+            <p>Instructions for windows that are opened outside the main windown are found at the bottom of each window, and can be read by clicking on the banner :
+            <img style='vertical-align:middle;' src="images/instructions-button.png"  height="24">
             </p>  
         <hr>          
             
@@ -91,7 +92,7 @@
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
                     <dd>&nbsp;</dd>
-                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (put away) your working files. Similar to temporary Store, but leaves no trace in the revision history</dd>
+                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. View it as a temporary Store, which leaves no trace in the revision history</dd>
                 <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
                     <dd>&nbsp;</dd>
                 <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
@@ -101,7 +102,10 @@
                     <dd>&nbsp;</dd>
                 <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
                 <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository</dd>
-                <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
+                <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd
+                    <dd>&nbsp;</dd>
+                <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
+                    <dd>&nbsp;</dd>
                 </dd>
               
 
@@ -117,13 +121,10 @@
             </p>
                         
             <p> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
-            shows the number of modified files.  Clicking on this area opens a list of modified files in a new window.
-            In this new window, you can see if a file was added, modified or deleted.  
+            shows the number of modified files. In normal mode, it is the difference since the last Store operation.  In history mode, it is the change from the previous revision in history.
+            Clicking on this area opens a list of modified files in a new window.
+            In this new window, you can see if a file was added, modified or deleted.  You may also investigate how the files were changed viewing the differences, and in the normal mode also delete or restore the changed file.
             </p>
-                         
-            <p> If the window listing modified files was opened when you browsed the history, you can view the differences to a single file.</p> 
-            <p> If the window listing modified files was opened in normal mode (non-hisotory browsing), you can also here view the differences to a single file, 
-            but also restore a file to the last stored state, or delete the file.</p> 
                                    
             <p> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
             can show up instead of above status of changed files. 
