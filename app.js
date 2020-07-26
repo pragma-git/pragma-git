@@ -358,8 +358,24 @@ async function _callback( name, event){
                 let counter = 0;
                 let failed = true; // First guess
 
-                const origBranchName = 'temp-branch';
-                let branchName = origBranchName;  // First time without number
+                const origBranchName = 'temp-branch-';  // Start string branchName with "temp-branch-"
+                
+                // Find highest-number on temp-branches (if more than one exists)
+                let branchList = await gitBranchList();
+                let highest = 0;  // Highest number here
+                
+                for (let branchName of branchList){
+                    console.log(branchName);
+                    if ( branchName.startsWith(origBranchName) ){
+                        let number = Number( branchName.split(origBranchName).pop() ); // Get number after "temp-branch-"
+                        if (number > highest){
+                            highest = number;
+                        }
+                    }
+                }
+                let next = highest + 1;
+                let newBranchName = origBranchName + next;
+                
                 
                 // Try creating branch until success
                 while (failed){
@@ -368,7 +384,7 @@ async function _callback( name, event){
                         let folder = state.repos[ state.repoNumber].localFolder;
                         
                         // Move 'detached HEAD' into (and create) temporary branch
-                        let commands = [ 'checkout', '-b', branchName, 'HEAD'];
+                        let commands = [ 'checkout', '-b', newBranchName, 'HEAD'];
                         await simpleGit( folder).raw(  commands, onCreateBranch);
                         function onCreateBranch(err, result ){console.log(result);};
                         
