@@ -282,7 +282,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-branch': {
-        branchClicked();
+        branchClicked(true);
         break;
       }
       case 'clicked-folder': {
@@ -352,33 +352,43 @@ async function _callback( name, event){
       case 'detachedHeadDialog': {
           
         console.log('detachedHeadDialog -- returned ' + event);
-        // Return value from dialog is true if I want to create a temporary branch.
-        if (event == true){
-
-            try{
-                let folder = state.repos[ state.repoNumber].localFolder;
-                const branchName = 'temp-branch';
-                
-                // Move 'detached HEAD' into (and create) temporary branch
-                let commands = [ 'checkout', '-b', branchName, 'HEAD'];
-                await simpleGit( folder).raw(  commands, onCreateBranch);
-                function onCreateBranch(err, result ){console.log(result);};
-                
-                // Switch branch away from temporary branch
-                
-            }catch(err){        
-                console.log('Error creating local branches, in gitCreateBranch');
-                console.log(err);
-            }
-
-        }
         
-        break;
-      }   
+        switch (event) {
+            case  'Temp_Branch' : {
+                // Create new branch and move into it
+                try{
+                    let folder = state.repos[ state.repoNumber].localFolder;
+                    const branchName = 'temp-branch';
+                    
+                    // Move 'detached HEAD' into (and create) temporary branch
+                    let commands = [ 'checkout', '-b', branchName, 'HEAD'];
+                    await simpleGit( folder).raw(  commands, onCreateBranch);
+                    function onCreateBranch(err, result ){console.log(result);};
+                    
+                    // Switch branch away from temporary branch
+                    
+                }catch(err){        
+                    console.log('Error creating local branches, in gitCreateBranch');
+                    console.log(err);
+                }
+                break;
+            }
+            case  'Delete' : {
+                // Move out of "detached Head" (losing track of it)
+                branchClicked(false);
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
+            
+        }
+        break; 
+      } // end case 'detachedHeadDialog'  
       default: {
         // code block
       }  
-    }
+    } // End switch(name)
 
     // ---------------
     // LOCAL FUNCTIONS
@@ -399,7 +409,8 @@ async function _callback( name, event){
         
         _setMode('UNKNOWN');
     }
-    async function branchClicked(){
+    async function branchClicked( detectDetachedBranch ){
+        // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
         
         // Determine status of local repository
         var status_data;  
@@ -411,8 +422,8 @@ async function _callback( name, event){
         }
         
         // If Detached Head
-        if (status_data.current == 'HEAD' ){
-            document.getElementById('detachedHeadDialog').show();
+        if (detectDetachedBranch && status_data.current == 'HEAD' ){
+            document.getElementById('detachedHeadDialog').show(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
             return;
         }
         
