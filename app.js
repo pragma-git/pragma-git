@@ -350,26 +350,36 @@ async function _callback( name, event){
         break;
       }
       case 'detachedHeadDialog': {
-          
         console.log('detachedHeadDialog -- returned ' + event);
         
         switch (event) {
             case  'Temp_Branch' : {
                 // Create new branch and move into it
-                try{
-                    let folder = state.repos[ state.repoNumber].localFolder;
-                    const branchName = 'temp-branch';
+                let counter = 0;
+                let failed = true; // First guess
+
+                const origBranchName = 'temp-branch';
+                let branchName = origBranchName;  // First time without number
+                
+                // Try creating branch until success
+                while (failed){
                     
-                    // Move 'detached HEAD' into (and create) temporary branch
-                    let commands = [ 'checkout', '-b', branchName, 'HEAD'];
-                    await simpleGit( folder).raw(  commands, onCreateBranch);
-                    function onCreateBranch(err, result ){console.log(result);};
-                    
-                    // Switch branch away from temporary branch
-                    
-                }catch(err){        
-                    console.log('Error creating local branches, in gitCreateBranch');
-                    console.log(err);
+                    try{
+                        let folder = state.repos[ state.repoNumber].localFolder;
+                        
+                        // Move 'detached HEAD' into (and create) temporary branch
+                        let commands = [ 'checkout', '-b', branchName, 'HEAD'];
+                        await simpleGit( folder).raw(  commands, onCreateBranch);
+                        function onCreateBranch(err, result ){console.log(result);};
+                        
+                        failed = false; // Break loop
+                        
+                    }catch(err){        
+                        console.log('Failed creating temporary branch "temp-branch" ');
+                        console.log(err);
+                    } 
+                    counter = counter + 1;
+                    branchName = 'temp-branch-' + counter;
                 }
                 break;
             }
