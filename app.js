@@ -60,6 +60,13 @@
  * 
  * - How to initialize git-flow ?
  * 
+ * 
+ *  Menu Windows
+ *   var mb = new gui.Menu({type: 'menubar'});
+ *   mb.createMacBuiltin('My App');
+ *   gui.Window.get().menu = mb;
+ *   console.log( mb.items[2].submenu.items[0].label ) // Menu/Fönster
+ * 
  * Docs : https://www.npmjs.com/package/simple-git
  *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
 */
