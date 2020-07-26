@@ -417,7 +417,8 @@ async function _callback( name, event){
         // Open new window -- and create closed-callback
         let about_win = gui.Window.open(
             'about.html#/new_page', 
-            {   position: 'center',
+            {   id: 'aboutWindowId',
+                position: 'center',
                 width: 600,
                 height: 700   
             },
