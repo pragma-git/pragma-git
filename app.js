@@ -39,6 +39,12 @@
  * 
  * Open questions
  * 
+ * - Detached head
+ *   TODO: handle if temp-branch exists
+ *   handle if dialog answer is no (leave detached HEAD)
+ * 
+ * 
+ * 
  * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
  *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
  *   2) Dialog to ask if create new branch or move to top ?  
@@ -251,61 +257,78 @@ async function _callback( name, event){
     console.log('_callback = ' + name);
     console.log(event);
     switch(name) {
-      case 'clicked-store-button':
+      case 'clicked-store-button': {
         storeButtonClicked();
         break;
-      case 'clicked-minimize-button':
+      }
+      case 'clicked-minimize-button': {
         win.minimize();
         break;
-      case 'message_key_up':
+      }
+      case 'message_key_up': {
         messageKeyUpEvent();
         break;
-      case 'clicked-up-arrow':
+      }
+      case 'clicked-up-arrow': {
         upArrowClicked();
         break;
-      case 'clicked-down-arrow':
+      }
+      case 'clicked-down-arrow': {
         downArrowClicked();
         break;
-      case 'clicked-repo':
+      }
+      case 'clicked-repo': {
         repoClicked();
         break;
-      case 'clicked-branch':
+      }
+      case 'clicked-branch': {
         branchClicked();
         break;
-      case 'clicked-folder':
+      }
+      case 'clicked-folder': {
         folderClicked();
         break;
-      case 'clicked-stash-button':
+      }
+      case 'clicked-stash-button': {
         gitStash();
-        break;        
-      case 'clicked-stash_pop-button':
+        break;   
+      }     
+      case 'clicked-stash_pop-button': {
         gitStashPop();
-        break;       
-      case 'clicked-push-button':
+        break; 
+      }      
+      case 'clicked-push-button': {
         gitPush();
         break;
-      case 'clicked-pull-button':
+      }
+      case 'clicked-pull-button': {
         gitPull();
         break;
-      case 'clicked-merge-button':
+      }
+      case 'clicked-merge-button': {
         mergeClicked();
-        break;      
-      case 'clickedMergeContextualMenu' :
+        break; 
+      }     
+      case 'clickedMergeContextualMenu' : {
         let selectedBranch = event;
         console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
         console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
         gitMerge( event.currentBranch, event.selectedBranch); 
         break;
-      case 'clicked-settings':
+      }
+      case 'clicked-settings': {
         showSettings();
         break;
-      case 'clicked-about':
+      }
+      case 'clicked-about': {
         showAbout();
         break;
-      case 'clicked-close-button':
+      }
+      case 'clicked-close-button': {
         closeWindow();
         break;
-      case 'clicked-status-text' :
+      }
+      case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {
                 return
             }
@@ -321,11 +344,40 @@ async function _callback( name, event){
         localState.fileListWindow = true;
         
         break;
-      case 'file-dropped':
+      }
+      case 'file-dropped': {
         dropFile( event); 
         break;
-      default:
+      }
+      case 'detachedHeadDialog': {
+          
+        console.log('detachedHeadDialog -- returned ' + event);
+        // Return value from dialog is true if I want to create a temporary branch.
+        if (event == true){
+
+            try{
+                let folder = state.repos[ state.repoNumber].localFolder;
+                const branchName = 'temp-branch';
+                
+                // Move 'detached HEAD' into (and create) temporary branch
+                let commands = [ 'checkout', '-b', branchName, 'HEAD'];
+                await simpleGit( folder).raw(  commands, onCreateBranch);
+                function onCreateBranch(err, result ){console.log(result);};
+                
+                // Switch branch away from temporary branch
+                
+            }catch(err){        
+                console.log('Error creating local branches, in gitCreateBranch');
+                console.log(err);
+            }
+
+        }
+        
+        break;
+      }   
+      default: {
         // code block
+      }  
     }
 
     // ---------------
@@ -357,6 +409,14 @@ async function _callback( name, event){
             console.log('Error in unComittedFiles,  calling  _mainLoop()');
             console.log(err);
         }
+        
+        // If Detached Head
+        if (status_data.current == 'HEAD' ){
+            document.getElementById('detachedHeadDialog').show();
+            return;
+        }
+        
+        
      
         // Determine if no files to commit
         var uncommitedFiles = status_data.changedFiles;

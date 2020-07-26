@@ -223,6 +223,25 @@
         
         <div class="bottom-titlebar-divider"></div>
     </div>
+    
+    
+    
+    
+    <!-- Detached head dialog -->   
+  
+    <dialog id="detachedHeadDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+        <p>You have worked in a checked out old revision ("detached Head").  The work can be kept, if a temporary branch is created.  Create temporary branch? </p>  
+        <button id="yes" 
+            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog',true);">
+            Yes
+        </button>   
+        <button id="no"
+            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog',false);">
+            No
+        </button>  
+    </dialog>  
+
+
   
 </body>
 
