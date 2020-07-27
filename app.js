@@ -345,6 +345,52 @@ async function _callback( name, event){
         dropFile( event); 
         break;
       }
+      case 'initializeRepoOK' : {
+          
+        setStatusBar( 'Initializing git');
+        
+        // Read cached folder (cached in dropFile, when asking if initializing git )
+        folder = localState.droppedRepoFolder;
+        localState.droppedRepoFolder='';  // Clear
+        
+        await simpleGit(folder).init( onInit );
+        function onInit(err, initResult) { }
+        
+        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+        
+        await waitTime( 1000);
+        
+        //await gitAddCommitAndPush( 'First commit');
+
+        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+        
+        // Initial commit
+        setStatusBar( 'Initial commit');
+        let outputData;
+        await simpleGit( folder )
+            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
+            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+            
+        function onCommit(err, result) {console.log(result); outputData = result };
+        
+        await waitTime( 1000);
+        console.log(outputData);
+        
+        
+        // add repo to program
+        try {
+            await addExistingRepo( folder); 
+        }catch(error){
+            console.log(error);
+        }
+
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+          
+        break;  
+      }
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
         
@@ -415,21 +461,6 @@ async function _callback( name, event){
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-     
-    // Utility
-    function findObjectIndex( myArray, objectField, stringToFind ){
-        
-        var foundIndex; //last found index
-        // Loop for the array elements 
-        for (let i in myArray) { 
-    
-            if (stringToFind === myArray[i][objectField]){
-                foundIndex = i;
-            }
-        } 
-        
-        return foundIndex;
-    }
 
     // title-bar
     function repoClicked(){
@@ -879,10 +910,7 @@ async function _callback( name, event){
             console.log( 'Folder = ' + folder );
         } 
     
-        
-        // Find top folder in initialized local repo
-        var topFolder;
-        
+        // Dialog if repo does not exist
         try{
             var isRepo;
             await simpleGit(folder).checkIsRepo(onCheckIsRepo);
@@ -893,89 +921,20 @@ async function _callback( name, event){
             // If not a repo
             if (!isRepo){
                 // Ask permisson to init repo
-                var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
-                var string = 'This folder is not a repository.'+ os.EOL;
-                string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
-                string += 'The name of the repository will be "' + nameOfFolder + '" ';
-                
-                // Create repo
-                if ( confirmationDialog(string) ) {
-                    
-                    setStatusBar( 'Initializing git');
-                    
-                    await simpleGit(folder).init( onInit );
-                    function onInit(err, initResult) { }
-                    
-                    await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-                    function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-                    
-                    await waitTime( 1000);
-                    
-                    //await gitAddCommitAndPush( 'First commit');
-        
-                    topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-                    
-                    // Initial commit
-                    setStatusBar( 'Initial commit');
-                    let outputData;
-                    await simpleGit( folder )
-                        .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-                        //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
-                        
-                    function onCommit(err, result) {console.log(result); outputData = result };
-                    
-                    await waitTime( 1000);
-                    console.log(outputData);
-                    
-                }else{
-                    // bail out if rejected permission
-                    return 
-                }
+                localState.droppedRepoFolder = folder;
+                document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                return
+            } else {
+                await addExistingRepo( folder); 
             }
-            
-            // Find top folder of Repo
-            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
-    
         }catch(error){
             console.log(error);
         }
-        
-        // Add folder last in  state array
-        var index = state.repos.length;
-        state.repos[index] = {}; 
-        state.repos[index].localFolder = topFolder;
-        
-        // Clean duplicates from state based on name "localFolder"
-        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
-        try{
-            // Set index to match the folder you added
-            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
-        }catch(err){
-            index = state.repos.length; // Highest should be last added
-        }
-        
-        // Set to current
-        state.repoNumber = index;
-        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
-    
-        // Set global
-        state.repos[state.repoNumber].localFolder = topFolder;
-        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
-        
+
         // Update immediately
         await _setMode('UNKNOWN');
         await _update();
-        
-        //
-        // Local function definitions
-        //
 
-    
-    
-    
     };
 
     // status-bar
@@ -1534,7 +1493,7 @@ async function gitIsInstalled(){
     }
 
     // Alert dialog if not installed
-    if ( isInstalled){
+    if ( !isInstalled){
         document.getElementById('gitNotInstalledAlert').showModal();
         return
     }
@@ -1574,6 +1533,7 @@ async function gitStatus(){
         
         // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
         status_data = [];
+        status_data.conflicted = [];
         status_data.modified = []; // zero length
         status_data.not_added = [];
         status_data.created = [];
@@ -1960,6 +1920,58 @@ function cleanDuplicates( myArray, objectField ){
 
     return newArray;
 }
+function findObjectIndex( myArray, objectField, stringToFind ){
+    
+    var foundIndex; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        if (stringToFind === myArray[i][objectField]){
+            foundIndex = i;
+        }
+    } 
+    
+    return foundIndex;
+}
+async function addExistingRepo( folder) {
+        // Get top folder
+        var topFolder;
+        try{
+
+            // Find top folder of Repo
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+    
+        }catch(error){
+            console.log(error);
+        }
+
+
+        
+        // Add folder last in  state array
+        var index = state.repos.length;
+        state.repos[index] = {}; 
+        state.repos[index].localFolder = topFolder;
+        
+        // Clean duplicates from state based on name "localFolder"
+        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        try{
+            // Set index to match the folder you added
+            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+        }catch(err){
+            index = state.repos.length; // Highest should be last added
+        }
+        
+        // Set to current
+        state.repoNumber = index;
+        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
+    
+        // Set global
+        state.repos[state.repoNumber].localFolder = topFolder;
+        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+}    
 
 // Title bar
 function setTitleBar( id, text){

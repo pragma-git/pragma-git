@@ -265,7 +265,24 @@
     </dialog>  
 
 
+    <!-- Dropped file is not a repo -->   
   
+    <dialog id="doYouWantToInitializeRepoDialog" style="background-color:yellow;border:1px dotted black;">  
+        <b>WARNING -- the dropped folder is not a repository.</b><br>
+            Do you want to initialize this folder as a git repository ? <br>
+            <br>
+        
+        <button id="initializeRepoDialogOK" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK');">
+            Initialize
+        </button>   
+        <button id="initializeRepoDialogCancel" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+            Cancel
+        </button>     
+
+    </dialog>  
+
 </body>
 
     
