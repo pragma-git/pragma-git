@@ -1850,20 +1850,6 @@ async function gitMerge( currentBranchName, selectedBranchName){
 function getMode(){
     return localState.mode;
 }
-function confirmationDialog(text) {    
-    console.log('confirmationDialog called');
-    
-    //var dialog_win = gui.Window.open('confirmationDialog.html#/new_page', {
-        //position: 'center',
-        //width: 300,
-        //height: 100,
-        //focus: true
-    //});
-
-    console.log('Opened Confirmation Dialog');
-    
-    return confirm(text);
-}
 function waitTime( delay) {
 // Delay in milliseconds
    console.log("starting delay ")
