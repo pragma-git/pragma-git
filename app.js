@@ -486,7 +486,7 @@ async function _callback( name, event){
                     console.log('Continue to change branch');
                 }else{
                     console.log('Commits on detached HEAD.  Show dialog');
-                    document.getElementById('detachedHeadDialog').show(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
+                    document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
                     return
                 }
    
@@ -1534,13 +1534,9 @@ async function gitIsInstalled(){
     }
 
     // Alert dialog if not installed
-    if ( !isInstalled){
-        var string = 'Cannot find "git" !'+ os.EOL;
-        string += ' ' + os.EOL;
-        string += 'Please make sure "git" is installed. ' + os.EOL;
-        string += 'See manual for help (question mark icon in top-left corner of the main window) ' ;
-        
-        alert(string);
+    if ( isInstalled){
+        document.getElementById('gitNotInstalledAlert').showModal();
+        return
     }
     
     state.git = isInstalled;

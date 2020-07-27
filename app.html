@@ -223,10 +223,24 @@
         
         <div class="bottom-titlebar-divider"></div>
     </div>
-    
-    
-    
-    
+
+
+    <!-- Git not installed alert -->   
+  
+    <dialog id="gitNotInstalledAlert" style="background-color:#C00;border:1px dotted black;">  
+        <b>ERROR -- Cannot find "git" !</b><br>
+            Please make sure "git" is installed. <br>
+            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
+            <br>
+        
+        <button 
+            onclick="document.getElementById('gitNotInstalledAlert').close();">
+            OK
+        </button>   
+    </dialog>      
+
+
+
     <!-- Detached head dialog -->   
   
     <dialog id="detachedHeadDialog" style="background-color:#C00;border:1px dotted black;">  
