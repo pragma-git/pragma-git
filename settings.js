@@ -28,29 +28,27 @@ async function _callback( name, event){
     
     let id = event.id;
     let value, table, data2, branchList;
-    //var localFolder = "";
+    var localFolder = "";
     let textareaId, realId;
     let newUrl;
     
     console.log('_callback = ' + name);
-    switch(name) {
-        
-        
-        case 'checkboxChanged':
+    switch(name) {  
+        case 'checkboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
             value = event.checked;
             state[id] = value;
             break;
-    
-        case 'folderSelectButton' :
+        }
+        case 'folderSelectButton' : {
             //This calls the hidden folder dialog input-element in settings.html
             document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
             document.getElementById("cloneFolderInputButton").click();
             
-            break;       
-            
-        case 'folderSelectButtonPressed' :
+            break;   
+        }    
+        case 'folderSelectButtonPressed' : {
             //This should be called when hidden input-element is changed (see id="cloneFolderInputButton", in settings.html)
             console.log('Selected folder = ');
             console.log(event.value);
@@ -62,10 +60,8 @@ async function _callback( name, event){
             document.getElementById(state.repos.length).value = localFolder;
         
             break;
-    
-
-            
-        case 'cloneButtonPressed' :
+        }   
+        case 'cloneButtonPressed' : {
             console.log('cloneButtonPressed');
             
             // I know that the last row has index same as length of number of repos
@@ -80,9 +76,8 @@ async function _callback( name, event){
             increaseDivSize('foldableDiv1');
         
             break;
-
-            
-        case 'repoRadiobuttonChanged':
+        }
+        case 'repoRadiobuttonChanged': {
             console.log('repoRadiobuttonChanged');
             console.log(event);
             value = event.checked;
@@ -110,9 +105,8 @@ async function _callback( name, event){
             state.repoNumber = Number(id);  // id can be a string
             
             break;
- 
-         
-        case 'newBranchNameKeyUp':
+        }        
+        case 'newBranchNameKeyUp': {
 
             let string = document.getElementById("branchNameTextarea").value;
             // Remove ^~?:*[\ 
@@ -125,10 +119,9 @@ async function _callback( name, event){
             
             
             document.getElementById("branchNameTextarea").value = string;
-            break;        
- 
-           
-        case 'addBranchButtonPressed':
+            break;   
+        }           
+        case 'addBranchButtonPressed': {
         
             console.log('addBranchButtonPressed');
             console.log(event);
@@ -156,10 +149,73 @@ async function _callback( name, event){
             increaseDivSize('foldableDiv1');
             
             break;
-    
- 
-    
-        case 'setButtonClicked':
+        }
+        case 'deleteBranchClicked' : {
+            let branchName = event;
+            localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
+            console.log('deleteBranchClicked -- branch = ' + branchName);
+            
+            try{
+                await simpleGit( localFolder ).branch( ['-d', branchName], onDeleteBranch);
+                function onDeleteBranch(err, result ){
+                    console.log(result);
+                    console.log(err);     
+                }
+            }catch(err){ 
+                displayMessage('resultBranch', 'Failed deleting branch', err);  
+                increaseDivSize('foldableDiv1');     
+                console.log('Error deleting local branch');
+                console.log(err);
+                
+                // Most likely, this is because the branch was not fully merged. 
+                if ( err.message.includes('is not fully merged') ) {
+                    document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
+                }
+                return
+            }
+            
+            // No errors -- Update branches table 
+            table = document.getElementById("branchesTableBody");
+            branchList = await gitBranchList( state.repos[ state.repoNumber].localFolder );
+            
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            generateBranchTable( document, table, branchList); // generate the new branch table 
+            increaseDivSize('foldableDiv1');
+            
+
+
+            break;
+        }
+        case 'forceDeleteBranchClicked' : {
+            let branchName = event;
+            localFolder = document.getElementById('currentRepo').innerHTML;  // This is what the user sees, so lets use that
+            console.log('forceDeleteBranchClicked -- branch = ' + branchName);
+            
+            try{
+                await simpleGit(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
+                function onDeleteBranch(err, result ){
+                    console.log(result);
+                    console.log(err);
+                }
+            }catch(err){ 
+                displayMessage('resultBranch', 'Failed deleting branch', err);  
+                increaseDivSize('foldableDiv1');     
+                console.log('Error deleting local branch');
+                console.log(err);
+                return
+            }
+            
+            // No errors -- Update branches table            
+            table = document.getElementById("branchesTableBody");
+            branchList = await gitBranchList( localFolder );
+            
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            generateBranchTable( document, table, branchList); // generate the new branch table 
+            increaseDivSize('foldableDiv1');
+            
+            break;
+        }
+        case 'setButtonClicked': {
             // For :
             // - Set button
             // - Test button used in cloning
@@ -224,8 +280,7 @@ async function _callback( name, event){
             // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
             
             break;
-
-
+        }
     } // End switch
     
     //
@@ -366,7 +421,11 @@ async function gitCreateBranch( folder, branchName){
     try{
         const commands = [ 'branch', branchName];
         await simpleGit( folder).raw(  commands, onCreateBranch);
-        function onCreateBranch(err, result ){console.log(result);};
+        function onCreateBranch(err, result ){
+            console.log(result);
+            console.log(err);
+            displayMessage('resultRepo', 'Failed creating branch', err);
+        };
     }catch(err){        
         displayMessage('resultBranch', 'Failed creating branch', err);
         console.log('Error creating local branches, in gitCreateBranch');
@@ -715,14 +774,14 @@ function generateBranchTable(document, table, branchlist) {
         button = document.createElement('button');
         button.setAttribute("id", index);
         button.innerHTML = 'Delete';
-        button.onclick = forgetButtonClicked;
+        button.setAttribute('onclick',
+            "selectedBranch = '"  + element + "';" + 
+            "document.getElementById('deleteBranchDialog').showModal();" );  // Opens dialog from html-page
         cell.appendChild(button);
         
-            // Hide button and callback
-        button.style.display = "none";  
-        button.onclick = forgetButtonClicked;  
-        
-    
+        // Hide button and callback
+        //button.style.display = "none";  
+
          // Into table cell :   Branch name text
         cell = row.insertCell();
         cell.setAttribute("class", 'branchName');
