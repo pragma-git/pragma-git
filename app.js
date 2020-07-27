@@ -39,24 +39,20 @@
  * 
  * Open questions
  * 
- * - Detached head
- *   TODO: handle if temp-branch exists
- *   handle if dialog answer is no (leave detached HEAD)
+ * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
  * 
- * 
- * 
- * - How to be helpful : handle change in checkout which is not HEAD (detached head)?  
- *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
- *   2) Dialog to ask if create new branch or move to top ?  
- *   3) Extra button - "To new branch", and open a dialog for new branch name
+ * - Settings, branches.  Add Delete branch button (with warning dialog)
  *  
- * -- Settings, branches.  Add Delete branch button (with warning dialog)
  * 
  * - Settings -- add test button for diff and merge tools
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
+ * - Single file history
  * 
+ * - Idea : Page with problem-solver
+ *   - git reflog
+ *   -
  * 
  * - add scribble area (note) for each branch and repo
  * 
@@ -419,7 +415,21 @@ async function _callback( name, event){
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-
+     
+    // Utility
+    function findObjectIndex( myArray, objectField, stringToFind ){
+        
+        var foundIndex; //last found index
+        // Loop for the array elements 
+        for (let i in myArray) { 
+    
+            if (stringToFind === myArray[i][objectField]){
+                foundIndex = i;
+            }
+        } 
+        
+        return foundIndex;
+    }
 
     // title-bar
     function repoClicked(){
@@ -447,10 +457,44 @@ async function _callback( name, event){
             console.log(err);
         }
         
-        // If Detached Head
-        if (detectDetachedBranch && status_data.current == 'HEAD' ){
-            document.getElementById('detachedHeadDialog').show(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
-            return;
+        //
+        // If Detached Head (dialog if needed, then bail out)
+        //
+        if (detectDetachedBranch && status_data.current == 'HEAD' ){ 
+            
+            // Is detached Head (lets see if any new commits)
+            try{              
+                let branchSummary;
+                await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
+                function onLog(err, result){console.log(result);console.log(err);branchSummary=result;}  // result.current is the detachment point.  result.detached = true if detached
+                
+                //branchSummary :
+                //all: (5) ["7741225", "master", "second", "temp-branch-1", "third"]
+                //current: "7741225"
+                //branches:
+                //7741225: {current: true, name: "7741225", commit: "7741225", label: "F"}                            <--- currentBranchObject below
+                //master: {current: false, name: "master", commit: "660d091", label: "Merge branch 'temp-branch-1'"}
+                //...
+
+                let currentBranchName = branchSummary.current;
+                
+                // Test if commit-hash is the same as branch-name (meaning no commits have been done after detaching HEAD)
+                let currentBranchObject = branchSummary.branches[currentBranchName];
+                if ( currentBranchObject.name == currentBranchObject.commit){
+                    // No commited change in detached head -- don't throw dialog
+                    console.log('No commits in checked-out detached HEAD : ' + currentBranchObject.name);
+                    console.log('Continue to change branch');
+                }else{
+                    console.log('Commits on detached HEAD.  Show dialog');
+                    document.getElementById('detachedHeadDialog').show(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
+                    return
+                }
+   
+            }catch(err){        
+                console.log(err);
+                return
+            }
+
         }
         
         
@@ -928,20 +972,7 @@ async function _callback( name, event){
         //
         // Local function definitions
         //
-        
-        function findObjectIndex( myArray, objectField, stringToFind ){
-            
-            var foundIndex; //last found index
-            // Loop for the array elements 
-            for (let i in myArray) { 
-        
-                if (stringToFind === myArray[i][objectField]){
-                    foundIndex = i;
-                }
-            } 
-            
-            return foundIndex;
-        }
+
     
     
     
