@@ -13,7 +13,7 @@
  * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
  */
 
-/* ISSUES
+/* NAMING
  * ------
  * 
  * /* Namnförslag
@@ -40,8 +40,6 @@
  * Open questions
  * 
  * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
- * 
- * - Settings, branches.  Add Delete branch button (with warning dialog)
  *  
  * 
  * - Settings -- add test button for diff and merge tools

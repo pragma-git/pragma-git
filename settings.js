@@ -483,6 +483,22 @@ async function injectIntoSettingsJs(document) {
         }
     }
 
+    //
+    // Internal function
+    //
+    async function quickUnfold(foldableButton){
+        let content = foldableButton.nextElementSibling;
+        console.log(content);
+        
+        // Quick unfold
+        content.classList.add('quickUnfold'); 
+        foldableButton.click();
+    
+        // Set transition time back after giving time  for redraw
+        setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
+    
+    };
+
 
 };
 
@@ -863,23 +879,6 @@ function hideMesssage(divId){
     document.getElementById(divId).style.display = 'none';
     
 }
-async function quickUnfold(foldableButton){
-    let content = foldableButton.nextElementSibling;
-    console.log(content);
-    
-    // Remove transition time
-    content.classList.add('quickUnfold');
-    
-    // Mimic click (did not work to call click-function)
-    foldableButton.classList.toggle("active");
-    content.style.maxHeight = content.scrollHeight + "px";
-    
-    console.log('quickUnfold -- unfolding : ' + foldableButton);
-    
-    // Set transition time back after giving time  for redraw
-    setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
-
-};
 
 // Utility (these are newer in settings.js)
 function cleanDuplicates( myArray, objectField ){
