@@ -334,6 +334,14 @@ function closeWindow(){
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
     
+    // Read collapsible into state
+    state.settingsWindow = {}; 
+    state.settingsWindow.unfolded = {};
+    for (i = 0; i < coll.length; i++) {
+        state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
+
+    }
+     
     // Return
     localState.mode = 'UNKNOWN';
     
@@ -435,10 +443,9 @@ async function gitCreateBranch( folder, branchName){
 }
 
 // Start initiated from settings.html
-function injectIntoSettingsJs(document) {
+async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
-    
-  
+ 
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
@@ -457,12 +464,25 @@ function injectIntoSettingsJs(document) {
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
-        if ( ! win.canSetVisibleOnAllWorkspaces() ){
-            document.getElementById('onAllWorkspaces').disabled = true;
-        }
-    
+    if ( ! win.canSetVisibleOnAllWorkspaces() ){
+        document.getElementById('onAllWorkspaces').disabled = true;
+    }
+
+
     // Build repo table
-    createHtmlTable(document);
+    await createHtmlTable(document);  
+
+    // Fold / unfold as last time
+    for (entry of Object.entries( state.settingsWindow.unfolded) ) {
+        console.log( entry);
+        let id = entry[0];
+        let unfolded = entry[1];
+        if (unfolded == true){
+            console.log('injectIntoSettingsJs -- unfolding :' + id);
+            quickUnfold( document.getElementById(id)); 
+        }
+    }
+
 
 };
 
@@ -502,7 +522,7 @@ async function createHtmlTable(document){
                 }
             }   
             
-            generateRepoTable( document, table, state.repos); // generate the table first
+            await generateRepoTable( document, table, state.repos); // generate the table first
  
             
         // Current branch table 
@@ -747,12 +767,12 @@ async function generateRepoTable(document, table, data) {
     // Draw branch by simulating click
     let event =[];
     event.id = foundIndex; // Simulate first clicked
-    _callback( "repoRadiobuttonChanged", event);
+    await _callback( "repoRadiobuttonChanged", event);
 
     
     console.log(table);
 }
-function generateBranchTable(document, table, branchlist) {
+async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
     let cell, text, button;
  
@@ -843,6 +863,23 @@ function hideMesssage(divId){
     document.getElementById(divId).style.display = 'none';
     
 }
+async function quickUnfold(foldableButton){
+    let content = foldableButton.nextElementSibling;
+    console.log(content);
+    
+    // Remove transition time
+    content.classList.add('quickUnfold');
+    
+    // Mimic click (did not work to call click-function)
+    foldableButton.classList.toggle("active");
+    content.style.maxHeight = content.scrollHeight + "px";
+    
+    console.log('quickUnfold -- unfolding : ' + foldableButton);
+    
+    // Set transition time back after giving time  for redraw
+    setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
+
+};
 
 // Utility (these are newer in settings.js)
 function cleanDuplicates( myArray, objectField ){

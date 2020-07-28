@@ -121,8 +121,13 @@
           padding: 0 18px;
           max-height: 0;
           overflow: hidden;
-          transition: max-height 0.2s ease-out;
+          transition: max-height 0.2s ease-out; 
         }
+        
+        .quickUnfold {
+          transition: max-height 0.0s ease-out; 
+        }
+
     </style>
     
     
@@ -147,7 +152,7 @@
        
             
     <!--  REPO SETTINGS -- foldable header--> 
-    <button class="collapsible" id="listRepos">Repository settings :</button> 
+    <button class="collapsible" id="repoSettings">Repository settings :</button> 
                 
         <div class="content" id="foldableDiv1" > 
         <h3>Repository table </h3>  
@@ -221,7 +226,7 @@
 
        
     <!--  SOFTWARE SETTINGS -- foldable header--> 
-    <button class="collapsible" id="listFiles">Software settings :</button> 
+    <button class="collapsible" id="softwareSettings">Software settings :</button> 
                 
         <div class="content">              
                 
@@ -264,7 +269,7 @@
         <br>  
         
     <!--  INSTRUCTIONS  -->     
-    <button class="collapsible" id="collapsibleConflict">Instructions</button>
+    <button class="collapsible" id="instructions">Instructions</button>
         <div class="content"> 
             
              <!-------------------------------------------------------------------------------------------->  
@@ -466,6 +471,7 @@
             } else {
                 content.style.maxHeight = content.scrollHeight + "px";
             } 
+            
         });
     }
 </script>
@@ -485,7 +491,7 @@
         }
     );
 </script>
-    
+
   
 
 </body>
