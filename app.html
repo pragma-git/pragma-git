@@ -268,11 +268,11 @@
             <br>
         
         <button  id="newBranchNameEntered"
-            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);">
+            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
             OK
         </button>           
         <button id="cancelBranchNameInputDialog"
-            onclick="document.getElementById('branchNameInputDialog').close();">
+            onclick="document.getElementById('branchNameInputDialog').close();document.getElementById('branchNameTextarea').value='';">
             Cancel
         </button>  
     </dialog>      

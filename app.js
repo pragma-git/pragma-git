@@ -39,11 +39,6 @@
  * 
  * Open questions
  * 
- * - branch button
- *   now from HEAD.  Lets allow branching from history
- * 
- * - hide branch button when they can't be used
- * 
  * - Crowded title-bar : should stash buttons be on bottom bar (and visible only if modified for stash, and only if anything stashed for stash-pop) ?
  * 
  * 
