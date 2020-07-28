@@ -121,6 +121,31 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
+
+
+.bottom-titlebar-stash_pop-icon
+ {
+  position: absolute;
+  right: 80;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+.bottom-titlebar-stash-icon
+ {
+  FONT-WEIGHT: 200;
+  position: absolute;
+  right: 115;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+
 .top-titlebar-text{
   position: absolute;
   left: 32px;
@@ -187,27 +212,6 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
-
-.top-titlebar-stash_pop-icon
- {
-  position: absolute;
-  right: 210px;
-  width: auto;
-  height: 17px;
-  margin-top: 6px;
-  margin-bottom: 6px;
-  -webkit-app-region: no-drag;
-}
-.top-titlebar-stash-icon
- {
-  position: absolute;
-  right: 245px;
-  width: auto;
-  height: 17px;
-  margin-top: 6px;
-  margin-bottom: 6px;
-  -webkit-app-region: no-drag;
-}
 
 #top-titlebar-minimize-icon{
   position: absolute;

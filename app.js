@@ -2304,6 +2304,19 @@ function loadSettings(settingsFile){
     return state;
 }
 
+// Dev test
+function dev_show_all_icons(){
+    isPaused = true;
+    document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+    
+ 
+}
+
 // -------------
 // WINDOW EVENTS
 // -------------
