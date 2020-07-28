@@ -308,16 +308,20 @@ async function _callback( name, event){
         console.log(event);
 
         let newBranchName = document.getElementById('branchNameTextarea').value;
-        
-        // Create branch
-        //await gitCreateBranch( state.repos[state.repoNumber].localFolder, branchName);
+
         
         // Create and checkout new branch
         try{
             let folder = state.repos[ state.repoNumber].localFolder;
+            let commit = 'HEAD';  // First guess
             
-            // Move 'detached HEAD' into (and create) temporary branch
-            let commands = [ 'checkout', '-b', newBranchName];
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+            
+            // Create new branch
+            let commands = [ 'checkout', '-b', newBranchName, commit];
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){console.log(result);};
 
