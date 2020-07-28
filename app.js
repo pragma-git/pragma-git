@@ -40,6 +40,9 @@
  * Open questions
  * 
  * - branch button
+ *   now from HEAD.  Lets allow branching from history
+ * 
+ * - hide branch button when they can't be used
  * 
  * - Crowded title-bar : should stash buttons be on bottom bar (and visible only if modified for stash, and only if anything stashed for stash-pop) ?
  * 
@@ -1158,6 +1161,17 @@ async function _update(){
             console.log(err);
         }
         
+    // Update Branch button (hide if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden'
+            }else{
+                document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+                
     //
     // WRITE TITLE-BAR, STATUS-BAR, MESSAGE (history only)
     //    
