@@ -170,15 +170,8 @@
                     <tbody id="settingsTableBody">
                     </tbody>
                 </table>
-            
-                <!--  REPOSITORY RESULT -->    
-                <div id="resultRepo" style="display:none"> 
-                    <img src="images/error_icon.png" style="float:left;padding: 6px;vertical-align:middle;" height="32" width="32">
-                    <h3 id="resultRepoTitle"></h3>
-                    <p id="resultRepoMessage"></p>
-                </div>
 
-                    
+                   
                 <!--  HIDDEN -->
                 
                 <input id = "cloneFolderInputButton" 
@@ -209,14 +202,7 @@
                     <tbody id="branchesTableBody">
                     </tbody>
                 </table>    
-                
-                <!--  BRANCH RESULT -->                    
-                <div id="resultBranch"  style="display:none"> 
-                    <img src="images/error_icon.png" style="float:left;padding: 6px;vertical-align:middle;" height="32" width="32">
-                    <h3 id="resultBranchTitle"> </h3>
-                    <p id="resultBranchMessage"></p>
-                </div>   
-                
+    
         </div>    
             
  </div>
@@ -412,7 +398,20 @@
     </div><!-- content --> 
 
 
-               
+
+<!--  General alert dialog  --> 
+
+<dialog id="alertDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p> 
+        <div id='alertTitle'></div><br>  
+        <div id='alertMessage'></div>  
+    </p>  
+    <button id="no"
+        onclick="document.getElementById('alertDialog').close();selectedBranch='';">
+        OK
+    </button>  
+</dialog>  
+                
                 
 
 <!--  Warning dialog for delete branch  --> 

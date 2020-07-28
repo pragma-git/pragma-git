@@ -21,10 +21,7 @@ var win
 
 // Callbacks 
 async function _callback( name, event){
-    
-    // Hide all messages
-    hideMesssage('resultRepo');
-    hideMesssage('resultBranch');
+
     
     let id = event.id;
     let value, table, data2, branchList;
@@ -162,7 +159,8 @@ async function _callback( name, event){
                     console.log(err);     
                 }
             }catch(err){ 
-                displayMessage('resultBranch', 'Failed deleting branch', err);  
+                
+                displayAlert('Failed deleting branch', err);  
                 increaseDivSize('foldableDiv1');     
                 console.log('Error deleting local branch');
                 console.log(err);
@@ -198,7 +196,8 @@ async function _callback( name, event){
                     console.log(err);
                 }
             }catch(err){ 
-                displayMessage('resultBranch', 'Failed deleting branch', err);  
+                
+                displayAlert('Failed deleting branch', err);  
                 increaseDivSize('foldableDiv1');     
                 console.log('Error deleting local branch');
                 console.log(err);
@@ -250,7 +249,8 @@ async function _callback( name, event){
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
                 }catch(err){
-                    displayMessage('resultRepo', 'Failed setting remote URL', err)
+                    
+                    displayAlert('Failed setting remote URL', err)
                     console.log('Repository set URL failed');
                     console.log(err);
                     document.getElementById(textareaId).style.color='orange';
@@ -270,7 +270,8 @@ async function _callback( name, event){
                 document.getElementById(textareaId).style.color='green';
     
             }catch(err){
-                displayMessage('resultRepo', 'Failed verifying remote URL', err)
+                
+                displayAlert('Failed verifying remote URL', err)
                 console.log('Repository test failed');
                 console.log(err);
                 document.getElementById(textareaId).style.color='red';
@@ -366,7 +367,8 @@ async function gitClone( folderName, repoURL){
         function onClone(error, result ){console.log(result);console.log(error) }; 
     }catch(err){ 
         console.log(err);
-        displayMessage('resultRepo', 'Failed cloning', err)
+        
+        displayAlert('Failed cloning', err)
         return
     }
         
@@ -434,7 +436,8 @@ async function gitCreateBranch( folder, branchName){
             console.log(err);
         };
     }catch(err){        
-        displayMessage('resultBranch', 'Failed creating branch', err);
+        
+        displayAlert('Failed creating branch', err);
         console.log('Error creating local branches, in gitCreateBranch');
         console.log(err);
     }
@@ -861,23 +864,21 @@ async function generateBranchTable(document, table, branchlist) {
    
 }
 
-function displayMessage(divId, title, message){
-    // Writes into div in settins.html
+function 
+displayAlert(title, message){
+    // Writes into alertDialog in settins.html
     // Example:
     //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
-    let titleId = divId + 'Title';
-    let messageId = divId + 'Message';
-    
-    document.getElementById(titleId).innerHTML = title;
-    document.getElementById(messageId).innerHTML = message;
+    //
+    // first argument is ignored
+
+    document.getElementById('alertTitle').innerHTML = title;
+    document.getElementById('alertMessage').innerHTML = message;
     
     // Show message
-    document.getElementById(divId).style.display = '';
+    document.getElementById('alertDialog').showModal();
 }
-function hideMesssage(divId){
-    document.getElementById(divId).style.display = 'none';
-    
-}
+
 
 // Utility (these are newer in settings.js)
 function cleanDuplicates( myArray, objectField ){
