@@ -432,7 +432,6 @@ async function gitCreateBranch( folder, branchName){
         function onCreateBranch(err, result ){
             console.log(result);
             console.log(err);
-            displayMessage('resultRepo', 'Failed creating branch', err);
         };
     }catch(err){        
         displayMessage('resultBranch', 'Failed creating branch', err);
