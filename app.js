@@ -39,10 +39,12 @@
  * 
  * Open questions
  * 
- * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
- *  
+ * - branch button
  * 
- * - Settings -- add test button for diff and merge tools
+ * - Crowded title-bar : should stash buttons be on bottom bar (and visible only if modified for stash, and only if anything stashed for stash-pop) ?
+ * 
+ * 
+ * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
  * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
@@ -277,6 +279,54 @@ async function _callback( name, event){
       }
       case 'clicked-branch': {
         branchClicked(true);
+        break;
+      }
+      case 'newBranchNameKeyUp': {
+          
+        // Copied from settings.js
+          
+        let string = document.getElementById("branchNameTextarea").value;
+        // Remove ^~?:*[\ 
+        string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
+        // Remove more
+        string = string.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
+        string = string.replace( ' ', ''); // Removing space
+        string = string.replace( '..', '.'); // Removing consecutive dots@{
+        string = string.replace( '@{', '@'); // Stop sequence @{
+        
+        
+        document.getElementById("branchNameTextarea").value = string;
+
+        break;
+      }
+      case 'addBranchButtonPressed': {
+
+        console.log('addBranchButtonPressed');
+        console.log(event);
+
+        let newBranchName = document.getElementById('branchNameTextarea').value;
+        
+        // Create branch
+        //await gitCreateBranch( state.repos[state.repoNumber].localFolder, branchName);
+        
+        // Create and checkout new branch
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;
+            
+            // Move 'detached HEAD' into (and create) temporary branch
+            let commands = [ 'checkout', '-b', newBranchName];
+            await simpleGit( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){console.log(result);};
+
+            
+        }catch(err){       
+            displayAlert('Failed creating branch', err); 
+            console.log('Failed creating branch ');
+            console.log(err);
+        } 
+
+        
+
         break;
       }
       case 'clicked-folder': {
@@ -2072,6 +2122,24 @@ async function  writeTimedMessage( message, placeholder, time){
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
+
+function displayAlert(title, message){
+    
+    // Copied from settings.js
+    
+    // Writes into alertDialog in settins.html
+    // Example:
+    //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
+    //
+    // first argument is ignored
+
+    document.getElementById('alertTitle').innerHTML = title;
+    document.getElementById('alertMessage').innerHTML = message;
+    
+    // Show message
+    document.getElementById('alertDialog').showModal();
+}
+
 
 // Output row (below message)
 function writeOutputRow( htmltext){

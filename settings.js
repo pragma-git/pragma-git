@@ -803,8 +803,13 @@ async function generateBranchTable(document, table, branchlist) {
     for (let element of branchlist) {
         console.log('Element = ' + element );
         let row = table.insertRow();
-        
-        
+
+         // Into table cell :   Branch name text
+        cell = row.insertCell();
+        cell.setAttribute("class", 'branchName');
+        text = document.createTextNode( element );
+        cell.appendChild(text);
+ 
         // Into table cell :  button
         cell = row.insertCell();
         cell.setAttribute("class", 'branchAction');
@@ -816,16 +821,6 @@ async function generateBranchTable(document, table, branchlist) {
             "selectedBranch = '"  + element + "';" + 
             "document.getElementById('deleteBranchDialog').showModal();" );  // Opens dialog from html-page
         cell.appendChild(button);
-        
-        // Hide button and callback
-        //button.style.display = "none";  
-
-         // Into table cell :   Branch name text
-        cell = row.insertCell();
-        cell.setAttribute("class", 'branchName');
-        text = document.createTextNode( element );
-        cell.appendChild(text);
-
 
 
         index ++;
@@ -837,18 +832,7 @@ async function generateBranchTable(document, table, branchlist) {
     //
     let row = table.insertRow();
     
-    // Into table cell :  button
-    cell = row.insertCell();
-    cell.setAttribute("class", 'action');
-    
-    button = document.createElement('button');
-    button.setAttribute("id", "addBranchButtonPressed");
-    button.innerHTML = 'Add branch';
-    button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
-    cell.appendChild(button);
-    
-      
-    
+     
     // Into table cell :   Branch name textarea
     cell = row.insertCell();
     cell.setAttribute("class", 'branchName');
@@ -860,12 +844,25 @@ async function generateBranchTable(document, table, branchlist) {
     //textarea.onclick = forgetButtonClicked;
     
     cell.appendChild(textarea);
+    
+       
+    // Into table cell :  button
+    cell = row.insertCell();
+    cell.setAttribute("class", 'branchAction');
+    
+    button = document.createElement('button');
+    button.setAttribute("id", "addBranchButtonPressed");
+    button.innerHTML = 'Add branch';
+    button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
+    cell.appendChild(button);
+    
+      
+
 
    
 }
 
-function 
-displayAlert(title, message){
+function displayAlert(title, message){
     // Writes into alertDialog in settins.html
     // Example:
     //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
