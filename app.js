@@ -1117,23 +1117,24 @@ async function _update(){
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
     }   
-    
-    //
-    // SET ICON VISIBILITY
-    //   
-    
+
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
             localState.settings = false;
             updateWithNewSettings();
         }
+     
+    //
+    // SET ICON VISIBILITY
+    //   
     
+       
     // If left conflicts window
         if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
             localState.conflictsWindow = false;
         }
             
-    // Update Push button (show if ahead of remote)
+    // Push button (show if ahead of remote)
         try{
             if (status_data.ahead > 0){
                 document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
@@ -1144,7 +1145,7 @@ async function _update(){
             console.log(err);
         }
     
-    // Update Pull button (show if behind remote)
+    // Pull button (show if behind remote)
         try{
             if (status_data.behind > 0){
                 document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
@@ -1155,7 +1156,7 @@ async function _update(){
             console.log(err);
         }
         
-    // Update Merge button (hide if uncomitted files)
+    // Merge button (hide if uncomitted files)
         try{
             if (status_data.changedFiles){
                 document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden'
@@ -1166,7 +1167,7 @@ async function _update(){
             console.log(err);
         }
         
-    // Update Branch button (hide if uncomitted files)
+    // Branch button (hide if uncomitted files)
         try{
             if (status_data.changedFiles){
                 document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden'
@@ -1176,7 +1177,36 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
-                
+        
+    // Stash button (show if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+         
+    // Stash-pop button (show if no changed files)
+        try{
+            let stash_status;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .stash(['list'], onStash);
+            function onStash(err, result ){  stash_status = result }
+            
+            
+            if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+                document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+               
+                        
     //
     // WRITE TITLE-BAR, STATUS-BAR, MESSAGE (history only)
     //    
