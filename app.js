@@ -39,7 +39,7 @@
  * 
  * Open questions
  * 
- * - Crowded title-bar : should stash buttons be on bottom bar (and visible only if modified for stash, and only if anything stashed for stash-pop) ?
+ * - Branching -- add some status-bar messages showing action.
  * 
  * 
  * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
@@ -319,6 +319,12 @@ async function _callback( name, event){
             let commands = [ 'checkout', '-b', newBranchName, commit];
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){console.log(result);};
+            
+            setStatusBar( 'Creating branch "' + newBranchName);
+            await waitTime( 1000);  
+                      
+            setStatusBar( 'Moved into "' + newBranchName);
+            await waitTime( WAIT_TIME);  
 
             
         }catch(err){       
