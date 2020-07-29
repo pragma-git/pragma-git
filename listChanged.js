@@ -544,7 +544,7 @@ function createFileTable(status_data) {
                     discardLink.setAttribute('style', "color: blue; cursor: pointer");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
-                        "document.getElementById('restoreDialog').show();" );  // Opens dialog from html-page
+                        "document.getElementById('restoreDialog').showModal();" );  // Opens dialog from html-page
                     discardLink.textContent=" (restore)";
                     cell.appendChild(discardLink);         
                 }   
@@ -555,7 +555,7 @@ function createFileTable(status_data) {
                     discardLink.setAttribute('style', "color: blue; cursor: pointer");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
-                        "document.getElementById('deleteDialog').show();" );  // Opens dialog from html-page
+                        "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
                     discardLink.textContent=" (delete)";
                     cell.appendChild(discardLink);         
                 }                     
