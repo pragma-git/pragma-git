@@ -6,6 +6,8 @@ var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
 const simpleGit = require('simple-git');  
+
+var util = require('./util_module.js'); // Pragma-git common functions
        
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -382,11 +384,11 @@ async function gitClone( folderName, repoURL){
         state.repos[index].localFolder = topFolder;
         
         // Clean duplicates from state based on name "localFolder"
-        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         
         try{
             // Set index to match the folder you added
-            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+            index = util.findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
         }catch(err){
             index = state.repos.length; // Highest should be last added
         }
@@ -876,88 +878,3 @@ function displayAlert(title, message){
     document.getElementById('alertDialog').showModal();
 }
 
-
-// Utility (these are newer in settings.js)
-function cleanDuplicates( myArray, objectField ){
-    // Removes all elements in "myArray"  where the field "objectField" are duplicates
-    //
-    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
-    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
-    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
-    
-    // Display the list of array objects 
-    console.log(myArray); 
-
-    // Declare a new array 
-    let newArray = []; 
-      
-    // Declare an empty object 
-    let uniqueObject = {}; 
-      
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        // Extract the title 
-        objTitle = myArray[i][objectField]; 
-
-        // Use the title as the index 
-        uniqueObject[objTitle] = myArray[i]; 
-    } 
-      
-    // Loop to push unique object into array 
-    for (i in uniqueObject) { 
-        newArray.push(uniqueObject[i]); 
-    } 
-      
-    // Display the unique objects 
-    console.log(newArray); 
-
-
-
-    return newArray;
-}
-function findObjectIndex( myArray, objectField, stringToFind ){
-    
-    var foundIndex; //last found index
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        if (stringToFind === myArray[i][objectField]){
-            foundIndex = i;
-        }
-    } 
-    
-    return Number(foundIndex);
-}
-
-
- // NOTES :
-    
-    // Find all open windows
-    //chrome.windows.getAll({populate: true}, function(wins){
-        //console.log("windows", wins)
-    //})
-    
-    ////var n = 1;
-    ////chrome.windows.getAll({populate: true}, getAllResponse)
-    ////function getAllResponse(wins) { console.log("windows", wins); getOneWindow(wins,n)}
-    ////function getOneWindow(wins,n) { 
-        
-        ////console.log("Tab 0 window" + n , wins[n].tabs[0] ); 
-        ////console.log("Tab 0 name,  window " + n , wins[n].tabs[0].title ); 
-        ////console.log("Tab 0 name,  window " + n , wins[n].window ); 
-        //////win = nw.Window.get().cWindow.tabs[0].title
-    ////}
-    
-        //console.log('settings dialog pressed');
-    
-    //// TODO : Here settings can be done.  For instance remote git linking
-    
-    //var output;
-    //try{
-        //await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); output = result;} );
-    //}catch(err){        
-        //console.log(err);
-    //}   
-    
-    //var history = output.ListLogSummary.all;

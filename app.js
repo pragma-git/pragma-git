@@ -39,7 +39,7 @@
  * 
  * Open questions
  * 
- * - Branching -- add some status-bar messages showing action.
+ * - Stash : setting to only have one stash on stack ?
  * 
  * 
  * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
@@ -198,6 +198,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var os = require('os');
         var fs = require('fs');
         const simpleGit = require('simple-git');  // npm install simple-git
+        
+        var util = require('./util_module.js'); // Pragma-git common functions
      
     
     // Constants 
@@ -280,20 +282,8 @@ async function _callback( name, event){
         break;
       }
       case 'newBranchNameKeyUp': {
-          
-        // Copied from settings.js
-          
-        let string = document.getElementById("branchNameTextarea").value;
-        // Remove ^~?:*[\ 
-        string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
-        // Remove more
-        string = string.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
-        string = string.replace( ' ', ''); // Removing space
-        string = string.replace( '..', '.'); // Removing consecutive dots@{
-        string = string.replace( '@{', '@'); // Stop sequence @{
-        
-        
-        document.getElementById("branchNameTextarea").value = string;
+        let string = document.getElementById("branchNameTextarea").value ;
+        document.getElementById("branchNameTextarea").value = util.branchCharFilter( string) ;
 
         break;
       }
@@ -1965,57 +1955,6 @@ function mkdir(dir){
         fs.mkdirSync(dir);
     }
 }
-function cleanDuplicates( myArray, objectField ){
-    // Removes all elements in "myArray"  where the field "objectField" are duplicates
-    //
-    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
-    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
-    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
-    
-    // Display the list of array objects 
-    console.log(myArray); 
-
-    // Declare a new array 
-    let newArray = []; 
-      
-    // Declare an empty object 
-    let uniqueObject = {}; 
-      
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        // Extract the title 
-        objTitle = myArray[i][objectField]; 
-
-        // Use the title as the index 
-        uniqueObject[objTitle] = myArray[i]; 
-    } 
-      
-    // Loop to push unique object into array 
-    for (i in uniqueObject) { 
-        newArray.push(uniqueObject[i]); 
-    } 
-      
-    // Display the unique objects 
-    console.log(newArray); 
-
-
-
-    return newArray;
-}
-function findObjectIndex( myArray, objectField, stringToFind ){
-    
-    var foundIndex; //last found index
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        if (stringToFind === myArray[i][objectField]){
-            foundIndex = i;
-        }
-    } 
-    
-    return foundIndex;
-}
 async function addExistingRepo( folder) {
         // Get top folder
         var topFolder;
@@ -2039,10 +1978,10 @@ async function addExistingRepo( folder) {
         state.repos[index].localFolder = topFolder;
         
         // Clean duplicates from state based on name "localFolder"
-        state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         try{
             // Set index to match the folder you added
-            index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+            index = util.findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
         }catch(err){
             index = state.repos.length; // Highest should be last added
         }
@@ -2298,7 +2237,7 @@ function loadSettings(settingsFile){
     
     
     // Clean duplicate in state.repos based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );
+    state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
     console.log('State after cleaning duplicates');
     console.log(state);
     
