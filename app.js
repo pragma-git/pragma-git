@@ -1803,6 +1803,12 @@ async function gitAddCommitAndPush( message){
 async function gitStash(){
     // Stash
     try{
+        // Drop old stashes
+        if (state.onlyOneStash){   
+            await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['clear'], onStashClear);
+            function onStashClear(err, result) {console.log(result);console.log(err) };
+        }
+        
         await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
         function onStash(err, result) {console.log(result);console.log(err) };
     
@@ -2227,6 +2233,7 @@ function loadSettings(settingsFile){
         state.alwaysOnTop = true;
         state.forceCommitBeforeBranchChange = true;
         state.autoPushToRemote = true;
+        state.onlyOneStash = true;
         
         state.tools.difftool = "";
         state.tools.mergetool = "";

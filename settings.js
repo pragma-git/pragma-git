@@ -464,6 +464,7 @@ async function injectIntoSettingsJs(document) {
     document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
+    document.getElementById('onlyOneStash').checked = state.onlyOneStash;
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
     

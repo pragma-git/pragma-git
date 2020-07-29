@@ -236,6 +236,10 @@
                  <!--  Auto-push to remote -->
                 <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
+                
+                <!--  One stash stored per repository -->
+                <input type="checkbox" id="onlyOneStash" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="onlyOneStash"> Store only latest stash (drop older stashes)</label><br>
              
              
               
@@ -386,9 +390,16 @@
                             <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
                             <br>
                         <dt><b>Git</b></dt>
-                            <dd><b>- Branch change not allowed, for changed files </b> : Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
-                            <dd><b>- Auto-push to remote when Store clicked </b> : The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
-                            <br>
+                            <dd><b>- Branch change not allowed, for changed files </b> : 
+                                Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
+                            
+                            <dd><b>- Auto-push to remote when Store clicked </b> : 
+                                The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
+                            
+                            <dd><b>- Store only latest stash (drop older stashes) </b> : 
+                                Stops stash list to grow.  Typical workflow is to stash (store temporarily), and after a little while use stash pop to put back the data.
+                                This settings reduce the risk that you pop more than one stash (and thereby gets an unintended result)</dd>
+                             <br>
                         <dt><b>External tools</b></dt>
                             <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                             <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
