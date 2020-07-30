@@ -22,6 +22,9 @@ The aim is to be the opposite to how many percieve ”git” ("impractical
 
  
 
+Screen shot
+-----------
+
 ![](images/Pragma-git-screen-shot.png)
 
  
