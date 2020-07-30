@@ -12,28 +12,6 @@
  *
  * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
  */
-
-/* NAMING
- * ------
- * 
- * /* Namnförslag
- * Pragma-git
- * 
- * Opposites to Pragmatic :
- * 
- * impractical
- * unrealistic  
- * idealistic
- * unreasonable
- * inefficient
- * irrational
- * visionary
- * sentimental
- * romantic
- * theoretical
- * excited
- * 
-*/
 /* TODO
  * ----
  * 
@@ -1737,9 +1715,6 @@ async function gitLocalFolder(){
     
 }
 async function gitAddCommitAndPush( message){
-    
-    // TODO : localState.staged should override auto-stage
-    
     
     var status_data;     
     
