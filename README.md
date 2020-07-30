@@ -16,25 +16,27 @@ The difference to other git clients are:
 
 -   uses external diff and merge tools — use your favourite
 
-The aim is to be :
+ 
 
--   ”pragmatic”, the antonym (opposite) to how many non-experts perceive ”git”
-    as "impractical, irrational, unreasonable, inefficient”
+Git is an impressive toolbox with over 100 commands, and that makes the
+threshold to get started overwhelming
+
+ 
+
+The aim with Pragma-git is to be
+
+-   ”pragmatic” — the antonym (opposite) to how many perceive ”git” as being
+    impractical, irrational, or unreasonable to work with.
 
  
 
 Screen shot
 -----------
 
-Example screen shot with the stash function enabled.
+Example screen shot with all the functions enabled (most of the time a number of
+these will be hidden)
 
-![](images/Pragma-git-screen-shot-small.png)
-
- 
-
- 
-
- 
+![](images/Pragma-git-screen-shot.png)
 
 Requirements
 ------------
