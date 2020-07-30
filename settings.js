@@ -273,7 +273,7 @@ async function _callback( name, event){
     
             }catch(err){
                 
-                displayAlert('Failed verifying remote URL', err)
+                //displayAlert('Failed verifying remote URL', err)
                 console.log('Repository test failed');
                 console.log(err);
                 document.getElementById(textareaId).style.color='red';
