@@ -112,7 +112,7 @@ div#message-wrapper{
 .bottom-titlebar-text {
   position: absolute;
   left: 32px;
-  width: 80%;
+  width: auto;
   margin-top: 6px;
   margin-bottom: 6px;
   font-family: Arial;
