@@ -3,8 +3,8 @@ Pragma-git
 
  
 
-"Pragma-git" is a friendly git control app with a small desktop window, fully
-compatible with other git client softwares.
+"Pragma-git" is the friendly pragmatic git control app, fully compatible with
+other git client softwares.
 
 The difference to other git clients are:
 
@@ -12,20 +12,27 @@ The difference to other git clients are:
 
 -   easy overview — you don’t need the branch diagrams in daily work
 
--   shows features when applicable —
+-   shows features when applicable — do not show a button when it cannot be used
 
--   uses external diff and merge tools — use your favourites
+-   uses external diff and merge tools — use your favourite
 
-The aim is to be the opposite to how many percieve ”git” ("impractical
-,irrational, unreasonable ,inefficient”)  — all opposites to the word
-”pragmatic”.
+The aim is to be :
+
+-   ”pragmatic”, the antonym (opposite) to how many non-experts perceive ”git”
+    as "impractical, irrational, unreasonable, inefficient”
 
  
 
 Screen shot
 -----------
 
-![](images/Pragma-git-screen-shot.png)
+Example screen shot with the stash function enabled.
+
+![](images/Pragma-git-screen-shot-small.png)
+
+ 
+
+ 
 
  
 
