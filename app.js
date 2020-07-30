@@ -778,6 +778,8 @@ async function _callback( name, event){
                     
             }catch(err){        
                 console.log(err);
+                
+                displayAlert('Failed Checkout', err); 
             }
             
         }else{
