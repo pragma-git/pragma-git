@@ -1874,7 +1874,7 @@ async function gitFetch(){
         console.log('Error in gitFetch()');
         console.log(err);
         error = err;
-        await writeTimedMessage( 'Failure fetching from remote ' + os.EOL + error, true, WAIT_TIME);
+        displayAlert('Failure fetching from remote', err); 
     }
   
 }
@@ -1898,16 +1898,18 @@ async function gitPull(){
             await simpleGit( state.repos[state.repoNumber].localFolder ).pull( onPull);
             function onPull(err, result) {console.log(result) };
             
-            await writeTimedMessage( 'Successfully pulled files from remote' + os.EOL + error, true, WAIT_TIME);
+            await writeTimedMessage( 'Pulled files from remote' + os.EOL + error, true, WAIT_TIME);
         }catch(err){
+            
+            displayAlert('Failed pulling remote file', err); 
             console.log('Error in gitPull()');
             console.log(err);
             error = err;
-            await writeTimedMessage( 'Failure pulling files from remote ' + os.EOL + error, true, WAIT_TIME);
+            
         }
         _setMode('UNKNOWN');
     }else {
-        writeTimedMessage( 'No files can be pulled from remote' + os.EOL + error, true, WAIT_TIME);
+        displayAlert('No files can be pulled from remote', err);
     }
 
 }
