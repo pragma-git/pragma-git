@@ -2202,46 +2202,101 @@ function saveSettings(){
     fs.writeFileSync(settingsFile, jsonString);
 }
 function loadSettings(settingsFile){
+    // 1) Try to read file into state_in
+    // 2) If fails, set state_in empty
+    // Use internal function "setting" to :
+    // 3) If some struct keys are missing in state_in, create them
+    // 4) Build a new state struct -- setting default value for each undefined parameter (otherwise, keep parameter value from state_in)
+    
 
-    
     try{
+        // 1) Read json
         jsonString = fs.readFileSync(settingsFile);
-        state = JSON.parse(jsonString);
+        state_in = JSON.parse(jsonString);
         
-        console.log('Input json file');
-        console.log(state);
-        
-        // Sanity check on repoNumber
-        if ( state.repoNumber >= state.repos.length ){
-            state.repoNumber = 0;
-        }        
-        // Sanity check on repoNumber
-        if ( state.repos.length == 0){
-            state.repoNumber = -1;
-        }
-    
+        console.log('state -- read from json file');
+        console.log(state_in);
+
+
     }catch(err){
         console.log('Error loading settings -- setting defaults');
-        // Defaults
-        state = {};
-        
-        state.repoNumber = -1; // Indicate that no repos exist yet
-        localState.branchNumber = 0;
-        
-        state.repos = [];
-        
-        state.alwaysOnTop = true;
-        state.forceCommitBeforeBranchChange = true;
-        state.autoPushToRemote = true;
-        state.onlyOneStash = true;
-        
-        state.tools.difftool = "";
-        state.tools.mergetool = "";
-        
-        console.log(err);
-
+        // 2) Defaults
+        state_in = {};            
     }
     
+    //
+    // Set from state_in, or default value if parameter missing
+    //
+    
+        // Internal function (returns defaultValue if input undefined)
+        function setting( input, defaultValue){
+            if (input == undefined){
+                console.log(defaultValue);
+                return defaultValue
+            }
+            console.log(input);
+            return input;
+        }
+        
+        // 3) Make sure multiple struct levels exist in state_in
+                            
+            state_in.tools = setting( state_in.tools, {} ); 
+            state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
+            state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
+    
+        // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
+            state = {};
+        
+        // Repos (default is empty)
+            console.log('- setting repos');
+            state.repoNumber = setting( state_in.repoNumber, -1);
+            state.repos = setting( state_in.repos, [] );
+        
+        // Visual
+            console.log('- setting visual settings');
+            state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
+            state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+        
+        // Git
+            console.log('- setting git settings');
+            state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
+            state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
+            state.onlyOneStash = setting( state_in.onlyOneStash, true);
+            
+        // External tools (three levels -- state.tools.difftool )
+            console.log('- setting external tools ');
+
+            state.tools = setting( state_in.tools, {} ); 
+            state.tools.difftool = setting( state_in.tools.difftool, "");
+            state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            
+            console.log('State after amending non-existing with defaults ');
+            console.log(state);
+        
+        // Position
+            state.position = setting( state_in.position, {} ); 
+        
+        // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
+            state.settingsWindow = setting( state_in.settingsWindow, {} );
+            state.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, [] );
+            state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
+            state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
+            state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+
+    //
+    // Post-process state
+    //
+
+    // Sanity check on repoNumber
+    if ( state.repoNumber >= state.repos.length ){
+        state.repoNumber = 0;
+    }        
+    
+    // Sanity check on repoNumber
+    if ( state.repos.length == 0){
+        state.repoNumber = -1;
+    }
+        
     
     // Clean duplicate in state.repos based on name "localFolder"
     state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
@@ -2251,9 +2306,8 @@ function loadSettings(settingsFile){
     if ( state.repoNumber > state.repos.length ){
         state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
     }
-    
-    
-    // Place window
+
+    // Position window
     try{
         // Validate position on screen
         if ( (state.position.x + state.position.width) > screen.width ) {
