@@ -875,7 +875,7 @@ async function _callback( name, event){
         // Get log
         var history;
         try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( onHistory);
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'], onHistory);
             function onHistory(err, result){console.log(result); history = result.all;} 
         }catch(err){        
             console.log(err);
