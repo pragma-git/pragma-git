@@ -1,15 +1,35 @@
-# Frameless window
+Pragma-git
+==========
 
-A sample application to showcase how you can use `"frame": false` windows to allow total customization of the window's real state. At beginning, the window is open with no titlebar. As long as you check one of the titlebars, it is added to the appropriate position. Notice that the added titlebars are the only parts of the window that allows dragging. This is achieved through a special CSS property applied to what is draggable or non-draggable (by default, the whole window is not draggable): `-webkit-app-region: drag|no-drag;`
+ 
 
-**This demo requires node-webkit >= v0.3.0** 
+"Pragma-git" is a friendly git control app with a small desktop window, fully
+compatible with other git client softwares.
 
-## Screen shot
+The difference to other git clients are:
 
-![screenshot](http://ww1.sinaimg.cn/large/6556d357tw1dxuhssppffj.jpg)
+-   small window — leaves more screen-space without hiding program
 
-## APIs
+-   easy overview — you don’t need the branch diagrams in daily work
 
-* [Window](https://github.com/nwjs/nw.js/wiki/Window)
-* [Frameless Window](https://github.com/nwjs/nw.js/wiki/Frameless-Window)
+-   shows features when applicable —
 
+-   uses external diff and merge tools — use your favourites
+
+The aim is to be the opposite to how many percieve ”git” ("impractical
+,irrational, unreasonable ,inefficient”)  — all opposites to the word
+”pragmatic”.
+
+ 
+
+![](images/Pragma-git-screen-shot.png)
+
+ 
+
+Requirements
+------------
+
+-   [Windows, Mac or Linux](https://github.com/nwjs/nw.js/wiki/Window)
+
+-   [​nw.js (binary download includes everything
+    needed)](https://github.com/nwjs/nw.js/wiki/Frameless-Window)
