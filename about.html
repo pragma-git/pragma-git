@@ -276,7 +276,9 @@
                     
                     <tr>
                         <td>Store</td>
-                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.</td>
+                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.
+                        "Stored", refers to commited in "git language".  "Non-stored", "non-commited" and similar phrasing means that there are changed files
+                        that should be stored (commited)</td>
                     </tr>
  
                      
@@ -284,6 +286,8 @@
                         <td>Branch</td>
                         <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
                         performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
+                        You can create a new branch from where you are, or from a historical snapshot (see section "Log, History", below). 
+                        You cannot create a new branch if you have changed files that are not stored.  
                         If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
                     </tr>  
                      

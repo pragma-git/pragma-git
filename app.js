@@ -295,7 +295,7 @@ async function _callback( name, event){
             await waitTime( 1000);  
                       
             setStatusBar( 'Moved into "' + newBranchName);
-            await waitTime( WAIT_TIME);  
+            waitTime( WAIT_TIME);  
 
             
         }catch(err){       
@@ -304,6 +304,7 @@ async function _callback( name, event){
             console.log(err);
         } 
 
+        _setMode('UNKNOWN');
         
 
         break;
