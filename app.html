@@ -399,7 +399,31 @@
             Cancel
         </button>     
 
-    </dialog>  
+    </dialog> 
+    
+    
+    
+    <!-- IN PROGRESS : Stash dialog -->   
+  
+    <dialog id="stashOverwriteDialog" style="background-color:#C00;border:1px dotted black;">  
+        <b>WARNING -- there is a "stash" that will be overwritten!</b><br>
+            1) Keep work : a temporary branch will be created<br>
+            2) Replace : the old stash will be replaced by this one<br>
+            <br>
+        
+        <button id="tempBranchDetachedDialog" value="Temp_Branch"
+            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog',this.value);">
+            1) Temp Branch
+        </button>   
+        <button id="deleteDetachedDialog" value="Replace"
+            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog', this.value);">
+            2) Replace
+        </button>     
+        <button id="cancelDetachedDialog" value="Cancel"
+            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog', this.value);">
+            Cancel
+        </button>  
+    </dialog>   
 
 </body>
 

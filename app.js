@@ -18,8 +18,12 @@
  * 
  * Open questions
  * 
- * - Should I give option to create temp branch when stash already exists ? Like in  Detached head dialog ?
- *   options Delete, Temporary branch, or Cancel.  Nice if I can name the temporary branch
+ *   
+ * 
+ * - Problem with stash and showing of stash-pop
+ *   Summary : I only allow one stash.  I only allow stash-pop if no files are changed.
+ *   1) Should I give option to create temp branch when stash already exists ? Like in  Detached head dialog ?
+ *   options Delete, Temporary branch, or Cancel.  Nice if I can name the temporary branch (both for detached head and for this)
  * 
  * 
  * - tag  pop-up menu with options :  new tag, find tag, remove tag, list tags
@@ -368,7 +372,8 @@ async function _callback( name, event){
             
             if (stash_status.length > 0) {
                 // Ask permission to overwrite stash
-                document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                document.getElementById('stashOverwriteDialog').showModal();
             }else{
                 // No stash exists, OK to stash
                 gitStash();
@@ -377,6 +382,74 @@ async function _callback( name, event){
             console.log(err);
         }
         break;
+      }     
+      case 'stashOverwriteDialog': {
+         {
+        console.log('stashOverwriteDialog -- returned ' + event);
+        
+        switch (event) {
+            case  'Temp_Branch' : {
+                // Create new branch and move into it
+                let counter = 0;
+                let failed = true; // First guess
+
+                const origBranchName = 'temp-branch-';  // Start string branchName with "temp-branch-"
+                
+                // Find highest-number on temp-branches (if more than one exists)
+                let branchList = await gitBranchList();
+                let highest = 0;  // Highest number here
+                
+                for (let branchName of branchList){
+                    console.log(branchName);
+                    if ( branchName.startsWith(origBranchName) ){
+                        let number = Number( branchName.split(origBranchName).pop() ); // Get number after "temp-branch-"
+                        if (number > highest){
+                            highest = number;
+                        }
+                    }
+                }
+                let next = highest + 1;
+                let newBranchName = origBranchName + next;
+                
+                
+                // Try creating branch until success
+                while (failed){
+                    
+                    try{
+                        let folder = state.repos[ state.repoNumber].localFolder;
+                        
+                        // Move 'stash' into (and create) temporary branch
+                        let commands = [ 'stash', 'branch', newBranchName];
+                        await simpleGit( folder).raw(  commands, onCreateBranch);
+                        function onCreateBranch(err, result ){console.log(result);};
+                        
+                        failed = false; // Break loop
+                        
+                    }catch(err){        
+                        console.log('Failed creating temporary branch "temp-branch" ');
+                        console.log(err);
+                    } 
+                    counter = counter + 1;
+                    newBranchName = 'temp-branch-' + counter;
+                }
+                break;
+            }
+            case  'Replace' : {
+                gitStash();
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
+            
+        }
+        break; 
+      } // end case 'stashOverwriteDialog' 
+          
+          
+          
+        gitStash();
+        break;   
       }     
       case 'allowed_stash-from-dialog': {
         gitStash();
@@ -1251,7 +1324,8 @@ async function _update(){
             
             
             //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
-            if ( (stash_status.length > 0) && FALSE_IN_HISTORY_MODE ){
+            if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
+            {
                 document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
             }else{
                 document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
@@ -1368,6 +1442,7 @@ async function _update(){
                 console.log('_update -- CONFLICT mode');
                 console.log(status);
 
+                break;
             }
             
             default: {
@@ -1889,7 +1964,7 @@ async function gitStashPop(){
         function onStashPop(err, result) {console.log(result);console.log(err) };
     
     }catch(err){
-        // TODO : Possibility for this error : error: could not restore untracked files from stash
+        // TODO : gitStashPop -- Possibility for this error : error: could not restore untracked files from stash
         // Solution https://gist.github.com/demagu/729c0a3605a4bd2e4c3d
         //
         console.log('Error in gitStashPop()');
