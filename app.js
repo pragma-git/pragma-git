@@ -18,9 +18,9 @@
  * 
  * Open questions
  * 
- * - stash and stash-pop should be hidden if history mode (fix in  _setMode)
+ * - Should I give option to create temp branch when stash already exists ? Like in  Detached head dialog ?
+ *   options Delete, Temporary branch, or Cancel.  Nice if I can name the temporary branch
  * 
- * - warn if creating stash, when already exists ("Do you want to overwrite last stash ?")
  * 
  * - tag  pop-up menu with options :  new tag, find tag, remove tag, list tags
  * 
@@ -1137,6 +1137,7 @@ async function _update(){
 
     }
     
+    
     // Validate repo and folder :
  
     // Check if localFolder exists 
@@ -1167,6 +1168,7 @@ async function _update(){
     // SET ICON VISIBILITY
     //   
     
+    let FALSE_IN_HISTORY_MODE  = !(modeName == 'HISTORY'); // Used in if statement to make it false when in history mode
        
     // If left conflicts window
         if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
@@ -1231,7 +1233,7 @@ async function _update(){
                
     // Stash button (show if uncomitted files)
         try{
-            if (status_data.changedFiles){
+            if (status_data.changedFiles && FALSE_IN_HISTORY_MODE ){
                 document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
             }else{
                 document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden'
@@ -1248,7 +1250,8 @@ async function _update(){
             function onStash(err, result ){  stash_status = result }
             
             
-            if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+            //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+            if ( (stash_status.length > 0) && FALSE_IN_HISTORY_MODE ){
                 document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
             }else{
                 document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
@@ -1337,6 +1340,7 @@ async function _update(){
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
+                
                 break;
             }
                 
