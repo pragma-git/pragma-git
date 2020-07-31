@@ -62,7 +62,7 @@ myModule.branchCharFilter = function ( string ){
     string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
     // Remove more
     string = string.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
-    string = string.replace( ' ', ''); // Removing space
+    string = string.replace( ' ', '_'); // Removing space
     string = string.replace( '..', '.'); // Removing consecutive dots@{
     string = string.replace( '@{', '@'); // Stop sequence @{
     
