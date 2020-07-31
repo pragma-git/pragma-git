@@ -395,53 +395,6 @@ async function _callback( name, event){
         console.log('stashOverwriteDialog -- returned ' + event);
         
         switch (event) {
-            case  'Temp_Branch' : {
-                // Create new branch and move into it
-                let counter = 0;
-                let failed = true; // First guess
-
-                const origBranchName = 'temp-branch-';  // Start string branchName with "temp-branch-"
-                
-                // Find highest-number on temp-branches (if more than one exists)
-                let branchList = await gitBranchList();
-                let highest = 0;  // Highest number here
-                
-                for (let branchName of branchList){
-                    console.log(branchName);
-                    if ( branchName.startsWith(origBranchName) ){
-                        let number = Number( branchName.split(origBranchName).pop() ); // Get number after "temp-branch-"
-                        if (number > highest){
-                            highest = number;
-                        }
-                    }
-                }
-                let next = highest + 1;
-                let newBranchName = origBranchName + next;
-                
-                
-                // Try creating branch until success
-                while (failed){
-                    
-                    try{
-                        let folder = state.repos[ state.repoNumber].localFolder;
-                        
-                        // // Move 'stash' into (and create) temporary branch
-                        // let commands = [ 'stash', 'branch', newBranchName];
-                        let commands = [ 'checkout', '-b', newBranchName];
-                        await simpleGit( folder).raw(  commands, onCreateBranch);
-                        function onCreateBranch(err, result ){console.log(result);};
-                        
-                        failed = false; // Break loop
-                        
-                    }catch(err){        
-                        console.log('Failed creating temporary branch "temp-branch" ');
-                        console.log(err);
-                    } 
-                    counter = counter + 1;
-                    newBranchName = 'temp-branch-' + counter;
-                }
-                break;
-            }
             case  'Replace' : {
                 gitStash();
                 break;
@@ -565,52 +518,6 @@ async function _callback( name, event){
         console.log('detachedHeadDialog -- returned ' + event);
         
         switch (event) {
-            case  'Temp_Branch' : {
-                // Create new branch and move into it
-                let counter = 0;
-                let failed = true; // First guess
-
-                const origBranchName = 'temp-branch-';  // Start string branchName with "temp-branch-"
-                
-                // Find highest-number on temp-branches (if more than one exists)
-                let branchList = await gitBranchList();
-                let highest = 0;  // Highest number here
-                
-                for (let branchName of branchList){
-                    console.log(branchName);
-                    if ( branchName.startsWith(origBranchName) ){
-                        let number = Number( branchName.split(origBranchName).pop() ); // Get number after "temp-branch-"
-                        if (number > highest){
-                            highest = number;
-                        }
-                    }
-                }
-                let next = highest + 1;
-                let newBranchName = origBranchName + next;
-                
-                
-                // Try creating branch until success
-                while (failed){
-                    
-                    try{
-                        let folder = state.repos[ state.repoNumber].localFolder;
-                        
-                        // Move 'detached HEAD' into (and create) temporary branch
-                        let commands = [ 'checkout', '-b', newBranchName, 'HEAD'];
-                        await simpleGit( folder).raw(  commands, onCreateBranch);
-                        function onCreateBranch(err, result ){console.log(result);};
-                        
-                        failed = false; // Break loop
-                        
-                    }catch(err){        
-                        console.log('Failed creating temporary branch "temp-branch" ');
-                        console.log(err);
-                    } 
-                    counter = counter + 1;
-                    branchName = 'temp-branch-' + counter;
-                }
-                break;
-            }
             case  'Delete' : {
                 // Move out of "detached Head" (losing track of it)
                 branchClicked(false);

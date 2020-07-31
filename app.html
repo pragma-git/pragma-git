@@ -349,7 +349,7 @@
             <br>
         
         <button id="tempBranchDetachedDialog" value="Temp_Branch"
-            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog',this.value);">
+            onclick="document.getElementById('detachedHeadDialog').close();document.getElementById('branchNameInputDialog').showModal();"> <!-- Call html-dialog for branch selection -->
             1) Temp Branch
         </button>   
         <button id="deleteDetachedDialog" value="Delete"
@@ -392,7 +392,7 @@
             <br>
         
         <button id="tempBranchDetachedDialog" value="Temp_Branch"
-            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog',this.value);">
+            onclick="document.getElementById('stashOverwriteDialog').close();document.getElementById('branchNameInputDialog').showModal();"> <!-- Call html-dialog for branch selection -->   
             1) Temp Branch
         </button>   
         <button id="deleteDetachedDialog" value="Replace"
