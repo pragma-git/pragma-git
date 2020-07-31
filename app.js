@@ -18,6 +18,7 @@
  * 
  * Open questions
  * 
+ * 
  * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
  *   and clone from local to that repo
  * 

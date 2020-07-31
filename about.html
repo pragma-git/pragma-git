@@ -20,10 +20,72 @@
             color: #006400; 
             font-size: 11pt;  
         }
+        
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
 
 
         
     </style>
+    
+        <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          //background-color: #777;
+          //color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          //background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          //color: white;
+          font-weight: bold;
+          float: left;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out; 
+        }
+        
+        .quickUnfold {
+          transition: max-height 0.0s ease-out; 
+        }
+
+    </style>
+    
 
 <body>   
     
@@ -45,7 +107,7 @@
         
         <h4>Intro</h4>
                                
-            <p>This app aims to be a user-friendly revision control client. 
+            <p>This app aims to be a user-friendly revision control software. 
                 It fits people working on their own projects, or that find git overwhelming. 
             </p>
                                
@@ -75,9 +137,31 @@
             <p>If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize the folder for git.
             </p>  
          
-        <hr>           
+        <hr>        
+        
+ <!-------------------------------------------------------------------------------------------->             
+         <h4>Beginner's workflow</h4>
+             <p>For git first-timers, the workflow would simply be: 
+             <ul>
+                <li>Work on your files</li>
+                <li>When finished with some task: write a description in the text area, and press the "Store" button to store a snapshot of your files</li>
+                <li>Work on your files</li>
+                <li>When finished with some task: write a description in the text area, and press the "Store" button</li>
+                <li>...</li>
+             </ul>  
+            </p>    
+             
+            <p>The beauty of the revision control is, that you may go back to any snapshot later
+            </p>          
+        <hr>          
+         
+            
  <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Clickable icons</h4>
+        <h3>Learn more</h3>   
+        <hr>  
+
+ <!-------------------------------------------------------------------------------------------->         
+          <h4>Clickable icons</h4>
             
              <dl>
               <dt>Most things can be clicked :</dt>
@@ -110,7 +194,165 @@
                 </dd>
               
 
-            </dl> 
+            </dl>           
+            
+        <hr>    
+                 
+ <!-------------------------------------------------------------------------------------------->                           
+         <h4>A little git dictionary</h4>
+         <button class="collapsible" id="repoSettings">&nbsp; (click to view) </button> 
+         <div  class="content">
+
+              <p>There are a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control</p>
+              
+              <table>
+                <tr> <th>Word</th> <th>Meaning</th></hr>
+                <tbody>
+                    <tr>
+                        <td>Git </td>
+                        <td>The <i>de facto </i> standard for software revision control </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Snapshot </td> 
+                        <td>A version of all your project files, freezed to exactly this state forever</td>
+                    </tr>
+                                               
+                     <tr>
+                        <td>Project folder </td> 
+                        <td>A location for storing the files. See "Repository" below</td>
+                    </tr>
+                                  
+                     <tr>
+                        <td>Project folder </td> 
+                        <td>A location for storing the files. See "Repository" below</td>
+                    </tr>
+                                                      
+                    <tr>
+                        <td>Repository </td> 
+                        <td>A location for storing the files. See "Project folder" above</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Local repository</td>
+                        <td>A folder on your computer which has been assigned for version control.  In Pragma-git, you drop the folder onto the main window.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Remote repository</td>
+                        <td>A location normally on another computer.  Git can send data to (push) and retrieve data from (pull) the remote repository</td>
+                    </tr>
+                                                                   
+                     <tr>
+                        <td>Initialize</td> 
+                        <td>A project folder has to be initialized to become a git repository. 
+                        This places a hidden folder ".git" in your project folder, which keeps track of all revisions.  Do not delete this folder!!</td>
+                    </tr>
+                            
+                                                                    
+                     <tr>
+                        <td>Clone</td> 
+                        <td>This means making a copy of a remote repository on your local computer.  You can then work with this, as your own. 
+                        One good use case, is if you work on more than one computer.  
+                        Then, you can clone from a remote repository to your second computer, to get a copy of your complete remote repository.  
+                        Cloning is only done once, after that you work with Commit, Push, Pull operations, or in Pragma-git, with the "Store"-button and Pull.
+                        </td>
+                    </tr>
+                                              
+                    <tr>
+                        <td>Commit</td>
+                        <td>The "git" word for storing a snaphshot of your work, with a descriptive name.</td>
+                    </tr>
+                                       
+                    <tr>
+                        <td>Add, Commit</td>
+                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Add, Commit, Push </td>
+                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. The "Store"-button in Pragma-git does this.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Store</td>
+                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.</td>
+                    </tr>
+ 
+                     
+                    <tr>
+                        <td>Branch</td>
+                        <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
+                        performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
+                        If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
+                    </tr>  
+                     
+                    <tr>
+                        <td>Merge</td>
+                        <td>Incorporating changes from one branch into another branch. Git does this very cleverly, so that changes that do not overlap will be combined from both branches.
+                        If you are unlucky, the same line of text has been changed differently in both branches.  Then, git needs your help to resolve which version you wish to keep
+                        -- called to resolve a merge conflict</td>
+                    </tr>   
+                    
+                    <tr>
+                        <td>Conflict</td>
+                        <td>See above. A conflict can occur when merging two snapshots from for instance two branches, but also between a remote and a local repository.
+                        There are two different types of conflicts: 1) a file was deleted in one of the two places, and 2) a file was changed in the same place on both places.
+                        For both this cases, git needs your help to decide on what you wish to do.  This process is called "resolving a conflict", and in Pragma-git there is a tool
+                        that aids you in doing this</td>
+                    </tr>           
+
+                    <tr>
+                        <td>Pull</td>
+                        <td>Retrieving the latest snapshot from the remote repository, and merging that with your local project folder.  
+                        If you work on multiple computers, or are many people in the team, some work may have been performed and stored on the remote repository.
+                        "Pull" is a way to update your local project folder to the latest state. It is good practice to do this before you start working on your local project.</td>
+                    </tr>          
+
+                    <tr>
+                        <td>Push</td>
+                        <td>Send a copy of your snapshots to the remote repository.  
+                        In Pragma-git, the default is to do a "push" when pressing the "Store" button.  
+                        This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
+                        In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
+                    </tr>    
+                    <tr>
+                        <td>Stash</td>
+                        <td>Like a clipboard copy, where you can "cut" (and  remember) the file changes since the last stored snapshot.  
+                        A stash takes you back to a clean last-snapshot, and keeps the changes in memory. Sometimes this can be useful. 
+                        One such occasion is if you forgot to "pull" from the remote repository,
+                        before starting to work in your local folder.  Doing a "stash", then "pull", and then "stash-pop" would be a workflow to solve such problem.
+                        In Pragma-git "stash" works  as the computer clipboard's copy command, and can hold only one stash. </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Stash-pop</td>
+                        <td>Like a clipboard "paste", where you retrieve the stashed (see above) changed files. 
+                        In Pragma-git "stash" works  as the computer clipboard's cut and paste command, and can hold only one stash at a time </td>
+                    </tr>
+                     
+                    <tr>
+                        <td>Log, History</td>
+                        <td>The log (History) shows all stored snapshots.  In Pragma-git, you walk down in history with the arrow buttons.  
+                        You can set your project folder to any snapshot from the history, by doing a "checkout"   </td>
+                    </tr>
+                            
+                    <tr>
+                        <td>Checkout</td>
+                        <td>This command sets your project folder to the state it was in at the point in time of the snapshot.  
+                        You may play with the project in that state, but should be careful not to make any changes. </td>
+                    </tr>
+                        
+                    <tr>
+                        <td>Detached HEAD</td>
+                        <td>A checkout of a snapshot is in  a state called "detached HEAD".  That means that it does not belong to any branch, and if you make changes,
+                        they will be dangling without being easy to retrieve.  Pragma-git advice you if this happens.  The best way is to create a new branch from the checkout
+                        and work from there, and end your work by merging it to another branch.</td>
+                    </tr>
+                                               
+                </tbody>
+              </table>
+        </div>
         <hr>    
                  
  <!-------------------------------------------------------------------------------------------->                                  
@@ -269,7 +511,6 @@
                 <dd>- <a href='https://github.com/zcbenz/nw-sample-apps' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">nw-sample-apps examples</a></dd>
                 <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd> 
                 <dd>- <a href='https://www.valentinog.com/blog/html-table/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">generate tables</a></dd>
-                <dd>- <a href='https://www.freeiconspng.com/downloadimg/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;"></a>www.freeiconspng.com</dd>
            
               <dt></dt>
             </dl>
@@ -284,6 +525,28 @@
 </div>
 
  <!-------------------------------------------------------------------------------------------->                                  
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+            
+        });
+    }
+</script>
   
 </body>
 </html>
