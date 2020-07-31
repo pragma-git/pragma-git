@@ -96,7 +96,16 @@
                 src="images/push.png">
         </div> 
     
-
+                        
+        <!-- Icon Tag  -->                             
+        <div class="top-title-bar-tag-icon">
+            <img id="top-title-bar-tag-icon" height="17" width="auto" 
+                onclick="document.getElementById('tagNameInputDialog').showModal();" 
+                onmouseover="updateImageUrl('top-title-bar-tag-icon', 'images/tag_hover.png');" 
+                onmouseout= "updateImageUrl('top-title-bar-tag-icon', 'images/tag.png');" 
+                src="images/tag.png">
+        </div> 
+                        
         
         <!-- Top right icons  -->           
         <div class="top-titlebar-close-field">  
@@ -258,9 +267,33 @@
         </button>  
     </dialog>  
                 
-       
 
-    <!-- Branch selection -->   
+    <!-- Tag creation -->   
+  
+    <dialog id="tagNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+        <b>Create branch from this commit</b><br>
+            <br>
+            <textarea id="tagNameTextarea" 
+                rows="2" 
+                cols="30" 
+                placeholder="name of new tag"
+                onkeyup= "_callback('newTagNameKeyUp', this);"></textarea>  
+            <br>
+
+            <br>
+        
+        <button  id="newTagNameEntered"
+            onclick="document.getElementById('tagNameInputDialog').close();_callback('addTagButtonPressed', this.value);document.getElementById('tagNameTextarea').value='';">
+            OK
+        </button>           
+        <button id="cancelTagNameInputDialog"
+            onclick="document.getElementById('tagNameInputDialog').close();document.getElementById('tagNameTextarea').value='';">
+            Cancel
+        </button>  
+    </dialog>             
+
+
+    <!-- Branch creation -->   
   
     <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
         <b>Create branch from this commit</b><br>

@@ -18,6 +18,7 @@
  * 
  * Open questions
  * 
+ * - warn if creating stash, when already exists ("Do you want to overwrite last stash ?")
  * 
  * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
  *   and clone from local to that repo
@@ -268,6 +269,12 @@ async function _callback( name, event){
 
         break;
       }
+      case 'newTagNameKeyUp': {
+        let string = document.getElementById("tagNameTextarea").value ;
+        document.getElementById("tagNameTextarea").value = util.branchCharFilter( string) ;
+
+        break;
+      }
       case 'addBranchButtonPressed': {
 
         console.log('addBranchButtonPressed');
@@ -309,6 +316,37 @@ async function _callback( name, event){
 
         break;
       }
+      case 'addTagButtonPressed' : {
+        let newTagName = document.getElementById('tagNameTextarea').value;
+      
+        // Create new Tag
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;            
+            let commit = 'HEAD';  // First guess
+            
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+  
+            // Create new Tag
+            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
+            function onCreateTag(err, result ){console.log(result);console.log(err);};
+            
+            setStatusBar( 'Creating Tag "' + newTagName);
+            //await waitTime( 1000);  
+
+            waitTime( WAIT_TIME);  
+
+            
+        }catch(err){       
+            displayAlert('Failed creating tag', err); 
+            console.log('Failed creating tag ');
+            console.log(err);
+        } 
+
+      }
+    
       case 'clicked-folder': {
         folderClicked();
         break;
@@ -1151,7 +1189,19 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
+         
+    // Tag button (hide if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('top-title-bar-tag-icon').style.visibility = 'hidden'
+            }else{
+                document.getElementById('top-title-bar-tag-icon').style.visibility = 'visible'
+            }
+        }catch(err){  
+            console.log(err);
+        }
         
+               
     // Stash button (show if uncomitted files)
         try{
             if (status_data.changedFiles){

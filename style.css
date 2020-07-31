@@ -168,10 +168,21 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
+.top-title-bar-tag-icon
+ {
+  position: absolute;
+  right: 80px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
 .top-titlebar-push-icon
  {
   position: absolute;
-  right: 90px;
+  right: 110px;
   width: 17px;
   height: 17px;
   margin-top: 6px;
@@ -182,7 +193,7 @@ div#message-wrapper{
 .top-titlebar-pull-icon
  {
   position: absolute;
-  right: 120px;
+  right: 140px;
   width: 17px;
   height: 17px;
   margin-top: 6px;
@@ -193,7 +204,7 @@ div#message-wrapper{
 .top-titlebar-merge-icon
  {
   position: absolute;
-  right: 150px;
+  right: 170px;
   width: 17px;
   height: 17px;
   margin-top: 6px;
@@ -204,7 +215,7 @@ div#message-wrapper{
 .top-titlebar-branch-icon
  {
   position: absolute;
-  right: 180px;
+  right: 200px;
   width: 17px;
   height: 17px;
   margin-top: 6px;
