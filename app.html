@@ -98,11 +98,11 @@
     
                         
         <!-- Icon Tag  -->                             
-        <div class="top-title-bar-tag-icon">
-            <img id="top-title-bar-tag-icon" height="17" width="auto" 
+        <div class="top-titlebar-tag-icon">
+            <img id="top-titlebar-tag-icon" height="17" width="auto" 
                 onclick="document.getElementById('tagNameInputDialog').showModal();" 
-                onmouseover="updateImageUrl('top-title-bar-tag-icon', 'images/tag_hover.png');" 
-                onmouseout= "updateImageUrl('top-title-bar-tag-icon', 'images/tag.png');" 
+                onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');" 
                 src="images/tag.png">
         </div> 
                         
@@ -254,9 +254,10 @@
 <!-- Dialogs  -->   
 <!--          -->   
 
-<!--  General alert dialog  --> 
 
-    <dialog id="alertDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <!--  General alert dialog  --> 
+
+    <dialog id="alertDialog" style="background-color:#C00;border:1px dotted black;">  
         <p> 
             <div id='alertTitle'></div><br>  
             <div id='alertMessage'></div>  
@@ -267,6 +268,7 @@
         </button>  
     </dialog>  
                 
+
 
     <!-- Tag creation -->   
   
@@ -291,6 +293,7 @@
             Cancel
         </button>  
     </dialog>             
+
 
 
     <!-- Branch creation -->   

@@ -1193,9 +1193,9 @@ async function _update(){
     // Tag button (hide if uncomitted files)
         try{
             if (status_data.changedFiles){
-                document.getElementById('top-title-bar-tag-icon').style.visibility = 'hidden'
+                document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden'
             }else{
-                document.getElementById('top-title-bar-tag-icon').style.visibility = 'visible'
+                document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
             }
         }catch(err){  
             console.log(err);
@@ -2379,6 +2379,7 @@ function dev_show_all_icons(){
     document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
     document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
