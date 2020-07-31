@@ -18,7 +18,19 @@
  * 
  * Open questions
  * 
- *   
+ * - Resolve conflicts -- add all options in https://git-scm.com/docs/git-status.  
+ * 
+ *   create_merge_conflict.command  should be extended with all these
+ * 
+ *   X shows the status of the index, and Y shows the status of the work tree
+ *       D           D    unmerged, both deleted
+ *       A           U    unmerged, added by us
+ *       U           D    unmerged, deleted by them
+ *       U           A    unmerged, added by them
+ *       D           U    unmerged, deleted by us
+ *       A           A    unmerged, both added
+ *       U           U    unmerged, both modified
+ *    
  * 
  * - Problem with stash and showing of stash-pop
  *   Summary : I only allow one stash.  I only allow stash-pop if no files are changed.
