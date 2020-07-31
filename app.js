@@ -18,7 +18,13 @@
  * 
  * Open questions
  * 
+ * - stash and stash-pop should be hidden if history mode (fix in  _setMode)
+ * 
  * - warn if creating stash, when already exists ("Do you want to overwrite last stash ?")
+ * 
+ * - tag  pop-up menu with options :  new tag, find tag, remove tag, list tags
+ * 
+ * - history : list window (can this be same as tag list window ?)
  * 
  * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
  *   and clone from local to that repo
@@ -346,15 +352,36 @@ async function _callback( name, event){
         } 
 
       }
-    
       case 'clicked-folder': {
         folderClicked();
         break;
       }
       case 'clicked-stash-button': {
+          
+    // Stash -- ask to overwrite if stash exists
+        try{
+            let stash_status;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .stash(['list'], onStash);
+            function onStash(err, result ){  stash_status = result }
+            
+            
+            if (stash_status.length > 0) {
+                // Ask permission to overwrite stash
+                document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+            }else{
+                // No stash exists, OK to stash
+                gitStash();
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }     
+      case 'allowed_stash-from-dialog': {
         gitStash();
         break;   
-      }     
+      }
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 
@@ -1858,6 +1885,9 @@ async function gitStashPop(){
         function onStashPop(err, result) {console.log(result);console.log(err) };
     
     }catch(err){
+        // TODO : Possibility for this error : error: could not restore untracked files from stash
+        // Solution https://gist.github.com/demagu/729c0a3605a4bd2e4c3d
+        //
         console.log('Error in gitStashPop()');
         console.log(err);
     }

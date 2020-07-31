@@ -381,6 +381,26 @@
 
     </dialog>  
 
+
+    <!-- Stash overwrite previous stash ? -->   
+  
+    <dialog id="doYouWantToOverWriteStashDialog" style="background-color:#C00;border:1px dotted black;">  
+        <b>WARNING -- there is a "stash" that will be overwritten!</b><br>
+            Are you sure this old stash is not needed?  <br>
+            Replace with new stash? <br>
+            <br>
+        
+        <button id="replaceStashDialogOK" 
+            onclick="document.getElementById('doYouWantToOverWriteStashDialog').close();_callback('allowed_stash-from-dialog');">
+            Replace
+        </button>   
+        <button id="replaceStashDialogCancel" 
+            onclick="document.getElementById('doYouWantToOverWriteStashDialog').close();"> 
+            Cancel
+        </button>     
+
+    </dialog>  
+
 </body>
 
     
