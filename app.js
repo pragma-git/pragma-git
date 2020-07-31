@@ -366,6 +366,7 @@ async function _callback( name, event){
             console.log('Failed creating tag ');
             console.log(err);
         } 
+        break;
 
       }
       case 'clicked-folder': {
@@ -1293,16 +1294,16 @@ async function _update(){
             console.log(err);
         }
         
-    // Branch button (hide if uncomitted files)
-        try{
-            if (status_data.changedFiles){
-                document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden'
-            }else{
-                document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
-            }
-        }catch(err){  
-            console.log(err);
-        }
+    //// Branch button (hide if uncomitted files)
+        //try{
+            //if (status_data.changedFiles){
+                //document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden'
+            //}else{
+                //document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+            //}
+        //}catch(err){  
+            //console.log(err);
+        //}
          
     // Tag button (hide if uncomitted files)
         try{
