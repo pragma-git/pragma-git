@@ -32,12 +32,6 @@
  *       U           U    unmerged, both modified
  *    
  * 
- * - Problem with stash and showing of stash-pop
- *   Summary : I only allow one stash.  I only allow stash-pop if no files are changed.
- *   1) Should I give option to create temp branch when stash already exists ? Like in  Detached head dialog ?
- *   options Delete, Temporary branch, or Cancel.  Nice if I can name the temporary branch (both for detached head and for this)
- * 
- * 
  * - tag  pop-up menu with options :  new tag, find tag, remove tag, list tags
  * 
  * - history : list window (can this be same as tag list window ?)
@@ -431,8 +425,9 @@ async function _callback( name, event){
                     try{
                         let folder = state.repos[ state.repoNumber].localFolder;
                         
-                        // Move 'stash' into (and create) temporary branch
-                        let commands = [ 'stash', 'branch', newBranchName];
+                        // // Move 'stash' into (and create) temporary branch
+                        // let commands = [ 'stash', 'branch', newBranchName];
+                        let commands = [ 'checkout', '-b', newBranchName];
                         await simpleGit( folder).raw(  commands, onCreateBranch);
                         function onCreateBranch(err, result ){console.log(result);};
                         
@@ -464,10 +459,6 @@ async function _callback( name, event){
         gitStash();
         break;   
       }     
-      case 'allowed_stash-from-dialog': {
-        gitStash();
-        break;   
-      }
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 

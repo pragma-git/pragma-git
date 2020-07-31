@@ -382,32 +382,12 @@
     </dialog>  
 
 
-    <!-- Stash overwrite previous stash ? -->   
-  
-    <dialog id="doYouWantToOverWriteStashDialog" style="background-color:#C00;border:1px dotted black;">  
-        <b>WARNING -- there is a "stash" that will be overwritten!</b><br>
-            Are you sure this old stash is not needed?  <br>
-            Replace with new stash? <br>
-            <br>
-        
-        <button id="replaceStashDialogOK" 
-            onclick="document.getElementById('doYouWantToOverWriteStashDialog').close();_callback('allowed_stash-from-dialog');">
-            Replace
-        </button>   
-        <button id="replaceStashDialogCancel" 
-            onclick="document.getElementById('doYouWantToOverWriteStashDialog').close();"> 
-            Cancel
-        </button>     
-
-    </dialog> 
     
-    
-    
-    <!-- IN PROGRESS : Stash dialog -->   
+    <!-- Stash overwrite dialog -->   
   
     <dialog id="stashOverwriteDialog" style="background-color:#C00;border:1px dotted black;">  
-        <b>WARNING -- there is a "stash" that will be overwritten!</b><br>
-            1) Keep work : a temporary branch will be created<br>
+        <b>WARNING -- there is a "stash" that may be overwritten!</b><br>
+            1) Keep work : a temporary branch will be created instead <br>
             2) Replace : the old stash will be replaced by this one<br>
             <br>
         
