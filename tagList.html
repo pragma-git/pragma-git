@@ -1,0 +1,66 @@
+<html>
+    <head>
+        <title>List tags</title>
+        <script src="tagList.js"></script>
+    </head>
+    
+    <body>
+
+        <div id="outerContent"  style="width: fit-content;padding: 10px">
+        <p>Filter list using wildcards (*)</p>  
+              
+        <textarea id="tagFilterText" 
+            rows="1" 
+            cols="30" 
+            placeholder="*"></textarea>
+            </textarea>
+        <br>
+        
+        
+        <p>Select one</p>
+        <select name="tagSelection" size="5">
+            <option value="SM">http://www.scriptingmaster.com</option>
+            <option value="Google">http://www.google.com</option>
+            <option value="MSN">http://www.msn.com</option>
+            <option value="yahoo">http://www.yahoo.com</option>
+            <option value="microsoft">http://www.microsoft.com</option>
+            </select>
+            
+        <br>
+        <br>
+        
+        <button  id="Checkout"
+            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            Checkout
+            </button>    
+        
+        <button  id="Cancel"
+            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            Cancel
+            </button>  
+        </div>
+    </body>
+    
+    
+    
+    <!--  Onload, call javascript file  --> 
+    <script>
+    
+    
+        window.addEventListener(
+            'DOMContentLoaded', 
+            (event) => {
+                console.log('listChanged.html :DOM fully loaded and parsed');
+                injectIntoJs(document);
+            }
+        );
+        window.addEventListener(
+            'unload', 
+            (event) => {
+                console.log('listChanged.html :DOM fully unloaded -- maybe window closed ');
+                closeWindow(window);
+            }
+        );
+    </script>
+    
+</html>

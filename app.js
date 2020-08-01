@@ -2435,6 +2435,19 @@ function dev_show_all_icons(){
     
  
 }
+function dev_show_tag_list(){
+    
+            gui.Window.open(
+                'tagList.html#/new_page' ,
+                {
+                    id: 'tagListWindowId',
+                    position: 'center',
+                    title: "Select one tag"
+                }
+            ); 
+
+}
+
 
 // -------------
 // WINDOW EVENTS
