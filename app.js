@@ -588,7 +588,7 @@ async function _callback( name, event){
                 
                 // Test if commit-hash is the same as branch-name (meaning no commits have been done after detaching HEAD)
                 let currentBranchObject = branchSummary.branches[currentBranchName];
-                if ( currentBranchObject.name == currentBranchObject.commit){
+                if ( currentBranchObject.name == currentBranchObject.commit){  // Works for checked-out commit. TODO : but not for checked-out tag!
                     // No commited change in detached head -- don't throw dialog
                     console.log('No commits in checked-out detached HEAD : ' + currentBranchObject.name);
                     console.log('Continue to change branch');
@@ -1846,6 +1846,35 @@ async function gitAddCommitAndPush( message){
     writeMessage('',false);  // Remove this message  
     _setMode('UNKNOWN');  
     await _update()
+}
+
+async function gitCheckoutTag(tagName){
+    
+    // I want to checkout with commit-hash -- and not tag name.
+    //
+    // (Reason is that I can then compare the detached branch which has the hash as a name, with the hash at current commit.
+    //  If they are equal I am still at checkout point. If they are not equal, there have been new commits on the detached head.  
+    //
+    // If I would checkout with tag name, the name would be the tag name instead of the hash.  This would spoil identifying if at startpoint or not, as done in _callback/branchClicked )
+    try{
+        let folder = state.repos[state.repoNumber].localFolder;
+        
+        // get hash of tagName
+        let hash;
+        await simpleGit(folder).raw([ 'rev-parse', tagName], onShowToplevel);
+        function onShowToplevel(err, result){ console.log(result); hash = result }
+        hash = hash.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
+        
+        // checkout tag using hash
+        await simpleGit(folder).checkout( hash, onCheckout);
+        function onCheckout(err, result){console.log(result)} 
+        
+    }catch(err){
+        console.log('Failed checking out tag = ' + tagName);
+        console.log(err);
+        
+    }
+    
 }
 
 async function gitStash(){
