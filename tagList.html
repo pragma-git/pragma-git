@@ -7,18 +7,23 @@
     <body>
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
-        <p>Filter list using wildcards (*)</p>  
               
+        <label for="tagFilterText">Filter (wildcard *)</label><br>
         <textarea id="tagFilterText" 
             rows="1" 
             cols="30" 
-            placeholder="*"></textarea>
+            placeholder="*"
+            onkeyup="_callback('onFilterKeyUp',this)"
+        
+            ></textarea>
             </textarea>
+        <br>
         <br>
         
         
-        <p>Select one</p>
-        <select name="tagSelection" size="5">
+
+        <label for="tagSelection"> Select one</label><br>
+        <select name="tagSelection" id="tagSelection" size="5" style="width: 100%">
             <option value="SM">http://www.scriptingmaster.com</option>
             <option value="Google">http://www.google.com</option>
             <option value="MSN">http://www.msn.com</option>
@@ -29,13 +34,13 @@
         <br>
         <br>
         
-        <button  id="Checkout"
-            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+        <button  id="Select-button"
+            onclick="_callback('Select-button', document.getElementById('tagSelection').value );">
             Checkout
             </button>    
         
         <button  id="Cancel"
-            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            onclick="_callback('Cancel-button');">
             Cancel
             </button>  
         </div>

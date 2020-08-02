@@ -332,6 +332,11 @@ async function _callback( name, event){
 
         break;
       }
+      case 'clicked-tag-button': {
+        // Make dropdown menu with options 1) Create tag, 2) Checkout tag
+        tagClicked();
+        break;
+      }
       case 'addTagButtonPressed' : {
         let newTagName = document.getElementById('tagNameTextarea').value;
       
@@ -530,6 +535,9 @@ async function _callback( name, event){
         }
         break; 
       } // end case 'detachedHeadDialog'  
+      case 'tagCheckout': { // Called from tagList.js
+        checkoutTag(event);
+      }
       default: {
         // code block
       }  
@@ -784,6 +792,72 @@ async function _callback( name, event){
         await menu.popup(pos.left, pos.top + 24);
                 
 
+    }
+    async function tagClicked(){
+              
+        // Create an empty context menu
+        var menu = new gui.Menu();
+
+        
+        // Add context menu to title-row
+
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'New tag', 
+                    click: () => { document.getElementById('tagNameInputDialog').showModal();} 
+                } 
+            )        
+        )
+        
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'Checkout tag ', 
+                    click: () => { tag_checkout_dialog();} 
+                } 
+            )        
+        )
+
+
+        
+
+        // Popup as context menu
+        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        await menu.popup(pos.left, pos.top + 24);
+                
+
+    }
+
+    async function checkoutTag(tagName){
+        
+        // I want to checkout with commit-hash -- and not tag name.
+        //
+        // (Reason is that I can then compare the detached branch which has the hash as a name, with the hash at current commit.
+        //  If they are equal I am still at checkout point. If they are not equal, there have been new commits on the detached head.  
+        //
+        // If I would checkout with tag name, the name would be the tag name instead of the hash.  This would spoil identifying if at startpoint or not, as done in _callback/branchClicked )
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+            
+            // get hash of tagName
+            let hash;
+            await simpleGit(folder).raw([ 'rev-parse', tagName], onShowToplevel);
+            function onShowToplevel(err, result){ console.log(result); hash = result }
+            hash = hash.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
+            
+            // checkout tag using hash
+            await simpleGit(folder).checkout( hash, onCheckout);
+            function onCheckout(err, result){console.log(result)} 
+            
+        }catch(err){
+            console.log('Failed checking out tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        _setMode('UNKNOWN');
+        
     }
  
     // main window
@@ -1848,35 +1922,6 @@ async function gitAddCommitAndPush( message){
     await _update()
 }
 
-async function gitCheckoutTag(tagName){
-    
-    // I want to checkout with commit-hash -- and not tag name.
-    //
-    // (Reason is that I can then compare the detached branch which has the hash as a name, with the hash at current commit.
-    //  If they are equal I am still at checkout point. If they are not equal, there have been new commits on the detached head.  
-    //
-    // If I would checkout with tag name, the name would be the tag name instead of the hash.  This would spoil identifying if at startpoint or not, as done in _callback/branchClicked )
-    try{
-        let folder = state.repos[state.repoNumber].localFolder;
-        
-        // get hash of tagName
-        let hash;
-        await simpleGit(folder).raw([ 'rev-parse', tagName], onShowToplevel);
-        function onShowToplevel(err, result){ console.log(result); hash = result }
-        hash = hash.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
-        
-        // checkout tag using hash
-        await simpleGit(folder).checkout( hash, onCheckout);
-        function onCheckout(err, result){console.log(result)} 
-        
-    }catch(err){
-        console.log('Failed checking out tag = ' + tagName);
-        console.log(err);
-        
-    }
-    
-}
-
 async function gitStash(){
     // Stash
     try{
@@ -2082,6 +2127,41 @@ async function addExistingRepo( folder) {
         state.repos[state.repoNumber].localFolder = topFolder;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
 }    
+
+// Dialogs
+async function tag_checkout_dialog(){
+            
+            let tagList;
+            
+            try{
+                // List stash
+
+                await simpleGit( state.repos[state.repoNumber].localFolder ).tag( ['--list'], onTagList);
+                function onTagList(err, result) {console.log(result);console.log(err); tagList = result };
+                
+                // Make array of tags (from one result-string)
+                localState.arrayTagList = tagList.split(os.EOL);
+            
+            }catch(err){
+                console.log('Error in tagList()');
+                console.log(err);
+            }
+    
+    
+            gui.Window.open(
+                'tagList.html#/new_page' ,
+                {
+                    id: 'tagListWindowId',
+                    position: 'center',
+                    title: "Select one tag"
+                }
+            ); 
+            
+            localState.tagListWindow = true;
+
+}
+
+
 
 // Title bar
 function setTitleBar( id, text){
@@ -2435,19 +2515,6 @@ function dev_show_all_icons(){
     
  
 }
-function dev_show_tag_list(){
-    
-            gui.Window.open(
-                'tagList.html#/new_page' ,
-                {
-                    id: 'tagListWindowId',
-                    position: 'center',
-                    title: "Select one tag"
-                }
-            ); 
-
-}
-
 
 // -------------
 // WINDOW EVENTS

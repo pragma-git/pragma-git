@@ -34,9 +34,7 @@ var origFiles = [];  // Store files found to be conflicting.  Use to remove .ori
 // FUNCTIONS
 // ---------    
 
-// Start initiated from settings.html
 async function injectIntoJs(document) {
-
     
     console.log('tagList.js entered');
     win = gui.Window.get();
@@ -67,276 +65,69 @@ async function injectIntoJs(document) {
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
     }
 
-
-
+    // Populate window
+    fillSelectWithValues(localState.arrayTagList, '*');
 
 };
+function fillSelectWithValues( tagValues, filterRule){
+    let selectBox = document.getElementById("tagSelection");
+    selectBox.innerHTML = "";
+    
+    for (let tag of tagValues) {
+        if ( matchRuleExpl(tag, filterRule) ){
+            let selectOption = document.createElement('option');
+            selectOption.innerHTML=tag;
+            selectOption.value=tag;
+            selectBox.appendChild(selectOption);
+        }
+    }
+    
+}
+function matchRuleExpl(str, rule) {
+  // From : https://stackoverflow.com/questions/26246601/wildcard-string-comparison-in-javascript  
+    
+  // for this solution to work on any string, no matter what characters it has
+  var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 
-// Main functions 
+  // "."  => Find a single character, except newline or line terminator
+  // ".*" => Matches any string that contains zero or more characters
+  rule = rule.split("*").map(escapeRegex).join(".*");
+
+  // "^"  => Matches any string with the following at the beginning of it
+  // "$"  => Matches any string with that in front at the end of it
+  rule = "^" + rule + "$"
+
+  //Create a regular expression object for matching string
+  var regex = new RegExp(rule);
+
+  //Returns true if it finds a match, otherwise it returns false
+  return regex.test(str);
+}
+
 async function _callback( name, event, event2){
 
-    let id = event.id;
-    let file;
-    let commit;
-    let status_data;
-    let tool;
     
     console.log('_callback = ' + name);
     switch(name) {
-       
-        case 'applySelectedFilesButton': {
-            console.log('applySelectedFilesButton');
+        
+        case 'onFilterKeyUp': {
+            let filterRule = document.getElementById('tagFilterText').value;
+            filterRule = filterRule + '*';  // Implicit end with wildcard
+            fillSelectWithValues( localState.arrayTagList, filterRule)
+            break;
+        }
+        case 'Select-button' : {
             console.log(event);
-            
-            localState.unstaged = makeListOfUnstagedFiles();
-
-            // Note : This will be done once again after pressing Store (in case something has happened)
-               
-            // Add all files to index (all newest versions of working-tree files will be in index)
-            var path = '.'; // Add all
-            await simpleGit( state.repos[state.repoNumber].localFolder )
-                .add( path, onAdd );   
-            function onAdd(err, result) {console.log(result) ;console.log(err); }
-            
-            // Remove localState.unstaged from index
-            for (let file of localState.unstaged) {
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                .raw( [  'reset', '--', file ] , onReset); 
-            }
-            function onReset(err, result) {console.log(result) ;console.log(err);}
-
+            opener._callback('tagCheckout',event); // Calling _callback in opening window
             closeWindow();
             break;
         }
-         
-        case 'diffLinkAll' : {
-            console.log('diffLinkAll');
-            console.log(event);
-            
-            tool = state.tools.difftool;
-
-            
-            // Prepare command  --  Can be either history mode, or normal mode
-            if (localState.mode == 'HISTORY') {
-                // History
-                console.log('diffLinkAll -- history');
-                
-                commit = event;
-
-                tool = state.tools.difftool;
-    
-                // Prepare for git diff with previous commit and selected commit in history log
-                command = [  
-                    'difftool',  
-                    '--tool',
-                    tool,
-                    '--dir-diff',
-                    commit + "^" ,
-                    commit
-                ];  
-                    
-                
-            } else {
-                // Not history
-                console.log('diffLinkAll -- normal');
-                
-                // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
-                command = [  
-                    'difftool',
-                    '--tool',
-                    tool,
-                    '--dir-diff',
-                    'HEAD'
-                ];
-            }
-       
-            // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
-            }
-            
-            
-            
-            
-            break;
-        }
-
-        case 'diffLinkHistory': {
-         
-            // Three inputs
-            console.log('diffLinkHistory');
-            console.log(event);
-            
-            commit = event;
-            file = event2;
-            
-            file = file.replace('/','//');
-            
-            tool = state.tools.difftool;
-
-            // Prepare for git diff with previous commit and selected commit in history log
-            command = [  
-                'difftool',
-                '-y',  
-                '--tool',
-                tool,
-                commit + "^:" + file,
-                commit + ":" + file
-            ];
-
-            // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLinkHistory -- caught error ');
-                console.log(err);
-            }
         
-
-            break;
-        }
- 
-        case 'diffLink': {
-            console.log('diffLink');
-            console.log(event);
-            
-            file = event;
-            file = file.replace('/','//');
-            
-            tool = state.tools.difftool;
-
-            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
-            command = [  
-                'difftool',
-                '-y',  
-                '--tool',
-                tool,
-                'HEAD',
-                '--',
-                file
-            ];
-
-            // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
-            }
-        
-
-            break;
-        }
- 
-        case 'discardLink': {
-            console.log('discardLink');
-            console.log(event);
-            
-            file = event;   
-            try{
-                
-                // Unstage (may not be needed, but no harm)
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] , onReset); 
-                    function onReset(err, result) {console.log(result) }
-             
-                // Checkout, to discard changes
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .checkout(file, onGitCheckout );
-                    function onGitCheckout(err, result){ console.log(result); console.log(err);  };
-
-                
-            }catch(err){
-                console.log('discardLink -- caught error ');
-                console.log(err);
-            }
-                
-    
-            // Git Status
-            try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-            }catch(err){
-                console.log("discardLink -- Error " );
-                console.log(err);
-                return
-            }
-
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+        case 'Cancel-button' : {
+            closeWindow();
             break;
         }
 
-        case 'deleteLink': {
-            console.log('deleteLink');
-            console.log(event);
-            
-            file = event;   
-            try{
-                 
-                // Unstage (may not be needed, but no harm)
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] , onReset); 
-                    function onReset(err, result) {console.log(result) }
-                    
-                // Delete from file system                   
-                let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
-                console.log('deleteLink -- deleting file = ' + filePath);
-                fs.unlinkSync(filePath)
-  
-            }catch(err){
-                console.log('deleteLink -- caught error ');
-                console.log(err);
-            }
-                
-    
-            // Git Status
-            try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-            }catch(err){
-                console.log("deleteLink -- Error " );
-                console.log(err);
-                return
-            }
-
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
-            break;
-        }           
-        
-        case 'radioButtonChanged' : {
-            // TODO : stage or unstage depending on what happened
-            // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
-            
-            let checked = event.checked;
-            let file2 = event.parentElement.innerText;
-            //file2 = '"' + file2 + '"';
-            
-            if ( checked ) {
-                await simpleGit( state.repos[state.repoNumber].localFolder )
-                .add( [file2], onAdd );   
-    
-            } else {
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                .raw( [  'reset', '--', file2 ] , onReset); 
-            }
-            // Local functions
-            function onAdd(err, result) {console.log(result) ;console.log(err);}
-            function onReset(err, result) {console.log(result) ;console.log(err);}
-
-            break;
-        }
 
     } // End switch
     
@@ -372,12 +163,11 @@ async function _callback( name, event, event2){
 // ================= END CALLBACK =================  
 }
 
-
 function closeWindow(){
 
     // Return
     
-    localState.fileListWindow = false;  // Show to main program that window is closed
+    localState.tagListWindow = false;  // Show to main program that window is closed
     win.close();
     
 }
