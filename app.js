@@ -28,6 +28,15 @@
  *   to find. Catch error if no tag)
  * 
  * 
+ * - new textarea :
+ *   - placeholder
+ *   - readOnly
+ *   - value
+ *   - title
+ *   - tag
+ *   - commit
+ *   
+ * 
  * - Resolve conflicts -- add all options in https://git-scm.com/docs/git-status.  
  * 
  *   create_merge_conflict.command  should be extended with all these
@@ -236,6 +245,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.conflictsWindow = false; // True when conflicts window is open
         localState.fileListWindow = false; // True when conflicts window is open
         localState.aboutWindow = false; // True when conflicts window is open
+        
+    // Display
+        var textOutput = {};
         
         
     // Expose these to all windows 
@@ -972,7 +984,8 @@ async function _callback( name, event){
             // Display
             //localState.mode = 'HISTORY';
             _setMode('HISTORY');
-            writeMessage( localState.historyString, false);
+            //writeMessage( localState.historyString, false);
+            writeTextOutput( { value: localState.historyString, placeholder : ''});
             
             status_data = await gitShow(localState.historyHash);
             setStatusBar( fileStatusString( status_data));
@@ -1006,7 +1019,8 @@ async function _callback( name, event){
             localState.historyNumber = -1;
             localState.historyString = "";
             localState.historyHash = "";
-            writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
+            //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
+            writeTextOutput( { value: '', placeholder : ''});
             _setMode('UNKNOWN');
             await _update()
         }else{
@@ -1027,7 +1041,8 @@ async function _callback( name, event){
             
             // Display            
             localState.mode = 'HISTORY';
-            writeMessage( localState.historyString, false);
+            //writeMessage( localState.historyString, false);
+            writeTextOutput( { value: localState.historyString, placeholder : ''});
             
             status_data = await gitShow(localState.historyHash);
             setStatusBar( fileStatusString( status_data));    
@@ -1047,8 +1062,10 @@ async function _callback( name, event){
             return
         }
         
+        textOutput.value = readMessage();
+        
         // It should be safe to assume that CHANGED_FILES of some sort -- otherwise
-        if (readMessage().length > 0 ){
+        if ( (textOutput.value.length > 0) ||  ( textOutput.value.title  > 0 ) ){
             _setMode( 'CHANGED_FILES_TEXT_ENTERED');
         }else{
             _setMode( 'CHANGED_FILES');
@@ -1403,8 +1420,8 @@ async function _update(){
                 console.log(status);
             
             
-                writeMessage( localState.historyString, false);
-            
+                //writeMessage( localState.historyString, false);
+                writeTextOutput( { value: localState.historyString, placeholder : ''});
             
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
@@ -1543,7 +1560,7 @@ async function _setMode( inputModeName){
                 
                 // Clean values that destroy working-out mode
                 if (currentMode == 'HISTORY'){
-                    document.getElementById('message').value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
+                    textOutput.value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
                     localState.historyString = "";
                     localState.historyHash = "";
                 }
@@ -1598,8 +1615,8 @@ async function _setMode( inputModeName){
             newModeName = 'DEFAULT';
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
+            textOutput.value = "";
+            textOutput.placeholder = "Get started by dropping a folder onto this window ...";    
             document.getElementById("message").readOnly = true;
             
             setTitleBar( 'top-titlebar-repo-text', ''  );
@@ -1610,11 +1627,11 @@ async function _setMode( inputModeName){
         case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
-            document.getElementById('message').placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";           
+            textOutput.value = "";           
             document.getElementById("message").readOnly = true;
             break;
         }
@@ -1622,11 +1639,11 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            document.getElementById('message').placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
+            textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
             //if (currentMode ==  'CHANGED_FILES') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";          
+            textOutput.value = "";          
             document.getElementById("message").readOnly = false;
             break;
         }
@@ -1637,8 +1654,8 @@ async function _setMode( inputModeName){
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = false;
-            //document.getElementById('message').value = "";  // Don't want to destory typed text
-            //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
+            //textOutput.value = "";  // Don't want to destory typed text
+            //textOutput.placeholder = "Get started by dropping a folder onto this window";    
             document.getElementById("message").readOnly = false;
             break;
         }
@@ -1650,8 +1667,8 @@ async function _setMode( inputModeName){
             document.getElementById("store-button").innerHTML="Checkout";// Set button
             document.getElementById('store-button').disabled = false;
             // Text not fixed
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "";    
+            textOutput.value = "";
+            textOutput.placeholder = "";    
             document.getElementById ("message").readOnly = true;
             break;
         }
@@ -1661,8 +1678,8 @@ async function _setMode( inputModeName){
             if (currentMode ==  'SETTINGS') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = 
+            textOutput.value = "";
+            textOutput.placeholder = 
                 "You are in settings mode." + os.EOL + 
                 "- Unfold a settings section ..." + os.EOL + 
                 "- Close window when done";    
@@ -1675,8 +1692,8 @@ async function _setMode( inputModeName){
             if (currentMode ==  'CONFLICT') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = 
+            textOutput.value = "";
+            textOutput.placeholder = 
                 "There is a file conflict to resolve" + os.EOL + 
                 "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
                 "- Write a message, and press Store when done";    
@@ -1693,6 +1710,9 @@ async function _setMode( inputModeName){
       
     // Remember mode
     localState.mode = newModeName;
+    
+    // Show
+    writeTextOutput(textOutput);
 
     await _update()
     
@@ -1927,7 +1947,8 @@ async function gitAddCommitAndPush( message){
       
     // Finish up
     localState.unstaged = [];
-    writeMessage('',false);  // Remove this message  
+    //writeMessage('',false);  // Remove this message 
+    writeTextOutput( { value: '', placeholder : ''}); 
     _setMode('UNKNOWN');  
     await _update()
 }
@@ -2070,7 +2091,8 @@ async function gitMerge( currentBranchName, selectedBranchName){
   
       
     // Finish up
-    writeMessage('',false);  // Remove this message  
+    //writeMessage('',false);  // Remove this message  
+    writeTextOutput( { value: '', placeholder : ''});
     
     _setMode('UNKNOWN');
     await _update()
@@ -2242,6 +2264,11 @@ function updateContentStyle() {
 }
 
 // Message
+function writeTextOutput(textOutput){
+    document.getElementById('message').value = textOutput.value;
+    document.getElementById('message').placeholder = textOutput.placeholder;  
+}
+
 function readMessage( ){
     try{
         return document.getElementById('message').value;
@@ -2271,15 +2298,17 @@ async function  writeTimedMessage( message, placeholder, time){
     var oldMessage_placeholder = document.getElementById('message').placeholder;
     
     // Show new message and wait
-    writeMessage( message, placeholder);
+    //writeMessage( message, placeholder);
+    writeTextOutput( { value: message, placeholder : placeholder}); 
     await waitTime( time).catch({});
     
     document.getElementById('message').value = oldMessage_value;
     document.getElementById('message').placeholder = oldMessage_placeholder;
     
     // Restore old message (if user hasn't written something in the wait time
-    if ( document.getElementById('message').length == 0 ){
-        writeMessage( oldMessage, placeholder);
+    if ( (document.getElementById('message').value.length + document.getElementById('message').title.length )== 0 ){
+        //writeMessage( oldMessage, placeholder);
+        writeTextOutput( { value: oldMessage, placeholder : placeholder}); 
     }
     
     // Restart timer
