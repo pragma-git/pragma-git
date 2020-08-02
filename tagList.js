@@ -1,6 +1,6 @@
 
 // Define DEBUG features
-var devTools = true;
+var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 // ---------

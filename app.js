@@ -18,6 +18,16 @@
  * 
  * Open questions
  * 
+ * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
+ *      opener._callback('tagCheckout',event); // Calling _callback in opening window
+ *  )
+ * 
+ * - message window should show tags as well
+ *   ( use  
+ *      git describe --tags --exact-match   
+ *   to find. Catch error if no tag)
+ * 
+ * 
  * - Resolve conflicts -- add all options in https://git-scm.com/docs/git-status.  
  * 
  *   create_merge_conflict.command  should be extended with all these
@@ -32,7 +42,7 @@
  *       U           U    unmerged, both modified
  *    
  * 
- * - tag  pop-up menu with options :  new tag, find tag, remove tag, list tags
+ * - tag  pop-up menu , add option : remove tag
  * 
  * - history : list window (can this be same as tag list window ?)
  * 
