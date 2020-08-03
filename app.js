@@ -18,6 +18,14 @@
  * 
  * Open questions
  * 
+ * - git merge --no-ff --no-commit   (let --no-ff  being a setting )
+ *   merges without committing.  I can then Write a message and Store
+ *   Nice : set place-holder saying "write message to describe what has been changed branch"
+ * 
+ * - As above, but after conflict resolution, write place-holder 
+ *  
+ * 
+ * 
  * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
  *      opener._callback('tagCheckout',event); // Calling _callback in opening window
  *  )
@@ -2090,7 +2098,7 @@ async function gitMerge( currentBranchName, selectedBranchName){
     try{
         setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .mergeFromTo( selectedBranchName, currentBranchName, {} , onMerge);
+            .mergeFromTo( selectedBranchName, currentBranchName, ['--no-ff', '--no-commit' ], onMerge);
             
         function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err };
        
@@ -2102,11 +2110,15 @@ async function gitMerge( currentBranchName, selectedBranchName){
       
     // Finish up
     //writeMessage('',false);  // Remove this message  
-    textOutput.value = '';
-    writeTextOutput( textOutput);
     
-    _setMode('UNKNOWN');
+    //await _setMode('UNKNOWN');
+    await _setMode('CHANGED_FILES_TEXT_ENTERED');
     await _update()
+    
+    textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
+    textOutput.readOnly = false;
+    //textOutput.placeholder = 'Write description of Merge, and press Store';
+    writeTextOutput( textOutput);
 }
 
 // Utility functions
@@ -2327,6 +2339,7 @@ async function writeTimedTextOutput(textOutputStruct, time){
     
 }
 function readMessage(){
+    // returns message text ( which consists of a title row, OPTIONALLY followed by an empty line and a long multi-line message)
     try{
         let message = document.getElementById('message').value;
         return message;
