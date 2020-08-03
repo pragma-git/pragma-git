@@ -18,11 +18,13 @@
  * 
  * Open questions
  * 
- * - git merge --no-ff --no-commit   (let --no-ff  being a setting )
+ * - [OK] git merge --no-ff --no-commit   (let --no-ff  being a setting )
  *   merges without committing.  I can then Write a message and Store
  *   Nice : set place-holder saying "write message to describe what has been changed branch"
  * 
- * - As above, but after conflict resolution, write place-holder 
+ * - As above, but after conflict resolution, write default message
+ *   (maybe remember the intention "pull / merge"
+ * 
  *  
  * 
  * 
