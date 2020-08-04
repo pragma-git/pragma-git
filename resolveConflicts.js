@@ -12,7 +12,9 @@ var fs = require('fs');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
-const simpleGit = require('simple-git');  
+const simpleGit = require('simple-git'); 
+
+const util = require('./util_module.js'); // Pragma-git common functions 
 
 
 
@@ -97,7 +99,7 @@ async function _callback( name, event){
         case 'resolveAllDeletedButton':
             console.log('resolveAllDeletedButton');
             console.log(event);
-            gitResolveDeletions( state.repos[state.repoNumber].localFolder);
+            gitResolveUnsureFiles( state.repos[state.repoNumber].localFolder);
             break;
      
         case 'conflictsResolvedButton':
@@ -174,7 +176,7 @@ async function _callback( name, event){
         
         
     }
-    async function gitResolveDeletions( folder){
+    async function gitResolveUnsureFiles( folder){
         
         var tbody = document.getElementById("deletedTableBody");
         for (var i = 0, row; row = tbody.rows[i]; i++) {
@@ -184,29 +186,30 @@ async function _callback( name, event){
             let checked  = row.cells[0].getElementsByTagName('input')[0].checked;
             
             if (checked){
-                // Remove
-                try{
-                    // Store conflicting file names
-                    console.log('gitResolveDeletions -- deleting file = ' +fileName);
-                    await simpleGit( folder).rm(fileName, onDelete );
-                    function onDelete(err, result){ console.log(result); console.log(err) };
-        
-                }catch(err){
-                    console.log('gitResolveDeletions -- caught error deleting file = ' +fileName);
-                    console.log(err);
-                }
-            }else{
                 // Add
                 try{
                     // Store conflicting file names
-                    console.log('gitResolveDeletions -- add file = ' +fileName);
+                    console.log('gitResolveUnsureFiles -- add file = ' +fileName);
                     await simpleGit( folder).add(fileName, onAdd );
                     function onAdd(err, result){ console.log(result); console.log(err) };
         
                 }catch(err){
-                    console.log('gitResolveDeletions -- caught error adding file = ' +fileName);
+                    console.log('gitResolveUnsureFiles -- caught error adding file = ' +fileName);
                     console.log(err);
-                }                
+                }      
+            }else{
+                // Remove
+                try{
+                    // Store conflicting file names
+                    console.log('gitResolveUnsureFiles -- deleting file = ' +fileName);
+                    await simpleGit( folder).rm(fileName, onDelete );
+                    function onDelete(err, result){ console.log(result); console.log(err) };
+        
+                }catch(err){
+                    console.log('gitResolveUnsureFiles -- caught error deleting file = ' +fileName);
+                    console.log(err);
+                }
+                          
             }
 
             
@@ -215,7 +218,7 @@ async function _callback( name, event){
 
         //try{
             //// Store conflicting file names
-            //console.log('gitResolveDeletions -- Resolving conflicting files');
+            //console.log('gitResolveUnsureFiles -- Resolving conflicting files');
             
             //// Resolve with external merge tool
             ////writeMessage( 'Resolving conflicts');
@@ -223,7 +226,7 @@ async function _callback( name, event){
             //function onResolveConflict(err, result){ console.log(result); console.log(err) };
 
         //}catch(err){
-            //console.log('gitResolveDeletions -- caught error ');
+            //console.log('gitResolveUnsureFiles -- caught error ');
             //console.log(err);
             //// If external diff tool does not exist => write messate about this
             
@@ -232,7 +235,7 @@ async function _callback( name, event){
         // Update table
         let status_data;
         try{
-            console.log('gitResolveDeletions -- update table getting status');
+            console.log('gitResolveUnsureFiles -- update table getting status');
             await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
             function onStatus(err, result ){ 
                 status_data = result; 
@@ -241,10 +244,10 @@ async function _callback( name, event){
                 createDeletedFileTable(document, status_data); 
             };
             
-            console.log('gitResolveDeletions -- redraw table ');
+            console.log('gitResolveUnsureFiles -- redraw table ');
             createDeletedFileTable(document, status_data)
         }catch(err){
-            console.log('gitResolveDeletions -- error redrawing table');
+            console.log('gitResolveUnsureFiles -- error redrawing table');
             console.log(err);
         }
         
@@ -392,9 +395,17 @@ function createConflictingFileTable(document, status_data) {
     tbody.setAttribute('id','conflictingTableBody');
 
     // Fill tbody with content
-    for (let i in status_data.files) {
-        let fileStruct = status_data.files[i];
-        if ( fileStruct.working_dir == 'U' ){
+    console.log('createConflictingFileTable');
+    for (let i in status_data.conflicted) {
+        
+        let index = util.findObjectIndex(status_data.files, 'path', status_data.conflicted[i]);
+        let fileStruct = status_data.files[index];
+        let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
+        
+        console.log( 'XY = ' + XY + '  ' + fileStruct.path);
+        
+        
+        if ( XY == 'AA' || XY == 'UU' ){
             
 /*   X shows the status of the index, and Y shows the status of the work tree          
  *       D           D    unmerged, both deleted   - no conflict
@@ -448,10 +459,43 @@ function createDeletedFileTable(document, status_data) {
     tbody.setAttribute('id','deletedTableBody');
 
     // Fill tbody with content
-    for (let i in status_data.files) { 
-        let fileStruct = status_data.files[i];
-        if ( fileStruct.working_dir == 'D' ){
+    console.log('createDeletedFileTable');
+    for (let i in status_data.conflicted) { 
+        let index = util.findObjectIndex(status_data.files, 'path', status_data.conflicted[i]);
+        let fileStruct = status_data.files[index];
+        let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
+        console.log( 'XY = ' + XY + '  ' + fileStruct.path);
+        
+        if ( XY == 'D ' || XY == ' D' ||XY == 'DU' || XY == 'UD' || XY == 'AU'|| XY == 'UA'){
             console.log( fileStruct.path);
+            
+            
+            
+            // Description of what has happened
+            let reason = "unknown reason";
+            switch (XY){
+                case 'D ' :
+                    reason = 'File deleted in current branch';
+                    break;
+                case 'DU' :
+                    reason = 'File deleted in current branch';
+                    break;
+                case 'AU' :
+                    reason = 'File added in current branch';
+                    break;
+                    
+                case ' D' :
+                    reason = 'File deleted in other branch';
+                    break;
+                case 'UD' :
+                    reason = 'File deleted in other branch';
+                    break;
+                case 'UA' :
+                    reason = 'File added in other branch';
+                    break;
+
+            }
+            
             
             // Remember found file
             foundFiles.push(fileStruct.path);
@@ -477,13 +521,16 @@ function createDeletedFileTable(document, status_data) {
                 var label = document.createElement('label')
                 label.htmlFor = index;
                 
-                var description = document.createTextNode( fileStruct.path);
+                var description = document.createTextNode( fileStruct.path );
                 label.appendChild(description);
+                
+                var htmlReason = document.createTextNode( '  (' + reason + ')');
                 
                 var newline = document.createElement('br');
                 
                 cell.appendChild(checkbox);
                 cell.appendChild(label);
+                cell.appendChild(htmlReason);
                 cell.appendChild(newline);
             
             

@@ -108,16 +108,16 @@
 
     </div><br>
     
-    <!--  2) DELETED FILES -->     
-    <button class="collapsible" id="collapsibleDeleted">2) Deleted files</button>
+    <!--  2) KEEP OR DELETE -->     
+    <button class="collapsible" id="collapsibleDeleted">2) Select files to keep</button>
     <div class="content">    
-        <p>Files in your current branch were deleted in the branch you merge from.
-        You can chose to delete them (checked) or keep the existing files (uncheck)
+        <p>Pragma-git could not determine if the file should be kept or deleted. 
+        Checked files will be kept. Un-checked will be deleted.
         </p>    
       
         <table style="width:100%"> 
             <thead><tr>
-                <th class="path">Deleted file (un-check to keep file)</th>
+                <th class="path">Keep checked files </th>
             </tr></thead>
             <tbody id="deletedTableBody" >
             </tbody>
@@ -127,7 +127,7 @@
         <button id="resolveAllDeletedButton" 
             onclick="_callback('resolveAllDeletedButton',this)" 
             style="vertical-align: middle;">
-            Delete checked files (keep others)
+            Keep checked files (delete others)
         </button>
         <br>
 
@@ -167,7 +167,7 @@
     <button class="collapsible" id="collapsibleConflict">Instructions</button>
     <div class="content">
         
-        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted in one place, or
+        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted or modified in one place, or
          that there are differences in overlapping parts of two files.  Both these cases needs a manual choice, which change to keep.
         </p>   
         
@@ -176,12 +176,11 @@
         </p>
          
         <p><b>Section "1) Conflicting files"</b> : <br>  
-        Resolve the conflicts one section at a time. This is initiated by the "Solve conflicting files" button, which starts an external merge tool (see Requirements, below)
+        Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below)
         </p>
         
-        <p><b>Section "2) Deleted files"</b> : <br>  
-        Files that you are working on were deleted in the place you are merging from.  Typically this is the intention to delete them (checked box),
-        but in case you prefer to keep your files, uncheck the box. 
+        <p><b>Section "2) Select files to keep"</b> : <br>  
+        The files listed here were in a state where it could not be determined if they should be kept, or deleted.  Check files you wish to keep.
         </p>
         
         <p><b>Section "3) Accept changes"</b> : <br>  
