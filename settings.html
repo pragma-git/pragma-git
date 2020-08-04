@@ -240,6 +240,11 @@
                 <!--  One stash stored per repository -->
                 <input type="checkbox" id="onlyOneStash" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="onlyOneStash"> Store only latest stash (drop older stashes)</label><br>
+                
+                <!--  --no-ff merge (gitflow recommends this) -->
+                <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br>
+             
              
              
               
@@ -399,7 +404,12 @@
                             <dd><b>- Store only latest stash (drop older stashes) </b> : 
                                 Stops stash list to grow.  Typical workflow is to stash (store temporarily), and after a little while use stash pop to put back the data.
                                 This settings reduce the risk that you pop more than one stash (and thereby gets an unintended result)</dd>
-                             <br>
+                                                         
+                            <dd><b>- Merge without fast-forward </b> : 
+                                This is default, and makes clearer merges.  This guarantees a commit when merging,
+                                where the commit message clarifies the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.</dd>
+                            <br>
+                            
                         <dt><b>External tools</b></dt>
                             <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                             <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>

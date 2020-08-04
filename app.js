@@ -2098,11 +2098,17 @@ async function gitMerge( currentBranchName, selectedBranchName){
     let mergeResult;  
     let mergeError;  // mergeError.conflicts
     
+    // Set No-fast-forward option according to settings
+    let options = ['--no-commit' ];
+    if (state.NoFF_merge){
+        options = ['--no-ff', '--no-commit' ];
+    }
+    
     // Merge
     try{
         setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .mergeFromTo( selectedBranchName, currentBranchName, ['--no-ff', '--no-commit' ], onMerge);
+            .mergeFromTo( selectedBranchName, currentBranchName, options, onMerge);
             
         function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err };
        
@@ -2488,6 +2494,7 @@ function loadSettings(settingsFile){
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
             state.onlyOneStash = setting( state_in.onlyOneStash, true);
+            state.NoFF_merge = setting( state_in.NoFF_merge, true);
             
         // External tools (three levels -- state.tools.difftool )
             console.log('- setting external tools ');
