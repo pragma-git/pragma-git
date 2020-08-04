@@ -709,6 +709,7 @@ async function _callback( name, event){
         if ( localState.aboutWindow == true ){
             return
         }
+
         
         // Open new window -- and create closed-callback
         let about_win = gui.Window.open(
@@ -731,6 +732,7 @@ async function _callback( name, event){
                          // For systems that have multiple workspaces (virtual screens)
                         if ( cWindows.canSetVisibleOnAllWorkspaces() ){
                             cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
                         }
                     }
                 )
