@@ -453,7 +453,10 @@ async function injectIntoSettingsJs(document) {
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    }
+    } 
+    
+    // Always on top
+    win.setAlwaysOnTop( state.alwaysOnTop );
     
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
