@@ -372,6 +372,8 @@ function closeWindow(){
     // Return
     localState.mode = 'UNKNOWN';
     
+    localState.fileListWindow = false;  // Show to main program that window is closed
+    
     win.close();
     
 }
@@ -393,6 +395,24 @@ function createConflictingFileTable(document, status_data) {
     for (let i in status_data.files) {
         let fileStruct = status_data.files[i];
         if ( fileStruct.working_dir == 'U' ){
+            
+/*   X shows the status of the index, and Y shows the status of the work tree          
+ *       D           D    unmerged, both deleted   - no conflict
+ * 
+ *       A           U    unmerged, added by us    - accept   (file only on our side)
+ *       U           D    unmerged, deleted by them- ask           ( fixed in createDeletedFileTable)
+ * 
+ *       U           A    unmerged, added by them  - accept   (file only on their side)
+ *       D           U    unmerged, deleted by us  - ask         
+ * 
+ *       A           A    unmerged, both added     - conflict  (true file conflicts)
+ *       U           U    unmerged, both modified  - conflict     
+ *   
+ *  
+ * 
+ * 
+ * 
+ */
             
             // remember found file
             foundFiles.push(fileStruct.path);
