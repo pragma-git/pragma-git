@@ -252,7 +252,6 @@ async function _callback( name, event){
                     state.repos[realId].remoteURL = newUrl;
                 }catch(err){
                     
-                    displayAlert('Failed setting remote URL', err)
                     console.log('Repository set URL failed');
                     console.log(err);
                     document.getElementById(textareaId).style.color='orange';
