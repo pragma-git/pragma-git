@@ -71,7 +71,7 @@ async function injectIntoJs(document) {
     let a = createConflictingFileTable(document, status_data);
     document.getElementById('collapsibleConflict').click();  // Open collapsed section 1)
     
-    let b = createDeletedFileTable(document, status_data);
+    let b = createUnsureFileTable(document, status_data);
     document.getElementById('collapsibleDeleted').click();   // Open collapsed section 2)
     
     document.getElementById('collapsibleResolved').click();  // Open collapsed section 3)
@@ -113,6 +113,7 @@ async function _callback( name, event){
             console.log('undoMergeButton');
             console.log(event);
             gitUndoMerge( state.repos[state.repoNumber].localFolder);
+            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
             break;
 
 
@@ -242,11 +243,11 @@ async function _callback( name, event){
                 status_data = result; 
                 console.log(result); 
                 console.log(err) 
-                createDeletedFileTable(document, status_data); 
+                createUnsureFileTable(document, status_data); 
             };
             
             console.log('gitResolveUnsureFiles -- redraw table ');
-            createDeletedFileTable(document, status_data)
+            createUnsureFileTable(document, status_data)
         }catch(err){
             console.log('gitResolveUnsureFiles -- error redrawing table');
             console.log(err);
@@ -363,7 +364,7 @@ async function _update(){
             console.log(result); 
             console.log(err);
             createConflictingFileTable(document, status_data);
-            // createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
+            // createUnsureFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
         };
     }catch(err){
         
@@ -412,7 +413,7 @@ function createConflictingFileTable(document, status_data) {
  *       D           D    unmerged, both deleted   - no conflict
  * 
  *       A           U    unmerged, added by us    - accept   (file only on our side)
- *       U           D    unmerged, deleted by them- ask           ( fixed in createDeletedFileTable)
+ *       U           D    unmerged, deleted by them- ask           ( fixed in createUnsureFileTable)
  * 
  *       U           A    unmerged, added by them  - accept   (file only on their side)
  *       D           U    unmerged, deleted by us  - ask         
@@ -447,7 +448,7 @@ function createConflictingFileTable(document, status_data) {
     
     return foundFiles;
 }
-function createDeletedFileTable(document, status_data) {
+function createUnsureFileTable(document, status_data) {
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
@@ -460,7 +461,7 @@ function createDeletedFileTable(document, status_data) {
     tbody.setAttribute('id','deletedTableBody');
 
     // Fill tbody with content
-    console.log('createDeletedFileTable');
+    console.log('createUnsureFileTable');
     for (let i in status_data.conflicted) { 
         let index = util.findObjectIndex(status_data.files, 'path', status_data.conflicted[i]);
         let fileStruct = status_data.files[index];

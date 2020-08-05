@@ -1,76 +1,102 @@
 #!/bin/bash
 
 #
-# second          C - D - E - *Emod
-#                /
-# master  - A - B - F - G - *Gmod
-#                \
-# third           T1 - T2 
+# second   A1   A1      A   
+#          A2   A2       
+#          A3   A3       
+#               B 
+#
+#
+#
+#                   ---- C2
+#                 /
+#          A --- B 
+#                 \    
+#                   - C1 --- C3
+#    
+# master   A1    A1   
+#          A2    A2    B
+#          A3    A3    B
+#                B
+#                  +D
+#
+#
+      
 #
 # Emod and Gmod are new compared to created with "make_three_filled_branches.command"
 
-./make_three_filled_branches.command
 
-# master has files ABFG
-# second has files ABCDE
-#
-# in B, the following files exist (common to both branches)
-#  A, A1, A2,A3 , A-folder/A2, 
-#  B, B1, B2, B3 exist 
-#
-# The plan is now to modify them :
-# master : delete A, add A4, delete A2, add A5, edit A3
-# second : delete B, add B4, delete A2, add A5, edit A3
+REPO=/tmp/twoBranches
 
-REPO=/tmp/threeBranches
+# start all over
+rm -rf $REPO
 
+mkdir  $REPO
 cd $REPO
+git init
 
-# Make new conflicting commits Emod, Gmod
+#
+# master branch 
+#
+git checkout -b 'master'
 
-#   X shows the status of the index, and Y shows the status of the work tree
-#       D           D    unmerged, both deleted     A2 Accept
-#       A           U    unmerged, added by us      G  Conflict
-#       U           D    unmerged, deleted by them  B  Accept 
-#       U           A    unmerged, added by them    B4 Accept
-#       D           U    unmerged, deleted by us    A  Accept
-#       A           A    unmerged, both added       A5 Conflict
-#       U           U    unmerged, both modified    A3 Conflict
-
-
-
-# resolveConflicts.js:453 XY = UU  A3 
-# resolveConflicts.js:453 XY = AA  A5
-# resolveConflicts.js:453 XY = D   B
-# resolveConflicts.js:453 XY = A   B4
-# resolveConflicts.js:453 XY = A   C
-# resolveConflicts.js:453 XY = A   D
-# resolveConflicts.js:453 XY = A   E
-# resolveConflicts.js:453 XY = AU  G   Why not A4 ?
-
-# Change files in second
-git switch 'second'
-rm B
-echo 'second created B4' > B4
-rm A2 # both deleted
-echo 'second created A5' > A5 # Both created
-echo 'second edited A3' >> A3
+# master commit A, B
+echo 'master created DD' >  DD
+echo 'master created UD' >  UD
+echo 'master created DU' >  DU
+echo 'master created UU' >  UU
 git add .
-git commit -a -m 'Gmod'
+git commit -m 'A'
 
-# Change files in master
-git switch 'master'
-rm A
-echo 'master created A4' > A4
-rm A2 # both deleted
-echo 'master created A5' > A5 # Both created
-echo 'master edited A3' >> A3
+
+# branch master to second
+git checkout -b 'second'
+
+
+# work on branch master - commit C1 
+git checkout 'master'
+rm DD
+echo 'master created AU' >  AU
+rm DU 
+echo 'master created AA' >  AA
+echo 'master edited UU' >>  UU
+echo 'master edited UD' >>  UD
+
 git add .
-git commit -a -m 'Emod' 
+git commit -m 'C1'
 
 
-# Switch to master
-git switch 'master'
+# work on branch second - commit C2 
+git checkout 'second'
+rm DD
+rm UD 
+echo 'second created UA' >  UA
+echo 'second created AA' >  AA
+echo 'second edited UU' >>  UU
+echo 'second edited DU' >>  DU
+
+git add .
+git commit -m 'C2'
+
+
+## work on branch master - commit C3
+#git checkout 'master'
+#echo 'master created AU' >  AU
+
+#git add .
+#git commit -m 'C3'
+
+
+# End in branch master
+git checkout 'master'
+
+
+
+
+
+
+
+
 
 
 
