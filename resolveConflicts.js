@@ -68,11 +68,17 @@ async function injectIntoJs(document) {
     }
 
     // Draw tables, and store found files 
-    let a = createConflictingFileTable(document, status_data);
-    document.getElementById('collapsibleConflict').click();  // Open collapsed section 1)
     
     let b = createUnsureFileTable(document, status_data);
-    document.getElementById('collapsibleDeleted').click();   // Open collapsed section 2)
+    document.getElementById('collapsibleUnsure').click();   // Open collapsed section 1)
+    
+    if (b.length == 0){
+        document.getElementById('resolveAllConflictsButton').disabled = false; // Second button is enabled if no conflicts
+    }
+    
+    let a = createConflictingFileTable(document, status_data);
+    document.getElementById('collapsibleConflict').click();  // Open collapsed section 2)
+    
     
     document.getElementById('collapsibleResolved').click();  // Open collapsed section 3)
     
@@ -97,10 +103,14 @@ async function _callback( name, event){
             break;
             
         
-        case 'resolveAllDeletedButton':
-            console.log('resolveAllDeletedButton');
+        case 'resolveAllUnsureButton':
+            console.log('resolveAllUnsureButton');
             console.log(event);
             gitResolveUnsureFiles( state.repos[state.repoNumber].localFolder);
+            
+            // Enable "Solve conflicting files" button in step 2)
+            document.getElementById('resolveAllConflictsButton').disabled = false;
+            
             break;
      
         case 'conflictsResolvedButton':
@@ -406,27 +416,12 @@ function createConflictingFileTable(document, status_data) {
         
         console.log( 'XY = ' + XY + '  ' + fileStruct.path);
         
-        
+        /*   For paths with merge conflicts, X and Y show the modification states of each side of the merge        
+         *       A           A    unmerged, both added     - conflict  (true file conflicts)
+         *       U           U    unmerged, both modified  - conflict     
+         */        
         if ( XY == 'AA' || XY == 'UU' ){
-            
-/*   X shows the status of the index, and Y shows the status of the work tree          
- *       D           D    unmerged, both deleted   - no conflict
- * 
- *       A           U    unmerged, added by us    - accept   (file only on our side)
- *       U           D    unmerged, deleted by them- ask           ( fixed in createUnsureFileTable)
- * 
- *       U           A    unmerged, added by them  - accept   (file only on their side)
- *       D           U    unmerged, deleted by us  - ask         
- * 
- *       A           A    unmerged, both added     - conflict  (true file conflicts)
- *       U           U    unmerged, both modified  - conflict     
- *   
- *  
- * 
- * 
- * 
- */
-            
+
             // remember found file
             foundFiles.push(fileStruct.path);
             console.log( fileStruct.path);
@@ -467,6 +462,17 @@ function createUnsureFileTable(document, status_data) {
         let fileStruct = status_data.files[index];
         let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
         console.log( 'XY = ' + XY + '  ' + fileStruct.path);
+        
+        /*   For paths with merge conflicts, X and Y show the modification states of each side of the merge       
+         *       D           D    unmerged, both deleted   - no conflict
+         * 
+         *       A           U    unmerged, added by us    - accept   (file only on our side)
+         *       U           D    unmerged, deleted by them- ask           ( fixed in createUnsureFileTable)
+         * 
+         *       U           A    unmerged, added by them  - accept   (file only on their side)
+         *       D           U    unmerged, deleted by us  - ask         
+         * 
+         */
         
         if ( XY == 'D ' || XY == ' D' ||XY == 'DU' || XY == 'UD' || XY == 'AU'|| XY == 'UA'){
             console.log( fileStruct.path);

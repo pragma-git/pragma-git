@@ -79,37 +79,9 @@
 <body>
     
     <h2>Resolve Conflicts</h2>
-
     
-    <!--  1) CONFLICTING FILES --> 
-    <button class="collapsible" id="collapsibleConflict">1) Conflicting files :</button>
-    <div class="content">
-
-              
-        <table style="width:100%"> 
-            <thead><tr>
-                <th class="path">File with conflict</th>
-            </tr></thead>
-            <tbody id="conflictingTableBody" >
-            </tbody>
-        </table>
-        
-                
-         <br>
-         <button id="resolveAllConflictsButton" 
-                onclick="_callback('resolveAllConflictsButton',this)" 
-                style="vertical-align: middle;">
-                Solve conflicting files 
-            </button> 
-            (one after another) using external merge tool
-         <br>
-    
-  
-
-    </div><br>
-    
-    <!--  2) KEEP OR DELETE -->     
-    <button class="collapsible" id="collapsibleDeleted">2) Select files to keep</button>
+    <!--  1) KEEP OR DELETE -->     
+    <button class="collapsible" id="collapsibleUnsure">1) Select files to keep</button>
     <div class="content">    
         <p>Pragma-git could not determine if the file should be kept or deleted. 
         Checked files will be kept. Un-checked will be deleted.
@@ -124,14 +96,45 @@
         </table>
         
         <br>
-        <button id="resolveAllDeletedButton" 
-            onclick="_callback('resolveAllDeletedButton',this)" 
+        <button id="resolveAllUnsureButton" 
+            onclick="_callback('resolveAllUnsureButton',this)" 
             style="vertical-align: middle;">
             Keep checked files (delete others)
         </button>
         <br>
 
     </div><br>
+    
+    <!--  2) CONFLICTING FILES --> 
+    <button class="collapsible" id="collapsibleConflict">2) Conflicting files :</button>
+    <div class="content">
+        <p>This step cannot be done if there are any files listed in step 1) above.
+        </p>    
+      
+              
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">File with conflict</th>
+            </tr></thead>
+            <tbody id="conflictingTableBody" >
+            </tbody>
+        </table>
+        
+                
+         <br>
+         <button id="resolveAllConflictsButton" 
+                onclick="_callback('resolveAllConflictsButton',this)" 
+                style="vertical-align: middle;"
+                disabled>
+                Solve conflicting files 
+            </button> 
+            (one after another) using external merge tool
+         <br>
+    
+  
+
+    </div><br>
+
     
     <!--  3) CONFLICTS RESOLVED  --> 
     <button class="collapsible" id="collapsibleResolved">3) Accept changes</button>
@@ -174,14 +177,16 @@
         <p><b>This window has a stepwise approach</b> : <br>  
         Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
         </p>
-         
-        <p><b>Section "1) Conflicting files"</b> : <br>  
-        Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below)
-        </p>
         
-        <p><b>Section "2) Select files to keep"</b> : <br>  
+        <p><b>Section "1) Select files to keep"</b> : <br>  
         The files listed here were in a state where it could not be determined if they should be kept, or deleted.  Check files you wish to keep.
+        </p>      
+           
+        <p><b>Section "2) Conflicting files"</b> : <br>  
+        Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below).
+        This button will be enabled when there are no conflicts in step 1).
         </p>
+
         
         <p><b>Section "3) Accept changes"</b> : <br>  
         This is your last chance to change your mind.  <br>
