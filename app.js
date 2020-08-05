@@ -18,16 +18,6 @@
  * 
  * Open questions
  * 
- * - [OK] git merge --no-ff --no-commit   (let --no-ff  being a setting )
- *   merges without committing.  I can then Write a message and Store
- *   Nice : set place-holder saying "write message to describe what has been changed branch"
- * 
- * - As above, but after conflict resolution, write default message
- *   (maybe remember the intention "pull / merge"
- * 
- *  
- * 
- * 
  * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
  *      opener._callback('tagCheckout',event); // Calling _callback in opening window
  *  )
@@ -37,30 +27,6 @@
  *      git describe --tags --exact-match   
  *   to find. Catch error if no tag)
  * 
- * 
- * - new textarea :
- *   - placeholder
- *   - readOnly
- *   - value
- *   - title
- *   - tag
- *   - commit
- *   
- * 
- * - Resolve conflicts -- add all options in https://git-scm.com/docs/git-status.  
- * 
- *   create_merge_conflict.command  should be extended with all these
- * 
- *   X shows the status of the index, and Y shows the status of the work tree
- *       D           D    unmerged, both deleted
- *       A           U    unmerged, added by us
- *       U           D    unmerged, deleted by them
- *       U           A    unmerged, added by them
- *       D           U    unmerged, deleted by us
- *       A           A    unmerged, both added
- *       U           U    unmerged, both modified
- *    
- * 
  * - tag  pop-up menu , add option : remove tag
  * 
  * - history : list window (can this be same as tag list window ?)
@@ -68,12 +34,9 @@
  * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
  *   and clone from local to that repo
  * 
- * 
- * - Ask if I want to remove a temp-branch which is merged ?  Would be helpful
- * 
  * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
- * - Single file history
+ * - Single-file history
  * 
  * - Idea : Page with problem-solver
  *   - git reflog
@@ -813,20 +776,6 @@ async function _callback( name, event){
         
         menu.append(new gui.MenuItem({ type: 'separator' }));
         menu.append(new gui.MenuItem({ label: '... into "' + currentBranch +'"', enabled : false })); 
-        
-        // Add Cancel line
-        menu.append(new gui.MenuItem({ type: 'separator' }));
-        //menu.append(new gui.MenuItem({ label: 'CANCEL merge' }));
-        menu.append(
-            new gui.MenuItem(
-                { 
-                    label: 'CANCEL merge', 
-                    click: () => { console.log('Contextual menu -- clicked CANCEL');} 
-                } 
-            )
-        );
-        
-        
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();

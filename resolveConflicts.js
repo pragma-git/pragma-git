@@ -16,8 +16,6 @@ const simpleGit = require('simple-git');
 
 const util = require('./util_module.js'); // Pragma-git common functions 
 
-
-
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
@@ -152,18 +150,7 @@ async function _callback( name, event){
             //await waitTime( 1000);
             
             console.log('gitResolveConflicts -- Finished resolving conflicting files');
-            
-            // TODO (A) : clean out *.orig  backup files created by git mergetool
-            //
-            // I would like to remove all *.orig for the conflicting files once conflict resolved
-            //
-            // 1) store the conflicting files names : in "localState.conflict.repo[repoNumber].conflicting_files before merge
-            //
-            // 2) Then remove files.orig if conflict is resolved
-            //
-            
-            // TODO (B) : Write message text "Merged  selectedBranch  into  currentBranch "  (replace with names)
-            
+    
             
         }catch(err){
             console.log('gitResolveConflicts -- caught error ');
@@ -226,23 +213,7 @@ async function _callback( name, event){
 
             
         }
-        
 
-        //try{
-            //// Store conflicting file names
-            //console.log('gitResolveUnsureFiles -- Resolving conflicting files');
-            
-            //// Resolve with external merge tool
-            ////writeMessage( 'Resolving conflicts');
-            //await simpleGit( folder).raw(command, onResolveConflict );
-            //function onResolveConflict(err, result){ console.log(result); console.log(err) };
-
-        //}catch(err){
-            //console.log('gitResolveUnsureFiles -- caught error ');
-            //console.log(err);
-            //// If external diff tool does not exist => write messate about this
-            
-        //}
         
         // Update table
         let status_data;
@@ -374,7 +345,6 @@ async function _update(){
             console.log(result); 
             console.log(err);
             createConflictingFileTable(document, status_data);
-            // createUnsureFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
         };
     }catch(err){
         
