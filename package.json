@@ -27,7 +27,7 @@
     "mac": {
       "displayName": "Pragma-git",
       "copyright": "copyright",
-      "icon": "./images/questionmark_black.icns",
+      "icon": "./images/icon.icns",
       "plistStrings": {
         "CFBundleIdentifier": "io.github.evshiron.nwjs-builder-phoenix.project.modified",
         "CFBundleDocumentTypes": []
@@ -37,7 +37,7 @@
         "productName": "Pragma-git",
         "companyName": "Jan Axelsson",
         "copyright": "copyright",
-        "icon": "./images/questionmark_black.ico"
+        "icon": "./images/icon.ico"
     },
     "nsis": {
         "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
