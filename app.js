@@ -350,11 +350,16 @@ async function _callback( name, event){
             // Create new Tag
             await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
             function onCreateTag(err, result ){console.log(result);console.log(err);};
+            setStatusBar( 'Creating Tag "' + newTagName);
+            waitTime( WAIT_TIME);  
+            
+            // Push tag to remote
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+            function onPush(err, result) {console.log(result) };
             
             setStatusBar( 'Creating Tag "' + newTagName);
-            //await waitTime( 1000);  
-
             waitTime( WAIT_TIME);  
+            
 
             
         }catch(err){       
