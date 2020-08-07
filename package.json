@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "main": "app.html",
   "author": "Jan Axelsson", 
+  "license": "MIT",
   "window": {
     "show": false,
     "toolbar": false,
@@ -22,6 +23,25 @@
   },
   "build": {
     "nwFlavor": "normal",
-    "nwVersion": "v0.47.2"
+    "nwVersion": "v0.47.2",
+    "mac": {
+      "displayName": "Pragma-git",
+      "copyright": "copyright",
+      "icon": "./images/questionmark_black.icns",
+      "plistStrings": {
+        "CFBundleIdentifier": "io.github.evshiron.nwjs-builder-phoenix.project.modified",
+        "CFBundleDocumentTypes": []
+      }
+    },
+    "win": {
+        "productName": "Pragma-git",
+        "companyName": "Jan Axelsson",
+        "copyright": "copyright",
+        "icon": "./images/questionmark_black.ico"
+    },
+    "nsis": {
+        "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
+        "diffUpdaters": true
+    }
   }
 }
