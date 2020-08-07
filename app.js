@@ -1971,7 +1971,7 @@ async function gitPush(){
     // Push
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
     
-    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null}, onPush);
+    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
     function onPush(err, result) {console.log(result) };
     
     await waitTime( 1000);  

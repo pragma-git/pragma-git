@@ -5,7 +5,7 @@ TESTS
 
 ### Succesful merges
 
-**setup : **make_three_filled_branches.command
+**setup :** make_three_filled_branches.command
 
 **Pragma-git :** Stand in "master". Merge-button "second"
 
@@ -19,8 +19,8 @@ TESTS
 
 **Pragma-git :** Stand in "master". Merge-button "second"
 
-**Expected :** /tmp/threeBranches is in conflict with A-folder/A2 being changed,
-and B deleted in "second".
+**Expected :** /tmp/twoBranches has all possible conflicts, both within files,
+as well as between branches
 
  
 
