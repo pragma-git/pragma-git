@@ -17,17 +17,17 @@
  * ----
  * 
  * Open questions
- * 
- * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
- *      opener._callback('tagCheckout',event); // Calling _callback in opening window
- *  )
- * 
+* 
  * - message window should show tags as well
  *   ( use  
  *      git describe --tags --exact-match   
  *   to find. Catch error if no tag)
  * 
- * - tag  pop-up menu , add option : remove tag
+ * 
+ * 
+ * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
+ *      opener._callback('tagCheckout',event); // Calling _callback in opening window
+ *  )
  * 
  * - history : list window (can this be same as tag list window ?)
  * 
@@ -58,7 +58,7 @@
  *   console.log( mb.items[2].submenu.items[0].label ) // Menu/Fönster
  * 
  * Docs : https://www.npmjs.com/package/simple-git
- *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+ *        https://github.com/steveukx/git-js#readme  (nicely formatted API)
 */
 /* TESTS
  * 
@@ -155,12 +155,52 @@
  * MacOS :
  ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild -p osx64 -o ~/Pragma-git  ~/Documents/Projects/Pragma-git/Pragma-git
  
- * All Platforms :
-~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild \
+ *
+ * nw-builder (all platforms) :
+ * 
+ ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild \
   --platforms win32,win64,osx64,linux32,linux64 \
+  --flavor normal \
   --buildDir ~/Pragma-git \
   --name Pragma-git \
   ~/Documents/Projects/Pragma-git/Pragma-git
+  *
+  * Options :     
+    appName: argv.name,
+    files: path.resolve(process.cwd(), files) 
+    flavor: argv.flavor || 'sdk',
+    platforms: argv.platforms ? argv.platforms.split(',') : null,
+    version: argv.version,
+    macIcns: argv.macIcns || false,
+    winIco: argv.winIco || false,
+    cacheDir: argv.cacheDir ? path.resolve(process.cwd(), argv.cacheDir) : path.resolve(__dirname, '..', 'cache'),
+    buildDir: path.resolve(process.cwd(), argv.buildDir),
+    forceDownload: argv.forceDownload
+  * 
+  * 
+  * 
+  * 
+  * nwjs-phoenix-builder
+  * 
+  * 1) brew cask install wine-stable --no-quarantine
+  * 2) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
+  * 3) rm /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe \
+       ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe
+  * 
+  * 4) Create 
+    ~/Documents/Projects/Pragma-git/node_modules/.bin/build \
+    --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
+    --mirror https://dl.nwjs.io/  \
+    --name Pragma-git  \
+    --concurrent true  \
+    ~/Documents/Projects/Pragma-git/Pragma-git
+  * 
+  * Options :
+  * https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+  * 
+  * 
+  * 
+
 
  */
 

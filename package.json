@@ -3,6 +3,7 @@
   "description": "Chrome platform app.",
   "version": "0.1.0",
   "main": "app.html",
+  "author": "Jan Axelsson", 
   "window": {
     "show": false,
     "toolbar": false,
@@ -18,5 +19,9 @@
   },
   "dependencies": {
     "simple-git": "^2.11.0"
+  },
+  "build": {
+    "nwFlavor": "normal",
+    "nwVersion": "v0.47.2"
   }
 }
