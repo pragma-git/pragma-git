@@ -35,7 +35,10 @@
         <br>
         
         <button  id="Select-button"
-            onclick="_callback('Select-button', document.getElementById('tagSelection').value );">
+            onclick="
+                event.buttonText = document.getElementById('Select-button').innerHTML;
+                event.selected = document.getElementById('tagSelection').value ;
+                 _callback('Select-button', event);">
             Checkout
             </button>    
         

@@ -67,6 +67,9 @@ async function injectIntoJs(document) {
 
     // Populate window
     fillSelectWithValues(localState.arrayTagList, '*');
+    
+    // Set button name
+    document.getElementById('Select-button').innerHTML =  localState.tagListButton;
 
 };
 function fillSelectWithValues( tagValues, filterRule){
@@ -118,7 +121,7 @@ async function _callback( name, event, event2){
         }
         case 'Select-button' : {
             console.log(event);
-            opener._callback('tagCheckout',event); // Calling _callback in opening window
+            opener._callback('tagSelected',event); // Calling _callback in opening window
             closeWindow();
             break;
         }

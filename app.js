@@ -537,8 +537,15 @@ async function _callback( name, event){
         }
         break; 
       } // end case 'detachedHeadDialog'  
-      case 'tagCheckout': { // Called from tagList.js
-        checkoutTag(event);
+      case 'tagSelected': { // Called from tagList.js
+        switch (event.buttonText ){
+            case 'Checkout' :
+                checkoutTag(event.selected);
+                break;
+            case 'Delete' :
+                deleteTag(event.selected);
+                break;
+        }
       }
       default: {
         // code block
@@ -809,11 +816,20 @@ async function _callback( name, event){
             new gui.MenuItem(
                 { 
                     label: 'Checkout tag ', 
-                    click: () => { tag_checkout_dialog();} 
+                    click: () => { tag_list_dialog();} 
                 } 
             )        
         )
 
+        
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'Delete tag ', 
+                    click: () => { localState.tagListButton = 'Delete'; tag_list_dialog();} 
+                } 
+            )        
+        )
 
         
 
@@ -854,7 +870,23 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     }
- 
+    async function deleteTag(tagName){
+        
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+            
+            //await simpleGit(folder).checkout( hash, onCheckout);
+            //function onCheckout(err, result){console.log(result)} 
+            
+        }catch(err){
+            console.log('Failed checking out tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        _setMode('UNKNOWN');
+        
+    } 
     // main window
     async function storeButtonClicked() { 
         
@@ -2148,7 +2180,7 @@ async function addExistingRepo( folder) {
 }    
 
 // Dialogs
-async function tag_checkout_dialog(){
+async function tag_list_dialog(){
             
             let tagList;
             
