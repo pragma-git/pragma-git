@@ -821,6 +821,8 @@ async function _callback( name, event){
             )        
         )
 
+       
+        menu.append(new gui.MenuItem({ type: 'separator' })); 
         
         menu.append(
             new gui.MenuItem(
@@ -872,14 +874,38 @@ async function _callback( name, event){
     }
     async function deleteTag(tagName){
         
+        // Delete remote
         try{
             let folder = state.repos[state.repoNumber].localFolder;
+
+            setStatusBar( 'Deleting tag');
+
+            await simpleGit( folder )
+            .raw( [  'push', '--delete' , 'origin', tagName] , onPush);
+            function onPush(err, result) {console.log(result); console.log(err) };
             
-            //await simpleGit(folder).checkout( hash, onCheckout);
-            //function onCheckout(err, result){console.log(result)} 
+            await waitTime( 1000);  
             
         }catch(err){
-            console.log('Failed checking out tag = ' + tagName);
+            console.log('Failed deleting remote tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        // Delete local
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+
+            setStatusBar( 'Deleting tag');
+
+            await simpleGit( folder )
+            .raw( [  'tag', '-d' , tagName] , onDelete);
+            function onDelete(err, result) {console.log(result); console.log(err) };
+            
+            await waitTime( 1000);  
+            
+        }catch(err){
+            console.log('Failed deleting local tag = ' + tagName);
             console.log(err);
             
         }
