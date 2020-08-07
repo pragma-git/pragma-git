@@ -22,7 +22,7 @@
     "simple-git": "^2.11.0"
   },
   "build": {
-    "nwFlavor": "normal",
+    "nwFlavor": "sdk",
     "nwVersion": "v0.47.2",
     "mac": {
       "displayName": "Pragma-git",

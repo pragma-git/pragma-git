@@ -1280,10 +1280,16 @@ async function _update(){
     let modeName = getMode();
     let  status_data = [];
     let  folder = "";
-    let fullFolderPath = state.repos[ state.repoNumber].localFolder;
+    let fullFolderPath = "";
+    
+    if (state.repos.length >0){
+        fullFolderPath = state.repos[ state.repoNumber].localFolder; 
+    }
+    
     
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
+        
         try{
             status_data = await gitStatus();
             let result = await gitLocalFolder();
@@ -1402,22 +1408,26 @@ async function _update(){
         }
          
     // Stash-pop button (show if no changed files)
-        try{
-            let stash_status;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
-                .stash(['list'], onStash);
-            function onStash(err, result ){  stash_status = result }
-            
-            
-            //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
-            if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
-            {
-                document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
-            }else{
-                document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
+        let stash_status;
+        if (state.repos.length > 0){
+            try{
+                
+                await simpleGit( state.repos[state.repoNumber].localFolder)
+                    .stash(['list'], onStash);
+                function onStash(err, result ){  stash_status = result }
+                
+                
+                //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+                if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
+                {
+                    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
+                }else{
+                    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
+                }
+            }catch(err){  
+                console.log(err);
             }
-        }catch(err){  
-            console.log(err);
+            
         }
                
                         
@@ -1804,7 +1814,10 @@ async function gitIsInstalled(){
         function test(err, result){ 
             console.log(result); 
             resultMessage = result;
-            isInstalled = true;
+            
+            if (err == undefined){
+                isInstalled = true;
+            }
         }; 
     }catch(err){
         console.log(err); 
@@ -2094,7 +2107,6 @@ async function gitFetch(){
         console.log('Error in gitFetch()');
         console.log(err);
         error = err;
-        displayAlert('Failure fetching from remote', err); 
     }
   
 }
