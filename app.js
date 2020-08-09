@@ -24,6 +24,10 @@
  *   to find. Catch error if no tag)
  * 
  * 
+ * - .gitignore  -- remove desktop.ini  files
+ *   https://tortoisegit.org/docs/tortoisegit/tgit-dug-ignore.html  has a good dialog how to add to .gitignore
+ * 
+ * 
  * 
  * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
  *      opener._callback('tagCheckout',event); // Calling _callback in opening window

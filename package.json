@@ -3,7 +3,7 @@
   "description": "Chrome platform app.",
   "version": "0.1.0",
   "main": "app.html",
-  "author": "Jan Axelsson", 
+  "author": "Jan Axelsson",
   "license": "MIT",
   "window": {
     "show": false,
@@ -34,14 +34,17 @@
       }
     },
     "win": {
-        "productName": "Pragma-git",
-        "companyName": "Jan Axelsson",
-        "copyright": "copyright",
-        "icon": "./images/icon.ico"
+      "productName": "Pragma-git",
+      "companyName": "Jan Axelsson",
+      "copyright": "copyright",
+      "icon": "./images/icon.ico"
     },
     "nsis": {
-        "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
-        "diffUpdaters": true
+      "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
+      "diffUpdaters": true
     }
+  },
+  "devDependencies": {
+    "nwjs-builder-phoenix": "^1.15.0"
   }
 }
