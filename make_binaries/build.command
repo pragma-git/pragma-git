@@ -22,17 +22,43 @@
 # 2) sudo gem install fpm # For linux .deb creation
 
 
+
+#
 # Build dists into : "/Users/jan/Documents/Projects/Pragma-git/dist"
+#
 
-~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
---tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
---mirror https://dl.nwjs.io/  \
---name Pragma-git  \
---concurrent true  \
-~/Documents/Projects/Pragma-git/Pragma-git
+    ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
+    --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
+    --mirror https://dl.nwjs.io/  \
+    --name Pragma-git  \
+    --concurrent true  \
+    ~/Documents/Projects/Pragma-git/Pragma-git
 
-#Options :
-# https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+    #Options :
+    # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+
+
+#
+# Build Windows installers
+#
+    # 64-bit
+    echo 'BUILDING ẂIN 64-BIT'
+    mkdir ../dist/win64
+
+    makensis \
+    -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x64') \
+    -DOUTPUT='win64\Pragma-git-installer.exe' \
+    windows_installer.nsi
+    
+    # 32-bit
+    echo 'BUILDING ẂIN 32-BIT'
+    mkdir ../dist/win32
+
+    makensis \
+    -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x86') \
+    -DOUTPUT='win32\Pragma-git-installer.exe' \
+    windows_installer.nsi
+
 
 
 
