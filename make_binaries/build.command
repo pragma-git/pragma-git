@@ -16,16 +16,23 @@
 #    ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe
 
 
-# To allow packaging for (not implemented yet)
+# To create installers
 
-# 1) brew install makensis
-# 2) sudo gem install fpm # For linux .deb creation
+# 1) brew install makensis # For making windows installer
+# 2) brew install create-dmg # For creating mac installer
+
+
+# NOT implemented yet :
+# 3) sudo gem install fpm # For linux .deb creation
 
 
 
 #
 # Build dists into : "/Users/jan/Documents/Projects/Pragma-git/dist"
 #
+    echo '=========================='
+    echo 'BUILDING FOR ALL PLATFORMS'
+    echo '=========================='
 
     ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
     --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
@@ -39,19 +46,60 @@
 
 
 #
+# Build Mac installer
+#
+    echo '======================'
+    echo 'INSTALLER MACOS 64-BIT'
+    echo '======================'
+
+    # Move .app to temporary folder
+    mkdir ../dist/temp-macos
+    mv "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/" ../dist/temp-macos
+    
+    # Work in destination folder (dist/mac) 
+    mkdir ../dist/mac
+    cd ../dist/mac
+     
+    # Make .dmg
+    test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
+    create-dmg \
+      --volname "Pragma-git-Installer" \
+      --volicon "../../Pragma-git/images/icon.icns" \
+      --window-pos 200 120 \
+      --window-size 600 400 \
+      --icon-size 80 \
+      --icon "Pragma-git.app"  192 190 \
+      --hide-extension "Pragma-git.app" \
+      --app-drop-link 448 190 \
+      --icon ".fseventsd"  2000 190 \
+      --icon ".VolumeIcon.icns"  2000 190 \
+      "Pragma-git-Installer.dmg" \
+      "../temp-macos/"
+    
+    # Clean up
+    cd -
+    mv ../dist/temp-macos/Pragma-git.app "../dist/$(ls -1 ../dist/|grep 'mac-x64')/"
+    rm -r ../dist/temp-macos
+    
+
+
+#
 # Build Windows installers
 #
-    # 64-bit
-    echo 'BUILDING ẂIN 64-BIT'
+
+    echo '===================='
+    echo 'INSTALLER ẂIN 64-BIT'
+    echo '===================='
     mkdir ../dist/win64
 
     makensis \
     -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x64') \
     -DOUTPUT='win64\Pragma-git-installer.exe' \
     windows_installer.nsi
-    
-    # 32-bit
-    echo 'BUILDING ẂIN 32-BIT'
+
+    echo '===================='
+    echo 'INSTALLER ẂIN 32-BIT'
+    echo '===================='
     mkdir ../dist/win32
 
     makensis \
