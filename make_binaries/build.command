@@ -24,6 +24,7 @@
 
 # NOT implemented yet :
 # 3) sudo gem install fpm # For linux .deb creation
+# 4) brew install gnu-tar
 
 
 
@@ -106,8 +107,21 @@
     -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x86') \
     -DOUTPUT='win32\Pragma-git-installer.exe' \
     windows_installer.nsi
+    
 
 
+#
+# Build Linux installers
+#
+
+    echo '============================'
+    echo 'INSTALLER LINUX 64-BIT (DEB)'
+    echo '============================'
+    cd ~/Documents/Projects/Pragma-git/dist
+    fpm -s dir -t deb -n test --description "Pragma-git -- the pragmatic revision control"  -C Pragma-git-0.1.0-linux-x64 .=/opt/pragma-git
+    
+    
+    
 
 
 # Finish
