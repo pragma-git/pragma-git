@@ -20,11 +20,8 @@
 
 # 1) brew install makensis # For making windows installer
 # 2) brew install create-dmg # For creating mac installer
-
-
-# NOT implemented yet :
 # 3) sudo gem install fpm # For linux .deb creation
-# 4) brew install gnu-tar
+# 4) brew install gnu-tar # (tar for macos, for fpm)
 
 
 
@@ -118,7 +115,21 @@
     echo 'INSTALLER LINUX 64-BIT (DEB)'
     echo '============================'
     cd ~/Documents/Projects/Pragma-git/dist
-    fpm -s dir -t deb -n test --description "Pragma-git -- the pragmatic revision control"  -C Pragma-git-0.1.0-linux-x64 .=/opt/pragma-git
+    mkdir linux64
+    
+    DIR=$(ls -1 ../dist/|grep  'linux-x64')
+    
+    fpm -s dir \
+    -t deb \
+    -n 'pragma-git' \
+    -m 'axelsson.jan@gmail.com' \
+    --version '0.1.0' \
+    --description "Pragma-git -- the pragmatic revision control"  \
+    --deb-no-default-config-files \
+    -C "$DIR" \
+    --package "linux64/$DIR.deb" \
+    .=/opt/pragma-git
+    
     
     
     
