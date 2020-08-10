@@ -461,6 +461,9 @@ async function injectIntoSettingsJs(document) {
     console.log('Settings - state :');  
     console.log(global.state);
     
+    // Write path to div
+    document.getElementById('path').innerHTML = process.env.PATH;
+    
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
     document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;

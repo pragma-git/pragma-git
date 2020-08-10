@@ -29,7 +29,7 @@
       "copyright": "copyright",
       "icon": "./images/icon.icns",
       "plistStrings": {
-        "CFBundleIdentifier": "io.github.evshiron.nwjs-builder-phoenix.project.modified",
+        "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
         "CFBundleDocumentTypes": []
       }
     },

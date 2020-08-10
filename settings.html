@@ -249,6 +249,7 @@
              
               
             <h4>External tools</h4>  
+
             
                 <p><i>(typically the same in both fields ) </i></p>
             
@@ -257,8 +258,11 @@
                 
                 <label for="gitMergeTool"> Merge tool</label><br>
                 <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/><br><br>
-
-        
+            
+                <p>
+                PATH (see NOTE, in instructions below): <br><br>
+                <span id='path'><span>
+                </p>       
             <br>   
     
         </div><!-- foldable content -->
@@ -415,6 +419,15 @@
                             <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
                      </dl>     
                 </p>
+                
+                <p><B>NOTE : </B> If the external diff/merge tools don't open, their path may not be accessible to Pragma-git.  
+                This can be fixed, by creating a one-line text file named <code>path.txt</code> into the <code>.Pragma-git</code> folder, inside your home directory.
+                This file should start with the operating system's path delimiter ("<code>;</code>" for Windows, "<code>:</code>" for Mac and Linux), followed by the path to the
+                folder containing your diff and merge tools.  Example for mac :
+                </p>
+                <code>
+                :/usr/local/bin
+                </code>
                 <br>
                 <br>
             

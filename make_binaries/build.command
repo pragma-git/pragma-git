@@ -88,7 +88,7 @@
 #
 
     echo '===================='
-    echo 'INSTALLER ẂIN 64-BIT'
+    echo 'INSTALLER WIN 64-BIT'
     echo '===================='
     mkdir ../dist/win64
 
@@ -98,7 +98,7 @@
     windows_installer.nsi
 
     echo '===================='
-    echo 'INSTALLER ẂIN 32-BIT'
+    echo 'INSTALLER WIN 32-BIT'
     echo '===================='
     mkdir ../dist/win32
 

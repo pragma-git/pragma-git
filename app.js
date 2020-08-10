@@ -281,6 +281,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
+        
+    // Add to path 
+    try{
+        process.env.PATH += fs.readFileSync(settingsDir + pathsep + 'path.txt','utf8').replace(/(\r\n|\n|\r)/gm, ""); 
+    }catch(err){
+        console.log(err);
+    }
 
 
 // ---------
