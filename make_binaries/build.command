@@ -28,6 +28,7 @@
 #
 # Build dists into : "/Users/jan/Documents/Projects/Pragma-git/dist"
 #
+    echo ' '
     echo '=========================='
     echo 'BUILDING FOR ALL PLATFORMS'
     echo '=========================='
@@ -46,6 +47,7 @@
 #
 # Build Mac installer
 #
+    echo ' '
     echo '======================'
     echo 'INSTALLER MACOS 64-BIT'
     echo '======================'
@@ -58,7 +60,7 @@
     mkdir ../dist/mac
     cd ../dist/mac
      
-    # Make .dmg
+    # Make .dmg in ../dist/temp-macos
     test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
     create-dmg \
       --volname "Pragma-git-Installer" \
@@ -74,17 +76,18 @@
       "Pragma-git-Installer.dmg" \
       "../temp-macos/"
     
-    # Clean up
+    # Clean up 
     cd -
     mv ../dist/temp-macos/Pragma-git.app "../dist/$(ls -1 ../dist/|grep 'mac-x64')/"
     rm -r ../dist/temp-macos
-    
 
+    pwd
 
 #
 # Build Windows installers
 #
 
+    echo ' '
     echo '===================='
     echo 'INSTALLER WIN 64-BIT'
     echo '===================='
@@ -95,6 +98,7 @@
     -DOUTPUT='win64\Pragma-git-installer.exe' \
     windows_installer.nsi
 
+    echo ' '
     echo '===================='
     echo 'INSTALLER WIN 32-BIT'
     echo '===================='
@@ -111,26 +115,39 @@
 # Build Linux installers
 #
 
+    echo ' '
     echo '============================'
     echo 'INSTALLER LINUX 64-BIT (DEB)'
     echo '============================'
     cd ~/Documents/Projects/Pragma-git/dist
     mkdir linux64
     
-    DIR=$(ls -1 ../dist/|grep  'linux-x64')
     
-    fpm -s dir \
-    -t deb \
-    -n 'pragma-git' \
-    -m 'axelsson.jan@gmail.com' \
-    --version '0.1.0' \
+    DIR=$(ls -1 ../dist/|grep  'linux-x64') # Pragma-git-0.1.0-linux-x64
+    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-linux-x64 => VERSION='0.1.0'
+    chmod -R a+x "$DIR"
+    
+    rm "linux64/$DIR.deb" 
+    
+    fpm \
+    --input-type dir \
+    --output-type deb \
+    --name 'pragma-git' \
+    --maintainer 'axelsson.jan@gmail.com' \
+    --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
     --deb-no-default-config-files \
-    -C "$DIR" \
+    --chdir "$DIR" \
     --package "linux64/$DIR.deb" \
+    --after-install '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postinst' \
+    --after-remove '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git
     
-    
+ 
+    echo ' '
+    echo '=====' 
+    echo 'DONE '
+    echo '=====' 
     
     
 
