@@ -2,6 +2,10 @@
 
 # Some good input from https://github.com/Aluxian/nwjs-starter
 
+#
+# REQUIREMENTS
+#
+
 # Install nwjs-pheonix-builder
 # 1) cd ~/Documents/Projects/Pragma-git/Pragma-git >
 # 2) npm install nwjs-builder-phoenix --save-dev
@@ -10,18 +14,27 @@
 
 # Prerequisits nwjs-phoenix-builder
 
-# 1) brew cask install wine-stable --no-quarantine
-# 2) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
-# 3) rm ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe  \
+# 4) brew cask install wine-stable --no-quarantine
+# 5) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
+# 6) rm ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe  \
 #    ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe
 
 
 # To create installers
 
-# 1) brew install makensis # For making windows installer
-# 2) brew install create-dmg # For creating mac installer
-# 3) sudo gem install fpm # For linux .deb creation
-# 4) brew install gnu-tar # (tar for macos, for fpm)
+# 7) brew install makensis # For making windows installer
+# 8) brew install create-dmg # For creating mac installer
+# 9) sudo gem install fpm # For linux .deb creation
+# 10) brew install gnu-tar # (tar for macos, for fpm)
+
+
+#
+# TROUBLE-SHOOTING
+#
+
+# - no windows icons.   5) or 6) above 
+
+
 
 
 
