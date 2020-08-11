@@ -13,7 +13,8 @@
     "width": 460,
     "height": 140,
     "min_width": 350,
-    "min_height": 140
+    "min_height": 140,
+    "icon": "./images/icon.png"
   },
   "scripts": {
     "start": "nw ."
