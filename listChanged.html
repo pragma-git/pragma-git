@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Changed files</title>
+    
+    <script src="listChanged.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+        }
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+        
+        .icon {
+          display: inline-block;
+          line-height: 30px;
+          padding-left: 17px;
+        }
+        .added {
+          background: url("images/added.png") no-repeat scroll 0 0 transparent; 
+          display: inline-block;
+          padding-left: 1.2em; 
+          vertical-align:middle;        
+          background-size: 1em;
+        }
+        .modified {
+           background: url("images/modified.png") no-repeat scroll 0 0 transparent; 
+          display: inline-block;
+          padding-left: 1.2em; 
+          vertical-align:middle;        
+          background-size: 1em;
+        }
+        .deleted {
+           background: url("images/deleted.png") no-repeat scroll 0 0 transparent; 
+          display: inline-block;
+          padding-left: 1.2em; 
+          vertical-align:middle;        
+          background-size: 1em;
+        }
+    
+    
+    </style>
+ 
+    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          color: white;
+          font-weight: bold;
+          float: right;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+        }
+    </style>
+    
+       
+
+    
+</head>
+<body>
+    
+    <h2>List of modified files</h2>
+    
+    <p>
+        
+    </p>
+    
+    <!--  CHANGED FILES -- this title is changed in listChanges.js if history mode--> 
+    <button class="collapsible" id="listFiles">Files that will be stored (checkboxed):</button>  <!--  History mode : "Files changed since previous revision : --> 
+    
+ 
+    <div class="content">
+           
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">Changed files</th>
+                <th class="path"> <span id="diffAllSpan" style="color: blue; cursor: pointer" onclick="_callback('diffLinkAll',this)"> (diff all files) </span>  </th> 
+            </tr></thead>
+            <tbody id="listFilesTableBody" >
+            </tbody>
+        </table>
+        
+                 
+         <div id="applyButtonDiv">       
+         <br>
+         <button id="applySelectedFilesButton" 
+                onclick="_callback('applySelectedFilesButton',this)" 
+                style="vertical-align: middle;">
+                Update Selection
+            </button> 
+         <br>
+         </div>
+
+    </div><br>
+
+        
+    <!--  INSTRUCTIONS FOLDABLE HEADER--> 
+    <button class="collapsible" id="instructions">Instructions :</button>
+    
+    <div class="content">
+        
+        <!--  1) INSTRUCTIONS CHANGED FILES (disabled in listChanged.js, if history-list --> 
+        <div id="instructionsHEAD">
+            
+            <p>
+            <b>Changed files history</b>:<br>
+            This window shows files that have changed since the last stored revision.
+            </p>
+                
+        
+            <dl>
+              <dt>The icons show how the files were changed </dt>
+                <dd> <img src="images/added.png"  height="17" width="17"> is a new file, which did not exist in previous revision </dd>
+                <dd> <img src="images/modified.png"  height="17" width="17"> is a file that has changed since previous revision </dd>
+                <dd> <img src="images/deleted.png"  height="17" width="17"> is a file that has been deleted (but existed in previous revision)  </dd>
+              <dt></dt>
+            </dl>
+  
+                  
+                
+            <p><b>Check-boxes </b>:<br>
+            Pragma-git assumes that you wish to store all files you are working with.  
+            This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
+            </p>
+            
+            <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
+                  
+            <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+            
+            <p><b>Other file operations </b>: </p>     
+              
+            <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
+            <p><b>(diff)</b> opens the external diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
+            <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+            <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+            
+            
+            <p>Not all options are available for every type of change.  
+            For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
+            Therefore the "diff" linke will not be visible.
+            The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
+    
+        </div>
+    
+    
+        <!--  2) INSTRUCTIONS HISTORY FILES (disabled in listChanged.js, if file-list for HEAD -->        
+        <div id="instructionsHistory">
+            <p>
+            <b>Changed files history</b>:<br>
+            This window shows files that have changed between this revision, and previous revision.
+            </p>
+            
+            <dl>
+              <dt>The icons show how the files were changed </dt>
+                <dd> <img src="images/added.png"  height="17" width="17"> is a new file, which did not exist in previous revision </dd>
+                <dd> <img src="images/modified.png"  height="17" width="17"> is a file that has changed since previous revision </dd>
+                <dd> <img src="images/deleted.png"  height="17" width="17"> is a file that was deleted in this revision (but existed in previous revision)  </dd>
+              <dt></dt>
+            </dl>
+  
+              
+            <p><b>(diff)</b> opens the external diff viewer, and shows how the file changed between this and previous revision.  Requires external diff viewer defined in settings</p>
+    
+    
+        </div>        
+    
+    
+    </div>
+
+<!--  Warning dialog for restore  --> 
+
+<dialog id="restoreDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p>This will remove all changes, and restore the file to its stored state.  Do your really want to discard the changes? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('restoreDialog').close();_callback('discardLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('restoreDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+<!--  Warning dialog for delete  --> 
+
+<dialog id="deleteDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p>This will delete the file on disk.  Do your really want to delete ? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('deleteDialog').close();_callback('deleteLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('deleteDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+ 
+<script>  <!--  selectedFile used in dialog   -->
+    var selectedFile;  // Will be set when clicking "restore" (which is a dynamically generated link, created from javascript)
+</script>
+
+
+  
+
+
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+        });
+    }
+</script>
+
+
+<!--  Onload, call javascript file  --> 
+<script>
+
+
+    window.addEventListener(
+        'DOMContentLoaded', 
+        (event) => {
+            console.log('listChanged.html :DOM fully loaded and parsed');
+            injectIntoJs(document);
+        }
+    );
+    window.addEventListener(
+        'unload', 
+        (event) => {
+            console.log('listChanged.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+        }
+    );
+</script>
+    
+  
+
+
+</body>
+</html>
+

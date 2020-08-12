@@ -13,86 +13,216 @@
  * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
  */
 
-/* ISSUES
- * ------
- * 
- * /
- * 
- * /* Namnförslag
- * digit
- * gitenough 
- * legit
- * agit -- Agit is the short form o agitated. It refers to people who looks so mean or somewhat close to a yeti. It can also refer to people who looks so stressed and fucked up. 
- * gitsy (finns)
- * gitta / gitaH
- * gitty  (finns)  -- "Being very happy while showing signs of nervousness. Being happy while exhibiting behavior associated with not thinking clearly"
-  */
 /* TODO
  * ----
  * 
  * Open questions
  * 
- * - Rewrite simpleGit commands as in dropFile()
- *
- * - Add pull from remote (icon in title-bar after "repo(branch)"
+ * - DEFAULT mode : hide all buttons
+ * - on windows -- alwaysOnTop alternative should not be checked and grayed.  Should be hidden, or disabled and grayed
  * 
- * - How to handle local changes when pulling ?  Stash, pull, pop ?   ( https://stackoverflow.com/questions/10414769/git-pull-keeping-local-changes )
- *
- * - How to checkout ? (Maybe let Store button become Chechout when browsing history ?)  document.getElementById("store-button").innerHTML="Checkout"
  * 
- * - How to handle change in checkout which is not HEAD (detached head)?  
- *   1) Auto-create branch if find that it is detached head on commit?   "git checkout -b newbranch"
- *   2) Dialog to ask if create new branch or move to top ?  
- *   3) Instead: save as non-git in separate folder ? That would be easier to understand.
+ * 
+* 
+ * - message window should show tags as well
+ *   ( use  
+ *      git describe --tags --exact-match   
+ *   to find. Catch error if no tag)
+ * 
+ * 
+ * - .gitignore  -- remove desktop.ini  files
+ *   https://tortoisegit.org/docs/tortoisegit/tgit-dug-ignore.html  has a good dialog how to add to .gitignore
+ * 
+ * 
+ * 
+ * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
+ *      opener._callback('tagCheckout',event); // Calling _callback in opening window
+ *  )
+ * 
+ * - history : list window (can this be same as tag list window ?)
+ * 
+ * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
+ *   and clone from local to that repo
+ * 
+ * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
  *
- * - See list of files clicking on Modified / New / Deleted
+ * - Single-file history
+ * 
+ * - Idea : Page with problem-solver
+ *   - git reflog
+ *   -
+ * 
+ * - add scribble area (note) for each branch and repo
+ * 
+ * - add script-button row (configurable from settings for each repository)
  * 
  * - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
  * 
- * - How to pull ? Auto-pull before push ?
- * - How to merge ?
- * 
  * - How to initialize git-flow ?
  * 
+ * 
+ *  Menu Windows
+ *   var mb = new gui.Menu({type: 'menubar'});
+ *   mb.createMacBuiltin('My App');
+ *   gui.Window.get().menu = mb;
+ *   console.log( mb.items[2].submenu.items[0].label ) // Menu/Fönster
+ * 
  * Docs : https://www.npmjs.com/package/simple-git
- *        https://github.com/steveukx/git-js#readme  (nicely formmatted API)
+ *        https://github.com/steveukx/git-js#readme  (nicely formatted API)
 */
-/* MODES
- * -----
+/* TESTS
  * 
- * Active mode is stored in localState.mode
+ * 1) Succesful merges
  * 
- * Display is updated by calling function update()
- * which is also called from td function run by timer
+ * setup : make_three_filled_branches.command 
+ * Pragma-git : Stand in "master". Merge-button "second"
+ *  
+ * Expected : /tmp/threeBranches  "second" successfully merged into "master"
+ *   
  * 
- * setMode(modeString); for instance : setMode('DEFAULT')
+ * 2) Merge conflict
+ * 
+ * setup : create_merge_conflict.command
+ * Pragma-git : Stand in "master". Merge-button "second"
+ * 
+ * Expected : /tmp/threeBranches is in conflict with A-folder/A2 being changed, and B deleted in "second". 
+ * 
+ * 
+ * 3) Pull 
+ * 
+ * setup : create_pull_conflict.command
+ * Pragma-git : Stand in "master". Pull button should be visible; press it.
+ * 
+ * Expected : /tmp/threeBranches is in conflict with remote master.  
+ * 
+ */
+/* TECHNICAL OVERVIEW
+ * ------------------
+ * 
+ * The program is run by the following functions : 
+ * _loopTimer runs and calls _update 
+ * _update() updates the display and handle which mode is used internally. 
+ * _setMode( modeString) sets the mode up. for instance : _setMode('DEFAULT')
+ * _callback handles user clicks, and will change mode according to the functionality of the user callback. 
+ *           Some callbacks call _update() directly for immediate update
+ * 
+ * The app has multiple modes, which display and handle things differently.
+ * For instance, textarea can have text, placeholder and read-only text, depending on mode. 
+ * 
  * 
  * Mode Strings :
  * --------------
  * 
+ * UNKNOWN                    lets _setMode determine correct mode
+ * 
  * DEFAULT                    no git repositories
- *                          - Store-button = disabled
- *                          - placeholder = "Drop folder on window to get started"
+ *                            - Store-button = disabled
+ *                            - placeholder = "Drop folder on window to get started"
  *         
  * NO_FILES_TO_COMMIT        standing on a repository and branch, but no files to update
- *                          - Store-button = disabled
+ *                            - Store-button = disabled
+ *                            - placeholder = "No changed files to store"
  * 
- *                          - placeholder = "No changed files to store"
- * CHANGED_FILES   No text has been input yet
- *                          - Store-button = disabled
+ * CHANGED_FILES             No text has been input yet
+ *                           - Store-button = disabled
+ *                           - placeholder = "Add description ..."
  * 
- *                          - placeholder = "Add description ..."
  * CHANGED_FILES_TEXT_ENTERED     At least one character written
- *                          - Store-button = enabled
- *                          - placeholder = disabled (automatically)
+ *                           - Store-button = enabled
+ *                           - placeholder = disabled (automatically)
  * HISTORY 
- *                          - Store-button = disabled
- *                          - placeholder = shows history             
+ *                           - Store-button = disabled
+ *                           - placeholder = shows history             
  * SETTINGS             
- *                          - Store-button = disabled
- *                          - placeholder = shows history   
+ *                           - Store-button = disabled
+ *                           - placeholder = shows hints   
+ * 
+ * CONFLICT                  
+ *                           - Store-button = disabled
+ *                           - placeholder = shows hints   
+ * 
+ * State
+ * -----
+ * There are two variables that are global to all windows
+ * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/repo.json)
+ * - localState              - contains state data (historyNumber, branchNumber, mode) which is not saved to file
+ * 
+ * 
+ * Setting dialog
+ * --------------
+ * Communicates the following to the main window using global variables : 
+ * - state.repos and state.repoNumber
+ * - localState.mode
+ * where the _update() makes sure to handle this information
+ * 
+ * 
+ * 
+ */
+/* BUILD
+ 
+ Using nw-builder (https://www.npmjs.com/package/nw-builder)
+ 
+ * MacOS :
+ ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild -p osx64 -o ~/Pragma-git  ~/Documents/Projects/Pragma-git/Pragma-git
+ 
+ *
+ * nw-builder (all platforms) :
+ * 
+ ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild \
+  --platforms win32,win64,osx64,linux32,linux64 \
+  --flavor normal \
+  --buildDir ~/Pragma-git \
+  --name Pragma-git \
+  ~/Documents/Projects/Pragma-git/Pragma-git
+  *
+  * Options :     
+    appName: argv.name,
+    files: path.resolve(process.cwd(), files) 
+    flavor: argv.flavor || 'sdk',
+    platforms: argv.platforms ? argv.platforms.split(',') : null,
+    version: argv.version,
+    macIcns: argv.macIcns || false,
+    winIco: argv.winIco || false,
+    cacheDir: argv.cacheDir ? path.resolve(process.cwd(), argv.cacheDir) : path.resolve(__dirname, '..', 'cache'),
+    buildDir: path.resolve(process.cwd(), argv.buildDir),
+    forceDownload: argv.forceDownload
+  * 
+  * 
+  * 
+  * 
+  * nwjs-phoenix-builder
+  * 
+  * 1) brew cask install wine-stable --no-quarantine
+  * 2) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
+  * 3) rm /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe \
+       ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe
+  * 
+  * 4) Create 
+    ~/Documents/Projects/Pragma-git/node_modules/.bin/build \
+    --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
+    --mirror https://dl.nwjs.io/  \
+    --name Pragma-git  \
+    --concurrent true  \
+    ~/Documents/Projects/Pragma-git/Pragma-git
+  * 
+  * Options :
+  * https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+  * 
+  * 
+  * 
+
+
  */
 
+/* New repo
+ *  
+ * Create github repo
+ * Drop files and initialize (TODO: initialize and do first commmit)
+ * Make first commit
+ * git remote add origin https://github.com/JanAxelssonTest/test3.git  // git push -u origin master denied
+ * git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test3.git 
+ * git push -u origin master
+ */ 
 
 // Define DEBUG features
 var devTools = false;
@@ -108,11 +238,12 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var os = require('os');
         var fs = require('fs');
         const simpleGit = require('simple-git');  // npm install simple-git
+        
+        var util = require('./util_module.js'); // Pragma-git common functions
      
     
     // Constants 
-        const WAIT_TIME = 5000; // Time to wait for brief messages being shown (for instance in message field)
-        global.globalString = "This can be accessed anywhere!";
+        const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
         
@@ -121,7 +252,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
  
       
     // Files & folders
-        var settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
+        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
         var settingsFile = settingsDir + pathsep + 'repo.json';    
         
     
@@ -129,181 +260,358 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.branchNumber = 0;  
-        localState.mode = 'DEFAULT'; // Default (changed with _setMode function)
+        localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
+        localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
-        var state = loadSettings(settingsFile); // json settings
+        localState.settings = false;        // True when settings window is open
+        localState.conflictsWindow = false; // True when conflicts window is open
+        localState.fileListWindow = false; // True when conflicts window is open
+        localState.aboutWindow = false; // True when conflicts window is open
+        
+    // Display text
+        var textOutput = {
+            value: '',        // First row is title, rows after are message
+            placeholder: '', 
+            readOnly : false
+        };
+        
+    // Expose these to all windows 
+        global.state = loadSettings(settingsFile); // json settings
+        global.localState = localState;   
 
     // Collect settings
         var repoSettings = {}; 
    
         
-    // Initiate GUI update loop 
-        _mainLoop(); // Immediate 
-        var timer = _loopTimer( 2000);
+    // Initiate asynchronous loops
+        const seconds = 1000; // milliseconds per second
+        var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
+        var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
+        
+    // Add to path 
+    try{
+        process.env.PATH += fs.readFileSync(settingsDir + pathsep + 'path.txt','utf8').replace(/(\r\n|\n|\r)/gm, ""); 
+    }catch(err){
+        console.log(err);
+    }
 
 
 // ---------
 // FUNCTIONS
 // ---------
 
-// main functions
-
-function _callback( name, event){
+// Main functions
+async function _callback( name, event){
     console.log('_callback = ' + name);
+    console.log(event);
     switch(name) {
-      case 'clicked-store-button':
+      case 'clicked-store-button': {
         storeButtonClicked();
         break;
-      case 'message_key_up':
+      }
+      case 'clicked-minimize-button': {
+        win.minimize();
+        break;
+      }
+      case 'message_key_up': {
         messageKeyUpEvent();
         break;
-      case 'clicked-up-arrow':
+      }
+      case 'clicked-up-arrow': {
         upArrowClicked();
         break;
-      case 'clicked-down-arrow':
+      }
+      case 'clicked-down-arrow': {
         downArrowClicked();
         break;
-      case 'clicked-repo':
+      }
+      case 'clicked-repo': {
         repoClicked();
         break;
-      case 'clicked-branch':
-        branchClicked();
+      }
+      case 'clicked-branch': {
+        branchClicked(true);
         break;
-      case 'clicked-folder':
+      }
+      case 'newBranchNameKeyUp': {
+        let string = document.getElementById("branchNameTextarea").value ;
+        document.getElementById("branchNameTextarea").value = util.branchCharFilter( string) ;
+
+        break;
+      }
+      case 'newTagNameKeyUp': {
+        let string = document.getElementById("tagNameTextarea").value ;
+        document.getElementById("tagNameTextarea").value = util.branchCharFilter( string) ;
+
+        break;
+      }
+      case 'addBranchButtonPressed': {
+
+        console.log('addBranchButtonPressed');
+        console.log(event);
+
+        let newBranchName = document.getElementById('branchNameTextarea').value;
+
+        
+        // Create and checkout new branch
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;
+            let commit = 'HEAD';  // First guess
+            
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+            
+            // Create new branch
+            let commands = [ 'checkout', '-b', newBranchName, commit];
+            await simpleGit( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){console.log(result);};
+            
+            setStatusBar( 'Creating branch "' + newBranchName);
+            await waitTime( 1000);  
+                      
+            setStatusBar( 'Moved into "' + newBranchName);
+            waitTime( WAIT_TIME);  
+
+            
+        }catch(err){       
+            displayAlert('Failed creating branch', err); 
+            console.log('Failed creating branch ');
+            console.log(err);
+        } 
+
+        _setMode('UNKNOWN');
+        
+
+        break;
+      }
+      case 'clicked-tag-button': {
+        // Make dropdown menu with options 1) Create tag, 2) Checkout tag
+        tagClicked();
+        break;
+      }
+      case 'addTagButtonPressed' : {
+        let newTagName = document.getElementById('tagNameTextarea').value;
+      
+        // Create new Tag
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;            
+            let commit = 'HEAD';  // First guess
+            
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+  
+            // Create new Tag
+            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
+            function onCreateTag(err, result ){console.log(result);console.log(err);};
+            setStatusBar( 'Creating Tag "' + newTagName);
+            waitTime( WAIT_TIME);  
+            
+            // Push tag to remote
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+            function onPush(err, result) {console.log(result) };
+            
+            setStatusBar( 'Creating Tag "' + newTagName);
+            waitTime( WAIT_TIME);  
+            
+
+            
+        }catch(err){       
+            displayAlert('Failed creating tag', err); 
+            console.log('Failed creating tag ');
+            console.log(err);
+        } 
+        break;
+
+      }
+      case 'clicked-folder': {
         folderClicked();
         break;
-      case 'clicked-settings':
+      }
+      case 'clicked-stash-button': {
+          
+    // Stash -- ask to overwrite if stash exists
+        try{
+            let stash_status;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .stash(['list'], onStash);
+            function onStash(err, result ){  stash_status = result }
+            
+            
+            if (stash_status.length > 0) {
+                // Ask permission to overwrite stash
+                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                document.getElementById('stashOverwriteDialog').showModal();
+            }else{
+                // No stash exists, OK to stash
+                gitStash();
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }     
+      case 'stashOverwriteDialog': {
+         {
+        console.log('stashOverwriteDialog -- returned ' + event);
+        
+        switch (event) {
+            case  'Replace' : {
+                gitStash();
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
+            
+        }
+        break; 
+      } // end case 'stashOverwriteDialog' 
+          
+          
+          
+        gitStash();
+        break;   
+      }     
+      case 'clicked-stash_pop-button': {
+        gitStashPop();
+        break; 
+      }      
+      case 'clicked-push-button': {
+        gitPush();
+        break;
+      }
+      case 'clicked-pull-button': {
+        gitPull();
+        break;
+      }
+      case 'clicked-merge-button': {
+        mergeClicked();
+        break; 
+      }     
+      case 'clickedMergeContextualMenu' : {
+        let selectedBranch = event;
+        console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
+        console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
+        gitMerge( event.currentBranch, event.selectedBranch); 
+        break;
+      }
+      case 'clicked-settings': {
         showSettings();
         break;
-      case 'clicked-about':
+      }
+      case 'clicked-about': {
         showAbout();
         break;
-      case 'clicked-close-button':
+      }
+      case 'clicked-close-button': {
         closeWindow();
         break;
-      case 'file-dropped':
-        atest( event); 
+      }
+      case 'clicked-status-text' : {
+        if (localState.fileListWindow == true) {
+                return
+            }
+            
+        let status_data = await gitStatus();
+        
+        if (status_data.conflicted.length > 0){
+            resolveConflicts(state.repos[state.repoNumber].localFolder);
+        }else{
+            listChanged();
+        }
+        
+        localState.fileListWindow = true;
+        
+        break;
+      }
+      case 'file-dropped': {
         dropFile( event); 
         break;
-      default:
+      }
+      case 'initializeRepoOK' : {
+          
+        setStatusBar( 'Initializing git');
+        
+        // Read cached folder (cached in dropFile, when asking if initializing git )
+        folder = localState.droppedRepoFolder;
+        localState.droppedRepoFolder='';  // Clear
+        
+        await simpleGit(folder).init( onInit );
+        function onInit(err, initResult) { }
+        
+        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+        
+        await waitTime( 1000);
+        
+        //await gitAddCommitAndPush( 'First commit');
+
+        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+        
+        // Initial commit
+        setStatusBar( 'Initial commit');
+        let outputData;
+        await simpleGit( folder )
+            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
+            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+            
+        function onCommit(err, result) {console.log(result); outputData = result };
+        
+        await waitTime( 1000);
+        console.log(outputData);
+        
+        
+        // add repo to program
+        try {
+            await addExistingRepo( folder); 
+        }catch(error){
+            console.log(error);
+        }
+
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+          
+        break;  
+      }
+      case 'detachedHeadDialog': {
+        console.log('detachedHeadDialog -- returned ' + event);
+        
+        switch (event) {
+            case  'Delete' : {
+                // Move out of "detached Head" (losing track of it)
+                branchClicked(false);
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
+            
+        }
+        break; 
+      } // end case 'detachedHeadDialog'  
+      case 'tagSelected': { // Called from tagList.js
+        switch (event.buttonText ){
+            case 'Checkout' :
+                checkoutTag(event.selected);
+                break;
+            case 'Delete' :
+                deleteTag(event.selected);
+                break;
+        }
+      }
+      default: {
         // code block
-    }
+      }  
+    } // End switch(name)
 
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-    
-    function atest(event){
-        console.log('ATEST = ' + event);
-        
-    };
-    async function dropFile(e) {
-    e.preventDefault();
-    
-    // Reset css 
-    document.getElementById('content').className = '';
-    
-    const item = e.dataTransfer.items[0];
-    const entry = item.webkitGetAsEntry();
-    
-    var file = item.getAsFile().path;
-    var folder = file; // Guess that a folder was dropped 
-
-    if (entry.isFile) {
-        folder = require('path').dirname(file); // Correct, because file was dropped
-        console.log( 'Folder = ' + folder );
-    } 
-
-    
-    // Find top folder in initialized local repo
-    var topFolder;
-    
-    try{
-        var isRepo;
-        await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
-        
-        console.log('dropFolder CHECK IF REPO = ' + isRepo);
-        
-        // If not a repo
-        if (!isRepo){
-            // Ask permisson to init repo
-            var nameOfFolder = folder.replace(/^.*[\\\/]/, '');
-            var string = 'This folder is not a repository.'+ os.EOL;
-            string += 'Do you want to initialize this folder as a git repository ?' + os.EOL;
-            string += 'The name of the repository will be "' + nameOfFolder + '" ';
-            
-            // Create repo
-            if ( confirmationDialog(string) ) {
-                await simpleGit(folder).init( onInit );
-                await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-    
-                function onInit(err, initResult) { }
-                function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-    
-                topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-            }else{
-                // bail out if rejected permission
-                return 
-            }
-        }
-        
-        // Find top folder of Repo
-        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-
-    }catch(error){
-        console.log(error);
-    }
-    
-    // Add folder last in  state array
-    var index = state.repos.length;
-    state.repos[index] = {}; 
-    state.repos[index].localFolder = topFolder;
-    
-    // Clean duplicates from state based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
-    try{
-        // Set index to match the folder you added
-        index = findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
-    }catch(err){
-        index = state.repos.length; // Highest should be last added
-    }
-    
-    // Set to current
-    state.repoNumber = index;
-    localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
-
-    // Set global
-    state.repos[state.repoNumber].localFolder = topFolder;
-    console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
-    
-    // Update immediately
-    _mainLoop();
-    
-    //
-    // Local function definitions
-    //
-    
-    function findObjectIndex( myArray, objectField, stringToFind ){
-        
-        var foundIndex; //last found index
-        // Loop for the array elements 
-        for (let i in myArray) { 
-    
-            if (stringToFind === myArray[i][objectField]){
-                foundIndex = i;
-            }
-        } 
-        
-        return foundIndex;
-    }
-
-
-    
-};
-
 
     // title-bar
     function repoClicked(){
@@ -313,41 +621,86 @@ function _callback( name, event){
         if (state.repoNumber >= numberOfRepos){
             state.repoNumber = 0;
         }
-        _mainLoop();
-            
-        // Reset some variables
-        localState.historyNumber = -1;
+        
+        // Update remote info immediately
+        gitFetch();  
+        
+        _setMode('UNKNOWN');
     }
-    async function branchClicked(){
+    async function branchClicked( detectDetachedBranch ){
+        // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
         
         // Determine status of local repository
         var status_data;  
         try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+            status_data = await gitStatus();
         }catch(err){
             console.log('Error in unComittedFiles,  calling  _mainLoop()');
             console.log(err);
         }
+        
+        //
+        // If Detached Head (dialog if needed, then bail out)
+        //
+        if (detectDetachedBranch && status_data.current == 'HEAD' ){ 
+            
+            // Is detached Head (lets see if any new commits)
+            try{              
+                let branchSummary;
+                await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
+                function onLog(err, result){console.log(result);console.log(err);branchSummary=result;}  // result.current is the detachment point.  result.detached = true if detached
+                
+                //branchSummary :
+                //all: (5) ["7741225", "master", "second", "temp-branch-1", "third"]
+                //current: "7741225"
+                //branches:
+                //7741225: {current: true, name: "7741225", commit: "7741225", label: "F"}                            <--- currentBranchObject below
+                //master: {current: false, name: "master", commit: "660d091", label: "Merge branch 'temp-branch-1'"}
+                //...
+
+                let currentBranchName = branchSummary.current;
+                
+                // Test if commit-hash is the same as branch-name (meaning no commits have been done after detaching HEAD)
+                let currentBranchObject = branchSummary.branches[currentBranchName];
+                if ( currentBranchObject.name == currentBranchObject.commit){  // Works for checked-out commit. TODO : but not for checked-out tag!
+                    // No commited change in detached head -- don't throw dialog
+                    console.log('No commits in checked-out detached HEAD : ' + currentBranchObject.name);
+                    console.log('Continue to change branch');
+                }else{
+                    console.log('Commits on detached HEAD.  Show dialog');
+                    document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
+                    return
+                }
+   
+            }catch(err){        
+                console.log(err);
+                return
+            }
+
+        }
+        
+        
      
         // Determine if no files to commit
-        var uncommitedFiles = false;
-        if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0){
-            uncommitedFiles = true;
-        }  
+        var uncommitedFiles = status_data.changedFiles;
+
     
-    
-        // Checkout branch  /  Warn about uncommited
-        if ( uncommitedFiles ){
+        // Checkout branch  /  Warn about uncommited (if that setting is enabled)
+        if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
             // Let user know that they need to commit before changing branch
-            await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
+            //await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
+            let tempOutput = {};
+            tempOutput.placeholder = 'Before changing branch :' + os.EOL + 'Add description and Store ...';
+            tempOutput.value = '';
+            await writeTimedTextOutput(tempOutput, WAIT_TIME);
+            
             
         }else{
                 
             // Determine local branches
             var branchList;
             try{
-                isPaused = true;
-                await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], (err, result) => {console.log(result); branchList = result.all});
+                branchList = await gitBranchList();
             }catch(err){        
                 console.log('Error determining local branches, in branchClicked()');
                 console.log(err);
@@ -355,7 +708,7 @@ function _callback( name, event){
             
             // Cycle through local branches
             localState.branchNumber = localState.branchNumber + 1;
-            var numberOfBranches = state.repos.length;
+            var numberOfBranches = branchList.length;
             if (localState.branchNumber >= numberOfBranches){
                 localState.branchNumber = 0;
             }
@@ -364,16 +717,19 @@ function _callback( name, event){
         
             // Checkout local branch
             try{
-                await simpleGit(state.repos[state.repoNumber].localFolder).checkout(branchName, (err, result) => {console.log(result)} );
+                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+                function onCheckout(err, result){console.log(result)} 
+
             }catch(err){        
                 console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
                 console.log(err);
-            }   
+            }  
         }
     
         console.log(branchList);
      
-        _mainLoop();
+        _setMode('UNKNOWN');
+       //await _update()
         
         // Reset some variables
         localState.historyNumber = -1;
@@ -381,12 +737,42 @@ function _callback( name, event){
     function showAbout(){    
         console.log('About button pressed');
         
-        about_win = gui.Window.open('about.html#/new_page', {
-            position: 'center',
-            width: 600,
-            height: 450,
-            
-        });
+                
+        if ( localState.aboutWindow == true ){
+            return
+        }
+
+        
+        // Open new window -- and create closed-callback
+        let about_win = gui.Window.open(
+            'about.html#/new_page', 
+            {   id: 'aboutWindowId',
+                position: 'center',
+                width: 600,
+                height: 700   
+            },
+            function(cWindows){ 
+                cWindows.on('closed', 
+                    function(){
+                        localState.aboutWindow = false;
+                        cWindows = null;  // dereference
+                    }
+                );
+                
+                cWindows.on('loaded', 
+                    function(){
+                         // For systems that have multiple workspaces (virtual screens)
+                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
+                        }
+                    }
+                )
+            }
+        );
+
+        // Show that window is open
+        localState.aboutWindow = true;
         
     }
     function closeWindow(a){
@@ -413,32 +799,246 @@ function _callback( name, event){
         // After closing the new window, close the main window.
         this.close(true);
     }   
+    async function mergeClicked(){
+              
+        // Create an empty context menu
+        var menu = new gui.Menu();
+        
+        let branchList = await gitBranchList();
+        let currentBranch = " ";
+        
+        try{
+            let status_data = await gitStatus();
+            currentBranch = status_data.current;
+            console.log(currentBranch);
+        }catch(err){
+            console.log('Failed reading current branch');
+        }
+  
+        let menuItems = branchList;
+        
+        // Add context menu title-row
+        menu.append(new gui.MenuItem({ label: 'Merge (selected one) ... ', enabled : false }));
+        menu.append(new gui.MenuItem({ type: 'separator' }));
+                
+        // Add names of all branches
+        for (var i = 0; i < menuItems.length; ++i) {
+            if (currentBranch != menuItems[i]){
+                let myEvent = [];
+                myEvent.selectedBranch = menuItems[i];
+                myEvent.currentBranch = currentBranch;
+                menu.append(
+                    new gui.MenuItem(
+                        { 
+                            label: menuItems[i], 
+                            click: () => { _callback('clickedMergeContextualMenu',myEvent);} 
+                        } 
+                    )
+                );
+                console.log(menuItems[i]);
+            }else{
+                console.log('Skipped current branch = ' + menuItems[i]);
+            }
 
+        }
+ 
+        
+        menu.append(new gui.MenuItem({ type: 'separator' }));
+        menu.append(new gui.MenuItem({ label: '... into "' + currentBranch +'"', enabled : false })); 
 
+        // Popup as context menu
+        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        await menu.popup(pos.left, pos.top + 24);
+                
+
+    }
+    async function tagClicked(){
+              
+        // Create an empty context menu
+        var menu = new gui.Menu();
+
+        
+        // Add context menu to title-row
+
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'New tag', 
+                    click: () => { document.getElementById('tagNameInputDialog').showModal();} 
+                } 
+            )        
+        )
+        
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'Checkout tag ', 
+                    click: () => { tag_list_dialog();} 
+                } 
+            )        
+        )
+
+       
+        menu.append(new gui.MenuItem({ type: 'separator' })); 
+        
+        menu.append(
+            new gui.MenuItem(
+                { 
+                    label: 'Delete tag ', 
+                    click: () => { localState.tagListButton = 'Delete'; tag_list_dialog();} 
+                } 
+            )        
+        )
+
+        
+
+        // Popup as context menu
+        let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
+        await menu.popup(pos.left, pos.top + 24);
+                
+
+    }
+
+    async function checkoutTag(tagName){
+        
+        // I want to checkout with commit-hash -- and not tag name.
+        //
+        // (Reason is that I can then compare the detached branch which has the hash as a name, with the hash at current commit.
+        //  If they are equal I am still at checkout point. If they are not equal, there have been new commits on the detached head.  
+        //
+        // If I would checkout with tag name, the name would be the tag name instead of the hash.  This would spoil identifying if at startpoint or not, as done in _callback/branchClicked )
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+            
+            // get hash of tagName
+            let hash;
+            await simpleGit(folder).raw([ 'rev-parse', tagName], onShowToplevel);
+            function onShowToplevel(err, result){ console.log(result); hash = result }
+            hash = hash.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
+            
+            // checkout tag using hash
+            await simpleGit(folder).checkout( hash, onCheckout);
+            function onCheckout(err, result){console.log(result)} 
+            
+        }catch(err){
+            console.log('Failed checking out tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        _setMode('UNKNOWN');
+        
+    }
+    async function deleteTag(tagName){
+        
+        // Delete remote
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+
+            setStatusBar( 'Deleting tag');
+
+            await simpleGit( folder )
+            .raw( [  'push', '--delete' , 'origin', tagName] , onPush);
+            function onPush(err, result) {console.log(result); console.log(err) };
+            
+            await waitTime( 1000);  
+            
+        }catch(err){
+            console.log('Failed deleting remote tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        // Delete local
+        try{
+            let folder = state.repos[state.repoNumber].localFolder;
+
+            setStatusBar( 'Deleting tag');
+
+            await simpleGit( folder )
+            .raw( [  'tag', '-d' , tagName] , onDelete);
+            function onDelete(err, result) {console.log(result); console.log(err) };
+            
+            await waitTime( 1000);  
+            
+        }catch(err){
+            console.log('Failed deleting local tag = ' + tagName);
+            console.log(err);
+            
+        }
+        
+        _setMode('UNKNOWN');
+        
+    } 
     // main window
-    function storeButtonClicked() { 
-        gitAddCommitAndPush( readMessage());
+    async function storeButtonClicked() { 
+        
+        // Could be called for Store, or History Checkout 
+        
+        if ( getMode() == 'HISTORY' ){
+            // History
+            
+            try{
+                
+                // Checkout this commit (into a detached HEAD)             
+                console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
+                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
+                function onDetachedHead(err, result){console.log(result);console.log(err); history = result.all;} 
+                
+                // Set historyNumber to top
+                localState.historyNumber = -1;
+                
+                // Leave history mode
+                _setMode('UNKNOWN');
+                    
+            }catch(err){        
+                console.log(err);
+                
+                displayAlert('Failed Checkout', err); 
+            }
+            
+        }else{
+            // Store
+            gitAddCommitAndPush( readMessage());
+        }
+        
 }  
     async function downArrowClicked(){
         
         console.log('down arrow clicked');
         
+        
+        
+        localState.historyNumber = localState.historyNumber + 1;
+        
         // Get log
         var history;
-        try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+        try{              
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'],onHistory);
+            function onHistory(err, result){console.log(result);console.log(err); history = result.all;} 
+                
         }catch(err){        
             console.log(err);
         }
         
+        // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
+        var historyBranchesAtPoint = ""; // Do not comment out this row !
+        //try{              
+            //await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--contains', history[localState.historyNumber + 1].hash], onHistoryBranches );
+            //function onHistoryBranches(err, result){console.log(result);console.log(err); historyBranchesAtPoint = result.all;} 
+            //historyBranchesAtPoint = ' [ ' + historyBranchesAtPoint + ' ]'; 
+                
+        //}catch(err){        
+            //console.log(err);
+            //console.log(historyBranchesAtPoint )       
+        //}
+               
+
 
         try{
-            _setMode('HISTORY');
-            
             // Cycle through history
             console.log('downArrowClicked - Cycle through history');
             var numberOfHistorySteps = history.length;
-            localState.historyNumber = localState.historyNumber + 1;
             console.log('downArrowClicked - numberOfHistorySteps, localState');
             console.log(numberOfHistorySteps);
             console.log(localState);
@@ -446,23 +1046,42 @@ function _callback( name, event){
             var numberOfBranches = state.repos.length;
             console.log('downArrowClicked - numberOfBranches');
             console.log(numberOfBranches);
-            if (localState.historyNumber >= numberOfHistorySteps){
+            if (localState.historyNumber == numberOfHistorySteps){
                 console.log('downArrowClicked - setting localState.historyNumber = 0');
-                localState.historyNumber = 0;
+                localState.historyNumber = numberOfHistorySteps -1; // Set to last
             }
             
-            // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            
+            localState.historyHash = history[localState.historyNumber].hash; // Store hash
+            
+            // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
+            
+            // Branches on this commit
+            localState.historyString += historyBranchesAtPoint;
+
+            // Message
+            localState.historyString += os.EOL 
             + os.EOL 
-            + history[localState.historyNumber].message;
+            + history[localState.historyNumber].message
+            + os.EOL 
+            + os.EOL 
+            + history[localState.historyNumber].body;
             
             // Display
-            writeMessage( historyString, false);
+            //localState.mode = 'HISTORY';
+            _setMode('HISTORY');
+            //writeMessage( localState.historyString, false);
+            textOutput.value = localState.historyString;
+            writeTextOutput( textOutput);
             
+            status_data = await gitShow(localState.historyHash);
+            setStatusBar( fileStatusString( status_data));
+
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
-            _setMode('DEFAULT');
+            await _setMode('UNKNOWN');
             localState.historyNumber = -1;
             console.log(err);
         }    
@@ -473,7 +1092,8 @@ function _callback( name, event){
         // Get log
         var history;
         try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( (err, result) => {console.log(result); history = result.all;} );
+            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'], onHistory);
+            function onHistory(err, result){console.log(result); history = result.all;} 
         }catch(err){        
             console.log(err);
         }   
@@ -486,21 +1106,42 @@ function _callback( name, event){
         if (localState.historyNumber < 0){
             // Leave history browsing
             localState.historyNumber = -1;
-            _setMode('DEFAULT');
-            _mainLoop();
+            localState.historyString = "";
+            localState.historyHash = "";
+            //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
+            textOutput.value = '';
+            writeTextOutput( textOutput);
+            _setMode('UNKNOWN');
+            await _update()
         }else{
             // Show history
-            _setMode('HISTORY');
+            //_setMode('HISTORY');
+            
+            localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
             // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            var historyString = ( history[localState.historyNumber].date).substring( 11,11+8) 
+            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
             + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
             + os.EOL 
-            + history[localState.historyNumber].message;
+            + os.EOL 
+            + history[localState.historyNumber].message
+            + os.EOL 
+            + os.EOL 
+            + history[localState.historyNumber].body;  
             
-            // Display
-            writeMessage( historyString, false);
-            }
+            // Display            
+            localState.mode = 'HISTORY';
+            //writeMessage( localState.historyString, false);
+            textOutput.value = localState.historyString;
+            writeTextOutput( textOutput);
+            
+            status_data = await gitShow(localState.historyHash);
+            setStatusBar( fileStatusString( status_data));    
+                  
+            // Store hash
+            
+            localState.historyHash = history[localState.historyNumber].hash;
+        }
     }
     function messageKeyUpEvent() { 
         // Enable if message text 
@@ -508,28 +1149,83 @@ function _callback( name, event){
         //setStoreButtonEnableStatus( (message.length > 0 ));
         
         // Bail out if read-only
-        if ( document.getElementById("message").readOnly == true ){
+        if ( textOutput.readOnly == true ){
             return
         }
         
+        textOutput.value = readMessage();
+        
         // It should be safe to assume that CHANGED_FILES of some sort -- otherwise
-        if (readMessage().length > 0 ){
+        if (textOutput.value.length > 0){
             _setMode( 'CHANGED_FILES_TEXT_ENTERED');
         }else{
             _setMode( 'CHANGED_FILES');
         }
         
     }
- 
+    async function dropFile(e) {
+        e.preventDefault();
+        
+        // Reset css 
+        document.getElementById('content').className = '';
+        
+        const item = e.dataTransfer.items[0];
+        const entry = item.webkitGetAsEntry();
+        
+        var file = item.getAsFile().path;
+        file = file.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+        var folder = file; // Guess that a folder was dropped 
+    
+        if (entry.isFile) {
+            folder = require('path').dirname(file); // Correct, because file was dropped
+            console.log( 'Folder = ' + folder );
+        } 
+    
+        // Dialog if repo does not exist
+        try{
+            var isRepo;
+            await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+            
+            console.log('dropFolder CHECK IF REPO = ' + isRepo);
+            
+            // If not a repo
+            if (!isRepo){
+                // Ask permisson to init repo
+                localState.droppedRepoFolder = folder;
+                document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                return
+            } else {
+                await addExistingRepo( folder); 
+            }
+        }catch(error){
+            console.log(error);
+        }
+
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+
+    };
+
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
-        gui.Shell.showItemInFolder(state.repos[state.repoNumber].localFolder);
+        gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
     }
     function showSettings() {    
+        
         console.log('Settings button pressed');
-        var settings_win = gui.Window.open('settings.html#/new_page' ,
+        
+        if ( getMode() == 'SETTINGS' ){
+            return
+        }
+        
+        _setMode('SETTINGS');
+        
+        settings_win = gui.Window.open('settings.html#/new_page' ,
             {
+                id: 'settingsWindowId',
                 position: 'center',
                 width: 600,
                 height: 700,
@@ -537,417 +1233,1106 @@ function _callback( name, event){
             }
             ); 
         console.log(settings_win);
-        
-        // Make state available to new window
-        global.state = state;
+        localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
      return   
+    };
+
+    function resolveConflicts( folder){
+               
+        if ( localState.conflictsWindow == true ){
+            return
+        }
+        
+        resolve_win = gui.Window.open('resolveConflicts.html#/new_page' ,
+            {
+                id: 'resolveConflictsWindowId',
+                position: 'center',
+                width: 600,
+                height: 700,
+                title: "Resolve Conflicts"
+            }
+            ); 
+        console.log(resolve_win);
+        localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
+    };
+    
+    function listChanged(){
+        resolve_win = gui.Window.open('listChanged.html#/new_page' ,
+            {
+                id: 'listChangedId',
+                position: 'center',
+                width: 600,
+                height: 700,
+                title: "List Changed Files"
+            }
+            ); 
+        console.log(settings_win);        
     };
 // ================= END CALLBACK ================= 
 } 
-function _loopTimer( delayInMs){
-    var timer = window.setInterval(function() {
-            if(!isPaused) {
-                _mainLoop();
-            }
-        }, delayInMs);
-    return timer
+async function _loopTimer( timerName, delayInMs){
+    
+    // Define timer  
+    switch( timerName ) {        
+        case 'update-loop':    
+            return window.setInterval( _update, delayInMs );
+            break;
+    
+        case 'fetch-loop':    
+            return window.setInterval( gitFetch, delayInMs );
+            break;
+
+    }
+
+    
 }
-async function _mainLoop(){
+async function _update(){ 
+    // Bail out if isPaused = true
+    if(isPaused) {
+        return;
+    }    
     
-    // Bail out for modes that do not depend on git status 
-    if ( getMode() == 'HISTORY'){
-        return
-    }
-    if ( getMode() == 'CHANGED_FILES_TEXT_ENTERED'){
-        return
-    }
-    if (state.repos.length == 0){ // Capture if there are no repos
-        _setMode('DEFAULT');
+    // Variables
+    let currentBranch = "";
+    let modeName = getMode();
+    let  status_data = [];
+    let  folder = "";
+    let fullFolderPath = "";
+    
+    if (state.repos.length >0){
+        fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
     
-    // Determine if changed files (from git status)
-    var status_data;  
-    var currentBranch = ""; // Empty default, will show blank if branch not found
-    try{
-        // Understand this: 
-        // - simpleGit(dir).status( handler_function)
-        // - handler_function is defined as an anonymous function with arrow ('=>') notation
-        // - the two outputs from status are input variables to the anonymous function.
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result});
-        currentBranch = status_data.current;  // Name of current branch
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-
-    }
-
-    // Set mode 
-    try{
-        let changedFiles = ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) > 0);
-        if ( changedFiles ){
-            _setMode('CHANGED_FILES');
-        }else{
-            _setMode('NO_FILES_TO_COMMIT');
-        }        
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
+    // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
+    if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
-    }
-    
-    // Set Status-bar
-    try{
-        if (status_data != null) {
-            setStatusBar( 'Modified = ' + status_data.modified.length + ' |  New = ' + status_data.not_added.length + ' |  Deleted = ' + status_data.deleted.length);
-        }else{
-            setStatusBar(' ');
+        try{
+            status_data = await gitStatus();
+            let result = await gitLocalFolder();
+            folder = result.folderName;
+            currentBranch = status_data.current; 
+        }catch(err){
+            console.log(err);
+
         }
-    }catch(err){
-        console.log('Error in _mainLoop()');
-        console.log(err);
-        
+
     }
-
-
-    //
-    // Set titlebar : ' repo (branch) ' = ' foldername (currenBranch)'
-    //
     
-    // Get name of local folder
-    var foldername = ""; 
-    try{
-        var currentDir = simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
-        foldername = currentDir.replace(/^.*[\\\/]/, '');
-     }catch(err){
-        console.log('Error in _mainLoop() - Get name of local folder');
-        console.log(err);
+    
+    // Validate repo and folder :
+ 
+    // Check if localFolder exists 
+    if (fs.existsSync( fullFolderPath ) ) {
+        // If folder exists, I am allowed to check if repo
+        
+        // Check if repository 
+        var isRepo;
+        await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
+        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+        
+        if (!isRepo) {
+            folder = "(not a repo) " + folder;
+            currentBranch = "";
+        }
+    }else{    
+        let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
+        folder = "(not a folder) " + nameOfFolder;
     }   
 
-    setTitleBar( 'top-titlebar-repo-text', foldername   );
-    if (currentBranch.length == 0){
-        setTitleBar( 'top-titlebar-branch-text', '' );
-    }else{
-        setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
-    }
-    
-    
-    // KEEP HERE: May be useful in future 
+    // If left settings window
+        if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
+            localState.settings = false;
+            updateWithNewSettings();
+        }
+     
     //
-    // 1) Get name of Repo
-    //var rawOut; 
-    //await simpleGit.raw([ 'config', '--get', 'remote.origin.url'], (err, result) => {console.log(result); rawOut = result})
-    //var repoName = rawOut.replace(/^.*[\\\/]/, '');
+    // SET ICON VISIBILITY
+    //   
     
-    // 2) Get list of all settings in local 
-    //var listOut; 
-    //await simpleGit.raw([ 'config', '--list'], (err, result) => {console.log(result); listOut = result})
+    let FALSE_IN_HISTORY_MODE  = !(modeName == 'HISTORY'); // Used in if statement to make it false when in history mode
+       
+    // If left conflicts window
+        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
+            localState.conflictsWindow = false;
+        }
+            
+    // Push button (show if ahead of remote)
+        try{
+            if (status_data.ahead > 0){
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+    
+    // Pull button (show if behind remote)
+        try{
+            if (status_data.behind > 0){
+                document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
         
-  
-// ================= END _MAINLOOP =================     
-} 
-function _setMode( modeName){
+    // Merge button (hide if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden'
+            }else{
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        
+    //// Branch button (hide if uncomitted files)
+        //try{
+            //if (status_data.changedFiles){
+                //document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden'
+            //}else{
+                //document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+            //}
+        //}catch(err){  
+            //console.log(err);
+        //}
+         
+    // Tag button (hide if uncomitted files)
+        try{
+            if (status_data.changedFiles){
+                document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden'
+            }else{
+                document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        
+               
+    // Stash button (show if uncomitted files)
+        try{
+            if (status_data.changedFiles && FALSE_IN_HISTORY_MODE ){
+                document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
+            }else{
+                document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }
+         
+    // Stash-pop button (show if no changed files)
+        let stash_status;
+        if (state.repos.length > 0){
+            try{
+                
+                await simpleGit( state.repos[state.repoNumber].localFolder)
+                    .stash(['list'], onStash);
+                function onStash(err, result ){  stash_status = result }
+                
+                
+                //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+                if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
+                {
+                    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
+                }else{
+                    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'
+                }
+            }catch(err){  
+                console.log(err);
+            }
+            
+        }
+               
+                        
+    //
+    // WRITE TITLE-BAR, STATUS-BAR, MESSAGE (history only)
+    //    
+           
+    // mode - dependent :
+        switch( modeName ) {        
+            case 'UNKNOWN': {  
+                _setMode('UNKNOWN'); // _setMode finds the correct Mode if called by "UNKNOWN"
+                break;
+            }
+                
+            case 'DEFAULT': {  
+                setTitleBar( 'top-titlebar-repo-text', ' ' );
+                setTitleBar( 'top-titlebar-branch-text', ' ' );
+                setStatusBar(' ');
+                break;
+            }
+                
+            case 'NO_FILES_TO_COMMIT': {  
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( fileStatusString( status_data));
+                // If not correct mode, fix :
+                if (status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+                break;
+            }
+                
+            case 'CHANGED_FILES': {  
+                try{
+                    setTitleBar( 'top-titlebar-repo-text', folder );
+                    setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                    setStatusBar( fileStatusString( status_data));            
+                }catch(err){
+                    console.log('update --  case "CHANGED_FILES" caught error');
+                    _setMode('UNKNOWN');
+                }
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( fileStatusString( status_data));            
+                // If not correct mode, fix :
+                if (!status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+                break;
+            }
+                
+            case 'CHANGED_FILES_TEXT_ENTERED': {  
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( fileStatusString( status_data));
+                // If not correct mode, fix :
+                if (!status_data.changedFiles){
+                    _setMode('UNKNOWN');
+                }
+                break;
+            }
+                
+            case 'HISTORY': {  
+
+                let status;
+                let hash = localState.historyHash;
+            
+                try{
+                    status_data = await gitShow(hash);
+                }catch(err){
+                    console.log('fileStatus -- caught error');
+                    console.log(err);
+                }
+                console.log(status);
+            
+            
+                //writeMessage( localState.historyString, false);
+                textOutput.value = localState.historyString;
+                writeTextOutput( textOutput);
+            
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setStatusBar( fileStatusString( status_data));
+                
+                break;
+            }
+                
+            case 'SETTINGS': {  
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                try{
+                    setStatusBar( fileStatusString( status_data));
+                 }catch(err){
+                    await _setMode('UNKNOWN');
+                    setStatusBar(' ');
+                    setTitleBar( 'top-titlebar-repo-text', folder );
+                    setStatusBar( fileStatusString( status_data));
+                }
+                
+                break;
+            }
+            
+                            
+            case 'CONFLICT': {  
+                setTitleBar( 'top-titlebar-repo-text', folder );
+                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' ); 
+                    setStatusBar( fileStatusString( status_data)); 
+
+                console.log('_update -- CONFLICT mode');
+                console.log(status);
+
+                break;
+            }
+            
+            default: {
+                console.log('run_timer - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
+            }
+        }    
+    // return
+        return true
+
+    //
+    // Local functions
+    //
+    function updateWithNewSettings(){
+        //Called when left settings window
+        //
+        // NOTE : To implement a new setting that affects the gui, 
+        // add code to these places :
+        // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
+        // - app.js/loadSettings                           -- applies when starting app.js
+        // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+        // - settings.html                                 -- where the form element for the setting is shown
+        
+        
+        win.setAlwaysOnTop( state.alwaysOnTop );
+        
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+        }
+        saveSettings();
+    }
+
+};
+async function _setMode( inputModeName){
  /* Called from the following :
  * 
- * 'DEFAULT':                       _mainLoop, repoClicked, branchClicked, downArrowClicked, upArrowClicked
+ * 'UNKNOWN':                       (let _setMode determine mode by itself)
+ * 'DEFAULT':                       _mainLoop, repoClicked, branchClicked, downArrowClicked, upArrowClicked  (used for empty repo list)
  * 'NO_FILES_TO_COMMIT' :           _mainLoop
  * 'CHANGED_FILES':                 _mainLoop, messageKeyUpEvent
  * 'CHANGED_FILES_TEXT_ENTERED' :   messageKeyUpEvent
  * 'HISTORY':                       downArrowClicked, upArrowClicked
  * 'SETTINGS':
+ * 'CONFLICT'
  * 
  */
+    var newModeName;
     
+    let currentMode = await getMode();
+    console.log('setMode = ' + inputModeName + ' ( from current mode )= ' + currentMode + ')');
     
-    let currentMode= getMode();
-    console.log('setMode = ' + modeName + ' ( from current mode = ' + currentMode);
+    var HEAD_title;    
+           
+    // Get current message
+    var history;
+    try{              
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( ['-1'],onCurrentMessage);
+        function onCurrentMessage(err, result){
+            // result.latest has following fields :  hash, date, message, refs, author_email, author_name
+            console.log(result);
+            console.log(err); 
+            HEAD_title = result.latest.message;
+            } 
+            
+    }catch(err){        
+        console.log(err);
+    }
+
     
-    
-    switch(modeName) {
-        case 'DEFAULT':
+    switch(inputModeName) {  
+              
+        //
+        // UNKNOWN - DETERMINE MODE
+        //      
+        case 'UNKNOWN': {
+                // Fallback guess
+                newModeName = 'DEFAULT';  // Best guess so far -- need something else than UNKNOWN to stop infinit recursion
+                
+                // Reset some localState variables (and let the found mode correct)
+                let copyOfLocalState = localState;  // Backup localState
+                localState.historyNumber = -1;      // Guess that not in history browsing mode
+                
+                // Sources used to determinine mode
+                let messageLength = readMessage().length;
+                let numberOfRepos = state.repos.length;
+                let historyNumberPointer = localState.historyNumber;
+                let status_data = []; 
+                status_data.changedFiles = false;
+                
+                // Populate  status_data
+                try{
+                    status_data = await gitStatus();
+                    //console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
+                }catch(err){
+                    status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
+                }
+
+                // Log sources to determine mode
+                console.log(status_data);  
+                console.log(messageLength);
+                console.log(numberOfRepos);
+                console.log(historyNumberPointer);
+                
+                // Clean values that destroy working-out mode
+                if (currentMode == 'HISTORY'){
+                    textOutput.value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
+                    localState.historyString = "";
+                    localState.historyHash = "";
+                }
+       
+                // DEFAULT
+                if ( numberOfRepos == 0 ){ 
+                    newModeName = 'DEFAULT';  
+                    _setMode( newModeName);
+                    break;
+                }    
+                   
+                // CONFLICT
+                if (status_data.conflicted.length > 0){ 
+                    newModeName = 'CONFLICT';  
+                    _setMode( newModeName);
+                    break;
+                }     
+ 
+                // NO_FILES_TO_COMMIT
+                try{
+                    if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
+                        newModeName = 'NO_FILES_TO_COMMIT'; 
+                        _setMode( newModeName);
+                        break;
+                    }
+                }catch(err){
+                    console.log('_setMode --  case "CHANGED_FILES" caught error');
+                }          
+                 
+                     
+                // CHANGED_FILES 
+                // CHANGED_FILES_TEXT_ENTERED
+                if ( status_data.changedFiles== true){   
+                    if ( messageLength  > 0 ) { newModeName = 'CHANGED_FILES_TEXT_ENTERED' }
+                    if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' } 
+                    _setMode( newModeName);
+                }   
+                
+                break;
+            }
+                
+        //
+        // KNOWN MODE - UPDATE display state
+        //            
+        // - Store button -- enabled/disabled  Store/Checkout
+        // - Message      -- placeholder/writeable/
+        // 
+        // all following
+        case 'DEFAULT': {
             //if (currentMode ==  'DEFAULT') { return};
+            newModeName = 'DEFAULT';
+            document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "Get started by dropping a folder onto this window ...";    
-            document.getElementById("message").readOnly = true;
+            textOutput.value = "";
+            textOutput.placeholder = "Get started by dropping a folder onto this window ...";    
+            textOutput.readOnly = true;
             
             setTitleBar( 'top-titlebar-repo-text', ''  );
             setTitleBar( 'top-titlebar-branch-text', '' );
             break;
-            
-        case 'NO_FILES_TO_COMMIT':
-            // set by _mainLoop
-            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
-            document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "No changed files to store";            
-            document.getElementById("message").readOnly = true;
-            break;
-            
-        case 'CHANGED_FILES':
-            // set by _mainLoop
-            if (currentMode ==  'CHANGED_FILES') { return};
-            document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "You have changed files." + os.EOL + "Add description and press Store";        
-            document.getElementById("message").readOnly = false;
-            break;
-            
-        case 'CHANGED_FILES_TEXT_ENTERED':
-            // set by messageKeyUpEvent
-            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
-            document.getElementById('store-button').disabled = false;
-            //document.getElementById('message').value = "";
-            //document.getElementById('message').placeholder = "Get started by dropping a folder onto this window";    
-            document.getElementById("message").readOnly = false;
-            break;
-            
-        case 'HISTORY':
-            // set by downArrowClicked and upArrowClicked
-            if (currentMode ==  'HISTORY') { return};
-            document.getElementById('store-button').disabled = true;
-            // Text not fixed
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "TODO";    
-            document.getElementById ("message").readOnly = true;
-            break;
-            
-        case 'SETTINGS':
-            if (currentMode ==  'SETTINGS') { return};
-            document.getElementById('store-button').disabled = true;
-            document.getElementById('message').value = "";
-            document.getElementById('message').placeholder = "TODO ";    
-            document.getElementById("message").readOnly = true;
-            break;
-            
-        default:
-            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + modeName);
         }
-    
+            
+        case 'NO_FILES_TO_COMMIT': {
+            // set by _mainLoop
+            newModeName = 'NO_FILES_TO_COMMIT';
+            textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = true;
+            textOutput.value = "";           
+            textOutput.readOnly = true;
+            break;
+        }
+            
+        case 'CHANGED_FILES': {
+            // set by _mainLoop
+            newModeName = 'CHANGED_FILES';
+            textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
+            //if (currentMode ==  'CHANGED_FILES') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = true;
+            textOutput.value = "";          
+            textOutput.readOnly = false;
+            break;
+        }
+            
+        case 'CHANGED_FILES_TEXT_ENTERED': {
+            // set by messageKeyUpEvent
+            newModeName = 'CHANGED_FILES_TEXT_ENTERED';
+            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = false;
+            //textOutput.value = "";  // Don't want to destory typed text
+            //textOutput.placeholder = "Get started by dropping a folder onto this window";    
+            textOutput.readOnly = false;
+            break;
+        }
+            
+        case 'HISTORY': {
+            // set by downArrowClicked and upArrowClicked
+            newModeName = 'HISTORY';
+            if (currentMode ==  'HISTORY') { return};
+            document.getElementById("store-button").innerHTML="Checkout";// Set button
+            document.getElementById('store-button').disabled = false;
+            // Text not fixed
+            textOutput.value = "";
+            textOutput.placeholder = "";    
+            textOutput.readOnly = true;
+            break;
+        }
+            
+        case 'SETTINGS': {
+            newModeName = 'SETTINGS';
+            if (currentMode ==  'SETTINGS') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = true;
+            textOutput.value = "";
+            textOutput.placeholder = 
+                "You are in settings mode." + os.EOL + 
+                "- Unfold a settings section ..." + os.EOL + 
+                "- Close window when done";    
+            textOutput.readOnly = true;
+            break;
+        }
+            
+        case 'CONFLICT': {
+            newModeName = 'CONFLICT';
+            if (currentMode ==  'CONFLICT') { return};
+            document.getElementById("store-button").innerHTML="Store";// Set button
+            document.getElementById('store-button').disabled = true;
+            textOutput.value = "";
+            textOutput.placeholder = 
+                "There is a file conflict to resolve" + os.EOL + 
+                "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
+                "- Write a message, and press Store when done";    
+            textOutput.readOnly = true;
+            break;
+        }
+        
+        default: {
+            console.log('setMode - WARNING : NO MATCHING MODE WAS FOUND TO INPUT = ' + inputModeName);
+        }    
+    }
+        
+    console.log('setMode result : setMode = ' + newModeName + ' ( from current mode )= ' + currentMode + ')');
+      
     // Remember mode
-    localState.mode = modeName;
+    localState.mode = newModeName;
+    
+    // Show
+    await _update()
+   
+    console.log(textOutput);
+    writeTextOutput(textOutput);
+    
+
+    return newModeName;  // In case I want to use it with return variable
 }
 
-
 // Git commands
+async function gitIsInstalled(){
+    var isInstalled = false;
+    var resultMessage = "";
+    try{
+        await simpleGit().raw([ 'version'], test );
+        function test(err, result){ 
+            console.log(result); 
+            resultMessage = result;
+            
+            if (err == undefined){
+                isInstalled = true;
+            }
+        }; 
+    }catch(err){
+        console.log(err); 
+    }
+
+    // Alert dialog if not installed
+    if ( !isInstalled){
+        document.getElementById('gitNotInstalledAlert').showModal();
+        return
+    }
+    
+    state.git = isInstalled;
+
+    return isInstalled;
+
+}
+async function gitStatus(){
+    // Determine if changed files (from git status)
+    let status_data = [] ;  
+    status_data.changedFiles = false;
+    status_data.current = "";
+    
+    // Make safe for empty repos
+    if (state.repos.length == 0){ return status_data}
+    if (state.repoNumber > (state.repos.length -1) ){ return status_data}
+    
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder)
+            .status( onStatus);
+        function onStatus(err, result ){  status_data = result }
+        
+        // New files can be not_added (user created them) or created (git merge created them)
+        status_data.changedFiles = ( 
+            (status_data.modified.length 
+            + status_data.not_added.length 
+            + status_data.created.length
+            + status_data.deleted.length) > 0);
+        //console.log(status_data);
+        status_data.current;  // Name of current branch
+        
+    }catch(err){
+        console.log('Error in gitStatus()');
+        console.log(err);
+        
+        // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
+        status_data = [];
+        status_data.conflicted = [];
+        status_data.modified = []; // zero length
+        status_data.not_added = [];
+        status_data.created = [];
+        status_data.deleted = [];
+        status_data.changedFiles = false;
+        status_data.ahead = 0;
+        status_data.behind = 0;
+
+    }
+ 
+    // return fields : 
+    //      changedFiles (boolean) 
+    //      modified, not_added, deleted (integers)
+    //      conflicted; Array of files being in conflict (there is a conflict if length>0)
+    return status_data;  
+}
+async function gitShow(commit){
+    
+    let showStatus;
+    let outputStatus = []; // Will build a struct on this
+    
+    // TODO : questionable if needed (3 lines)
+    outputStatus.added = [];
+    outputStatus.deleted = [];
+    outputStatus.modified = [];
+    
+    outputStatus.files = [];
+    
+    let hash = localState.historyHash;
+    
+    try{
+        // Read status
+        await simpleGit(state.repos[state.repoNumber].localFolder).show( ['--name-status','--oneline',hash], onWhatChanged);
+        function onWhatChanged(err, result){ console.log(result); showStatus = result } 
+        console.log('fileStatus -- hash = ' + hash);
+        
+        let splitLines = showStatus.split(/\r?\n/); 
+        
+        for (let i = 1; i < splitLines.length; i++) { 
+            let line = splitLines[i];  // Example "M       listChanged.html"
+            
+            if (line.length > 0)  // Last line may be empty from the git show command
+            {   
+                // Split into type and file name  
+                let type = line.substring(0,1);  // "M"
+                let fileName = line.substring(1).trim(); // "listChanged.html"
+                
+                switch (type){
+
+                    case "A" :
+                        outputStatus.added.push(fileName);
+                        break;
+                    
+                    case "D" :
+                        outputStatus.deleted.push(fileName);
+                        break;
+                    
+                    case "M" :
+                        outputStatus.modified.push(fileName);
+                        break;
+                }
+                outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
+                
+                console.log('split = ' + line);
+            }
+        }
+
+        
+        
+        
+    }catch(err){
+        console.log('fileStatus -- caught error');
+        console.log(err);
+    }
+    
+    // Store in localState
+    localState.history_status_data = outputStatus;
+    
+    return outputStatus;
+    
+}
+async function gitBranchList(){
+    let branchList;
+    
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
+        function onBranchList(err, result ){console.log(result); branchList = result.all};
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+    }
+    return branchList
+}
+async function gitLocalFolder(){
+    
+    let gitFolders = [];
+
+    try{
+        gitFolders.folderPath = await simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
+        gitFolders.folderName = gitFolders.folderPath.replace(/^.*[\\\/]/, '');
+     }catch(err){
+        gitFolders.folderName = ""; 
+        gitFolders.folderPath = ""; 
+        
+        console.log('gitLocalFolder - Error getting name of local folder');
+        console.log(err);
+    } 
+    // return fields : 
+    //    foldername, folderPath
+    return gitFolders;
+    
+}
 async function gitAddCommitAndPush( message){
+    
     var status_data;     
     
     
     // Read current branch
     try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
-        _setMode('CHANGED_FILES');
+        status_data = await gitStatus();
     }catch(err){
         console.log('Error in _mainLoop()');
         console.log(err);
     }
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+
     
-    // Add all files
+    // Add all files to index
     setStatusBar( 'Adding files');
     var path = '.'; // Add all
-    await simpleGit(state.repos[state.repoNumber].localFolder).add( path, (err, result) => {console.log(result) });
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .add( path, onAdd );   
+    function onAdd(err, result) {console.log(result) }
+    
+    
+    // Remove localState.unstaged from index
+    for (var file of localState.unstaged) {
+         await simpleGit( state.repos[state.repoNumber].localFolder )
+        .raw( [  'reset', '--', file ] , onReset); 
+    }
+    function onReset(err, result) {console.log(result) }
+    
     await waitTime( 1000);
     
-    // Commit including deleted
+    // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).commit( message, {'--all' : null} , (err, result) => {console.log(result) });
+    //await simpleGit( state.repos[state.repoNumber].localFolder )
+        //.commit( message, {'--all' : null} , onCommit);
+    await simpleGit( state.repos[state.repoNumber].localFolder )
+        .commit( message, onCommit);        
+    function onCommit(err, result) {console.log(result) };
+    
     await waitTime( 1000);
     
-    // Push (and create remote branch if not existing)
-    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    await simpleGit(state.repos[state.repoNumber].localFolder).push( remoteBranch, {'--set-upstream' : null}, (err, result) => {console.log(result) }); 
-    await waitTime( 1000);  
-        
-    writeMessage('',false);  // Remove this message  
-    _mainLoop();
+    if (state.autoPushToRemote){ 
+        await gitPush();
+    }
+      
+    // Finish up
+    localState.unstaged = [];
+    //writeMessage('',false);  // Remove this message 
+    textOutput.value = '';
+    writeTextOutput( textOutput);
+    _setMode('UNKNOWN');  
+    await _update()
 }
-async function unComittedFiles(){
-    var status_data;  
+
+async function gitStash(){
+    // Stash
     try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).status((err, result) => {console.log(result); console.log(err);status_data = result})
+        // Drop old stashes
+        if (state.onlyOneStash){   
+            await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['clear'], onStashClear);
+            function onStashClear(err, result) {console.log(result);console.log(err) };
+        }
+        
+        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
+        function onStash(err, result) {console.log(result);console.log(err) };
+    
     }catch(err){
-        console.log('Error in unComittedFiles,  calling  _mainLoop()');
+        console.log('Error in gitStash()');
         console.log(err);
     }
  
-    // If no files to commit
-    var uncommitedFiles = false;
-    if ( (status_data.modified.length + status_data.not_added.length + status_data.deleted.length) == 0){
-        uncommitedFiles = true;
-    }  
-    return uncommitedFiles;
+    setStatusBar( 'Stashing files');
+    await waitTime( 1000);      
+}
+async function gitStashPop(){
+    // Stash pop
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['pop'], onStashPop);
+        function onStashPop(err, result) {console.log(result);console.log(err) };
+    
+    }catch(err){
+        // TODO : gitStashPop -- Possibility for this error : error: could not restore untracked files from stash
+        // Solution https://gist.github.com/demagu/729c0a3605a4bd2e4c3d
+        //
+        console.log('Error in gitStashPop()');
+        console.log(err);
+    }
+ 
+    setStatusBar( 'Retrieving stashed files');
+    await waitTime( 1000);        
 }
 
+async function gitPush(){
+    
+    // Read current branch
+    try{
+        status_data = await gitStatus();
+    }catch(err){
+        console.log('Error in gitPush()');
+        console.log(err);
+    }
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    
+
+    // Push
+    setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+    
+    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+    function onPush(err, result) {console.log(result) };
+    
+    await waitTime( 1000);  
+
+}
+async function gitFetch(){
+    console.log('Running gitFetch()');
+     
+    var error = "";
+
+    // Fetch
+     try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+        function onFetch(err, result) {console.log(result) };
+        
+    }catch(err){
+        console.log('Error in gitFetch()');
+        console.log(err);
+        error = err;
+    }
+  
+}
+async function gitPull(){
+    
+    var error = "";
+    // Read current branch
+    try{
+        status_data = await gitStatus();
+    }catch(err){
+    }
+    
+    var currentBranch = status_data.current;
+    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+
+    // Pull
+    if (status_data.behind > 0){
+        setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
+
+        try{
+            await simpleGit( state.repos[state.repoNumber].localFolder ).pull( onPull);
+            function onPull(err, result) {console.log(result) };
+            
+            //await writeTimedMessage( 'Pulled files from remote' + os.EOL + error, true, WAIT_TIME);
+            
+            let tempOutput = {};
+            tempOutput.placeholder = 'Pulled files from remote' + os.EOL + error;
+            tempOutput.value = '';
+            await writeTimedTextOutput(tempOutput, WAIT_TIME);
+            
+            
+        }catch(err){
+            
+            displayAlert('Failed pulling remote file', err); 
+            console.log('Error in gitPull()');
+            console.log(err);
+            error = err;
+            
+        }
+        _setMode('UNKNOWN');
+    }else {
+        displayAlert('No files can be pulled from remote', err);
+    }
+
+}
+async function gitMerge( currentBranchName, selectedBranchName){
+
+    console.log('gitMerge, merge branch = ' + selectedBranchName);
+    console.log('gitMerge, into current branch =  ' + currentBranchName);
+    
+    await waitTime( 1000);
+    
+    let mergeResult;  
+    let mergeError;  // mergeError.conflicts
+    
+    // Set No-fast-forward option according to settings
+    let options = ['--no-commit' ];
+    if (state.NoFF_merge){
+        options = ['--no-ff', '--no-commit' ];
+    }
+    
+    // Merge
+    try{
+        setStatusBar( 'Merging "' + selectedBranchName + '" -> "' + currentBranchName + '"');
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .mergeFromTo( selectedBranchName, currentBranchName, options, onMerge);
+            
+        function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err };
+       
+        await waitTime( 1000);  
+    }catch(err){
+        console.log('gitMerge failed');     
+    }
+  
+      
+    // Finish up
+    //writeMessage('',false);  // Remove this message  
+    
+    //await _setMode('UNKNOWN');
+    await _setMode('CHANGED_FILES_TEXT_ENTERED');
+    await _update()
+    
+    textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
+    textOutput.readOnly = false;
+    //textOutput.placeholder = 'Write description of Merge, and press Store';
+    writeTextOutput( textOutput);
+}
 
 // Utility functions
 function getMode(){
     return localState.mode;
 }
-
-function confirmationDialog(text) {    
-    console.log('confirmationDialog called');
-    
-    //var dialog_win = gui.Window.open('confirmationDialog.html#/new_page', {
-        //position: 'center',
-        //width: 300,
-        //height: 100,
-        //focus: true
-    //});
-
-    console.log('Opened Confirmation Dialog');
-    
-    return confirm(text);
-}
-
 function waitTime( delay) {
 // Delay in milliseconds
-  console.log("starting delay ")
-  return new Promise(resolve => {
-    setTimeout(function() {
-      resolve("delay ")
-      console.log("delay is done")
-    }, delay)
+   console.log("starting delay ")
+   return new Promise( resolve => {
+        setTimeout(
+            function() {
+                    resolve("delay ")
+                    console.log("delay is done")
+            }
+            , delay
+        )
   })
 }
-
 function mkdir(dir){
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
     }
 }
+async function addExistingRepo( folder) {
+        // Get top folder
+        var topFolder;
+        try{
 
-function updateStatusBar( text){
-    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
-    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
-    console.log('updateStatusBar = ' + newmessage);
-}
-function setStatusBar( text){
-    document.getElementById('bottom-titlebar-text').innerHTML = text;
-    console.log('setStatusBar = ' + text);
-}
-function setTitleBar( id, text){
-    document.getElementById(id).innerHTML = text;
-    console.log('setTitleBar (element ' + id + ') = ' + text);
-}
+            // Find top folder of Repo
+            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+    
+        }catch(error){
+            console.log(error);
+        }
 
-function setStoreButtonEnableStatus( enableStatus) {
-    document.getElementById('store-button').disabled = !enableStatus;
-}
 
-function cleanDuplicates( myArray, objectField ){
-    // Removes all elements in "myArray"  where the field "objectField" are duplicates
+        
+        // Add folder last in  state array
+        var index = state.repos.length;
+        state.repos[index] = {}; 
+        state.repos[index].localFolder = topFolder;
+        
+        // Clean duplicates from state based on name "localFolder"
+        state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
+        try{
+            // Set index to match the folder you added
+            index = util.findObjectIndex( state.repos, 'localFolder', topFolder);  // Local function
+        }catch(err){
+            index = state.repos.length; // Highest should be last added
+        }
+        
+        // Set to current
+        state.repoNumber = index;
+        localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
+    
+        // Set global
+        state.repos[state.repoNumber].localFolder = topFolder;
+        console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+}    
+
+// Dialogs
+async function tag_list_dialog(){
+            
+            let tagList;
+            
+            try{
+                // List tags
+
+                await simpleGit( state.repos[state.repoNumber].localFolder ).tag( ['--list'], onTagList);
+                function onTagList(err, result) {console.log(result);console.log(err); tagList = result };
+                
+                // Make array of tags (from one result-string)
+                localState.arrayTagList = tagList.split(os.EOL);
+            
+            }catch(err){
+                console.log('Error in tagList()');
+                console.log(err);
+            }
+    
+    
+            gui.Window.open(
+                'tagList.html#/new_page' ,
+                {
+                    id: 'tagListWindowId',
+                    position: 'center',
+                    title: "Select one tag"
+                }
+            ); 
+            
+            localState.tagListWindow = true;
+
+}
+function displayAlert(title, message){
+    
+    // Copied from settings.js
+    
+    // Writes into alertDialog in settins.html
+    // Example:
+    //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
     //
-    // So if objectField = 'localFolder' the duplicates in this kind of array are removed :
-    // cleanDuplicates( [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}, {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}], 'localFolder' );
-    // returns [ {localFolder: "/Users/jan/Desktop/TEMP/Test-git"}]
+    // first argument is ignored
+
+    document.getElementById('alertTitle').innerHTML = title;
+    document.getElementById('alertMessage').innerHTML = message;
     
-    // Display the list of array objects 
-    console.log(myArray); 
-
-    // Declare a new array 
-    let newArray = []; 
-      
-    // Declare an empty object 
-    let uniqueObject = {}; 
-      
-    // Loop for the array elements 
-    for (let i in myArray) { 
-
-        // Extract the title 
-        objTitle = myArray[i][objectField]; 
-
-        // Use the title as the index 
-        uniqueObject[objTitle] = myArray[i]; 
-    } 
-      
-    // Loop to push unique object into array 
-    for (i in uniqueObject) { 
-        newArray.push(uniqueObject[i]); 
-    } 
-      
-    // Display the unique objects 
-    console.log(newArray); 
-
-
-
-    return newArray;
+    // Show message
+    document.getElementById('alertDialog').showModal();
 }
 
-// Settings
-function saveSettings(){
-    
-    // Update current window position
-        win = gui.Window.get();
-        state.position.x = win.x;
-        state.position.y = win.y;
-        state.position.width = win.width;
-        state.position.height = win.height;  
-    
-    // Save settings
-    var jsonString = JSON.stringify(state, null, 2);
-    fs.writeFileSync(settingsFile, jsonString);
-}
-function loadSettings(settingsFile){
-    try{
-        jsonString = fs.readFileSync(settingsFile);
-        state = JSON.parse(jsonString);
-        
-        console.log('Input json file');
-        console.log(state);
-    
-    }catch(err){
-        console.log('Error loading settings -- setting defaults');
-        // Defaults
-        state = {};
-        
-        state.repoNumber = -1; // Indicate that no repos exist yet
-        localState.branchNumber = 0;
-        
-        state.repos = [];
-        
-        console.log(err);
 
-    }
-    
-    
-    // Clean duplicate in state.repos based on name "localFolder"
-    state.repos = cleanDuplicates( state.repos, 'localFolder' );
-    console.log('State after cleaning duplicates');
-    console.log(state);
-    
-    if ( state.repoNumber > state.repos.length ){
-        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
-    }
-    
-    
-    // Place window
-    try{
-        // Validate position on screen
-        if ( (state.position.x + state.position.width) > screen.width ) {
-            state.position.x = screen.availLeft;
-        }
-        
-        if ( (state.position.y + state.position.height) > screen.height ){
-            state.position.y = screen.availTop;
-        }
-        
-        // Position and size window
-        win = gui.Window.get();
-        win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height);
-
-        
-    }catch(err){
-        console.log('Error setting window position and size');
-        console.log(err);
-    }
-    return state;
-}
 
 // Title bar
+function setTitleBar( id, text){
+    if (text.length == 0){
+        text = " ";
+    }
+    document.getElementById(id).innerHTML = text;
+    //console.log('setTitleBar (element ' + id + ') = ' + text);
+}
 function updateImageUrl(image_id, new_image_url) {
   var image = document.getElementById(image_id);
   if (image)
@@ -983,7 +2368,7 @@ function updateContentStyle() {
     
     var titlebar = document.getElementById("top-titlebar");
     if (titlebar) {
-        height -= titlebar.offsetHeight + 36 + 2;
+        height -= titlebar.offsetHeight + 32 + 2;
         top += titlebar.offsetHeight;
     }
     titlebar = document.getElementById("bottom-titlebar");
@@ -999,57 +2384,293 @@ function updateContentStyle() {
     content.setAttribute("style", contentStyle);
     
     // This is to make message textarea follow window resize
-    var message_area = document.getElementById("message");
-    var message_area_style = "height: " + (height - 28).toString() + "px; ";
-    message_area_style += "width: 100%; " ;
-    message_area_style += "resize: none; " ;
-    message_area.setAttribute("style", message_area_style);
+    //var message_area = document.getElementById("message");
+    //var message_area_style = "height: " + (height - 28 - 8).toString() + "px; ";
+    //message_area_style += "width: 100%; " ;
+    //message_area_style += "resize: none; " ;
+    //message_area.setAttribute("style", message_area_style);
 
   
 }
 
 // Message
-function readMessage( ){
-    return document.getElementById('message').value;
+function writeTextOutput(textOutputStruct){
+    document.getElementById('message').value = textOutputStruct.value;
+    document.getElementById('message').placeholder = textOutputStruct.placeholder;  
+    document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    textOutput = textOutputStruct;
 }
-function writeMessage( message, placeholder){
-    if (placeholder){
-        document.getElementById('message').value = "";
-        document.getElementById('message').placeholder = message;
-    }else{
-        document.getElementById('message').value = message;
-    }
-}
-async function  writeTimedMessage( message, placeholder, time){
+async function writeTimedTextOutput(textOutputStruct, time){
     // Give the user the time to read the message, then restore previous message
     
     // Pause timer
     isPaused = true;
     
+    
     // Store old message
-    var oldMessage = document.getElementById('message').value;
-    if (placeholder){
-        oldMessage = document.getElementById('message').placeholder;
-    }
+    let oldTextOutput = textOutput;
     
     // Show new message and wait
-    writeMessage( message, placeholder);
+    //writeMessage( message, placeholder);
+    textOutput.value = textOutputStruct.value;
+    textOutput.placeholder = textOutputStruct.placeholder;
+    writeTextOutput( textOutput);
     await waitTime( time).catch({});
+
     
     // Restore old message (if user hasn't written something in the wait time
-    if ( document.getElementById('message').length == 0 ){
-        writeMessage( oldMessage, placeholder);
+    if ( (textOutput.value.length )== 0 ){
+        //writeMessage( oldMessage, placeholder);
+        textOutput = oldTextOutput;
+        writeTextOutput( textOutput);
     }
     
     // Restart timer
-    isPaused = false;  
-} 
+    isPaused = false;      
+    
+}
+function readMessage(){
+    // returns message text ( which consists of a title row, OPTIONALLY followed by an empty line and a long multi-line message)
+    try{
+        let message = document.getElementById('message').value;
+        return message;
+    }catch(err){
+        console.log(err);
+        textOutput.value = '';
+        return textOutput;
+    }
+    
+}
 
+function setStoreButtonEnableStatus( enableStatus) {
+    document.getElementById('store-button').disabled = !enableStatus;
+}
+
+
+
+// Output row (below message)
+function writeOutputRow( htmltext){
+    document.getElementById("output_row").style.visibility = 'visible';
+    document.getElementById("output_text").innerHTML = htmltext;
+}
+function clearOutputRow( ){
+    document.getElementById("output_row").style.visibility = 'collapsed';
+    document.getElementById("output_text").innerHTML = '';
+}
+
+// Statusbar
+function updateStatusBar( text){
+    newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
+    document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
+    console.log('updateStatusBar = ' + newmessage);
+}
+function setStatusBar( text){
+    if (devTools){
+        document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+    }else {
+        document.getElementById('bottom-titlebar-text').innerHTML = text;
+    }
+}
+function fileStatusString( status_data){
+    
+    if (localState.mode == 'HISTORY'){
+        // Work on hash from current history pointer
+        
+        return 'Modified = ' 
+        + status_data.modified.length 
+        + ' |  New = ' + ( status_data.added.length )
+        + ' |  Deleted = ' + status_data.deleted.length;
+        
+    }else{
+        // Normal operation, work on git status from HEAD
+        try{
+            if (status_data.conflicted.length > 0){
+                return 'Conflicts = ' + status_data.conflicted.length + ' (click here to resolve)';
+                
+            }else{
+                return 'Modified = ' 
+                + status_data.modified.length 
+                + ' |  New = ' + ( status_data.not_added.length + status_data.created.length )
+                + ' |  Deleted = ' + status_data.deleted.length;
+
+            }
+        }catch(err){
+            
+        }
+    }
+};
+
+// Settings
+function saveSettings(){
+    
+    // Update current window position
+        win = gui.Window.get();
+        state.position.x = win.x;
+        state.position.y = win.y;
+        state.position.width = win.width;
+        state.position.height = win.height;  
+    
+    // Save settings
+    var jsonString = JSON.stringify(state, null, 2);
+    fs.writeFileSync(settingsFile, jsonString);
+}
+function loadSettings(settingsFile){
+    // 1) Try to read file into state_in
+    // 2) If fails, set state_in empty
+    // Use internal function "setting" to :
+    // 3) If some struct keys are missing in state_in, create them
+    // 4) Build a new state struct -- setting default value for each undefined parameter (otherwise, keep parameter value from state_in)
+    
+
+    try{
+        // 1) Read json
+        jsonString = fs.readFileSync(settingsFile);
+        state_in = JSON.parse(jsonString);
+        
+        console.log('state -- read from json file');
+        console.log(state_in);
+
+
+    }catch(err){
+        console.log('Error loading settings -- setting defaults');
+        // 2) Defaults
+        state_in = {};            
+    }
+    
+    //
+    // Set from state_in, or default value if parameter missing
+    //
+    
+        // Internal function (returns defaultValue if input undefined)
+        function setting( input, defaultValue){
+            if (input == undefined){
+                console.log(defaultValue);
+                return defaultValue
+            }
+            console.log(input);
+            return input;
+        }
+        
+        // 3) Make sure multiple struct levels exist in state_in
+                            
+            state_in.tools = setting( state_in.tools, {} ); 
+            state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
+            state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
+    
+        // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
+            state = {};
+        
+        // Repos (default is empty)
+            console.log('- setting repos');
+            state.repoNumber = setting( state_in.repoNumber, -1);
+            state.repos = setting( state_in.repos, [] );
+        
+        // Visual
+            console.log('- setting visual settings');
+            state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
+            state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+        
+        // Git
+            console.log('- setting git settings');
+            state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
+            state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
+            state.onlyOneStash = setting( state_in.onlyOneStash, true);
+            state.NoFF_merge = setting( state_in.NoFF_merge, true);
+            
+        // External tools (three levels -- state.tools.difftool )
+            console.log('- setting external tools ');
+
+            state.tools = setting( state_in.tools, {} ); 
+            state.tools.difftool = setting( state_in.tools.difftool, "");
+            state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            
+            console.log('State after amending non-existing with defaults ');
+            console.log(state);
+        
+        // Position
+            state.position = setting( state_in.position, {} ); 
+        
+        // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
+            state.settingsWindow = setting( state_in.settingsWindow, {} );
+            state.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, [] );
+            state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
+            state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
+            state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+
+    //
+    // Post-process state
+    //
+
+    // Sanity check on repoNumber
+    if ( state.repoNumber >= state.repos.length ){
+        state.repoNumber = 0;
+    }        
+    
+    // Sanity check on repoNumber
+    if ( state.repos.length == 0){
+        state.repoNumber = -1;
+    }
+        
+    
+    // Clean duplicate in state.repos based on name "localFolder"
+    state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
+    console.log('State after cleaning duplicates');
+    console.log(state);
+    
+    if ( state.repoNumber > state.repos.length ){
+        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
+    }
+
+    // Position window
+    try{
+        // Validate position on screen
+        if ( (state.position.x + state.position.width) > screen.width ) {
+            state.position.x = screen.availLeft;
+        }
+        
+        if ( (state.position.y + state.position.height) > screen.height ){
+            state.position.y = screen.availTop;
+        }
+        
+        // Position and size window
+        win = gui.Window.get();
+        win.moveTo( state.position.x, state.position.y);
+        win.resizeTo( state.position.width, state.position.height);
+        
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+        }
+
+        
+    }catch(err){
+        console.log('Error setting window position and size');
+        console.log(err);
+    }
+    
+
+
+    
+    return state;
+}
+
+// Dev test
+function dev_show_all_icons(){
+    isPaused = true;
+    document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+    
+ 
+}
 
 // -------------
 // WINDOW EVENTS
 // -------------
-
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
@@ -1083,12 +2704,15 @@ window.onload = function() {
   win.setAlwaysOnTop(true);
   
   
-  // Listen to main window's close event
-  //nw.Window.get().on('close', closeWindowHandler);
-  
   if (devTools == true){
       win.showDevTools();  // WARNING : causes redraw issues on startup
   }
+  
+  _setMode('UNKNOWN');
+  _update();
+  
+  // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
+  setTimeout(gitIsInstalled, 2000);
 
 };
 

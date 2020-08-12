@@ -12,34 +12,6 @@
         #content.hover  { border: 3px dashed #333; }
     </style>
 
-    
-    <!-- Drop folder initiate script-->    
-    <script>
-    
-        //Same as $(document).ready();
-        function ready(fn) {
-            if (document.readyState != 'loading'){
-                fn();
-            } else {
-                document.addEventListener('DOMContentLoaded', fn);
-            }
-        }
-    
-        //When the page has loaded, run this code
-        ready( function(){
-            // prevent default behavior from changing page on dropped file
-            window.ondragover = function(e) { e.preventDefault(); return false };
-            // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
-            window.ondrop = function(e) { e.preventDefault(); return false };
-        
-            const holder = document.getElementById('content');
-            holder.ondragover = function () { this.className = 'hover'; return false; };
-            holder.ondragleave = function () { this.className = ''; return false; };
-            
-            holder.ondrop = function(e) {  _callback('file-dropped', e); return false }; // See app.js
-        
-        });
-    </script>
 
 </head>
 
@@ -50,41 +22,113 @@
     <!-- Top titlebar -->    
     
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
+                
+        <!-- Icon About  --> 
         <div class="about-icon"> 
             <img id="about-icon"    height="17" width="17"  
                 onclick="_callback('clicked-about');" 
                 onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
-                onmouseout="updateImageUrl('about-icon', 'images/questionmark.png');" 
+                onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
                 src="images/questionmark.png">
-            </div>
+
+        </div>
             
 
-            <div id="top-titlebar-text" class="top-titlebar-text">
-                
-                <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                    onclick="_callback('clicked-repo')" 
-                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
-                </div>
-                
-                <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                    onclick="_callback('clicked-branch')" 
-                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-                </div>  
-                 
-            </div>     
+        <div id="top-titlebar-text" class="top-titlebar-text">
+            
+            <!-- Text Repo  --> 
+            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
+                onclick="_callback('clicked-repo')" 
+                onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+            </div>
+            
+            <!-- Text Branch  --> 
+            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                onclick="_callback('clicked-branch')" 
+                onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+            </div>  
 
+ 
+        </div>     
+
+        <!-- NOTE : set absolute positions in style.css -->
+ 
+
+ 
+        <!-- Icon Branch  -->                             
+        <div class="top-titlebar-branch-icon">
+            <img id="top-titlebar-branch-icon" height="17" width="17" 
+                onclick="document.getElementById('branchNameInputDialog').showModal();" 
+                onmouseover="updateImageUrl('top-titlebar-branch-icon', 'images/branch_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');" 
+                src="images/branch.png">
+        </div> 
+                
+                                                 
+        <!-- Icon Merge  -->                             
+        <div class="top-titlebar-merge-icon">
+            <img id="top-titlebar-merge-icon" height="17" width="17" 
+                onclick="_callback('clicked-merge-button')" 
+                onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
+                src="images/merge.png">
+        </div> 
+                
+                        
+        <!-- Icon Pull  --> 
+        <div class="top-titlebar-pull-icon">
+            <img id="top-titlebar-pull-icon" height="17" width="17" 
+                onclick="_callback('clicked-pull-button')" 
+                onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-pull-icon', 'images/pull.png');" 
+                src="images/pull.png">
+        </div>   
+
+                   
+        <!-- Icon Push  -->         
+        <div class="top-titlebar-push-icon">
+            <img id="top-titlebar-push-icon" height="17" width="17" 
+                onclick="_callback('clicked-push-button')" 
+                onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
+                src="images/push.png">
+        </div> 
+    
+                        
+        <!-- Icon Tag  -->                             
+        <div class="top-titlebar-tag-icon">
+            <img id="top-titlebar-tag-icon" height="17" width="auto" 
+                onclick="_callback('clicked-tag-button');" 
+                onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');" 
+                src="images/tag.png">
+        </div> 
+                        
         
-        <div class="top-titlebar-close-icon">
+        <!-- Top right icons  -->           
+        <div class="top-titlebar-close-field">  
+                    
+            <!-- Icon Minimize  -->                     
+            <img id="top-titlebar-minimize-icon" height="17" width="17" 
+                onclick="_callback('clicked-minimize-button')" 
+                onmouseover="updateImageUrl('top-titlebar-minimize-icon', 'images/minimize_hover.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-minimize-icon', 'images/minimize.png');" 
+                src="images/minimize.png">
+ 
+            
+            <!-- Icon Close  -->              
             <img id="top-titlebar-close-icon" 
                 onclick="_callback('clicked-close-button')" 
                 onmouseover="updateImageUrl('top-titlebar-close-icon', 'images/button_close_hover.png');" 
-                onmouseout="updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
+                onmouseout= "updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
                 src="images/button_close.png">
-            </div>
+        </div>
+        
           
         <div class="top-titlebar-divider"></div> 
+        
     </div>
 
 
@@ -96,6 +140,7 @@
                     
             <table id="outer_table">
                 <tr>
+                    <!-- History arrows  --> 
                     <td>
                         <table id="arrow_table">               
                         <tr>
@@ -118,12 +163,27 @@
                         </tr>
                         </table>
                     </td>
+                    
+                    <!-- Message textarea  --> 
                     <td class="message_column">
-                        <textarea class="message" id="message" onkeyup="_callback( 'message_key_up');" >  </textarea>
+                        <textarea class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
                     </td>
+                    <!-- Store button  --> 
                     <td>
                         <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
                     </td>
+                </tr>
+                
+                <!-- Collapsable html output  --> 
+                <tr id="output_row" style="visibility:collapse">
+                    <td></td>
+                    <td>
+                        <div id="output_text">
+                            dasdfasfdas
+                        </div>
+                        
+                    </td>
+                    <td></td>
                 </tr>
             </table>
 
@@ -136,6 +196,8 @@
     <!-- Bottom titlebar -->    
     
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
+        
+        <!-- Icon Folder  -->  
         <div class="bottom-titlebar-folder-icon">
             <img id="bottom-titlebar-folder-icon"  height="17" width="17"
                 onclick="_callback('clicked-folder')" 
@@ -145,11 +207,38 @@
             </div>
             
  
+         <!-- Text Status  -->     
+        <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
+                onclick="_callback('clicked-status-text')">
+            </div>
             
-        <div id="bottom-titlebar-text" class="bottom-titlebar-text"></div>
-
+            
+                                               
+        <!-- Icon Stash  -->                             
+        <div class="bottom-titlebar-stash-icon">
+            <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
+                onclick="_callback('clicked-stash-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
+                src="images/stash.png">
+        </div> 
         
-        <div class="bottom-titlebar-settings-icon">
+                                             
+        <!-- Icon Stash pop  -->                             
+        <div class="bottom-titlebar-stash_pop-icon">
+            <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
+                onclick="_callback('clicked-stash_pop-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');" 
+                src="images/stash_pop.png">
+        </div>    
+            
+            
+            
+            
+
+        <!-- Icon Settings  -->  
+        <div class="bottom-titlebar-settings-field">
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
                 onclick="_callback('clicked-settings')"
                 onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 
@@ -159,6 +248,192 @@
         
         <div class="bottom-titlebar-divider"></div>
     </div>
+    
+    
+<!--          -->    
+<!-- Dialogs  -->   
+<!--          -->   
+
+
+    <!--  General alert dialog  --> 
+
+    <dialog id="alertDialog" style="background-color:#C00;border:1px dotted black;">  
+        <p> 
+            <div id='alertTitle'></div><br>  
+            <div id='alertMessage'></div>  
+        </p>  
+        <button id="no"
+            onclick="document.getElementById('alertDialog').close();selectedBranch='';">
+            OK
+        </button>  
+    </dialog>  
+                
+
+
+    <!-- Tag creation -->   
   
+    <dialog id="tagNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+        <b>Create branch from this commit</b><br>
+            <br>
+            <textarea id="tagNameTextarea" 
+                rows="2" 
+                cols="30" 
+                placeholder="name of new tag"
+                onkeyup= "_callback('newTagNameKeyUp', this);"></textarea>  
+            <br>
+
+            <br>
+        
+        <button  id="newTagNameEntered"
+            onclick="document.getElementById('tagNameInputDialog').close();_callback('addTagButtonPressed', this.value);document.getElementById('tagNameTextarea').value='';">
+            OK
+        </button>           
+        <button id="cancelTagNameInputDialog"
+            onclick="document.getElementById('tagNameInputDialog').close();document.getElementById('tagNameTextarea').value='';">
+            Cancel
+        </button>  
+    </dialog>             
+
+
+
+    <!-- Branch creation -->   
+  
+    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+        <b>Create branch from this commit</b><br>
+            <br>
+            <textarea id="branchNameTextarea" 
+                rows="2" 
+                cols="30" 
+                placeholder="name of new branch"
+                onkeyup= "_callback('newBranchNameKeyUp', this);"></textarea>
+            <br>
+
+            <br>
+        
+        <button  id="newBranchNameEntered"
+            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            OK
+        </button>           
+        <button id="cancelBranchNameInputDialog"
+            onclick="document.getElementById('branchNameInputDialog').close();document.getElementById('branchNameTextarea').value='';">
+            Cancel
+        </button>  
+    </dialog>      
+
+
+
+    <!-- Git not installed alert -->   
+  
+    <dialog id="gitNotInstalledAlert" style="background-color:#C00;border:1px dotted black;">  
+        <b>ERROR -- Cannot find "git" !</b><br>
+            Please make sure "git" is installed. <br>
+            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
+            <br>
+        
+        <button 
+            onclick="document.getElementById('gitNotInstalledAlert').close();">
+            OK
+        </button>   
+        
+    </dialog>      
+
+
+
+    <!-- Detached head dialog -->   
+  
+    <dialog id="detachedHeadDialog" style="background-color:#C00;border:1px dotted black;">  
+        <b>WARNING -- detached HEAD !</b><br>
+            You've created work in an old revision. <br>
+            1) Keep work : a temporary branch will be created<br>
+            2) Delete : drop work done on old revision<br>
+            <br>
+        
+        <button id="tempBranchDetachedDialog" value="Temp_Branch"
+            onclick="document.getElementById('detachedHeadDialog').close();document.getElementById('branchNameInputDialog').showModal();"> <!-- Call html-dialog for branch selection -->
+            1) Temp Branch
+        </button>   
+        <button id="deleteDetachedDialog" value="Delete"
+            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog', this.value);">
+            2) Delete
+        </button>     
+        <button id="cancelDetachedDialog" value="Cancel"
+            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog', this.value);">
+            Cancel
+        </button>  
+    </dialog>  
+
+
+    <!-- Dropped file is not a repo -->   
+  
+    <dialog id="doYouWantToInitializeRepoDialog" style="background-color:yellow;border:1px dotted black;">  
+        <b>WARNING -- the dropped folder is not a repository.</b><br>
+            Do you want to initialize this folder as a git repository ? <br>
+            <br>
+        
+        <button id="initializeRepoDialogOK" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK');">
+            Initialize
+        </button>   
+        <button id="initializeRepoDialogCancel" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+            Cancel
+        </button>     
+
+    </dialog>  
+
+
+    
+    <!-- Stash overwrite dialog -->   
+  
+    <dialog id="stashOverwriteDialog" style="background-color:#C00;border:1px dotted black;">  
+        <b>WARNING -- there is a "stash" that may be overwritten!</b><br>
+            1) Keep work : a temporary branch will be created instead <br>
+            2) Replace : the old stash will be replaced by this one<br>
+            <br>
+        
+        <button id="tempBranchDetachedDialog" value="Temp_Branch"
+            onclick="document.getElementById('stashOverwriteDialog').close();document.getElementById('branchNameInputDialog').showModal();"> <!-- Call html-dialog for branch selection -->   
+            1) Temp Branch
+        </button>   
+        <button id="deleteDetachedDialog" value="Replace"
+            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog', this.value);">
+            2) Replace
+        </button>     
+        <button id="cancelDetachedDialog" value="Cancel"
+            onclick="document.getElementById('stashOverwriteDialog').close();_callback('stashOverwriteDialog', this.value);">
+            Cancel
+        </button>  
+    </dialog>   
+
 </body>
+
+    
+    <!-- Drop folder initiate script-->    
+    <script>
+    
+        //Same as $(document).ready();
+        function ready(fn) {
+            if (document.readyState != 'loading'){
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+    
+        //When the page has loaded, run this code
+        ready( function(){
+            // prevent default behavior from changing page on dropped file
+            window.ondragover = function(e) { e.preventDefault(); return false };
+            
+            // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
+            window.ondrop = function(e) { e.preventDefault(); return false };
+        
+            const holder = document.getElementById('content');
+            holder.ondragover = function () { this.className = 'hover'; return false; };
+            holder.ondragleave = function () { this.className = ''; return false; };
+            
+            holder.ondrop = function(e) {  _callback('file-dropped', e); return false }; // See app.js
+        
+        });
+    </script>
 </html>

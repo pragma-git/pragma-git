@@ -1,0 +1,74 @@
+<html>
+    <head>
+        <title>List tags</title>
+        <script src="tagList.js"></script>
+    </head>
+    
+    <body>
+
+        <div id="outerContent"  style="width: fit-content;padding: 10px">
+              
+        <label for="tagFilterText">Filter (wildcard *)</label><br>
+        <textarea id="tagFilterText" 
+            rows="1" 
+            cols="30" 
+            placeholder="*"
+            onkeyup="_callback('onFilterKeyUp',this)"
+        
+            ></textarea>
+            </textarea>
+        <br>
+        <br>
+        
+        
+
+        <label for="tagSelection"> Select one</label><br>
+        <select name="tagSelection" id="tagSelection" size="15" style="width: 100%">
+            <option value="SM">http://www.scriptingmaster.com</option>
+            <option value="Google">http://www.google.com</option>
+            <option value="MSN">http://www.msn.com</option>
+            <option value="yahoo">http://www.yahoo.com</option>
+            <option value="microsoft">http://www.microsoft.com</option>
+            </select>
+            
+        <br>
+        <br>
+        
+        <button  id="Select-button"
+            onclick="
+                event.buttonText = document.getElementById('Select-button').innerHTML;
+                event.selected = document.getElementById('tagSelection').value ;
+                 _callback('Select-button', event);">
+            Checkout
+            </button>    
+        
+        <button  id="Cancel"
+            onclick="_callback('Cancel-button');">
+            Cancel
+            </button>  
+        </div>
+    </body>
+    
+    
+    
+    <!--  Onload, call javascript file  --> 
+    <script>
+    
+    
+        window.addEventListener(
+            'DOMContentLoaded', 
+            (event) => {
+                console.log('listChanged.html :DOM fully loaded and parsed');
+                injectIntoJs(document);
+            }
+        );
+        window.addEventListener(
+            'unload', 
+            (event) => {
+                console.log('listChanged.html :DOM fully unloaded -- maybe window closed ');
+                closeWindow(window);
+            }
+        );
+    </script>
+    
+</html>

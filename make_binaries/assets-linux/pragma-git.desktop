@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Pragma-git
+Icon=/opt/pragma-git/images/linux-icons/48/pragma-git.png
+Exec=/opt/pragma-git/Pragma-git
+Comment=Pragmatic revision control
+Categories=GNOME;GTK;Development;Documentation;
+Terminal=false

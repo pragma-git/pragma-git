@@ -2,7 +2,7 @@
 # Get access token from : settings/developers settings/Personal Access Settings 
 # (set repo=on)
 USER='JanAxelsson'
-TOKEN=f749ea8473a1afb417dc78f674369ec77b5fa62c
+TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
 
 #
 # LIST 
@@ -61,6 +61,18 @@ TOKEN=f749ea8473a1afb417dc78f674369ec77b5fa62c
 
     git remote add origin https://$USER:$TOKEN@github.com/$USER/$NEW_REPO
     git push -u origin master
+    
+    
+    # Eller långa varianten från github när man gör nytt repo
+        echo "# test" >> README.md
+        git init
+        git add README.md
+        git commit -m "first commit"
+        git remote add origin https://github.com/JanAxelssonTest/test.git
+        git push -u origin master
+        
+    # Modify url
+        git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
 
 
 

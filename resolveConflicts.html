@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Resolve Conflicts</title>
+    
+    <script src="resolveConflicts.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+        }
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+    
+    
+    </style>
+ 
+    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #777;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          color: white;
+          font-weight: bold;
+          float: right;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out;
+        }
+    </style>
+    
+       
+
+    
+</head>
+<body>
+    
+    <h2>Resolve Conflicts</h2>
+    
+    <!--  1) KEEP OR DELETE -->     
+    <button class="collapsible" id="collapsibleUnsure">1) Select files to keep</button>
+    <div class="content">    
+        <p>Pragma-git could not determine if the file should be kept or deleted. 
+        Checked files will be kept. Un-checked will be deleted.
+        </p>    
+      
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">Keep checked files </th>
+            </tr></thead>
+            <tbody id="deletedTableBody" >
+            </tbody>
+        </table>
+        
+        <br>
+        <button id="resolveAllUnsureButton" 
+            onclick="_callback('resolveAllUnsureButton',this)" 
+            style="vertical-align: middle;">
+            Keep checked files (delete others)
+        </button>
+        <br>
+
+    </div><br>
+    
+    <!--  2) CONFLICTING FILES --> 
+    <button class="collapsible" id="collapsibleConflict">2) Conflicting files :</button>
+    <div class="content">
+        <p>This step cannot be done if there are any files listed in step 1) above.
+        </p>    
+      
+              
+        <table style="width:100%"> 
+            <thead><tr>
+                <th class="path">File with conflict</th>
+            </tr></thead>
+            <tbody id="conflictingTableBody" >
+            </tbody>
+        </table>
+        
+                
+         <br>
+         <button id="resolveAllConflictsButton" 
+                onclick="_callback('resolveAllConflictsButton',this)" 
+                style="vertical-align: middle;"
+                disabled>
+                Solve conflicting files 
+            </button> 
+            (one after another) using external merge tool
+         <br>
+    
+  
+
+    </div><br>
+
+    
+    <!--  3) CONFLICTS RESOLVED  --> 
+    <button class="collapsible" id="collapsibleResolved">3) Accept changes</button>
+    <div class="content">    
+        <p>This last step removes different backup files, and accepts the changes in previous steps.  
+        You may also undo the whole merge.
+        </p>
+         
+        <p>After leaving this window, write a description, and press Store.
+        </p>
+        
+          
+        <br>
+        <button id="conflictsResolvedButton" 
+            onclick="_callback('conflictsResolvedButton',this)" 
+            style="vertical-align: middle;">
+            Click to accept
+        </button>
+        
+        <button id="undoMergeButton" 
+            onclick="_callback('undoMergeButton',this)" 
+            style="vertical-align: middle;">
+            Undo Merge
+        </button>
+        
+        <br>
+        
+    </div><br>
+    
+    
+
+    <!--  INSTRUCTIONS  -->     
+    <button class="collapsible" id="collapsibleConflict">Instructions</button>
+    <div class="content">
+        
+        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted or modified in one place, or
+         that there are differences in overlapping parts of two files.  Both these cases needs a manual choice, which change to keep.
+        </p>   
+        
+        <p><b>This window has a stepwise approach</b> : <br>  
+        Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
+        </p>
+        
+        <p><b>Section "1) Select files to keep"</b> : <br>  
+        The files listed here were in a state where it could not be determined if they should be kept, or deleted.  Check files you wish to keep.
+        </p>      
+           
+        <p><b>Section "2) Conflicting files"</b> : <br>  
+        Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below).
+        This button will be enabled when there are no conflicts in step 1).
+        </p>
+
+        
+        <p><b>Section "3) Accept changes"</b> : <br>  
+        This is your last chance to change your mind.  <br>
+        Press "Undo Merge" in case you do not accept. <br>
+        Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)<br><br>
+        NOTE : After this, you should type a description and press the Store-button in the main window
+        </p>
+        
+        <p><b>Requirements</b> : <br>  
+        This window uses the external merge tool, which you define in the settings window.  
+        </p>
+        
+    </div><br>
+
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+        });
+    }
+</script>
+
+
+<!--  Onload, call javascript file  --> 
+<script>
+
+    window.addEventListener(
+        'DOMContentLoaded', 
+        (event) => {
+            console.log('resolveConflicts.html :DOM fully loaded and parsed');
+            injectIntoJs(document);
+        }
+    );
+    window.addEventListener(
+        'unload', 
+        (event) => {
+            console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+        }
+    );
+</script>
+    
+  
+
+
+</body>
+</html>
+

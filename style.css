@@ -30,7 +30,8 @@ div#content {
 }
 
 div#inner-content {
-  margin: 10px;
+  margin: 0px;
+  height: inherit;
   width:auto;
 }
 
@@ -38,12 +39,21 @@ div#inner-content {
 
 table#outer_table {
   width: auto;
-  height: auto;
+  height: inherit;
+}
+
+tr#output_row {
+  width: auto;
+  height: fit-content;
 }
 
 td {
   width: auto;
-  height: auto; 
+  height: auto;
+}
+
+.settingsActionCell{
+  text-align: center;
 }
 
 .message_column{
@@ -74,7 +84,7 @@ div#message-wrapper{
   left: 0px;
   top: 0px;
   width: 100%;
-  height: 32px;
+  height: 28px;
   background-color: #7a7c7c;
   -webkit-user-select: none;
   -webkit-app-region: drag;
@@ -85,14 +95,13 @@ div#message-wrapper{
   left: 0px;
   bottom: 0px;
   width: 100%;
-  height: 32px;
+  height: 28px;
   background-color: #7a7c7c;
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
 
-.about-icon,
-.bottom-titlebar-folder-icon {
+.about-icon, .bottom-titlebar-folder-icon{
   position: absolute;
   left: 6px;
   margin-top: 6px;
@@ -102,18 +111,44 @@ div#message-wrapper{
 
 .bottom-titlebar-text {
   position: absolute;
-  left: 32px;
-  width: 80%;
+  left: 28px;
+  width: auto;
   margin-top: 6px;
   margin-bottom: 6px;
   font-family: Arial;
   font-size: 11pt;
   color: #ffffff;
+  -webkit-app-region: no-drag;
 }
+
+
+
+.bottom-titlebar-stash_pop-icon
+ {
+  position: absolute;
+  right: 80;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+.bottom-titlebar-stash-icon
+ {
+  FONT-WEIGHT: 200;
+  position: absolute;
+  right: 115;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
 
 .top-titlebar-text{
   position: absolute;
-  left: 32px;
+  left: 28px;
   width: 80%;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -133,12 +168,80 @@ div#message-wrapper{
   -webkit-app-region: no-drag;
 }
 
+.top-titlebar-tag-icon
+ {
+  position: absolute;
+  right: 80px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
 
-.top-titlebar-close-icon,
-.bottom-titlebar-settings-icon {
+.top-titlebar-push-icon
+ {
+  position: absolute;
+  right: 110px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-pull-icon
+ {
+  position: absolute;
+  right: 140px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-merge-icon
+ {
+  position: absolute;
+  right: 170px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-branch-icon
+ {
+  position: absolute;
+  right: 200px;
+  width: 17px;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+
+#top-titlebar-minimize-icon{
+  position: absolute;
+  right: 24px;
+  width: 14px; /* Make more narrow than image for better proportions */
+  -webkit-app-region: no-drag;
+}
+
+#top-titlebar-close-icon{
+  position: absolute;
+  right: 0px;
+  width: 17px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-close-field,
+.bottom-titlebar-settings-field {
   position: absolute;
   right: 11px;
-  width: 17px;
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -148,7 +251,7 @@ div#message-wrapper{
 .top-titlebar-divider {
   position: absolute;
   left: 0px;
-  top: 31px;
+  top: 27px;
   width: 100%;
   height: 1px;
   background-color: #2a2c2c;
@@ -157,7 +260,7 @@ div#message-wrapper{
 .bottom-titlebar-divider {
   position: absolute;
   left: 0px;
-  bottom: 31px;
+  bottom: 27px;
   width: 100%;
   height: 1px;
   background-color: #2a2c2c;

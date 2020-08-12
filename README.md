@@ -1,15 +1,63 @@
-# Frameless window
+Pragma-git
+==========
 
-A sample application to showcase how you can use `"frame": false` windows to allow total customization of the window's real state. At beginning, the window is open with no titlebar. As long as you check one of the titlebars, it is added to the appropriate position. Notice that the added titlebars are the only parts of the window that allows dragging. This is achieved through a special CSS property applied to what is draggable or non-draggable (by default, the whole window is not draggable): `-webkit-app-region: drag|no-drag;`
+ 
 
-**This demo requires node-webkit >= v0.3.0** 
+"Pragma-git" is the friendly pragmatic git control app, fully compatible with
+other git client softwares.
 
-## Screen shot
+The difference to other git clients are:
 
-![screenshot](http://ww1.sinaimg.cn/large/6556d357tw1dxuhssppffj.jpg)
+-   small window — leaves more screen-space without hiding program
 
-## APIs
+-   easy overview — you don’t need the branch diagrams in daily work
 
-* [Window](https://github.com/nwjs/nw.js/wiki/Window)
-* [Frameless Window](https://github.com/nwjs/nw.js/wiki/Frameless-Window)
+-   shows features when applicable — no confusion
 
+-   uses external diff and merge tools — use your favourite
+
+ 
+
+Git is an impressive toolbox with over 100 commands, and knowing what commands
+to use makes the threshold to get started overwhelming.
+
+ 
+
+The aim with Pragma-git is to be
+
+-   ”pragmatic” — the antonym (opposite) to impractical, irrational, or
+    unreasonable.
+
+-   just right — making the best features of the great git easy to use
+
+-   watching out — guiding you through dangers of losing data
+
+ 
+
+Screen shot
+-----------
+
+Example screen shot with all the functions enabled (most of the time when not
+applicable, many of these will be hidden)
+
+![](images/Pragma-git-screen-shot2.png)
+
+Installation
+------------
+
+-   Windows — download and run installer
+
+-   Mac — download and run installer
+
+-   Linux — download deb or rpm installer. Try to double-click and run.  
+    If that is not allowed :
+
+    -   Ubuntu, Linux Mint, etc (deb-format) :  
+        `sudo dpkg --install INSTALLATION_FILE`
+
+    -   RedHat, CentOS, Fedora etc (rpm-format) :  
+        `sudo yum localinstall  INSTALLATION_FILE`
+
+    -   Others, use package installation procedure for that system
+
+ 

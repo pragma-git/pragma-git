@@ -1,0 +1,41 @@
+html {
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+  background-color: #dddddd;
+}
+
+
+::-webkit-scrollbar-thumb {
+  display: none;
+}
+
+
+div#content {
+  background-color: #dddddd;
+  margin: 0px;
+  padding: 0px;
+
+}
+
+div#inner-content {
+  margin: 10px;
+  width:auto;
+}
+
+
+
+table#outer_table {
+  width: auto;
+  height: auto;
+}
+
+

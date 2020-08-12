@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Link to the binary
+ln -sf /opt/pragma-git/Pragma-git /usr/local/bin/pragma-git
+ln -sf /opt/pragma-git/Pragma-git /usr/local/bin/Pragma-git
+
+# Icons
+cp '/opt/pragma-git/images/linux-icons/48/pragma-git.png' '/usr/share/icons/hicolor/48x48/apps'
+cp '/opt/pragma-git/images/linux-icons/256/pragma-git.png' '/usr/share/icons/hicolor/256x256/apps'
+cp '/opt/pragma-git/images/linux-icons/scalable/pragma-git.svg' '/usr/share/icons/hicolor/scalable/apps'
+
+
+# Launcher icon
+desktop-file-install /opt/pragma-git/make_binaries/assets-linux/pragma-git.desktop
+

@@ -3,6 +3,8 @@
   "description": "Chrome platform app.",
   "version": "0.1.0",
   "main": "app.html",
+  "author": "Jan Axelsson",
+  "license": "MIT",
   "window": {
     "show": false,
     "toolbar": false,
@@ -11,13 +13,39 @@
     "width": 460,
     "height": 140,
     "min_width": 350,
-    "min_height": 140
+    "min_height": 140,
+    "icon": "./images/icon.png"
   },
   "scripts": {
     "start": "nw ."
   },
   "dependencies": {
-    "nodegit": "^0.26.5",
     "simple-git": "^2.11.0"
+  },
+  "build": {
+    "nwFlavor": "sdk",
+    "nwVersion": "v0.47.2",
+    "mac": {
+      "displayName": "Pragma-git",
+      "copyright": "copyright",
+      "icon": "./images/icon.icns",
+      "plistStrings": {
+        "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
+        "CFBundleDocumentTypes": []
+      }
+    },
+    "win": {
+      "productName": "Pragma-git",
+      "companyName": "Jan Axelsson",
+      "copyright": "copyright",
+      "icon": "./images/icon.ico"
+    },
+    "nsis": {
+      "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
+      "diffUpdaters": true
+    }
+  },
+  "devDependencies": {
+    "nwjs-builder-phoenix": "^1.15.0"
   }
 }

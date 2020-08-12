@@ -1,8 +1,91 @@
 <html>
     <head>
       <title>About</title>
-      <link rel="stylesheet" type="text/css" href="style.css" />
+      
     </head>
+    
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 12pt;
+        }
+        
+        h4{
+            text-align:left;   
+        }        
+        h2, h3{
+            text-align:center;   
+        }       
+        code{
+            color: #006400; 
+            font-size: 11pt;  
+        }
+        
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+
+
+        
+    </style>
+    
+        <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          //background-color: #777;
+          //color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          //background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          //color: white;
+          font-weight: bold;
+          float: left;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out; 
+        }
+        
+        .quickUnfold {
+          transition: max-height 0.0s ease-out; 
+        }
+
+    </style>
+    
 
 <body>   
     
@@ -10,25 +93,42 @@
 <div id="content">
         
     <div id="inner-content">
+ <!-------------------------------------------------------------------------------------------->                                  
             
         <h2>About</h2>
     
         <hr>
-     
-        <h3>Git started</h3>     
         
+ <!-------------------------------------------------------------------------------------------->                                  
+        <h3>Git started</h3>   
+        <hr>  
+
+ <!-------------------------------------------------------------------------------------------->         
         
         <h4>Intro</h4>
                                
-            <p>This app aims to be a user-friendly revision control client. 
-             It fits people working on their own projects, or that find git overwhelming. 
+            <p>This app aims to be a user-friendly revision control software. 
+                It fits people working on their own projects, or that find git overwhelming. 
             </p>
                                
             <p> The app uses "git" behind the scene, and is therefore fully compatible and 
-             can be used interchangeably together with other git softwares.
-            </p>            
+                can be used interchangeably together with other git softwares.
+            </p>  
+        <hr>          
+
+ <!-------------------------------------------------------------------------------------------->             
+        <h4>Help</h4>
+                               
+            <p>Help for the main window is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            </p>
+                               
+            <p>Instructions for windows that are opened outside the main windown are found at the bottom of each window, and can be read by clicking on the banner :
+            <img style='vertical-align:middle;' src="images/instructions-button.png"  height="24">
+            </p>  
+        <hr>          
             
-            
+    
+ <!-------------------------------------------------------------------------------------------->             
          <h4>Start working - drop a folder</h4>
             
             <p>Dragging a project's folder onto the app's window makes it available for version control.  
@@ -36,31 +136,259 @@
             
             <p>If the folder is not prepared (as a git repository), the user is asked to allow the program to initialize the folder for git.
             </p>  
-                 
-                        
-         <h4>Clickable items</h4>
+         
+        <hr>        
+        
+ <!-------------------------------------------------------------------------------------------->             
+         <h4>Beginner's workflow</h4>
+             <p>For git first-timers, the workflow would simply be: 
+             <ul>
+                <li>Work on your files</li>
+                <li>When finished with some task: write a description in the text area, and press the "Store" button to store a snapshot of your files</li>
+                <li>Work on your files</li>
+                <li>When finished with some task: write a description in the text area, and press the "Store" button</li>
+                <li>...</li>
+             </ul>  
+            </p>    
+             
+            <p>The beauty of the revision control is, that you may go back to any snapshot later
+            </p>          
+        <hr>          
+         
+            
+ <!-------------------------------------------------------------------------------------------->                                  
+        <h3>Learn more</h3>   
+        <hr>  
+
+ <!-------------------------------------------------------------------------------------------->         
+          <h4>Clickable icons</h4>
             
              <dl>
-              <dt>Most things can be clicked.  The icons means :</dt>
+              <dt>Most things can be clicked :</dt>
+                <dd>&nbsp;</dd>
+                <dt><i>These buttons are always visible :</i></dt>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
+                    <dd>&nbsp;</dd>
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
-              <dt></dt>
-            </dl>  
+                    <dd>&nbsp;</dd>
+                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. View it as a temporary Store, which leaves no trace in the revision history</dd>
+                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
+                    <dd>&nbsp;</dd>
+                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
+                    <dd>&nbsp;</dd>
+                    
+                <dt><i>These buttons are visible only when they can be used :</i></dt>
+                    <dd>&nbsp;</dd>
+                <dd> <img src="images/branch_black.png"  height="17" width="17"> Create a new branch from your position </dd>
+                <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
+                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository</dd>
+                <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
+                <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
+                    <dd>&nbsp;</dd>
+                <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
+                    <dd>&nbsp;</dd>
+                </dd>
+              
+
+            </dl>           
             
-             <p>The title-bar texts are also clickable (see  <a href="#Advanced">Advanced</a>, below).
-            </p>
-                   
+        <hr>    
+                 
+ <!-------------------------------------------------------------------------------------------->                           
+         <h4>A little git dictionary</h4>
+         <button class="collapsible" id="repoSettings">&nbsp; (click to view) </button> 
+         <div  class="content">
+
+              <p>There are a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control</p>
+              
+              <table>
+                <tr> <th>Word</th> <th>Meaning</th></hr>
+                <tbody>
+                    <tr>
+                        <td>Git </td>
+                        <td>The <i>de facto </i> standard for software revision control </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Snapshot </td> 
+                        <td>A version of all your project files, freezed to exactly this state forever</td>
+                    </tr>
+                                               
+                     <tr>
+                        <td>Project folder </td> 
+                        <td>A location for storing the files. See "Repository" below</td>
+                    </tr>
                                   
-         <h4>Store version with description </h4>
-             <p>
-                The status bar 
-                <img style='vertical-align:middle;' src="images/statusbar_filled_in.png"  height="24" > 
-                shows the number of modified, new, and deleted files in the project. 
+                     <tr>
+                        <td>Project folder </td> 
+                        <td>A location for storing the files. See "Repository" below</td>
+                    </tr>
+                                                      
+                    <tr>
+                        <td>Repository </td> 
+                        <td>A location for storing the files. See "Project folder" above</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Local repository</td>
+                        <td>A folder on your computer which has been assigned for version control.  In Pragma-git, you drop the folder onto the main window.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Remote repository</td>
+                        <td>A location normally on another computer.  Git can send data to (push) and retrieve data from (pull) the remote repository</td>
+                    </tr>
+                                                                   
+                     <tr>
+                        <td>Initialize</td> 
+                        <td>A project folder has to be initialized to become a git repository. 
+                        This places a hidden folder ".git" in your project folder, which keeps track of all revisions.  Do not delete this folder!!</td>
+                    </tr>
+                            
+                                                                    
+                     <tr>
+                        <td>Clone</td> 
+                        <td>This means making a copy of a remote repository on your local computer.  You can then work with this, as your own. 
+                        One good use case, is if you work on more than one computer.  
+                        Then, you can clone from a remote repository to your second computer, to get a copy of your complete remote repository.  
+                        Cloning is only done once, after that you work with Commit, Push, Pull operations, or in Pragma-git, with the "Store"-button and Pull.
+                        </td>
+                    </tr>
+                                              
+                    <tr>
+                        <td>Commit</td>
+                        <td>The "git" word for storing a snaphshot of your work, with a descriptive name.</td>
+                    </tr>
+                                       
+                    <tr>
+                        <td>Add, Commit</td>
+                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Add, Commit, Push </td>
+                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. The "Store"-button in Pragma-git does this.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Store</td>
+                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.
+                        "Stored", refers to commited in "git language".  "Non-stored", "non-commited" and similar phrasing means that there are changed files
+                        that should be stored (commited)</td>
+                    </tr>
+ 
+                     
+                    <tr>
+                        <td>Branch</td>
+                        <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
+                        performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
+                        You can create a new branch from where you are, or from a historical snapshot (see section "Log, History", below). 
+                        You cannot create a new branch if you have changed files that are not stored.  
+                        If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
+                    </tr>  
+                     
+                    <tr>
+                        <td>Merge</td>
+                        <td>Incorporating changes from one branch into another branch. Git does this very cleverly, so that changes that do not overlap will be combined from both branches.
+                        If you are unlucky, the same line of text has been changed differently in both branches.  Then, git needs your help to resolve which version you wish to keep
+                        -- called to resolve a merge conflict</td>
+                    </tr>   
+                    
+                    <tr>
+                        <td>Conflict</td>
+                        <td>See above. A conflict can occur when merging two snapshots from for instance two branches, but also between a remote and a local repository.
+                        There are two different types of conflicts: 1) a file was deleted in one of the two places, and 2) a file was changed in the same place on both places.
+                        For both this cases, git needs your help to decide on what you wish to do.  This process is called "resolving a conflict", and in Pragma-git there is a tool
+                        that aids you in doing this</td>
+                    </tr>           
+
+                    <tr>
+                        <td>Pull</td>
+                        <td>Retrieving the latest snapshot from the remote repository, and merging that with your local project folder.  
+                        If you work on multiple computers, or are many people in the team, some work may have been performed and stored on the remote repository.
+                        "Pull" is a way to update your local project folder to the latest state. It is good practice to do this before you start working on your local project.</td>
+                    </tr>          
+
+                    <tr>
+                        <td>Push</td>
+                        <td>Send a copy of your snapshots to the remote repository.  
+                        In Pragma-git, the default is to do a "push" when pressing the "Store" button.  
+                        This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
+                        In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
+                    </tr>    
+                    <tr>
+                        <td>Stash</td>
+                        <td>Like a clipboard copy, where you can "cut" (and  remember) the file changes since the last stored snapshot.  
+                        A stash takes you back to a clean last-snapshot, and keeps the changes in memory. Sometimes this can be useful. 
+                        One such occasion is if you forgot to "pull" from the remote repository,
+                        before starting to work in your local folder.  Doing a "stash", then "pull", and then "stash-pop" would be a workflow to solve such problem.
+                        In Pragma-git "stash" works  as the computer clipboard's copy command, and can hold only one stash. </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Stash-pop</td>
+                        <td>Like a clipboard "paste", where you retrieve the stashed (see above) changed files. 
+                        In Pragma-git "stash" works  as the computer clipboard's cut and paste command, and can hold only one stash at a time </td>
+                    </tr>
+                     
+                    <tr>
+                        <td>Log, History</td>
+                        <td>The log (History) shows all stored snapshots.  In Pragma-git, you walk down in history with the arrow buttons.  
+                        You can set your project folder to any snapshot from the history, by doing a "checkout"   </td>
+                    </tr>
+                            
+                    <tr>
+                        <td>Checkout</td>
+                        <td>This command sets your project folder to the state it was in at the point in time of the snapshot.  
+                        You may play with the project in that state, but should be careful not to make any changes. </td>
+                    </tr>
+                        
+                    <tr>
+                        <td>Detached HEAD</td>
+                        <td>A checkout of a snapshot is in  a state called "detached HEAD".  That means that it does not belong to any branch, and if you make changes,
+                        they will be dangling without being easy to retrieve.  Pragma-git advice you if this happens.  The best way is to create a new branch from the checkout
+                        and work from there, and end your work by merging it to another branch.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Tag</td>
+                        <td>An alias for a commit.  This is often used for version numbering of softwares, but can be used for anything. You may view it as a sort of permanent bookmark</td>
+                    </tr>
+                                               
+                </tbody>
+              </table>
+        </div>
+        <hr>    
+                 
+ <!-------------------------------------------------------------------------------------------->                                  
+         <h4>Title and status bars</h4>
+
+            <p> <img style='vertical-align:middle;' src="images/top-title-bar.png"  height="24"> (the top title bar)<br>
+            displays the name of your current repository (in this example "MyFolder"), and the name of the current branch (in this case "master").
+            Both the repository, and the branch names can be clicked to cycle through your repositories and branches, respectively.
             </p>
-                
+                        
+            <p> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
+            shows the number of modified files. In normal mode, it is the difference since the last Store operation.  In history mode, it is the change from the previous revision in history.
+            Clicking on this area opens a list of modified files in a new window.
+            In this new window, you can see if a file was added, modified or deleted.  You may also investigate how the files were changed viewing the differences, and in the normal mode also delete or restore the changed file.
+            </p>
+                                   
+            <p> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
+            can show up instead of above status of changed files. 
+            This may happen under special circumstances after a "merge", "pull" or "stash retrieve" action.  
+            What it means is that Pragma-git needs your help to clarify what is your intention with files changed in different ways in two different locations.
+            Click on this area to open a "conflict resolution window", that guides you through this process.
+            </p>    
+        <hr>      
+
+ <!-------------------------------------------------------------------------------------------->                                  
+         <h4>Store version with short description </h4>
              <p>
                 When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
                 you may store a named revision of the project. The nice thing about the revision control system is, 
@@ -68,46 +396,141 @@
             </p>
                     
             <p>
-                To store a revision of the changed files, you fill in a descriptive text, and the button  
-                <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active.  Press the button to store your revision.
-            </p>
-      
+                To store a revision of the changed files, you click in the text field, and type a descriptive text. The Store button  
+                <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active when you start typing.  Press this button to store your revision.
+            </p> 
+        <hr>  
+            
+ <!-------------------------------------------------------------------------------------------->                                  
+         <h4>Store version with longer description </h4>                    
+            <p> The description may be more than one line. If you use multiple lines, 
+                the first line is a brief description (like a title). The next line is an empty line. 
+                The following lines contain a more specific description. Example :<br>
+            </p> 
+            
+             <p><code  style = "margin-left: 15px">My message title </code><br>
+                <code  style = "margin-left: 15px"> </code><br>
+                <code  style = "margin-left: 15px">my long description that goes on and on ....  </code>
+            </p>     
          <hr>    
             
+ <!-------------------------------------------------------------------------------------------->                                  
             
-         <h3 id="Advanced">Advanced </h3>
+         <h3 id="Advanced">Advanced </h3>  
+        <hr>     
+ 
+ <!-------------------------------------------------------------------------------------------->                                           
+         <h4>Multiple repositories and branches </h4>    
              
-            <p><u>Repositories</u> : You can have multiple active project folders (repositories). 
-            You switch by clicking the name (the first text in the title bar), to change to next project in the list.
+            <p><u>Repositories</u> : You can have multiple active project folders (repositories), added by drag-and drop as described above. 
+                You switch by clicking the name (the first text in the title bar), to change to next project in the list.
             </p>
-              
+            
+            <p>Repositories can also be created by cloning from an existing remote repository (see Instructions section, at the 
+            settings page  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">).
+            </p>
+            
+            <p>Repositories can also be removed from the list in the program, also that from the settings window  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">).
+            </p>
+                                      
             <p><u>Branches</u> : You can have multiple branches of your work, that you can switch between. 
-            You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
+                You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
             </p>           
-            
-        <hr>   
-              
-            
-         <h4>Installation </h4>
+             <p>Branches can be created from the Settings dialog icon <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">,
+                where a new branch can be created from the top of your current branch, or from a checked-out historical commit.
+             </p> 
              
-            <p><u>Git</u> : The code relies on the standard installation of git 
-            (<a href=https://www.atlassian.com/git/tutorials/install-git' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a>)
+             <p>  
+                Branching can also be performed with the <img src="images/branch_black.png"  height="17" width="17">  button (which is available if all working files are stored). 
+                With this button, a branch may be created starting from the commit displayed in the main window (the latest Store, or a historical commit)
+                
+                
+                
+                
+                <!-- TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  -->   
+            </p>     
+        <hr>               
+     
+ <!-------------------------------------------------------------------------------------------->                                  
+          <h4>History, and checkout </h4>    
+             
+            <p><u>Browsing history</u> : As described above, the arrow buttons let you browse back in time.
             </p>
-        
+            
+            <p>When you view an old commit, the "Store-button" is changed into a "Checkout" button.  
+            Pressing "Checkout" sets the files in the project to the same state as it was when Stored. This is useful if you wish to test your work as it was at this time point.
+            If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
+            </p>
+            
+            <p><u>Peculiarity with git</u> : If you, however, change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
+            </p>
+                       
+            <p><u>Detached HEAD branch</u> : The branch-name in the title bar is changed to "HEAD", which in git language is referred to as a "detached HEAD".
+            That means, that once you move to another branch, the detached branch can't be easily found again.  
+            </p>
+            
+            <p><u>Modified files in HEAD branch</u> : 
+            If you have modified any files from this checkout and want to keep your changes, you need to move those changes to another branch.
+            </p>
+                        
+            <p><u>Not Stored files</u> : The easiest way to do move modified (but not Stored) files from a detached HEAD is : 
+                <ol>
+                    <li>Press the stash button <img 'vertical-align:middle;' src="images/stash_black.png"  height="17" width="17"> </li><br>
+                    <li>Click on the branch name (HEAD), until you are at the branch where you wish to add your changes to</li><br>
+                    <li>Press the retrieve stash button <img 'vertical-align:middle;' src="images/stash_pop_black.png"  height="17" width="17"></li>
+                </ol>
+            </p>
+            
+            <p><u>Stored files</u> : If you have modified and Stored files originating from a checked-out historical commit (what git calls "from a detached HEAD") : 
+                <ol type='i'>
+                    <li>Click on the branch name (HEAD) </li><br>
+                    <li>A dialog pops up, and asks if you wish to <br>
+                        1) Create a temporary branch, to save the files, or <br>
+                        2) Delete your changes
+                    </li><br>
+                    <li>If you select to 1) create a temporary branch, your work will be saved in a branch named "temp-branch-" followed by a number. 
+                    Change branch to where you wish the new work to be added, and then click the merge button <img src="images/merge_black.png"  height="17" width="17"> </li>
+                </ol>
+            </p> 
+                        
+        <br>
+        <hr>               
+     
+ <!-------------------------------------------------------------------------------------------->             
+         <h2>Installation </h2>
+        <hr>             
+ <!-------------------------------------------------------------------------------------------->                  
+            <p><u>Git</u> : The code relies on the standard installation of git 
+                (<a href='https://git-scm.com/downloads' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">download link</a>)
+            </p>
+            
+            <p><u>Diff and Merge tool</u> : An external Diff and Merge tool needs to be installed.  This is done in the settings window. 
+            There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+            are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+            Meld exists for Windows, Mac, and Linux, but there are many platform specific that may be equally good, or even suit you better.
+            </p>
+                
             
         <hr>             
-        <h4>Acknowledgements</h4>
+ <!-------------------------------------------------------------------------------------------->                                  
+        <h2>Credits</h2>
             
             <dl>
               <dt>This program could not have been written without the following input and code </dt>
                 <dd>- <a href='https://nwjs.io' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">NW.js</a></dd>
-                <dd>- <a href='https://github.com/zcbenz/nw-sample-apps' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">nw-sample-apps examples</a></dd>
-                <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd>                <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd>
-                <dd>- <a href='https://www.valentinog.com/blog/html-table/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">generate tables</a></dd>
+                <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd> 
+           
               <dt></dt>
             </dl>
+            
+            <dl>
+              <dt>Special thanks for helpful links </dt>
+                <dd>- <a href='https://github.com/zcbenz/nw-sample-apps' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">nw-sample-apps examples</a></dd>
+                <dd>- <a href='https://www.valentinog.com/blog/html-table/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">generate tables</a></dd>
            
-    
+              <dt></dt>
+            </dl>     
+           
         <hr>
 
             
@@ -117,6 +540,29 @@
     </div>
 </div>
 
+ <!-------------------------------------------------------------------------------------------->                                  
+
+
+<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener(
+        "click", 
+        function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } 
+            
+        });
+    }
+</script>
   
 </body>
 </html>
