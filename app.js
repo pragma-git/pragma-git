@@ -21,7 +21,9 @@
  * - DEFAULT mode : hide all buttons
  * - on windows -- alwaysOnTop alternative should not be checked and grayed.  Should be hidden, or disabled and grayed
  * 
- * 
+ * - setup this in git, if not existing:
+ *   git config --global user.email "axelsson.jan@gmail.com"
+ *   git config --global user.name "Jan Axelsson"
  * 
 * 
  * - message window should show tags as well
@@ -240,6 +242,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const simpleGit = require('simple-git');  // npm install simple-git
         
         var util = require('./util_module.js'); // Pragma-git common functions
+        
      
     
     // Constants 

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+
+    <title>pell</title>
+
+    <link rel="stylesheet" type="text/css" href="node_modules/pell/dist/pell.css">
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      .content {
+        box-sizing: border-box;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 20px;
+      }
+
+      #html-output {
+        white-space: pre-wrap;
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <div class="content">
+      <h1>pell</h1>
+      <div id="editor" class="pell"></div>
+      <div style="margin-top:20px;">
+        <h3>Text output:</h3>
+        <div id="text-output"></div>
+      </div>
+      
+      <div style="margin-top:20px;">
+        <h3>HTML output:</h3>
+        <pre id="html-output"></pre>
+      </div>
+      
+      <div style="margin-top:20px;">
+        <h3>Markdown output:</h3>
+        <pre id="markdown-output"></pre>
+      </div>
+       
+      <div style="margin-top:20px;">
+        <h3>Markdown converted back to html, output:</h3>
+        <pre id="markdown-html-output"></pre>
+      </div>           
+      
+    </div>
+
+    <script src="node_modules/pell/dist/pell.js"></script>
+    <script>
+        //const TurndownService = require('turndown')
+        //const turndownService = new TurndownService( )
+        
+        const showdown = require('showdown');
+        const converter = new showdown.Converter();
+        
+        converter.setFlavor('original');
+        converter.setOption('noHeaderId', true);
+        
+        
+      var editor = window.pell.init({
+        element: document.getElementById('editor'),
+        defaultParagraphSeparator: 'p',
+        onChange: function (html) {
+          document.getElementById('text-output').innerHTML = html
+          document.getElementById('html-output').textContent = html
+          //document.getElementById('markdown-output').innerHTML = turndownService.turndown(html)
+          
+          // Pell works in html
+          
+          // Markdown from Pell field
+          var md = converter.makeMarkdown(html);
+          document.getElementById('markdown-output').innerHTML = md;
+          
+          // Back to html from converted markdown
+          var htm = converter.makeHtml(md);
+          document.getElementById('markdown-html-output').textContent = htm;
+          
+          
+        }
+      })
+    </script>
+
+
+
+  </body>
+</html>
