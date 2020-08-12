@@ -1211,7 +1211,7 @@ async function _callback( name, event){
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
-        gui.Shell.showItemInFolder(state.repos[state.repoNumber].localFolder);
+        gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
     }
     function showSettings() {    
         
