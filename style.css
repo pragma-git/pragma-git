@@ -84,7 +84,7 @@ div#message-wrapper{
   left: 0px;
   top: 0px;
   width: 100%;
-  height: 32px;
+  height: 28px;
   background-color: #7a7c7c;
   -webkit-user-select: none;
   -webkit-app-region: drag;
@@ -95,13 +95,13 @@ div#message-wrapper{
   left: 0px;
   bottom: 0px;
   width: 100%;
-  height: 32px;
+  height: 28px;
   background-color: #7a7c7c;
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
 
-.about-icon, .bottom-titlebar-folder-icon, .aaa, .bbb{
+.about-icon, .bottom-titlebar-folder-icon{
   position: absolute;
   left: 6px;
   margin-top: 6px;
@@ -111,7 +111,7 @@ div#message-wrapper{
 
 .bottom-titlebar-text {
   position: absolute;
-  left: 32px;
+  left: 28px;
   width: auto;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -148,7 +148,7 @@ div#message-wrapper{
 
 .top-titlebar-text{
   position: absolute;
-  left: 32px;
+  left: 28px;
   width: 80%;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -251,7 +251,7 @@ div#message-wrapper{
 .top-titlebar-divider {
   position: absolute;
   left: 0px;
-  top: 31px;
+  top: 27px;
   width: 100%;
   height: 1px;
   background-color: #2a2c2c;
@@ -260,7 +260,7 @@ div#message-wrapper{
 .bottom-titlebar-divider {
   position: absolute;
   left: 0px;
-  bottom: 31px;
+  bottom: 27px;
   width: 100%;
   height: 1px;
   background-color: #2a2c2c;

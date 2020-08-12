@@ -17,6 +17,12 @@
  * ----
  * 
  * Open questions
+ * 
+ * - DEFAULT mode : hide all buttons
+ * - on windows -- alwaysOnTop alternative should not be checked and grayed.  Should be hidden, or disabled and grayed
+ * 
+ * 
+ * 
 * 
  * - message window should show tags as well
  *   ( use  
@@ -2362,7 +2368,7 @@ function updateContentStyle() {
     
     var titlebar = document.getElementById("top-titlebar");
     if (titlebar) {
-        height -= titlebar.offsetHeight + 36 + 2;
+        height -= titlebar.offsetHeight + 32 + 2;
         top += titlebar.offsetHeight;
     }
     titlebar = document.getElementById("bottom-titlebar");
