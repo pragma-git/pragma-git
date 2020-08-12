@@ -36,7 +36,14 @@
 # - no windows icons.   5) or 6) above 
 
 
-
+    
+# Clean old builds
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win32
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win64
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/linux64
+    
 
 
 #
@@ -47,6 +54,8 @@
     echo 'BUILDING FOR ALL PLATFORMS'
     echo '=========================='
 
+
+    # Build
     ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
     --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
@@ -105,6 +114,7 @@
     echo '===================='
     echo 'INSTALLER WIN 64-BIT'
     echo '===================='
+    rm -r ../dist/win64
     mkdir ../dist/win64
 
     makensis \
@@ -116,6 +126,7 @@
     echo '===================='
     echo 'INSTALLER WIN 32-BIT'
     echo '===================='
+    rm -r ../dist/win32
     mkdir ../dist/win32
 
     makensis \
@@ -126,7 +137,7 @@
 
 
 #
-# Build Linux installers
+# Build Linux DEB installer
 #
 
     echo ' '
@@ -134,6 +145,7 @@
     echo 'INSTALLER LINUX 64-BIT (DEB)'
     echo '============================'
     cd ~/Documents/Projects/Pragma-git/dist
+    rm linux64/*.deb
     mkdir linux64
     
     
@@ -157,17 +169,21 @@
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git
     
- 
-    echo ' '
-    echo '=====' 
-    echo 'DONE '
-    echo '=====' 
+    # Remove installation : sudo dpkg --remove pragma-git
+    # Installation : sudo dpkg --install /mnt/Pragma-git/linux64/Pragma-git- (tab)
+    
+
+
+#
+# Build Linux RPM installer
+#
 
     echo ' '
     echo '============================'
     echo 'INSTALLER LINUX 64-BIT (RPM)'
     echo '============================'
     cd ~/Documents/Projects/Pragma-git/dist
+    rm linux64/*.rpm
     mkdir linux64
     
     
@@ -196,14 +212,14 @@
     
     # For a fresh centos 7 install, do  : sudo yum erase libXScrnSaver libatomic pragma-git
     # For centos7 install from file, do : sudo yum localinstall /mnt/Pragma-git/linux64/Pragma-git- (tab)
-    
  
+    
+#
+# DONE
+#
     echo ' '
     echo '=====' 
     echo 'DONE '
     echo '====='     
-    
 
-
-# Finish
-read -n 1 -s -r -p "Press any key to continue"
+    read -n 1 -s -r -p "DONE : Press any key to continue" && echo ' '

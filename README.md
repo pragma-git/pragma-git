@@ -25,11 +25,10 @@ to use makes the threshold to get started overwhelming.
 
 The aim with Pragma-git is to be
 
--   ”pragmatic” — the antonym (opposite) to how some perceive ”git”; as being
-    impractical, irrational, or unreasonable to work with.
+-   ”pragmatic” — the antonym (opposite) to impractical, irrational, or
+    unreasonable.
 
--   just right — making the best features of the great git available with one
-    click
+-   just right — making the best features of the great git easy to use
 
 -   watching out — guiding you through dangers of losing data
 
@@ -41,12 +40,24 @@ Screen shot
 Example screen shot with all the functions enabled (most of the time when not
 applicable, many of these will be hidden)
 
-![](images/Pragma-git-screen-shot.png)
+![](images/Pragma-git-screen-shot2.png)
 
-Requirements
+Installation
 ------------
 
--   [Windows, Mac or Linux](https://github.com/nwjs/nw.js/wiki/Window)
+-   Windows — download and run installer
 
--   [​nw.js (binary download includes everything
-    needed)](https://github.com/nwjs/nw.js/wiki/Frameless-Window)
+-   Mac — download and run installer
+
+-   Linux — download deb or rpm installer. Try to double-click and run.  
+    If that is not allowed :
+
+    -   Ubuntu, Linux Mint, etc (deb-format) :  
+        `sudo dpkg --install INSTALLATION_FILE`
+
+    -   RedHat, CentOS, Fedora etc (rpm-format) :  
+        `sudo yum localinstall  INSTALLATION_FILE`
+
+    -   Others, use package installation procedure for that system
+
+ 
