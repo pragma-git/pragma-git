@@ -26,6 +26,7 @@
 # 8) brew install create-dmg # For creating mac installer
 # 9) sudo gem install fpm # For linux .deb creation
 # 10) brew install gnu-tar # (tar for macos, for fpm)
+# 11) brew install rpm
 
 
 #
@@ -161,7 +162,46 @@
     echo '=====' 
     echo 'DONE '
     echo '=====' 
+
+    echo ' '
+    echo '============================'
+    echo 'INSTALLER LINUX 64-BIT (RPM)'
+    echo '============================'
+    cd ~/Documents/Projects/Pragma-git/dist
+    mkdir linux64
     
+    
+    DIR=$(ls -1 ../dist/|grep  'linux-x64') # Pragma-git-0.1.0-linux-x64
+    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-linux-x64 => VERSION='0.1.0'
+    chmod -R a+x "$DIR"
+    
+    rm "linux64/$DIR.rpm" 
+    
+    # Dependencies are added from problems I had with CentOS7
+    fpm \
+    --input-type dir \
+    --output-type rpm \
+    --name 'pragma-git' \
+    --maintainer 'axelsson.jan@gmail.com' \
+    --version "$VERSION" \
+    --description "Pragma-git -- the pragmatic revision control"  \
+    --chdir "$DIR" \
+    --package "linux64/$DIR.rpm" \
+    --depends libXScrnSaver \
+    --depends libatomic \
+    --rpm-os linux \
+    --after-install '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postinst' \
+    --after-remove '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postrm' \
+    .=/opt/pragma-git
+    
+    # For a fresh centos 7 install, do  : sudo yum erase libXScrnSaver libatomic pragma-git
+    # For centos7 install from file, do : sudo yum localinstall /mnt/Pragma-git/linux64/Pragma-git- (tab)
+    
+ 
+    echo ' '
+    echo '=====' 
+    echo 'DONE '
+    echo '====='     
     
 
 
