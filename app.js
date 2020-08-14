@@ -13,6 +13,26 @@
  * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
  */
 
+/* Notes - window
+ * 
+ * From main window console : gui.Window.open('notes.html')
+ * 
+ * Add drop-down selection at bottom. From console of notes-window : 
+d=document.createElement("select");
+
+o = document.createElement("option")
+o.innerText = 'repo';
+d.appendChild( o );
+
+o = document.createElement("option")
+o.innerText = 'branch';
+d.appendChild( o );
+
+document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
+ * 
+ * 
+ * */
+
 /* TODO
  * ----
  * 
