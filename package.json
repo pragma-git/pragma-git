@@ -20,8 +20,7 @@
     "start": "nw ."
   },
   "dependencies": {
-    "pell": "^1.0.6",
-    "showdown": "^1.9.1",
+    "@toast-ui/editor": "^2.3.1",
     "simple-git": "^2.11.0"
   },
   "build": {

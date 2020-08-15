@@ -276,7 +276,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
       
     // Files & folders
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
-        var settingsFile = settingsDir + pathsep + 'repo.json';    
+        var settingsFile = settingsDir + pathsep + 'repo.json';     
+        let notesDir = settingsDir + pathsep + 'Notes'; mkdir(notesDir);
         
     
     // State variables
@@ -354,6 +355,21 @@ async function _callback( name, event){
       }
       case 'clicked-branch': {
         branchClicked(true);
+        break;
+      }
+      case 'clicked-notes':{
+        let fileName = document.getElementById('top-titlebar-repo-text').innerText;
+        let filePath = notesDir + pathsep + fileName + '.md';
+        global.arguments = [ filePath ];  // send through global.arguments
+        gui.Window.open('notes.html',
+            {
+                id: 'notesWindowId',
+                position: 'center',
+                width: 600,
+                height: 600,
+                title: "Notes"
+            })  
+          
         break;
       }
       case 'newBranchNameKeyUp': {
