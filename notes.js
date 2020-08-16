@@ -8,7 +8,10 @@ var fs = require('fs');
 var util = require('./util_module.js'); // Pragma-git common functions
 
 var editor;  // Editor object
-var filePath;
+var filePath;// Path to open file
+
+
+window.setInterval(save, 1000 );
 
 
 
@@ -45,20 +48,20 @@ async function injectIntoNotesJs(document) {
     //editor.getMarkdown()
 
 };
-
-function closeWindow(){
+function save(){
     let content = "";
     try{
         content = editor.getMarkdown();
+        fs.writeFileSync(filePath,content,'utf8');
     }catch(err){
         console.log('FAILED SAVING FILE = ' + filePath);
         console.log(err);
-    }
-    
-    fs.writeFileSync(filePath,content,'utf8');
-    
-    console.log('clicked close window');
-    
+    }    
 
-    
+}
+
+function closeWindow(){
+    save(); // Save file
+
+    console.log('clicked close window');
 }
