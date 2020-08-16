@@ -6,7 +6,7 @@
 
     <title>ToastUI editor</title>
 
-    
+        <script src="notes.js"></script>
     
       <!-- Editor's Dependecy Style -->
 
@@ -23,7 +23,7 @@
         height: 100%;
     }  
     
-    #editor2{
+    #editor{
         margin-top: -2px  /* I get scrollbars in window otherwise, because a build-in 1px border around editor. */
     }  
 
@@ -37,54 +37,45 @@
 
   </head>
   <body>
-          
-    <!-- 
-gui.Window.open('notes.html',            {
-                position: 'center',
-                width: 600,
-                height: 600,
-                title: "Settings"
-            })
-    
-    // Note . if I add an ID, it will also remember window size
-    -->
-      
-      
-      
-      
-      
 
-       
 
 <!--
      From https://nhn.github.io/tui.editor/latest/
 -->
 <div class="outer-content">
-        <div id="editor2"></div>
-</div>     
-    
+        <div id="editor"></div>
+</div>    
 
-    <script src="node_modules/@toast-ui/editor/dist/toastui-editor-all.js"></script>
-
+    <!-- 
+    NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
     
+    Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+    from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+    was the solution.
+    
+    Save downloaded file as : "lib/toastui-editor-all.js"
+    
+    Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+    
+    -->
+    <script src="lib/toastui-editor-all.js"></script>
+ 
+    <!--  Onload, call javascript file  --> 
     <script>
-    const Editor = toastui.Editor;
-    //const Editor = require('@toast-ui/editor');
-    const editor2 = new Editor({
-      el: document.querySelector('#editor2'),
-      height: '100%',
-      initialEditType: 'wysiwyg', //  wysiwyg or markdown
-      previewStyle: 'vertical'
-    });
-
-    
-    
-    // editor2.getMarkdown() 
-    // editor2.mdEditor.setValue('hej'+os.EOL+'du',true)  
-
+        const Editor = toastui.Editor;
+        
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('notes.html :DOM fully loaded and parsed');
+            injectIntoNotesJs(document);
+            }
+        );
+        window.addEventListener('unload', (event) => {
+            console.log('notes.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+            }
+        );
     </script> 
-
-
+    
 
   </body>
 </html>

@@ -5,8 +5,6 @@ var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
 
-const Editor = require('@toast-ui/editor');
-
 var util = require('./util_module.js'); // Pragma-git common functions
 
 var editor;  // Editor object
@@ -30,12 +28,12 @@ async function injectIntoNotesJs(document) {
     }
      
     
-    //const Editor = toastui.Editor;
+    // See notes about how editor is loaded in "notes.html"
     editor = new Editor({
       el: document.querySelector('#editor'),
       height: '100%',
       initialValue: content,
-      initialEditType: 'markdown', //  wysiwyg or markdown
+      initialEditType: 'wysiwyg', //  wysiwyg or markdown
       previewStyle: 'vertical'
     });
 
