@@ -11,7 +11,7 @@ var editor;  // Editor object
 var filePath;// Path to open file
 
 
-window.setInterval(save, 1000 );
+window.setInterval(save, 30 * 1000 );
 
 
 
