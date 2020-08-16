@@ -45,3 +45,20 @@ async function injectIntoNotesJs(document) {
     //editor.getMarkdown()
 
 };
+
+function closeWindow(){
+    let content = "";
+    try{
+        content = editor.getMarkdown();
+    }catch(err){
+        console.log('FAILED SAVING FILE = ' + filePath);
+        console.log(err);
+    }
+    
+    fs.writeFileSync(filePath,content,'utf8');
+    
+    console.log('clicked close window');
+    
+
+    
+}
