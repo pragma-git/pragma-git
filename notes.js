@@ -32,10 +32,10 @@ async function injectIntoNotesJs(document) {
     
     //const Editor = toastui.Editor;
     editor = new Editor({
-      el: document.querySelector('#editor2'),
+      el: document.querySelector('#editor'),
       height: '100%',
       initialValue: content,
-      initialEditType: 'wysiwyg', //  wysiwyg or markdown
+      initialEditType: 'markdown', //  wysiwyg or markdown
       previewStyle: 'vertical'
     });
 
@@ -43,7 +43,7 @@ async function injectIntoNotesJs(document) {
     // Easiest way to set text (in empty editor)
     //editor.insertText(content);
     
-    // Easiest way to reat text
-    editor.getMarkdown()
+    // Easiest way to read text
+    //editor.getMarkdown()
 
 };
