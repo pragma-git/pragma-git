@@ -49,9 +49,22 @@
                 onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
             </div>  
-
+             
+            <!-- Icon Notes  -->                             
+            <div class="top-titlebar-notes-icon">
+                <img id="top-titlebar-notes-icon" height="17" width="17" 
+                    onclick="_callback('clicked-notes')"
+                    onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
+                    src="images/notes.png">
+            </div> 
  
         </div>     
+        
+        
+                    
+
+
 
         <!-- NOTE : set absolute positions in style.css -->
  

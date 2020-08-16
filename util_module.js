@@ -70,5 +70,11 @@ myModule.branchCharFilter = function ( string ){
     
 }
 
+myModule.mkdir = function (dir){
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+}
+
 // Export
 module.exports = myModule 
