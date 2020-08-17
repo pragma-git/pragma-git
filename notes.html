@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Notes</title>
+
+        <script src="notes.js"></script>
+    
+      <!-- Editor's Dependecy Style -->
+
+        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css" />
+        <link rel="stylesheet" href="node_modules/@toast-ui/editor/dist/toastui-editor.css" />
+        
+        
+
+ <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }  
+    
+    #editor{
+        margin-top: -2px  /* I get scrollbars in window otherwise, because a build-in 1px border around editor. */
+    }  
+
+    .outer-content {
+        width: 100%;
+        height: 100%;
+    }
+ 
+ </style>
+
+
+  </head>
+  <body>
+
+
+<!--
+     From https://nhn.github.io/tui.editor/latest/
+-->
+<div class="outer-content">
+        <div id="editor"></div>
+</div>    
+
+    <!-- 
+    NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
+    
+    Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+    from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+    was the solution.
+    
+    Save downloaded file as : "lib/toastui-editor-all.js"
+    
+    Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+    
+    -->
+
+    <!-- DOWNLOAD latest toastui-editor-all.js  like this :
+    cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
+    wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
+     -->
+        
+    <script src="lib/toastui-editor-all.js"></script>
+
+
+
+<!--
+    <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
+-->
+
+ 
+    <!--  Onload, call javascript file  --> 
+    <script>
+        const Editor = toastui.Editor;
+        
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('notes.html :DOM fully loaded and parsed');
+            injectIntoNotesJs(document);
+            }
+        );
+        window.addEventListener('unload', (event) => {
+            console.log('notes.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+            }
+        );
+    </script> 
+    
+
+  </body>
+</html>

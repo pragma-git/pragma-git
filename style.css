@@ -101,6 +101,12 @@ div#message-wrapper{
   -webkit-app-region: drag;
 }
 
+.top-titlebar-notes-icon{
+  display:inline;
+  vertical-align:middle;
+  -webkit-app-region: no-drag;
+}
+
 .about-icon, .bottom-titlebar-folder-icon{
   position: absolute;
   left: 6px;

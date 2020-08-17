@@ -172,6 +172,7 @@
                     <dd>&nbsp;</dd>
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
+                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project</dd>
                     <dd>&nbsp;</dd>
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
@@ -415,7 +416,20 @@
          <hr>    
             
  <!-------------------------------------------------------------------------------------------->                                  
+           <h4>Project Notes </h4>                    
+            <p> You may write personal notes for each repository.  The format is "markdown" rich text, 
+            which you can type in a visual mode (what you see is what you get), or in a traditional markdown editor.  
+            You change mode at the bottom-right of the editor.
             
+            </p> 
+            
+             <p>The notes-file is stored in your home folder's <code>.Pragma-git/Notes</code> directory.  
+             Files are saved automatically every 30 seconds, and when you close the window.
+            </p>     
+         <hr>    
+            
+ <!-------------------------------------------------------------------------------------------->                                  
+                
          <h3 id="Advanced">Advanced </h3>  
         <hr>     
  
@@ -519,6 +533,7 @@
               <dt>This program could not have been written without the following input and code </dt>
                 <dd>- <a href='https://nwjs.io' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">NW.js</a></dd>
                 <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">simple-git</a></dd> 
+                <dd>- <a href='https://ui.toast.com/tui-editor/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Toast-ui editor</a></dd>
            
               <dt></dt>
             </dl>

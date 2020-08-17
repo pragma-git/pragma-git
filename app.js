@@ -13,63 +13,27 @@
  * Package : https://github.com/nwjs/nw.js/wiki/How-to-package-and-distribute-your-apps
  */
 
-/* TODO
- * ----
+/* Notes - window
  * 
- * Open questions
+ * From main window console : gui.Window.open('notes.html')
  * 
- * - DEFAULT mode : hide all buttons
- * - on windows -- alwaysOnTop alternative should not be checked and grayed.  Should be hidden, or disabled and grayed
- * 
- * 
- * 
-* 
- * - message window should show tags as well
- *   ( use  
- *      git describe --tags --exact-match   
- *   to find. Catch error if no tag)
- * 
- * 
- * - .gitignore  -- remove desktop.ini  files
- *   https://tortoisegit.org/docs/tortoisegit/tgit-dug-ignore.html  has a good dialog how to add to .gitignore
+ * Add drop-down selection at bottom. From console of notes-window : 
+d=document.createElement("select");
+
+o = document.createElement("option")
+o.innerText = 'repo';
+d.appendChild( o );
+
+o = document.createElement("option")
+o.innerText = 'branch';
+d.appendChild( o );
+
+document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * 
  * 
- * 
- * - settings, use opener.function instead of  localState.settings  (compare tagList.js  using this in callback : 
- *      opener._callback('tagCheckout',event); // Calling _callback in opening window
- *  )
- * 
- * - history : list window (can this be same as tag list window ?)
- * 
- * - help setting up remote ssh non-bare repository (https://stackoverflow.com/questions/1764380/how-to-push-to-a-non-bare-git-repository) 
- *   and clone from local to that repo
- * 
- * - Hide-branch feature (settings checkbox column, and then put them in state.repos.hidden.  Would require updating of branchList commands in app.js
- *
- * - Single-file history
- * 
- * - Idea : Page with problem-solver
- *   - git reflog
- *   -
- * 
- * - add scribble area (note) for each branch and repo
- * 
- * - add script-button row (configurable from settings for each repository)
- * 
- * - How to setup remote repository ?  (see : https://medium.com/@erbalvindersingh/pushing-a-git-repo-online-to-github-via-nodejs-and-simplegit-package-17893ecebddd , or try my version by implementing raw REST calls)
- * 
- * - How to initialize git-flow ?
- * 
- * 
- *  Menu Windows
- *   var mb = new gui.Menu({type: 'menubar'});
- *   mb.createMacBuiltin('My App');
- *   gui.Window.get().menu = mb;
- *   console.log( mb.items[2].submenu.items[0].label ) // Menu/Fönster
- * 
- * Docs : https://www.npmjs.com/package/simple-git
- *        https://github.com/steveukx/git-js#readme  (nicely formatted API)
-*/
+ * */
+
+
 /* TESTS
  * 
  * 1) Succesful merges
@@ -158,71 +122,7 @@
  * 
  * 
  */
-/* BUILD
- 
- Using nw-builder (https://www.npmjs.com/package/nw-builder)
- 
- * MacOS :
- ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild -p osx64 -o ~/Pragma-git  ~/Documents/Projects/Pragma-git/Pragma-git
- 
- *
- * nw-builder (all platforms) :
- * 
- ~/Documents/Projects/Pragma-git/node_modules/.bin/nwbuild \
-  --platforms win32,win64,osx64,linux32,linux64 \
-  --flavor normal \
-  --buildDir ~/Pragma-git \
-  --name Pragma-git \
-  ~/Documents/Projects/Pragma-git/Pragma-git
-  *
-  * Options :     
-    appName: argv.name,
-    files: path.resolve(process.cwd(), files) 
-    flavor: argv.flavor || 'sdk',
-    platforms: argv.platforms ? argv.platforms.split(',') : null,
-    version: argv.version,
-    macIcns: argv.macIcns || false,
-    winIco: argv.winIco || false,
-    cacheDir: argv.cacheDir ? path.resolve(process.cwd(), argv.cacheDir) : path.resolve(__dirname, '..', 'cache'),
-    buildDir: path.resolve(process.cwd(), argv.buildDir),
-    forceDownload: argv.forceDownload
-  * 
-  * 
-  * 
-  * 
-  * nwjs-phoenix-builder
-  * 
-  * 1) brew cask install wine-stable --no-quarantine
-  * 2) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
-  * 3) rm /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe \
-       ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/node_modules/rcedit/bin/rcedit.exe
-  * 
-  * 4) Create 
-    ~/Documents/Projects/Pragma-git/node_modules/.bin/build \
-    --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
-    --mirror https://dl.nwjs.io/  \
-    --name Pragma-git  \
-    --concurrent true  \
-    ~/Documents/Projects/Pragma-git/Pragma-git
-  * 
-  * Options :
-  * https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
-  * 
-  * 
-  * 
 
-
- */
-
-/* New repo
- *  
- * Create github repo
- * Drop files and initialize (TODO: initialize and do first commmit)
- * Make first commit
- * git remote add origin https://github.com/JanAxelssonTest/test3.git  // git push -u origin master denied
- * git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test3.git 
- * git push -u origin master
- */ 
 
 // Define DEBUG features
 var devTools = false;
@@ -240,6 +140,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const simpleGit = require('simple-git');  // npm install simple-git
         
         var util = require('./util_module.js'); // Pragma-git common functions
+        
      
     
     // Constants 
@@ -253,7 +154,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
       
     // Files & folders
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
-        var settingsFile = settingsDir + pathsep + 'repo.json';    
+        var settingsFile = settingsDir + pathsep + 'repo.json';     
+        let notesDir = settingsDir + pathsep + 'Notes'; mkdir(notesDir);
         
     
     // State variables
@@ -331,6 +233,21 @@ async function _callback( name, event){
       }
       case 'clicked-branch': {
         branchClicked(true);
+        break;
+      }
+      case 'clicked-notes':{
+        let fileName = document.getElementById('top-titlebar-repo-text').innerText;
+        let filePath = notesDir + pathsep + fileName + '.md';
+        global.arguments = [ filePath ];  // send through global.arguments
+        gui.Window.open('notes.html',
+            {
+                id: 'notesWindowId',
+                position: 'center',
+                width: 600,
+                height: 600,
+                title: "Notes"
+            })  
+          
         break;
       }
       case 'newBranchNameKeyUp': {
