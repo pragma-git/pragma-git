@@ -790,7 +790,7 @@ async function _callback( name, event){
             new gui.MenuItem(
                 { 
                     label: 'Checkout tag ', 
-                    click: () => { tag_list_dialog();} 
+                    click: () => { localState.tagListButton = 'Checkout'; tag_list_dialog();} 
                 } 
             )        
         )
