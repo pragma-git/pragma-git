@@ -87,7 +87,7 @@
     test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
     create-dmg \
       --volname "Pragma-git-Installer" \
-      --volicon "../../Pragma-git/images/icon.icns" \
+      --volicon "../../Pragma-git/images/icon_installer.icns" \
       --window-pos 200 120 \
       --window-size 600 400 \
       --icon-size 80 \
@@ -117,9 +117,11 @@
     rm -r ../dist/win64
     mkdir ../dist/win64
 
+    DIR=$(ls -1 ../dist/|grep  'win-x64')
     makensis \
-    -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x64') \
+    -DEXEFOLDER=$DIR \
     -DOUTPUT='win64\Pragma-git-installer.exe' \
+    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     windows_installer.nsi
 
     echo ' '
@@ -129,9 +131,11 @@
     rm -r ../dist/win32
     mkdir ../dist/win32
 
+    DIR=$(ls -1 ../dist/|grep  'win-x86')
     makensis \
-    -DEXEFOLDER=$(ls -1 ../dist/|grep  'win-x86') \
+    -DEXEFOLDER=$DIR \
     -DOUTPUT='win32\Pragma-git-installer.exe' \
+    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     windows_installer.nsi
     
 
