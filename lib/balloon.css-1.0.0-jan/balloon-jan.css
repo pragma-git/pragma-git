@@ -186,25 +186,23 @@ button[aria-label] {
     
   /* JAN */    
   [aria-label][data-balloon-pos="jan-center"]:after {
-    left: 100%;
+    left: 50%;
     margin-left: 10px;
     top: 50%;
-    transform: translate(calc(var(--balloon-move) * -1), -0%); }
-
+    transform: translate(-50%, -50%); }
   [aria-label][data-balloon-pos="jan-center"]:before {
     width: 0;
     height: 0;
     border: 5px solid transparent;
     border-right-color: var(--balloon-color);
-    left: 100%;
+    left: 50%;
     top: 50%;
-    transform: translate(calc(var(--balloon-move) * -1), -0%); }
-
+    transform: translate(-50%, -50%); }
   [aria-label][data-balloon-pos="jan-center"]:hover:after, [aria-label][data-balloon-pos="jan-center"][data-balloon-visible]:after {
-    transform: translate(calc(var(--balloon-move) * -1), -0%);   }
-
+    transform: translate(-50%, -50%); }
   [aria-label][data-balloon-pos="jan-center"]:hover:before, [aria-label][data-balloon-pos="jan-center"][data-balloon-visible]:before {
-    transform: translate(calc(var(--balloon-move) * -1), -0%); }
+    transform: translate(-50%, -50%); }
+
     
   [aria-label][data-balloon-length="small"]:after {
     white-space: normal;
