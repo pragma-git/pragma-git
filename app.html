@@ -2,8 +2,13 @@
 <head>
     <title>Pragma-git</title>
     
+    <!-- Tooltips-->
+    <link rel="stylesheet" href="lib/balloon.css-1.0.0/balloon.css ">    
+    
     <link rel="stylesheet" type="text/css" href="style.css" />
     <script src="app.js"></script>
+    
+
     
 
     <!-- Drop folder border-->
@@ -24,7 +29,10 @@
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
                 
         <!-- Icon About  --> 
-        <div class="about-icon"> 
+        <div class="about-icon"
+                data-balloon-pos="down-left"  
+                data-balloon-length="small" 
+                aria-label="Help"> 
             <img id="about-icon"    height="17" width="17"  
                 onclick="_callback('clicked-about');" 
                 onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
@@ -34,24 +42,29 @@
         </div>
             
 
+
         <div id="top-titlebar-text" class="top-titlebar-text">
             
             <!-- Text Repo  --> 
-            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                onclick="_callback('clicked-repo')" 
-                onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+            <div  class="top-titlebar-repo-text"  data-balloon-pos="down" data-balloon-length="small" aria-label="Switch repository" >
+                <div id="top-titlebar-repo-text"
+                    onclick="_callback('clicked-repo')" 
+                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+                </div>
             </div>
             
             <!-- Text Branch  --> 
-            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                onclick="_callback('clicked-branch')" 
-                onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-            </div>  
+            <div class="top-titlebar-branch-text"   data-balloon-pos="down" data-balloon-length="small" aria-label="Switch branch for current repository" >
+                <div id="top-titlebar-branch-text" 
+                    onclick="_callback('clicked-branch')" 
+                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+                </div>  
+            </div>
              
             <!-- Icon Notes  -->                             
-            <div class="top-titlebar-notes-icon">
+            <div class="top-titlebar-notes-icon"  data-balloon-pos="down" data-balloon-length="small" aria-label="Personal notes for current repository" >
                 <img id="top-titlebar-notes-icon" height="17" width="17" 
                     onclick="_callback('clicked-notes')"
                     onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
@@ -59,7 +72,7 @@
                     src="images/notes.png">
             </div> 
  
-        </div>     
+        </div>    
         
         
                     
@@ -71,7 +84,7 @@
 
  
         <!-- Icon Branch  -->                             
-        <div class="top-titlebar-branch-icon">
+        <div class="top-titlebar-branch-icon" data-balloon-pos="down"  data-balloon-length="small" aria-label="Switch branch">
             <img id="top-titlebar-branch-icon" height="17" width="17" 
                 onclick="document.getElementById('branchNameInputDialog').showModal();" 
                 onmouseover="updateImageUrl('top-titlebar-branch-icon', 'images/branch_hover.png');" 
@@ -81,7 +94,7 @@
                 
                                                  
         <!-- Icon Merge  -->                             
-        <div class="top-titlebar-merge-icon">
+        <div class="top-titlebar-merge-icon"data-balloon-pos="down"  data-balloon-length="small" aria-label="Merge. Select branch to merge into current branch">
             <img id="top-titlebar-merge-icon" height="17" width="17" 
                 onclick="_callback('clicked-merge-button')" 
                 onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
@@ -91,7 +104,7 @@
                 
                         
         <!-- Icon Pull  --> 
-        <div class="top-titlebar-pull-icon">
+        <div class="top-titlebar-pull-icon"data-balloon-pos="down"  data-balloon-length="small" aria-label="Pull from remote repository">
             <img id="top-titlebar-pull-icon" height="17" width="17" 
                 onclick="_callback('clicked-pull-button')" 
                 onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
@@ -101,7 +114,7 @@
 
                    
         <!-- Icon Push  -->         
-        <div class="top-titlebar-push-icon">
+        <div class="top-titlebar-push-icon" data-balloon-pos="down"  data-balloon-length="small" aria-label="Push to remote repository. Only available if auto-push is disabled in settings">
             <img id="top-titlebar-push-icon" height="17" width="17" 
                 onclick="_callback('clicked-push-button')" 
                 onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
@@ -111,7 +124,7 @@
     
                         
         <!-- Icon Tag  -->                             
-        <div class="top-titlebar-tag-icon">
+        <div class="top-titlebar-tag-icon" data-balloon-pos="down"  data-balloon-length="small" aria-label="Create, checkout or delete a tag.  A tag is a shortcut-name for a snapshot">
             <img id="top-titlebar-tag-icon" height="17" width="auto" 
                 onclick="_callback('clicked-tag-button');" 
                 onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
@@ -158,20 +171,24 @@
                         <table id="arrow_table">               
                         <tr>
                             <td>
-                                <img id="up-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-up-arrow')" 
-                                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
-                                src="images/up-arrow.png">
+                                <div  class="up-arrow"  data-balloon-pos="up-left" data-balloon-length="small" aria-label="Show newer snapshots" >
+                                    <img id="up-arrow"  height="17" width="17" 
+                                    onclick="_callback( 'clicked-up-arrow')" 
+                                    onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                                    src="images/up-arrow.png">
+                                </div>
                             </td> 
                         </tr>            
                         <tr>
                             <td>
-                                <img id="down-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-down-arrow')"  
-                                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
-                                src="images/down-arrow.png">
+                                <div  class="down-arrow"  data-balloon-pos="down-left" data-balloon-length="small" aria-label="Show older snapshots" >
+                                    <img id="down-arrow"  height="17" width="17" 
+                                    onclick="_callback( 'clicked-down-arrow')"  
+                                    onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                                    src="images/down-arrow.png">
+                                </div>
                             </td> 
                         </tr>
                         </table>
@@ -179,11 +196,24 @@
                     
                     <!-- Message textarea  --> 
                     <td class="message_column">
-                        <textarea class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
+                        <div class="message_class"  
+                            data-balloon-pos="down" 
+                            data-balloon-length="large" 
+                            aria-label="Combined 'Store', 'History', and 'Drop-folder' area. Different functions are: 
+                            1) Store message area (type description here). 
+                            2) Drop folder to add a local repository. 
+                            3) Shows older snapshot (when using arrow buttons)" >
+                            <textarea class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
+                        </div>
                     </td>
                     <!-- Store button  --> 
                     <td>
-                        <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
+                        <div  class="store-button"  data-balloon-pos="down-right" data-balloon-length="xlarge" 
+                            aria-label=
+                            "1) Button text 'Store' : Commit and push (auto-push can be turned off in settings).
+                             2) Button text 'Checkout' : Check out a historical snapshot" >
+                            <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
+                        </div>
                     </td>
                 </tr>
                 
@@ -211,7 +241,7 @@
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
         
         <!-- Icon Folder  -->  
-        <div class="bottom-titlebar-folder-icon">
+        <div class="bottom-titlebar-folder-icon"  data-balloon-pos="up-left" data-balloon-length="small" aria-label="Open local files in Explorer/Finder" >
             <img id="bottom-titlebar-folder-icon"  height="17" width="17"
                 onclick="_callback('clicked-folder')" 
                 onmouseover="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder_hover.png');" 
@@ -221,14 +251,15 @@
             
  
          <!-- Text Status  -->     
-        <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
+        <div id="bottom-titlebar-text" class="bottom-titlebar-text"  data-balloon-pos="up-left" data-balloon-length="large" 
+            aria-label="Info about changed files (click to view file differences, or delete/restore changed files)" >
                 onclick="_callback('clicked-status-text')">
             </div>
             
             
                                                
         <!-- Icon Stash  -->                             
-        <div class="bottom-titlebar-stash-icon">
+        <div class="bottom-titlebar-stash-icon"  data-balloon-pos="up-right" data-balloon-length="small" aria-label="Stash. Hide changed files" >
             <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
                 onclick="_callback('clicked-stash-button')" 
                 onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
@@ -238,7 +269,7 @@
         
                                              
         <!-- Icon Stash pop  -->                             
-        <div class="bottom-titlebar-stash_pop-icon">
+        <div class="bottom-titlebar-stash_pop-icon"  data-balloon-pos="up-right" data-balloon-length="small" aria-label="Stash Pop. Put back stashed (hidden changed) files" >
             <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
                 onclick="_callback('clicked-stash_pop-button')" 
                 onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
@@ -251,7 +282,7 @@
             
 
         <!-- Icon Settings  -->  
-        <div class="bottom-titlebar-settings-field">
+        <div class="bottom-titlebar-settings-field" data-balloon-pos="up-right" data-balloon-length="small" aria-label="Settings (software and repository settings)" >
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
                 onclick="_callback('clicked-settings')"
                 onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 
