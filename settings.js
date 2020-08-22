@@ -80,28 +80,27 @@ async function _callback( name, event){
             console.log('repoRadiobuttonChanged');
             console.log(event);
             value = event.checked;
-            
-            // Replace table 
-            document.getElementById("branchesTableBody").innerHTML = ""; 
-            
-             // Display changes
-            table = document.getElementById("branchesTableBody");
-            data2 = Object.keys(state.repos[id]);
-            let myLocalFolder = state.repos[id].localFolder;
-            //localFolder = state.repos[id].localFolder;
-            
-            try{
+                
+            try{            
+                // Replace table 
+                document.getElementById("branchesTableBody").innerHTML = ""; 
+                
+                 // Display changes
+                table = document.getElementById("branchesTableBody");
+                let myLocalFolder = state.repos[id].localFolder;
+
                 branchList = await gitBranchList( myLocalFolder);
                 generateBranchTable( document, table, branchList); // generate the table first
+    
+                
+                // Show current repo
+                document.getElementById("currentRepo").innerHTML = myLocalFolder;
+                
+                // Set state (so it will be updated in main program)
+                state.repoNumber = Number(id);  // id can be a string
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
-            
-            // Show current repo
-            document.getElementById("currentRepo").innerHTML = myLocalFolder;
-            
-            // Set state (so it will be updated in main program)
-            state.repoNumber = Number(id);  // id can be a string
             
             break;
         }        
@@ -521,53 +520,43 @@ async function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
-    
-    // Create table if there are any repos
-    if (state.repos.length > 0){        
-        
-        // Repo table           
-            //document.getElementById("header_Forget").style.visibility = "visible"; 
-            document.getElementById("emptyTable_iFrame").style.height ="0px";
-            
-            let table = document.getElementById("settingsTableBody");
-            let data = Object.keys(state.repos[0]);
-            console.log('Settings - data repos:');
-            console.log(data);
-            
-            
-                
-            // Ammend data with a field for remote repo
-            for (let i in state.repos) {
-                let configList;
-                try{
-                    configList = await gitConfigList( state.repos[i].localFolder ); 
-                    state.repos[i].remoteURL = configList["remote.origin.url"];
-                    console.log( state.repos[i].localFolder);
-                    console.log( configList["remote.origin.url"]);   
-                }catch(err){
-                    configList = [];
-                    console.log( state.repos[i].localFolder);
-                    console.log( 'Caught error');
-                }
-            }   
-            
-            await generateRepoTable( document, table, state.repos); // generate the table first
- 
-            
-        // Current branch table 
-            document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
-            
-        // branch table is generated inside generateRepoTable
-        
-    }else{ 
 
-        // Hide everything that does not apply to empty folder   
+    // Repo table           
+        //document.getElementById("header_Forget").style.visibility = "visible"; 
+        document.getElementById("emptyTable_iFrame").style.height ="0px";
+        
+        let table = document.getElementById("settingsTableBody");
+        console.log('Settings - data repos:');
+
+        // Amend data with a field for remote repo
+        for (let i in state.repos) {
+            let configList;
+            try{
+                configList = await gitConfigList( state.repos[i].localFolder ); 
+                state.repos[i].remoteURL = configList["remote.origin.url"];
+                console.log( state.repos[i].localFolder);
+                console.log( configList["remote.origin.url"]);   
+            }catch(err){
+                configList = [];
+                console.log( state.repos[i].localFolder);
+                console.log( 'Caught error');
+            }
+        }   
+        
+        await generateRepoTable( document, table, state.repos); // generate the table first
+
+        
+    // Current branch table 
+        document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
+        
+    // branch table is generated inside generateRepoTable
+
+    if (state.repos.length == 0){
+        // Show what is needed for empty folder   
         document.getElementById('hide').style.display = "none";
-        
-        
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
+    }
 
-   }
    
    //
    // Local functions
@@ -593,14 +582,16 @@ async function createHtmlTable(document){
 }
 async function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
-    let currentRepoFolder = state.repos[state.repoNumber].localFolder;
+    
     
     let foundIndex = 0;  // index matching currentRepoFolder
     
     //
     // Add repos to table
     //
-               
+    if (state.repos.length > 0) { 
+        let currentRepoFolder = state.repos[state.repoNumber].localFolder;   
+            
         // Loop rows in data
         for (let element of data) {
             console.log('Element = ' + element );
@@ -705,6 +696,8 @@ async function generateRepoTable(document, table, data) {
             // counter update
             index ++;
         }
+    } // if any repos
+    
     //
     // Add input for cloning
     //
