@@ -1634,7 +1634,9 @@ async function _setMode( inputModeName){
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";
-            textOutput.placeholder = "Get started by dropping a folder onto this window ...";    
+            textOutput.placeholder = "Get started by " + os.EOL 
+               + "- dropping a folder onto this window, or " + os.EOL 
+               + "- cloning a repository (settings, lower right corner)";    
             textOutput.readOnly = true;
             
             setTitleBar( 'top-titlebar-repo-text', ''  );
@@ -1671,9 +1673,7 @@ async function _setMode( inputModeName){
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
-            document.getElementById('store-button').disabled = false;
-            //textOutput.value = "";  // Don't want to destory typed text
-            //textOutput.placeholder = "Get started by dropping a folder onto this window";    
+            document.getElementById('store-button').disabled = false;  
             textOutput.readOnly = false;
             break;
         }

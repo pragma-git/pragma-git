@@ -153,7 +153,7 @@
                 
 
  <!--  TABLES  -->                 
- <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->  
+
      
        
             
@@ -162,8 +162,7 @@
                 
         <div class="content" id="foldableDiv1" > 
         <h3>Repository table </h3>  
-              
-                <p><i>(you can add them again by dropping a folder into the main window) </i></p>
+
                 
                 <!--  REPOSITORY TABLE -->
                 <table style="width:100%"> 
@@ -186,32 +185,30 @@
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
  
-            <br> 
-            <br> 
-            
+            <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
             
 
-            
-                        
-            <h3>Branches in selected project </h3>  
-            
-                <p> <u>Current project folder</u> : <span id="currentRepo"></span></p>
-            
-                <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-                
-
-                <!--  BRANCH TABLE -->  
-                <table style="width:100%;"> 
-                    <thead ><tr>
-                        <th class="localFolder">Branch</th>
-                        <th class="branchAction">Action</th>
-                    <tbody id="branchesTableBody">
-                    </tbody>
-                </table>    
     
-        </div>    
+            <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->              
+                            
+                <h3>Branches in selected project </h3>  
+                
+                    <p> <u>Current project folder</u> : <span id="currentRepo"></span></p>
+                
+                    
+    
+                    <!--  BRANCH TABLE -->  
+                    <table style="width:100%;"> 
+                        <thead ><tr>
+                            <th class="localFolder">Branch</th>
+                            <th class="branchAction">Action</th>
+                        <tbody id="branchesTableBody">
+                        </tbody>
+                    </table>    
+        
+            </div>    
             
- </div>
+        </div>
 <br>  
   <!--  End hiding part  -->
 

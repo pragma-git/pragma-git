@@ -71,8 +71,7 @@ async function _callback( name, event){
             
             await gitClone( folder, URL);
             
-            
-            increaseDivSize('foldableDiv1');
+
         
             break;
         }
@@ -80,28 +79,27 @@ async function _callback( name, event){
             console.log('repoRadiobuttonChanged');
             console.log(event);
             value = event.checked;
-            
-            // Replace table 
-            document.getElementById("branchesTableBody").innerHTML = ""; 
-            
-             // Display changes
-            table = document.getElementById("branchesTableBody");
-            data2 = Object.keys(state.repos[id]);
-            let myLocalFolder = state.repos[id].localFolder;
-            //localFolder = state.repos[id].localFolder;
-            
-            try{
+                
+            try{            
+                // Replace table 
+                document.getElementById("branchesTableBody").innerHTML = ""; 
+                
+                 // Display changes
+                table = document.getElementById("branchesTableBody");
+                let myLocalFolder = state.repos[id].localFolder;
+
                 branchList = await gitBranchList( myLocalFolder);
                 generateBranchTable( document, table, branchList); // generate the table first
+    
+                
+                // Show current repo
+                document.getElementById("currentRepo").innerHTML = myLocalFolder;
+                
+                // Set state (so it will be updated in main program)
+                state.repoNumber = Number(id);  // id can be a string
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
-            
-            // Show current repo
-            document.getElementById("currentRepo").innerHTML = myLocalFolder;
-            
-            // Set state (so it will be updated in main program)
-            state.repoNumber = Number(id);  // id can be a string
             
             break;
         }        
@@ -285,13 +283,8 @@ async function _callback( name, event){
         }
     } // End switch
     
-    //
-    // Local functions
-    //
-    function  increaseDivSize(id){
-        let content = document.getElementById(id);
-         content.style.maxHeight = content.scrollHeight + "px";
-    };
+
+
 }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
@@ -362,10 +355,37 @@ async function gitClone( folderName, repoURL){
     let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
     let topFolder = folderName + pathsep + repoName;
 
-    // Clone
+    //// Clone
+    //try{
+        //await simpleGit( folderName).clone(  repoURL, onClone);
+        //function onClone(error, result ){console.log(result);console.log(error) }; 
+    //}catch(err){ 
+        //console.log(err);
+        
+        //displayAlert('Failed cloning', err)
+        //return
+    //}
+
+    // Clone all branches
+    //    ( this is done by making a bare repo in topFolder/.git : 
+    //      and then undoing the bare repo : git config --unset core.bare)
+    
+    
     try{
-        await simpleGit( folderName).clone(  repoURL, onClone);
+        // 1) Clone bare repo
+        let options = ['--mirror']
+        let bareFolderName = topFolder + pathsep + '.git'; // Make a bare repository 
+        await simpleGit( folderName).clone(  repoURL, bareFolderName,options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
+        
+        // 2) Make a real repo 
+        await simpleGit( topFolder ).raw( [  'config', '--unset' , 'core.bare'] , onConfig);
+        function onConfig(err, result) {console.log(result); console.log(err) };
+        
+        // 3) Checkout default branch
+        await simpleGit(topFolder).checkout( onCheckout);
+        function onCheckout(err, result){console.log(result)};
+        
     }catch(err){ 
         console.log(err);
         
@@ -406,11 +426,28 @@ async function gitClone( folderName, repoURL){
         return
     }
     
-    // Update Settings display
+    // Update Settings display, repos
     document.getElementById("folderSelectButton").setAttribute("id", "dummy"); // Take away this id, before making a new button with same id
-    
+
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
+    
+    
+                
+    // Update Settings display, branches 
+    table = document.getElementById("branchesTableBody");
+    data2 = Object.keys(state.repos[0]);  // Used for headers
+    
+    branchList = await gitBranchList( localFolder2);
+    
+    document.getElementById('branchNameTextarea').value = ""; // Clear text field
+    
+    
+    document.getElementById("branchesTableBody").innerHTML = ""; 
+    generateBranchTable( document, table, branchList); // generate the new branch table 
+    
+    increaseDivSize('foldableDiv1');
+            
 
         
 
@@ -521,53 +558,43 @@ async function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
-    
-    // Create table if there are any repos
-    if (state.repos.length > 0){        
-        
-        // Repo table           
-            //document.getElementById("header_Forget").style.visibility = "visible"; 
-            document.getElementById("emptyTable_iFrame").style.height ="0px";
-            
-            let table = document.getElementById("settingsTableBody");
-            let data = Object.keys(state.repos[0]);
-            console.log('Settings - data repos:');
-            console.log(data);
-            
-            
-                
-            // Ammend data with a field for remote repo
-            for (let i in state.repos) {
-                let configList;
-                try{
-                    configList = await gitConfigList( state.repos[i].localFolder ); 
-                    state.repos[i].remoteURL = configList["remote.origin.url"];
-                    console.log( state.repos[i].localFolder);
-                    console.log( configList["remote.origin.url"]);   
-                }catch(err){
-                    configList = [];
-                    console.log( state.repos[i].localFolder);
-                    console.log( 'Caught error');
-                }
-            }   
-            
-            await generateRepoTable( document, table, state.repos); // generate the table first
- 
-            
-        // Current branch table 
-            document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
-            
-        // branch table is generated inside generateRepoTable
-        
-    }else{ 
 
-        // Hide everything that does not apply to empty folder   
+    // Repo table           
+        //document.getElementById("header_Forget").style.visibility = "visible"; 
+        document.getElementById("emptyTable_iFrame").style.height ="0px";
+        
+        let table = document.getElementById("settingsTableBody");
+        console.log('Settings - data repos:');
+
+        // Amend data with a field for remote repo
+        for (let i in state.repos) {
+            let configList;
+            try{
+                configList = await gitConfigList( state.repos[i].localFolder ); 
+                state.repos[i].remoteURL = configList["remote.origin.url"];
+                console.log( state.repos[i].localFolder);
+                console.log( configList["remote.origin.url"]);   
+            }catch(err){
+                configList = [];
+                console.log( state.repos[i].localFolder);
+                console.log( 'Caught error');
+            }
+        }   
+        
+        await generateRepoTable( document, table, state.repos); // generate the table first
+
+        
+    // Current branch table 
+        document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
+        
+    // branch table is generated inside generateRepoTable
+
+    if (state.repos.length == 0){
+        // Show what is needed for empty folder   
         document.getElementById('hide').style.display = "none";
-        
-        
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
+    }
 
-   }
    
    //
    // Local functions
@@ -593,14 +620,16 @@ async function createHtmlTable(document){
 }
 async function generateRepoTable(document, table, data) {
     var index = 0; // Used to create button-IDs
-    let currentRepoFolder = state.repos[state.repoNumber].localFolder;
+    
     
     let foundIndex = 0;  // index matching currentRepoFolder
     
     //
     // Add repos to table
     //
-               
+    if (state.repos.length > 0) { 
+        let currentRepoFolder = state.repos[state.repoNumber].localFolder;   
+            
         // Loop rows in data
         for (let element of data) {
             console.log('Element = ' + element );
@@ -705,6 +734,8 @@ async function generateRepoTable(document, table, data) {
             // counter update
             index ++;
         }
+    } // if any repos
+    
     //
     // Add input for cloning
     //
@@ -872,6 +903,10 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
+function  increaseDivSize(id){
+    let content = document.getElementById(id);
+     content.style.maxHeight = content.scrollHeight + "px";
+};
 
 function displayAlert(title, message){
     // Writes into alertDialog in settins.html
