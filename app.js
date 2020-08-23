@@ -122,7 +122,9 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * 
  * 
  */
-
+ 
+// Store default path 
+var defaultPath = process.env.PATH;
 
 // Define DEBUG features
 var devTools = false;
@@ -189,9 +191,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
-        
-    // Path as seen by Pragma-git
-    const defaultPath = process.env.PATH;
+
 
 
 // ---------
@@ -2633,6 +2633,10 @@ window.onresize = function() {
 };
 window.onload = function() {
   var win = nw.Window.get();
+  
+  
+  console.log('PATH 1 = ' + process.env.PATH);
+  defaultPath = process.env.PATH;
 
   
   // Fix for overshoot of content outside window
