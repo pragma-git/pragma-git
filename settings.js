@@ -71,8 +71,7 @@ async function _callback( name, event){
             
             await gitClone( folder, URL);
             
-            
-            increaseDivSize('foldableDiv1');
+
         
             break;
         }
@@ -284,13 +283,8 @@ async function _callback( name, event){
         }
     } // End switch
     
-    //
-    // Local functions
-    //
-    function  increaseDivSize(id){
-        let content = document.getElementById(id);
-         content.style.maxHeight = content.scrollHeight + "px";
-    };
+
+
 }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
@@ -432,11 +426,28 @@ async function gitClone( folderName, repoURL){
         return
     }
     
-    // Update Settings display
+    // Update Settings display, repos
     document.getElementById("folderSelectButton").setAttribute("id", "dummy"); // Take away this id, before making a new button with same id
-    
+
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
+    
+    
+                
+    // Update Settings display, branches 
+    table = document.getElementById("branchesTableBody");
+    data2 = Object.keys(state.repos[0]);  // Used for headers
+    
+    branchList = await gitBranchList( localFolder2);
+    
+    document.getElementById('branchNameTextarea').value = ""; // Clear text field
+    
+    
+    document.getElementById("branchesTableBody").innerHTML = ""; 
+    generateBranchTable( document, table, branchList); // generate the new branch table 
+    
+    increaseDivSize('foldableDiv1');
+            
 
         
 
@@ -892,6 +903,10 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
+function  increaseDivSize(id){
+    let content = document.getElementById(id);
+     content.style.maxHeight = content.scrollHeight + "px";
+};
 
 function displayAlert(title, message){
     // Writes into alertDialog in settins.html
