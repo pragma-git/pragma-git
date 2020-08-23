@@ -482,6 +482,20 @@ async function gitCreateBranch( folder, branchName){
     }
 
 }
+async function gitConfigList( localFolder ){
+let configList;
+
+try{
+    await simpleGit(localFolder).listConfig(onConfigList);
+    function onConfigList(err, result ){console.log(result); configList = result.all};
+    console.log(configList);
+    
+}catch(err){        
+    console.log('Error determining remote URL, in gitConfigList');
+    console.log(err);
+}
+return configList
+}
 
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
@@ -520,6 +534,19 @@ async function injectIntoSettingsJs(document) {
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
     document.getElementById('pathAddition').value = state.tools.addedPath;
+    
+    // Set values according to git-config
+    try{
+        configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
+        console.log(configList);
+        document.getElementById('authorName').value = configList['user.name'];
+        document.getElementById('authorEmail').value = configList['user.email'];
+        
+    }catch(err){
+        console.log(err);
+    }
+    
+    
     
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
@@ -603,28 +630,6 @@ async function createHtmlTable(document){
         document.getElementById('hide').style.display = "none";
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
     }
-
-   
-   //
-   // Local functions
-   //
-    async function gitConfigList( localFolder ){
-    let configList;
-    
-    try{
-        await simpleGit(localFolder).listConfig(onConfigList);
-        function onConfigList(err, result ){console.log(result); configList = result.all};
-        console.log(configList);
-        
-    }catch(err){        
-        console.log('Error determining remote URL, in gitConfigList');
-        console.log(err);
-    }
-    return configList
-    }
-   
-
-
 
 }
 async function generateRepoTable(document, table, data) {
