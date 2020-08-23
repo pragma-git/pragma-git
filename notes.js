@@ -32,20 +32,17 @@ async function injectIntoNotesJs(document) {
      
     
     // See notes about how editor is loaded in "notes.html"
-    editor = new Editor({
+    let options = {
       el: document.querySelector('#editor'),
       height: '100%',
       initialValue: content,
-      initialEditType: 'wysiwyg', //  wysiwyg or markdown
       previewStyle: 'vertical'
-    });
+    }
 
+    options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
 
-    // Easiest way to set text (in empty editor)
-    //editor.insertText(content);
-    
-    // Easiest way to read text
-    //editor.getMarkdown()
+    editor = new Editor( options);
+
 
 };
 function save(){
@@ -61,7 +58,14 @@ function save(){
 }
 
 function closeWindow(){
-    save(); // Save file
+    // Save file
+    save(); 
+    
+    // Save settings
+    global.state.notesWindow.editMode = editor.currentMode;
+    opener.saveSettings(); // Save settings to file
+    
+    
 
     console.log('clicked close window');
 }

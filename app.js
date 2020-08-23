@@ -2473,6 +2473,7 @@ function loadSettings(settingsFile){
             state_in.tools = setting( state_in.tools, {} ); 
             state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
             state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
+            state_in.notesWindow = setting( state_in.notesWindow, {} ); 
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
@@ -2513,6 +2514,11 @@ function loadSettings(settingsFile){
             state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
             state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
             state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+        
+        // Notes window (this setting is updated when closing notes window)
+            state.notesWindow = setting( state_in.notesWindow, {} );
+            state.notesWindow.editMode = setting( state_in.notesWindow.editMode, "wysiwyg");
+
 
     //
     // Post-process state
