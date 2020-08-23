@@ -328,6 +328,7 @@ function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    state.tools.addedPath = document.getElementById('pathAddition').value;
     
     // Read collapsible into state
     state.settingsWindow = {}; 
@@ -499,7 +500,9 @@ async function injectIntoSettingsJs(document) {
     console.log(global.state);
     
     // Write path to div
-    document.getElementById('path').innerHTML = process.env.PATH;
+    document.getElementById('path').innerHTML = process.env.PATH
+    .replace(/:\s*/g,':<br>')
+    .replace(/;\s*/g,';<br>'); // Replace colons and semicolons
     
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
@@ -512,6 +515,8 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    document.getElementById('pathAddition').value = state.tools.addedPath;
+    
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
     if ( ! win.canSetVisibleOnAllWorkspaces() ){

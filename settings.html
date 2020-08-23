@@ -230,7 +230,7 @@
                 <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br>
 
                 
-            <h4>Git</h4>  
+            <h4>Git Settings</h4>  
                 <!--  Force commit before branch change -->
                 <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="forceCommitBeforeBranchChange"> Branch change not allowed, for changed files</label><br>
@@ -245,30 +245,54 @@
                 
                 <!--  --no-ff merge (gitflow recommends this) -->
                 <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br>
-             
-             
+                <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br><br>
+                
+                
+
+                
+
+ 
+                <table>            
+                  <tr style="border: none;">
+                        <td>
+                            <label for="authorName"> Author's name :</label><br>
+                            <input id="authorName" type="text" size="30" />
+                        </td>
+                        <td>                
+                            <label for="authorEmail"> Author's email :</label><br>
+                            <input id="authorEmail" type="text" size="30" />
+                        </td>
+                    </tr>
+                </table>             
              
               
-            <h4>External tools</h4>  
+            <h4>Git External tools</h4>  
 
-            
-                <p><i>(typically the same in both fields ) </i></p>
-            
-                <label for="gitDiffTool"> Diff tool</label><br>
-                <input id="gitDiffTool" type="text" size="30" /><br><br>
+                <table>
+                    <tr style="border: none;">
+                        <td>
+                            <label for="gitDiffTool"> Diff tool :</label><br>
+                            <input id="gitDiffTool" type="text" size="30" /><br><br>
+                        </td>
+                        <td>                
+                            <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
+                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/><br><br>
+                        </td>
+                    </tr>
+                    
+                    <tr style="border: none;">
+                        <td colspan="2">
+                            <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See instructions below) : </label><br>
+                            <input id="pathAddition" type="text" style="width: 100%;"/><br>
+                        </td>
+                    </tr>
+                </table>
                 
-                <label for="gitMergeTool"> Merge tool</label><br>
-                <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/><br><br>
-            
-                <p>
-                PATH (see NOTE, in instructions below): <br><br>
-                <span id='path'><span>
-                </p>       
-            <br>   
+                <br>
+                <br>
+
     
         </div><!-- foldable content -->
-        <br>  
         
     <!--  INSTRUCTIONS  -->     
     <button class="collapsible" id="instructions">Instructions</button>
@@ -419,18 +443,21 @@
                         <dt><b>External tools</b></dt>
                             <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                             <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
+                            <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
+                                This can be fixed, by adding the path to the tools in this field.
+                                If you have different diff and merge tools, two paths may be needed.
+                                The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
+                            </dd>
                      </dl>     
                 </p>
-                
-                <p><B>NOTE : </B> If the external diff/merge tools don't open, their path may not be accessible to Pragma-git.  
-                This can be fixed, by creating a one-line text file named <code>path.txt</code> into the <code>.Pragma-git</code> folder, inside your home directory.
-                This file should start with the operating system's path delimiter ("<code>;</code>" for Windows, "<code>:</code>" for Mac and Linux), followed by the path to the
-                folder containing your diff and merge tools.  Example for mac :
-                </p>
-                <code>
-                :/usr/local/bin
-                </code>
+
                 <br>
+                       
+                <hr>                
+                <b>Information </b><br>
+                 Your system path as seen by Pragma-git :<br>
+                <code><span id='path' style="font-size: 9pt;"></span>  </code>  
+                <br>   
                 <br>
             
         </div><!-- foldable content -->
