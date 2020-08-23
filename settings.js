@@ -159,15 +159,15 @@ async function _callback( name, event){
                     console.log(err);     
                 }
             }catch(err){ 
-                
-                displayAlert('Failed deleting branch', err);  
-                increaseDivSize('foldableDiv1');     
-                console.log('Error deleting local branch');
-                console.log(err);
-                
+
                 // Most likely, this is because the branch was not fully merged. 
                 if ( err.message.includes('is not fully merged') ) {
                     document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
+                }else{                      
+                    displayAlert('Failed deleting branch', err);  
+                    increaseDivSize('foldableDiv1');     
+                    console.log('Error deleting local branch');
+                    console.log(err);
                 }
                 return
             }
