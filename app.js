@@ -2194,7 +2194,7 @@ async function addExistingRepo( folder) {
 function setPath( additionalPath){
     
     let sep = ':';  // mac or linux
-    if (os.platform() == 'windows'){
+    if ( os.platform().startsWith('win') ){
         sep = ';';
     }
     

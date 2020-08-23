@@ -500,9 +500,13 @@ async function injectIntoSettingsJs(document) {
     console.log(global.state);
     
     // Write path to div
-    document.getElementById('path').innerHTML = process.env.PATH
-    .replace(/:\s*/g,':<br>')
-    .replace(/;\s*/g,';<br>'); // Replace colons and semicolons
+    if ( os.platform().startsWith('win') ){    
+        document.getElementById('path').innerHTML = process.env.PATH
+        .replace(/;\s*/g,';<br>'); // Replace semicolons
+    }else{
+        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
+    }
+
     
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
