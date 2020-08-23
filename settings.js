@@ -281,6 +281,7 @@ async function _callback( name, event){
             
             break;
         }
+
     } // End switch
     
 
@@ -320,7 +321,7 @@ function forgetButtonClicked(event){
     
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
-function closeWindow(){
+async function closeWindow(){
     
     // Read fields into state
     if ( !('tools' in state) ){
@@ -337,6 +338,24 @@ function closeWindow(){
         state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
 
     }
+    
+    // Set Git author name and email (stored in git, not in settings)
+    try{
+        commands = [ 'config', '--global', 'user.name', document.getElementById('authorName').value];
+        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+        function onConfig(err, result ){ console.log(result); console.log(err);  }
+    }catch(err){
+        console.log('Failed storing git user.name');
+    }
+    
+    try{  
+        commands = [ 'config', '--global', 'user.email', document.getElementById('authorEmail').value];
+        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+        function onConfig(err, result ){ console.log(result); console.log(err);  }
+    }catch(err){
+        console.log('Failed storing git user.email');
+    }
+    
      
     // Return
     localState.mode = 'UNKNOWN';
