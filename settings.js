@@ -159,15 +159,15 @@ async function _callback( name, event){
                     console.log(err);     
                 }
             }catch(err){ 
-                
-                displayAlert('Failed deleting branch', err);  
-                increaseDivSize('foldableDiv1');     
-                console.log('Error deleting local branch');
-                console.log(err);
-                
+
                 // Most likely, this is because the branch was not fully merged. 
                 if ( err.message.includes('is not fully merged') ) {
                     document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
+                }else{                      
+                    displayAlert('Failed deleting branch', err);  
+                    increaseDivSize('foldableDiv1');     
+                    console.log('Error deleting local branch');
+                    console.log(err);
                 }
                 return
             }
@@ -281,6 +281,7 @@ async function _callback( name, event){
             
             break;
         }
+
     } // End switch
     
 
@@ -320,7 +321,7 @@ function forgetButtonClicked(event){
     
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
-function closeWindow(){
+async function closeWindow(){
     
     // Read fields into state
     if ( !('tools' in state) ){
@@ -328,6 +329,7 @@ function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    state.tools.addedPath = document.getElementById('pathAddition').value;
     
     // Read collapsible into state
     state.settingsWindow = {}; 
@@ -336,6 +338,24 @@ function closeWindow(){
         state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
 
     }
+    
+    // Set Git author name and email (stored in git, not in settings)
+    try{
+        commands = [ 'config', '--global', 'user.name', document.getElementById('authorName').value];
+        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+        function onConfig(err, result ){ console.log(result); console.log(err);  }
+    }catch(err){
+        console.log('Failed storing git user.name');
+    }
+    
+    try{  
+        commands = [ 'config', '--global', 'user.email', document.getElementById('authorEmail').value];
+        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+        function onConfig(err, result ){ console.log(result); console.log(err);  }
+    }catch(err){
+        console.log('Failed storing git user.email');
+    }
+    
      
     // Return
     localState.mode = 'UNKNOWN';
@@ -481,6 +501,20 @@ async function gitCreateBranch( folder, branchName){
     }
 
 }
+async function gitConfigList( localFolder ){
+let configList;
+
+try{
+    await simpleGit(localFolder).listConfig(onConfigList);
+    function onConfigList(err, result ){console.log(result); configList = result.all};
+    console.log(configList);
+    
+}catch(err){        
+    console.log('Error determining remote URL, in gitConfigList');
+    console.log(err);
+}
+return configList
+}
 
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
@@ -499,7 +533,13 @@ async function injectIntoSettingsJs(document) {
     console.log(global.state);
     
     // Write path to div
-    document.getElementById('path').innerHTML = process.env.PATH;
+    if ( os.platform().startsWith('win') ){    
+        document.getElementById('path').innerHTML = process.env.PATH
+        .replace(/;\s*/g,';<br>'); // Replace semicolons
+    }else{
+        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
+    }
+
     
     // Set values according to state variable
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
@@ -512,6 +552,21 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    document.getElementById('pathAddition').value = state.tools.addedPath;
+    
+    // Set values according to git-config
+    try{
+        configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
+        console.log(configList);
+        document.getElementById('authorName').value = configList['user.name'];
+        document.getElementById('authorEmail').value = configList['user.email'];
+        
+    }catch(err){
+        console.log(err);
+    }
+    
+    
+    
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
     if ( ! win.canSetVisibleOnAllWorkspaces() ){
@@ -594,28 +649,6 @@ async function createHtmlTable(document){
         document.getElementById('hide').style.display = "none";
         document.getElementById("emptyTable_iFrame").style.height ="auto"; 
     }
-
-   
-   //
-   // Local functions
-   //
-    async function gitConfigList( localFolder ){
-    let configList;
-    
-    try{
-        await simpleGit(localFolder).listConfig(onConfigList);
-        function onConfigList(err, result ){console.log(result); configList = result.all};
-        console.log(configList);
-        
-    }catch(err){        
-        console.log('Error determining remote URL, in gitConfigList');
-        console.log(err);
-    }
-    return configList
-    }
-   
-
-
 
 }
 async function generateRepoTable(document, table, data) {

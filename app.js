@@ -122,7 +122,9 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * 
  * 
  */
-
+ 
+// Store default path 
+var defaultPath = process.env.PATH;
 
 // Define DEBUG features
 var devTools = false;
@@ -189,13 +191,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
-        
-    // Add to path 
-    try{
-        process.env.PATH += fs.readFileSync(settingsDir + pathsep + 'path.txt','utf8').replace(/(\r\n|\n|\r)/gm, ""); 
-    }catch(err){
-        console.log(err);
-    }
+
 
 
 // ---------
@@ -1486,7 +1482,7 @@ async function _update(){
     //
     // Local functions
     //
-    function updateWithNewSettings(){
+     function updateWithNewSettings(){
         //Called when left settings window
         //
         // NOTE : To implement a new setting that affects the gui, 
@@ -1503,6 +1499,11 @@ async function _update(){
         if ( win.canSetVisibleOnAllWorkspaces() ){
             win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
         }
+        
+        // Update path
+        setPath( state.tools.addedPath);
+        
+        // Save settings
         saveSettings();
     }
 
@@ -2190,6 +2191,27 @@ async function addExistingRepo( folder) {
         state.repos[state.repoNumber].localFolder = topFolder;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
 }    
+function setPath( additionalPath){
+    
+    let sep = ':';  // mac or linux
+    if ( os.platform().startsWith('win') ){
+        sep = ';';
+    }
+    
+    // Add to path 
+    try{
+        process.env.PATH = defaultPath + sep + additionalPath; 
+    }catch(err){
+        console.log(err);
+    }
+    
+    // Correct if empty
+    if (additionalPath.length  == 0 ){
+         process.env.PATH = defaultPath;
+    }
+    
+}
+
 
 // Dialogs
 async function tag_list_dialog(){
@@ -2473,6 +2495,7 @@ function loadSettings(settingsFile){
             state_in.tools = setting( state_in.tools, {} ); 
             state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
             state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
+            state_in.notesWindow = setting( state_in.notesWindow, {} ); 
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
@@ -2500,6 +2523,7 @@ function loadSettings(settingsFile){
             state.tools = setting( state_in.tools, {} ); 
             state.tools.difftool = setting( state_in.tools.difftool, "");
             state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            state.tools.addedPath = setting( state_in.tools.addedPath, "");
             
             console.log('State after amending non-existing with defaults ');
             console.log(state);
@@ -2513,6 +2537,11 @@ function loadSettings(settingsFile){
             state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
             state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
             state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+        
+        // Notes window (this setting is updated when closing notes window)
+            state.notesWindow = setting( state_in.notesWindow, {} );
+            state.notesWindow.editMode = setting( state_in.notesWindow.editMode, "wysiwyg");
+
 
     //
     // Post-process state
@@ -2565,6 +2594,8 @@ function loadSettings(settingsFile){
         console.log(err);
     }
     
+    // Path
+    setPath( state.tools.addedPath);
 
 
     
@@ -2602,6 +2633,10 @@ window.onresize = function() {
 };
 window.onload = function() {
   var win = nw.Window.get();
+  
+  
+  console.log('PATH 1 = ' + process.env.PATH);
+  defaultPath = process.env.PATH;
 
   
   // Fix for overshoot of content outside window
