@@ -142,6 +142,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var fs = require('fs');
         const simpleGit = require('simple-git');  // npm install simple-git
 
+        var util = require('./util_module.js'); // Pragma-git common functions
     
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
