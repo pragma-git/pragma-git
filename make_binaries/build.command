@@ -89,13 +89,14 @@
       --volname "Pragma-git-Installer" \
       --volicon "../../Pragma-git/images/icon_installer.icns" \
       --window-pos 200 120 \
-      --window-size 600 400 \
+      --window-size 500 320 \
+      --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
       --icon-size 80 \
-      --icon "Pragma-git.app"  192 190 \
+      --icon "Pragma-git.app"  125 175 \
       --hide-extension "Pragma-git.app" \
-      --app-drop-link 448 190 \
-      --icon ".fseventsd"  2000 190 \
-      --icon ".VolumeIcon.icns"  2000 190 \
+      --app-drop-link 375 175 \
+      --icon ".fseventsd"  1000 190 \
+      --icon ".VolumeIcon.icns"  1000 190 \
       "Pragma-git-Installer.dmg" \
       "../temp-macos/"
     
