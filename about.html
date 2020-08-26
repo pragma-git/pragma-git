@@ -85,17 +85,21 @@
         }
 
     </style>
+
     
 
 <body>   
     
       
 <div id="content">
+    
         
     <div id="inner-content">
- <!-------------------------------------------------------------------------------------------->                                  
+ <!-------------------------------------------------------------------------------------------->  
+        <p style="text-align:right;"> version <span id='version'></span></p>                                
             
-        <h2>About</h2>
+        <h2>About Pragma-git</h2>
+        
     
         <hr>
         
@@ -596,6 +600,11 @@
             
         });
     }
+</script>
+
+<script>
+        var VERSION = require('./package.json').version; 
+        document.getElementById('version').innerText = VERSION;
 </script>
   
 </body>
