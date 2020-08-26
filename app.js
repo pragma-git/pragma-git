@@ -1057,16 +1057,14 @@ async function _callback( name, event){
         }
     }
     function messageKeyUpEvent() { 
-        // Enable if message text 
-        //var message = readMessage();
-        //setStoreButtonEnableStatus( (message.length > 0 ));
-        
+ 
         // Bail out if read-only
         if ( textOutput.readOnly == true ){
             return
         }
         
         textOutput.value = readMessage();
+
         
         // It should be safe to assume that CHANGED_FILES of some sort -- otherwise
         if (textOutput.value.length > 0){
@@ -1639,6 +1637,7 @@ async function _setMode( inputModeName){
                + "- dropping a folder onto this window, or " + os.EOL 
                + "- cloning a repository (settings, lower right corner)";    
             textOutput.readOnly = true;
+            writeTextOutput(textOutput);
             
             setTitleBar( 'top-titlebar-repo-text', ''  );
             setTitleBar( 'top-titlebar-branch-text', '' );
@@ -1654,6 +1653,7 @@ async function _setMode( inputModeName){
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
             textOutput.readOnly = true;
+            writeTextOutput(textOutput);
             break;
         }
             
@@ -1666,16 +1666,20 @@ async function _setMode( inputModeName){
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";          
             textOutput.readOnly = false;
+            writeTextOutput(textOutput);
             break;
         }
             
         case 'CHANGED_FILES_TEXT_ENTERED': {
             // set by messageKeyUpEvent
+            console.log( readMessage() );
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
             document.getElementById("store-button").innerHTML="Store";// Set button
             document.getElementById('store-button').disabled = false;  
+            textOutput.value = readMessage();    
             textOutput.readOnly = false;
+            // NOTE: Do not call writeTextOutput(textOutput); Reason : Characters may be lost -- better let browser window handle display self.
             break;
         }
             
@@ -1689,6 +1693,7 @@ async function _setMode( inputModeName){
             textOutput.value = "";
             textOutput.placeholder = "";    
             textOutput.readOnly = true;
+            writeTextOutput(textOutput);
             break;
         }
             
@@ -1703,6 +1708,7 @@ async function _setMode( inputModeName){
                 "- Unfold a settings section ..." + os.EOL + 
                 "- Close window when done";    
             textOutput.readOnly = true;
+            writeTextOutput(textOutput);
             break;
         }
             
@@ -1717,6 +1723,7 @@ async function _setMode( inputModeName){
                 "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
                 "- Write a message, and press Store when done";    
             textOutput.readOnly = true;
+            writeTextOutput(textOutput);
             break;
         }
         
@@ -1734,7 +1741,7 @@ async function _setMode( inputModeName){
     await _update()
    
     console.log(textOutput);
-    writeTextOutput(textOutput);
+    //writeTextOutput(textOutput);
     
 
     return newModeName;  // In case I want to use it with return variable
