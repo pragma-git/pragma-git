@@ -1356,6 +1356,26 @@ async function _update(){
             }
             
         }
+        
+    // All buttons if DEFAULT mode
+        if (modeName == 'DEFAULT'){                        
+            // Hide icons
+            document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden';
+            document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden';
+            document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+            document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden';
+            document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
+            document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
+            document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden';
+            
+            // Notes and folder icon hidden if no repo
+            document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
+            document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'hidden';  
+        }else{
+            // Notes and folder icon shown if repo
+            document.getElementById('top-titlebar-notes-icon').style.visibility = 'visible'; // Notes icon
+            document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'visible'; // Folder icon
+        }
                
                         
     //
@@ -1373,6 +1393,7 @@ async function _update(){
                 setTitleBar( 'top-titlebar-repo-text', ' ' );
                 setTitleBar( 'top-titlebar-branch-text', ' ' );
                 setStatusBar(' ');
+
                 break;
             }
                 
@@ -1380,6 +1401,7 @@ async function _update(){
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
                 setStatusBar( fileStatusString( status_data));
+                
                 // If not correct mode, fix :
                 if (status_data.changedFiles){
                     _setMode('UNKNOWN');
