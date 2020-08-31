@@ -15,10 +15,13 @@ var fs = require('fs');
 
 var util = require('../util_module.js'); // Pragma-git common functions
 
-var dmp = require('node_modules/diff-match-patch/index.js'); // Google diff-match-patch
+var dmp = require('node_modules/diff-match-patch/index.js'); // Google diff-match-patch  TODO: -- needed?
 
-var editor;  // Editor object
-var filePath;// Path to open file
+
+// Remember state
+var panes = 2;
+var lastPaneNumber = panes; // Updates every InitUI
+
 
 // Read paths
 
@@ -36,15 +39,35 @@ console.log('$LOCAL  = ' + LOCAL);
 console.log('$REMOTE = ' + REMOTE);
 console.log('$MERGED = ' + MERGED);
 
-// Setup
+// Set working folder
 process.chdir( ROOT);  // Now all relative paths works
 
 
+// Modified from GUI
+var connect = "align"; 
+var collapse = false; 
 
-window.setInterval(save, 30 * 1000 );
+var options = {
+    lineNumbers: true,
+    mode: "text/html",
+    highlightDifferences: true,
+    connect: connect,
+    collapseIdentical: collapse
+  };
+  
+var dv; // initUI sets this CodeMirror.MergeView instance
 
-// Start as:
-// ~/Documents/Projects/Pragma-git/Pragma-git/merge > /Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222  . 'hej' 'du'
+
+
+window.setInterval(save, 30 * 1000 );  // TODO : autosave
+
+/* 
+ * .gitconfig:
+ * 
+[mergetool "pragma-merge"]
+    cmd = /Applications/nwjs.app/Contents/MacOS/nwjs  ~/Documents/Projects/Pragma-git/Pragma-git/merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
+    trustExitCode = true
+*/
 
 // Start initiated from notes.html
 async function injectIntoNotesJs(document) {
@@ -119,6 +142,66 @@ function loadFile(filePath)  {
 
 
 
+function initUI() {
+  if (value == null) return;
+    
+  
+ //let editorValue = dv.editor().getValue(); // Store changes 
+  
+  if ( panes == 2){
+    options.value = loadFile(LOCAL);  // editor
+    options.origLeft = null;
+    options.orig = loadFile(REMOTE)
+  }
+  
+  if ( panes == 3){
+
+    options.value = loadFile(BASE);  // editor
+    options.origLeft = loadFile(LOCAL);
+    options.orig = loadFile(REMOTE); 
+  }  
+  
+  var target = document.getElementById("view");
+  target.innerHTML = "";
+
+  dv = CodeMirror.MergeView(target, options);
+
+}
+function toggleDifferences() {
+  dv.setShowDifferences(highlight = !highlight);
+}
+function mergeViewHeight(mergeView) {
+  function editorHeight(editor) {
+    if (!editor) return 0;
+    return editor.getScrollInfo().height;
+  }
+  return Math.max(editorHeight(mergeView.leftOriginal()),
+                  editorHeight(mergeView.editor()),
+                  editorHeight(mergeView.rightOriginal()));
+}
+function resize(mergeView) {
+  var height = mergeViewHeight(mergeView);
+  for(;;) {
+    if (mergeView.leftOriginal())
+      mergeView.leftOriginal().setSize(null, height);
+    mergeView.editor().setSize(null, height);
+    if (mergeView.rightOriginal())
+      mergeView.rightOriginal().setSize(null, height);
+
+    var newHeight = mergeViewHeight(mergeView);
+    if (newHeight >= height) break;
+    else height = newHeight;
+  }
+  mergeView.wrap.style.height = height + "px";
+}
+
+
+
+
+
+
+
+
 
 function save(){
     //let content = "";
@@ -143,4 +226,6 @@ function closeWindow(){
     
 
     console.log('clicked close window');
+    
+    window.process.exit(1);
 }
