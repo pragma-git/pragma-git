@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Merge/Diff</title>
+    
+    
+    <link rel=stylesheet href="node_modules/codemirror/lib/codemirror.css">
+    <link rel=stylesheet href="node_modules/codemirror/addon/merge/merge.css">
+    
+    
+    
+    
+    <script src="node_modules/codemirror/lib/codemirror.js"></script>
+    
+    <script src="node_modules/codemirror/mode/xml/xml.js"></script>
+    <script src="node_modules/codemirror/mode/css/css.js"></script>
+    <script src="node_modules/codemirror/mode/javascript/javascript.js"></script>
+    <script src="node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    
+
+    <script src="node_modules/diff-match-patch/index.js"></script>
+
+    <script src="node_modules/codemirror/addon/merge/merge.js"></script>
+    
+    <script src="pragma-merge.js"></script>
+    
+
+    
+     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }  
+
+        .outer-content {
+            width: 100%;
+            height: auto;
+        }
+
+        
+     
+     </style>
+        
+    
+    
+    <style>   
+        .CodeMirror { 
+            line-height: 1.4; 
+        }
+
+        span.clicky {
+          cursor: pointer;
+          background: white;
+          color: black;
+          padding: 0 3px;
+          border-style: solid;
+          border-width: 1px;
+          border-radius: 2px;
+          border-color: black;
+        }
+        
+        .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
+            height: calc(100vh - 70px);
+        }
+
+  </style>
+
+</head>
+
+
+<body>
+
+    <div class="outer-content">
+            <div id="view"></div>
+    </div>       
+    
+    <p> &nbsp;
+        <span class=clicky onclick="panes = 2; initUI()">two-way</span>
+        <span class=clicky onclick="panes = 3; initUI()">three-way</span>
+        <span class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
+        <span class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+    </p>
+
+<!--
+    <p> The <a href="../doc/manual.html#addon_merge"><code>merge</code></a>
+        addon provides an interface for displaying and merging diffs,
+        either <span class=clicky onclick="panes = 2; initUI()">two-way</span>
+        or <span class=clicky onclick="panes = 3; initUI()">three-way</span>.
+        The left (or center) pane is editable, and the differences with the
+        other pane(s) are <span class=clicky
+        onclick="toggleDifferences()">optionally</span> shown live as you edit
+        it. In the two-way configuration, there are also options to pad changed
+        sections to <span class=clicky onclick="connect = connect ? null :
+        'align'; initUI()">align</span> them, and to <span class=clicky
+        onclick="collapse = !collapse; initUI()">collapse</span> unchanged
+        stretches of text.</p>
+    
+    <p>This addon depends on
+        the <a href="https://code.google.com/p/google-diff-match-patch/">google-diff-match-patch</a>
+        library to compute the diffs.</p>
+-->
+
+
+
+    <script>
+        var value, orig1, orig2, dv, panes = 2, highlight = true, connect = "align", collapse = false;
+        
+        function initUI() {
+          if (value == null) return;
+          
+          var target = document.getElementById("view");
+          target.innerHTML = "";
+          dv = CodeMirror.MergeView(target, {
+            value: value,
+            origLeft: panes == 3 ? orig1 : null,
+            orig: orig2,
+            lineNumbers: true,
+            mode: "text/html",
+            highlightDifferences: highlight,
+            connect: connect,
+            collapseIdentical: collapse
+          });
+        }
+        
+        function toggleDifferences() {
+          dv.setShowDifferences(highlight = !highlight);
+        }
+        
+        //window.onload = function() {
+          //value = document.documentElement.innerHTML;
+          //orig1 = "<!doctype html>\n\n" + value.replace(/\.\.\//g, "codemirror/").replace("yellow", "orange");
+          //orig2 = value.replace(/\u003cscript/g, "\u003cscript type=text/javascript ")
+            //.replace("white", "purple;\n      font: comic sans;\n      text-decoration: underline;\n      height: 15em");
+          //initUI();
+          //let d = document.createElement("div"); d.style.cssText = "width: 50px; margin: 7px; height: 14px"; dv.editor().addLineWidget(57, d)
+        //};
+        
+        function mergeViewHeight(mergeView) {
+          function editorHeight(editor) {
+            if (!editor) return 0;
+            return editor.getScrollInfo().height;
+          }
+          return Math.max(editorHeight(mergeView.leftOriginal()),
+                          editorHeight(mergeView.editor()),
+                          editorHeight(mergeView.rightOriginal()));
+        }
+        
+        function resize(mergeView) {
+          var height = mergeViewHeight(mergeView);
+          for(;;) {
+            if (mergeView.leftOriginal())
+              mergeView.leftOriginal().setSize(null, height);
+            mergeView.editor().setSize(null, height);
+            if (mergeView.rightOriginal())
+              mergeView.rightOriginal().setSize(null, height);
+        
+            var newHeight = mergeViewHeight(mergeView);
+            if (newHeight >= height) break;
+            else height = newHeight;
+          }
+          mergeView.wrap.style.height = height + "px";
+        }
+    </script>
+
+
+ 
+    <!--  Onload, call javascript file  --> 
+
+    <script>
+
+        
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('merge.html :DOM fully loaded and parsed');
+            injectIntoNotesJs(document);
+            }
+        );
+        window.addEventListener('unload', (event) => {
+            console.log('merge.html :DOM fully unloaded -- maybe window closed ');
+            closeWindow(window);
+            }
+        );
+    </script> 
+
+
+</body>    
+</html>
