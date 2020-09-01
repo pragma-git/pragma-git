@@ -147,18 +147,61 @@ function initUI() {
     
   
  //let editorValue = dv.editor().getValue(); // Store changes 
+ 
+ document.getElementById('title').innerText = 'File = ' + MERGED;
+ 
   
   if ( panes == 2){
-    options.value = loadFile(LOCAL);  // editor
     options.origLeft = null;
-    options.orig = loadFile(REMOTE)
+    
+    let editorLabel;
+    let rightViewerLabel;
+    
+    // Set mode-dependent params
+    switch (getMode() ){
+      case 'UNCOMMITTED_DIFF': { 
+        editorLabel = 'new'; 
+        rightViewerLabel = 'stored';
+        options.value = loadFile(REMOTE);  // editor
+        options.orig = loadFile(LOCAL)
+        break; 
+      }
+      case 'HISTORY_DIFF':  { 
+        editorLabel = 'selected'; 
+        rightViewerLabel = 'previous';
+        options.value = loadFile(REMOTE);  // editor TODO: turn off edit in HISTORY_DIFF
+        options.orig = loadFile(LOCAL)
+        break;
+      }
+      case 'MERGE':  { 
+        editorLabel = 'this'; 
+        rightViewerLabel = 'other';
+        options.value = loadFile(LOCAL);  // editor
+        options.orig = loadFile(REMOTE)
+        break;
+      }
+    }
+    
+    // Apply mode-dependency
+    document.getElementById('editor2').innerHTML = editorLabel;
+    document.getElementById('right2').innerHTML = rightViewerLabel;
+    
+    document.getElementById('Headers2').style.visibility = 'visible';
+    document.getElementById('Headers3').style.visibility = 'collapse';
   }
   
   if ( panes == 3){
 
-    options.value = loadFile(BASE);  // editor
     options.origLeft = loadFile(LOCAL);
+    options.value = loadFile(BASE);  // editor
     options.orig = loadFile(REMOTE); 
+    
+    document.getElementById('LOCAL3').innerHTML = 'LOCAL ';
+    document.getElementById('BASE3').innerHTML = 'MERGED ';
+    document.getElementById('REMOTE3').innerHTML = 'OTHER (REMOTE)';
+    
+    document.getElementById('Headers2').style.visibility = 'collapse';
+    document.getElementById('Headers3').style.visibility = 'visible';
   }  
   
   var target = document.getElementById("view");
@@ -167,6 +210,20 @@ function initUI() {
   dv = CodeMirror.MergeView(target, options);
 
 }
+
+
+function getMode( ){
+    if ( REMOTE == MERGED){
+        return 'UNCOMMITTED_DIFF';
+    }    
+    if ( BASE == MERGED){
+        return 'HISTORY_DIFF';
+    }
+    
+    
+    return 'MERGE'
+}
+
 function toggleDifferences() {
   dv.setShowDifferences(highlight = !highlight);
 }
@@ -217,6 +274,7 @@ function save(){
 
 function closeWindow(){
     // Save file
+    
     save(); 
     
     // Save settings

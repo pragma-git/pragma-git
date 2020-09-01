@@ -5,7 +5,7 @@
     <meta name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-    <title>Merge/Diff</title>
+    <title id='title'>Merge/Diff</title>
     
     
     <link rel=stylesheet href="node_modules/codemirror/lib/codemirror.css">
@@ -76,8 +76,26 @@
 
 <body>
 
+
     <div class="outer-content">
-            <div id="view"></div>
+        <table id="Headers3" style="width:100%; visibility: collapse;">
+            <tr>
+                <td id="LOCAL3" style="width:33%; text-align: center;">left</td>
+                <td id="BASE3" style="width:33%; text-align: center;">center</td>
+                <td id="REMOTE3" style="width:33%; text-align: center;">right</td>
+            </tr>
+        </table>
+        
+        
+        <table id="Headers2" style="width:100%; visibility: collapse;">
+            <tr>
+                <td id="editor2" style="width:50%; text-align: center;">left</td>
+                <td id="right2" style="width:50%; text-align: center;">right</td>
+            </tr>
+        </table>
+
+        
+        <div id="view"></div>
     </div>       
     
     <p> &nbsp;
