@@ -150,6 +150,24 @@ function initUI() {
  
  document.getElementById('title').innerText = 'File = ' + MERGED;
  
+  if (getMode() !== 'MERGE'){
+      // Only 'MERGE' can have 3 panes.  Fallback
+      panes = 2;
+  }
+ 
+  if ( panes == 3){
+
+    options.origLeft = loadFile(LOCAL);
+    options.value = loadFile(BASE);  // editor
+    options.orig = loadFile(REMOTE); 
+    
+    document.getElementById('left3').innerHTML = 'this ';
+    document.getElementById('editor3').innerHTML = 'merge here ';
+    document.getElementById('right3').innerHTML = 'other';
+    
+    document.getElementById('Headers2').style.visibility = 'collapse';
+    document.getElementById('Headers3').style.visibility = 'visible';
+  }  
   
   if ( panes == 2){
     options.origLeft = null;
@@ -190,19 +208,7 @@ function initUI() {
     document.getElementById('Headers3').style.visibility = 'collapse';
   }
   
-  if ( panes == 3){
-
-    options.origLeft = loadFile(LOCAL);
-    options.value = loadFile(BASE);  // editor
-    options.orig = loadFile(REMOTE); 
-    
-    document.getElementById('LOCAL3').innerHTML = 'LOCAL ';
-    document.getElementById('BASE3').innerHTML = 'MERGED ';
-    document.getElementById('REMOTE3').innerHTML = 'OTHER (REMOTE)';
-    
-    document.getElementById('Headers2').style.visibility = 'collapse';
-    document.getElementById('Headers3').style.visibility = 'visible';
-  }  
+ 
   
   var target = document.getElementById("view");
   target.innerHTML = "";
