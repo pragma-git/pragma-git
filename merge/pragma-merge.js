@@ -51,8 +51,7 @@ var options = {
     lineNumbers: true,
     mode: "text/html",
     highlightDifferences: true,
-    connect: connect,
-    collapseIdentical: collapse
+    connect: connect
   };
   
 var dv; // initUI sets this CodeMirror.MergeView instance
@@ -143,6 +142,9 @@ function loadFile(filePath)  {
 
 
 function initUI() {
+
+  options.collapseIdentical = collapse; // Updated from GUI button
+    
   if (value == null) return;
     
   
