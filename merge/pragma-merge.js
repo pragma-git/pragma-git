@@ -67,55 +67,11 @@ window.setInterval(save, 30 * 1000 );  // TODO : autosave
     trustExitCode = true
 */
 
-// Start initiated from notes.html
-async function injectIntoJs(document) {
-    
-    
-    
-    win = gui.Window.get();
-    //win.showDevTools(); 
-    
-
-// Good placement for Three way sync   
-
-    // Editor
-    value = loadFile(BASE);
-    
-    // Left
-    orig1 = loadFile(LOCAL);
-    
-    // Right 
-    orig2 = loadFile(REMOTE);
-    
-
-// Good placement for Two way sync   
-
-    // Editor
-    value = loadFile(LOCAL);
-    
-    // Left
-    orig1 = loadFile(REMOTE);
-    
-    // Right 
-    delete orig2;   
-    
-
+// Start initiated from html
+function injectIntoJs(document) {
     initUI();
-
-    let d = document.createElement("div"); d.style.cssText = "width: 50px; margin: 7px; height: 14px"; dv.editor().addLineWidget(57, d)
-
-    console.log(arguments);
-
-    
-    // Open file
-    let content = "";
-    try{
-        content = fs.readFileSync(filePath,'utf8');
-    }catch(err){
-        
-    }
-
 };
+
 function loadFile(filePath)  { 
     let content = "";
     try{
@@ -179,7 +135,7 @@ function initUI() {
     
     
     
-    if (value == null) return;
+    //if (value == null) return;
 
  
      document.getElementById('title').innerText = 'File = ' + MERGED;
