@@ -11,6 +11,7 @@
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
+var mime = require('mime-types')
 
 var util = require('../util_module.js'); // Pragma-git common functions
 
@@ -122,9 +123,14 @@ function loadFile(filePath)  {
     }catch(err){
         
     }
+    
     return content;
 } 
-
+function getMimeType(filePath){
+    var fileExt = filePath.split('.').pop();
+    
+    return mime.lookup(fileExt);
+}
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -157,6 +163,10 @@ function resize(mergeView) {
 
 // Modified 
 function initUI() {
+    
+    
+    options.mode = getMimeType(MERGED);
+    console.log('MIME-type = ' + options.mode);
     
     // Set state as set with clicky-buttons
     options.collapseIdentical = collapse; // Updated from GUI button
