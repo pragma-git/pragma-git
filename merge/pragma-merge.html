@@ -96,15 +96,26 @@
             </tr>
         </table>
 
-        
         <div id="view"></div>
     </div>       
+    
     
     <p> &nbsp;
         <span class=clicky onclick="panes = 2; initUI()">two-way</span>
         <span class=clicky onclick="panes = 3; initUI()">three-way</span>
         <span class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
         <span class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+        
+        <button id="save" 
+            onclick="save();closeWindow();" 
+            style="float: right;margin-right: 10px;">
+            Save
+        </button>
+        <button id="cancel" 
+            onclick="exitWithErrorCode()" 
+            style="float: right;margin-right: 10px;">
+            Cancel
+        </button>
     </p>
 
 <!--

@@ -139,16 +139,42 @@ function loadFile(filePath)  {
 } 
 
 
+// Standard CodeMirror
+function toggleDifferences() {
+  dv.setShowDifferences(highlight = !highlight);
+}
+function mergeViewHeight(mergeView) {
+  function editorHeight(editor) {
+    if (!editor) return 0;
+    return editor.getScrollInfo().height;
+  }
+  return Math.max(editorHeight(mergeView.leftOriginal()),
+                  editorHeight(mergeView.editor()),
+                  editorHeight(mergeView.rightOriginal()));
+}
+function resize(mergeView) {
+  var height = mergeViewHeight(mergeView);
+  for(;;) {
+    if (mergeView.leftOriginal())
+      mergeView.leftOriginal().setSize(null, height);
+    mergeView.editor().setSize(null, height);
+    if (mergeView.rightOriginal())
+      mergeView.rightOriginal().setSize(null, height);
 
+    var newHeight = mergeViewHeight(mergeView);
+    if (newHeight >= height) break;
+    else height = newHeight;
+  }
+  mergeView.wrap.style.height = height + "px";
+}
 
+// Modified 
 function initUI() {
 
   options.collapseIdentical = collapse; // Updated from GUI button
     
   if (value == null) return;
-    
-  
- //let editorValue = dv.editor().getValue(); // Store changes 
+
  
  document.getElementById('title').innerText = 'File = ' + MERGED;
  
@@ -218,8 +244,6 @@ function initUI() {
   dv = CodeMirror.MergeView(target, options);
 
 }
-
-
 function getMode( ){
     if ( REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
@@ -232,66 +256,35 @@ function getMode( ){
     return 'MERGE'
 }
 
-function toggleDifferences() {
-  dv.setShowDifferences(highlight = !highlight);
-}
-function mergeViewHeight(mergeView) {
-  function editorHeight(editor) {
-    if (!editor) return 0;
-    return editor.getScrollInfo().height;
-  }
-  return Math.max(editorHeight(mergeView.leftOriginal()),
-                  editorHeight(mergeView.editor()),
-                  editorHeight(mergeView.rightOriginal()));
-}
-function resize(mergeView) {
-  var height = mergeViewHeight(mergeView);
-  for(;;) {
-    if (mergeView.leftOriginal())
-      mergeView.leftOriginal().setSize(null, height);
-    mergeView.editor().setSize(null, height);
-    if (mergeView.rightOriginal())
-      mergeView.rightOriginal().setSize(null, height);
-
-    var newHeight = mergeViewHeight(mergeView);
-    if (newHeight >= height) break;
-    else height = newHeight;
-  }
-  mergeView.wrap.style.height = height + "px";
-}
-
-
-
-
-
-
-
-
 
 function save(){
-    //let content = "";
-    //try{
-        //content = editor.getMarkdown();
-        //fs.writeFileSync(filePath,content,'utf8');
-    //}catch(err){
-        //console.log('FAILED SAVING FILE = ' + filePath);
-        //console.log(err);
-    //}    
+    let content = "";
+    try{
+         content = dv.editor().getValue(); 
+        fs.writeFileSync(MERGED,content,'utf8');
+    }catch(err){
+        console.log('FAILED SAVING FILE = ' + MERGED);
+        console.log(err);
+    }    
 
 }
 
 function closeWindow(){
-    // Save file
-    
-    save(); 
-    
-    // Save settings
-    global.state.notesWindow.editMode = editor.currentMode;
-    opener.saveSettings(); // Save settings to file
-    
-    
+   gui.App.closeAllWindows();
+      
+    // Hide the window to give user the feeling of closing immediately
+    this.hide();
 
-    console.log('clicked close window');
-    
-    window.process.exit(1);
+    // If the new window is still open then close it.
+    if (win !== null) {
+      win.close(true)
+    }
+
+    // After closing the new window, close the main window.
+    this.close(true);
+}
+
+function exitWithErrorCode(){
+    // Only way I managed to close with an exit code different to 0 (this is equivalent to kill -9 in linux)
+    process.kill(process.ppid, 'SIGKILL'); // Error code 137
 }
