@@ -44,7 +44,7 @@ process.chdir( ROOT);  // Now all relative paths works
 
 
 // Modified from GUI
-var connect = "align"; 
+var connect = null; // null or "align"
 var collapse = false; 
 
 var options = {
@@ -65,7 +65,7 @@ window.setInterval(save, 30 * 1000 );  // TODO : autosave
 [mergetool "pragma-merge"]
     cmd = /Applications/nwjs.app/Contents/MacOS/nwjs  ~/Documents/Projects/Pragma-git/Pragma-git/merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
     trustExitCode = true
-*/
+*/ 
 
 // Start initiated from html
 function injectIntoJs(document) {
