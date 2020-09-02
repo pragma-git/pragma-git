@@ -67,12 +67,12 @@ window.setInterval(save, 30 * 1000 );  // TODO : autosave
 */
 
 // Start initiated from notes.html
-async function injectIntoNotesJs(document) {
+async function injectIntoJs(document) {
     
     
     
     win = gui.Window.get();
-    win.showDevTools(); 
+    //win.showDevTools(); 
     
 
 // Good placement for Three way sync   
@@ -98,21 +98,11 @@ async function injectIntoNotesJs(document) {
     // Right 
     delete orig2;   
     
-    
-    
-    initUI();
-    
 
-    //value = document.documentElement.innerHTML;
-    //orig1 = "<!doctype html>\n\n" + value.replace(/\.\.\//g, "codemirror/").replace("yellow", "orange");
-    //orig2 = value.replace(/\u003cscript/g, "\u003cscript type=text/javascript ")
-    //.replace("white", "purple;\n      font: comic sans;\n      text-decoration: underline;\n      height: 15em");
-    
     initUI();
+
     let d = document.createElement("div"); d.style.cssText = "width: 50px; margin: 7px; height: 14px"; dv.editor().addLineWidget(57, d)
 
-    
-    
     console.log(arguments);
 
     
@@ -125,7 +115,6 @@ async function injectIntoNotesJs(document) {
     }
 
 };
-
 function loadFile(filePath)  { 
     let content = "";
     try{
@@ -168,101 +157,102 @@ function resize(mergeView) {
 
 // Modified 
 function initUI() {
-
-  // Set state as set with clicky-buttons
-  options.collapseIdentical = collapse; // Updated from GUI button
-  options.connect = connect; // null or 'align'
-  
-  // Set display of clicky-buttons
-  document.getElementById("two-way").classList.add('enabled');
-  document.getElementById("three-way").classList.remove('enabled');
-  
-  
-  
     
-  if (value == null) return;
+    // Set state as set with clicky-buttons
+    options.collapseIdentical = collapse; // Updated from GUI button
+    options.connect = connect; // null or 'align'
+    
+    // Set display of clicky-buttons
+    document.getElementById("two-way").classList.add('enabled');
+    document.getElementById("three-way").classList.remove('enabled');
+    
+    
+    
+    
+    if (value == null) return;
 
  
- document.getElementById('title').innerText = 'File = ' + MERGED;
- //
- // 2 or 3 panes
- //
-  if (getMode() !== 'MERGE'){
-      // Only 'MERGE' can have 3 panes.  Fallback
-      panes = 2;
+     document.getElementById('title').innerText = 'File = ' + MERGED;
+     //
+     // 2 or 3 panes
+     //
+      if (getMode() !== 'MERGE'){
+          // Only 'MERGE' can have 3 panes.  Fallback
+          panes = 2;
+          
+          // Hide panes buttons
+          document.getElementById('two-way').style.visibility = 'collapse';
+          document.getElementById('two-way').style.width = '0px';
+          
+          document.getElementById('three-way').style.visibility = 'collapse';
+          document.getElementById('three-way').style.width = '0px';
+      }
+    
+      if ( panes == 3){
+    
+        // content
+        options.origLeft = loadFile(LOCAL);
+        options.value = loadFile(BASE);  // editor
+        options.orig = loadFile(REMOTE); 
+        
+        // html
+        document.getElementById('left3').innerHTML = 'this ';
+        document.getElementById('editor3').innerHTML = 'merge here ';
+        document.getElementById('right3').innerHTML = 'other';
+        
+        document.getElementById('Headers2').style.visibility = 'collapse';
+        document.getElementById('Headers3').style.visibility = 'visible';
+        
+        disable('two-way');
+        enable('three-way');
+      }  
       
-      // Hide panes buttons
-      document.getElementById('two-way').style.visibility = 'collapse';
-      document.getElementById('two-way').style.width = '0px';
-      
-      document.getElementById('three-way').style.visibility = 'collapse';
-      document.getElementById('three-way').style.width = '0px';
-  }
- 
-  if ( panes == 3){
+      if ( panes == 2){
+        options.origLeft = null;
+        
+        let editorLabel;
+        let rightViewerLabel;
+        
+        // Set mode-dependent params
+        switch (getMode() ){
+          case 'UNCOMMITTED_DIFF': { 
+            editorLabel = 'new'; 
+            rightViewerLabel = 'stored';
+            options.value = loadFile(REMOTE);  // editor
+            options.orig = loadFile(LOCAL)
+            break; 
+          }
+          case 'HISTORY_DIFF':  { 
+            editorLabel = 'selected'; 
+            rightViewerLabel = 'previous';
+            options.value = loadFile(REMOTE);  // editor TODO: turn off edit in HISTORY_DIFF
+            options.orig = loadFile(LOCAL);
+            
+            readOnlyOption(true); // Sets this mode to read only
+            break;
+          }
+          case 'MERGE':  { 
+            editorLabel = 'this'; 
+            rightViewerLabel = 'other';
+            options.value = loadFile(LOCAL);  // editor
+            options.orig = loadFile(REMOTE)
+            break;
+          }
+        }
+        
+        // Apply mode-dependency html
+        document.getElementById('editor2').innerHTML = editorLabel;
+        document.getElementById('right2').innerHTML = rightViewerLabel;
+        
+        document.getElementById('Headers2').style.visibility = 'visible';
+        document.getElementById('Headers3').style.visibility = 'collapse';
+          
+           
+        enable('two-way');
+        disable('three-way');
+      }
 
-    // content
-    options.origLeft = loadFile(LOCAL);
-    options.value = loadFile(BASE);  // editor
-    options.orig = loadFile(REMOTE); 
-    
-    // html
-    document.getElementById('left3').innerHTML = 'this ';
-    document.getElementById('editor3').innerHTML = 'merge here ';
-    document.getElementById('right3').innerHTML = 'other';
-    
-    document.getElementById('Headers2').style.visibility = 'collapse';
-    document.getElementById('Headers3').style.visibility = 'visible';
-    
-    disable('two-way');
-    enable('three-way');
-  }  
-  
-  if ( panes == 2){
-    options.origLeft = null;
-    
-    let editorLabel;
-    let rightViewerLabel;
-    
-    // Set mode-dependent params
-    switch (getMode() ){
-      case 'UNCOMMITTED_DIFF': { 
-        editorLabel = 'new'; 
-        rightViewerLabel = 'stored';
-        options.value = loadFile(REMOTE);  // editor
-        options.orig = loadFile(LOCAL)
-        break; 
-      }
-      case 'HISTORY_DIFF':  { 
-        editorLabel = 'selected'; 
-        rightViewerLabel = 'previous';
-        options.value = loadFile(REMOTE);  // editor TODO: turn off edit in HISTORY_DIFF
-        options.orig = loadFile(LOCAL)
-        break;
-      }
-      case 'MERGE':  { 
-        editorLabel = 'this'; 
-        rightViewerLabel = 'other';
-        options.value = loadFile(LOCAL);  // editor
-        options.orig = loadFile(REMOTE)
-        break;
-      }
-    }
-    
-    // Apply mode-dependency html
-    document.getElementById('editor2').innerHTML = editorLabel;
-    document.getElementById('right2').innerHTML = rightViewerLabel;
-    
-    document.getElementById('Headers2').style.visibility = 'visible';
-    document.getElementById('Headers3').style.visibility = 'collapse';
-      
-       
-    enable('two-way');
-    disable('three-way');
-  }
 
-    
-    
     //
     // Set content 
     // 
@@ -290,6 +280,7 @@ function initUI() {
 
 }
 
+// Show button states
 function enable(id){
     document.getElementById(id).classList.remove('disabled');
     document.getElementById(id).classList.add('enabled');
@@ -299,6 +290,19 @@ function disable(id){
     document.getElementById(id).classList.add('disabled');
 }
 
+// Make readonly
+function readOnlyOption( readonly){
+    if (readonly){
+        options.revertButtons = false;
+        options.readOnly = true; 
+        document.getElementById('title').innerText = document.getElementById('title').innerText + ' (READ-ONLY)';
+        console.log('read only');
+        console.log('title = ' + document.getElementById('title').innerText);
+    }else{
+        options.revertButtons = true;
+        options.readOnly = false; 
+    }
+}
 
 function getMode( ){
     if ( REMOTE == MERGED){
