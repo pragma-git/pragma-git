@@ -293,14 +293,20 @@ function disable(id){
 // Make readonly
 function readOnlyOption( readonly){
     if (readonly){
+        // Make readonly
         options.revertButtons = false;
         options.readOnly = true; 
         document.getElementById('title').innerText = document.getElementById('title').innerText + ' (READ-ONLY)';
-        console.log('read only');
-        console.log('title = ' + document.getElementById('title').innerText);
-    }else{
-        options.revertButtons = true;
-        options.readOnly = false; 
+        
+        // Hide Save and cancel buttons
+        document.getElementById('cancel').style.visibility = 'collapse';
+        document.getElementById('save').style.visibility = 'collapse';
+
+        
+        // Show Close button
+        document.getElementById('close').style.visibility = 'visible';
+        document.getElementById('close').style.float = 'right';
+
     }
 }
 

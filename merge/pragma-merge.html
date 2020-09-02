@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
   <head>
 
@@ -74,7 +74,7 @@
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
-            height: calc(100vh - 70px);
+            height: calc(100vh - 86px);
         }
 
   </style>
@@ -108,22 +108,33 @@
     </div>       
     
     
-    <p style="margin-right: 10 px;"> &nbsp;
+    <p style="margin-right: 10 px;"> 
+        <div>
         <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
         <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
         <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
         <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+        </div>
+ 
         
+        <button id="close" 
+            onclick="closeWindow();" 
+            style="float: none;margin-right: 10px; visibility: collapse">
+            Close
+        </button>
+               
         <button id="save" 
             onclick="save();closeWindow();" 
             style="float: right;margin-right: 10px;">
             Save
         </button>
+        
         <button id="cancel" 
             onclick="exitWithErrorCode()" 
             style="float: right;margin-right: 10px;">
             Cancel
         </button>
+        
     </p>
 
 <!--
