@@ -1,6 +1,5 @@
 
 
-
 // Learned from :
 // https://blog.beardhatcode.be/2018/03/your-own-git-mergetool.html
 
@@ -60,8 +59,7 @@ var dv; // initUI sets this CodeMirror.MergeView instance
 
 window.setInterval(save, 30 * 1000 );  // TODO : autosave
 
-/* 
- * .gitconfig:
+/* .gitconfig howto
  * 
 [mergetool "pragma-merge"]
     cmd = /Applications/nwjs.app/Contents/MacOS/nwjs  ~/Documents/Projects/Pragma-git/Pragma-git/merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
@@ -171,30 +169,53 @@ function resize(mergeView) {
 // Modified 
 function initUI() {
 
+  // Set state as set with clicky-buttons
   options.collapseIdentical = collapse; // Updated from GUI button
+  options.connect = connect; // null or 'align'
+  
+  // Set display of clicky-buttons
+  document.getElementById("two-way").classList.add('enabled');
+  document.getElementById("three-way").classList.remove('enabled');
+  
+  
+  
     
   if (value == null) return;
 
  
  document.getElementById('title').innerText = 'File = ' + MERGED;
- 
+ //
+ // 2 or 3 panes
+ //
   if (getMode() !== 'MERGE'){
       // Only 'MERGE' can have 3 panes.  Fallback
       panes = 2;
+      
+      // Hide panes buttons
+      document.getElementById('two-way').style.visibility = 'collapse';
+      document.getElementById('two-way').style.width = '0px';
+      
+      document.getElementById('three-way').style.visibility = 'collapse';
+      document.getElementById('three-way').style.width = '0px';
   }
  
   if ( panes == 3){
 
+    // content
     options.origLeft = loadFile(LOCAL);
     options.value = loadFile(BASE);  // editor
     options.orig = loadFile(REMOTE); 
     
+    // html
     document.getElementById('left3').innerHTML = 'this ';
     document.getElementById('editor3').innerHTML = 'merge here ';
     document.getElementById('right3').innerHTML = 'other';
     
     document.getElementById('Headers2').style.visibility = 'collapse';
     document.getElementById('Headers3').style.visibility = 'visible';
+    
+    disable('two-way');
+    enable('three-way');
   }  
   
   if ( panes == 2){
@@ -228,22 +249,57 @@ function initUI() {
       }
     }
     
-    // Apply mode-dependency
+    // Apply mode-dependency html
     document.getElementById('editor2').innerHTML = editorLabel;
     document.getElementById('right2').innerHTML = rightViewerLabel;
     
     document.getElementById('Headers2').style.visibility = 'visible';
     document.getElementById('Headers3').style.visibility = 'collapse';
+      
+       
+    enable('two-way');
+    disable('three-way');
   }
-  
- 
-  
-  var target = document.getElementById("view");
-  target.innerHTML = "";
 
-  dv = CodeMirror.MergeView(target, options);
+    
+    
+    //
+    // Set content 
+    // 
+    
+    var target = document.getElementById("view");
+    target.innerHTML = "";
+    
+    dv = CodeMirror.MergeView(target, options);
+    
+    //
+    // Set buttons 
+    // 
+    if (connect == 'align'){
+        enable('align'); 
+    }else{
+        disable('align'); 
+    }
+    
+    if (collapse){
+        enable('hide-unchanged'); 
+    }else{
+        disable('hide-unchanged'); 
+    }
+
 
 }
+
+function enable(id){
+    document.getElementById(id).classList.remove('disabled');
+    document.getElementById(id).classList.add('enabled');
+}
+function disable(id){
+    document.getElementById(id).classList.remove('enabled');
+    document.getElementById(id).classList.add('disabled');
+}
+
+
 function getMode( ){
     if ( REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';

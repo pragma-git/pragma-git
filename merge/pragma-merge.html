@@ -42,7 +42,13 @@
             width: 100%;
             height: auto;
         }
-
+        
+        .enabled{
+            background: lightgreen;
+        }
+        .disabled{
+            background: white;
+        }
         
      
      </style>
@@ -56,13 +62,15 @@
 
         span.clicky {
           cursor: pointer;
-          background: white;
           color: black;
           padding: 0 3px;
           border-style: solid;
           border-width: 1px;
           border-radius: 2px;
           border-color: black;
+          float: left;
+          display: block;
+          margin-right: 2px;
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
@@ -100,11 +108,11 @@
     </div>       
     
     
-    <p> &nbsp;
-        <span class=clicky onclick="panes = 2; initUI()">two-way</span>
-        <span class=clicky onclick="panes = 3; initUI()">three-way</span>
-        <span class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
-        <span class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+    <p style="margin-right: 10 px;"> &nbsp;
+        <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
+        <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
+        <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
+        <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
         
         <button id="save" 
             onclick="save();closeWindow();" 
