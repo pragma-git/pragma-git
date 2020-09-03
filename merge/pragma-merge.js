@@ -13,7 +13,7 @@ var os = require('os');
 var fs = require('fs');
 var mime = require('mime-types')
 
-var util = require('../util_module.js'); // Pragma-git common functions
+//var util = require('util_module.js'); // Pragma-git common functions
 
 var dmp = require('node_modules/diff-match-patch/index.js'); // Google diff-match-patch  TODO: -- needed?
 

@@ -18,5 +18,31 @@
     "codemirror": "^5.57.0",
     "diff-match-patch": "^1.0.5",
     "mime-types": "^2.1.27"
+  },
+  "build": {
+    "nwFlavor": "sdk",
+    "nwVersion": "v0.47.2",
+    "mac": {
+      "displayName": "Pragma-merge",
+      "copyright": "copyright",
+      "icon": "../images/icon.icns",
+      "plistStrings": {
+        "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
+        "CFBundleDocumentTypes": []
+      }
+    },
+    "win": {
+      "productName": "Pragma-merge",
+      "companyName": "Jan Axelsson",
+      "copyright": "copyright",
+      "icon": "../images/icon.ico"
+    },
+    "nsis": {
+      "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
+      "diffUpdaters": true
+    }
+  },
+  "devDependencies": {
+    "nwjs-builder-phoenix": "^1.15.0"
   }
 }
