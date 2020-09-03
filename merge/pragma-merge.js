@@ -8,14 +8,10 @@
 // ---------
 // INIT
 // ---------
-var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
 var mime = require('mime-types'); //
-
-//var util = require('util_module.js'); // Pragma-git common functions
-
-var dmp = require('node_modules/diff-match-patch/index.js'); // Google diff-match-patch  TODO: -- needed?
 
 
 // Remember state
@@ -64,13 +60,9 @@ var options = optionsTemplate;
 var dv = {}; // initUI sets this CodeMirror.MergeView instance 
 dv.panes = panes; // Initial value
 
-
-/* .gitconfig howto
- * 
-[mergetool "pragma-merge"]
-    cmd = /Applications/nwjs.app/Contents/MacOS/nwjs  ~/Documents/Projects/Pragma-git/Pragma-git/merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
-    trustExitCode = true
-*/ 
+//-----------
+// FUNCTIONS
+//-----------
 
 // Start initiated from html
 function injectIntoJs(document) {
@@ -396,21 +388,5 @@ function closeWindowNicely(){
     this.close(true);
 }
 
-//function cancelButtonPressed(){
-
-   //gui.App.closeAllWindows();
-    //// Only way I managed to close with an exit code different to 0 (this is equivalent to kill -9 in linux)
-    //process.kill(process.ppid, 'SIGKILL'); // Error code 137
-//}
-
-//function closeWindow(){
-
-    //// Force close in case I cancelled something that could have been edited => error code
-    //if (dv.options.readOnly == false ){ 
-        //process.kill(process.ppid, 'SIGKILL'); // Error code 137 -- I want an error code for compatibility with Git if I close or cancel something that should be edited.
-    //} 
-    //// In case of not edit-able, close without error code
-    //closeWindowNicely()
-//}
 
 
