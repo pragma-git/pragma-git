@@ -44,6 +44,8 @@ console.log('$MERGED = ' + MERGED);
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
 
+// HTML Title
+const HTML_TITLE = 'File &nbsp;&nbsp; = &nbsp;&nbsp;' + MERGED
 
 // Modified from GUI
 var connect = null; // null or "align"
@@ -79,7 +81,7 @@ function injectIntoJs(document) {
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
     
-    document.getElementById('title').innerText = 'File = ' + MERGED;
+    document.getElementById('title').innerHTML = HTML_TITLE;
     
     initUI();
 };
@@ -306,7 +308,7 @@ function readOnlyOption( readonly){
         // Make readonly
         options.revertButtons = false;
         options.readOnly = true; 
-        document.getElementById('title').innerText = document.getElementById('title').innerText + ' (READ-ONLY)';
+        document.getElementById('title').innerHTML = HTML_TITLE + ' &nbsp;&nbsp;(READ-ONLY VIEW)';
         
         // Hide Save and cancel buttons
         document.getElementById('cancel').style.visibility = 'collapse';
