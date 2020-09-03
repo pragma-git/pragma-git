@@ -23,6 +23,7 @@ var panes = 2;
 var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
+var SAVED = false; // Flag to show that save has been performed
 
 // Read paths
 
@@ -71,6 +72,8 @@ dv.panes = panes; // Initial value
 
 // Start initiated from html
 function injectIntoJs(document) {
+
+    
     cachedFile.BASE = loadFile(BASE);
     cachedFile.LOCAL = loadFile(LOCAL);
     cachedFile.REMOTE = loadFile(REMOTE);
@@ -330,28 +333,54 @@ function getMode( ){
 }
 
 // Finishing
+function finish( wayToFinish){
+    
+    switch(wayToFinish) {
+        case 'cancel':  {
+            process.kill(process.ppid, 'SIGKILL'); // Error code 137
+            break;
+        }
+        case 'close':  {
+            closeWindowNicely();
+            break;
+        }
+        case 'save':  {
+            save();
+            SAVED=true;
+            closeWindowNicely();
+            break;
+        }
+        case 'unloadWindow':  {
+            // This function will be called when window is unloaded, regardless. 
+            // 
+            if (!SAVED){
+                process.kill(process.ppid, 'SIGKILL'); // Error code 137
+            }
+            break;
+        }
+    }
+
+}
+
+
+
+
+
 function save(){
     let content = "";
     try{
-         content = dv.editor().getValue(); 
+        content = dv.editor().getValue(); 
         fs.writeFileSync(MERGED,content,'utf8');
     }catch(err){
         console.log('FAILED SAVING FILE = ' + MERGED);
         console.log(err);
     }    
+}
 
-}
-function closeWindow(){
-    // Force close in case I cancelled something that could have been edited => error code
-    if (dv.options.readOnly == false ){ 
-        exitWithErrorCode(); // I want an error code for compatibility with Git if I close or cancel something that should be edited.
-    } 
-    // In case of not edit-able, close without error code
-    closeWindowNicely()
-}
 function closeWindowNicely(){
+    
 
-   gui.App.closeAllWindows();
+    gui.App.closeAllWindows();
       
     // Hide the window to give user the feeling of closing immediately
     this.hide();
@@ -364,7 +393,22 @@ function closeWindowNicely(){
     // After closing the new window, close the main window.
     this.close(true);
 }
-function exitWithErrorCode(){
-    // Only way I managed to close with an exit code different to 0 (this is equivalent to kill -9 in linux)
-    process.kill(process.ppid, 'SIGKILL'); // Error code 137
-}
+
+//function cancelButtonPressed(){
+
+   //gui.App.closeAllWindows();
+    //// Only way I managed to close with an exit code different to 0 (this is equivalent to kill -9 in linux)
+    //process.kill(process.ppid, 'SIGKILL'); // Error code 137
+//}
+
+//function closeWindow(){
+
+    //// Force close in case I cancelled something that could have been edited => error code
+    //if (dv.options.readOnly == false ){ 
+        //process.kill(process.ppid, 'SIGKILL'); // Error code 137 -- I want an error code for compatibility with Git if I close or cancel something that should be edited.
+    //} 
+    //// In case of not edit-able, close without error code
+    //closeWindowNicely()
+//}
+
+

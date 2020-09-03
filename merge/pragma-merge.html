@@ -149,21 +149,21 @@
         
         
         <button id="close" 
-            onclick="closeWindow();" 
+            onclick="finish('close');" 
             style="float: none;margin-right: 10px; visibility: collapse">
             Close
         </button>
         
                
         <button id="save" 
-            onclick="save();closeWindowNicely();" 
+            onclick="finish('save');" 
             style="float: right;margin-right: 10px;">
             Save
         </button>
         
         
         <button id="cancel" 
-            onclick="exitWithErrorCode()" 
+            onclick="finish('cancel')" 
             style="float: right;margin-right: 10px;">
             Cancel
         </button>
@@ -181,7 +181,7 @@
         );        
         window.addEventListener('unload', (event) => {
             console.log('merge.html :DOM fully unloaded -- maybe window closed ');
-            closeWindowNicely(window);
+            finish('unloadWindow');
             }
         );
     </script>  
