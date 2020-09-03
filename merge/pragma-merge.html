@@ -3,7 +3,7 @@
   <head>
 
     <meta name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
 
     <title id='title'>Merge/Diff</title>
     
@@ -140,19 +140,27 @@
         <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
         <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
         </div>
- 
+        
+        
+        <div id='jump' style="position: absolute; left: 50%; bottom: 20px"> 
+             <span id='down' class=clicky onclick="dv.edit.execCommand('goNextDiff');"> &#x2B07;</span> 
+             <span id='up'   class=clicky onclick="dv.edit.execCommand('goPrevDiff');"> &#x2B06;</span> 
+        </div>
+        
         
         <button id="close" 
             onclick="closeWindow();" 
             style="float: none;margin-right: 10px; visibility: collapse">
             Close
         </button>
+        
                
         <button id="save" 
             onclick="save();closeWindowNicely();" 
             style="float: right;margin-right: 10px;">
             Save
         </button>
+        
         
         <button id="cancel" 
             onclick="exitWithErrorCode()" 
