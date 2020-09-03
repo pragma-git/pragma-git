@@ -47,12 +47,14 @@ process.chdir( ROOT);  // Now all relative paths works
 var connect = null; // null or "align"
 var collapse = false; 
 
-var options = {
+const optionsTemplate = {
     lineNumbers: true,
     mode: "text/html",
     highlightDifferences: true,
     connect: connect
   };
+  
+var options = optionsTemplate;
   
 var dv; // initUI sets this CodeMirror.MergeView instance
 
@@ -120,6 +122,9 @@ function resize(mergeView) {
 // Modified 
 function initUI() {
     
+    // New start
+    options = optionsTemplate;
+    
     
     options.mode = getMimeType(MERGED);
     console.log('MIME-type = ' + options.mode);
@@ -154,7 +159,7 @@ function initUI() {
           document.getElementById('three-way').style.width = '0px';
       }
     
-      if ( panes == 3){
+      if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
         options.origLeft = loadFile(LOCAL);
