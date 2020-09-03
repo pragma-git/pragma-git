@@ -53,15 +53,14 @@ const optionsTemplate = {
     lineNumbers: true,
     mode: "text/html",
     highlightDifferences: true,
-    connect: connect
+    connect: connect,
+    readOnly: false
   };
 var options = optionsTemplate;
   
-var dv = {}; // initUI sets this CodeMirror.MergeView instance
+var dv = {}; // initUI sets this CodeMirror.MergeView instance 
 dv.panes = panes; // Initial value
 
-
-window.setInterval(save, 30 * 1000 );  // TODO : autosave
 
 /* .gitconfig howto
  * 
@@ -81,7 +80,6 @@ function injectIntoJs(document) {
     
     initUI();
 };
-
 function loadFile(filePath)  { 
     let content = "";
     try{
@@ -127,7 +125,7 @@ function resize(mergeView) {
   mergeView.wrap.style.height = height + "px";
 }
 
-// Modified 
+// Redraw 
 function initUI() {
     
     // New start
@@ -331,7 +329,7 @@ function getMode( ){
     return 'MERGE'
 }
 
-
+// Finishing
 function save(){
     let content = "";
     try{
@@ -343,8 +341,16 @@ function save(){
     }    
 
 }
-
 function closeWindow(){
+    // Force close in case I cancelled something that could have been edited => error code
+    if (dv.options.readOnly == false ){ 
+        exitWithErrorCode(); // I want an error code for compatibility with Git if I close or cancel something that should be edited.
+    } 
+    // In case of not edit-able, close without error code
+    closeWindowNicely()
+}
+function closeWindowNicely(){
+
    gui.App.closeAllWindows();
       
     // Hide the window to give user the feeling of closing immediately
@@ -358,7 +364,6 @@ function closeWindow(){
     // After closing the new window, close the main window.
     this.close(true);
 }
-
 function exitWithErrorCode(){
     // Only way I managed to close with an exit code different to 0 (this is equivalent to kill -9 in linux)
     process.kill(process.ppid, 'SIGKILL'); // Error code 137
