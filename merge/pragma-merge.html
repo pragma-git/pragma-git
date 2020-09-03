@@ -156,41 +156,13 @@
         
     </p>
 
-<!--
-    <p> The <a href="../doc/manual.html#addon_merge"><code>merge</code></a>
-        addon provides an interface for displaying and merging diffs,
-        either <span class=clicky onclick="panes = 2; initUI()">two-way</span>
-        or <span class=clicky onclick="panes = 3; initUI()">three-way</span>.
-        The left (or center) pane is editable, and the differences with the
-        other pane(s) are <span class=clicky
-        onclick="toggleDifferences()">optionally</span> shown live as you edit
-        it. In the two-way configuration, there are also options to pad changed
-        sections to <span class=clicky onclick="connect = connect ? null :
-        'align'; initUI()">align</span> them, and to <span class=clicky
-        onclick="collapse = !collapse; initUI()">collapse</span> unchanged
-        stretches of text.</p>
-    
-    <p>This addon depends on
-        the <a href="https://code.google.com/p/google-diff-match-patch/">google-diff-match-patch</a>
-        library to compute the diffs.</p>
--->
-
 
  
     <!--  Onload, call javascript file  --> 
-
     <script>
-        
-
-        
         window.addEventListener('DOMContentLoaded', (event) => {
             console.log('merge.html :DOM fully loaded and parsed');
             injectIntoJs(document);
-            }
-        );
-        window.addEventListener('unload', (event) => {
-            console.log('merge.html :DOM fully unloaded -- maybe window closed ');
-            closeWindow(window);
             }
         );
     </script> 

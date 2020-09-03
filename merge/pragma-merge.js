@@ -11,7 +11,7 @@
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
-var mime = require('mime-types')
+var mime = require('mime-types'); //
 
 //var util = require('util_module.js'); // Pragma-git common functions
 
@@ -21,6 +21,7 @@ var dmp = require('node_modules/diff-match-patch/index.js'); // Google diff-matc
 // Remember state
 var panes = 2;
 var lastPaneNumber = panes; // Updates every InitUI
+var cachedFile = {};  // Struct to store content from files loaded
 
 
 // Read paths
@@ -47,17 +48,17 @@ process.chdir( ROOT);  // Now all relative paths works
 var connect = null; // null or "align"
 var collapse = false; 
 
+// Options for MergeView
 const optionsTemplate = {
     lineNumbers: true,
     mode: "text/html",
     highlightDifferences: true,
     connect: connect
   };
-  
 var options = optionsTemplate;
   
-var dv; // initUI sets this CodeMirror.MergeView instance
-
+var dv = {}; // initUI sets this CodeMirror.MergeView instance
+dv.panes = panes; // Initial value
 
 
 window.setInterval(save, 30 * 1000 );  // TODO : autosave
@@ -71,6 +72,13 @@ window.setInterval(save, 30 * 1000 );  // TODO : autosave
 
 // Start initiated from html
 function injectIntoJs(document) {
+    cachedFile.BASE = loadFile(BASE);
+    cachedFile.LOCAL = loadFile(LOCAL);
+    cachedFile.REMOTE = loadFile(REMOTE);
+    cachedFile.MERGED = loadFile(MERGED);
+    
+    document.getElementById('title').innerText = 'File = ' + MERGED;
+    
     initUI();
 };
 
@@ -136,14 +144,9 @@ function initUI() {
     // Set display of clicky-buttons
     document.getElementById("two-way").classList.add('enabled');
     document.getElementById("three-way").classList.remove('enabled');
-    
-    
-    
-    
-    //if (value == null) return;
 
  
-     document.getElementById('title').innerText = 'File = ' + MERGED;
+    
      //
      // 2 or 3 panes
      //
@@ -162,9 +165,22 @@ function initUI() {
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
-        options.origLeft = loadFile(LOCAL);
-        options.value = loadFile(BASE);  // editor
-        options.orig = loadFile(REMOTE); 
+        options.origLeft = cachedFile.LOCAL;
+        
+        if ( dv.panes == panes ){ 
+            // 1) dv.editor().getValue() if not changed from 2-pane
+            try{
+                options.value = dv.editor().getValue();  // Use content, in case it has been edited
+            }catch(err){
+                // Lands here on open when dv not fully defined
+                options.value = cachedFile.BASE;
+            }
+        }else{ 
+            // 2) cachedFile.BASE if changed from 2-pane
+            options.value = cachedFile.BASE;
+        } 
+        
+        options.orig = cachedFile.REMOTE; 
         
         // html
         document.getElementById('left3').innerHTML = 'this ';
@@ -189,27 +205,46 @@ function initUI() {
           case 'UNCOMMITTED_DIFF': { 
             editorLabel = 'new'; 
             rightViewerLabel = 'stored';
-            options.value = loadFile(REMOTE);  // editor
-            options.orig = loadFile(LOCAL)
+            try{
+                options.value = dv.editor().getValue();  // Use content, in case it has been edited
+            }catch(err){
+                options.value = loadFile(REMOTE);
+            }
+            
+            options.orig = cachedFile.LOCAL;
             break; 
           }
-          case 'HISTORY_DIFF':  { 
+          case 'HISTORY_DIFF':  { //
             editorLabel = 'selected'; 
             rightViewerLabel = 'previous';
-            options.value = loadFile(REMOTE);  // editor TODO: turn off edit in HISTORY_DIFF
-            options.orig = loadFile(LOCAL);
+            options.value = cachedFile.REMOTE;  // Can't be changed, because readonly
+            options.orig = cachedFile.LOCAL;
             
             readOnlyOption(true); // Sets this mode to read only
             break;
           }
           case 'MERGE':  { 
             editorLabel = 'this'; 
-            rightViewerLabel = 'other';
-            options.value = loadFile(LOCAL);  // editor
-            options.orig = loadFile(REMOTE)
+            rightViewerLabel = 'other'; 
+            
+            if ( dv.panes == panes ){ // Not changed number of panes
+                // 1) dv.editor().getValue() if not changed from 3-pane
+                try{
+                    options.value = dv.editor().getValue();  // Use content, in case it has been edited
+                }catch(err){
+                    // Lands here on open when dv not fully defined
+                    options.value = cachedFile.LOCAL;
+                }
+            }else{
+                // 2) cachedFile.LOCAL if changed from 3-pane
+                options.value = cachedFile.LOCAL;
+            }
+            
+            
+            options.orig = cachedFile.REMOTE
             break;
           }
-        }
+        } 
         
         // Apply mode-dependency html
         document.getElementById('editor2').innerHTML = editorLabel;
@@ -232,6 +267,9 @@ function initUI() {
     target.innerHTML = "";
     
     dv = CodeMirror.MergeView(target, options);
+    
+    // Remember current number of panes (not part of CodeMirror, but I chose to store it here)
+    dv.panes = panes;
     
     //
     // Set buttons 
