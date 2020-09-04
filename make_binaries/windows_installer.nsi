@@ -7,10 +7,10 @@ BrandingText "Jan Axelsson"
 !define APP_NAME "Pragma-git"
 !define COMP_NAME "Jan Axelsson"
 !define WEB_SITE "http://www.dicom2usb.com"
-!define COPYRIGHT "Author  © 2006"
+!define COPYRIGHT "Author  © 2020"
 !define DESCRIPTION "Application"
-!define INSTALLER_NAME "C:\Users\jan\Desktop\Nsisqssg\Output\Pragma-git\setup.exe"
-!define MAIN_APP_EXE "Pragma-git.exe"
+!define INSTALLER_NAME "C:\Users\jan\Desktop\Nsisqssg\Output\${APP_NAME}\setup.exe"
+!define MAIN_APP_EXE "${APP_NAME}.exe"
 !define INSTALL_TYPE "SetShellVarContext current"
 !define REG_ROOT "HKCU"
 !define REG_APP_PATH "Software\Microsoft\Windows\CurrentVersion\App Paths\${MAIN_APP_EXE}"
@@ -52,9 +52,9 @@ Section
     WriteUninstaller "$INSTDIR\Uninstall ${MAIN_APP_EXE}"
     
     # create shortcuts in the start menu and on the desktop
-    CreateShortCut "$SMPROGRAMS\Pragma-git.lnk" "$INSTDIR\${MAIN_APP_EXE}"
-    #CreateShortCut "$SMPROGRAMS\Uninstall Pragma-git.lnk" "$INSTDIR\Uninstall ${MAIN_APP_EXE}"
-    CreateShortCut "$DESKTOP\Pragma-git.lnk" "$INSTDIR\${MAIN_APP_EXE}"
+    CreateShortCut "$SMPROGRAMS\${APP_NAME}.lnk" "$INSTDIR\${MAIN_APP_EXE}"
+    #CreateShortCut "$SMPROGRAMS\Uninstall ${APP_NAME}.lnk" "$INSTDIR\Uninstall ${MAIN_APP_EXE}"
+    CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${MAIN_APP_EXE}"
 
 
     # REGISTRY SETTINGS
@@ -79,9 +79,9 @@ Section "Uninstall"
     RMDir /r $INSTDIR
     
     # delete the shortcuts
-    Delete "$SMPROGRAMS\Pragma-git.lnk"
-    Delete "$SMPROGRAMS\Uninstall Pragma-git.lnk"
-    Delete "$DESKTOP\Pragma-git.lnk"
+    Delete "$SMPROGRAMS\${APP_NAME}.lnk"
+    Delete "$SMPROGRAMS\Uninstall ${APP_NAME}.lnk"
+    Delete "$DESKTOP\${APP_NAME}.lnk"
     
     # REGISTRY SETTINGS
     DeleteRegKey ${REG_ROOT} "${REG_APP_PATH}"
