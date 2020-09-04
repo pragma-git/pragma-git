@@ -13,23 +13,29 @@ var os = require('os');
 var fs = require('fs');
 var mime = require('mime-types'); //
 
+const pathsep = require('path').sep;  // Os-dependent path separator
+
+var win;
 
 // Remember state
 var panes = 2;
 var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
-var SAVED = false; // Flag to show that save has been performed
+var SAVED = false; // Flag to show that save has been performed.
 
 // Read paths
-
 const ROOT = process.env.PWD;
 
-const BASE = nw.App.argv[0];   // name of a temporary file containing the common base for the merge
-const LOCAL = nw.App.argv[1];  // name of a temporary file containing the contents of the file on the current branch
-const REMOTE = nw.App.argv[2]; // name of a temporary file containing the contents of the file to be merged
-const MERGED = nw.App.argv[3]; // name of the file to which the merge tool should write the result
+const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
+const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
 
+process.chdir( SIGNALDIR);
+const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
+const LOCAL = loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
+const REMOTE = loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
+const MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 console.log('PATHS : ')
 console.log('$ROOT   = ' + ROOT);
 console.log('$BASE   = ' + BASE);
@@ -66,7 +72,7 @@ dv.panes = panes; // Initial value
 
 // Start initiated from html
 function injectIntoJs(document) {
-
+    win = gui.Window.get();
     
     cachedFile.BASE = loadFile(BASE);
     cachedFile.LOCAL = loadFile(LOCAL);
@@ -77,6 +83,7 @@ function injectIntoJs(document) {
     
     initUI();
 };
+
 function loadFile(filePath)  { 
     let content = "";
     try{
@@ -331,25 +338,28 @@ function finish( wayToFinish){
     
     switch(wayToFinish) {
         case 'cancel':  {
-            process.kill(process.ppid, 'SIGKILL'); // Error code 137
+            closeWindowNicely(1);
             break;
         }
         case 'close':  {
-            closeWindowNicely();
+            closeWindowNicely(0);
             break;
         }
         case 'save':  {
             save();
             SAVED=true;
-            closeWindowNicely();
+            closeWindowNicely(0);
             break;
         }
         case 'unloadWindow':  {
             // This function will be called when window is unloaded, regardless. 
             // 
-            if (!SAVED){
-                process.kill(process.ppid, 'SIGKILL'); // Error code 137
+            if (SAVED){
+                closeWindowNicely(0);
+            }else{
+                closeWindowNicely(1);
             }
+
             break;
         }
     }
@@ -371,21 +381,25 @@ function save(){
     }    
 }
 
-function closeWindowNicely(){
+function closeWindowNicely(exitCode){
     
-
-    gui.App.closeAllWindows();
-      
-    // Hide the window to give user the feeling of closing immediately
-    this.hide();
-
-    // If the new window is still open then close it.
-    if (win !== null) {
-      win.close(true)
+    // Write exit code to file for script to pick up
+    try{
+        fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+    }catch(err){
+        console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
+        console.log(err);
+        fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
     }
-
-    // After closing the new window, close the main window.
-    this.close(true);
+        
+    // Remove file, to let script know it has stopped
+    try {
+        fs.unlinkSync(SIGNALFILE)
+    
+    } catch(err) {
+        console.error(err)
+    }
+    win.close();
 }
 
 

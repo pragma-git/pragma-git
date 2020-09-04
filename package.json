@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@toast-ui/editor": "^2.3.1",
+    "chokidar": "^3.4.2",
     "codemirror": "^5.57.0",
     "diff-match-patch": "^1.0.5",
     "simple-git": "^2.11.0"

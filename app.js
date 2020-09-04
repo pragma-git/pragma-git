@@ -140,7 +140,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var gui = require("nw.gui");    
         var os = require('os');
         var fs = require('fs');
+        const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
+        
 
         var util = require('./util_module.js'); // Pragma-git common functions
     
@@ -191,7 +193,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
 
-
+    // Inititate listening to Pragma-merge start signal
+       const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
+       const watcher = chokidar.watch('file, dir, glob, or array', {
+          ignored: /(^|[\/\\])\../, // ignore dotfiles
+          persistent: true
+        });
+       watcher.add(SIGNALFILE);
+       watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
 
 // ---------
 // FUNCTIONS
@@ -1766,6 +1775,18 @@ async function _setMode( inputModeName){
     
 
     return newModeName;  // In case I want to use it with return variable
+}
+
+function startPragmaMerge(){
+    gui.Window.open('merge/pragma-merge.html', { 
+            id: 'settingsWindowId',
+            position: 'center',
+            width: 600,
+            height: 700,
+            title: 'Pragma-merge'
+        } 
+    );
+
 }
 
 // Git commands

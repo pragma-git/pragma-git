@@ -1,0 +1,27 @@
+#!/bin/bash
+
+TMP="$HOME/.Pragma-git/.tmp"
+mkdir "$TMP"
+
+RUNNING="$TMP/pragma-merge-running"  # Pragma-git uses this file to start Pragma-merge
+EXIT="$TMP/exit"
+
+echo $1 > "$TMP/first"
+echo $2 > "$TMP/second"
+echo $3 > "$TMP/third"
+echo $4 > "$TMP/fourth"
+
+
+# Run Pragma-merge
+touch "$RUNNING" 
+while [  -f "$RUNNING" ]
+do
+  echo 'waiting'
+  sleep 2 # or less like 0.2
+done
+
+# Exited
+EXITCODE=$(cat "$EXIT")
+rm "$EXIT"
+
+exit $EXITCODE
