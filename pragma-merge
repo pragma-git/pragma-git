@@ -11,13 +11,15 @@ echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"
 echo $4 > "$TMP/fourth"
 
+pwd > "$TMP/repo_path"
+
 
 # Run Pragma-merge
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
   echo 'waiting'
-  sleep 2 # or less like 0.2
+  sleep 1 
 done
 
 # Exited

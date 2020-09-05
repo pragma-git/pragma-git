@@ -11,7 +11,7 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
-var mime = require('mime-types'); //
+////var mime = require('mime-types'); //
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -25,13 +25,14 @@ var cachedFile = {};  // Struct to store content from files loaded
 var SAVED = false; // Flag to show that save has been performed.
 
 // Read paths
-const ROOT = process.env.PWD;
+//const ROOT = process.env.PWD;
 
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
 
 process.chdir( SIGNALDIR);
+const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");   
 const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
 const LOCAL = loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
 const REMOTE = loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
@@ -136,7 +137,7 @@ function initUI() {
     options = optionsTemplate;
     
     
-    options.mode = getMimeType(MERGED);
+    ////options.mode = getMimeType(MERGED);
     console.log('MIME-type = ' + options.mode);
     
     // Set state as set with clicky-buttons
