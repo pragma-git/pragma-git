@@ -55,7 +55,7 @@
     echo '=========================='
 
 
-    # Build
+    # Build All platforms
     ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
     --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
@@ -65,6 +65,11 @@
 
     #Options :
     # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+    
+        
+    # Make pragma-merge helper script executable
+    echo 'Make "pragma-merge" executable'
+    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge"
 
 
 #
@@ -74,6 +79,7 @@
     echo '======================'
     echo 'INSTALLER MACOS 64-BIT'
     echo '======================'
+
 
     # Move .app to temporary folder
     mkdir ../dist/temp-macos
