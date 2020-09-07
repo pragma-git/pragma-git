@@ -3,18 +3,31 @@
 TMP="$HOME/.Pragma-git/.tmp"
 mkdir "$TMP"
 
-RUNNING="$TMP/pragma-merge-running"  # Pragma-git uses this file to start Pragma-merge
-EXIT="$TMP/exit"
+RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
+EXIT="$TMP/exit"                     # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
+# 
 echo $1 > "$TMP/first"
 echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"
 echo $4 > "$TMP/fourth"
 
-pwd > "$TMP/repo_path"
+# Repo path
+if [ -z ${GIT_DIR+x} ]
+then
+    # Mac or Linux  
+    echo "Mac or Linux" > "$TMP/mergelog.txt"
+    echo "\"$(pwd)\"" > "$TMP/repo_path"
+    env >> "$TMP/mergelog.txt"
+else
+    # Windows
+    echo "WINDOWS" > "$TMP/mergelog.txt"
+    #echo "\"$(pwd -W | sed 's/\//\\/g' )\"" > "$TMP/repo_path"  # Win32 path with "/", replace with "\"
+    echo $(pwd -W) > "$TMP/repo_path"
+    env >> "$TMP/mergelog.txt"
+fi
 
-
-# Run Pragma-merge
+# Run Pragma-merge while $RUNNING exists (removed by Pragma-merge when closed)
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
@@ -22,7 +35,7 @@ do
   sleep 1 
 done
 
-# Exited
+# Exited Pragma-merge
 EXITCODE=$(cat "$EXIT")
 rm "$EXIT"
 

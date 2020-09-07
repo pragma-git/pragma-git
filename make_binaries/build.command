@@ -129,6 +129,7 @@
     -DEXEFOLDER=$DIR \
     -DOUTPUT='win64\Pragma-git-installer.exe' \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
+    -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
     windows_installer.nsi
 
     echo ' '
@@ -143,6 +144,7 @@
     -DEXEFOLDER=$DIR \
     -DOUTPUT='win32\Pragma-git-installer.exe' \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
+    -DPROGRAMFILESFOLDER='$PROGRAMFILES32' \
     windows_installer.nsi
     
 

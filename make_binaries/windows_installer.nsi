@@ -24,7 +24,8 @@ BrandingText "Jan Axelsson"
 OutFile ..\dist\${OUTPUT}
 
 # set the installation directory
-InstallDir "$PROGRAMFILES\${APP_NAME}\"
+#InstallDir "$PROGRAMFILES64\${APP_NAME}\"
+InstallDir "${PROGRAMFILESFOLDER}\${APP_NAME}\"
 
 # app dialogs
 !insertmacro MUI_PAGE_WELCOME
