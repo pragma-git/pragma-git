@@ -2,6 +2,8 @@
 
 const myModule = {}
 
+var fs = require('fs');
+
 // Work on array with fields
 myModule.cleanDuplicates = function ( myArray, objectField ){ 
     // Removes all elements in "myArray"  where the field "objectField" are duplicates
@@ -75,6 +77,13 @@ myModule.mkdir = function (dir){
         fs.mkdirSync(dir);
     }
 }
+
+myModule.rm = function (f){
+    if (fs.existsSync(f)){
+        fs.unlinkSync(f);
+    }
+}
+
 
 // Export
 module.exports = myModule 

@@ -27,6 +27,7 @@ var SAVED = false; // Flag to show that save has been performed.
 // Read paths
 //const ROOT = process.env.PWD;
 
+// These three files are also defined in app.js
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';

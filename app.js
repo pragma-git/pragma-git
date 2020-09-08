@@ -156,9 +156,22 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
  
       
     // Files & folders
-        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
-        var settingsFile = settingsDir + pathsep + 'repo.json';     
-        let notesDir = settingsDir + pathsep + 'Notes'; mkdir(notesDir);
+        const STARTDIR = process.cwd(); // Folder where this file was started
+        const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInMergeTool()
+    
+        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
+        mkdir( settingsDir);
+        
+        var settingsFile = settingsDir + pathsep + 'repo.json';    
+         
+        let notesDir = settingsDir + pathsep + 'Notes'; 
+        mkdir(notesDir);
+        
+        // Pragma-merge : Signalling files and folders 
+        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+        //const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  // Set below
+        const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
+        
         
     
     // State variables
@@ -201,7 +214,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         });
        watcher.add(SIGNALFILE);
        watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
-
+       
+    // Initiate pragma-git as default diff and merge tool
+        gitDefineBuiltInMergeTool();
+    
+    
 // ---------
 // FUNCTIONS
 // ---------
@@ -1817,6 +1834,74 @@ async function gitIsInstalled(){
 
     return isInstalled;
 
+}
+async function gitDefineBuiltInMergeTool(){
+    // Command git config --global --replace-all  include.path ~/.Pragma-git/pragma-git-config .*pragma-git.*
+    // where the include files are named "pragma-git-config_XXX" (XXX=mac,win, linux)
+    // The paths are relative installed Pragma-git
+    //
+    // Note that the internal diff tool is called pragma-git from a user's perspective
+    // but the name is really pragma-merge (but the user doesn't know about this, since pragma-merge is a built-in part of Pragma-git)
+    
+    
+    // Set up signalling folder  +  remove files that may interfere if left after a crash
+    util.mkdir(SIGNALDIR); // In case it does not exist yet
+    try{
+        
+    }catch(err){
+        
+    }
+    util.rm(SIGNALFILE);     // rm 'pragma-merge-running'
+    util.rm(EXITSIGNALFILE); // rm 'exit'
+    
+    
+    // Find config file
+    let configfile = "";
+    switch (process.platform) {
+      case 'darwin': {
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_mac';
+        
+        // Special DEV
+        if ( STARTDIR.startsWith('/Users') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_mac';
+        }
+        
+        break;
+      }
+      case 'linux': {
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_linux';
+        break;
+      }
+      case 'win32': {
+        // Note : called win32 also for 64-bit  
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
+        break;
+      }
+    }
+    console.log('Config file = ' + configfile);
+      
+    // Git command
+    let regex = '.*pragma-git.*'
+    command = [  
+        'config',  
+        '--global',
+        '--replace-all',
+        'include.path',
+        configfile,
+        regex
+    ];  
+      
+    // Set in global git .config file
+    try{
+        await simpleGit(  )
+        .raw( command , onConfig);
+    }catch(err){
+        console.log('Failed setting internal merge tool');
+        console.log(err);
+    }  
+    function onConfig(err, result) {console.log(result); console.log(err); };
+
+    
 }
 async function gitStatus(){
     // Determine if changed files (from git status)

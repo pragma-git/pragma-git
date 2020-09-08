@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 TMP="$HOME/.Pragma-git/.tmp"
 mkdir "$TMP"
@@ -13,11 +13,11 @@ echo $3 > "$TMP/third"
 echo $4 > "$TMP/fourth"
 
 # Repo path
-if [ -z ${GIT_DIR+x} ]
+if [ -z ${SYSTEMDRIVE+x} ]
 then
     # Mac or Linux  
     echo "Mac or Linux" > "$TMP/mergelog.txt"
-    echo "\"$(pwd)\"" > "$TMP/repo_path"
+    echo $(pwd) > "$TMP/repo_path"
     env >> "$TMP/mergelog.txt"
 else
     # Windows
