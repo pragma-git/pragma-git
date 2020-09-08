@@ -43,6 +43,9 @@
         h2{
             text-align:left; 
         }
+        h4{
+            margin-block-end: auto;
+        }
         .instructHeader{
             color: CornflowerBlue; 
         }
@@ -232,7 +235,21 @@
 
                 
             <h4>Git Settings</h4>  
-            
+               
+
+                <table>            
+                  <tr style="border: none;">
+                        <td>
+                            <label for="authorName"> Author's name :</label><br>
+                            <input id="authorName" type="text" size="30"/>
+                        </td>
+                        <td>                
+                            <label for="authorEmail"> Author's email :</label><br>
+                            <input id="authorEmail" type="text" size="30"/>
+                        </td>
+                    </tr>
+                </table>  
+                            
                 <!--  Force commit before branch change -->
                 <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="forceCommitBeforeBranchChange"> Branch change not allowed, for changed files</label><br>
@@ -248,20 +265,7 @@
                 <!--  --no-ff merge (gitflow recommends this) -->
                 <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br><br>
-                
-
-                <table>            
-                  <tr style="border: none;">
-                        <td>
-                            <label for="authorName"> Author's name :</label><br>
-                            <input id="authorName" type="text" size="30"/>
-                        </td>
-                        <td>                
-                            <label for="authorEmail"> Author's email :</label><br>
-                            <input id="authorEmail" type="text" size="30"/>
-                        </td>
-                    </tr>
-                </table>             
+            
              
               
             <h4>Git External tools</h4>  
@@ -270,11 +274,11 @@
                     <tr style="border: none;">
                         <td>
                             <label for="gitDiffTool"> Diff tool :</label><br>
-                            <input id="gitDiffTool" type="text" size="30" /><br><br>
+                            <input id="gitDiffTool" type="text" size="30" />
                         </td>
                         <td>                
                             <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/><br><br>
+                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
                         </td>
                     </tr>
                     
