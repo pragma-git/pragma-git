@@ -268,7 +268,7 @@
             
              
               
-            <h4>Git External tools</h4>  
+            <h4>Git External tools (built-in if empty)</h4>  
 
                 <table>
                     <tr style="border: none;">
@@ -464,6 +464,16 @@
                             
                             
                         <dt><b>Git External tools</b></dt>
+                            <p> Pragma-git has a built-in diff and merge tool.  
+                            If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
+                             If you have your favorite Diff and Merge tool it may be used instead. 
+                             <br>
+                            There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+                            are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+                            Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
+                            The settings for external tools are :
+                             <br>
+                            
                             <br>
                             <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                             <br>
@@ -482,9 +492,15 @@
                        
                 <hr>                
                 <b>Information </b><br>
-                 Your system path as seen by Pragma-git :<br>
-                <code><span id='path' style="font-size: 9pt;"></span>  </code>  
+                 Your system's path as seen by Pragma-git :<br>
+                <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>   
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
                 <br>
             
         </div><!-- foldable content -->

@@ -1280,6 +1280,7 @@ async function _update(){
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
             localState.settings = false;
             updateWithNewSettings();
+            saveSettings();
         }
      
     //
@@ -1524,33 +1525,6 @@ async function _update(){
     // return
         return true
 
-    //
-    // Local functions
-    //
-     function updateWithNewSettings(){
-        //Called when left settings window
-        //
-        // NOTE : To implement a new setting that affects the gui, 
-        // add code to these places :
-        // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
-        // - app.js/loadSettings                           -- applies when starting app.js
-        // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
-        // - settings.html                                 -- where the form element for the setting is shown
-        
-        
-        win.setAlwaysOnTop( state.alwaysOnTop );
-        
-        // For systems that have multiple workspaces (virtual screens)
-        if ( win.canSetVisibleOnAllWorkspaces() ){
-            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-        }
-        
-        // Update path
-        setPath( state.tools.addedPath);
-        
-        // Save settings
-        saveSettings();
-    }
 
 };
 async function _setMode( inputModeName){
@@ -2690,8 +2664,8 @@ function loadSettings(settingsFile){
     if ( state.repos.length == 0){
         state.repoNumber = -1;
     }
+
         
-    
     // Clean duplicate in state.repos based on name "localFolder"
     state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
     console.log('State after cleaning duplicates');
@@ -2716,24 +2690,52 @@ function loadSettings(settingsFile){
         win = gui.Window.get();
         win.moveTo( state.position.x, state.position.y);
         win.resizeTo( state.position.width, state.position.height);
-        
-        // For systems that have multiple workspaces (virtual screens)
-        if ( win.canSetVisibleOnAllWorkspaces() ){
-            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-        }
 
-        
+      
     }catch(err){
         console.log('Error setting window position and size');
         console.log(err);
     }
-    
-    // Path
-    setPath( state.tools.addedPath);
 
+
+    // Update using same functions as when leaving settings window
+    updateWithNewSettings();
 
     
     return state;
+}
+function updateWithNewSettings(){
+    //Called when left settings window
+    //
+    // NOTE : To implement a new setting that affects the gui, 
+    // add code to these places :
+    // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
+    // - app.js/loadSettings                           -- applies when starting app.js
+    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+    // - settings.html                                 -- where the form element for the setting is shown
+    
+    
+    win.setAlwaysOnTop( state.alwaysOnTop );
+    
+    // For systems that have multiple workspaces (virtual screens)
+    if ( win.canSetVisibleOnAllWorkspaces() ){
+        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+    }
+    
+    // Update path
+    setPath( state.tools.addedPath);
+
+    
+    // Blank external diff -> use built in pragma-merge
+    if ( state.tools.difftool.trim().length == 0 ){
+        state.tools.difftool = "pragma-git";
+    }      
+    
+    // Blank external merge -> use built in pragma-merge
+    if ( state.tools.mergetool.trim().length == 0 ){
+        state.tools.mergetool = "pragma-git";
+    }   
+
 }
 
 // Dev test
