@@ -24,6 +24,7 @@
     "chokidar": "^3.4.2",
     "codemirror": "^5.57.0",
     "diff-match-patch": "^1.0.5",
+    "mime-types": "^2.1.27",
     "simple-git": "^2.11.0"
   },
   "build": {
