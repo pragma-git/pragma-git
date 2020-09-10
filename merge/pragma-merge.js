@@ -11,7 +11,7 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
-////var mime = require('mime-types'); //
+var mime = require('mime-types'); // Mime
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -138,7 +138,7 @@ function initUI() {
     options = optionsTemplate;
     
     
-    ////options.mode = getMimeType(MERGED);
+    options.mode = getMimeType(MERGED); // Mime
     console.log('MIME-type = ' + options.mode);
     
     // Set state as set with clicky-buttons
