@@ -140,7 +140,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var gui = require("nw.gui");    
         var os = require('os');
         var fs = require('fs');
+        const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
+        
 
         var util = require('./util_module.js'); // Pragma-git common functions
     
@@ -154,9 +156,22 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
  
       
     // Files & folders
-        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; mkdir( settingsDir);
-        var settingsFile = settingsDir + pathsep + 'repo.json';     
-        let notesDir = settingsDir + pathsep + 'Notes'; mkdir(notesDir);
+        const STARTDIR = process.cwd(); // Folder where this file was started
+        const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInMergeTool()
+    
+        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
+        mkdir( settingsDir);
+        
+        var settingsFile = settingsDir + pathsep + 'repo.json';    
+         
+        let notesDir = settingsDir + pathsep + 'Notes'; 
+        mkdir(notesDir);
+        
+        // Pragma-merge : Signalling files and folders 
+        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+        //const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  // Set below
+        const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
+        
         
     
     // State variables
@@ -191,8 +206,19 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
 
-
-
+    // Inititate listening to Pragma-merge start signal
+       const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
+       const watcher = chokidar.watch('file, dir, glob, or array', {
+          ignored: /(^|[\/\\])\../, // ignore dotfiles
+          persistent: true
+        });
+       watcher.add(SIGNALFILE);
+       watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
+       
+    // Initiate pragma-git as default diff and merge tool
+        gitDefineBuiltInMergeTool();
+    
+    
 // ---------
 // FUNCTIONS
 // ---------
@@ -1254,6 +1280,7 @@ async function _update(){
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
             localState.settings = false;
             updateWithNewSettings();
+            saveSettings();
         }
      
     //
@@ -1498,33 +1525,6 @@ async function _update(){
     // return
         return true
 
-    //
-    // Local functions
-    //
-     function updateWithNewSettings(){
-        //Called when left settings window
-        //
-        // NOTE : To implement a new setting that affects the gui, 
-        // add code to these places :
-        // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
-        // - app.js/loadSettings                           -- applies when starting app.js
-        // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
-        // - settings.html                                 -- where the form element for the setting is shown
-        
-        
-        win.setAlwaysOnTop( state.alwaysOnTop );
-        
-        // For systems that have multiple workspaces (virtual screens)
-        if ( win.canSetVisibleOnAllWorkspaces() ){
-            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-        }
-        
-        // Update path
-        setPath( state.tools.addedPath);
-        
-        // Save settings
-        saveSettings();
-    }
 
 };
 async function _setMode( inputModeName){
@@ -1768,6 +1768,18 @@ async function _setMode( inputModeName){
     return newModeName;  // In case I want to use it with return variable
 }
 
+function startPragmaMerge(){
+    gui.Window.open('merge/pragma-merge.html', { 
+            id: 'settingsWindowId',
+            position: 'center',
+            width: 600,
+            height: 700,
+            title: 'Pragma-merge'
+        } 
+    );
+
+}
+
 // Git commands
 async function gitIsInstalled(){
     var isInstalled = false;
@@ -1796,6 +1808,74 @@ async function gitIsInstalled(){
 
     return isInstalled;
 
+}
+async function gitDefineBuiltInMergeTool(){
+    // Command git config --global --replace-all  include.path ~/.Pragma-git/pragma-git-config .*pragma-git.*
+    // where the include files are named "pragma-git-config_XXX" (XXX=mac,win, linux)
+    // The paths are relative installed Pragma-git
+    //
+    // Note that the internal diff tool is called pragma-git from a user's perspective
+    // but the name is really pragma-merge (but the user doesn't know about this, since pragma-merge is a built-in part of Pragma-git)
+    
+    
+    // Set up signalling folder  +  remove files that may interfere if left after a crash
+    util.mkdir(SIGNALDIR); // In case it does not exist yet
+    try{
+        
+    }catch(err){
+        
+    }
+    util.rm(SIGNALFILE);     // rm 'pragma-merge-running'
+    util.rm(EXITSIGNALFILE); // rm 'exit'
+    
+    
+    // Find config file
+    let configfile = "";
+    switch (process.platform) {
+      case 'darwin': {
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_mac';
+        
+        // Special DEV
+        if ( STARTDIR.startsWith('/Users') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_mac';
+        }
+        
+        break;
+      }
+      case 'linux': {
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_linux';
+        break;
+      }
+      case 'win32': {
+        // Note : called win32 also for 64-bit  
+        configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
+        break;
+      }
+    }
+    console.log('Config file = ' + configfile);
+      
+    // Git command
+    let regex = '.*pragma-git.*'
+    command = [  
+        'config',  
+        '--global',
+        '--replace-all',
+        'include.path',
+        configfile,
+        regex
+    ];  
+      
+    // Set in global git .config file
+    try{
+        await simpleGit(  )
+        .raw( command , onConfig);
+    }catch(err){
+        console.log('Failed setting internal merge tool');
+        console.log(err);
+    }  
+    function onConfig(err, result) {console.log(result); console.log(err); };
+
+    
 }
 async function gitStatus(){
     // Determine if changed files (from git status)
@@ -2584,8 +2664,8 @@ function loadSettings(settingsFile){
     if ( state.repos.length == 0){
         state.repoNumber = -1;
     }
+
         
-    
     // Clean duplicate in state.repos based on name "localFolder"
     state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
     console.log('State after cleaning duplicates');
@@ -2610,24 +2690,52 @@ function loadSettings(settingsFile){
         win = gui.Window.get();
         win.moveTo( state.position.x, state.position.y);
         win.resizeTo( state.position.width, state.position.height);
-        
-        // For systems that have multiple workspaces (virtual screens)
-        if ( win.canSetVisibleOnAllWorkspaces() ){
-            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-        }
 
-        
+      
     }catch(err){
         console.log('Error setting window position and size');
         console.log(err);
     }
-    
-    // Path
-    setPath( state.tools.addedPath);
 
+
+    // Update using same functions as when leaving settings window
+    updateWithNewSettings();
 
     
     return state;
+}
+function updateWithNewSettings(){
+    //Called when left settings window
+    //
+    // NOTE : To implement a new setting that affects the gui, 
+    // add code to these places :
+    // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
+    // - app.js/loadSettings                           -- applies when starting app.js
+    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+    // - settings.html                                 -- where the form element for the setting is shown
+    
+    
+    win.setAlwaysOnTop( state.alwaysOnTop );
+    
+    // For systems that have multiple workspaces (virtual screens)
+    if ( win.canSetVisibleOnAllWorkspaces() ){
+        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+    }
+    
+    // Update path
+    setPath( state.tools.addedPath);
+
+    
+    // Blank external diff -> use built in pragma-merge
+    if ( state.tools.difftool.trim().length == 0 ){
+        state.tools.difftool = "pragma-git";
+    }      
+    
+    // Blank external merge -> use built in pragma-merge
+    if ( state.tools.mergetool.trim().length == 0 ){
+        state.tools.mergetool = "pragma-git";
+    }   
+
 }
 
 // Dev test

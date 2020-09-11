@@ -28,6 +28,13 @@ as well as between branches
 
 **setup :** create_pull_conflict.command
 
+**settings :**
+
+/tmp/threeBranches,
+
+remote =
+<https://JanAxelssonTest:01e0b46efb5c37ceba6e72e7433a7e0863e016c7@github.com/JanAxelssonTest/Pull_test_repo>
+
 **Pragma-git :** Stand in "master". Pull button should be visible; press it.
 
 **Expected :** /tmp/threeBranches is in conflict with remote master.
