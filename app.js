@@ -220,7 +220,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     
     
 // ---------
-// FUNCTIONS
+// FUNCTIONS 
 // ---------
 
 // Main functions
