@@ -1940,13 +1940,14 @@ async function gitShow(commit){
     
     try{
         // Read status
-        await simpleGit(state.repos[state.repoNumber].localFolder).show( ['--name-status','--oneline',hash], onWhatChanged);
+        hash = hash + '^1' + '..' + hash; // compare first parent with current commit
+        await simpleGit(state.repos[state.repoNumber].localFolder).diff( ['--name-status','--oneline', hash], onWhatChanged);
         function onWhatChanged(err, result){ console.log(result); showStatus = result } 
         console.log('fileStatus -- hash = ' + hash);
         
         let splitLines = showStatus.split(/\r?\n/); 
         
-        for (let i = 1; i < splitLines.length; i++) { 
+        for (let i = 0; i < splitLines.length; i++) { 
             let line = splitLines[i];  // Example "M       listChanged.html"
             
             if (line.length > 0)  // Last line may be empty from the git show command
@@ -1959,17 +1960,23 @@ async function gitShow(commit){
 
                     case "A" :
                         outputStatus.added.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
                     
                     case "D" :
                         outputStatus.deleted.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
                     
                     case "M" :
                         outputStatus.modified.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
+                        
+                    default :
+                        break; // catches if hashes are listed (as in a merge)
                 }
-                outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
+                //outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                 
                 console.log('split = ' + line);
             }
