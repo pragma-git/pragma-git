@@ -191,7 +191,7 @@ async function _callback( name, event, event2){
             commit = event;
             file = event2;
             
-            file = file.replace('/','//');
+            //file = file.replace('/','//');
             
             tool = state.tools.difftool;
 

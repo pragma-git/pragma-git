@@ -43,6 +43,9 @@
         h2{
             text-align:left; 
         }
+        h4{
+            margin-block-end: auto;
+        }
         .instructHeader{
             color: CornflowerBlue; 
         }
@@ -115,7 +118,7 @@
           content: '\002B'; # Unicode character for "plus" sign (+) 
           color: white;
           font-weight: bold;
-          float: right;
+          float: left;
           margin-left: 5px;
         }
         
@@ -158,7 +161,7 @@
        
             
     <!--  REPO SETTINGS -- foldable header--> 
-    <button class="collapsible" id="repoSettings">Repository settings :</button> 
+    <button class="collapsible" id="repoSettings">&nbsp; Repository settings :</button> 
                 
         <div class="content" id="foldableDiv1" > 
         <h3>Repository table </h3>  
@@ -216,7 +219,7 @@
 
        
     <!--  SOFTWARE SETTINGS -- foldable header--> 
-    <button class="collapsible" id="softwareSettings">Software settings :</button> 
+    <button class="collapsible" id="softwareSettings">&nbsp; Software settings :</button> 
                 
         <div class="content">              
                 
@@ -232,7 +235,21 @@
 
                 
             <h4>Git Settings</h4>  
-            
+               
+
+                <table>            
+                  <tr style="border: none;">
+                        <td>
+                            <label for="authorName"> Author's name :</label><br>
+                            <input id="authorName" type="text" size="30"/>
+                        </td>
+                        <td>                
+                            <label for="authorEmail"> Author's email :</label><br>
+                            <input id="authorEmail" type="text" size="30"/>
+                        </td>
+                    </tr>
+                </table>  
+                            
                 <!--  Force commit before branch change -->
                 <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="forceCommitBeforeBranchChange"> Branch change not allowed, for changed files</label><br>
@@ -248,33 +265,20 @@
                 <!--  --no-ff merge (gitflow recommends this) -->
                 <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br><br>
-                
-
-                <table>            
-                  <tr style="border: none;">
-                        <td>
-                            <label for="authorName"> Author's name :</label><br>
-                            <input id="authorName" type="text" size="30"/>
-                        </td>
-                        <td>                
-                            <label for="authorEmail"> Author's email :</label><br>
-                            <input id="authorEmail" type="text" size="30"/>
-                        </td>
-                    </tr>
-                </table>             
+            
              
               
-            <h4>Git External tools</h4>  
+            <h4>Git tools (built-in if empty)</h4>  
 
                 <table>
                     <tr style="border: none;">
                         <td>
                             <label for="gitDiffTool"> Diff tool :</label><br>
-                            <input id="gitDiffTool" type="text" size="30" /><br><br>
+                            <input id="gitDiffTool" type="text" size="30" />
                         </td>
                         <td>                
                             <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/><br><br>
+                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
                         </td>
                     </tr>
                     
@@ -293,7 +297,7 @@
                 <br>
         
     <!--  INSTRUCTIONS  -->     
-    <button class="collapsible" id="instructions">Instructions</button>
+    <button class="collapsible" id="instructions">&nbsp; Instructions</button>
         <div class="content"> 
             
              <!-------------------------------------------------------------------------------------------->  
@@ -459,7 +463,17 @@
                             <br>
                             
                             
-                        <dt><b>Git External tools</b></dt>
+                        <dt><b>Git tools</b></dt>
+                            <p> Pragma-git has a built-in diff and merge tool.  
+                            If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
+                             If you have your favorite Diff and Merge tool it may be used instead. 
+                             <br>
+                            There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+                            are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+                            Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
+                            The settings for external tools are :
+                             <br>
+                            
                             <br>
                             <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                             <br>
@@ -478,9 +492,15 @@
                        
                 <hr>                
                 <b>Information </b><br>
-                 Your system path as seen by Pragma-git :<br>
-                <code><span id='path' style="font-size: 9pt;"></span>  </code>  
+                 Your system's path as seen by Pragma-git :<br>
+                <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>   
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
                 <br>
             
         </div><!-- foldable content -->

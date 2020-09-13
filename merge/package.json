@@ -1,49 +1,41 @@
 {
-  "name": "Pragma-git",
+  "name": "Pragma-merge",
   "description": "Chrome platform app.",
-  "version": "0.5.0",
-  "main": "app.html",
+  "version": "0.4.1",
+  "main": "pragma-merge.html",
   "author": "Jan Axelsson",
   "license": "MIT",
   "window": {
-    "show": false,
-    "toolbar": false,
-    "frame": false,
+    "id": "pragma-merge-window-id",
     "position": "center",
-    "width": 460,
-    "height": 140,
+    "width": 700,
+    "height": 540,
     "min_width": 350,
     "min_height": 140,
-    "icon": "./images/icon.png"
-  },
-  "scripts": {
-    "start": "nw ."
+    "icon": "../images/icon.png"
   },
   "dependencies": {
-    "@toast-ui/editor": "^2.3.1",
-    "chokidar": "^3.4.2",
     "codemirror": "^5.57.0",
     "diff-match-patch": "^1.0.5",
-    "mime-types": "^2.1.27",
-    "simple-git": "^2.11.0"
+    "mime-types": "^2.1.27"
   },
   "build": {
     "nwFlavor": "sdk",
     "nwVersion": "v0.47.2",
     "mac": {
-      "displayName": "Pragma-git",
+      "displayName": "Pragma-merge",
       "copyright": "copyright",
-      "icon": "./images/icon.icns",
+      "icon": "../images/icon.icns",
       "plistStrings": {
         "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
         "CFBundleDocumentTypes": []
       }
     },
     "win": {
-      "productName": "Pragma-git",
+      "productName": "Pragma-merge",
       "companyName": "Jan Axelsson",
       "copyright": "copyright",
-      "icon": "./images/icon.ico"
+      "icon": "../images/icon.ico"
     },
     "nsis": {
       "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",

@@ -1,0 +1,3 @@
+[mergetool "pragma-git"]
+    cmd = "$ProgramW6432/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
+	trustExitCode = true    

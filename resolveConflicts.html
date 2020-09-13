@@ -56,7 +56,7 @@
           content: '\002B'; # Unicode character for "plus" sign (+) 
           color: white;
           font-weight: bold;
-          float: right;
+          float: left;
           margin-left: 5px;
         }
         
@@ -81,7 +81,7 @@
     <h2>Resolve Conflicts</h2>
     
     <!--  1) KEEP OR DELETE -->     
-    <button class="collapsible" id="collapsibleUnsure">1) Select files to keep</button>
+    <button class="collapsible" id="collapsibleUnsure">&nbsp; 1) Select files to keep</button>
     <div class="content">    
         <p>Pragma-git could not determine if the file should be kept or deleted. 
         Checked files will be kept. Un-checked will be deleted.
@@ -106,7 +106,7 @@
     </div><br>
     
     <!--  2) CONFLICTING FILES --> 
-    <button class="collapsible" id="collapsibleConflict">2) Conflicting files :</button>
+    <button class="collapsible" id="collapsibleConflict">&nbsp; 2) Conflicting files :</button>
     <div class="content">
         <p>This step cannot be done if there are any files listed in step 1) above.
         </p>    
@@ -137,7 +137,7 @@
 
     
     <!--  3) CONFLICTS RESOLVED  --> 
-    <button class="collapsible" id="collapsibleResolved">3) Accept changes</button>
+    <button class="collapsible" id="collapsibleResolved">&nbsp; 3) Accept changes</button>
     <div class="content">    
         <p>This last step removes different backup files, and accepts the changes in previous steps.  
         You may also undo the whole merge.
@@ -167,7 +167,7 @@
     
 
     <!--  INSTRUCTIONS  -->     
-    <button class="collapsible" id="collapsibleConflict">Instructions</button>
+    <button class="collapsible" id="collapsibleConflict">&nbsp; Instructions</button>
     <div class="content">
         
         <p>You are in this window because there are file conflicts.  This could be because the file has been deleted or modified in one place, or

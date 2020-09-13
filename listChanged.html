@@ -83,7 +83,7 @@
           content: '\002B'; # Unicode character for "plus" sign (+) 
           color: white;
           font-weight: bold;
-          float: right;
+          float: left;
           margin-left: 5px;
         }
         
@@ -112,7 +112,7 @@
     </p>
     
     <!--  CHANGED FILES -- this title is changed in listChanges.js if history mode--> 
-    <button class="collapsible" id="listFiles">Files that will be stored (checkboxed):</button>  <!--  History mode : "Files changed since previous revision : --> 
+    <button class="collapsible" id="listFiles">&nbsp; Files that will be stored (checkboxed):</button>  <!--  History mode : "Files changed since previous revision : --> 
     
  
     <div class="content">
@@ -120,7 +120,8 @@
         <table style="width:100%"> 
             <thead><tr>
                 <th class="path">Changed files</th>
-                <th class="path"> <span id="diffAllSpan" style="color: blue; cursor: pointer" onclick="_callback('diffLinkAll',this)"> (diff all files) </span>  </th> 
+                <th class="path">  <span id="diffAllSpan">  </span></th> 
+                <!--  <th class="path"> <span id="diffAllSpan" style="color: blue; cursor: pointer" onclick="_callback('diffLinkAll',this)"> (diff all files) </span>  </th>  --> 
             </tr></thead>
             <tbody id="listFilesTableBody" >
             </tbody>
@@ -141,7 +142,7 @@
 
         
     <!--  INSTRUCTIONS FOLDABLE HEADER--> 
-    <button class="collapsible" id="instructions">Instructions :</button>
+    <button class="collapsible" id="instructions">&nbsp; Instructions :</button>
     
     <div class="content">
         
@@ -176,7 +177,7 @@
             <p><b>Other file operations </b>: </p>     
               
             <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
-            <p><b>(diff)</b> opens the external diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
+            <p><b>(diff)</b> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
             <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
             <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
             
@@ -205,7 +206,8 @@
             </dl>
   
               
-            <p><b>(diff)</b> opens the external diff viewer, and shows how the file changed between this and previous revision.  Requires external diff viewer defined in settings</p>
+            <p><b>(diff)</b> opens the diff viewer, and shows how the file changed between this and previous revision.  
+            Uses the built-in diff viewer, or an external viewer defined in settings</p>
     
     
         </div>        
