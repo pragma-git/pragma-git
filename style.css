@@ -166,7 +166,8 @@ div#message-wrapper{
 
 
 .top-titlebar-repo-text,
-.top-titlebar-branch-text{
+.top-titlebar-branch-text,
+.top-titlebar-branch-arrow{
   display:inline-block;
   font-family: Arial;
   font-size: 11pt;

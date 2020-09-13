@@ -253,7 +253,28 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-branch': {
-        branchClicked(true);
+        branchClicked(true, event); // 'menu' or 'cycle'
+        break;
+      }
+      case 'clickedBranchContextualMenu': { 
+        console.log('Selected branch = ' + event.selectedBranch);
+        let branchName = event.selectedBranch;
+        
+        // Checkout local branch
+        try{
+            await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+            function onCheckout(err, result){console.log(result)} 
+
+        }catch(err){        
+            console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
+            console.log(err);
+        }  
+        
+        _setMode('UNKNOWN');
+
+        // Reset some variables
+        localState.historyNumber = -1;
+        
         break;
       }
       case 'clicked-notes':{
@@ -565,7 +586,7 @@ async function _callback( name, event){
         
         _setMode('UNKNOWN');
     }
-    async function branchClicked( detectDetachedBranch ){
+    async function branchClicked( detectDetachedBranch, type){
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
         
         // Determine status of local repository
@@ -644,24 +665,75 @@ async function _callback( name, event){
                 console.log(err);
             }
             
-            // Cycle through local branches
-            localState.branchNumber = localState.branchNumber + 1;
-            var numberOfBranches = branchList.length;
-            if (localState.branchNumber >= numberOfBranches){
-                localState.branchNumber = 0;
+            //
+            // TODO : as is, this routine can be called with intention to 1) chose branch from a menu, 2) cycle branches. How to know selected ?
+            //
+            
+            //
+            // Show branch menu
+            //
+            if (type == 'menu'){
+                var menu = new gui.Menu();
+                let menuItems = branchList;
+                
+                let currentBranch = status_data.current;
+        
+                // Add context menu title-row
+                menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                        
+                // Add names of all branches
+                for (var i = 0; i < menuItems.length; ++i) {
+                    if (currentBranch != menuItems[i]){
+                        let myEvent = [];
+                        myEvent.selectedBranch = menuItems[i];
+                        myEvent.currentBranch = currentBranch;
+                        menu.append(
+                            new gui.MenuItem(
+                                { 
+                                    label: menuItems[i], 
+                                    click: () => { _callback('clickedBranchContextualMenu',myEvent);} 
+                                } 
+                            )
+                        );
+                        console.log(menuItems[i]);
+                    }else{
+                        console.log('Skipped current branch = ' + menuItems[i]);
+                    }
+        
+                }
+
+        
+                // Popup as context menu
+                let pos = document.getElementById("top-titlebar-branch-text").getBoundingClientRect();
+                await menu.popup( Math.trunc(pos.left),24);
+                    
+                return // BAIL OUT
             }
-            var branchName = branchList[localState.branchNumber];
+
+            
+            //
+            // Cycle through local branches
+            //
+            if (type == 'cycle'){            
+                localState.branchNumber = localState.branchNumber + 1;
+                var numberOfBranches = branchList.length;
+                if (localState.branchNumber >= numberOfBranches){
+                    localState.branchNumber = 0;
+                }
+                var branchName = branchList[localState.branchNumber];
     
         
-            // Checkout local branch
-            try{
-                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
-                function onCheckout(err, result){console.log(result)} 
-
-            }catch(err){        
-                console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
-                console.log(err);
-            }  
+                // Checkout local branch
+                try{
+                    await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+                    function onCheckout(err, result){console.log(result)} 
+    
+                }catch(err){        
+                    console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
+                    console.log(err);
+                } 
+            } 
         }
     
         console.log(branchList);
@@ -786,7 +858,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup(pos.left, pos.top + 24);
+        await menu.popup( Math.trunc(pos.left),24);
                 
 
     }
@@ -832,7 +904,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup(pos.left, pos.top + 24);
+        await menu.popup( Math.trunc(pos.left),24);
                 
 
     }
@@ -1426,7 +1498,7 @@ async function _update(){
                 
             case 'NO_FILES_TO_COMMIT': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 setStatusBar( fileStatusString( status_data));
                 
                 // If not correct mode, fix :
@@ -1439,14 +1511,14 @@ async function _update(){
             case 'CHANGED_FILES': {  
                 try{
                     setTitleBar( 'top-titlebar-repo-text', folder );
-                    setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                    setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                     setStatusBar( fileStatusString( status_data));            
                 }catch(err){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 setStatusBar( fileStatusString( status_data));            
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
@@ -1457,7 +1529,7 @@ async function _update(){
                 
             case 'CHANGED_FILES_TEXT_ENTERED': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 setStatusBar( fileStatusString( status_data));
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
@@ -1485,7 +1557,7 @@ async function _update(){
                 writeTextOutput( textOutput);
             
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 setStatusBar( fileStatusString( status_data));
                 
                 break;
@@ -1493,7 +1565,7 @@ async function _update(){
                 
             case 'SETTINGS': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' );
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 try{
                     setStatusBar( fileStatusString( status_data));
                  }catch(err){
@@ -1509,7 +1581,7 @@ async function _update(){
                             
             case 'CONFLICT': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '  (<u>' + currentBranch + '</u>)' ); 
+                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' ); 
                     setStatusBar( fileStatusString( status_data)); 
 
                 console.log('_update -- CONFLICT mode');

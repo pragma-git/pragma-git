@@ -44,11 +44,18 @@
             </div>
             
             <!-- Text Branch  --> 
-            <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                onclick="_callback('clicked-branch')" 
+            &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
+                onclick="_callback('clicked-branch', 'menu')" 
+                onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
+                >&#x25BE;</div>
+                
+                <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                onclick="_callback('clicked-branch', 'cycle')" 
                 onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-            </div>  
+            </div>)
+            &nbsp;
              
             <!-- Icon Notes  -->                             
             <div class="top-titlebar-notes-icon">
