@@ -1,7 +1,7 @@
 {
   "name": "Pragma-git",
   "description": "Chrome platform app.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "main": "app.html",
   "author": "Jan Axelsson",
   "license": "MIT",
