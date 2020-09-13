@@ -1,7 +1,7 @@
-#!/bin/bash -x
+#!/bin/bash
 
 TMP="$HOME/.Pragma-git/.tmp"
-mkdir "$TMP"
+mkdir "$TMP" 2>/dev/null
 
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 EXIT="$TMP/exit"                     # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
@@ -31,7 +31,6 @@ fi
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
-  echo 'waiting'
   sleep 1 
 done
 
