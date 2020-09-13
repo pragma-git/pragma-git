@@ -1762,7 +1762,7 @@ async function _setMode( inputModeName){
     await _update()
    
     console.log(textOutput);
-    //writeTextOutput(textOutput);
+    writeTextOutput(textOutput);
     
 
     return newModeName;  // In case I want to use it with return variable
