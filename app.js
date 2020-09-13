@@ -828,7 +828,7 @@ async function _callback( name, event){
         let menuItems = branchList;
         
         // Add context menu title-row
-        menu.append(new gui.MenuItem({ label: 'Merge (selected one) ... ', enabled : false }));
+        menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
@@ -854,7 +854,7 @@ async function _callback( name, event){
  
         
         menu.append(new gui.MenuItem({ type: 'separator' }));
-        menu.append(new gui.MenuItem({ label: '... into "' + currentBranch +'"', enabled : false })); 
+        menu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
