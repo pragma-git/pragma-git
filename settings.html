@@ -115,7 +115,7 @@
         }
         
         .collapsible:after {
-          content: '\002B'; # Unicode character for "plus" sign (+) 
+          content: '\002B'; /* Unicode character for "plus" sign (+) */
           color: white;
           font-weight: bold;
           float: left;
@@ -123,7 +123,7 @@
         }
         
         .active:after {
-          content: "\2212"; # Unicode character for "plus" sign (-) 
+          content: "\2212"; /* Unicode character for "plus" sign (-) */
         }
         
         .content {
@@ -134,7 +134,7 @@
         }
         
         .quickUnfold {
-          transition: max-height 0.0s ease-out; 
+          transition: max-height 0.05s ease-out; 
         }
 
     </style>
@@ -160,8 +160,8 @@
      
        
             
-    <!--  REPO SETTINGS -- foldable header--> 
-    <button class="collapsible" id="repoSettings">&nbsp; Repository settings :</button> 
+    <!--  REPO SETTINGS -- foldable header --> 
+    <button class="collapsible active" id="repoSettings">&nbsp; Repository settings :</button>  <!--  Hack : set active, to counter-act '-' from callback('repoRadiobuttonChanged') --> 
                 
         <div class="content" id="foldableDiv1" > 
         <h3>Repository table </h3>  

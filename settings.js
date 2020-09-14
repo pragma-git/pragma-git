@@ -89,7 +89,11 @@ async function _callback( name, event){
                 let myLocalFolder = state.repos[id].localFolder;
 
                 branchList = await gitBranchList( myLocalFolder);
+                
+                document.getElementById("branchesTableBody").innerHTML = ""; 
                 generateBranchTable( document, table, branchList); // generate the table first
+                
+                increaseDivSize('foldableDiv1');
     
                 
                 // Show current repo
@@ -97,6 +101,8 @@ async function _callback( name, event){
                 
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
+
+                
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
@@ -930,8 +936,6 @@ async function generateBranchTable(document, table, branchlist) {
     button.innerHTML = 'Add branch';
     button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
     cell.appendChild(button);
-    
-      
 
 
    
