@@ -399,14 +399,15 @@ async function _callback( name, event){
                 .stash(['list'], onStash);
             function onStash(err, result ){  stash_status = result }
             
-            
-            if (stash_status.length > 0) {
-                // Ask permission to overwrite stash
-                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                document.getElementById('stashOverwriteDialog').showModal();
-            }else{
-                // No stash exists, OK to stash
-                gitStash();
+            if (state.onlyOneStash){  // If settings to allow one stash only
+                if (stash_status.length > 0) {
+                    // Ask permission to overwrite stash
+                    //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                    document.getElementById('stashOverwriteDialog').showModal();
+                }else{
+                    // No stash exists, OK to stash
+                    gitStash();
+                }
             }
         }catch(err){  
             console.log(err);
