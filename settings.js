@@ -90,10 +90,14 @@ async function _callback( name, event){
 
                 branchList = await gitBranchList( myLocalFolder);
                 
-                document.getElementById("branchesTableBody").innerHTML = ""; 
+                
                 generateBranchTable( document, table, branchList); // generate the table first
                 
-                increaseDivSize('foldableDiv1');
+                // Match size if unfolded (otherwise, mixup for icons '-' instead of '+'
+                if ( document.getElementById("repoSettings").classList.contains('active') ){
+                    increaseDivSize('foldableDiv1');
+                }
+                
     
                 
                 // Show current repo
@@ -578,6 +582,7 @@ async function injectIntoSettingsJs(document) {
     if ( ! win.canSetVisibleOnAllWorkspaces() ){
         document.getElementById('onAllWorkspaces').disabled = true;
     }
+    
 
 
     // Build repo table
@@ -593,6 +598,7 @@ async function injectIntoSettingsJs(document) {
             quickUnfold( document.getElementById(id)); 
         }
     }
+
 
     //
     // Internal function
@@ -866,6 +872,7 @@ async function generateRepoTable(document, table, data) {
     // Draw branch by simulating click
     let event =[];
     event.id = foundIndex; // Simulate first clicked
+    
     await _callback( "repoRadiobuttonChanged", event);
 
     
