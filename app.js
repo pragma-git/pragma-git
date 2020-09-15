@@ -399,15 +399,13 @@ async function _callback( name, event){
                 .stash(['list'], onStash);
             function onStash(err, result ){  stash_status = result }
             
-            if (state.onlyOneStash){  // If settings to allow one stash only
-                if (stash_status.length > 0) {
-                    // Ask permission to overwrite stash
-                    //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                    document.getElementById('stashOverwriteDialog').showModal();
-                }else{
-                    // No stash exists, OK to stash
-                    gitStash();
-                }
+            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
+                // Ask permission to overwrite stash
+                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                document.getElementById('stashOverwriteDialog').showModal();
+            }else{
+                // No stash exists, OK to stash
+                gitStash();
             }
         }catch(err){  
             console.log(err);
@@ -1831,11 +1829,13 @@ async function _setMode( inputModeName){
     // Remember mode
     localState.mode = newModeName;
     
+    writeTextOutput(textOutput); 
+    
     // Show
     await _update()
    
     console.log(textOutput);
-    writeTextOutput(textOutput);
+    //writeTextOutput(textOutput); // NOTE: Do not call writeTextOutput(textOutput); Reason : Characters may be lost -- better let browser window handle display self.
     
 
     return newModeName;  // In case I want to use it with return variable
