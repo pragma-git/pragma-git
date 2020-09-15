@@ -89,7 +89,15 @@ async function _callback( name, event){
                 let myLocalFolder = state.repos[id].localFolder;
 
                 branchList = await gitBranchList( myLocalFolder);
+                
+                
                 generateBranchTable( document, table, branchList); // generate the table first
+                
+                // Match size if unfolded (otherwise, mixup for icons '-' instead of '+'
+                if ( document.getElementById("repoSettings").classList.contains('active') ){
+                    increaseDivSize('foldableDiv1');
+                }
+                
     
                 
                 // Show current repo
@@ -97,6 +105,8 @@ async function _callback( name, event){
                 
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
+
+                
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
@@ -572,6 +582,7 @@ async function injectIntoSettingsJs(document) {
     if ( ! win.canSetVisibleOnAllWorkspaces() ){
         document.getElementById('onAllWorkspaces').disabled = true;
     }
+    
 
 
     // Build repo table
@@ -587,6 +598,7 @@ async function injectIntoSettingsJs(document) {
             quickUnfold( document.getElementById(id)); 
         }
     }
+
 
     //
     // Internal function
@@ -860,6 +872,7 @@ async function generateRepoTable(document, table, data) {
     // Draw branch by simulating click
     let event =[];
     event.id = foundIndex; // Simulate first clicked
+    
     await _callback( "repoRadiobuttonChanged", event);
 
     
@@ -930,8 +943,6 @@ async function generateBranchTable(document, table, branchlist) {
     button.innerHTML = 'Add branch';
     button.setAttribute('onclick','_callback("addBranchButtonPressed",this)'); 
     cell.appendChild(button);
-    
-      
 
 
    

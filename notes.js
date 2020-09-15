@@ -36,7 +36,8 @@ async function injectIntoNotesJs(document) {
       el: document.querySelector('#editor'),
       height: '100%',
       initialValue: content,
-      previewStyle: 'vertical'
+      previewStyle: 'vertical',
+      usageStatistics: false
     }
 
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
