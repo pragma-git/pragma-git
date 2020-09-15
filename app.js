@@ -1829,14 +1829,17 @@ async function _setMode( inputModeName){
     // Remember mode
     localState.mode = newModeName;
     
-    writeTextOutput(textOutput); 
+    //writeTextOutput(textOutput); 
     
     // Show
     await _update()
-   
-    console.log(textOutput);
-    //writeTextOutput(textOutput); // NOTE: Do not call writeTextOutput(textOutput); Reason : Characters may be lost -- better let browser window handle display self.
     
+    // Depending on mode: during _update(), text may have been entered (textOutput.value is changed).
+    let newMessage = readMessage() ;
+    if ( textOutput.value !== newMessage){
+        textOutput.value = newMessage;
+    }
+    writeTextOutput(textOutput);  
 
     return newModeName;  // In case I want to use it with return variable
 }
