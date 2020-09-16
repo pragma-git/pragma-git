@@ -1,3 +1,6 @@
 [mergetool "pragma-git"]
     cmd = "$ProgramW6432/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
-	trustExitCode = true    
+	trustExitCode = true 
+       
+[core]
+    quotepath = false  # Stop UTF-8 characters to be transcribed.  Solves swedish characters etc 
