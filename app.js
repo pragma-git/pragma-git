@@ -108,7 +108,7 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * State
  * -----
  * There are two variables that are global to all windows
- * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/repo.json)
+ * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/settings.json)
  * - localState              - contains state data (historyNumber, branchNumber, mode) which is not saved to file
  * 
  * 
@@ -164,7 +164,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
         mkdir( settingsDir);
         
-        var settingsFile = settingsDir + pathsep + 'repo.json';    
+        var settingsFile = settingsDir + pathsep + 'settings.json';    
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
