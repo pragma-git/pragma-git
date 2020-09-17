@@ -2754,6 +2754,7 @@ function loadSettings(settingsFile){
             state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
             state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
             state_in.notesWindow = setting( state_in.notesWindow, {} ); 
+            state_in.pragmaMerge = setting( state_in.pragmaMerge, {} ); 
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
@@ -2799,7 +2800,11 @@ function loadSettings(settingsFile){
         // Notes window (this setting is updated when closing notes window)
             state.notesWindow = setting( state_in.notesWindow, {} );
             state.notesWindow.editMode = setting( state_in.notesWindow.editMode, "wysiwyg");
-
+            
+        // Diff viewer mode
+            state.pragmaMerge = setting( state_in.pragmaMerge, {} );
+            state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
+            state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
 
     //
     // Post-process state

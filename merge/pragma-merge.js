@@ -83,6 +83,16 @@ function injectIntoJs(document) {
     
     document.getElementById('title').innerHTML = HTML_TITLE;
     
+
+    // Set saved gui mode settings
+    collapse = global.state.pragmaMerge.hide_unchanged;
+
+    if ( global.state.pragmaMerge.align ) {
+        connect = 'align';
+    }else{
+        connect = null;
+    }   
+
     initUI();
 };
 
@@ -401,6 +411,12 @@ function closeWindowNicely(exitCode){
     } catch(err) {
         console.error(err)
     }
+    
+    // Store gui mode settings
+    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').classList.contains('enabled');
+    global.state.pragmaMerge.align = document.getElementById('align').classList.contains('enabled');
+            
+
     win.close();
 }
 
