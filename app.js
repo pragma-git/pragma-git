@@ -197,7 +197,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
-        global.localState = localState;   
+        global.localState = localState; 
+        
 
     // Collect settings
         var repoSettings = {}; 
@@ -2855,6 +2856,8 @@ function loadSettings(settingsFile){
 
     // Update using same functions as when leaving settings window
     updateWithNewSettings();
+    
+    
 
     
     return state;
@@ -2956,7 +2959,8 @@ window.onload = function() {
   
   // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
   setTimeout(gitIsInstalled, 2000);
-
+  
+  win.setAlwaysOnTop( state.alwaysOnTop );
 };
 
 
