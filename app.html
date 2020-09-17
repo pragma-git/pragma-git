@@ -37,8 +37,14 @@
         <div id="top-titlebar-text" class="top-titlebar-text">
             
             <!-- Text Repo  --> 
+            &nbsp;<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
+                onclick="_callback('clicked-repo', 'menu')" 
+                onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
+                >&#x25BE;</div>
+                
             <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                onclick="_callback('clicked-repo')" 
+                onclick="_callback('clicked-repo', 'cycle')" 
                 onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
             </div>

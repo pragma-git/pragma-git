@@ -108,7 +108,7 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * State
  * -----
  * There are two variables that are global to all windows
- * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/repo.json)
+ * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/settings.json)
  * - localState              - contains state data (historyNumber, branchNumber, mode) which is not saved to file
  * 
  * 
@@ -137,9 +137,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // -----
 
     // Import Modules
-        var gui = require("nw.gui");    
-        var os = require('os');
-        var fs = require('fs');
+        const gui = require("nw.gui");    
+        const os = require('os');
+        const fs = require('fs');
+        const path = require('path');
+        
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
         
@@ -162,7 +164,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
         mkdir( settingsDir);
         
-        var settingsFile = settingsDir + pathsep + 'repo.json';    
+        var settingsFile = settingsDir + pathsep + 'settings.json';    
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
@@ -249,7 +251,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-repo': {
-        repoClicked();
+        repoClicked(event);
         break;
       }
       case 'clicked-branch': {
@@ -274,6 +276,18 @@ async function _callback( name, event){
 
         // Reset some variables
         localState.historyNumber = -1;
+        
+        break;
+      }
+      case 'clickedRepoContextualMenu': {
+        console.log('Selected repo = ' + event.selectedRepo);
+        console.log('Selected repo = ' + event.selectedRepoNumber);
+        state.repoNumber = event.selectedRepoNumber;
+        
+        // Update remote info immediately
+        gitFetch();  
+        
+        _setMode('UNKNOWN');
         
         break;
       }
@@ -572,12 +586,64 @@ async function _callback( name, event){
     // ---------------
 
     // title-bar
-    function repoClicked(){
+    async function repoClicked( type){
+        
+        //
+        // Show branch menu
+        //
+        if (type == 'menu'){
+            var menu = new gui.Menu();
+            
+            let currentRepo = state.repos[state.repoNumber].localFolder;
+    
+            // Add context menu title-row
+            menu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
+            menu.append(new gui.MenuItem({ type: 'separator' }));
+            
+            let repoNames = [];
+                    
+            // Add names of all repos
+            for (var i = 0; i < state.repos.length; ++i) {
+                if (state.repoNumber != i ){
+                    let myEvent = [];
+                    repoNames[i] = path.basename( state.repos[i].localFolder );
+                    myEvent.selectedRepo = repoNames[i];
+                    myEvent.selectedRepoNumber = i;
+                    myEvent.currentRepo = currentRepo;
+                    menu.append(
+                        new gui.MenuItem(
+                            { 
+                                label: repoNames[i], 
+                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
+                            } 
+                        )
+                    );
+                    console.log(repoNames[i]);
+                }else{
+                    console.log('Skipped current repo = ' + repoNames[i]);
+                }
+    
+            }
+
+    
+            // Popup as context menu
+            let pos = document.getElementById("top-titlebar-repo-text").getBoundingClientRect();
+            await menu.popup( Math.trunc(pos.left),24);
+            
+            return; // BAIL OUT
+
+        }
+        
+
+        //
         // Cycle through stored repos
-        state.repoNumber = state.repoNumber + 1;
-        var numberOfRepos = state.repos.length;
-        if (state.repoNumber >= numberOfRepos){
-            state.repoNumber = 0;
+        //
+        if (type == 'cycle'){
+            state.repoNumber = state.repoNumber + 1;
+            var numberOfRepos = state.repos.length;
+            if (state.repoNumber >= numberOfRepos){
+                state.repoNumber = 0;
+            }
         }
         
         // Update remote info immediately
@@ -1184,7 +1250,7 @@ async function _callback( name, event){
         var folder = file; // Guess that a folder was dropped 
     
         if (entry.isFile) {
-            folder = require('path').dirname(file); // Correct, because file was dropped
+            folder = path.dirname(file); // Correct, because file was dropped
             console.log( 'Folder = ' + folder );
         } 
     
@@ -1218,7 +1284,8 @@ async function _callback( name, event){
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
-        gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
+        //gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
+        gui.Shell.openItem( path.resolve(state.repos[state.repoNumber].localFolder) ); // Required for unc paths to work in Windows
     }
     function showSettings() {    
         
@@ -2687,6 +2754,7 @@ function loadSettings(settingsFile){
             state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
             state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
             state_in.notesWindow = setting( state_in.notesWindow, {} ); 
+            state_in.pragmaMerge = setting( state_in.pragmaMerge, {} ); 
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
@@ -2732,7 +2800,11 @@ function loadSettings(settingsFile){
         // Notes window (this setting is updated when closing notes window)
             state.notesWindow = setting( state_in.notesWindow, {} );
             state.notesWindow.editMode = setting( state_in.notesWindow.editMode, "wysiwyg");
-
+            
+        // Diff viewer mode
+            state.pragmaMerge = setting( state_in.pragmaMerge, {} );
+            state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
+            state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
 
     //
     // Post-process state
