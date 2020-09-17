@@ -251,7 +251,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-repo': {
-        repoClicked();
+        repoClicked(event);
         break;
       }
       case 'clicked-branch': {
@@ -276,6 +276,18 @@ async function _callback( name, event){
 
         // Reset some variables
         localState.historyNumber = -1;
+        
+        break;
+      }
+      case 'clickedRepoContextualMenu': {
+        console.log('Selected repo = ' + event.selectedRepo);
+        console.log('Selected repo = ' + event.selectedRepoNumber);
+        state.repoNumber = event.selectedRepoNumber;
+        
+        // Update remote info immediately
+        gitFetch();  
+        
+        _setMode('UNKNOWN');
         
         break;
       }
@@ -574,12 +586,64 @@ async function _callback( name, event){
     // ---------------
 
     // title-bar
-    function repoClicked(){
+    async function repoClicked( type){
+        
+        //
+        // Show branch menu
+        //
+        if (type == 'menu'){
+            var menu = new gui.Menu();
+            
+            let currentRepo = state.repos[state.repoNumber].localFolder;
+    
+            // Add context menu title-row
+            menu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
+            menu.append(new gui.MenuItem({ type: 'separator' }));
+            
+            let repoNames = [];
+                    
+            // Add names of all repos
+            for (var i = 0; i < state.repos.length; ++i) {
+                if (state.repoNumber != i ){
+                    let myEvent = [];
+                    repoNames[i] = path.basename( state.repos[i].localFolder );
+                    myEvent.selectedRepo = repoNames[i];
+                    myEvent.selectedRepoNumber = i;
+                    myEvent.currentRepo = currentRepo;
+                    menu.append(
+                        new gui.MenuItem(
+                            { 
+                                label: repoNames[i], 
+                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
+                            } 
+                        )
+                    );
+                    console.log(repoNames[i]);
+                }else{
+                    console.log('Skipped current repo = ' + repoNames[i]);
+                }
+    
+            }
+
+    
+            // Popup as context menu
+            let pos = document.getElementById("top-titlebar-repo-text").getBoundingClientRect();
+            await menu.popup( Math.trunc(pos.left),24);
+            
+            return; // BAIL OUT
+
+        }
+        
+
+        //
         // Cycle through stored repos
-        state.repoNumber = state.repoNumber + 1;
-        var numberOfRepos = state.repos.length;
-        if (state.repoNumber >= numberOfRepos){
-            state.repoNumber = 0;
+        //
+        if (type == 'cycle'){
+            state.repoNumber = state.repoNumber + 1;
+            var numberOfRepos = state.repos.length;
+            if (state.repoNumber >= numberOfRepos){
+                state.repoNumber = 0;
+            }
         }
         
         // Update remote info immediately
@@ -1186,7 +1250,7 @@ async function _callback( name, event){
         var folder = file; // Guess that a folder was dropped 
     
         if (entry.isFile) {
-            folder = require('path').dirname(file); // Correct, because file was dropped
+            folder = path.dirname(file); // Correct, because file was dropped
             console.log( 'Folder = ' + folder );
         } 
     
