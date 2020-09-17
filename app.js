@@ -137,9 +137,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // -----
 
     // Import Modules
-        var gui = require("nw.gui");    
-        var os = require('os');
-        var fs = require('fs');
+        const gui = require("nw.gui");    
+        const os = require('os');
+        const fs = require('fs');
+        const path = require('path');
+        
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
         
@@ -1218,7 +1220,8 @@ async function _callback( name, event){
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
-        gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
+        //gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
+        gui.Shell.openItem( path.resolve(state.repos[state.repoNumber].localFolder) ); // Required for unc paths to work in Windows
     }
     function showSettings() {    
         
