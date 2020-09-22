@@ -628,8 +628,9 @@ async function _callback( name, event){
 
     
             // Popup as context menu
-            let pos = document.getElementById("top-titlebar-repo-text").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left),24);
+            let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
+            await menu.popup( Math.trunc(pos.left) -10,24);
+            
             
             return; // BAIL OUT
 
@@ -771,8 +772,8 @@ async function _callback( name, event){
 
         
                 // Popup as context menu
-                let pos = document.getElementById("top-titlebar-branch-text").getBoundingClientRect();
-                await menu.popup( Math.trunc(pos.left),24);
+                let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
+                await menu.popup( Math.trunc(pos.left) - 10,24);
                     
                 return // BAIL OUT
             }
