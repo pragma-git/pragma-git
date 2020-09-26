@@ -66,6 +66,8 @@ function closeWindow(){
     global.state.notesWindow.editMode = editor.currentMode;
     opener.saveSettings(); // Save settings to file
     
+    // Mark that closed
+    global.localState.notesWindow.open = false;
     
 
     console.log('clicked close window');

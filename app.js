@@ -187,6 +187,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.conflictsWindow = false; // True when conflicts window is open
         localState.fileListWindow = false; // True when conflicts window is open
         localState.aboutWindow = false; // True when conflicts window is open
+        localState.notesWindow = {};
+        localState.notesWindow.open = false; // True when notes window is open
         
     // Display text
         var textOutput = {
@@ -293,6 +295,9 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-notes':{
+        if (localState.notesWindow.open == true) {
+            return
+        }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
@@ -304,7 +309,8 @@ async function _callback( name, event){
                 height: 600,
                 title: "Notes"
             })  
-          
+        
+        localState.notesWindow.open = true;
         break;
       }
       case 'newBranchNameKeyUp': {
@@ -487,7 +493,7 @@ async function _callback( name, event){
       case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {
                 return
-            }
+        }
             
         let status_data = await gitStatus();
         
