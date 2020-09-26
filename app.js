@@ -1379,7 +1379,6 @@ async function _update(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
@@ -1422,7 +1421,7 @@ async function _update(){
             updateWithNewSettings();
             saveSettings();
         }
-     
+ 
     //
     // SET ICON VISIBILITY
     //   
@@ -1500,7 +1499,7 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
-         
+            
     // Stash-pop button (show if no changed files)
         let stash_status;
         if (state.repos.length > 0){
@@ -1577,6 +1576,7 @@ async function _update(){
             }
                 
             case 'CHANGED_FILES': {  
+             
                 try{
                     setTitleBar( 'top-titlebar-repo-text', folder );
                     setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -1585,9 +1585,10 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
+                return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
-                setStatusBar( fileStatusString( status_data));            
+                setStatusBar( fileStatusString( status_data));         
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
                     _setMode('UNKNOWN');
@@ -2529,7 +2530,10 @@ function setTitleBar( id, text){
     if (text.length == 0){
         text = " ";
     }
-    document.getElementById(id).innerHTML = text;
+    // Update only if changed (no need to redraw)
+    if ( document.getElementById(id).innerHTML !== text){
+        document.getElementById(id).innerHTML = text;
+    }
     //console.log('setTitleBar (element ' + id + ') = ' + text);
 }
 function updateImageUrl(image_id, new_image_url) {
@@ -2665,9 +2669,14 @@ function updateStatusBar( text){
 }
 function setStatusBar( text){
     if (devTools){
-        document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+        if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
+            document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+        }
     }else {
-        document.getElementById('bottom-titlebar-text').innerHTML = text;
+        // Update only if changed (no need to redraw)
+        if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
+            document.getElementById('bottom-titlebar-text').innerHTML = text;
+        }
     }
 }
 function fileStatusString( status_data){
