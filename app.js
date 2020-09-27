@@ -253,6 +253,17 @@ async function _callback( name, event){
         downArrowClicked();
         break;
       }
+      case 'clicked-find': {
+        if (document.getElementById('output_row').style.visibility == 'collapse' ){
+            document.getElementById('output_row').style.visibility = 'visible';
+            document.getElementById('bottom-titlebar-find-icon').style.visibility = 'hidden'; // Hide find-icon when search field made visible
+        }else{
+            document.getElementById('output_row').style.visibility = 'collapse';
+            document.getElementById('bottom-titlebar-find-icon').style.visibility = 'visible'; // Show find-icon when search field collapsed 
+        }
+        
+        break;
+      }
       case 'clicked-repo': {
         repoClicked(event);
         break;

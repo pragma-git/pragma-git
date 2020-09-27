@@ -168,25 +168,48 @@
                 <tr>
                     <!-- History arrows  --> 
                     <td>
-                        <table id="arrow_table">               
+                        <table id="arrow_table">  
+                        <tr height="17px">
+                            <td> 
+                            </td> 
+                        </tr>      
                         <tr>
-                            <td>
-                                <img id="up-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-up-arrow')" 
-                                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
-                                src="images/up-arrow.png">
+                            <td> 
                             </td> 
                         </tr>            
-                        <tr>
+                        <tr height="17px">
+                            <td>
+                                <img id="up-arrow"  height="17" width="17" 
+                                    onclick="_callback( 'clicked-up-arrow')" 
+                                    onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                                    src="images/up-arrow.png">
+                            </td> 
+                        </tr>            
+                        <tr height="17px">
                             <td>
                                 <img id="down-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-down-arrow')"  
-                                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
-                                src="images/down-arrow.png">
+                                    onclick="_callback( 'clicked-down-arrow')"  
+                                    onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                                    src="images/down-arrow.png">
                             </td> 
-                        </tr>
+                        </tr> 
+                        <tr>
+                            <td> 
+                            </td> 
+                        </tr>       
+                         <!-- Icon Find  -->   
+                        <tr height="17px">
+                            <td>
+                                <img id="bottom-titlebar-find-icon" height="17" width="17" 
+                                    onclick="_callback('clicked-find')"
+                                    onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
+                                    onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
+                                    src="images/find.png">
+                            </td> 
+                        </tr>   
+
                         </table>
                     </td>
                     
@@ -202,7 +225,13 @@
                 
                 <!-- Collapsable html output  --> 
                 <tr id="output_row" style="visibility:collapse">
-                    <td></td>
+                    <td>
+                        <img id="bottom-titlebar-find-icon2" height="17" width="17" 
+                            onclick="_callback('clicked-find')"
+                            onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
+                            onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
+                            src="images/find.png">                    
+                    </td>
                     <td class="message_column">
                         <div id="output_text">
                             <textarea class="message" placeholder="search" rows="1" cols="auto"></textarea>
@@ -239,7 +268,6 @@
         <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
                 onclick="_callback('clicked-status-text')">
             </div>
-            
             
                                                
         <!-- Icon Stash  -->                             

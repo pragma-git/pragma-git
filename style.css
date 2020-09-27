@@ -68,6 +68,10 @@ td {
   color: #03F;
 }
 
+#arrow_table{
+  height: 100%; 
+}
+
 
 div#message-wrapper{
   margin-right: 6px;
