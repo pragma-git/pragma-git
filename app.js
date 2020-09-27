@@ -254,13 +254,20 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find': {
+        let delta = 30; 
+        let fix = -1; // One pixel move settles visibility somehow
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             document.getElementById('output_row').style.visibility = 'visible';
-            document.getElementById('bottom-titlebar-find-icon').style.visibility = 'hidden'; // Hide find-icon when search field made visible
+            window.resizeTo(win.width, win.height + fix);
+            window.resizeTo(win.width, win.height + delta);
         }else{
             document.getElementById('output_row').style.visibility = 'collapse';
-            document.getElementById('bottom-titlebar-find-icon').style.visibility = 'visible'; // Show find-icon when search field collapsed 
+            window.resizeTo(win.width, win.height - delta);
+            window.resizeTo(win.width, win.height - fix);
         }
+        let element = document.getElementById('inner-content');
+
+
         
         break;
       }
@@ -871,6 +878,12 @@ async function _callback( name, event){
     }
     function closeWindow(a){
         console.log('Close argument = ' + a);  
+
+        
+        // Fold search fields
+        if (document.getElementById('output_row').style.visibility == 'visible' ){
+            _callback('clicked-find');
+        }
         
         // Store window position
         state.position = {}; // New level
@@ -884,6 +897,7 @@ async function _callback( name, event){
           
         // Hide the window to give user the feeling of closing immediately
         this.hide();
+
     
         // If the new window is still open then close it.
         if (win !== null) {
@@ -2576,6 +2590,7 @@ function focusTitlebars(focus) {
 }
 function updateContentStyle() {
     
+    
     // This is to make statusbar and titlebar position well
     var content = document.getElementById("content");
     if (!content)
@@ -2603,7 +2618,7 @@ function updateContentStyle() {
     contentStyle += "height: " + height  + "px; ";
     content.setAttribute("style", contentStyle);
     
-    // This is to make message textarea follow window resize
+    //// This is to make message textarea follow window resize
     //var message_area = document.getElementById("message");
     //var message_area_style = "height: " + (height - 28 - 8).toString() + "px; ";
     //message_area_style += "width: 100%; " ;

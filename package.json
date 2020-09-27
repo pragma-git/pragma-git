@@ -11,9 +11,9 @@
     "frame": false,
     "position": "center",
     "width": 460,
-    "height": 140,
+    "height": 144,
     "min_width": 350,
-    "min_height": 140,
+    "min_height": 144,
     "icon": "./images/icon.png"
   },
   "scripts": {

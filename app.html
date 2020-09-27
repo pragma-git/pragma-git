@@ -169,7 +169,7 @@
                     <!-- History arrows  --> 
                     <td>
                         <table id="arrow_table">  
-                        <tr height="17px">
+                        <tr height="auto">
                             <td> 
                             </td> 
                         </tr>      
@@ -200,10 +200,10 @@
                             </td> 
                         </tr>       
                          <!-- Icon Find  -->   
-                        <tr height="17px">
+                        <tr height="auto"  style="height: fit-content">
                             <td>
                                 <img id="bottom-titlebar-find-icon" height="17" width="17" 
-                                    onclick="_callback('clicked-find')"
+                                    onclick="_callback('clicked-find');updateContentStyle();"
                                     onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
                                     onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
                                     src="images/find.png">
@@ -226,15 +226,30 @@
                 <!-- Collapsable html output  --> 
                 <tr id="output_row" style="visibility:collapse">
                     <td>
-                        <img id="bottom-titlebar-find-icon2" height="17" width="17" 
-                            onclick="_callback('clicked-find')"
-                            onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
-                            onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
-                            src="images/find.png">                    
+                
                     </td>
                     <td class="message_column">
                         <div id="output_text">
-                            <textarea class="message" placeholder="search" rows="1" cols="auto"></textarea>
+                             
+                            <div class="group">
+                                <label for="findFileInput"> file</label>
+                                <input id="findFileInput" type="text" placeholder="file name"  size="25"/>
+                            </div>
+                                                        
+                            <div class="group">
+                                <label for="findTextInput"> free text</label>
+                                <input id="findTextInput" type="text" placeholder="text"  size="25"/> 
+                            </div>
+                                                       
+                            <div class="group">
+                                <label for="findDateInputAfter"> after</label>
+                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12"/> 
+                            </div>
+                            
+                            <div class="group">
+                                <label for="findDateInputBefore"> before</label>
+                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD"  size="12"/>
+                            </div>
                         </div>
                         
                     </td>
