@@ -1120,14 +1120,7 @@ async function _callback( name, event){
         localState.historyNumber = localState.historyNumber + 1;
         
         // Get log
-        var history;
-        try{              
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'],onHistory);
-            function onHistory(err, result){console.log(result);console.log(err); history = result.all;} 
-                
-        }catch(err){        
-            console.log(err);
-        }
+        var history = await gitHistory();
         
         // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
         var historyBranchesAtPoint = ""; // Do not comment out this row !
@@ -1198,13 +1191,7 @@ async function _callback( name, event){
         console.log('up arrow clicked');
         
         // Get log
-        var history;
-        try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'], onHistory);
-            function onHistory(err, result){console.log(result); history = result.all;} 
-        }catch(err){        
-            console.log(err);
-        }   
+        var history = await gitHistory();
     
         // Cycle through history
         var numberOfHistorySteps = history.length;
@@ -2185,6 +2172,56 @@ async function gitBranchList(){
     }
     return branchList
 }
+async function gitHistory() {
+    let history;
+    
+    let searchMessage = document.getElementById('findTextInput').value;
+    let searchFile = document.getElementById('findFileInput').value;
+    let since = document.getElementById('findDateInputAfter').value;
+    let until = document.getElementById('findDateInputBefore').value;
+    
+    let command = [ '--first-parent'];
+    
+    // Add only if filter is visible
+    if (document.getElementById('output_row').style.visibility == 'visible' ){
+    
+        // Build command depending on input  
+        if ( !isNullOrWhitespace(searchMessage) ){
+            command.push('--grep'); 
+            command.push(searchMessage);
+        }
+         
+        if ( !isNullOrWhitespace(searchFile) ){
+            command.push('--'); 
+            command.push(searchFile);
+        }
+         
+        if ( !isNullOrWhitespace(since) ){
+            command.push('--since'); 
+            command.push(since);
+        }
+         
+        if ( !isNullOrWhitespace(until) ){
+            command.push('--until'); 
+            command.push(until);
+        }
+    }
+ 
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( command, onHistory);
+        function onHistory(err, result){console.log(result); history = result.all; console.log(' ============ Found N = ' + history.length);} 
+    }catch(err){        
+        console.log(err);
+    }   
+    return history; 
+    
+    function isNullOrWhitespace( input ) {
+        return !input || !input.trim();
+    }
+    
+}
+
+
 async function gitLocalFolder(){
     
     let gitFolders = [];
