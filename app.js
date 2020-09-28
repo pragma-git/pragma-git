@@ -2191,11 +2191,6 @@ async function gitHistory() {
             command.push(searchMessage);
         }
          
-        if ( !isNullOrWhitespace(searchFile) ){
-            command.push('--'); 
-            command.push(searchFile);
-        }
-         
         if ( !isNullOrWhitespace(since) ){
             command.push('--since'); 
             command.push(since);
@@ -2204,6 +2199,11 @@ async function gitHistory() {
         if ( !isNullOrWhitespace(until) ){
             command.push('--until'); 
             command.push(until);
+        }
+        
+        if ( !isNullOrWhitespace(searchFile) ){
+            command.push('--'); 
+            command.push(searchFile);
         }
     }
  
