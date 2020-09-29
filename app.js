@@ -2204,7 +2204,7 @@ async function gitHistory() {
         
         if ( !isNullOrWhitespace(searchFile) ){
             command.push('--'); 
-            command.push(searchFile);
+            command.push('*' + searchFile + '*' ); // Allow subfolders before file name, and partial file name
         }
     }
  
