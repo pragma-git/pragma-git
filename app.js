@@ -2189,6 +2189,7 @@ async function gitHistory() {
         if ( !isNullOrWhitespace(searchMessage) ){
             command.push('--grep'); 
             command.push(searchMessage);
+            command.push('--regexp-ignore-case'); 
         }
          
         if ( !isNullOrWhitespace(since) ){
