@@ -187,6 +187,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.conflictsWindow = false; // True when conflicts window is open
         localState.fileListWindow = false; // True when conflicts window is open
         localState.aboutWindow = false; // True when conflicts window is open
+        localState.notesWindow = {};
+        localState.notesWindow.open = false; // True when notes window is open
         
     // Display text
         var textOutput = {
@@ -197,7 +199,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
-        global.localState = localState;   
+        global.localState = localState; 
+        
 
     // Collect settings
         var repoSettings = {}; 
@@ -292,6 +295,9 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-notes':{
+        if (localState.notesWindow.open == true) {
+            return
+        }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
@@ -303,7 +309,8 @@ async function _callback( name, event){
                 height: 600,
                 title: "Notes"
             })  
-          
+        
+        localState.notesWindow.open = true;
         break;
       }
       case 'newBranchNameKeyUp': {
@@ -486,7 +493,7 @@ async function _callback( name, event){
       case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {
                 return
-            }
+        }
             
         let status_data = await gitStatus();
         
@@ -627,8 +634,9 @@ async function _callback( name, event){
 
     
             // Popup as context menu
-            let pos = document.getElementById("top-titlebar-repo-text").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left),24);
+            let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
+            await menu.popup( Math.trunc(pos.left) -10,24);
+            
             
             return; // BAIL OUT
 
@@ -770,8 +778,8 @@ async function _callback( name, event){
 
         
                 // Popup as context menu
-                let pos = document.getElementById("top-titlebar-branch-text").getBoundingClientRect();
-                await menu.popup( Math.trunc(pos.left),24);
+                let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
+                await menu.popup( Math.trunc(pos.left) - 10,24);
                     
                 return // BAIL OUT
             }
@@ -1377,7 +1385,6 @@ async function _update(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
@@ -1420,7 +1427,7 @@ async function _update(){
             updateWithNewSettings();
             saveSettings();
         }
-     
+ 
     //
     // SET ICON VISIBILITY
     //   
@@ -1498,7 +1505,7 @@ async function _update(){
         }catch(err){  
             console.log(err);
         }
-         
+            
     // Stash-pop button (show if no changed files)
         let stash_status;
         if (state.repos.length > 0){
@@ -1575,6 +1582,7 @@ async function _update(){
             }
                 
             case 'CHANGED_FILES': {  
+             
                 try{
                     setTitleBar( 'top-titlebar-repo-text', folder );
                     setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -1583,9 +1591,10 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
+                return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
-                setStatusBar( fileStatusString( status_data));            
+                setStatusBar( fileStatusString( status_data));         
                 // If not correct mode, fix :
                 if (!status_data.changedFiles){
                     _setMode('UNKNOWN');
@@ -2527,7 +2536,10 @@ function setTitleBar( id, text){
     if (text.length == 0){
         text = " ";
     }
-    document.getElementById(id).innerHTML = text;
+    // Update only if changed (no need to redraw)
+    if ( document.getElementById(id).innerHTML !== text){
+        document.getElementById(id).innerHTML = text;
+    }
     //console.log('setTitleBar (element ' + id + ') = ' + text);
 }
 function updateImageUrl(image_id, new_image_url) {
@@ -2663,9 +2675,14 @@ function updateStatusBar( text){
 }
 function setStatusBar( text){
     if (devTools){
-        document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+        if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
+            document.getElementById('bottom-titlebar-text').innerHTML = text + '   (' + getMode() + ')'; // Show app's mode when in devMode
+        }
     }else {
-        document.getElementById('bottom-titlebar-text').innerHTML = text;
+        // Update only if changed (no need to redraw)
+        if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
+            document.getElementById('bottom-titlebar-text').innerHTML = text;
+        }
     }
 }
 function fileStatusString( status_data){
@@ -2855,6 +2872,8 @@ function loadSettings(settingsFile){
 
     // Update using same functions as when leaving settings window
     updateWithNewSettings();
+    
+    
 
     
     return state;
@@ -2956,7 +2975,8 @@ window.onload = function() {
   
   // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
   setTimeout(gitIsInstalled, 2000);
-
+  
+  win.setAlwaysOnTop( state.alwaysOnTop );
 };
 
 
