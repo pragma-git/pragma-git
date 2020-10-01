@@ -179,6 +179,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // State variables
         var localState = [];
         localState.historyNumber = -1;
+        localState.historyLength = 0;  // Number available in history or search 
         localState.branchNumber = 0;  
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
@@ -267,8 +268,12 @@ async function _callback( name, event){
         }
         let element = document.getElementById('inner-content');
 
-
-        
+        break;
+      }
+      case 'clicked-find-button' :{
+        localState.historyNumber = -1; // Reset to current
+        downArrowClicked();
+          
         break;
       }
       case 'clicked-repo': {
@@ -1122,6 +1127,8 @@ async function _callback( name, event){
         // Get log
         var history = await gitHistory();
         
+        localState.historyLength = history.length;
+        
         // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
         var historyBranchesAtPoint = ""; // Do not comment out this row !
         //try{              
@@ -1192,6 +1199,8 @@ async function _callback( name, event){
         
         // Get log
         var history = await gitHistory();
+        
+        localState.historyLength = history.length;
     
         // Cycle through history
         var numberOfHistorySteps = history.length;
@@ -2751,13 +2760,20 @@ function setStatusBar( text){
 }
 function fileStatusString( status_data){
     
+    let historyStatus = '&nbsp;&nbsp;  (' 
+        + ( localState.historyNumber + 1 )  
+        + ' of ' 
+        + localState.historyLength 
+        + ')';
+    
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
         return 'Modified = ' 
         + status_data.modified.length 
         + ' |  New = ' + ( status_data.added.length )
-        + ' |  Deleted = ' + status_data.deleted.length;
+        + ' |  Deleted = ' + status_data.deleted.length
+        + ' ' + historyStatus;
         
     }else{
         // Normal operation, work on git status from HEAD
