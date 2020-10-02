@@ -1450,7 +1450,7 @@ async function _update(){
         }
  
     //
-    // SET ICON VISIBILITY
+    // SET ICON VISIBILITY 
     //   
     
     let FALSE_IN_HISTORY_MODE  = !(modeName == 'HISTORY'); // Used in if statement to make it false when in history mode
