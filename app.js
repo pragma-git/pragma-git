@@ -1456,7 +1456,7 @@ async function _update(){
     let FALSE_IN_HISTORY_MODE  = !(modeName == 'HISTORY'); // Used in if statement to make it false when in history mode
        
     // If left conflicts window
-        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
+        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){ 
             localState.conflictsWindow = false;
         }
             
