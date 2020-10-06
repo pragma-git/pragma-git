@@ -234,38 +234,6 @@ async function _callback( name, event){
     console.log('_callback = ' + name);
     console.log(event);
     switch(name) {
-        
-      // History
-      case 'clicked-up-arrow': {
-        upArrowClicked();
-        break;
-      }
-      case 'clicked-down-arrow': {
-        downArrowClicked();
-        break;
-      }
-      case 'clicked-find': {
-        let delta = 30; 
-        let fix = -1; // One pixel move settles visibility somehow
-        if (document.getElementById('output_row').style.visibility == 'collapse' ){
-            document.getElementById('output_row').style.visibility = 'visible';
-            window.resizeTo(win.width, win.height + fix);
-            window.resizeTo(win.width, win.height + delta);
-        }else{
-            document.getElementById('output_row').style.visibility = 'collapse';
-            window.resizeTo(win.width, win.height - delta);
-            window.resizeTo(win.width, win.height - fix);
-        }
-        let element = document.getElementById('inner-content');
-
-        break;
-      }
-      case 'clicked-find-button' :{
-        localState.historyNumber = -1; // Reset to current
-        downArrowClicked();
-          
-        break;
-      }
 
       // Top title-bar
       case 'clicked-about': {
@@ -274,6 +242,7 @@ async function _callback( name, event){
       }
       case 'clicked-repo': {
         repoClicked(event);
+        clearFindFields();
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -284,6 +253,7 @@ async function _callback( name, event){
         // Update remote info immediately
         gitFetch();  
         
+        clearFindFields();
         _setMode('UNKNOWN');
         
         break;
@@ -383,7 +353,43 @@ async function _callback( name, event){
         storeButtonClicked();
         break;
       }
-   
+        
+      // History
+      case 'clicked-up-arrow': {
+        upArrowClicked();
+        break;
+      }
+      case 'clicked-down-arrow': {
+        downArrowClicked();
+        break;
+      }
+      case 'clicked-find': {
+        let delta = 30; 
+        let fix = -1; // One pixel move settles visibility somehow
+        if (document.getElementById('output_row').style.visibility == 'collapse' ){
+            // Show find
+            document.getElementById('output_row').style.visibility = 'visible';
+            window.resizeTo(win.width, win.height + fix);
+            window.resizeTo(win.width, win.height + delta);
+        }else{
+            // Hide find
+            document.getElementById('output_row').style.visibility = 'collapse';
+            window.resizeTo(win.width, win.height - delta);
+            window.resizeTo(win.width, win.height - fix);
+            
+            resetHistoryPointer();  // Go to first in history
+            upArrowClicked();// Get out of history
+            
+        }
+        let element = document.getElementById('inner-content');
+
+        break;
+      }
+      case 'clicked-find-button' :{
+        resetHistoryPointer();          
+        break;
+      }
+
       // Dialogs
       case 'newBranchNameKeyUp': {
         let string = document.getElementById("branchNameTextarea").value ;
@@ -1320,6 +1326,17 @@ async function _callback( name, event){
         await _update();
 
     };
+    function resetHistoryPointer(){
+        localState.historyNumber = -1; // Reset to current
+        downArrowClicked();
+        //_setMode('UNKNOWN');
+    }
+    function clearFindFields(){
+        document.getElementById('findTextInput').value = "";
+        document.getElementById('findFileInput').value = "";
+        document.getElementById('findDateInputAfter').value = "";
+        document.getElementById('findDateInputBefore').value = "";
+    }    
 
     // status-bar
     function folderClicked(){
