@@ -390,16 +390,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.72558266"
-     inkscape:cx="527.14896"
+     inkscape:cx="523.70345"
      inkscape:cy="204.76817"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
      showgrid="false"
      inkscape:window-width="1680"
      inkscape:window-height="1005"
-     inkscape:window-x="110"
-     inkscape:window-y="23"
+     inkscape:window-x="42"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      fit-margin-top="4"
      fit-margin-left="4"
@@ -540,6 +540,8 @@
      inkscape:label="Text"
      transform="translate(14.676295)">
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="67.977783"
@@ -566,6 +568,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan851" /></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        id="text1501"
        y="25.078777"
        x="46.014484"
@@ -577,6 +581,8 @@
          x="46.014484"
          sodipodi:role="line">Help</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="121.80038"
@@ -593,6 +599,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan1570">repository</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        id="text1704"
        y="17.596745"
        x="169.74629"
@@ -609,6 +617,8 @@
          sodipodi:role="line"
          id="tspan1782">Branch</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="252.18777"
@@ -630,6 +640,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan1992">Tag</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        id="text2282"
        y="61.625618"
        x="286.87833"
@@ -651,6 +663,8 @@
          sodipodi:role="line"
          id="tspan4421">(*)</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="191.33855"
@@ -667,6 +681,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan2566">Stash pop</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        id="text2568-3"
        y="124.32741"
        x="155.41655"
@@ -678,6 +694,8 @@
          sodipodi:role="line"
          id="tspan2783">Settings (software and repository)</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="61.027855"
@@ -694,6 +712,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan2975">(click to view diffs, delete or restore)</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="49.80481"
@@ -710,6 +730,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan2981">in Explorer / Finder</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="-10.676295"
@@ -746,6 +768,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan3547" /></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="85.032463"
@@ -757,6 +781,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan3573">&quot;Commit message area&quot; (type description here)</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="287.16608"
@@ -773,6 +799,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:0.264583"
          id="tspan3977">Close</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;fill:#000080;fill-opacity:1;stroke:none;stroke-width:1.165;stroke-miterlimit:4;stroke-dasharray:none"
        x="136.51353"
@@ -794,6 +822,8 @@
          style="font-size:6.35px;fill:#000080;stroke-width:1.165;stroke-miterlimit:4;stroke-dasharray:none"
          id="tspan4431">   - &quot;Store&quot; changes to &quot;Checkout&quot; when viewing history</tspan></text>
     <text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
        id="text6147"
        y="74.014397"
        x="87.334633"
