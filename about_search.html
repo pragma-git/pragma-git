@@ -1,0 +1,151 @@
+
+<html>
+    <head>
+      <title>About</title>
+      
+    </head>
+    
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 12pt;
+        }
+        
+        h4{
+            text-align:left;   
+        }        
+        h2, h3{
+            text-align:center;   
+        }       
+        code{
+            color: #006400; 
+            font-size: 11pt;  
+        }
+        
+        th{
+            border-collapse: collapse;
+            text-align:left;
+            font-size: 12pt;
+            padding: 6px;
+        }
+        table{
+            border-collapse: collapse;
+            text-align:left;
+        }
+        tr{
+            border-bottom: 2px solid #ccc;
+            font-size: 10pt;
+        }
+        td{
+            padding: 6px;
+        }
+
+
+        
+    </style>
+    
+        <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
+    <style> 
+        .collapsible {
+          background-color: #FFF;
+          //color: white;
+          cursor: pointer;
+          padding: 8px;
+          width: 100%;
+          border: none;
+          text-align: left;
+          outline: none;
+          font-size: 15px;
+        }
+        
+        .active, .collapsible:hover {
+          //background-color: #555;
+        }
+        
+        .collapsible:after {
+          content: '\002B'; # Unicode character for "plus" sign (+) 
+          //color: white;
+          font-weight: bold;
+          float: left;
+          margin-left: 5px;
+        }
+        
+        .active:after {
+          content: "\2212"; # Unicode character for "plus" sign (-) 
+        }
+        
+        .content {
+          padding: 0 18px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.2s ease-out; 
+        }
+        
+        .quickUnfold {
+          transition: max-height 0.0s ease-out; 
+        }
+
+    </style>
+
+    
+
+<body>   
+    
+      
+<div id="search-content">
+    
+        
+    <div id="search-inner-content" style="height: auto;">
+            
+
+        <!-------------------------------------------------------------------------------------------->             
+         <h4 id="SEARCH">Searching history </h4>            
+         
+         
+        <p>The number of visible previous commits can be filtered in a dialog that opens 
+        by clicking the <img src="images/find_black.png"  height="17" width="17"> icon.
+        </p>
+        
+        <p>The dialog allows filtering using any combination of the fields for :
+            <ul>
+                <li>file name (part of, or whole name)</li>
+                <li>text in commit message</li>
+                <li>date range</li>
+            </ul> 
+        </p>       
+            
+        Figure showing the dialog :<br>  
+        <br>   
+        <img style='vertical-align:middle;' src="images/Cheat-sheet-search.png" width="65%">
+         
+        <p>
+        After pressing the [Find] button, the lower status bar shows something like <code>(1 of 9)</code>, where the second number shows how
+        many commits that were found, and the first number which of these commits is currently displayed.  This filtered history
+        can be browsed by the arrow buttons 
+        (<img src="images/up-arrow_hover.png"  height="17" width="17">
+         <img  src="images/down-arrow_hover.png"  height="17" width="17">),
+        exactly as described for the non-filtered history
+        </p>    
+        
+        <p>
+        The format for dates follow git notation, and can be in many convenient formats as indicated in above figure text.  Git uses
+        a library called "approxidate", which is very flexible, but the documentation is sparse.   
+        </p>
+         
+        <p>
+        The filter is disabled by clicking the <img src="images/find_black.png"  height="17" width="17"> icon again.
+        </p>
+        
+        
+        <br>
+        <br>
+
+        <!-------------------------------------------------------------------------------------------->        
+
+    </div>
+</div>
+
+
+  
+</body>
+</html>

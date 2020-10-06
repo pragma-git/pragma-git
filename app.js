@@ -391,11 +391,11 @@ async function _callback( name, event){
       }
       case 'help-on-find' :{
         gui.Window.open(
-            'about.html#/new_page', 
-            {   id: 'aboutWindowId',
+            'about_search.html#/new_page', 
+            {   id: 'aboutSearchWindowId3',
                 position: 'center',
                 width: 600,
-                height: 700   
+                height: 600
             });         
         break;
       }
