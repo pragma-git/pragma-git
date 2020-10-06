@@ -233,23 +233,23 @@
                              
                             <div class="group">
                                 <label for="findFileInput"> file</label>
-                                <input id="findFileInput" type="text" placeholder="file name"  size="25"/>
+                                <input id="findFileInput" type="text" placeholder="file name"  size="25"onkeydown="clickFind()"/>
                             </div>
                                                         
                             <div class="group">
                                 <label for="findTextInput"> message text</label>
-                                <input id="findTextInput" type="text" placeholder="text"  size="25"/> 
+                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
                             </div>
                             &nbsp;&nbsp;
                                                        
                             <div class="group">
                                 <label for="findDateInputAfter"> since (oldest)</label>
-                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12"/> 
+                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12" onkeydown="clickFind()"/> 
                             </div>
                             
                             <div class="group">
                                 <label for="findDateInputBefore"> until (newest)</label>
-                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12"/>
+                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12" onkeydown="clickFind()"/>
                             </div>
                             
 
@@ -258,11 +258,18 @@
                         
                     </td>
                     <td>
-                            <button onclick="_callback('clicked-find-button')" >Find</button>
+                            <button id="find_button" onclick="_callback('clicked-find-button')" >Find</button>
                             
                     </td>
                 </tr>
             </table>
+            <script>
+                function clickFind() {
+                    if (event.keyCode == 13) {
+                        find_button.click();
+                    } 
+                }
+            </script>    
 
 
         </div>
