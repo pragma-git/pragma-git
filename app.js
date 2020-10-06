@@ -389,6 +389,16 @@ async function _callback( name, event){
         resetHistoryPointer();          
         break;
       }
+      case 'help-on-find' :{
+        gui.Window.open(
+            'about.html#/new_page', 
+            {   id: 'aboutWindowId',
+                position: 'center',
+                width: 600,
+                height: 700   
+            });         
+        break;
+      }
 
       // Dialogs
       case 'newBranchNameKeyUp': {
