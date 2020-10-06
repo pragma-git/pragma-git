@@ -2805,7 +2805,7 @@ function saveSettings(){
         state.position.height = win.height;  
     
     // Save settings
-    var jsonString = JSON.stringify(state, null, 2);
+    let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
 }
 function loadSettings(settingsFile){
@@ -2818,7 +2818,7 @@ function loadSettings(settingsFile){
 
     try{
         // 1) Read json
-        jsonString = fs.readFileSync(settingsFile);
+        let jsonString = fs.readFileSync(settingsFile);
         state_in = JSON.parse(jsonString);
         
         console.log('state -- read from json file');
