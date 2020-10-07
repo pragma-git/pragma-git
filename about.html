@@ -181,19 +181,25 @@
                 <dd>&nbsp;</dd>
                 <dt><i>These buttons are always visible :</i></dt>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
-                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project</dd>
+                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project.<a href="#NOTES">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
+                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. View it as a temporary Store, which leaves no trace in the revision history</dd>
                 <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
                     <dd>&nbsp;</dd>
-                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
+                    
+                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
                     
                 <dt><i>These buttons are visible only when they can be used :</i></dt>
@@ -204,6 +210,7 @@
                 <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
                 <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
                     <dd>&nbsp;</dd>
                 </dd>
@@ -402,7 +409,7 @@
         <hr>      
 
  <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Store version with short description </h4>
+         <h4 id="STORE">Store version with short description </h4>
              <p>
                 When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
                 you may store a named revision of the project. The nice thing about the revision control system is, 
@@ -429,7 +436,7 @@
          <hr>    
             
  <!-------------------------------------------------------------------------------------------->                                  
-           <h4>Project Notes </h4>                    
+           <h4 id="NOTES">Project Notes </h4>                    
             <p> You may write personal notes for each repository.  The format is "markdown" rich text, 
             which you can type in a visual mode (what you see is what you get), or in a traditional markdown editor.  
             You change mode at the bottom-right of the editor.
@@ -526,7 +533,48 @@
                         
         <br>
         <hr>               
-     
+      
+      <iframe id="SEARCH"  src="about_search.html" frameborder="0" style="width:100%;height:100%;" 
+          onload='content=document.getElementById("SEARCH");
+          content.style.height="";
+          content.style.height=content.contentWindow.document.documentElement.scrollHeight'> </iframe>
+          
+          <hr>
+ <!-------------------------------------------------------------------------------------------->             
+<!--
+         <h4 id="SEARCH2">Searching history </h4>            
+         
+         
+        <p>The number of stored commits can be filtered in a dialog that opens by clicking the <img src="images/find_black.png"  height="17" width="17"> icon.
+        </p>
+        
+        <p>The dialog allows to filter on any combination of file name (also part of file names), text in commit message, and a date range :
+        </p>       
+            
+            
+        <img style='vertical-align:middle;' src="images/Cheat-sheet-search.png" width="65%">
+         
+        <p>
+        After pressing the [Find] button, the lower status bar shows something like <code>(1 of 9)</code>, where the second number shows how
+        many commits that were found, and the first number which of these commits are currently displayed.  This filtered history
+        can be browsed by the arrow buttons exactly the same as the non-filtered history (see above)
+        </p>    
+        
+        <p>
+        The format for dates follow git notation, and can be in many convenient format as indicated in above figure.  Git uses
+        a library called "approxidate", which is very flexible, but the documentation seems to be lacking.   
+        </p>
+         
+        <p>
+        The filter is disabled by clicking the <img src="images/find_black.png"  height="17" width="17"> icon again
+        </p>
+        
+        
+        <br>
+        <br>
+        
+        <hr> 
+-->
  <!-------------------------------------------------------------------------------------------->             
          <h2 id="INSTALLATION">Installation </h2>
         <hr>             

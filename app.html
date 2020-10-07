@@ -168,25 +168,48 @@
                 <tr>
                     <!-- History arrows  --> 
                     <td>
-                        <table id="arrow_table">               
+                        <table id="arrow_table">  
+                        <tr height="auto">
+                            <td> 
+                            </td> 
+                        </tr>      
                         <tr>
-                            <td>
-                                <img id="up-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-up-arrow')" 
-                                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
-                                src="images/up-arrow.png">
+                            <td> 
                             </td> 
                         </tr>            
-                        <tr>
+                        <tr height="17px">
+                            <td>
+                                <img id="up-arrow"  height="17" width="17" 
+                                    onclick="_callback( 'clicked-up-arrow')" 
+                                    onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                                    src="images/up-arrow.png">
+                            </td> 
+                        </tr>            
+                        <tr height="17px">
                             <td>
                                 <img id="down-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-down-arrow')"  
-                                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
-                                src="images/down-arrow.png">
+                                    onclick="_callback( 'clicked-down-arrow')"  
+                                    onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                                    src="images/down-arrow.png">
                             </td> 
-                        </tr>
+                        </tr> 
+                        <tr>
+                            <td> 
+                            </td> 
+                        </tr>       
+                         <!-- Icon Find  -->   
+                        <tr height="auto"  style="height: fit-content">
+                            <td>
+                                <img id="bottom-titlebar-find-icon" height="17" width="17" 
+                                    onclick="_callback('clicked-find');updateContentStyle();"
+                                    onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
+                                    onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
+                                    src="images/find.png">
+                            </td> 
+                        </tr>   
+
                         </table>
                     </td>
                     
@@ -202,16 +225,55 @@
                 
                 <!-- Collapsable html output  --> 
                 <tr id="output_row" style="visibility:collapse">
-                    <td></td>
                     <td>
+                
+                    </td>
+                    <td class="message_column">
                         <div id="output_text">
-                            dasdfasfdas
+                             
+                            <div class="group">
+                                <label for="findFileInput"> file</label>
+                                <input id="findFileInput" type="text" placeholder="file name"  size="25"onkeydown="clickFind()"/>
+                            </div>
+                                                        
+                            <div class="group">
+                                <label for="findTextInput"> message text</label>
+                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
+                            </div>
+                            &nbsp;&nbsp;
+                                                       
+                            <div class="group">
+                                <label for="findDateInputAfter"> since (oldest)</label>
+                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12" onkeydown="clickFind()"/> 
+                            </div>
+                            
+                            <div class="group">
+                                <label for="findDateInputBefore"> until (newest)</label>
+                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12" onkeydown="clickFind()"/>
+                            </div>
+                            
+
+                            <img id="about-icon-find"   style='vertical-align:middle;'  height="17" width="17"  
+                                onclick="_callback('help-on-find')" 
+                                onmouseover="updateImageUrl('about-icon-find', 'images/questionmark_black.png');" 
+                                onmouseout= "updateImageUrl('about-icon-find', 'images/questionmark_hover.png');" 
+                                src="images/questionmark_hover.png">
                         </div>
                         
                     </td>
-                    <td></td>
+                    <td>
+                            <button id="find_button" onclick="_callback('clicked-find-button')" >Find</button>
+                            
+                    </td>
                 </tr>
             </table>
+            <script>
+                function clickFind() {
+                    if (event.keyCode == 13) {
+                        find_button.click();
+                    } 
+                }
+            </script>    
 
 
         </div>
@@ -237,7 +299,6 @@
         <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
                 onclick="_callback('clicked-status-text')">
             </div>
-            
             
                                                
         <!-- Icon Stash  -->                             
