@@ -142,7 +142,13 @@
 
         
     <!--  INSTRUCTIONS FOLDABLE HEADER--> 
-    <button class="collapsible" id="instructions">&nbsp; Instructions :</button>
+    <button class="collapsible" id="instructions">&nbsp;
+                <img id="about-icon" style='vertical-align:middle;' height="17" width="17"  
+                onclick="_callback('clicked-about');" 
+                onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                src="images/questionmark.png">&nbsp; Instructions :
+    </button>
     
     <div class="content">
         
