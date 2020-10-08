@@ -419,6 +419,12 @@ async function _callback( name, event){
         console.log(event);
 
         let newBranchName = document.getElementById('branchNameTextarea').value;
+        let gitflowPrefix = document.getElementById('gitflow').value;
+        
+        if ( gitflowPrefix.length > 1){
+            newBranchName = gitflowPrefix + '/' + newBranchName;
+        }
+        
 
         
         // Create and checkout new branch

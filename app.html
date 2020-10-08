@@ -398,13 +398,26 @@
             <br>
         
         <button  id="newBranchNameEntered"
-            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            onclick="document.getElementById('branchNameInputDialog').close();
+            _callback('addBranchButtonPressed', this.value);
+            document.getElementById('branchNameTextarea').value='';
+            document.getElementById('gitflow').value='none';">
             OK
         </button>           
         <button id="cancelBranchNameInputDialog"
-            onclick="document.getElementById('branchNameInputDialog').close();document.getElementById('branchNameTextarea').value='';">
+            onclick="document.getElementById('branchNameInputDialog').close();
+            document.getElementById('branchNameTextarea').value='';
+            document.getElementById('gitflow').value='none';">
             Cancel
         </button>  
+                      
+          <select id="gitflow" name="gitflow"  style="float: right;">
+            <option value="none">none</option>
+            <option value="feature">feature/</option>
+            <option value="release">release/</option>
+            <option value="hotfix">hotfix/</option>
+          </select>
+          <label for="gitflow" style="float: right;vertical-align:middle;">Prefix:</label>
     </dialog>      
 
 
