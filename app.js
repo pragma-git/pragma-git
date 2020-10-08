@@ -805,27 +805,8 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
-                // Add names of all branches
-                for (var i = 0; i < menuItems.length; ++i) {
-                    if (currentBranch != menuItems[i]){
-                        let myEvent = [];
-                        myEvent.selectedBranch = menuItems[i];
-                        myEvent.currentBranch = currentBranch;
-                        menu.append(
-                            new gui.MenuItem(
-                                { 
-                                    label: menuItems[i], 
-                                    click: () => { _callback('clickedBranchContextualMenu',myEvent);} 
-                                } 
-                            )
-                        );
-                        console.log(menuItems[i]);
-                    }else{
-                        console.log('Skipped current branch = ' + menuItems[i]);
-                    }
-        
-                }
-
+                //// Add names of all branches
+                makeBranchMenu(menu, currentBranch, menuItems, 'clickedBranchContextualMenu')
         
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
@@ -962,27 +943,9 @@ async function _callback( name, event){
         menu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
-        for (var i = 0; i < menuItems.length; ++i) {
-            if (currentBranch != menuItems[i]){
-                let myEvent = [];
-                myEvent.selectedBranch = menuItems[i];
-                myEvent.currentBranch = currentBranch;
-                menu.append(
-                    new gui.MenuItem(
-                        { 
-                            label: menuItems[i], 
-                            click: () => { _callback('clickedMergeContextualMenu',myEvent);} 
-                        } 
-                    )
-                );
-                console.log(menuItems[i]);
-            }else{
-                console.log('Skipped current branch = ' + menuItems[i]);
-            }
+        makeBranchMenu(menu, currentBranch, menuItems, 'clickedMergeContextualMenu')
 
-        }
- 
-        
+        // Add helping text
         menu.append(new gui.MenuItem({ type: 'separator' }));
         menu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
 
@@ -1038,7 +1001,6 @@ async function _callback( name, event){
                 
 
     }
-
     async function checkoutTag(tagName){
         
         // I want to checkout with commit-hash -- and not tag name.
@@ -1110,6 +1072,79 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     } 
+    function makeBranchMenu(menu, currentBranch, menuItems, callbackName){ // helper for branchClicked and mergeClicked
+        // menu is a nw.Menu
+        // currentBranch is a string
+        // menuItems is an array of branch names
+        // callbackName is a string
+        
+        
+            let cachedFirstPart = ' ';
+            let item = new gui.MenuItem({ label: 'dummy' }); // will make new one inside loop
+            let submenu = new gui.Menu(); // dummy
+                
+            for (var i = 0; i < menuItems.length; ++i) {
+                 
+                 
+                // For all branches not being current branch : 
+                if (currentBranch != menuItems[i]){
+                    let myEvent = [];
+                    myEvent.selectedBranch = menuItems[i];
+                    myEvent.currentBranch = currentBranch;
+
+                    
+                    //--------------------------
+                    // Make submenu if branch containing '/'
+                    if ( menuItems[i].includes("/") ) {
+                        // Submenu
+                                                                
+                        // Split on '/'
+                        let firstPart = myEvent.selectedBranch.split('/',1);
+                        let secondPart = myEvent.selectedBranch.substring(myEvent.selectedBranch.indexOf('/')+1);
+
+                        // Reuse submenu if same firstPart as last time
+                        if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                            item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                            menu.append( item); // Add submenu to main menu
+                            
+                            submenu = new gui.Menu();  // Create empty submenu
+                        }
+                        
+                        // Add submenu-row to submenu
+                        submenu.append(new gui.MenuItem(
+                                { 
+                                    label: secondPart, 
+                                    click: () => { _callback(callbackName,myEvent);} 
+                                } 
+                            )
+                        );
+                        item.submenu = submenu;
+ 
+                        // Remember firstPart -- so I know it has happened more than once
+                        cachedFirstPart = firstPart;
+                        
+                    } else {
+                        // No submenu
+                        menu.append(
+                            new gui.MenuItem(
+                                { 
+                                    label: menuItems[i], 
+                                    click: () => { _callback(callbackName,myEvent);} 
+                                } 
+                            )
+                        );
+                        console.log(menuItems[i]);
+                    } // -----------------
+                    
+                }else{
+                    // Skip current branch
+                    console.log('Skipped current branch = ' + menuItems[i]);
+                }
+    
+            }           
+   
+        };
+
     // main window
     async function storeButtonClicked() { 
         
