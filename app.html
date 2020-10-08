@@ -385,7 +385,7 @@
 
     <!-- Branch creation -->   
   
-    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black; max-height: 90%">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="branchNameTextarea" 
@@ -394,9 +394,10 @@
                 placeholder="name of new branch"
                 onkeyup= "_callback('newBranchNameKeyUp', this);"></textarea>
             <br>
-
             <br>
-        
+
+  
+         <div>      
         <button  id="newBranchNameEntered"
             onclick="document.getElementById('branchNameInputDialog').close();
             _callback('addBranchButtonPressed', this.value);
@@ -409,15 +410,16 @@
             document.getElementById('branchNameTextarea').value='';
             document.getElementById('gitflow').value='none';">
             Cancel
-        </button>  
-                      
+        </button> 
+         
           <select id="gitflow" name="gitflow"  style="float: right;">
             <option value="none">none</option>
             <option value="feature">feature/</option>
             <option value="release">release/</option>
             <option value="hotfix">hotfix/</option>
           </select>
-          <label for="gitflow" style="float: right;vertical-align:middle;">Prefix:</label>
+          <label for="gitflow" style="float: right;">Prefix:</label>
+          </div>
     </dialog>      
 
 
