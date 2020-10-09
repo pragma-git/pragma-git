@@ -45,9 +45,6 @@ async function injectIntoJs(document) {
     if ( win.canSetVisibleOnAllWorkspaces() ){
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
     }
-        
-    // Always on top
-    win.setAlwaysOnTop( state.alwaysOnTop );
     
     let status_data;
     

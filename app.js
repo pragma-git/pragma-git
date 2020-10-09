@@ -156,6 +156,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Handles to windows
         var settings_win;
         var notes_win;
+        var changed_win;
+        var resolve_win;
  
       
     // Files & folders
@@ -600,8 +602,10 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-status-text' : {
-        if (localState.fileListWindow == true) {
-                return
+        if (localState.fileListWindow == true) {        
+            try{ list_win.focus(); }catch(err){ }     
+            try{ resolve_win.focus(); }catch(err){ }
+            return
         }
             
         let status_data = await gitStatus();
@@ -1436,28 +1440,33 @@ async function _callback( name, event){
             return
         }
         
-        resolve_win = gui.Window.open('resolveConflicts.html#/new_page' ,
+        gui.Window.open('resolveConflicts.html#/new_page' ,
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
                 width: 600,
                 height: 700,
                 title: "Resolve Conflicts"
-            }
+            },
+                win=>win.on('loaded', () => resolve_win = nw.Window.get(win.window))
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
     };
     
     function listChanged(){
-        resolve_win = gui.Window.open('listChanged.html#/new_page' ,
+
+        
+        gui.Window.open('listChanged.html#/new_page' ,
             {
                 id: 'listChangedId',
                 position: 'center',
                 width: 600,
                 height: 700,
                 title: "List Changed Files"
-            }
+            },
+                win=>win.on('loaded', () => list_win = nw.Window.get(win.window))
+            
             ); 
         console.log(settings_win);        
     };
