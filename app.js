@@ -155,6 +155,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Handles to windows
         var settings_win;
+        var notes_win;
  
       
     // Files & folders
@@ -285,6 +286,7 @@ async function _callback( name, event){
       }
       case 'clicked-notes':{
         if (localState.notesWindow.open == true) {
+            try{ notes_win.focus(); }catch(err){ }
             return
         }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
@@ -297,7 +299,9 @@ async function _callback( name, event){
                 width: 600,
                 height: 600,
                 title: "Notes"
-            })  
+            },
+            win=>win.on('loaded', () => notes_win = nw.Window.get(win.window))
+            )  
         
         localState.notesWindow.open = true;
         break;
@@ -1404,6 +1408,7 @@ async function _callback( name, event){
         console.log('Settings button pressed');
         
         if ( getMode() == 'SETTINGS' ){
+            try{ settings_win.focus(); }catch(err){ }
             return
         }
         
@@ -1416,7 +1421,9 @@ async function _callback( name, event){
                 width: 600,
                 height: 700,
                 title: "Settings"
-            }
+            },
+            win=>win.on('loaded', () => settings_win = nw.Window.get(win.window))
+            
             ); 
         console.log(settings_win);
         localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
