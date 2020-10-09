@@ -364,7 +364,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find': {
-        let delta = 30; 
+        let delta = 40; 
         let fix = -1; // One pixel move settles visibility somehow
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             // Show find
