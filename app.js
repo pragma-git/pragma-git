@@ -183,7 +183,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var localState = [];
         localState.historyNumber = -1;
         localState.historyLength = 0;  // Number available in history or search 
-        localState.branchNumber = 0;  
+        localState.branchNumber = 0;   // Used only when changing to next branch -- otherwise branch as in current repository TODO : Update value when changing Repo
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
@@ -252,6 +252,7 @@ async function _callback( name, event){
         console.log('Selected repo = ' + event.selectedRepo);
         console.log('Selected repo = ' + event.selectedRepoNumber);
         state.repoNumber = event.selectedRepoNumber;
+        gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
         
         // Update remote info immediately
         gitFetch();  
@@ -665,7 +666,7 @@ async function _callback( name, event){
     async function repoClicked( type){
         
         //
-        // Show branch menu
+        // Show menu
         //
         if (type == 'menu'){
             var menu = new gui.Menu();
@@ -707,8 +708,8 @@ async function _callback( name, event){
             await menu.popup( Math.trunc(pos.left) -10,24);
             
             
-            return; // BAIL OUT
-
+            return; // BAIL OUT --  
+            // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
         }
         
 
@@ -721,6 +722,7 @@ async function _callback( name, event){
             if (state.repoNumber >= numberOfRepos){
                 state.repoNumber = 0;
             }
+            gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
         }
         
         // Update remote info immediately
@@ -2298,9 +2300,23 @@ async function gitShow(commit){
     return outputStatus;
     
 }
+async function gitSetLocalBranchNumber(){
+        
+    let branchSummary;
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
+        function onLog(err, result){console.log(result);console.log(err);branchSummary=result;}  
+        // branchSummary.current :  the checked-out branch name 
+        // branchSummary.all     :  an array of all branch names
+        localState.branchNumber = branchSummary.all.findIndex( (s) => { return (s === branchSummary.current) } ); // Search using javascript String.findIndex function (compare with current branchName) 
+    }catch (err){
+        console.log('Failed determining branchNumber');
+    }
+
+}
 async function gitBranchList(){
     let branchList;
-    
+   
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
         function onBranchList(err, result ){console.log(result); branchList = result.all};
