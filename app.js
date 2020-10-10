@@ -279,6 +279,7 @@ async function _callback( name, event){
             console.log(err);
         }  
         
+        localState.branchNumber = event.branchNumber;  
         _setMode('UNKNOWN');
 
         // Reset some variables
@@ -738,9 +739,9 @@ async function _callback( name, event){
             console.log('Error in unComittedFiles,  calling  _mainLoop()');
             console.log(err);
         }
-        
+    
         //
-        // If Detached Head (dialog if needed, then bail out)
+        // If Detached Head (dialog and bail out if changes have been made to detached Head)
         //
         if (detectDetachedBranch && status_data.current == 'HEAD' ){ 
             
@@ -779,16 +780,20 @@ async function _callback( name, event){
 
         }
         
-        
+        // Reached here if  :
+        // - branch named HEAD without changes
+        // - other branch with given name  (not called HEAD)
      
-        // Determine if no files to commit
-        var uncommitedFiles = status_data.changedFiles;
 
+        //
+        // Checkout branch, or tell user to commit 
+        //
     
-        // Checkout branch  /  Warn about uncommited (if that setting is enabled)
+        var uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+
         if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
-            // Let user know that they need to commit before changing branch
-            //await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
+            // Tell user to commit first (if that setting is enabled)
+            
             let tempOutput = {};
             tempOutput.placeholder = 'Before changing branch :' + os.EOL + 'Add description and Store ...';
             tempOutput.value = '';
@@ -796,6 +801,9 @@ async function _callback( name, event){
             
             
         }else{
+            // Checkout will be performed
+            // - next branch 
+            // - same as currentBranch if detached HEAD
                 
             // Determine local branches
             var branchList;
@@ -805,17 +813,19 @@ async function _callback( name, event){
                 console.log('Error determining local branches, in branchClicked()');
                 console.log(err);
             }
+
             
             //
-            // TODO : as is, this routine can be called with intention to 1) chose branch from a menu, 2) cycle branches. How to know selected ?
-            //
-            
-            //
-            // Show branch menu
+            // Alt 1) Show branch menu
             //
             if (type == 'menu'){
                 var menu = new gui.Menu();
                 let menuItems = branchList;
+                
+                // If detached HEAD, remove one item from menu
+                if (status_data.current === 'HEAD') { 
+                    menuItems.shift();  // Remove first item
+                }
                 
                 let currentBranch = status_data.current;
         
@@ -823,30 +833,49 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
-                //// Add names of all branches
+                // Add names of all branches
                 makeBranchMenu(menu, currentBranch, menuItems, 'clickedBranchContextualMenu')
+
         
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
                 await menu.popup( Math.trunc(pos.left) - 10,24);
                     
-                return // BAIL OUT
+                return // BAIL OUT -- branch will be set from menu callback
             }
 
             
             //
-            // Cycle through local branches
+            // Alt 2) Cycle through local branches
             //
-            if (type == 'cycle'){            
-                localState.branchNumber = localState.branchNumber + 1;
-                var numberOfBranches = branchList.length;
-                if (localState.branchNumber >= numberOfBranches){
-                    localState.branchNumber = 0;
+            if (type == 'cycle'){ 
+
+                // Get branch name
+                
+                let branchName; 
+                if (status_data.current === 'HEAD') { 
+                    
+                    // Make sure branch number within range
+                    if (localState.branchNumber >= branchList.length){
+                        localState.branchNumber = 0;
+                    }
+                    // Keep branch number. Get that branch from branchList         
+                    branchName = branchList[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                }else {
+                    // Normal branch
+                    
+                    // Cycle branch number
+                    localState.branchNumber = localState.branchNumber + 1;
+                    if (localState.branchNumber >= branchList.length){
+                        localState.branchNumber = 0;
+                    }
+                    // Get branchname after cycling
+                    branchName = branchList[localState.branchNumber];
                 }
-                var branchName = branchList[localState.branchNumber];
     
         
                 // Checkout local branch
+                
                 try{
                     await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
                     function onCheckout(err, result){console.log(result)} 
@@ -856,7 +885,7 @@ async function _callback( name, event){
                     console.log(err);
                 } 
             } 
-        }
+        } // End checking out branch
     
         console.log(branchList);
      
@@ -1109,6 +1138,7 @@ async function _callback( name, event){
                     let myEvent = [];
                     myEvent.selectedBranch = menuItems[i];
                     myEvent.currentBranch = currentBranch;
+                    myEvent.branchNumber = i;
 
                     
                     //--------------------------
