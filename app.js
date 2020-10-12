@@ -194,6 +194,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
         
+        localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
+        
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -290,7 +292,7 @@ async function _callback( name, event){
       }
       case 'clicked-notes':{
         if (localState.notesWindow.open == true) {
-            try{ notes_win.focus(); }catch(err){ }
+            try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
             return
         }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
@@ -2191,6 +2193,12 @@ async function gitStatus(){
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
     
+    // Handle if pinnedCommit
+    if (localState.pinnedCommit !== ''){
+        status_data = pinnedGitStatus( localState.pinnedCommit, localState.historyHash); // TODO : how handle if non-historical commits from two branches ?
+    }
+    
+    // Handle normal status of uncommited
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder)
             .status( onStatus);
@@ -2205,28 +2213,101 @@ async function gitStatus(){
         //console.log(status_data);
         status_data.current;  // Name of current branch
         
+
+        // TEST
+
+        //pinnedGitStatus( '5147433252f946b6439cc10a01692cd0824cd6c6', '3bb825ae6b0e9285728d8cd00e66d061050302a9');  // On Imlook4d master branch
+
+        // END TEST
+        
+        
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
         
         // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
-        status_data = [];
-        status_data.conflicted = [];
-        status_data.modified = []; // zero length
-        status_data.not_added = [];
-        status_data.created = [];
-        status_data.deleted = [];
-        status_data.changedFiles = false;
-        status_data.ahead = 0;
-        status_data.behind = 0;
-
+        status_data = createEmptyGitStatus();
     }
  
     // return fields : 
     //      changedFiles (boolean) 
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
-    return status_data;  
+    
+    return status_data;
+    
+    //return pinnedGitStatus( '5147433252f946b6439cc10a01692cd0824cd6c6', 'aea50f1a3c19fee6c5ca87c02cd39ef614c6869a');
+
+
+
+
+    //
+    // Internal functions
+    //
+        function createEmptyGitStatus(){
+            status_data = [];
+            status_data.conflicted = [];
+            status_data.modified = []; // zero length
+            status_data.not_added = [];
+            status_data.created = [];
+            status_data.deleted = [];
+            status_data.changedFiles = false;
+            status_data.ahead = 0;
+            status_data.behind = 0;
+            return status_data;
+        };
+        
+        
+        async function pinnedGitStatus( oldCommit, newCommmit){
+            // Depends on localState.historyHash being set throw arrow history browsing
+            
+            let status_data = createEmptyGitStatus();
+            
+            let fileListString;
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder)
+                    .diff( [ '--name-status', oldCommit, newCommmit ], onFileList);
+                function onFileList(err, result ){  fileListString = result }
+                
+                // Build status_data.files struct
+                status_data.files = [];
+                
+                // Fill status_data (Simple-git StatusSummary-struct)
+                let fileListStringArray = fileListString.split("\n");
+                let filesStruct;
+                for (let i in fileListStringArray) {
+                    let index = fileListStringArray[i].substring(0,2);
+                    let path  = fileListStringArray[i].substring(2);
+
+                    // Decode and fill StatusSummary
+                    if ( path !==''){                 
+                        switch (index.trim() ) {
+                            case "D" :
+                                status_data.deleted.push( path); 
+                                break;
+                            case "M" :
+                                status_data.modified.push( path); 
+                                break;
+                            case "A" :
+                                status_data.created.push( path); 
+                                break;
+                            case "R" :
+                                status_data.renamed.push( path); 
+                                break;
+                        }
+                        status_data.files.push( { index: index, path: path }); // fileStruct.files[i] = {index: "M	", path: "imlook4d/external functions/Update_imlook4d.m"}
+                    }
+                }
+
+            }catch(err){
+                console.log('Error in pinnedGitStatus()');
+                console.log(err);
+                
+                // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
+                status_data = createEmptyGitStatus();
+            }
+            return status_data;
+        };
 }
 async function gitShow(commit){
     
@@ -2240,11 +2321,18 @@ async function gitShow(commit){
     
     outputStatus.files = [];
     
-    let hash = localState.historyHash;
+    // Set two commit hashes
+    let hash2 = localState.historyHash;
+    let hash = hash2 + '^1' + '..' + hash2; // Guess historical: compare first parent with current commit
+    
+    // Correct guess, pinned commit should be compared to current history commit
+    if (localState.pinnedCommit !== ''){
+        hash = localState.pinnedCommit + '..' + localState.historyHash; // compare first parent with current commit    
+    }   
     
     try{
-        // Read status
-        hash = hash + '^1' + '..' + hash; // compare first parent with current commit
+
+        // Read diff
         await simpleGit(state.repos[state.repoNumber].localFolder).diff( ['--name-status','--oneline', hash], onWhatChanged);
         function onWhatChanged(err, result){ console.log(result); showStatus = result } 
         console.log('fileStatus -- hash = ' + hash);

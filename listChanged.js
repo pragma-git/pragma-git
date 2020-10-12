@@ -21,13 +21,6 @@ var localState = global.localState;
 
 var win
 
-const delayInMs = 1000;
-
-// Initiate GUI update loop 
-//var timer = _loopTimer( 1000);
-
-// Storage of paths to backup files
-//const backupExtension = '.orig';
 var origFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
 
 // ---------
@@ -50,8 +43,9 @@ async function injectIntoJs(document) {
     
     // Git Status
     try{
-        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+        //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+        //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+        status_data = await opener.gitStatus();
     }catch(err){
         console.log("createFileTable -- Error getting git status" );
         return
@@ -198,7 +192,8 @@ async function _callback( name, event, event2){
                 '-y',  
                 '--tool',
                 tool,
-                commit + "^:" + file,
+                //commit + "^:" + file,
+                localState.pinnedCommit + ":" + file,
                 commit + ":" + file
             ];
 
@@ -277,14 +272,17 @@ async function _callback( name, event, event2){
                 
     
             // Git Status
+            let status_data;
             try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                status_data = await opener.gitStatus();
             }catch(err){
                 console.log("discardLink -- Error " );
                 console.log(err);
                 return
             }
+            
 
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
@@ -314,9 +312,11 @@ async function _callback( name, event, event2){
                 
     
             // Git Status
+            let status_data;
             try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                status_data = await opener.gitStatus();
             }catch(err){
                 console.log("deleteLink -- Error " );
                 console.log(err);
@@ -383,38 +383,6 @@ async function _callback( name, event, event2){
 
 // ================= END CALLBACK =================  
 }
-//async function _loopTimer( delayInMs){
-    
-    //// Define timer
-    //let timer = window.setInterval( _update, delayInMs );
-    //return timer
-    
-
-    
-//}
-//async function _update(){
-    //if(isPaused) {
-        //return;
-    //}
-    
-    
-    //let folder = state.repos[state.repoNumber].localFolder;
-    //let status_data;
-    //try{
-        //await simpleGit( folder).status( onStatus );
-        //function onStatus(err, result ){ 
-            //status_data = result; 
-            //console.log(result); 
-            //console.log(err);
-            //createConflictingFileTable(document, status_data);
-            //// createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
-        //};
-    //}catch(err){
-        
-    //}
-    
-//}
-
 function closeWindow(){
 
     // Return
@@ -448,6 +416,8 @@ function createFileTable(status_data) {
     // Make  a new tbody
     let tbody = document.createElement("tbody"); // Empty tbody
     tbody.setAttribute('id','listFilesTableBody');
+    
+    console.log(status_data);
 
     // Fill tbody with content
     for (let i in status_data.files) { 
