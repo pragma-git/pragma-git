@@ -185,6 +185,12 @@ async function _callback( name, event, event2){
             //file = file.replace('/','//');
             
             tool = state.tools.difftool;
+            
+            // Set first commit to previous historical; or to pinned commit
+            let commit1 = commit + "^:" + file;
+            if (localState.pinnedCommit !== ''){
+                commit1 = localState.pinnedCommit + ":" + file;    
+            }   
 
             // Prepare for git diff with previous commit and selected commit in history log
             command = [  
@@ -192,8 +198,7 @@ async function _callback( name, event, event2){
                 '-y',  
                 '--tool',
                 tool,
-                //commit + "^:" + file,
-                localState.pinnedCommit + ":" + file,
+                commit1,
                 commit + ":" + file
             ];
 
