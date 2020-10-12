@@ -1298,7 +1298,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical(localState.historyHash);
             setStatusBar( fileStatusString( status_data));
 
         }catch(err){       
@@ -1353,7 +1353,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical(localState.historyHash);
             setStatusBar( fileStatusString( status_data));    
                   
             // Store hash
@@ -1773,7 +1773,7 @@ async function _update(){
                 let hash = localState.historyHash;
             
                 try{
-                    status_data = await gitShow(hash);
+                    status_data = await gitShowHistorical(hash);
                 }catch(err){
                     console.log('fileStatus -- caught error');
                     console.log(err);
@@ -2193,10 +2193,10 @@ async function gitStatus(){
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
     
-    // Handle if pinnedCommit
-    if (localState.pinnedCommit !== ''){
-        status_data = pinnedGitStatus( localState.pinnedCommit, localState.historyHash); // TODO : how handle if non-historical commits from two branches ?
-    }
+    //// Handle if pinnedCommit
+    //if (localState.pinnedCommit !== ''){
+        //status_data = pinnedGitStatus( localState.pinnedCommit, localState.historyHash); // TODO : how handle if non-historical commits from two branches ?
+    //}
     
     // Handle normal status of uncommited
     try{
@@ -2212,15 +2212,7 @@ async function gitStatus(){
             + status_data.deleted.length) > 0);
         //console.log(status_data);
         status_data.current;  // Name of current branch
-        
 
-        // TEST
-
-        //pinnedGitStatus( '5147433252f946b6439cc10a01692cd0824cd6c6', '3bb825ae6b0e9285728d8cd00e66d061050302a9');  // On Imlook4d master branch
-
-        // END TEST
-        
-        
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
@@ -2235,11 +2227,6 @@ async function gitStatus(){
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     
     return status_data;
-    
-    //return pinnedGitStatus( '5147433252f946b6439cc10a01692cd0824cd6c6', 'aea50f1a3c19fee6c5ca87c02cd39ef614c6869a');
-
-
-
 
     //
     // Internal functions
@@ -2256,60 +2243,9 @@ async function gitStatus(){
             status_data.behind = 0;
             return status_data;
         };
-        
-        
-        async function pinnedGitStatus( oldCommit, newCommmit){
-            // Depends on localState.historyHash being set throw arrow history browsing
-            
-            let status_data = createEmptyGitStatus();
-            
-            let fileListString;
-            try{
-                await simpleGit( state.repos[state.repoNumber].localFolder)
-                    .diff( [ '--name-status', oldCommit, newCommmit ], onFileList);
-                function onFileList(err, result ){  fileListString = result }
-                
-                // Build status_data.files struct
-                status_data.files = [];
-                
-                // Fill status_data (Simple-git StatusSummary-struct)
-                let fileListStringArray = fileListString.split("\n");
-                let filesStruct;
-                for (let i in fileListStringArray) {
-                    let index = fileListStringArray[i].substring(0,2);
-                    let path  = fileListStringArray[i].substring(2);
 
-                    // Decode and fill StatusSummary
-                    if ( path !==''){                 
-                        switch (index.trim() ) {
-                            case "D" :
-                                status_data.deleted.push( path); 
-                                break;
-                            case "M" :
-                                status_data.modified.push( path); 
-                                break;
-                            case "A" :
-                                status_data.created.push( path); 
-                                break;
-                            case "R" :
-                                status_data.renamed.push( path); 
-                                break;
-                        }
-                        status_data.files.push( { index: index, path: path }); // fileStruct.files[i] = {index: "M	", path: "imlook4d/external functions/Update_imlook4d.m"}
-                    }
-                }
-
-            }catch(err){
-                console.log('Error in pinnedGitStatus()');
-                console.log(err);
-                
-                // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
-                status_data = createEmptyGitStatus();
-            }
-            return status_data;
-        };
 }
-async function gitShow(commit){
+async function gitShowHistorical(commit){
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
