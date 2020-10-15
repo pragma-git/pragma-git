@@ -248,6 +248,7 @@ async function _callback( name, event){
       case 'clicked-repo': {
         repoClicked(event);
         clearFindFields();
+        localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -260,6 +261,7 @@ async function _callback( name, event){
         gitFetch();  
         
         clearFindFields();
+        localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         _setMode('UNKNOWN');
         
         break;
