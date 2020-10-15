@@ -2269,17 +2269,18 @@ async function gitShowHistorical(commit){
     let hash2 = localState.historyHash;
     let hash = hash2 + '^1' + '..' + hash2; // Guess historical: compare first parent with current commit
     
-    // Pinned commit.   Compared with current history commit
+    // If pinned commit.   Difference between pinned and current history point, shows change going forward in time
     if (localState.pinnedCommit !== ''){
            
         if ( await gitIsFirstCommitOldest( localState.pinnedCommit, localState.historyHash) ){
-            hash = localState.pinnedCommit + '..' + localState.historyHash; // compare first parent with current commit 
+            hash = localState.pinnedCommit + '..' + localState.historyHash; // compare pinned with current commit 
         }else {
             hash = localState.historyHash + '..' + localState.pinnedCommit; // Reverse order
         }
         console.log('git diff --name-status --oneline ' + hash);
     }   
 
+    // Generate file status data
     try{
 
         // Read diff
@@ -2324,9 +2325,7 @@ async function gitShowHistorical(commit){
             }
         }
 
-        
-        
-        
+
     }catch(err){
         console.log('fileStatus -- caught error');
         console.log(err);
