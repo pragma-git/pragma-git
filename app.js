@@ -340,6 +340,7 @@ async function _callback( name, event){
                 deleteTag(event.selected);
                 break;
         }
+        break;
       }
       case 'clicked-close-button': {
         closeWindow();
