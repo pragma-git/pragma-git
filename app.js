@@ -990,6 +990,11 @@ async function _callback( name, event){
   
         let menuItems = branchList;
         
+        // Remove HEAD from list, if it is there
+        if (currentBranch === 'HEAD') { 
+            menuItems.shift(); // Remove first element (which is where HEAD is in list)
+        }
+        
         // Add context menu title-row
         menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
