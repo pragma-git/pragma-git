@@ -2267,11 +2267,17 @@ async function gitShowHistorical(commit){
     let hash2 = localState.historyHash;
     let hash = hash2 + '^1' + '..' + hash2; // Guess historical: compare first parent with current commit
     
-    // Correct guess, pinned commit should be compared to current history commit
+    // Pinned commit.   Compared with current history commit
     if (localState.pinnedCommit !== ''){
-        hash = localState.pinnedCommit + '..' + localState.historyHash; // compare first parent with current commit    
+           
+        if ( await gitIsFirstCommitOldest( localState.pinnedCommit, localState.historyHash) ){
+            hash = localState.pinnedCommit + '..' + localState.historyHash; // compare first parent with current commit 
+        }else {
+            hash = localState.historyHash + '..' + localState.pinnedCommit; // Reverse order
+        }
+        console.log('git diff --name-status --oneline ' + hash);
     }   
-    
+
     try{
 
         // Read diff
@@ -2643,6 +2649,16 @@ async function gitMerge( currentBranchName, selectedBranchName){
     //textOutput.placeholder = 'Write description of Merge, and press Store';
     writeTextOutput( textOutput);
 }
+    
+async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+    let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
+    let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
+    function onLog(err, result){ console.log(result); return result } 
+    
+    return (logCorrectOrder.total > 0);
+    
+}
+
 
 // Utility functions
 function getMode(){
