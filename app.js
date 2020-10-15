@@ -2962,11 +2962,22 @@ function fileStatusString( status_data){
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
-        return 'Modified = ' 
-        + status_data.modified.length 
-        + ' |  New = ' + ( status_data.added.length )
-        + ' |  Deleted = ' + status_data.deleted.length
-        + ' ' + historyStatus;
+        if (localState.pinnedCommit === ''){
+            // Normal history compared with previous commit            
+            return 'Modified = ' 
+            + status_data.modified.length 
+            + ' |  New = ' + ( status_data.added.length )
+            + ' |  Deleted = ' + status_data.deleted.length
+            + ' ' + historyStatus;
+        }else{
+            // Compare with pinned commit  
+            return 'Modified = ' 
+            + status_data.modified.length 
+            + ' |  New = ' + ( status_data.added.length )
+            + ' |  Deleted = ' + status_data.deleted.length
+            //+ ' ' + historyStatus
+            + '&nbsp;&nbsp; <  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';    
+        }
         
     }else{
         // Normal operation, work on git status from HEAD
