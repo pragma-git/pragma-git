@@ -121,7 +121,7 @@ div#message-wrapper{
   -webkit-app-region: drag;
 }
 
-.top-titlebar-notes-icon{
+.top-titlebar-notes-icon, .top-titlebar-pinned-icon{
   display:inline;
   vertical-align:middle;
   -webkit-app-region: no-drag;
@@ -187,7 +187,8 @@ div#message-wrapper{
 
 .top-titlebar-repo-text,
 .top-titlebar-branch-text,
-.top-titlebar-branch-arrow{
+.top-titlebar-branch-arrow,
+.bottom-titlebar-status-text{
   display:inline-block;
   font-family: Arial;
   font-size: 11pt;

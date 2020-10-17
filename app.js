@@ -649,6 +649,26 @@ async function _callback( name, event){
         }
         break;
       }     
+      case 'clicked-pinned-icon': {
+
+        // Bail out if wrong mode
+        
+        
+        // Set or unset
+        if ( localState.pinnedCommit === '' ){
+            // Do not allow to pin if outside history mode
+            if ( getMode() === 'HISTORY'){
+                localState.pinnedCommit = localState.historyHash;
+                updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+            }
+        }else{
+            // OK to unpin in any mode
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+
+        break;
+      }     
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 
@@ -2948,6 +2968,18 @@ function setStatusBar( text){
         if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
             document.getElementById('bottom-titlebar-text').innerHTML = text;
         }
+        
+        // Pinned commit
+        if (localState.pinnedCommit !== ''){
+            let pinnedText = '&nbsp;&nbsp; <  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
+            }
+        }else{
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== ''){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = '';
+            }
+        }
     }
 }
 function fileStatusString( status_data){
@@ -2961,22 +2993,11 @@ function fileStatusString( status_data){
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
-        if (localState.pinnedCommit === ''){
-            // Normal history compared with previous commit            
-            return 'Modified = ' 
+        return 'Modified = ' 
             + status_data.modified.length 
             + ' |  New = ' + ( status_data.added.length )
             + ' |  Deleted = ' + status_data.deleted.length
             + ' ' + historyStatus;
-        }else{
-            // Compare with pinned commit  
-            return 'Modified = ' 
-            + status_data.modified.length 
-            + ' |  New = ' + ( status_data.added.length )
-            + ' |  Deleted = ' + status_data.deleted.length
-            //+ ' ' + historyStatus
-            + '&nbsp;&nbsp; <  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';    
-        }
         
     }else{
         // Normal operation, work on git status from HEAD
