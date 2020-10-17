@@ -1677,6 +1677,20 @@ async function _update(){
         }
         
                
+    // Pinned commit (show if in history mode)
+        try{
+            if (modeName == 'HISTORY'){
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }        
+               
+               
     // Stash button (show if uncomitted files)
         try{
             if (status_data.changedFiles && FALSE_IN_HISTORY_MODE ){
@@ -2971,7 +2985,7 @@ function setStatusBar( text){
         
         // Pinned commit
         if (localState.pinnedCommit !== ''){
-            let pinnedText = '&nbsp;&nbsp; <  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';
+            let pinnedText = '<  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
