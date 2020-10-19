@@ -43,17 +43,15 @@ async function injectIntoJs(document) {
     
     // Git Status
     try{
-        //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-        //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-        status_data = await opener.gitStatus();
+        if (localState.mode == 'HISTORY'){
+            status_data = await opener.gitShowHistorical(localState.historyHash);  
+        }else{
+            status_data = await opener.gitStatus();
+        }
     }catch(err){
-        console.log("createFileTable -- Error getting git status" );
+        console.log("injectIntoJs -- Error " );
+        console.log(err);
         return
-    }
-    
-    // if localState.mode='HISTORY', override
-    if (localState.mode == 'HISTORY'){
-        status_data = localState.history_status_data;  // Set by main app.js
     }
     
           
@@ -69,7 +67,7 @@ async function injectIntoJs(document) {
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
         document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
-        document.getElementById('listFiles').innerText = 'Files changed since previous revision :';  // Correct title to match historical file changes
+        document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  // Correct title to match historical file changes
     }else{
         document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
     }
@@ -157,11 +155,8 @@ async function _callback( name, event, event2){
             }
        
             // Git 
-            status_data;
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
@@ -203,11 +198,8 @@ async function _callback( name, event, event2){
             ];
 
             // Git 
-            status_data;
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
             }catch(err){
                 console.log('diffLinkHistory -- caught error ');
                 console.log(err);
@@ -238,11 +230,8 @@ async function _callback( name, event, event2){
             ];
 
             // Git 
-            status_data;
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
@@ -279,9 +268,11 @@ async function _callback( name, event, event2){
             // Git Status
             let status_data;
             try{
-                //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-                status_data = await opener.gitStatus();
+                if (localState.mode == 'HISTORY'){
+                    status_data = await opener.gitShowHistorical(localState.historyHash);  
+                }else{
+                    status_data = await opener.gitStatus();
+                }
             }catch(err){
                 console.log("discardLink -- Error " );
                 console.log(err);
@@ -302,8 +293,7 @@ async function _callback( name, event, event2){
                  
                 // Unstage (may not be needed, but no harm)
                  await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] , onReset); 
-                    function onReset(err, result) {console.log(result) }
+                    .raw( [  'reset', '--', file ] ); 
                     
                 // Delete from file system                   
                 let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
@@ -317,11 +307,12 @@ async function _callback( name, event, event2){
                 
     
             // Git Status
-            let status_data;
             try{
-                //await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                //function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
-                status_data = await opener.gitStatus();
+                if (localState.mode == 'HISTORY'){
+                    status_data = await opener.gitShowHistorical(localState.historyHash);  
+                }else{
+                    status_data = await opener.gitStatus();
+                }
             }catch(err){
                 console.log("deleteLink -- Error " );
                 console.log(err);
@@ -430,7 +421,10 @@ function createFileTable(status_data) {
         let file = fileStruct.path;
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
-        let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
+        // See : https://git-scm.com/docs/git-status
+        let X = fileStruct.index;
+        let Y = fileStruct.working_dir
+        let XY = X + Y;  
         
         console.log( '[' + XY + '] ' + fileStruct.path);
         
@@ -493,6 +487,17 @@ function createFileTable(status_data) {
                     break;
             
             }
+            
+            switch (X) {
+                case "R" :
+                    label.setAttribute("class","renamed"); // 
+                    let substrings = fileStruct.path.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
+                    file = substrings[1] + ' -> ' + substrings[2];
+                    typeOfChanged = 'renamed';
+                break;
+            }
+            
+            
             var description = document.createTextNode( file);
             label.appendChild(description);
 
@@ -553,15 +558,20 @@ function createFileTable(status_data) {
             function diffLinkHistory(document, commit, file){
                 // Make diff link (history)
                 var diffLink = document.createElement('span');
+                diffLink.innerHTML="";
+                    
                 if (typeOfChanged == 'modified'){  // two files to compare only in modified (only one file in deleted or added)
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
                     diffLink.textContent=" (diff)";
-                    return  diffLink;
-                }else{
-                    diffLink.innerHTML="";
-                    return  diffLink;
                 }
+                    
+                if (typeOfChanged == 'renamed'){  // two files to compare only in modified (only one file in deleted or added)
+                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
+                    diffLink.textContent=" (renamed / diff)";
+                }               
+                return  diffLink;
             };    
             
         //

@@ -1816,10 +1816,9 @@ async function _update(){
             case 'HISTORY': {  
 
                 let status;
-                let hash = localState.historyHash;
             
                 try{
-                    status_data = await gitShowHistorical(hash);
+                    status_data = await gitShowHistorical(localState.historyHash);
                 }catch(err){
                     console.log('fileStatus -- caught error');
                     console.log(err);
@@ -2353,7 +2352,12 @@ async function gitShowHistorical(commit){
                         outputStatus.modified.push(fileName);
                         outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
-                        
+                    
+                    case "R" : // Count renamed as Modified
+                        outputStatus.modified.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
+                        break;
+                                                
                     default :
                         break; // catches if hashes are listed (as in a merge)
                 }
