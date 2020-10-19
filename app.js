@@ -248,7 +248,11 @@ async function _callback( name, event){
       case 'clicked-repo': {
         repoClicked(event);
         clearFindFields();
-        localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
+        
+        // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
+        localState.pinnedCommit = ''; 
+        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
