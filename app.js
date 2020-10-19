@@ -195,6 +195,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow.open = false; // True when notes window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
+        localState.reversedOrder = false;  // set to true in gitShowHistorical if order called is reversed.  
         
     // Display text
         var textOutput = {
@@ -2311,8 +2312,10 @@ async function gitShowHistorical(commit){
            
         if ( await gitIsFirstCommitOldest( localState.pinnedCommit, localState.historyHash) ){
             hash = localState.pinnedCommit + '..' + localState.historyHash; // compare pinned with current commit 
+            localState.reversedOrder = false;
         }else {
             hash = localState.historyHash + '..' + localState.pinnedCommit; // Reverse order
+            localState.reversedOrder = true;
         }
         console.log('git diff --name-status --oneline ' + hash);
     }   
@@ -2372,9 +2375,6 @@ async function gitShowHistorical(commit){
         console.log('fileStatus -- caught error');
         console.log(err);
     }
-    
-    // Store in localState
-    localState.history_status_data = outputStatus;
     
     return outputStatus;
     

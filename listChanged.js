@@ -168,34 +168,30 @@ async function _callback( name, event, event2){
             break;
         }
 
-        case 'diffLinkHistory': {
+        case 'diffLinkHistoryRename': {
          
             // Three inputs
-            console.log('diffLinkHistory');
+            console.log('diffLinkHistoryRename');
             console.log(event);
-            
-            commit = event;
-            file = event2;
-            
-            //file = file.replace('/','//');
-            
+
             tool = state.tools.difftool;
             
             // Set first commit to previous historical; or to pinned commit
-            let commit1 = commit + "^:" + file;
-            if (localState.pinnedCommit !== ''){
-                commit1 = localState.pinnedCommit + ":" + file;    
-            }   
-
-            // Prepare for git diff with previous commit and selected commit in history log
+            let commit1 = event;
+            let commit2 = event2;
+            
+             // Prepare for git diff 
             command = [  
                 'difftool',
                 '-y',  
                 '--tool',
                 tool,
                 commit1,
-                commit + ":" + file
+                commit2
             ];
+
+
+            console.log(command);
 
             // Git 
             try{
@@ -421,6 +417,8 @@ function createFileTable(status_data) {
         let file = fileStruct.path;
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
+        let filetext = file; // First guess is that text is file path (for rename, it will be different)
+        
         // See : https://git-scm.com/docs/git-status
         let X = fileStruct.index;
         let Y = fileStruct.working_dir
@@ -491,14 +489,16 @@ function createFileTable(status_data) {
             switch (X) {
                 case "R" :
                     label.setAttribute("class","renamed"); // 
-                    let substrings = fileStruct.path.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
-                    file = substrings[1] + ' -> ' + substrings[2];
                     typeOfChanged = 'renamed';
+                    
+                    let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
+
+                    filetext = substrings[1] + ' -> ' + substrings[2];
                 break;
             }
             
             
-            var description = document.createTextNode( file);
+            var description = document.createTextNode( filetext);
             label.appendChild(description);
 
             cell.appendChild(label);
@@ -515,7 +515,8 @@ function createFileTable(status_data) {
                 
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
-                cell.appendChild( diffLink( document, file));
+                let commit = 'HEAD'
+                cell.appendChild( diffLinkHistory( document, commit, file) );
                  
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
@@ -540,20 +541,7 @@ function createFileTable(status_data) {
                 }                     
             }
             // Internal functions
-            
-            function diffLink(document, file){
-                // Make diff link (work_dir)
-                var diffLink = document.createElement('span');
-                if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
-                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
-                    diffLink.textContent=" (diff)";
-                    return  diffLink;
-                }else{
-                    diffLink.innerHTML="";
-                    return  diffLink;
-                }
-            };
+
              
             function diffLinkHistory(document, commit, file){
                 // Make diff link (history)
@@ -561,18 +549,71 @@ function createFileTable(status_data) {
                 diffLink.innerHTML="";
                     
                 if (typeOfChanged == 'modified'){  // two files to compare only in modified (only one file in deleted or added)
+                    
+                    let commit1 = commit + "^:" + file;
+                    let commit2 = commit + ":" + file;  
+                                               
+                    // Correct if pinned commit                        
+                    if (localState.pinnedCommit !== ''){ 
+                        commit2 = localState.pinnedCommit + ":" + file;
+                        commit1 = commit + ":" + file;    
+
+                        if (  !localState.reversedOrder ){
+                            commit2 = commit + ":" + file;
+                            commit1 = localState.pinnedCommit + ":" + file; 
+                        }
+                        
+                    }  
+
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistoryRename', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                 }
                     
                 if (typeOfChanged == 'renamed'){  // two files to compare only in modified (only one file in deleted or added)
+                    
+                    let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
+                    
+                     // Set first commit to previous historical; or to pinned commit
+                    let commit1 = commit + "^:" + substrings[1];
+                    let commit2 = commit + ":" + substrings[2];
+                             
+                    // Correct if pinned commit                        
+                    if (localState.pinnedCommit !== ''){ 
+                        commit2 = localState.pinnedCommit + ":" + substrings[2];
+                        commit1 = commit + ":" + substrings[1];    
+
+                        if (  !localState.reversedOrder ){
+                            commit2 = commit + ":" + substrings[2];
+                            commit1 = localState.pinnedCommit + ":" + substrings[1]; 
+                        }
+                        
+                    }   
+                    
+                    
+
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
-                    diffLink.textContent=" (renamed / diff)";
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistoryRename', " + "'" + commit1 + "', '" + commit2 + "') ");
+                    diffLink.textContent=" (diff)";
+                    
+                    // If 100% equal, don't make a link (diff is meaningless, and doesn't work)
+                    if (substrings[0] === '100'){
+                        diffLink.setAttribute('onclick', "");
+                        diffLink.textContent="";
+                    }
+                    
                 }               
                 return  diffLink;
-            };    
+            };   
+            
+            async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+                let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
+                let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
+                function onLog(err, result){ console.log(result); return result } 
+                
+                return (logCorrectOrder.total > 0);
+                
+            } 
             
         //
         // Button
