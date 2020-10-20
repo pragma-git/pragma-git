@@ -2237,11 +2237,7 @@ async function gitStatus(){
     // Make safe for empty repos
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
-    
-    //// Handle if pinnedCommit
-    //if (localState.pinnedCommit !== ''){
-        //status_data = pinnedGitStatus( localState.pinnedCommit, localState.historyHash); // TODO : how handle if non-historical commits from two branches ?
-    //}
+
     
     // Handle normal status of uncommited
     try{
@@ -2255,7 +2251,7 @@ async function gitStatus(){
             + status_data.not_added.length 
             + status_data.created.length
             + status_data.deleted.length) > 0);
-        //console.log(status_data);
+            
         status_data.current;  // Name of current branch
 
     }catch(err){
@@ -2992,7 +2988,7 @@ function setStatusBar( text){
         
         // Pinned commit
         if (localState.pinnedCommit !== ''){
-            let pinnedText = '<  compared with ' + localState.pinnedCommit.substring(0,6) + ' >';
+            let pinnedText = '< <u>compared with ' + localState.pinnedCommit.substring(0,6) + '</u> >';
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
