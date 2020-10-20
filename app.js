@@ -673,6 +673,14 @@ async function _callback( name, event){
 
         break;
       }     
+      case 'clicked-pinned-hash': {
+
+        // TODO : Jump to correct place in history if available
+        // If not available, due to filter, undo filter, and jump there
+
+        break;
+      } 
+      
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 

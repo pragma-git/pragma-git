@@ -231,6 +231,11 @@ function initUI() {
           case 'HISTORY_DIFF':  { //
             editorLabel = 'selected'; 
             rightViewerLabel = 'previous';
+            
+            if (global.localState.pinnedCommit !== ''){ 
+                rightViewerLabel = 'pinned commit < ' + global.localState.pinnedCommit.substring(0,6) + ' >';
+            }
+            
             options.value = cachedFile.REMOTE;  // Can't be changed, because readonly
             options.orig = cachedFile.LOCAL;
             
