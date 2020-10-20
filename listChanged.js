@@ -111,9 +111,8 @@ async function _callback( name, event, event2){
 
             closeWindow();
             break;
-        }
-         
-        case 'diffLinkAll' : {
+        }         
+        case 'diffLinkAll' : { // NOTE : Hidden in html now
             console.log('diffLinkAll');
             console.log(event);
             
@@ -167,11 +166,10 @@ async function _callback( name, event, event2){
             
             break;
         }
-
-        case 'diffLinkHistoryRename': {
+        case 'diffLinkHistory': {
          
             // Three inputs
-            console.log('diffLinkHistoryRename');
+            console.log('diffLinkHistory');
             console.log(event);
 
             tool = state.tools.difftool;
@@ -204,39 +202,6 @@ async function _callback( name, event, event2){
 
             break;
         }
- 
-        case 'diffLink': {
-            console.log('diffLink');
-            console.log(event);
-            
-            file = event;
-            file = file.replace('/','//');
-            
-            tool = state.tools.difftool;
-
-            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
-            command = [  
-                'difftool',
-                '-y',  
-                '--tool',
-                tool,
-                'HEAD',
-                '--',
-                file
-            ];
-
-            // Git 
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
-            }
-        
-
-            break;
-        }
- 
         case 'discardLink': {
             console.log('discardLink');
             console.log(event);
@@ -279,7 +244,6 @@ async function _callback( name, event, event2){
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }
-
         case 'deleteLink': {
             console.log('deleteLink');
             console.log(event);
@@ -318,7 +282,6 @@ async function _callback( name, event, event2){
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
-        
         case 'radioButtonChanged' : {
             // TODO : stage or unstage depending on what happened
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
@@ -395,15 +358,16 @@ function createFileTable(status_data) {
     // Old tbody
     let old_tbody = document.getElementById('listFilesTableBody');
 
+    // NOTE : Hidden in html now
 
-    // Table header (change onClick for history mode)
-    if (localState.mode == 'HISTORY'){
-        let commit = localState.historyHash;
-        document.getElementById('diffAllSpan').setAttribute( 
-            "onClick", 
-            "_callback('diffLinkAll', " + "'" + commit  + "') " 
-            );  // Send commit hash for history
-    }
+    //// Table header (change onClick for history mode)
+    //if (localState.mode == 'HISTORY'){
+        //let commit = localState.historyHash;
+        //document.getElementById('diffAllSpan').setAttribute( 
+            //"onClick", 
+            //"_callback('diffLinkAll', " + "'" + commit  + "') " 
+            //);  // Send commit hash for history
+    //}
 
     // Make  a new tbody
     let tbody = document.createElement("tbody"); // Empty tbody
@@ -558,7 +522,7 @@ function createFileTable(status_data) {
                         commit2 = localState.pinnedCommit + ":" + file;
                         commit1 = commit + ":" + file;    
 
-                        if (  !localState.reversedOrder ){
+                        if (  !status_data.reversedOrder ){
                             commit2 = commit + ":" + file;
                             commit1 = localState.pinnedCommit + ":" + file; 
                         }
@@ -566,7 +530,7 @@ function createFileTable(status_data) {
                     }  
 
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLinkHistoryRename', " + "'" + commit1 + "', '" + commit2 + "') ");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                 }
                     
@@ -583,7 +547,7 @@ function createFileTable(status_data) {
                         commit2 = localState.pinnedCommit + ":" + substrings[2];
                         commit1 = commit + ":" + substrings[1];    
 
-                        if (  !localState.reversedOrder ){
+                        if (  !status_data.reversedOrder ){
                             commit2 = commit + ":" + substrings[2];
                             commit1 = localState.pinnedCommit + ":" + substrings[1]; 
                         }
@@ -593,7 +557,7 @@ function createFileTable(status_data) {
                     
 
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLinkHistoryRename', " + "'" + commit1 + "', '" + commit2 + "') ");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                     
                     // If 100% equal, don't make a link (diff is meaningless, and doesn't work)
