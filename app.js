@@ -655,7 +655,7 @@ async function _callback( name, event){
       }     
       case 'clicked-pinned-icon': {
 
-        // Bail out if wrong mode
+        localState.pinnedHistoryNumber = localState.historyNumber;
         
         
         // Set or unset
@@ -674,10 +674,17 @@ async function _callback( name, event){
         break;
       }     
       case 'clicked-pinned-hash': {
+          
+        let history = await gitHistory();
 
         // TODO : Jump to correct place in history if available
         // If not available, due to filter, undo filter, and jump there
-
+        localState.historyHash = localState.pinnedCommit;
+        localState.historyNumber = localState.pinnedHistoryNumber;
+        localState.historyString = historyMessage(history, localState.historyNumber);
+        
+        status_data = await gitShowHistorical(localState.historyHash);
+        setStatusBar( fileStatusString( status_data));
         break;
       } 
       
@@ -1316,20 +1323,22 @@ async function _callback( name, event){
             
             localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
+            //// Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
             
-            // Branches on this commit
-            localState.historyString += historyBranchesAtPoint;
+            //// Branches on this commit
+            //localState.historyString += historyBranchesAtPoint;
 
-            // Message
-            localState.historyString += os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;
+            //// Message
+            //localState.historyString += os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display
             //localState.mode = 'HISTORY';
@@ -1373,19 +1382,20 @@ async function _callback( name, event){
             await _update()
         }else{
             // Show history
-            //_setMode('HISTORY');
             
-            localState.historyHash = history[localState.historyNumber].hash; // Store hash
+            //localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;  
+            //// Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;  
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display            
             localState.mode = 'HISTORY';
@@ -2964,7 +2974,41 @@ function readMessage(){
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
+function historyMessage(history, historyNumber ){
+            
+    // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
+    var historyBranchesAtPoint = ""; // Do not comment out this row !
+    //try{              
+        //await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--contains', history[historyNumber + 1].hash], onHistoryBranches );
+        //function onHistoryBranches(err, result){console.log(result);console.log(err); historyBranchesAtPoint = result.all;} 
+        //historyBranchesAtPoint = ' [ ' + historyBranchesAtPoint + ' ]'; 
+            
+    //}catch(err){        
+        //console.log(err);
+        //console.log(historyBranchesAtPoint )       
+    //}
+    
+    
+    
+    let historyHash = history[historyNumber].hash; // Store hash
+    
+    // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+    let historyString = ( history[historyNumber].date).substring( 11,11+5) 
+    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')';
+    
+    // Branches on this commit
+    historyString += historyBranchesAtPoint;
 
+    // Message
+    historyString += os.EOL 
+    + os.EOL 
+    + history[historyNumber].message
+    + os.EOL 
+    + os.EOL 
+    + history[historyNumber].body;
+    
+    return historyString
+}
 
 
 // Output row (below message)
