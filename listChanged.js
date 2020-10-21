@@ -166,6 +166,40 @@ async function _callback( name, event, event2){
             
             break;
         }
+        case 'diffLink': {
+            console.log('diffLink');
+            console.log(event);
+            
+            file = event;
+            file = file.replace('/','//');
+            
+            tool = state.tools.difftool;
+
+            // Prepare for git diff HEAD (which compares staged/unstaged workdir file to HEAD)
+            command = [  
+                'difftool',
+                '-y',  
+                '--tool',
+                tool,
+                'HEAD',
+                '--',
+                file
+            ];
+
+            // Git 
+            status_data;
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder)
+                    .raw(command, onStatus );
+                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+            }catch(err){
+                console.log('diffLink -- caught error ');
+                console.log(err);
+            }
+        
+
+            break;
+        }
         case 'diffLinkHistory': {
          
             // Three inputs
@@ -480,7 +514,8 @@ function createFileTable(status_data) {
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
                 let commit = 'HEAD'
-                cell.appendChild( diffLinkHistory( document, commit, file) );
+                //cell.appendChild( diffLinkHistory( document, commit, file) );
+                cell.appendChild( diffLink( document, file));
                  
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
@@ -506,7 +541,19 @@ function createFileTable(status_data) {
             }
             // Internal functions
 
-             
+            function diffLink(document, file){
+                // Make diff link (work_dir)
+                var diffLink = document.createElement('span');
+                if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
+                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
+                    diffLink.textContent=" (diff)";
+                    return  diffLink;
+                }else{
+                    diffLink.innerHTML="";
+                    return  diffLink;
+                }
+            };
             function diffLinkHistory(document, commit, file){
                 // Make diff link (history)
                 var diffLink = document.createElement('span');
