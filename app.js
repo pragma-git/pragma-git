@@ -2767,12 +2767,19 @@ async function gitMerge( currentBranchName, selectedBranchName){
 }
     
 async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
-    let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
-    let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
     function onLog(err, result){ console.log(result); return result } 
     
-    return (logCorrectOrder.total > 0);
+    //let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
+    //let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
+    //return (logCorrectOrder.total > 0);
     
+    let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+    let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+    
+    console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+    console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+    
+    return ( old.latest.date < newest.latest.date );
 }
 
 
