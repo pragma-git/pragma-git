@@ -837,6 +837,14 @@ async function _callback( name, event){
     async function branchClicked( detectDetachedBranch, type){
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
         
+        // If HISTORY, reset history counter without changing branch
+        if ( getMode() === 'HISTORY'){
+            resetHistoryPointer(); 
+            upArrowClicked(); // Get out of history
+            return;
+        }
+        
+        
         // Determine status of local repository
         var status_data;  
         try{
