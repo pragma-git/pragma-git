@@ -194,6 +194,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
         
+        localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
+        
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -246,6 +248,11 @@ async function _callback( name, event){
       case 'clicked-repo': {
         repoClicked(event);
         clearFindFields();
+        
+        // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
+        localState.pinnedCommit = ''; 
+        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -258,6 +265,7 @@ async function _callback( name, event){
         gitFetch();  
         
         clearFindFields();
+        localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         _setMode('UNKNOWN');
         
         break;
@@ -290,7 +298,7 @@ async function _callback( name, event){
       }
       case 'clicked-notes':{
         if (localState.notesWindow.open == true) {
-            try{ notes_win.focus(); }catch(err){ }
+            try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
             return
         }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
@@ -338,6 +346,7 @@ async function _callback( name, event){
                 deleteTag(event.selected);
                 break;
         }
+        break;
       }
       case 'clicked-close-button': {
         closeWindow();
@@ -644,6 +653,101 @@ async function _callback( name, event){
         }
         break;
       }     
+      case 'clicked-pinned-icon': {
+
+        // Store pinned history number and branch
+        localState.pinnedHistoryNumber = localState.historyNumber;
+        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
+        localState.pinnedBranchNumber = localState.branchNumber;
+        
+        // Store find settings
+        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
+        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
+        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
+        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+
+        
+        // Set or unset
+        if ( localState.pinnedCommit === '' ){
+            // Do not allow to pin if outside history mode
+            if ( getMode() === 'HISTORY'){
+                localState.pinnedCommit = localState.historyHash;
+                updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+            }
+        }else{
+            // OK to unpin in any mode
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+
+        break;
+      }     
+      case 'clicked-pinned-hash': {
+        
+        // Strategy : 
+        // If needed, change branch and apply filter => sure that pinned commit is found in history
+
+        // If not pinned branch, change to pinned branch
+
+            if (localState.pinnedBranch !== document.getElementById('top-titlebar-branch-text').innerText){
+                let event = {};
+                event.selectedBranch = localState.pinnedBranch;
+                event.branchNumber = localState.pinnedBranchNumber;
+                _callback('clickedBranchContextualMenu', event);
+            }   
+
+        
+        // If pinned filter settings is different from when pinned, return to search terms when pinned
+        
+            if (    ( document.getElementById('findTextInput').value + document.getElementById('findFileInput').value
+                     + document.getElementById('findDateInputAfter').value + document.getElementById('findDateInputBefore').value ) 
+                    !==
+                    ( localState.pinned_findTextInput + localState.pinned_findFileInput 
+                     + localState.pinned_findDateInputAfter + localState.pinned_findDateInputBefore )    
+                )
+                {
+                    document.getElementById('findTextInput').value = localState.pinned_findTextInput;
+                    document.getElementById('findFileInput').value = localState.pinned_findFileInput;
+                    document.getElementById('findDateInputAfter').value = localState.pinned_findDateInputAfter;
+                    document.getElementById('findDateInputBefore').value =  localState.pinned_findDateInputBefore;                
+                }
+
+        // Jump to correct place in history (checking that pinned is indeed available)
+        
+            let history = await gitHistory();
+            if ( history[ localState.pinnedHistoryNumber].hash === localState.pinnedCommit ){ // Equal means available in history
+                localState.historyHash = localState.pinnedCommit;
+                localState.historyNumber = localState.pinnedHistoryNumber;
+                localState.historyString = historyMessage(history, localState.historyNumber);
+
+            } else {
+                console.log('ERROR -- could not find pinned commit');
+                console.log('ERROR -- lookup found historical commit = ' + history[ localState.pinnedHistoryNumber].hash );
+                console.log('ERROR -- not the same as  pinned commit = ' + localState.pinnedCommit );
+            }
+
+        // Display
+        
+            localState.mode = 'HISTORY';
+            status_data = await gitShowHistorical();
+            setStatusBar( fileStatusString( status_data)); 
+            await _update();
+
+        // Call again if not in history of branch
+        
+            if ( history[ localState.pinnedHistoryNumber].hash !== localState.pinnedCommit ){
+                document.getElementById('down-arrow').click();
+                localState.historyNumber = localState.pinnedHistoryNumber;
+                document.getElementById('bottom-titlebar-pinned-text').click()
+                localState.mode = 'HISTORY';
+                status_data = await gitShowHistorical();
+                await setStatusBar( fileStatusString( status_data)); 
+            }
+             
+        
+        break;
+      } 
+      
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 
@@ -987,6 +1091,11 @@ async function _callback( name, event){
   
         let menuItems = branchList;
         
+        // Remove HEAD from list, if it is there
+        if (currentBranch === 'HEAD') { 
+            menuItems.shift(); // Remove first element (which is where HEAD is in list)
+        }
+        
         // Add context menu title-row
         menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
@@ -1274,20 +1383,22 @@ async function _callback( name, event){
             
             localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
+            //// Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
             
-            // Branches on this commit
-            localState.historyString += historyBranchesAtPoint;
+            //// Branches on this commit
+            //localState.historyString += historyBranchesAtPoint;
 
-            // Message
-            localState.historyString += os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;
+            //// Message
+            //localState.historyString += os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display
             //localState.mode = 'HISTORY';
@@ -1296,7 +1407,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));
 
         }catch(err){       
@@ -1331,19 +1442,20 @@ async function _callback( name, event){
             await _update()
         }else{
             // Show history
-            //_setMode('HISTORY');
             
-            localState.historyHash = history[localState.historyNumber].hash; // Store hash
+            //localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;  
+            //// Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;  
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display            
             localState.mode = 'HISTORY';
@@ -1351,7 +1463,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));    
                   
             // Store hash
@@ -1647,6 +1759,20 @@ async function _update(){
         }
         
                
+    // Pinned commit (show if in history mode)
+        try{
+            if (modeName == 'HISTORY'){
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+            }else{
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+            }
+        }catch(err){  
+            console.log(err);
+        }        
+               
+               
     // Stash button (show if uncomitted files)
         try{
             if (status_data.changedFiles && FALSE_IN_HISTORY_MODE ){
@@ -1768,10 +1894,9 @@ async function _update(){
             case 'HISTORY': {  
 
                 let status;
-                let hash = localState.historyHash;
             
                 try{
-                    status_data = await gitShow(hash);
+                    status_data = await gitShowHistorical();
                 }catch(err){
                     console.log('fileStatus -- caught error');
                     console.log(err);
@@ -2190,7 +2315,9 @@ async function gitStatus(){
     // Make safe for empty repos
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
+
     
+    // Handle normal status of uncommited
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder)
             .status( onStatus);
@@ -2202,33 +2329,42 @@ async function gitStatus(){
             + status_data.not_added.length 
             + status_data.created.length
             + status_data.deleted.length) > 0);
-        //console.log(status_data);
+            
         status_data.current;  // Name of current branch
-        
+
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
         
         // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
-        status_data = [];
-        status_data.conflicted = [];
-        status_data.modified = []; // zero length
-        status_data.not_added = [];
-        status_data.created = [];
-        status_data.deleted = [];
-        status_data.changedFiles = false;
-        status_data.ahead = 0;
-        status_data.behind = 0;
-
+        status_data = createEmptyGitStatus();
     }
  
     // return fields : 
     //      changedFiles (boolean) 
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
-    return status_data;  
+    
+    return status_data;
+
+    //
+    // Internal functions
+    //
+        function createEmptyGitStatus(){
+            status_data = [];
+            status_data.conflicted = [];
+            status_data.modified = []; // zero length
+            status_data.not_added = [];
+            status_data.created = [];
+            status_data.deleted = [];
+            status_data.changedFiles = false;
+            status_data.ahead = 0;
+            status_data.behind = 0;
+            return status_data;
+        };
+
 }
-async function gitShow(commit){
+async function gitShowHistorical(){
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
@@ -2240,11 +2376,27 @@ async function gitShow(commit){
     
     outputStatus.files = [];
     
-    let hash = localState.historyHash;
+    // Set two commit hashes
+    let hash2 = localState.historyHash;
+    let hash = hash2 + '^1' + '..' + hash2; // Guess historical: compare first parent with current commit
     
+    // If pinned commit.   Difference between pinned and current history point, shows change going forward in time
+    if (localState.pinnedCommit !== ''){
+           
+        if ( await gitIsFirstCommitOldest( localState.pinnedCommit, localState.historyHash) ){
+            hash = localState.pinnedCommit + '..' + localState.historyHash; // compare pinned with current commit 
+            outputStatus.reversedOrder = false;
+        }else {
+            hash = localState.historyHash + '..' + localState.pinnedCommit; // Reverse order
+            outputStatus.reversedOrder = true;
+        }
+        console.log('git diff --name-status --oneline ' + hash);
+    }   
+
+    // Generate file status data
     try{
-        // Read status
-        hash = hash + '^1' + '..' + hash; // compare first parent with current commit
+
+        // Read diff
         await simpleGit(state.repos[state.repoNumber].localFolder).diff( ['--name-status','--oneline', hash], onWhatChanged);
         function onWhatChanged(err, result){ console.log(result); showStatus = result } 
         console.log('fileStatus -- hash = ' + hash);
@@ -2276,7 +2428,12 @@ async function gitShow(commit){
                         outputStatus.modified.push(fileName);
                         outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
-                        
+                    
+                    case "R" : // Count renamed as Modified
+                        outputStatus.modified.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
+                        break;
+                                                
                     default :
                         break; // catches if hashes are listed (as in a merge)
                 }
@@ -2286,16 +2443,11 @@ async function gitShow(commit){
             }
         }
 
-        
-        
-        
+
     }catch(err){
         console.log('fileStatus -- caught error');
         console.log(err);
     }
-    
-    // Store in localState
-    localState.history_status_data = outputStatus;
     
     return outputStatus;
     
@@ -2613,6 +2765,23 @@ async function gitMerge( currentBranchName, selectedBranchName){
     //textOutput.placeholder = 'Write description of Merge, and press Store';
     writeTextOutput( textOutput);
 }
+    
+async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+    function onLog(err, result){ console.log(result); return result } 
+    
+    //let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
+    //let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
+    //return (logCorrectOrder.total > 0);
+    
+    let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+    let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+    
+    console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+    console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+    
+    return ( old.latest.date < newest.latest.date );
+}
+
 
 // Utility functions
 function getMode(){
@@ -2872,7 +3041,41 @@ function readMessage(){
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
+function historyMessage(history, historyNumber ){
+            
+    // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
+    var historyBranchesAtPoint = ""; // Do not comment out this row !
+    //try{              
+        //await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--contains', history[historyNumber + 1].hash], onHistoryBranches );
+        //function onHistoryBranches(err, result){console.log(result);console.log(err); historyBranchesAtPoint = result.all;} 
+        //historyBranchesAtPoint = ' [ ' + historyBranchesAtPoint + ' ]'; 
+            
+    //}catch(err){        
+        //console.log(err);
+        //console.log(historyBranchesAtPoint )       
+    //}
+    
+    
+    
+    let historyHash = history[historyNumber].hash; // Store hash
+    
+    // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+    let historyString = ( history[historyNumber].date).substring( 11,11+5) 
+    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')';
+    
+    // Branches on this commit
+    historyString += historyBranchesAtPoint;
 
+    // Message
+    historyString += os.EOL 
+    + os.EOL 
+    + history[historyNumber].message
+    + os.EOL 
+    + os.EOL 
+    + history[historyNumber].body;
+    
+    return historyString
+}
 
 
 // Output row (below message)
@@ -2901,6 +3104,18 @@ function setStatusBar( text){
         if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
             document.getElementById('bottom-titlebar-text').innerHTML = text;
         }
+        
+        // Pinned commit
+        if (localState.pinnedCommit !== ''){
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
+            }
+        }else{
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== ''){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = '';
+            }
+        }
     }
 }
 function fileStatusString( status_data){
@@ -2915,10 +3130,10 @@ function fileStatusString( status_data){
         // Work on hash from current history pointer
         
         return 'Modified = ' 
-        + status_data.modified.length 
-        + ' |  New = ' + ( status_data.added.length )
-        + ' |  Deleted = ' + status_data.deleted.length
-        + ' ' + historyStatus;
+            + status_data.modified.length 
+            + ' |  New = ' + ( status_data.added.length )
+            + ' |  Deleted = ' + status_data.deleted.length
+            + ' ' + historyStatus;
         
     }else{
         // Normal operation, work on git status from HEAD

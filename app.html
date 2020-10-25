@@ -306,13 +306,54 @@
             </div>
             
  
-         <!-- Text Status  -->     
-        <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
+         <!-- Text Status and pinned icon  -->     
+
+       <div id="bottom-titlebar-div" class="bottom-titlebar-text">
+    
+    
+            <!-- Text status  -->  
+            <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" 
                 onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
                          _callback('clicked-status-text')"
                 onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >
             </div>
+            &nbsp;
+             
+            <!-- Icon Pinned  -->                             
+            <div class="top-titlebar-pinned-icon">
+                <img id="top-titlebar-pinned-icon" height="17" width="17" 
+                    onclick="_callback('clicked-pinned-icon')"
+                             
+                    onmouseover="if (localState.pinnedCommit === ''){ 
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+                                 } else {
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+                                 }" 
+                                 
+                    onmouseout="if (localState.pinnedCommit === ''){ 
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+                                 } else {
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled.png');
+                                 }" 
+                                 
+                    src="images/pinned_disabled.png">
+            </div> 
+            &nbsp;
+            
+                
+            <!-- Text status  -->  
+            <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
+                onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                         _callback('clicked-pinned-hash');"
+                onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+            </div>
+ 
+        </div>     
+
+
+
             
                                                
         <!-- Icon Stash  -->                             

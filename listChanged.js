@@ -21,13 +21,6 @@ var localState = global.localState;
 
 var win
 
-const delayInMs = 1000;
-
-// Initiate GUI update loop 
-//var timer = _loopTimer( 1000);
-
-// Storage of paths to backup files
-//const backupExtension = '.orig';
 var origFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
 
 // ---------
@@ -50,16 +43,15 @@ async function injectIntoJs(document) {
     
     // Git Status
     try{
-        await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-        function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+        if (localState.mode == 'HISTORY'){
+            status_data = await opener.gitShowHistorical();  
+        }else{
+            status_data = await opener.gitStatus();
+        }
     }catch(err){
-        console.log("createFileTable -- Error getting git status" );
+        console.log("injectIntoJs -- Error " );
+        console.log(err);
         return
-    }
-    
-    // if localState.mode='HISTORY', override
-    if (localState.mode == 'HISTORY'){
-        status_data = localState.history_status_data;  // Set by main app.js
     }
     
           
@@ -75,7 +67,7 @@ async function injectIntoJs(document) {
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
         document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
-        document.getElementById('listFiles').innerText = 'Files changed since previous revision :';  // Correct title to match historical file changes
+        document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  // Correct title to match historical file changes
     }else{
         document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
     }
@@ -119,9 +111,8 @@ async function _callback( name, event, event2){
 
             closeWindow();
             break;
-        }
-         
-        case 'diffLinkAll' : {
+        }         
+        case 'diffLinkAll' : { // NOTE : Hidden in html now
             console.log('diffLinkAll');
             console.log(event);
             
@@ -163,11 +154,8 @@ async function _callback( name, event, event2){
             }
        
             // Git 
-            status_data;
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
             }catch(err){
                 console.log('diffLink -- caught error ');
                 console.log(err);
@@ -178,45 +166,6 @@ async function _callback( name, event, event2){
             
             break;
         }
-
-        case 'diffLinkHistory': {
-         
-            // Three inputs
-            console.log('diffLinkHistory');
-            console.log(event);
-            
-            commit = event;
-            file = event2;
-            
-            //file = file.replace('/','//');
-            
-            tool = state.tools.difftool;
-
-            // Prepare for git diff with previous commit and selected commit in history log
-            command = [  
-                'difftool',
-                '-y',  
-                '--tool',
-                tool,
-                commit + "^:" + file,
-                commit + ":" + file
-            ];
-
-            // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLinkHistory -- caught error ');
-                console.log(err);
-            }
-        
-
-            break;
-        }
- 
         case 'diffLink': {
             console.log('diffLink');
             console.log(event);
@@ -251,7 +200,42 @@ async function _callback( name, event, event2){
 
             break;
         }
- 
+        case 'diffLinkHistory': {
+         
+            // Three inputs
+            console.log('diffLinkHistory');
+            console.log(event);
+
+            tool = state.tools.difftool;
+            
+            // Set first commit to previous historical; or to pinned commit
+            let commit1 = event;
+            let commit2 = event2;
+            
+             // Prepare for git diff 
+            command = [  
+                'difftool',
+                '-y',  
+                '--tool',
+                tool,
+                commit1,
+                commit2
+            ];
+
+
+            console.log(command);
+
+            // Git 
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
+            }catch(err){
+                console.log('diffLinkHistory -- caught error ');
+                console.log(err);
+            }
+        
+
+            break;
+        }
         case 'discardLink': {
             console.log('discardLink');
             console.log(event);
@@ -277,19 +261,23 @@ async function _callback( name, event, event2){
                 
     
             // Git Status
+            let status_data;
             try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                if (localState.mode == 'HISTORY'){
+                    status_data = await opener.gitShowHistorical();  
+                }else{
+                    status_data = await opener.gitStatus();
+                }
             }catch(err){
                 console.log("discardLink -- Error " );
                 console.log(err);
                 return
             }
+            
 
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }
-
         case 'deleteLink': {
             console.log('deleteLink');
             console.log(event);
@@ -299,8 +287,7 @@ async function _callback( name, event, event2){
                  
                 // Unstage (may not be needed, but no harm)
                  await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] , onReset); 
-                    function onReset(err, result) {console.log(result) }
+                    .raw( [  'reset', '--', file ] ); 
                     
                 // Delete from file system                   
                 let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
@@ -315,8 +302,11 @@ async function _callback( name, event, event2){
     
             // Git Status
             try{
-                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                if (localState.mode == 'HISTORY'){
+                    status_data = await opener.gitShowHistorical();  
+                }else{
+                    status_data = await opener.gitStatus();
+                }
             }catch(err){
                 console.log("deleteLink -- Error " );
                 console.log(err);
@@ -326,7 +316,6 @@ async function _callback( name, event, event2){
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
-        
         case 'radioButtonChanged' : {
             // TODO : stage or unstage depending on what happened
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
@@ -383,38 +372,6 @@ async function _callback( name, event, event2){
 
 // ================= END CALLBACK =================  
 }
-//async function _loopTimer( delayInMs){
-    
-    //// Define timer
-    //let timer = window.setInterval( _update, delayInMs );
-    //return timer
-    
-
-    
-//}
-//async function _update(){
-    //if(isPaused) {
-        //return;
-    //}
-    
-    
-    //let folder = state.repos[state.repoNumber].localFolder;
-    //let status_data;
-    //try{
-        //await simpleGit( folder).status( onStatus );
-        //function onStatus(err, result ){ 
-            //status_data = result; 
-            //console.log(result); 
-            //console.log(err);
-            //createConflictingFileTable(document, status_data);
-            //// createDeletedFileTable(document, status_data);  // CANNOT be updated because that changes checkboxes back
-        //};
-    //}catch(err){
-        
-    //}
-    
-//}
-
 function closeWindow(){
 
     // Return
@@ -435,19 +392,22 @@ function createFileTable(status_data) {
     // Old tbody
     let old_tbody = document.getElementById('listFilesTableBody');
 
+    // NOTE : Hidden in html now
 
-    // Table header (change onClick for history mode)
-    if (localState.mode == 'HISTORY'){
-        let commit = localState.historyHash;
-        document.getElementById('diffAllSpan').setAttribute( 
-            "onClick", 
-            "_callback('diffLinkAll', " + "'" + commit  + "') " 
-            );  // Send commit hash for history
-    }
+    //// Table header (change onClick for history mode)
+    //if (localState.mode == 'HISTORY'){
+        //let commit = localState.historyHash;
+        //document.getElementById('diffAllSpan').setAttribute( 
+            //"onClick", 
+            //"_callback('diffLinkAll', " + "'" + commit  + "') " 
+            //);  // Send commit hash for history
+    //}
 
     // Make  a new tbody
     let tbody = document.createElement("tbody"); // Empty tbody
     tbody.setAttribute('id','listFilesTableBody');
+    
+    console.log(status_data);
 
     // Fill tbody with content
     for (let i in status_data.files) { 
@@ -455,7 +415,12 @@ function createFileTable(status_data) {
         let file = fileStruct.path;
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
-        let XY = fileStruct.index + fileStruct.working_dir;  // See : https://git-scm.com/docs/git-status
+        let filetext = file; // First guess is that text is file path (for rename, it will be different)
+        
+        // See : https://git-scm.com/docs/git-status
+        let X = fileStruct.index;
+        let Y = fileStruct.working_dir
+        let XY = X + Y;  
         
         console.log( '[' + XY + '] ' + fileStruct.path);
         
@@ -518,7 +483,20 @@ function createFileTable(status_data) {
                     break;
             
             }
-            var description = document.createTextNode( file);
+            
+            switch (X) {
+                case "R" :
+                    label.setAttribute("class","renamed"); // 
+                    typeOfChanged = 'renamed';
+                    
+                    let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
+
+                    filetext = substrings[1] + ' -> ' + substrings[2];
+                break;
+            }
+            
+            
+            var description = document.createTextNode( filetext);
             label.appendChild(description);
 
             cell.appendChild(label);
@@ -535,6 +513,8 @@ function createFileTable(status_data) {
                 
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
+                let commit = 'HEAD'
+                //cell.appendChild( diffLinkHistory( document, commit, file) );
                 cell.appendChild( diffLink( document, file));
                  
                 // Make restore link (only if modified or deleted) 
@@ -560,7 +540,7 @@ function createFileTable(status_data) {
                 }                     
             }
             // Internal functions
-            
+
             function diffLink(document, file){
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');
@@ -574,20 +554,69 @@ function createFileTable(status_data) {
                     return  diffLink;
                 }
             };
-             
             function diffLinkHistory(document, commit, file){
                 // Make diff link (history)
                 var diffLink = document.createElement('span');
+                diffLink.innerHTML="";
+                    
                 if (typeOfChanged == 'modified'){  // two files to compare only in modified (only one file in deleted or added)
+                    
+                    let commit1 = commit + "^:" + file;
+                    let commit2 = commit + ":" + file;  
+                                               
+                    // Correct if pinned commit                        
+                    if (localState.pinnedCommit !== ''){ 
+                        commit2 = localState.pinnedCommit + ":" + file;
+                        commit1 = commit + ":" + file;    
+
+                        if (  !status_data.reversedOrder ){
+                            commit2 = commit + ":" + file;
+                            commit1 = localState.pinnedCommit + ":" + file; 
+                        }
+                        
+                    }  
+
                     diffLink.setAttribute('style', "color: blue; cursor: pointer");
-                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit + "', '" + file + "') ");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
-                    return  diffLink;
-                }else{
-                    diffLink.innerHTML="";
-                    return  diffLink;
                 }
-            };    
+                    
+                if (typeOfChanged == 'renamed'){  // two files to compare only in modified (only one file in deleted or added)
+                    
+                    let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
+                    
+                     // Set first commit to previous historical; or to pinned commit
+                    let commit1 = commit + "^:" + substrings[1];
+                    let commit2 = commit + ":" + substrings[2];
+                             
+                    // Correct if pinned commit                        
+                    if (localState.pinnedCommit !== ''){ 
+                        commit2 = localState.pinnedCommit + ":" + substrings[2];
+                        commit1 = commit + ":" + substrings[1];    
+
+                        if (  !status_data.reversedOrder ){
+                            commit2 = commit + ":" + substrings[2];
+                            commit1 = localState.pinnedCommit + ":" + substrings[1]; 
+                        }
+                        
+                    }   
+                    
+                    
+
+                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
+                    diffLink.textContent=" (diff)";
+                    
+                    // If 100% equal, don't make a link (diff is meaningless, and doesn't work)
+                    if (substrings[0] === '100'){
+                        diffLink.setAttribute('onclick', "");
+                        diffLink.textContent="";
+                    }
+                    
+                }               
+                return  diffLink;
+            };   
+
             
         //
         // Button
