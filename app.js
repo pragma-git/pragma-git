@@ -3112,8 +3112,12 @@ function setStatusBar( text){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
         }else{
-            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== ''){
-                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = '';
+            let hashText = '';
+            if ( getMode() === 'HISTORY'){
+                hashText = '< ' + localState.historyHash.substring(0,6) + ' >';
+            }
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== hashText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
             }
         }
     }
