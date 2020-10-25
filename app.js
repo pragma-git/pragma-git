@@ -683,69 +683,67 @@ async function _callback( name, event){
         break;
       }     
       case 'clicked-pinned-hash': {
-          
-        let history = await gitHistory();
+        
+        // Strategy : 
+        // If needed, change branch and apply filter => sure that pinned commit is found in history
 
-            
         // If not pinned branch, change to pinned branch
-        async function part1(){
+
             if (localState.pinnedBranch !== document.getElementById('top-titlebar-branch-text').innerText){
                 let event = {};
                 event.selectedBranch = localState.pinnedBranch;
                 event.branchNumber = localState.pinnedBranchNumber;
                 _callback('clickedBranchContextualMenu', event);
             }   
-        }
+
         
-        // If pinned filter settings is different, reset search
-        async function part2(){
+        // If pinned filter settings is different from when pinned, return to search terms when pinned
+        
             if (    ( document.getElementById('findTextInput').value + document.getElementById('findFileInput').value
                      + document.getElementById('findDateInputAfter').value + document.getElementById('findDateInputBefore').value ) 
                     !==
                     ( localState.pinned_findTextInput + localState.pinned_findFileInput 
-                     + localState.pinned_findDateInputAfter + localState.pinned_findDateInputBefore)    )
+                     + localState.pinned_findDateInputAfter + localState.pinned_findDateInputBefore )    
+                )
                 {
                     document.getElementById('findTextInput').value = localState.pinned_findTextInput;
                     document.getElementById('findFileInput').value = localState.pinned_findFileInput;
                     document.getElementById('findDateInputAfter').value = localState.pinned_findDateInputAfter;
                     document.getElementById('findDateInputBefore').value =  localState.pinned_findDateInputBefore;                
                 }
-        }
-        
 
-        // If  available -- jump to correct place in history 
-        async function part3(){
+        // Jump to correct place in history (checking that pinned is indeed available)
+        
             let history = await gitHistory();
-            if ( history[ localState.pinnedHistoryNumber].hash === localState.pinnedCommit ){
+            if ( history[ localState.pinnedHistoryNumber].hash === localState.pinnedCommit ){ // Equal means available in history
                 localState.historyHash = localState.pinnedCommit;
                 localState.historyNumber = localState.pinnedHistoryNumber;
                 localState.historyString = historyMessage(history, localState.historyNumber);
-                      
-                
-                            
-                // Display           
-                localState.mode = 'HISTORY';
-                //writeMessage( localState.historyString, false);
-                textOutput.value = localState.historyString;
-                writeTextOutput( textOutput);
-                
-                status_data = await gitShowHistorical(localState.historyHash);
-                setStatusBar( fileStatusString( status_data));  
-                  
+
             } else {
                 console.log('ERROR -- could not find pinned commit');
                 console.log('ERROR -- lookup found historical commit = ' + history[ localState.pinnedHistoryNumber].hash );
                 console.log('ERROR -- not the same as  pinned commit = ' + localState.pinnedCommit );
             }
-        }
-        await part1();
-        await part2();
-        await _setMode('HISTORY');
-        status_data = await gitShowHistorical(localState.pinnedCommit);
-        await part3();
-        
 
-         
+        // Display
+        
+            localState.mode = 'HISTORY';
+            status_data = await gitShowHistorical();
+            setStatusBar( fileStatusString( status_data)); 
+            await _update();
+
+        // Call again if not in history of branch
+        
+            if ( history[ localState.pinnedHistoryNumber].hash !== localState.pinnedCommit ){
+                document.getElementById('down-arrow').click();
+                localState.historyNumber = localState.pinnedHistoryNumber;
+                document.getElementById('bottom-titlebar-pinned-text').click()
+                localState.mode = 'HISTORY';
+                status_data = await gitShowHistorical();
+                await setStatusBar( fileStatusString( status_data)); 
+            }
+             
         
         break;
       } 
@@ -1409,7 +1407,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShowHistorical(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));
 
         }catch(err){       
@@ -1465,7 +1463,7 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShowHistorical(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));    
                   
             // Store hash
@@ -1898,7 +1896,7 @@ async function _update(){
                 let status;
             
                 try{
-                    status_data = await gitShowHistorical(localState.historyHash);
+                    status_data = await gitShowHistorical();
                 }catch(err){
                     console.log('fileStatus -- caught error');
                     console.log(err);
@@ -2366,7 +2364,7 @@ async function gitStatus(){
         };
 
 }
-async function gitShowHistorical(commit){
+async function gitShowHistorical(){
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
@@ -3102,7 +3100,7 @@ function setStatusBar( text){
         
         // Pinned commit
         if (localState.pinnedCommit !== ''){
-            let pinnedText = '< <u>compared with ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }

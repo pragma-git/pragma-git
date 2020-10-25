@@ -44,7 +44,7 @@ async function injectIntoJs(document) {
     // Git Status
     try{
         if (localState.mode == 'HISTORY'){
-            status_data = await opener.gitShowHistorical(localState.historyHash);  
+            status_data = await opener.gitShowHistorical();  
         }else{
             status_data = await opener.gitStatus();
         }
@@ -264,7 +264,7 @@ async function _callback( name, event, event2){
             let status_data;
             try{
                 if (localState.mode == 'HISTORY'){
-                    status_data = await opener.gitShowHistorical(localState.historyHash);  
+                    status_data = await opener.gitShowHistorical();  
                 }else{
                     status_data = await opener.gitStatus();
                 }
@@ -303,7 +303,7 @@ async function _callback( name, event, event2){
             // Git Status
             try{
                 if (localState.mode == 'HISTORY'){
-                    status_data = await opener.gitShowHistorical(localState.historyHash);  
+                    status_data = await opener.gitShowHistorical();  
                 }else{
                     status_data = await opener.gitStatus();
                 }
@@ -616,15 +616,7 @@ function createFileTable(status_data) {
                 }               
                 return  diffLink;
             };   
-            
-            async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
-                let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
-                let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
-                function onLog(err, result){ console.log(result); return result } 
-                
-                return (logCorrectOrder.total > 0);
-                
-            } 
+
             
         //
         // Button
