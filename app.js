@@ -2373,6 +2373,7 @@ async function gitStatus(){
 
 }
 async function gitShowHistorical(){
+
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
@@ -2775,19 +2776,41 @@ async function gitMerge( currentBranchName, selectedBranchName){
 }
     
 async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
-    function onLog(err, result){ console.log(result); return result } 
+    // Checks if first parameter is older commit than second parameter
+    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
     
-    //let logReverseOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit + '..' + oldCommit], onLog);
-    //let logCorrectOrder = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit + '..' + newCommit], onLog); 
-    //return (logCorrectOrder.total > 0);
+    // Cache functionality
+    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
+        await calculate(oldCommit, newCommit); // Sets all cached variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }
     
-    let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
-    let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
-    
-    console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
-    console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
-    
-    return ( old.latest.date < newest.latest.date );
+    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }else{
+        await calculate(oldCommit, newCommit);       // Sets cache variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
+    }
+
+    // Internal function - calculate true / false
+    async function calculate(oldCommit, newCommit){
+        
+        function onLog(err, result){ console.log(result); return result } 
+        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+        
+        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+        
+        // Remember cached inputs    
+        gitIsFirstCommitOldest.oldCommit = oldCommit;
+        gitIsFirstCommitOldest.newCommit = newCommit;
+        
+        // Remember cached output
+        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
+        
+        return;         
+    }
 }
 
 
