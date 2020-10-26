@@ -545,8 +545,9 @@
             </p> 
                         
         <br>
-        <hr>               
-      
+        <hr> 
+                      
+ <!-------------------------------------------------------------------------------------------->        
       <iframe id="SEARCH"  src="about_search.html" frameborder="0" style="width:100%;height:100%;" 
           onload='content=document.getElementById("SEARCH");
           content.style.height="";
@@ -554,40 +555,30 @@
           
           <hr>
  <!-------------------------------------------------------------------------------------------->             
-<!--
-         <h4 id="SEARCH2">Searching history </h4>            
+
+         <h4 id="SEARCH2">History - comparing with fixed commit </h4>            
          
          
-        <p>The number of stored commits can be filtered in a dialog that opens by clicking the <img src="images/find_black.png"  height="17" width="17"> icon.
+        <p>When in history mode, either by clicking down arrow, or search, the difference in the status bar is shown relative previous commit.
         </p>
         
-        <p>The dialog allows to filter on any combination of file name (also part of file names), text in commit message, and a date range :
+        <p>Enabling the checkbox 
+            <img src="images/pinned_disabled_black.png"  height="17" width="17"> <img src="images/pinned_enabled_black.png"  height="17" width="17">
+            sets the current commit as the reference, and when moving in history the differences are relative this commit.
+        </p>        
+              
+        <p>The difference is always shown as a comparison between the newest to the oldest commit, 
+        regardless if the current commit is newer or older than the fixed commit.  This eliminates the 
+        problem that the same file can be marked as new or deleted in a comparison between two commits, depending on which of the two commits was fixed.
         </p>       
             
-            
-        <img style='vertical-align:middle;' src="images/Cheat-sheet-search.png" width="65%">
-         
-        <p>
-        After pressing the [Find] button, the lower status bar shows something like <code>(1 of 9)</code>, where the second number shows how
-        many commits that were found, and the first number which of these commits are currently displayed.  This filtered history
-        can be browsed by the arrow buttons exactly the same as the non-filtered history (see above)
-        </p>    
-        
-        <p>
-        The format for dates follow git notation, and can be in many convenient format as indicated in above figure.  Git uses
-        a library called "approxidate", which is very flexible, but the documentation seems to be lacking.   
-        </p>
-         
-        <p>
-        The filter is disabled by clicking the <img src="images/find_black.png"  height="17" width="17"> icon again
-        </p>
-        
+      
         
         <br>
         <br>
         
         <hr> 
--->
+
  <!-------------------------------------------------------------------------------------------->             
          <h2 id="INSTALLATION">Installation </h2>
         <hr>             
