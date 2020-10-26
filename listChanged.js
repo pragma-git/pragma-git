@@ -67,7 +67,13 @@ async function injectIntoJs(document) {
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
         document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
-        document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  // Correct title to match historical file changes
+
+        // Change from default text (two alternatives, if pinned or simple history)
+        if (localState.pinnedCommit !== ''){ 
+            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since commit ' + localState.pinnedCommit.substring(0,6) + ' :';  
+        }else{
+            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
+        }
     }else{
         document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
     }
