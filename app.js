@@ -613,10 +613,12 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-status-text' : {
-        if (localState.fileListWindow == true) {        
-            try{ list_win.focus(); }catch(err){ }     
-            try{ resolve_win.focus(); }catch(err){ }
-            return
+        if (localState.fileListWindow == true) {          
+            try{ 
+                resolve_win.focus();
+                return
+            }catch(err){ 
+            }    
         }
             
         let status_data = await gitStatus();
@@ -1617,7 +1619,15 @@ async function _callback( name, event){
                 height: 700,
                 title: "List Changed Files"
             },
-                win=>win.on('loaded', () => list_win = nw.Window.get(win.window))
+                win=>win.on('loaded', 
+                    () => {
+                        try{ 
+                            list_win.close(); // Close prior list_win if exists
+                        }catch(err){ 
+                        }
+                        list_win = nw.Window.get(win.window);
+                    }
+                )
             
             ); 
         console.log(settings_win);        

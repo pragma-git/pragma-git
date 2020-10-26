@@ -77,8 +77,7 @@ async function injectIntoJs(document) {
     }else{
         document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
     }
-    
-    // Set table header according to mode
+
 
 };
 
