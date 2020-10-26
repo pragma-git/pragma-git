@@ -55,7 +55,7 @@ async function injectIntoJs(document) {
     
     let hx = window.outerWidth - window.innerWidth;
     let hy = window.outerHeight - window.innerHeight;
-    window.resizeTo(dx + hx + 2 * padding , dy + hy + 2 * padding);
+    window.resizeTo(dx + hx + 2 * padding , dy + hy + 2 * padding + 32);
     
     // Always on top
     win.setAlwaysOnTop( state.alwaysOnTop );
