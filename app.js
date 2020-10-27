@@ -717,17 +717,22 @@ async function _callback( name, event){
         // Jump to correct place in history (checking that pinned is indeed available)
         
             let history = await gitHistory();
-            if ( history[ localState.pinnedHistoryNumber].hash === localState.pinnedCommit ){ // Equal means available in history
+
+            if ( !isNaN( util.findObjectIndex(history,'hash', localState.pinnedCommit) ) ){
+                // Set localState
+                localState.historyNumber = util.findObjectIndex(history,'hash', localState.pinnedCommit); 
                 localState.historyHash = localState.pinnedCommit;
-                localState.historyNumber = localState.pinnedHistoryNumber;
                 localState.historyString = historyMessage(history, localState.historyNumber);
+
 
             } else {
                 console.log('ERROR -- could not find pinned commit');
                 console.log('ERROR -- lookup found historical commit = ' + history[ localState.pinnedHistoryNumber].hash );
                 console.log('ERROR -- not the same as  pinned commit = ' + localState.pinnedCommit );
-            }
 
+            }           
+            
+                 
         // Display
         
             localState.mode = 'HISTORY';
@@ -737,7 +742,7 @@ async function _callback( name, event){
 
         // Call again if not in history of branch
         
-            if ( history[ localState.pinnedHistoryNumber].hash !== localState.pinnedCommit ){
+            if ( isNaN( util.findObjectIndex(history,'hash', localState.pinnedCommit) ) ){
                 document.getElementById('down-arrow').click();
                 localState.historyNumber = localState.pinnedHistoryNumber;
                 document.getElementById('bottom-titlebar-pinned-text').click()
