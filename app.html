@@ -245,12 +245,12 @@
                         <div id="output_text">
                                                         
                             <div class="group">
-                                <label for="findTextInput"> message &nbsp;
+                                <label for="findTextInput">  <span id="mess_text" style="color: #000000">message</span> &nbsp;
                                     <label class="switch">
-                                        <input id="message_code_switch" type="checkbox" class="slider round" onclick="find_button.click()">
+                                        <input id="message_code_switch" type="checkbox" class="slider round" onclick="colorSwitchTexts();find_button.click()">
                                         <span class="slider round"></span> 
                                     </label>
-                                    &nbsp; code
+                                    &nbsp; <span id="code_text" style="color: #aaaaaa">code-change</span> 
                                 </label>
                                 <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
                             </div>
@@ -271,11 +271,14 @@
                                 <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12" onkeydown="clickFind()"/> 
                             </div>
                             
+                            -
+                            
                             <div class="group">
                                 <label for="findDateInputBefore"> until (newest)</label>
                                 <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12" onkeydown="clickFind()"/>
                             </div>
                             
+                            &nbsp;&nbsp;
 
                             <img id="about-icon-find"   style='vertical-align:middle;'  height="17" width="17"  
                                 onclick="_callback('help-on-find')" 
@@ -296,6 +299,15 @@
                     if (event.keyCode == 13) {
                         find_button.click();
                     } 
+                }
+                function colorSwitchTexts(){
+                    if ( document.getElementById("message_code_switch").checked ){
+                        document.getElementById('code_text').setAttribute('style','color: #000000');
+                        document.getElementById('mess_text').setAttribute('style','color: #aaaaaa');
+                    }else{
+                        document.getElementById('code_text').setAttribute('style','color: #aaaaaa');
+                        document.getElementById('mess_text').setAttribute('style','color: #000000');
+                    }
                 }
             </script>    
 
