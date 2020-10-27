@@ -667,6 +667,7 @@ async function _callback( name, event){
         localState.pinned_findFileInput = document.getElementById('findFileInput').value;
         localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
         localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
 
         
         // Set or unset
@@ -711,7 +712,8 @@ async function _callback( name, event){
                     document.getElementById('findTextInput').value = localState.pinned_findTextInput;
                     document.getElementById('findFileInput').value = localState.pinned_findFileInput;
                     document.getElementById('findDateInputAfter').value = localState.pinned_findDateInputAfter;
-                    document.getElementById('findDateInputBefore').value =  localState.pinned_findDateInputBefore;                
+                    document.getElementById('findDateInputBefore').value =  localState.pinned_findDateInputBefore;    
+                    document.getElementById("message_code_switch").checked = localState.pinned_findCode;            
                 }
 
         // Jump to correct place in history (checking that pinned is indeed available)
@@ -2517,9 +2519,18 @@ async function gitHistory() {
     
         // Build command depending on input  
         if ( !isNullOrWhitespace(searchMessage) ){
-            command.push('--grep'); 
-            command.push(searchMessage);
-            command.push('--regexp-ignore-case'); 
+            // Two options, message or code search
+            if ( document.getElementById("message_code_switch").checked ){
+                // message text
+                command.push('-S'); 
+                command.push(searchMessage);
+                command.push('--regexp-ignore-case'); 
+            }else{
+                // code
+                command.push('--grep'); 
+                command.push(searchMessage);
+                command.push('--regexp-ignore-case'); 
+            }
         }
          
         if ( !isNullOrWhitespace(since) ){

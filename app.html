@@ -3,6 +3,9 @@
     <title>Pragma-git</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="slider_switch.css" />
+    
+    
     <script src="app.js"></script>
     
 
@@ -240,16 +243,27 @@
                     </td>
                     <td class="message_column">
                         <div id="output_text">
+                                                        
+                            <div class="group">
+                                <label for="findTextInput"> message &nbsp;
+                                    <label class="switch">
+                                        <input id="message_code_switch" type="checkbox" class="slider round" onclick="find_button.click()">
+                                        <span class="slider round"></span> 
+                                    </label>
+                                    &nbsp; code
+                                </label>
+                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
+                            </div>
+                            
+                            &nbsp;&nbsp;
+                            
                              
                             <div class="group">
                                 <label for="findFileInput"> file</label>
-                                <input id="findFileInput" type="text" placeholder="file name"  size="25"onkeydown="clickFind()"/>
+                                <input id="findFileInput" type="text" placeholder="file name"  size="25" onkeydown="clickFind()"/>
                             </div>
-                                                        
-                            <div class="group">
-                                <label for="findTextInput"> message text</label>
-                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
-                            </div>
+                            
+                            
                             &nbsp;&nbsp;
                                                        
                             <div class="group">
