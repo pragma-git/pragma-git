@@ -106,36 +106,50 @@
         by clicking the <img src="images/find_black.png"  height="17" width="17"> icon.
         </p>
         
-        <p>The dialog allows filtering using any combination of the fields for :
+        <p>The dialog allows filtering using a combination of the fields for :
             <ul>
                 <li>file name (part of, or whole name)</li>
                 <li>text in commit message</li>
+                <li>changed code lines in which search term exists (see below)</li>
                 <li>date range</li>
             </ul> 
         </p>       
             
-        Figure showing the dialog :<br>  
+        <i>Figure showing the dialog :<br></i> 
         <br>   
         <img style='vertical-align:middle;' src="images/Cheat-sheet-search.png" width="65%">
+        <br>
+        <br>
          
         <p>
-        After pressing the [Find] button, the lower status bar shows something like <code>(1 of 9)</code>, where the second number shows how
+        After pressing the [Find] button, the lower status bar shows something like <code>(1 of 2)</code>, where the second number shows how
         many commits that were found, and the first number which of these commits is currently displayed.  This filtered history
         can be browsed by the arrow buttons 
         (<img src="images/up-arrow_hover.png"  height="17" width="17">
          <img  src="images/down-arrow_hover.png"  height="17" width="17">),
-        exactly as described for the non-filtered history
+        exactly as described for the non-filtered history.  The "abbreviated hash" code of the commit is also shown at the bottom.
         </p>    
+        
+        <i>Figure showing the lower status-bar after search :<br></i> 
+        <br>   
+        <img style='vertical-align:middle;' src="images/searched_status_bar.png" width="65%">
+        <br>
+        <br>
         
         <p>
         The format for dates follow git notation, and can be in many convenient formats as indicated in above figure text.  Git uses
         a library called "approxidate", which is very flexible, but the documentation is sparse.   
         </p>
-         
+                
+        <p>
+        Code search finds commits, by looking for lines that has changed and that contain the search text. 
+        Thus the search text does not have to be changed, but a modified line must contain the word searched for.
+        </p>
+        
         <p>
         The filter is disabled by clicking the <img src="images/find_black.png"  height="17" width="17"> icon again.
         </p>
-        
+
         
         <br>
         <br>
