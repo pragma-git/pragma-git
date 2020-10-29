@@ -2512,7 +2512,10 @@ async function gitHistory() {
     let since = document.getElementById('findDateInputAfter').value;
     let until = document.getElementById('findDateInputBefore').value;
     
-    let command = [ '--first-parent'];
+    let command = [];
+    if (state.FirstParent){
+        command.push('--first-parent'); 
+    }
     
     // Add only if filter is visible
     if (document.getElementById('output_row').style.visibility == 'visible' ){
@@ -3293,6 +3296,7 @@ function loadSettings(settingsFile){
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
             state.onlyOneStash = setting( state_in.onlyOneStash, true);
             state.NoFF_merge = setting( state_in.NoFF_merge, true);
+            state.FirstParent = setting( state_in.FirstParent, true);
             
         // External tools (three levels -- state.tools.difftool )
             console.log('- setting external tools ');

@@ -269,7 +269,11 @@
                 
                 <!--  --no-ff merge (gitflow recommends this) -->
                 <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="onlyOneStash"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br><br>
+                <label for="NoFF_merge"> Merge without fast-forward (easier to understand merges, as recommended by GitFlow model)</label><br>
+                
+                <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
+                <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                <label for="FirstParent"> Search in current branch (if fast forward is used, this may not be entire accurate)</label><br><br>
             
              
               
@@ -444,6 +448,15 @@
                             
                         <dt><b>Git Settings</b></dt> 
                             <br>
+                                                     
+                            <dd><b>- Author's name </b> : 
+                                Modify your name (on all your repositories on this computer)</dd>
+                            <br>
+                                                         
+                            <dd><b>- Author's email </b> : 
+                                Modify your email (on all your repositories on this computer)</dd>
+                            <br>
+                            
                             <dd><b>- Branch change not allowed, for changed files </b> : 
                                 Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
                             <br>
@@ -458,18 +471,19 @@
                             <br>
                                                          
                             <dd><b>- Merge without fast-forward </b> : 
-                                This is default, and makes clearer merges.  This guarantees a commit when merging,
-                                where the commit message clarifies the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.</dd>
-                            <br>
-                                
-                                                         
-                            <dd><b>- Author's name </b> : 
-                                Modify your name (on all your repositories on this computer)</dd>
+                                This is default, and makes clearer merges.  This guarantees that a commit is created when merging,
+                                where the commit message can clarify the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.
+                                It is also recommended to enable this setting because searches will be easier to understand (see below setting).</dd>
                             <br>
                                                          
-                            <dd><b>- Author's email </b> : 
-                                Modify your email (on all your repositories on this computer)</dd>
+                            <dd><b>- Search in current branch </b> : 
+                                This is default, and makes search look in current branch.  This makes searches less confusing, since the 
+                                result follow a logical flow, and does not jump back and forth between branches.
+                                However: Results where fast-forward merge (above setting) are used will be confusing, 
+                                and if fast-forward-merges are your settings, it is recommended to disable the "Search in current branch" 
+                                setting.   <dd>
                             <br>
+
                                 
                             <br>
                             
