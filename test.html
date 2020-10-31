@@ -5,7 +5,7 @@
 
     
     <style>
-        div,span { display: block; float: left; height: 24; width: 12; }
+        div,span { display: block; float: left; height: 24; width: 12; outline: 1px dotted orange; outline-offset: -1px;}
         
         .firstcol { clear: both;}
 
@@ -20,50 +20,156 @@
              z-index: 1;
         }        
         
-        .line {
+        /* Span 2 divs. Centered in current div */
+        .diagline { 
+             position: relative; 
+             top: calc(-50% + 0px);
+             left: calc(-50% - 1px);
+             width:  calc(200% + 3px);
+             height: calc(200% + 10%);
+        }
+         
+        /* Span 1 div. Cross div  */
+        .vertline_below_node {
              position: relative;
-             top: -50%;
+             top: 5%;
              left: -50%;
              width: 200%;
-             height: 200%;
-        }
-        
-         #masked2 {
-             -mask-image: url(images/pipe.png);
-             -mask-mode: luminance;
-        }       
-        
-        
+             height: 110%;
+        } 
+         .vertline_below_line {
+            position: relative;
+             top: 45%;
+             left: -50%;
+             width: 200%;
+             height: 110%;
+             z-index: 1;
+        }        
     </style>
+  
     
 <body>
+
+
     
-   
-<div class='firstcol'></div> 
-<div></div>
-<div></div>
-<div><img class='node' src="images/circle_red.png"></div>
-<div></div>
-<div class='text'><code> hej du </code></div>
-<br>
+<script>
+    
+var graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SPM viewer
+* 7fe5f6f Fix accidental commit
+*   d267661 Merge remote-tracking branch 'origin/develop' into develop
+|\  
+* | cf12312 Revert "Fix that search-field was not always fully shown"
+| * bdfd286 Fix that search-field was not always fully shown
+|/  
+* 6f99d86 Improve again
+* 6e60ebc Improve update script -- to solve installing deeper and deeper
+* d9338fe Make update recognize github zip structure
+* 8bcc562 USER_SCRIPT folder updated
+* f300d65 Set version.txt
+*   3924c62 Update from github
+|\  
+| * abeb22e (origin/feature/update, feature/update) Fix USER_SCRIPT path
+| * 9848d08 Move update to github -- first commit
+|/  
+* aea50f1 Start testing Github site
+*   33b9dc3 Fix opening 1.2.840.10008.1.2
+|\  
+| * f7097f6 Fix error opening 1.2.840.10008.1.2
+| * 50f3260 test3
+| *   f08591a Merge branch 'master' of https://github.com/JanAxelsson/imlook4d
+| |\  
+| | * 572046d Set theme jekyll-theme-architect
+| * | 7b1e3cd test page 2
+| * | 1af4e37 test page
+| | * 44ad9df Set theme jekyll-theme-midnight
+| |/  
+| *   4970dcd (tag: 5.2.0) 5.2.0
+| |\  
+| |/  
+|/|   
+* | 6055e61 test
+`
 
-<div class='firstcol'></div> 
-<div></div>
-<div><img class='line' src="images/slash.png"></div>
-<div id='masked'><img class='line' src="images/pipe.png"></div>
-<div></div>
-<div class='text'><code> hej du sad adf adfs adsfds a</code></div>
 
-<br>
+console.log(graphText)
 
-<div class='firstcol'></div> 
-<div><img class='node' src="images/circle_red.png"></div>
-<span> </span> 
-<div><img class='node' src="images/circle_red.png"></div>
-<div></div>
-<div class='text'><code> hej du sad adf adfs adsfds a</code></div>
+var splitted = graphText.split("\n");
+console.log(splitted)
 
-<br>
+
+for(var row = 0; row < (splitted.length - 1); row++) {
+    let currentRow = splitted[ row ];
+    let nextRow = splitted[ row + 1];
+    
+    document.body.innerHTML += '<div class="firstcol"></div> ' // New row
+    for(var i = 0 ; i < currentRow.length ; i++){
+        
+        switch (currentRow[i]) {
+            case ' ' : {
+                document.body.innerHTML += '<div></div>';
+                break;
+            }
+            
+            case '*' : {
+                let total = '<img class="node" src="images/circle_red.png">';
+                
+                // Draw up-line if previous was node
+                let next = nextRow[ i ];
+                if ( next === '*' || next === '|'){
+                    total += '<img class="vertline_below_node" src="images/pipe.png">';
+                }
+                document.body.innerHTML += '<div>' + total +'</div>';
+
+                break;
+            }
+            
+            
+            case '/': {
+                document.body.innerHTML += '<div><img class="diagline" src="images/slash.png"></div>';
+                break;
+            }
+            
+            
+            case '_': {
+                document.body.innerHTML += '<div>__</div>';
+                break;
+            }_            
+            
+            case '|': {
+                let total = ''; //'<img class="vertline_below_node" src="images/pipe.png">';
+                     
+                // Draw up-line if previous was node
+                let next = nextRow[ i ];
+                if ( next === '*' || next === '|'){
+                    total += '<img class="vertline_below_line" src="images/pipe.png">';
+                }
+                document.body.innerHTML += '<div>' + total +'</div>';
+
+                
+                break;
+            }
+            
+            
+            case '\\' : {
+                document.body.innerHTML += '<div><img class="diagline" src="images/backslash.png"></div>'; 
+                break;
+            }
+            
+            default : {
+                document.body.innerHTML += '<div class="text"><code>' + currentRow.substring(i) + '</code></div>'
+                i = currentRow.length; // Bail out of loop
+                break;
+            }
+            
+            
+        }
+    }
+    
+    
+}
+        
+        
+</script>  
 
 </body>
 </html>
