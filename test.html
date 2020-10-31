@@ -1,0 +1,69 @@
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+
+    
+    <style>
+        div,span { display: block; float: left; height: 24; width: 12; }
+        
+        .firstcol { clear: both;}
+
+        .text { width: auto}
+        
+        .node {
+            position: relative;
+             top: 25%;
+             left: 0%;
+             width: 100%;
+             height: 50%;
+             z-index: 1;
+        }        
+        
+        .line {
+             position: relative;
+             top: -50%;
+             left: -50%;
+             width: 200%;
+             height: 200%;
+        }
+        
+         #masked2 {
+             -mask-image: url(images/pipe.png);
+             -mask-mode: luminance;
+        }       
+        
+        
+    </style>
+    
+<body>
+    
+   
+<div class='firstcol'></div> 
+<div></div>
+<div></div>
+<div><img class='node' src="images/circle_red.png"></div>
+<div></div>
+<div class='text'><code> hej du </code></div>
+<br>
+
+<div class='firstcol'></div> 
+<div></div>
+<div><img class='line' src="images/slash.png"></div>
+<div id='masked'><img class='line' src="images/pipe.png"></div>
+<div></div>
+<div class='text'><code> hej du sad adf adfs adsfds a</code></div>
+
+<br>
+
+<div class='firstcol'></div> 
+<div><img class='node' src="images/circle_red.png"></div>
+<span> </span> 
+<div><img class='node' src="images/circle_red.png"></div>
+<div></div>
+<div class='text'><code> hej du sad adf adfs adsfds a</code></div>
+
+<br>
+
+</body>
+</html>
