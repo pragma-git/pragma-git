@@ -5,11 +5,13 @@
 
     
     <style>
-        div,span { position: relative; display: block; float: left; height: 24; width: 12; outline: 1px dotted orange; outline-offset: -1px; }
+        
+        div { position: relative; float: left; height: 24; width: 12; outline: 1px dotted orange; outline-offset: -1px }
+        pre { margin: 2px}
         
         .firstcol { clear: both;}
 
-        .text { width: auto}
+        .text{ width: auto;}
         
         .node {
             position: absolute;
@@ -19,7 +21,16 @@
              width: 100%;
              z-index: 10;
         }        
-        
+         
+        .bridge {
+            position: absolute;
+             top: 25%;
+             left: -50%;
+             height: 50%;
+             width: 200%;
+             z-index: 1;
+        }  
+               
         .slash { 
              position: absolute; 
              top: 50%;
@@ -28,13 +39,31 @@
              width: 100%;
              z-index: 1;
         }    
-        
+               
+        .wideslash { 
+             position: absolute; 
+             top: 50%;
+             left: -50%;
+             height: 100%;
+             width: 200%;
+             z-index: 1;
+        }  
+                
         .backslash { 
              position: absolute; 
              top: 50%;
              left: 50%;
              height: 100%;
              width: 100%;
+             z-index: 1;
+        }  
+            
+        .widebackslash { 
+             position: absolute; 
+             top: 50%;
+             left: -50%;
+             height: 100%;
+             width: 200%;
              z-index: 1;
         }
 
@@ -46,6 +75,7 @@
              width: 100%;
              z-index: 1;
         } 
+
    
     </style>
   
@@ -95,116 +125,187 @@ var graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add scrip
 
 
 graphText2 = String.raw`
- * *   *  *  * *  *      
- * |  /   |  |  \  \   
- * | /   /    \  \  \     
- * | \  /      \    /      
- * |  \            /      
- *     *          *     
+ * *   *  *  * *  *    * *  * * 
+ * |  /   |  |  \  \   | |  | | 
+ * | /   /    \  \  \  |/    \|
+ * | \  /\     \    / /|      |\
+ * |  \            /  \|      |/ 
+ *     *          *    |\    /|  
 `
+
+
+graphText2 = String.raw`
+  * * *
+   \|/ 
+    |   
+   /|\  
+  * * *
+  
+  * *      * *
+   \|      |/
+    |\    /|
+    * *  * *
+       
+   *   *   *  *
+   *   |  /    \
+ 
+   /   /   /   /
+  *   |   /    \
+  *   *  *      *
+  
+   *   *   *  *
+   |   |   |  |
+   *   |  /    \
+   *   * *      *
+`
+
+graphText2 = String.raw`
+ * *      * *  A * *      * *  
+  \|      |/   A  \|      |/           
+   |\    /|    A   |\    /|    
+   * *  * *    A   * *  * *             
+                         
+ \  \  \      /  /   / B \  \  \      /  /   /          
+  |  *  \    |  *   /  B  |  *  \    |  *   /          
+                          
+ *  *  *    C   *  *  *    
+/   |   \   C  /   |   \          
+               
+ * *       D  * *       
+ |_|       D  |_|       this line is the important test
+/   \      D /   \      
+ 
+ *   *     E  *   *     
+  \ /      E   \ /      
+  / \      E   / \      
+ *   *     E  *   *     
+             NOTE: requires space not to fail
+  * * *    F   * * *    
+ /  |  \   F  /  |  \   
+    |   *  F     |   *       
+             NOTE: requires space not to fail
+
+`   
+
+const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 
 console.log(graphText)
 
 var splitted = graphText.split("\n");
 console.log(splitted)
 
-
 for(var row = 0; row < (splitted.length - 1); row++) {
-    let currentRow = splitted[ row ];
-    let nextRow = splitted[ row + 1];
+    let sumFound ='';
     
     document.body.innerHTML += '<div class="firstcol"></div> ' // New row
-    for(var i = 0 ; i < currentRow.length ; i++){
+    for(var i = 0 ; i < splitted[row].length ; i++){
+        let total = '';
+        let found = '';
+
         
-        switch (currentRow[i]) {
-            case ' ' : {
-                document.body.innerHTML += '<div></div>';
-                break;
-            }
-            
-            case '*' : {
-                // Alternatives : 
-                //   *   *   *   *
-                //   *   |  /     \
-                let total = '<img class="node" src="images/circle_red.png">'; // Draw node
-                
-                // Draw line :
-                if ( nextRow[ i ] === '*' ){ total += '<img class="pipe" src="images/pipe.png">'; }  // Connecting pipe, and next node will be drawn when handling next line
-                if ( nextRow[ i ] === '|'){ total += '<img class="pipe" src="images/pipe.png">'; }
-                if ( nextRow[ i - 1 ] === '/' ){ total += '<img class="slash" src="images/slash.png">'; }
-                if ( nextRow[ i + 1 ] === '\\' ) {  total += '<img class="backslash" src="images/backslash.png">';  }
-                
-                document.body.innerHTML += '<div>' + total +'</div>';
-                break;
-            }
-            
-            
-            case '/': {
-                // Alternatives : 
-                //   /    /  /   /
-                //  *    |  /    \
-                let total = '';
-                          
-                // Draw line :    
-                if ( nextRow[ i - 1] === '*' ){ total +=  '<img class="slash" src="images/slash.png">'; }             
-                if ( nextRow[ i - 1 ] === '|' ){ total +=  '<img class="slash" src="images/slash.png">';}
-                if ( nextRow[ i - 1 ] === '/' ){ total +=  '<img class="slash" src="images/slash.png">'; }
-                if ( nextRow[ i ] === '\\' ) { total +=  '<img class="pipe" src="images/pipe.png">'; }  // Special -- draw '|' to connect / \
+        // Draw node
+        if (  a(0,'*') ){
+            total += '<img class="node" src="images/circle_red.png">'; // Draw node
+        }
+ 
+        //
+        // Draw lines
+        //
+        
+        // Select what to draw -- first hit wins :
+        
+        if (  a(0,'|') && a(-1, '\\') && b(0,'|') && b(1,'\\')  ) {
+        // -------------
+        // A) Crossing down-right 
+            found = 'A1';
+            total += '<img class="pipe" src="images/pipe.png">';
+            total += '<img class="widebackslash" src="images/widebackslash.png">';  
+        }else if (  a(0,'|') && a(1, '/') && b(-1,'/') && b(0,'|')  ) {
+        // A) Crossing down-left 
+            found = 'A2';
+            total += '<img class="pipe" src="images/pipe.png">';
+            total += '<img class="wideslash"  src="images/wideslash.png">';     
+        }else if (  a(0,'\\') && !b(1,' ') && b(2,' ')  ) {
+        // -------------
+        // B) back-slash 
+            found = 'B1';
+            total += '<img class="backslash" src="images/backslash.png">';
+        }else if (  a(0,'/') && !b(-1,' ') && b(-2,' ')  ) {
+        // B) slash 
+            found = 'B2';
+            total += '<img class="slash" src="images/slash.png">';
+        }else if (  a(0,'|') && !b(-1,' ')  ) {
+        // -------------
+        // C) slash 
+            found = 'C1';
+            total += '<img class="slash" src="images/slash.png">';
+        }else if (  a(0,'|') && !b( 0,' ')  ) {
+        // C) pipe 
+            cfound = 'C2';
+            total += '<img class="pipe" src="images/pipe.png">';
+        }else if (  a(0,'|') && !b( 1,' ')  ) {
+        // C) back-slash 
+            found = 'C3';
+            total += '<img class="backslash" src="images/backslash.png">';
+        }else if (  a(0,'_') ) {
+        // -------------
+        // D) bridge
+            found = 'D';
+            total += '<img class="bridge" src="images/bridge.png">';
+        }else if (  a(0,'\\') && b(0,'/')  ) {
+        // -------------
+        // E) pipe 
+            found = 'E1';
+            total += '<img class="pipe" src="images/pipe.png">';
+        }else if (  a(0,'/') && b( 0,'\\')  ) {
+        // E) pipe 
+            found = 'E2';
+            total += '<img class="pipe" src="images/pipe.png">';
+        }else if (  a(0,'*') && !b( -1,' ') && !b( -1,'_') && b( 0,' ')   ) {
+        // -------------
+        // F) slash 
+            found = 'F1';
+            total += '<img class="slash" src="images/slash.png">'; 
+        }else if (  a(0,'*') && !b( 0,' ') && !b( 0,'_') ) {
+        // F) pipe 
+            found = 'F2';
+            total += '<img class="pipe" src="images/pipe.png">';
+        }else if (  a(0,'*') && !b(  1,' ') && !b( 1,'_') && b( 0,' ') ) {
+        // F) back-slash 
+            found = 'F3';
+            total += '<img class="backslash" src="images/backslash.png">';
+        }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
+        // -------------
+        // TEXT if nothing else
+            document.body.innerHTML += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'
+            i = splitted[row].length;
+            continue // skip rest of row
+        }
 
-                document.body.innerHTML += '<div>' + total +'</div>';
-                break;
-            }
-            
-            
-            case '_': {
-                document.body.innerHTML += '<div>__</div>';
-                break;
-            }_            
-            
-            case '|': {
-                // Alternatives : 
-                //   |   |   |  |
-                //   *   |  /    \
-                let total = '';
-                       
-                // Draw line :
-                if ( nextRow[ i ] === '*' ){ total +=  '<img class="pipe" src="images/pipe.png">';} // Special -- draw '|' to connect | and *
-                if ( nextRow[ i ] === '|' ){ total +=  '<img class="pipe" src="images/pipe.png">'; }
-                if ( nextRow[ i - 1 ] === '/' ){ total +=  '<img class="slash" src="images/slash.png">'; }
-                if ( nextRow[ i + 1 ] === '\\' ) { total +=  '<img class="backslash" src="images/backslash.png">'; }
-
-                document.body.innerHTML += '<div>' + total +'</div>';
-                break;
-            }
-            
-            
-            case '\\' : {
-                // Alternatives : 
-                //   \  \   \   \
-                //    *  |  /    \
-                let total = '';
-                
-                          
-                // Draw line :    
-                if ( nextRow[ i + 1] === '*' ){ total +=  '<img class="backslash" src="images/backslash.png">';} // Special -- draw '\' to connect \ |         
-                if ( nextRow[ i + 1 ] === '|' ){ total +=  '<img class="backslash" src="images/backslash.png">';}
-                if ( nextRow[ i ] === '/' ){ total +=  '<img class="pipe" src="images/pipe.png">'; }// Special -- draw '|' to connect / \
-                if ( nextRow[ i + 1 ] === '\\' ) { total +=  '<img class="backslash" src="images/backslash.png">'; }
-
-                document.body.innerHTML += '<div>' +  total +'</div>';
-                break;
-            }
-            
-            default : {
-                document.body.innerHTML += '<div class="text"><code>' + currentRow.substring(i) + '</code></div>'
-                i = currentRow.length; // Bail out of loop
-                break;
-            }
-            
-            
+        // Make div with content from above
+        document.body.innerHTML += '<div>' + total +'</div>';
+        
+        if (found !== ''){
+            sumFound += ' ' + found;
         }
     }
+    console.log('ROW = ' + row + '  ' + sumFound);
     
+    function a(index, c){
+        let currentRow = BUFFERTCOLS + splitted[ row ];
+        index = index + BUFFERTCOLS.length;
+        let answer = currentRow[i+index] === c;
+        //console.log(answer + '  ' + c + ' (a) Row = ' + row + '  col = ' + i + '  index = ' + index );
+        return answer;
+    }
+    
+    function b(index, c){
+        let nextRow = BUFFERTCOLS + splitted[ row + 1];
+        index = index + BUFFERTCOLS.length;
+        let answer = nextRow[i+index] === c;
+        //console.log(answer + '  ' + c + ' (b) Row = ' + row + '  col = ' + i + '  index = ' + index );
+        return answer;
+    }    
     
 }
         
