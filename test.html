@@ -449,12 +449,12 @@ for(var row = 0; row < (splitted.length - 1); row++) {
             total += '<img class="wideslash"  src="images/wideslash.png">';  
                
         // -------------
-        }else if (  a(0,'\\') && !b(1,' ') && b(2,' ')  ) {   
+        }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  ) ) {   
         // B) back-slash 
             found = 'B1';
             total += '<img class="backslash" src="images/backslash.png">';
             
-        }else if (  a(0,'/') && !b(-1,' ') && b(-2,' ')  ) {
+        }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') )  ) {
             // B) slash 
             found = 'B2';
             total += '<img class="slash" src="images/slash.png">';
@@ -462,7 +462,7 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         // -------------   
         }else if (  a(0,'|')  ) {
             
-            if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  ) {
+            if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  && !b( -1,'_') ) {
             // C) slash 
                 found += ' C1';
                 total += '<img class="slash" src="images/slash.png">';
@@ -474,7 +474,7 @@ for(var row = 0; row < (splitted.length - 1); row++) {
                 total += '<img class="pipe" src="images/pipe.png">';
                 
             }
-            if (  a(0,'|') && !b( 1,'/') && !b( 1,' ')  ) {
+            if (  a(0,'|') && !b( 1,'/') && !b( 1,' ') && !b( 1,'_') ) {
             // C) back-slash 
                 found += ' C3';
                 total += '<img class="backslash" src="images/backslash.png">';
@@ -519,9 +519,14 @@ for(var row = 0; row < (splitted.length - 1); row++) {
 
         }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
         // TEXT if nothing else
-            body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'
-            i = splitted[row].length;
+            let rowText = '(' + row + ') ';
+            body += '<div class="text"><pre>' + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>';
+            sumFound += ' ' + splitted[row].substring(i);
+            i = splitted[row].length; // skip out of loop
             continue // skip rest of row
+        }else if ( i == (splitted[row].length - 1) ) {
+            // Print out info for non-commit rows
+            body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>';
         }
 
         // Make div with content from above
@@ -531,7 +536,7 @@ for(var row = 0; row < (splitted.length - 1); row++) {
             sumFound += ' ' + found;
         }
     }
-    console.log('ROW = ' + row + '  ' + sumFound);
+    console.log('ROW = ' + row + '  '  +sumFound);
     
     function a(index, c){
         let currentRow = BUFFERTCOLS + splitted[ row ];
