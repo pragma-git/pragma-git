@@ -5,8 +5,10 @@
 
     
     <style>
+        /* Set outline: 0.01px to show */
         
-        div { position: relative; float: left; height: 24; width: 12; outline: 1px dotted orange; outline-offset: -1px }
+        div { position: relative; float: left; height: 24; width: 12; outline: 0.0px dotted orange; outline-offset: -0.005px }
+        
         pre { margin: 2px}
         
         .firstcol { clear: both;}
@@ -24,10 +26,10 @@
          
         .bridge {
             position: absolute;
-             top: 25%;
-             left: -50%;
-             height: 50%;
-             width: 200%;
+             top: 0px;
+             left: -6px;
+             height: 24px;
+             width: 24px;
              z-index: 1;
         }  
         
@@ -41,46 +43,46 @@
                
         .slash { 
              position: absolute; 
-             top: 50%;
-             left: -50%;
-             height: 100%;
-             width: 100%;
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 15px;
              z-index: 1;
         }    
                
         .wideslash { 
              position: absolute; 
-             top: 50%;
-             left: -50%;
-             height: 100%;
-             width: 200%;
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
              z-index: 1;
         }  
                 
         .backslash { 
              position: absolute; 
-             top: 50%;
-             left: 50%;
-             height: 100%;
-             width: 100%;
+             top: 12px;
+             left: 5px;
+             height: 27px;
+             width: 15px;
              z-index: 1;
         }  
             
         .widebackslash { 
              position: absolute; 
-             top: 50%;
-             left: -50%;
-             height: 100%;
-             width: 200%;
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
              z-index: 1;
         }
 
         .pipe {
              position: absolute;
-             top: 50%;
-             left: 0%;
-             height: 110%;
-             width: 100%;
+             top: 12px;
+             left: -1px;
+             height: 27px;
+             width: 15px;
              z-index: 1;
         } 
 
@@ -95,7 +97,7 @@
 <script>
 var graphText = '';
 
-// Example : git log --graph --date-order --oneline   
+// Real Example : git log --graph --date-order --oneline   
 graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SPM viewer
 * 7fe5f6f Fix accidental commit
 *   d267661 Merge remote-tracking branch 'origin/develop' into develop
@@ -349,17 +351,15 @@ graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SP
 | * 610f7ed Updated Help/About`
 
 
-
+// Some crazy examples
 graphText2 = String.raw`
  * *   *  *  * *  *    * *  * *    
  * |  /   |  |  \  \   | |  | |   
  * | /   /    \  \  \  |/    \|    
  * | \  /      \    / /|      |\    
  * |  \            /  \|      |/     
- *     *          *    |\    /|     `
-
-
-graphText2 = String.raw`
+ *     *          *    |\    /|     
+                                  
   * * *   
    \|/   
     |    
@@ -408,10 +408,12 @@ graphText2 = String.raw`
              NOTE: requires space not to fail
   * * *    F   * * *    
  /  |  \   F  /  |  \   
-    |   *  F     |   *       
+/   |   *  F     |   *       
              NOTE: requires space not to fail
  
 `   
+
+const DEV = false;  // Show additional info if DEV=true
 var body = '';  // This is where output is collected before putting it into body element
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
@@ -536,13 +538,22 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
         // TEXT if nothing else
             let rowText = '(' + row + ') ';
-            body += '<div class="text"><pre>' + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>';
+            if (DEV == true) {
+                body += '<div class="text"><pre>' + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+            }else{
+                body += '<div class="text"><pre>' + splitted[row].substring(i)  + '</pre></div>';   
+            }
             sumFound += ' ' + splitted[row].substring(i);
-            i = splitted[row].length; // skip out of loop
+            i = splitted[row].length; // set end-of-loop
             continue // skip rest of row
+            
         }else if ( i == (splitted[row].length - 1) ) {
             // Print out info for non-commit rows
-            body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>';
+            if (DEV == true) {
+                body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+            }else{
+                body += '<div class="text"><pre>' + splitted[row].substring(i) + '</pre></div>'; 
+            }
         }
 
         // Make div with content from above
@@ -558,7 +569,6 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         let currentRow = BUFFERTCOLS + splitted[ row ];
         index = index + BUFFERTCOLS.length;
         let answer = currentRow[i+index] === c;
-        //console.log(answer + '  ' + c + ' (a) Row = ' + row + '  col = ' + i + '  index = ' + index );
         return answer;
     }
     
@@ -566,7 +576,6 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         let nextRow = BUFFERTCOLS + splitted[ row + 1];
         index = index + BUFFERTCOLS.length;
         let answer = nextRow[i+index] === c;
-        //console.log(answer + '  ' + c + ' (b) Row = ' + row + '  col = ' + i + '  index = ' + index );
         return answer;
     }    
     
@@ -574,10 +583,10 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         let currentRow = BUFFERTCOLS + splitted[ row - 1];
         index = index + BUFFERTCOLS.length;
         let answer = currentRow[i+index] === c;
-        //console.log(answer + '  ' + c + ' (a) Row = ' + row + '  col = ' + i + '  index = ' + index );
         return answer;
     }    
 }
+
 // Print to body element
 document.body.innerHTML += body;       
         
