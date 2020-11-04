@@ -30,6 +30,14 @@
              width: 200%;
              z-index: 1;
         }  
+        
+        .bridgeleft {
+             left: -150%;
+        } 
+        
+        .bridgeright {
+             left: 50%;
+        }
                
         .slash { 
              position: absolute; 
@@ -480,11 +488,19 @@ for(var row = 0; row < (splitted.length - 1); row++) {
                 total += '<img class="backslash" src="images/backslash.png">';
             }
         // -------------    
-        }else if (  a(0,'_') ) {
+        }else if (  a(0,'_') && prev( 1,'/') ) {
         // D) bridge
-            found = 'D';
+            found = 'D2';
+            total += '<img class="bridge bridgeleft" src="images/bridge.png">';
+        }else if (  a(0,'_')  && prev(-1,'\\') ){
+        // D) bridge
+            found = 'D3';
+            total += '<img class="bridge bridgeright" src="images/bridge.png">';
+            }else if (  a(0,'_') ) {
+        // D) bridge
+            found = 'D1';
             total += '<img class="bridge" src="images/bridge.png">';
-            
+          
         // -------------
         }else if (  a(0,'\\') && b(0,'/')  ) {
         // E) pipe 
@@ -554,6 +570,13 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         return answer;
     }    
     
+    function prev(index, c){
+        let currentRow = BUFFERTCOLS + splitted[ row - 1];
+        index = index + BUFFERTCOLS.length;
+        let answer = currentRow[i+index] === c;
+        //console.log(answer + '  ' + c + ' (a) Row = ' + row + '  col = ' + i + '  index = ' + index );
+        return answer;
+    }    
 }
 // Print to body element
 document.body.innerHTML += body;       
