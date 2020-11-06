@@ -3,17 +3,25 @@
         <title>Test</title>
     </head>
 
-    
-    <style>
+    <!-- Styling graph-->
+    <style> 
         /* Set outline: 0.01px to show */
         
-        div { position: relative; float: left; height: 24; width: 12; outline: 0.0px dotted orange; outline-offset: -0.005px }
+        div { 
+            position: relative; 
+            float: left; 
+            height: 24; 
+            width: 12; 
+            outline: 0.0px dotted orange; outline-offset: -0.005px 
+        }
         
-        pre { margin: 2px}
+        pre { margin: 2px; }
         
         .firstcol { clear: both;}
 
-        .text{ width: auto;}
+        .text{
+            width: auto;
+        }
         
         .node {
             position: absolute;
@@ -88,7 +96,17 @@
 
    
     </style>
-  
+    
+    <!-- Styling div-click -->
+    <style> 
+        .selected{
+            color: red;
+        }
+        .text:hover {
+          background: #cccccc;
+        }
+    </style>
+
     
 <body>
 
@@ -591,6 +609,23 @@ for(var row = 0; row < (splitted.length - 1); row++) {
 document.body.innerHTML += body;       
         
 </script>  
+
+
+    
+    <script>
+
+        
+        document.body.addEventListener('click', function (evt) {
+            let parent = evt.target.parentElement;
+            // Set div class to selected
+            if ( parent.classList.contains('text') && !parent.classList.contains('selected') )  {
+                parent.classList.add('selected');
+            }else if ( parent.classList.contains('text') && parent.classList.contains('selected') ) {
+                parent.classList.remove('selected');
+            }
+        }, false);
+
+    </script>
 
 </body>
 </html>
