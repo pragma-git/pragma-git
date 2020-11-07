@@ -21,6 +21,7 @@
 
         .text{
             width: auto;
+            cursor: pointer;
         }
         
         .node {
@@ -100,11 +101,13 @@
     <!-- Styling div-click -->
     <style> 
         .selected{
-            color: red;
+            color: green;
+            background: #cccccc;
         }
         .text:hover {
-          background: #cccccc;
+            background: #bbbbbb;
         }
+
     </style>
 
     
@@ -443,6 +446,8 @@ console.log(graphText)
 var splitted = graphText.split("\n");
 console.log(splitted)
 
+const PIN_IMG = `<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;" src="images/pinned_disabled.png"> ` 
+
 for(var row = 0; row < (splitted.length - 1); row++) {
     let sumFound ='';
     
@@ -557,9 +562,9 @@ for(var row = 0; row < (splitted.length - 1); row++) {
         // TEXT if nothing else
             let rowText = '(' + row + ') ';
             if (DEV == true) {
-                body += '<div class="text"><pre>' + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+                body += '<div class="text"><pre>' + PIN_IMG + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
             }else{
-                body += '<div class="text"><pre>' + splitted[row].substring(i)  + '</pre></div>';   
+                body += '<div class="text"><pre>' + PIN_IMG +  splitted[row].substring(i)  + '</pre></div>';   
             }
             sumFound += ' ' + splitted[row].substring(i);
             i = splitted[row].length; // set end-of-loop
@@ -614,16 +619,58 @@ document.body.innerHTML += body;
     
     <script>
 
-        
+        // One eventlister for all clicks
         document.body.addEventListener('click', function (evt) {
-            let parent = evt.target.parentElement;
-            // Set div class to selected
-            if ( parent.classList.contains('text') && !parent.classList.contains('selected') )  {
-                parent.classList.add('selected');
-            }else if ( parent.classList.contains('text') && parent.classList.contains('selected') ) {
-                parent.classList.remove('selected');
+            
+            // <div class='text'> <pre> <img class='pinned-icon'> text which is clicked, causing target to be 'pre' </pre> </div>  
+
+            // Click text & not checked : Select or deselect
+            // Click text & checked :     Do nothing
+            // Click not-checked :        Check and select
+            // Click pinned checked :     Uncheck and deselect
+            
+            let parent = evt.target.parentElement; // Parent to clicked pre
+            
+            let CLICKED_TEXT = parent.classList.contains('text');
+            let CLICKED_PIN = evt.target.classList.contains('pinned-icon');
+            
+            let CHECKED = false;
+            let DIV = '';
+            
+            // Set CHECKED and DIV depending on target
+            if (CLICKED_TEXT){
+                CHECKED = evt.target.firstChild.src.includes('enabled');
+                DIV = evt.target.parentElement;
             }
-        }, false);
+            if (CLICKED_PIN){
+                CHECKED = evt.target.src.includes('enabled');
+                DIV = evt.target.parentElement.parentElement;
+            }
+            
+            // click message, pin= off  =>  select/deselect message
+            if ( CLICKED_TEXT && !CHECKED){
+                // Set div class to selected
+                if ( !DIV.classList.contains('selected') )  {
+                    DIV.classList.add('selected');
+                }else if ( DIV.classList.contains('selected') )  {
+                    DIV.classList.remove('selected');
+                }
+            }
+             
+            // click pin=off  =>  pin=on, select message
+            if ( CLICKED_PIN && !CHECKED ){
+                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                DIV.classList.add('selected');
+            }
+              
+            // click pin=on   =>  pin=off, deselect message
+            else if ( CLICKED_PIN && CHECKED ){
+                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                DIV.classList.remove('selected');
+            }
+ 
+        }, 
+        false);
 
     </script>
 
