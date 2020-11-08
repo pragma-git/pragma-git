@@ -766,6 +766,31 @@ async function _callback( name, event){
         break;
       }
 
+      // TEST
+      case 'clicked-graph':{
+        //if (localState.notesWindow.open == true) {
+            //try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
+            //return
+        //}
+        //let fileName = document.getElementById('top-titlebar-repo-text').innerText;
+        //let filePath = notesDir + pathsep + fileName + '.md';
+        //global.arguments = [ filePath ];  // send through global.arguments
+        gui.Window.open('graph.html',
+            {
+                id: 'testWindowId',
+                position: 'center',
+                width: 600,
+                height: 600,
+                title: "Graph"
+            }
+            //,
+            //win=>win.on('loaded', () => test_win = nw.Window.get(win.window))
+            )  
+        
+        //localState.notesWindow.open = true;
+        break;
+      } 
+      
       default: {
         // code block
       }  

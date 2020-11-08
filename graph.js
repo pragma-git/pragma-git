@@ -1,123 +1,37 @@
-<html>
-    <head>
-        <title>Test</title>
-    </head>
+// ---------
+// INIT
+// ---------
+var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var os = require('os');
+var fs = require('fs');
+const simpleGit = require('simple-git');  
 
-    <!-- Styling graph-->
-    <style> 
-        /* Set outline: 0.01px to show */
-        
-        div { 
-            position: relative; 
-            float: left; 
-            height: 24; 
-            width: 12; 
-            outline: 0.0px dotted orange; outline-offset: -0.005px 
-        }
-        
-        pre { margin: 2px; }
-        
-        .firstcol { clear: both;}
+var util = require('./util_module.js'); // Pragma-git common functions
+       
+const pathsep = require('path').sep;  // Os-dependent path separator
 
-        .text{
-            width: auto;
-            cursor: pointer;
-        }
-        
-        .node {
-            position: absolute;
-             top: 8px;
-             left: 0.5px;
-             height: 50%;
-             width: 100%;
-             z-index: 10;
-        }        
-         
-        .bridge {
-            position: absolute;
-             top: 0px;
-             left: -6px;
-             height: 24px;
-             width: 24px;
-             z-index: 1;
-        }  
-        
-        .bridgeleft {
-             left: -150%;
-        } 
-        
-        .bridgeright {
-             left: 50%;
-        }
-               
-        .slash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }    
-               
-        .wideslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }  
-                
-        .backslash { 
-             position: absolute; 
-             top: 12px;
-             left: 5px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }  
-            
-        .widebackslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }
+// Global for whole app
+//var state = global.state; // internal copy of global.state
+//var localState = global.localState; 
 
-        .pipe {
-             position: absolute;
-             top: 12px;
-             left: -1px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        } 
+var win
 
-   
-    </style>
-    
-    <!-- Styling div-click -->
-    <style> 
-        .selected{
-            color: green;
-            background: #cccccc;
-        }
-        .text:hover {
-            background: #bbbbbb;
-        }
+const DEV = false;  // Show additional info if DEV=true
+var body = '';  // This is where output is collected before putting it into body element
 
-    </style>
-
-    
-<body>
+const BUFFERTCOLS = '  '; // Allows to look to the left of current character
+const BUFFERTROW = '                                                        ';
 
 
-    
-<script>
-var graphText = '';
 
+const PIN_IMG = `<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;" src="images/pinned_disabled.png"> ` 
+
+
+//
+// Example graphs
+//
+var graphText =  testGraph();
+function testGraph(){
 // Real Example : git log --graph --date-order --oneline   
 graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SPM viewer
 * 7fe5f6f Fix accidental commit
@@ -431,248 +345,190 @@ graphText2 = String.raw`
  /  |  \   F  /  |  \   
 /   |   *  F     |   *       
              NOTE: requires space not to fail
- 
+                  
 `   
 
-const DEV = false;  // Show additional info if DEV=true
-var body = '';  // This is where output is collected before putting it into body element
-
-const BUFFERTCOLS = '  '; // Allows to look to the left of current character
-const BUFFERTROW = '                                                        ';
-graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
-
-console.log(graphText)
-
-var splitted = graphText.split("\n");
-console.log(splitted)
-
-const PIN_IMG = `<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;" src="images/pinned_disabled.png"> ` 
-
-for(var row = 0; row < (splitted.length - 1); row++) {
-    let sumFound ='';
-    
-    body += '<div class="firstcol"></div> ' // New row
-    for(var i = 0 ; i < splitted[row].length ; i++){
-        let total = '';
-        let found = '';
-
-        
-        // Draw node
-        if (  a(0,'*') ){
-            total += '<img class="node" src="images/circle_red.png">'; // Draw node
-        }
- 
-        //
-        // Draw lines
-        //
-        
-        // Select what to draw -- first hit wins :
-        
-        // -------------
-        if (  a(0,'|') && a(-1, '\\') && b(0,'|') && b(1,'\\')  ) {
-            // A) Crossing down-right 
-            found = 'A1';
-            total += '<img class="pipe" src="images/pipe.png">';
-            total += '<img class="widebackslash" src="images/widebackslash.png">';  
-        }else if (  a(0,'|') && a(1, '/') && b(-1,'/') && b(0,'|')  ) {
-            
-            // A) Crossing down-left 
-            found = 'A2';
-            total += '<img class="pipe" src="images/pipe.png">';
-            total += '<img class="wideslash"  src="images/wideslash.png">';  
-               
-        // -------------
-        }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  ) ) {   
-        // B) back-slash 
-            found = 'B1';
-            total += '<img class="backslash" src="images/backslash.png">';
-            
-        }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') )  ) {
-            // B) slash 
-            found = 'B2';
-            total += '<img class="slash" src="images/slash.png">';
-         
-        // -------------   
-        }else if (  a(0,'|')  ) {
-            
-            if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  && !b( -1,'_') ) {
-            // C) slash 
-                found += ' C1';
-                total += '<img class="slash" src="images/slash.png">';
-                
-            }
-            if (  a(0,'|') && !b( 0,' ') ) {
-            // C) pipe 
-                found += ' C2';
-                total += '<img class="pipe" src="images/pipe.png">';
-                
-            }
-            if (  a(0,'|') && !b( 1,'/') && !b( 1,' ') && !b( 1,'_') ) {
-            // C) back-slash 
-                found += ' C3';
-                total += '<img class="backslash" src="images/backslash.png">';
-            }
-        // -------------    
-        }else if (  a(0,'_') && prev( 1,'/') ) {
-        // D) bridge
-            found = 'D2';
-            total += '<img class="bridge bridgeleft" src="images/bridge.png">';
-        }else if (  a(0,'_')  && prev(-1,'\\') ){
-        // D) bridge
-            found = 'D3';
-            total += '<img class="bridge bridgeright" src="images/bridge.png">';
-            }else if (  a(0,'_') ) {
-        // D) bridge
-            found = 'D1';
-            total += '<img class="bridge" src="images/bridge.png">';
-          
-        // -------------
-        }else if (  a(0,'\\') && b(0,'/')  ) {
-        // E) pipe 
-            found = 'E1';
-            total += '<img class="pipe" src="images/pipe.png">';
-            
-        }else if (  a(0,'/') && b( 0,'\\')  ) {
-        // E) pipe 
-            found = 'E2';
-            total += '<img class="pipe" src="images/pipe.png">';
-            
-        // -------------
-        }else if (  a(0,'*') ){ 
-        // F) draw one or more lines from node
-        
-            if (  a(0,'*') && b( -1,'/') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') ) ) {
-            // F) slash 
-                found += ' F1';
-                total += '<img class="slash" src="images/slash.png">'; 
-            }
-            if (  a(0,'*') && !b( 0,' ') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') )  ) {
-            // F) pipe 
-                found += ' F2';
-                total += '<img class="pipe" src="images/pipe.png">';
-            }
-            if (  a(0,'*') && b( 1,'\\') && ( b( 0,'|')||b( 0,' ')||b( 0,'*')||b( 0,'_') ) ) {
-            // F) back-slash 
-                found += ' F3';
-                total += '<img class="backslash" src="images/backslash.png">';
-            }
-        // -------------
-
-        }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
-        // TEXT if nothing else
-            let rowText = '(' + row + ') ';
-            if (DEV == true) {
-                body += '<div class="text"><pre>' + PIN_IMG + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
-            }else{
-                body += '<div class="text"><pre>' + PIN_IMG +  splitted[row].substring(i)  + '</pre></div>';   
-            }
-            sumFound += ' ' + splitted[row].substring(i);
-            i = splitted[row].length; // set end-of-loop
-            continue // skip rest of row
-            
-        }else if ( i == (splitted[row].length - 1) ) {
-            // Print out info for non-commit rows
-            if (DEV == true) {
-                body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
-            }else{
-                body += '<div class="text"><pre>' + splitted[row].substring(i) + '</pre></div>'; 
-            }
-        }
-
-        // Make div with content from above
-        body += '<div>' + total +'</div>';
-        
-        if (found !== ''){
-            sumFound += ' ' + found;
-        }
-    }
-    console.log('ROW = ' + row + '  '  +sumFound);
-    
-    function a(index, c){
-        let currentRow = BUFFERTCOLS + splitted[ row ];
-        index = index + BUFFERTCOLS.length;
-        let answer = currentRow[i+index] === c;
-        return answer;
-    }
-    
-    function b(index, c){
-        let nextRow = BUFFERTCOLS + splitted[ row + 1];
-        index = index + BUFFERTCOLS.length;
-        let answer = nextRow[i+index] === c;
-        return answer;
-    }    
-    
-    function prev(index, c){
-        let currentRow = BUFFERTCOLS + splitted[ row - 1];
-        index = index + BUFFERTCOLS.length;
-        let answer = currentRow[i+index] === c;
-        return answer;
-    }    
+return graphText;
 }
 
-// Print to body element
-document.body.innerHTML += body;       
-        
-</script>  
-
-
+//
+// Functions
+//
+function injectIntoJs(document){
+    drawGraph( document, graphText);
+}
+function drawGraph( document, graphText){
+    graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
     
-    <script>
-
-        // One eventlister for all clicks
-        document.body.addEventListener('click', function (evt) {
+    console.log(graphText)
+    
+    let splitted = graphText.split("\n");
+    console.log(splitted)
+    
+    for(var row = 0; row < (splitted.length - 1); row++) {
+        let sumFound ='';
+        
+        body += '<div class="firstcol"></div> ' // New row
+        for(var i = 0 ; i < splitted[row].length ; i++){
+            let total = '';
+            let found = '';
+    
             
-            // <div class='text'> <pre> <img class='pinned-icon'> text which is clicked, causing target to be 'pre' </pre> </div>  
-
-            // Click text & not checked : Select or deselect
-            // Click text & checked :     Do nothing
-            // Click not-checked :        Check and select
-            // Click pinned checked :     Uncheck and deselect
-            
-            let parent = evt.target.parentElement; // Parent to clicked pre
-            
-            let CLICKED_TEXT = parent.classList.contains('text');
-            let CLICKED_PIN = evt.target.classList.contains('pinned-icon');
-            
-            let CHECKED = false;
-            let DIV = '';
-            
-            // Set CHECKED and DIV depending on target
-            if (CLICKED_TEXT){
-                CHECKED = evt.target.firstChild.src.includes('enabled');
-                DIV = evt.target.parentElement;
+            // Draw node
+            if (  a(0,'*') ){
+                total += '<img class="node" src="images/circle_red.png">'; // Draw node
             }
-            if (CLICKED_PIN){
-                CHECKED = evt.target.src.includes('enabled');
-                DIV = evt.target.parentElement.parentElement;
-            }
+     
+            //
+            // Draw lines
+            //
             
-            // click message, pin= off  =>  select/deselect message
-            if ( CLICKED_TEXT && !CHECKED){
-                // Set div class to selected
-                if ( !DIV.classList.contains('selected') )  {
-                    DIV.classList.add('selected');
-                }else if ( DIV.classList.contains('selected') )  {
-                    DIV.classList.remove('selected');
+            // Select what to draw -- first hit wins :
+            
+            // -------------
+            if (  a(0,'|') && a(-1, '\\') && b(0,'|') && b(1,'\\')  ) {
+                // A) Crossing down-right 
+                found = 'A1';
+                total += '<img class="pipe" src="images/pipe.png">';
+                total += '<img class="widebackslash" src="images/widebackslash.png">';  
+            }else if (  a(0,'|') && a(1, '/') && b(-1,'/') && b(0,'|')  ) {
+                
+                // A) Crossing down-left 
+                found = 'A2';
+                total += '<img class="pipe" src="images/pipe.png">';
+                total += '<img class="wideslash"  src="images/wideslash.png">';  
+                   
+            // -------------
+            }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  ) ) {   
+            // B) back-slash 
+                found = 'B1';
+                total += '<img class="backslash" src="images/backslash.png">';
+                
+            }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') )  ) {
+                // B) slash 
+                found = 'B2';
+                total += '<img class="slash" src="images/slash.png">';
+             
+            // -------------   
+            }else if (  a(0,'|')  ) {
+                
+                if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  && !b( -1,'_') ) {
+                // C) slash 
+                    found += ' C1';
+                    total += '<img class="slash" src="images/slash.png">';
+                    
+                }
+                if (  a(0,'|') && !b( 0,' ') ) {
+                // C) pipe 
+                    found += ' C2';
+                    total += '<img class="pipe" src="images/pipe.png">';
+                    
+                }
+                if (  a(0,'|') && !b( 1,'/') && !b( 1,' ') && !b( 1,'_') ) {
+                // C) back-slash 
+                    found += ' C3';
+                    total += '<img class="backslash" src="images/backslash.png">';
+                }
+            // -------------    
+            }else if (  a(0,'_') && prev( 1,'/') ) {
+            // D) bridge
+                found = 'D2';
+                total += '<img class="bridge bridgeleft" src="images/bridge.png">';
+            }else if (  a(0,'_')  && prev(-1,'\\') ){
+            // D) bridge
+                found = 'D3';
+                total += '<img class="bridge bridgeright" src="images/bridge.png">';
+                }else if (  a(0,'_') ) {
+            // D) bridge
+                found = 'D1';
+                total += '<img class="bridge" src="images/bridge.png">';
+              
+            // -------------
+            }else if (  a(0,'\\') && b(0,'/')  ) {
+            // E) pipe 
+                found = 'E1';
+                total += '<img class="pipe" src="images/pipe.png">';
+                
+            }else if (  a(0,'/') && b( 0,'\\')  ) {
+            // E) pipe 
+                found = 'E2';
+                total += '<img class="pipe" src="images/pipe.png">';
+                
+            // -------------
+            }else if (  a(0,'*') ){ 
+            // F) draw one or more lines from node
+            
+                if (  a(0,'*') && b( -1,'/') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') ) ) {
+                // F) slash 
+                    found += ' F1';
+                    total += '<img class="slash" src="images/slash.png">'; 
+                }
+                if (  a(0,'*') && !b( 0,' ') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') )  ) {
+                // F) pipe 
+                    found += ' F2';
+                    total += '<img class="pipe" src="images/pipe.png">';
+                }
+                if (  a(0,'*') && b( 1,'\\') && ( b( 0,'|')||b( 0,' ')||b( 0,'*')||b( 0,'_') ) ) {
+                // F) back-slash 
+                    found += ' F3';
+                    total += '<img class="backslash" src="images/backslash.png">';
+                }
+            // -------------
+    
+            }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
+            // TEXT if nothing else
+                let rowText = '(' + row + ') ';
+                if (DEV == true) {
+                    body += '<div class="text"><pre>' + PIN_IMG + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+                }else{
+                    body += '<div class="text"><pre>' + PIN_IMG +  splitted[row].substring(i)  + '</pre></div>';   
+                }
+                sumFound += ' ' + splitted[row].substring(i);
+                i = splitted[row].length; // set end-of-loop
+                continue // skip rest of row
+                
+            }else if ( i == (splitted[row].length - 1) ) {
+                // Print out info for non-commit rows
+                if (DEV == true) {
+                    body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+                }else{
+                    body += '<div class="text"><pre>' + splitted[row].substring(i) + '</pre></div>'; 
                 }
             }
-             
-            // click pin=off  =>  pin=on, select message
-            if ( CLICKED_PIN && !CHECKED ){
-                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
-                DIV.classList.add('selected');
+    
+            // Make div with content from above
+            body += '<div>' + total +'</div>';
+            
+            if (found !== ''){
+                sumFound += ' ' + found;
             }
-              
-            // click pin=on   =>  pin=off, deselect message
-            else if ( CLICKED_PIN && CHECKED ){
-                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
-                DIV.classList.remove('selected');
-            }
- 
-        }, 
-        false);
-
-    </script>
-
-</body>
-</html>
+        }
+        console.log('ROW = ' + row + '  '  +sumFound);
+        
+        function a(index, c){
+            let currentRow = BUFFERTCOLS + splitted[ row ];
+            index = index + BUFFERTCOLS.length;
+            let answer = currentRow[i+index] === c;
+            return answer;
+        }
+        
+        function b(index, c){
+            let nextRow = BUFFERTCOLS + splitted[ row + 1];
+            index = index + BUFFERTCOLS.length;
+            let answer = nextRow[i+index] === c;
+            return answer;
+        }    
+        
+        function prev(index, c){
+            let currentRow = BUFFERTCOLS + splitted[ row - 1];
+            index = index + BUFFERTCOLS.length;
+            let answer = currentRow[i+index] === c;
+            return answer;
+        }    
+    }
+    
+    // Print to body element
+    console.log(document);
+    document.body.innerHTML += body;  
+    
+}

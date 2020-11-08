@@ -1,0 +1,188 @@
+<html>
+    <head>
+        <title>Commit graph</title>
+        
+        <script src="graph.js"></script>
+    </head>
+
+    <!-- Styling graph-->
+    <style> 
+        /* Set outline: 0.01px to show */
+        
+        div { 
+            position: relative; 
+            float: left; 
+            height: 24; 
+            width: 12; 
+            outline: 0.0px dotted orange; outline-offset: -0.005px 
+        }
+        
+        pre { margin: 2px; }
+        
+        .firstcol { clear: both;}
+
+        .text{
+            width: auto;
+            cursor: pointer;
+        }
+        
+        .node {
+            position: absolute;
+             top: 8px;
+             left: 0.5px;
+             height: 50%;
+             width: 100%;
+             z-index: 10;
+        }        
+         
+        .bridge {
+            position: absolute;
+             top: 0px;
+             left: -6px;
+             height: 24px;
+             width: 24px;
+             z-index: 1;
+        }  
+        
+        .bridgeleft {
+             left: -150%;
+        } 
+        
+        .bridgeright {
+             left: 50%;
+        }
+               
+        .slash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        }    
+               
+        .wideslash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
+             z-index: 1;
+        }  
+                
+        .backslash { 
+             position: absolute; 
+             top: 12px;
+             left: 5px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        }  
+            
+        .widebackslash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
+             z-index: 1;
+        }
+
+        .pipe {
+             position: absolute;
+             top: 12px;
+             left: -1px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        } 
+
+   
+    </style>
+    
+    <!-- Styling div-click -->
+    <style> 
+        .selected{
+            color: green;
+            background: #cccccc;
+        }
+        .text:hover {
+            background: #bbbbbb;
+        }
+
+    </style>
+             
+    <body>   <!-- Empty body, fill in with injectIntoJs in graph.js --> 
+    
+    </body>                
+
+    <script> <!-- User interactions --> 
+    
+        // One eventlister for all clicks
+        document.body.addEventListener('click', function (evt) {
+            
+            // <div class='text'> <pre> <img class='pinned-icon'> text which is clicked, causing target to be 'pre' </pre> </div>  
+    
+            // Click text & not checked : Select or deselect
+            // Click text & checked :     Do nothing
+            // Click not-checked :        Check and select
+            // Click pinned checked :     Uncheck and deselect
+            
+            let parent = evt.target.parentElement; // Parent to clicked pre
+            
+            let CLICKED_TEXT = parent.classList.contains('text');
+            let CLICKED_PIN = evt.target.classList.contains('pinned-icon');
+            
+            let CHECKED = false;
+            let DIV = '';
+            
+            // Set CHECKED and DIV depending on target
+            if (CLICKED_TEXT){
+                CHECKED = evt.target.firstChild.src.includes('enabled');
+                DIV = evt.target.parentElement;
+            }
+            if (CLICKED_PIN){
+                CHECKED = evt.target.src.includes('enabled');
+                DIV = evt.target.parentElement.parentElement;
+            }
+            
+            // click message, pin= off  =>  select/deselect message
+            if ( CLICKED_TEXT && !CHECKED){
+                // Set div class to selected
+                if ( !DIV.classList.contains('selected') )  {
+                    DIV.classList.add('selected');
+                }else if ( DIV.classList.contains('selected') )  {
+                    DIV.classList.remove('selected');
+                }
+            }
+             
+            // click pin=off  =>  pin=on, select message
+            if ( CLICKED_PIN && !CHECKED ){
+                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                DIV.classList.add('selected');
+            }
+              
+            // click pin=on   =>  pin=off, deselect message
+            else if ( CLICKED_PIN && CHECKED ){
+                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                DIV.classList.remove('selected');
+            }
+    
+        }, 
+        false);
+    
+        </script>
+    <script> <!--  Onload, call javascript file  -->
+    window.addEventListener('DOMContentLoaded', (event) => {
+        console.log('settings.html :DOM fully loaded and parsed');
+        injectIntoJs(document);
+        }
+    );
+    window.addEventListener('unload', (event) => {
+        console.log('settings.html :DOM fully unloaded -- maybe window closed ');
+        closeWindow(window);
+        }
+    );
+</script>
+
+</html>
