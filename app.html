@@ -183,6 +183,7 @@
                         <table id="arrow_table">  
                         <tr height="auto">
                             <td> 
+
                             </td> 
                         </tr>      
                         <tr>
@@ -346,7 +347,17 @@
                 onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >
             </div>
             &nbsp;
-             
+            
+            
+             <div class="bottom-titlebar-more-icon">          
+                <img id="more" style="vertical-align:middle;" height="17" width="17" 
+                                    onclick="_callback( 'clicked-graph')" 
+                                    onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
+                                    onmouseout="updateImageUrl('more', 'images/more.png');" 
+                                    src="images/more.png">
+            </div> 
+            &nbsp;
+                         
             <!-- Icon Pinned  -->                             
             <div class="top-titlebar-pinned-icon">
                 <img id="top-titlebar-pinned-icon" height="17" width="17" 
