@@ -117,6 +117,14 @@
     </body>                
 
     <script> <!-- User interactions --> 
+        
+        var graph = {};
+        graph.pinnedDiv = '';  // Memory currently pinned DIV
+        graph.selectedDiv = '';// Memory currently selected DIV
+        
+        // On selection or pin, remember DIV in :
+        // graph.pinnedDiv   
+        // graph.selectedDiv
     
         // One eventlister for all clicks
         document.body.addEventListener('click', function (evt) {
@@ -128,13 +136,14 @@
             // Click not-checked :        Check and select
             // Click pinned checked :     Uncheck and deselect
             
+            
             let parent = evt.target.parentElement; // Parent to clicked pre
             
             let CLICKED_TEXT = parent.classList.contains('text');
             let CLICKED_PIN = evt.target.classList.contains('pinned-icon');
             
             let CHECKED = false;
-            let DIV = '';
+            let DIV = ''; // Currently clicked DIV
             
             // Set CHECKED and DIV depending on target
             if (CLICKED_TEXT){
@@ -148,24 +157,44 @@
             
             // click message, pin= off  =>  select/deselect message
             if ( CLICKED_TEXT && !CHECKED){
-                // Set div class to selected
-                if ( !DIV.classList.contains('selected') )  {
-                    DIV.classList.add('selected');
+                
+                if ( !DIV.classList.contains('selected') )  {  
+                    // If div not selected => select            
+                    try{
+                        DIV.classList.add('selected'); 
+                        graph.selectedDiv.classList.remove('selected');   
+                    }catch(err){}
+                    graph.selectedDiv = DIV;
                 }else if ( DIV.classList.contains('selected') )  {
-                    DIV.classList.remove('selected');
+                    // If div  selected => de-select            
+                    try{
+                        DIV.classList.remove('selected');
+                    }catch(err){}
+                    graph.selectedDiv = '';
                 }
             }
              
             // click pin=off  =>  pin=on, select message
             if ( CLICKED_PIN && !CHECKED ){
-                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
-                DIV.classList.add('selected');
+                // Select and pinned image
+                try{
+                    DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                    DIV.classList.add('selected');
+                    graph.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
+                    graph.pinnedDiv.classList.remove('selected');  
+                }catch(err){}
+                graph.pinnedDiv = DIV;
+                //graph.selectedDiv = DIV;
             }
               
             // click pin=on   =>  pin=off, deselect message
             else if ( CLICKED_PIN && CHECKED ){
                 DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
-                DIV.classList.remove('selected');
+                try{
+                    DIV.classList.remove('selected')
+                }catch(err){};
+                graph.pinnedDiv = '';
+                graph.selectedDiv = '';
             }
     
         }, 
