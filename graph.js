@@ -23,9 +23,12 @@ const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                        ';
 
 
+// Global for whole app
+var state = global.state; // internal copy of global.state
+var localState = global.localState; 
+
 
 const PIN_IMG = `<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;" src="images/pinned_disabled.png"> ` 
-
 
 //
 // Example graphs
@@ -354,10 +357,47 @@ return graphText;
 //
 // Functions
 //
-function injectIntoJs(document){
-    drawGraph( document, graphText);
+async function injectIntoJs(document){
+    
+    let folder = state.repos[ state.repoNumber].localFolder;
+    let graphText = 'Error reading graph';
+     
+    // Find complete history graph
+    try{
+        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--decorate']
+        commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%h %d%sH=%H'];
+        await simpleGit( folder).raw(  commands, onCreateBranch);
+        function onCreateBranch(err, result ){graphText = result; console.log(result); };
+    }catch(err){        
+        console.log(err);
+    }
+    
+    
+    // For current branch only
+    let command = [];
+    if (state.FirstParent){
+        command.push('--first-parent'); 
+    }
+  
+    
+    // Find history in current branch
+    let history = '';
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( command, onHistory);
+        function onHistory(err, result){console.log(result); history = result.all; console.log(' ============ Found N = ' + history.length);} 
+    }catch(err){        
+        console.log(err);
+    }  
+    
+    
+    drawGraph( document, graphText, history);
 }
-function drawGraph( document, graphText){
+function drawGraph( document, graphText, history){
+    // document  HTML document
+    // graphText output from  raw git log graph
+    // history   output from  git log with --oneParent (used to find which commits are in current branch)
+    
+    
     graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
     
     console.log(graphText)
@@ -365,18 +405,37 @@ function drawGraph( document, graphText){
     let splitted = graphText.split("\n");
     console.log(splitted)
     
+    
+    // Loop each row
+    
     for(var row = 0; row < (splitted.length - 1); row++) {
         let sumFound ='';
         
-        body += '<div class="firstcol"></div> ' // New row
-        for(var i = 0 ; i < splitted[row].length ; i++){
+        // Separate log row from ending long hash
+        let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+        let hashInThisRow = splitted[row].substring(startOfHash + 2); // Skip H=
+        
+        // Current row
+        let thisRow = splitted[row].substring(0, startOfHash);
+        if (startOfHash == -1){
+            thisRow = splitted[row]; // When no hash found (lines without commits)
+        }
+
+        // Parse row
+        body += '<div class="firstcol"></div> ' // First column on row
+        for(var i = 0 ; i < thisRow.length ; i++){
             let total = '';
             let found = '';
-    
+
             
             // Draw node
             if (  a(0,'*') ){
-                total += '<img class="node" src="images/circle_red.png">'; // Draw node
+                // Figure out if local branch, or not
+                if ( util.findObjectIndexStartsWith(history,'hash', hashInThisRow) >= 0){
+                    total += '<img class="node" src="images/circle_green.png">'; // Draw node
+                }else{
+                    total += '<img class="node" src="images/circle_black.png">'; // Draw node
+                }
             }
      
             //
@@ -479,20 +538,20 @@ function drawGraph( document, graphText){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
                 if (DEV == true) {
-                    body += '<div class="text"><pre>' + PIN_IMG + rowText + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+                    body += '<div class="text"><pre>' + PIN_IMG + rowText + thisRow.substring(i) + '   ' + sumFound + '</pre></div>'; 
                 }else{
-                    body += '<div class="text"><pre>' + PIN_IMG +  splitted[row].substring(i)  + '</pre></div>';   
+                    body += '<div class="text"><pre>' + PIN_IMG +  thisRow.substring(i)  + '</pre></div>';   
                 }
-                sumFound += ' ' + splitted[row].substring(i);
-                i = splitted[row].length; // set end-of-loop
+                sumFound += ' ' + thisRow.substring(i);
+                i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
                 
-            }else if ( i == (splitted[row].length - 1) ) {
+            }else if ( i == (thisRow.length - 1) ) {
                 // Print out info for non-commit rows
                 if (DEV == true) {
-                    body += '<div class="text"><pre>' + splitted[row].substring(i) + '   ' + sumFound + '</pre></div>'; 
+                    body += '<div class="text"><pre>' + thisRow.substring(i) + '   ' + sumFound + '</pre></div>'; 
                 }else{
-                    body += '<div class="text"><pre>' + splitted[row].substring(i) + '</pre></div>'; 
+                    body += '<div class="text"><pre>' + thisRow.substring(i) + '</pre></div>'; 
                 }
             }
     
@@ -506,7 +565,7 @@ function drawGraph( document, graphText){
         console.log('ROW = ' + row + '  '  +sumFound);
         
         function a(index, c){
-            let currentRow = BUFFERTCOLS + splitted[ row ];
+            let currentRow = BUFFERTCOLS + thisRow;
             index = index + BUFFERTCOLS.length;
             let answer = currentRow[i+index] === c;
             return answer;

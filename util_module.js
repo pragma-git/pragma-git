@@ -56,6 +56,19 @@ myModule.findObjectIndex = function ( myArray, objectField, stringToFind ){
     
     return Number(foundIndex);
 }
+myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFind ){ 
+    
+    var foundIndex; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        if (myArray[i][objectField].startsWith( stringToFind)){
+            foundIndex = i;
+        }
+    } 
+    
+    return Number(foundIndex);
+}
 
 // Branch name filtered by allowed chars
 myModule.branchCharFilter = function ( string ){
