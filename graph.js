@@ -364,8 +364,8 @@ async function injectIntoJs(document){
      
     // Find complete history graph
     try{
-        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--decorate']
-        commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%h %d%sH=%H'];
+        // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
+        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%d%sH=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
         await simpleGit( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){graphText = result; console.log(result); };
     }catch(err){        
