@@ -27,8 +27,8 @@ const BUFFERTROW = '                                                        ';
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
-
-const PIN_IMG = `<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;" src="images/pinned_disabled.png"> ` 
+// Global in this window
+let history = '';
 
 //
 // Example graphs
@@ -357,6 +357,8 @@ return graphText;
 //
 // Functions
 //
+
+// Start
 async function injectIntoJs(document){
     
     let folder = state.repos[ state.repoNumber].localFolder;
@@ -371,28 +373,58 @@ async function injectIntoJs(document){
     }catch(err){        
         console.log(err);
     }
-    
-    
+
+    // Find history in current branch -- write to : variable  for this filehistory
+    history = await readBranchHistory();
+ 
+    console.log(history);
+
+    await drawGraph( document, graphText, history);
+}
+
+// Util
+async function readBranchHistory(){
+        
     // For current branch only
     let command = [];
     if (state.FirstParent){
         command.push('--first-parent'); 
     }
-  
     
-    // Find history in current branch
-    let history = '';
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).log( command, onHistory);
         function onHistory(err, result){console.log(result); history = result.all; console.log(' ============ Found N = ' + history.length);} 
     }catch(err){        
         console.log(err);
     }  
-    
-    
-    drawGraph( document, graphText, history);
+    return history;
 }
+
+
+// Callbacks
+function setPinned(hash){
+    
+    // Update hash
+    localState.historyHash = hash;
+    localState.historyNumber = util.findObjectIndex(history,'hash', hash);
+    
+    // Show correct icon 
+    opener.document.getElementById('top-titlebar-pinned-icon').click();
+    
+    // Update pinned commit
+    localState.pinnedHash = hash;
+    opener._callback('clicked-pinned-icon');
+}
+async function setHistoricalCommit(hash){
+    localState.historyNumber = util.findObjectIndex(history,'hash', hash); 
+    localState.historyHash = hash;
+    localState.historyString = opener.historyMessage(history, localState.historyNumber);
+    opener._setMode('HISTORY');
+}
+
+// GUI 
 function drawGraph( document, graphText, history){
+    
     // document  HTML document
     // graphText output from  raw git log graph
     // history   output from  git log with --oneParent (used to find which commits are in current branch)
@@ -537,22 +569,14 @@ function drawGraph( document, graphText, history){
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
-                if (DEV == true) {
-                    body += '<div class="text"><pre>' + PIN_IMG + rowText + thisRow.substring(i) + '   ' + sumFound + '</pre></div>'; 
-                }else{
-                    body += '<div class="text"><pre>' + PIN_IMG +  thisRow.substring(i)  + '</pre></div>';   
-                }
+                body += '<div class="text">' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
                 
             }else if ( i == (thisRow.length - 1) ) {
                 // Print out info for non-commit rows
-                if (DEV == true) {
-                    body += '<div class="text"><pre>' + thisRow.substring(i) + '   ' + sumFound + '</pre></div>'; 
-                }else{
-                    body += '<div class="text"><pre>' + thisRow.substring(i) + '</pre></div>'; 
-                }
+                body += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
             }
     
             // Make div with content from above
@@ -590,4 +614,23 @@ function drawGraph( document, graphText, history){
     console.log(document);
     document.body.innerHTML += body;  
     
+}
+function drawCommitRow(hash, text, isDev){
+    if (isDev){
+        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text + `   ` + sumFound +  `</pre>`;
+    }else{
+        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+    }
+}
+function drawNonCommitRow(hash, text, isDev){
+    if (isDev){
+        return '<pre>'  +  text + '   ' + sumFound +  '</pre>';
+    }else{
+        return '<pre>'  +  text + '</pre>';
+    }
+}
+function drawPinnedImage(hash){
+    const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
+    const PIN_IMG2 = ' src="images/pinned_disabled.png"> ';
+    return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
 }
