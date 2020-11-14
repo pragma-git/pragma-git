@@ -3207,13 +3207,18 @@ function setStatusBar( text){
     }
 }
 function fileStatusString( status_data){
+
     
     let historyStatus = '&nbsp;&nbsp;  (' 
         + ( localState.historyNumber + 1 )  
         + ' of ' 
         + localState.historyLength 
         + ')';
-    
+ 
+    if ( isNaN(localState.historyNumber) ){
+        historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
+    }
+       
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         

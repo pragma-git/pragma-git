@@ -408,18 +408,35 @@ function setPinned(hash){
     localState.historyHash = hash;
     localState.historyNumber = util.findObjectIndex(history,'hash', hash);
     
-    // Show correct icon 
-    opener.document.getElementById('top-titlebar-pinned-icon').click();
-    
     // Update pinned commit
     localState.pinnedHash = hash;
     opener._callback('clicked-pinned-icon');
 }
 async function setHistoricalCommit(hash){
+    // Get item number in history of current branch (or NaN if off-branch)
     localState.historyNumber = util.findObjectIndex(history,'hash', hash); 
+    
+    // Set history in main window
     localState.historyHash = hash;
-    localState.historyString = opener.historyMessage(history, localState.historyNumber);
-    opener._setMode('HISTORY');
+    localState.historyString = await gitCommitMessage(hash);
+    localState.historyLength = history.length;
+    await opener._setMode('HISTORY');
+    await opener._update();
+}
+
+// Git
+async function gitCommitMessage(hash){
+    let folder = state.repos[ state.repoNumber].localFolder;
+    let text = '';
+    try{
+        // Emulate 'git show -s --format=%s ' with addition of long-hash at end
+        let commands = [ 'show', '-s', '--format=%B', hash]; // %B multi-line message
+        await simpleGit( folder).raw(  commands, onReadCommitMessage);
+        function onReadCommitMessage(err, result ){text = result; console.log(result); };
+    }catch(err){        
+        console.log(err);
+    }
+    return text;
 }
 
 // GUI 
