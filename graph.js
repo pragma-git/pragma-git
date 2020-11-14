@@ -374,22 +374,22 @@ async function injectIntoJs(document){
         console.log(err);
     }
 
-    // Find history in current branch -- write to : variable  for this filehistory
-    history = await readBranchHistory();
- 
+    // History from Pragma-git (honoring settings)
+    //   If --first-parent  then off-branch commits will yield branch-number NaN, and be marked 'off-branch' by Pragma-git
+    //   If not --first-parent, then all commits will be shown with commit number
+    history = await opener.gitHistory();
     console.log(history);
 
-    await drawGraph( document, graphText, history);
+    // Draw full graph, and label current branch
+    let branchHistory = await readBranchHistory();
+    await drawGraph( document, graphText, branchHistory);
 }
 
 // Util
-async function readBranchHistory(){
-        
-    // For current branch only
-    let command = [];
-    if (state.FirstParent){
-        command.push('--first-parent'); 
-    }
+async function readBranchHistory(){ // history of current branch (--first-parent)
+
+    let command = ['--first-parent'];
+    let history = '';
     
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).log( command, onHistory);
