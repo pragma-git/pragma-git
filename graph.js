@@ -403,14 +403,17 @@ async function readBranchHistory(){ // history of current branch (--first-parent
 
 // Callbacks
 function setPinned(hash){
+    // This function updates main window
+    
     
     // Update hash
     localState.historyHash = hash;
     localState.historyNumber = util.findObjectIndex(history,'hash', hash);
     
     // Update pinned commit
-    localState.pinnedCommit = hash;
+    //localState.pinnedCommit = hash;  // This should be set by callback (otherwise its if clauses fails) :
     opener._callback('clicked-pinned-icon');
+    console.log(localState.pinnedDiv);
 }
 async function setHistoricalCommit(hash){
     // Get item number in history of current branch (or NaN if off-branch)
@@ -424,12 +427,8 @@ async function setHistoricalCommit(hash){
     await opener._update();
 }
 function closeWindow(){
-
-    // Return
-    
     localState.graphWindow = false;  // Show to main program that window is closed
-    win.close();
-    
+    win.close(); 
 }
 
 // Git
