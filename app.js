@@ -158,6 +158,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var notes_win;
         var changed_win;
         var resolve_win;
+        var graph_win;
  
       
     // Files & folders
@@ -193,6 +194,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.aboutWindow = false; // True when conflicts window is open
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
+        localState.graphWindow = false; // True when graph window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
@@ -649,11 +651,11 @@ async function _callback( name, event){
                 height: 600,
                 title: "Graph"
             }
-            //,
-            //win=>win.on('loaded', () => test_win = nw.Window.get(win.window))
+            ,
+            win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
             )  
         
-        //localState.notesWindow.open = true;
+        localState.graphWindow = true;
         break;
       }  
       case 'clicked-pinned-icon': {
@@ -677,11 +679,17 @@ async function _callback( name, event){
             if ( getMode() === 'HISTORY'){
                 localState.pinnedCommit = localState.historyHash;
                 updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+
             }
         }else{
             // OK to unpin in any mode
             localState.pinnedCommit = '';
-            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');   
+                         
+            //// Uncheck also in graph window
+            //if (localState.graphWindow && localState.pinnedDiv !== ''){
+                //localState.pinnedDiv.firstChild.firstChild.click(); // Click pinned element in graph.html
+            //}
         }
 
         break;

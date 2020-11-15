@@ -120,8 +120,8 @@
          
         // On selection or pin, remember DIV in :    
         var graph = {};
-        graph.pinnedDiv = '';  // Memory currently pinned DIV
-        graph.selectedDiv = '';// Memory currently selected DIV
+        localState.pinnedDiv = '';  // Memory currently pinned DIV
+        localState.selectedDiv = '';// Memory currently selected DIV
         
 
     
@@ -168,11 +168,11 @@
                     console.log('1) CLICKED_TEXT && CHECKED && SELECTED');
                     // Deselect previous
                     try{
-                        graph.selectedDiv.classList.remove('selected');
+                        localState.selectedDiv.classList.remove('selected');
                     }catch(err){}
                                         
                     // Set selected empty 
-                    graph.selectedDiv = '';   // Forget selected             
+                    localState.selectedDiv = '';   // Forget selected             
                 }
                 
                 // 2a) Click not selected text (thus unchecked) =>  select message
@@ -180,9 +180,9 @@
                     console.log('2a) CLICKED_TEXT && !SELECTED && !CHECKED'); 
                     try{
                         DIV.classList.add('selected'); // Select this
-                        graph.selectedDiv.classList.remove('selected');  // Deselect previous 
+                        localState.selectedDiv.classList.remove('selected');  // Deselect previous 
                     }catch(err){}
-                    graph.selectedDiv = DIV;  // Remember this as selected
+                    localState.selectedDiv = DIV;  // Remember this as selected
                 }
                 
                 // 2b) Click unchecked selected text  =>  deselect message
@@ -191,7 +191,7 @@
                     try{
                         DIV.classList.remove('selected');  // Deselect this
                     }catch(err){}
-                    graph.selectedDiv = '';  // Forget selected
+                    localState.selectedDiv = '';  // Forget selected
                 }
                              
                 // 3a) Click unchecked pin-icon, not selected text   =>  pin=on, select message
@@ -202,10 +202,10 @@
                         DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
                         DIV.classList.add('selected');
                         
-                        graph.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
-                        graph.pinnedDiv.classList.remove('selected');  
+                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
+                        localState.pinnedDiv.classList.remove('selected');  
                     }catch(err){}
-                    graph.pinnedDiv = DIV; // Remember this as pinned.  Keep the old selected
+                    localState.pinnedDiv = DIV; // Remember this as pinned.  Keep the old selected
                 }
                               
                 // 3b) Click unchecked pin-icon, with selected text    =>  pin=on, select message
@@ -216,11 +216,11 @@
                         DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
                         DIV.classList.add('selected');
                         
-                        graph.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
-                        graph.pinnedDiv.classList.remove('selected');  
+                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
+                        localState.pinnedDiv.classList.remove('selected');  
                     }catch(err){}
-                    graph.pinnedDiv = DIV;
-                    graph.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
+                    localState.pinnedDiv = DIV;
+                    localState.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
                 }
                              
                 // 4) Click checked pin-icon (thus with selected text)   =>  pin=off, deselect message
@@ -230,7 +230,7 @@
                     try{
                         DIV.classList.remove('selected')
                     }catch(err){};
-                    graph.pinnedDiv = ''; // Forget pinned.  Keep the old selected
+                    localState.pinnedDiv = ''; // Forget pinned.  Keep the old selected
                 }
 
     

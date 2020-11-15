@@ -5,7 +5,6 @@ var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
 const simpleGit = require('simple-git');  
-
 var util = require('./util_module.js'); // Pragma-git common functions
        
 const pathsep = require('path').sep;  // Os-dependent path separator
@@ -360,6 +359,7 @@ return graphText;
 
 // Start
 async function injectIntoJs(document){
+    win = gui.Window.get();
     
     let folder = state.repos[ state.repoNumber].localFolder;
     let graphText = 'Error reading graph';
@@ -409,7 +409,7 @@ function setPinned(hash){
     localState.historyNumber = util.findObjectIndex(history,'hash', hash);
     
     // Update pinned commit
-    localState.pinnedHash = hash;
+    localState.pinnedCommit = hash;
     opener._callback('clicked-pinned-icon');
 }
 async function setHistoricalCommit(hash){
@@ -422,6 +422,14 @@ async function setHistoricalCommit(hash){
     localState.historyLength = history.length;
     await opener._setMode('HISTORY');
     await opener._update();
+}
+function closeWindow(){
+
+    // Return
+    
+    localState.graphWindow = false;  // Show to main program that window is closed
+    win.close();
+    
 }
 
 // Git
