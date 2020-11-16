@@ -405,7 +405,23 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find-button' :{
-        resetHistoryPointer();          
+        //resetHistoryPointer();   
+        
+        var history = await gitHistory();
+        localState.historyNumber = 0;
+        localState.historyLength = history.length;
+        localState.historyHash = history[localState.historyNumber].hash;   
+        localState.historyString = historyMessage(history, localState.historyNumber);
+    
+         _setMode('HISTORY');
+         
+        textOutput.value = localState.historyString;
+        writeTextOutput( textOutput);
+        
+        status_data = await gitShowHistorical();
+        setStatusBar( fileStatusString( status_data));
+        
+        selectInGraph(localState.historyHash);           
         break;
       }
       case 'help-on-find' :{
@@ -1435,6 +1451,9 @@ async function _callback( name, event){
             
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));
+            
+            selectInGraph(localState.historyHash);
+            
 
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
@@ -1457,6 +1476,9 @@ async function _callback( name, event){
         
         var numberOfBranches = state.repos.length;
         if (localState.historyNumber < 0){
+            
+            selectInGraph(localState.historyHash);
+            
             // Leave history browsing
             localState.historyNumber = -1;
             localState.historyString = "";
@@ -1466,6 +1488,7 @@ async function _callback( name, event){
             writeTextOutput( textOutput);
             _setMode('UNKNOWN');
             await _update()
+            
         }else{
             // Show history
             
@@ -1495,6 +1518,9 @@ async function _callback( name, event){
             // Store hash
             
             localState.historyHash = history[localState.historyNumber].hash;
+            
+            selectInGraph(localState.historyHash);
+            
         }
     }
     function messageKeyUpEvent() { 
@@ -1561,8 +1587,8 @@ async function _callback( name, event){
     };
     function resetHistoryPointer(){
         localState.historyNumber = -1; // Reset to current
-        downArrowClicked();
-        //_setMode('UNKNOWN');
+        downArrowClicked(); 
+        
     }
     function clearFindFields(){
         document.getElementById('findTextInput').value = "";
@@ -1622,9 +1648,9 @@ async function _callback( name, event){
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
-    };
-    
+    }; 
     function listChanged(){
+        
 
         
         gui.Window.open('listChanged.html#/new_page' ,
@@ -1648,37 +1674,15 @@ async function _callback( name, event){
             ); 
         console.log(settings_win);        
     };
+    function selectInGraph(hash){
+        
+        if (localState.graphWindow){  
+            let div = graph_win.window.document.getElementById( hash );
+            div.firstElementChild.click();
+        }
+    }
 // ================= END CALLBACK ================= 
 } 
-
-function drawPinImage(isPinned){
-
-
-        // Store pinned history number and branch
-        localState.pinnedHistoryNumber = localState.historyNumber;
-        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
-        localState.pinnedBranchNumber = localState.branchNumber;
-        
-        // Store find settings
-        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
-        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
-        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
-        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
-        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
-
-        
-        // Set or unset
-        if ( isPinned && ( getMode() === 'HISTORY' ) ){
-            // Do not allow to pin if outside history mode
-            localState.pinnedCommit = localState.historyHash;
-            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
-        }
-        if (!isPinned){
-            localState.pinnedCommit = '';
-            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
-        }
-    
-}
 
 async function _loopTimer( timerName, delayInMs){
     
@@ -3261,6 +3265,34 @@ function fileStatusString( status_data){
         }
     }
 };
+function drawPinImage(isPinned){
+
+
+        // Store pinned history number and branch
+        localState.pinnedHistoryNumber = localState.historyNumber;
+        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
+        localState.pinnedBranchNumber = localState.branchNumber;
+        
+        // Store find settings
+        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
+        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
+        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
+        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
+
+        
+        // Set or unset
+        if ( isPinned && ( getMode() === 'HISTORY' ) ){
+            // Do not allow to pin if outside history mode
+            localState.pinnedCommit = localState.historyHash;
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+        }
+        if (!isPinned){
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+    
+}
 
 // Settings
 function saveSettings(){
