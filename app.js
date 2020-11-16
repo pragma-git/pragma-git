@@ -659,39 +659,16 @@ async function _callback( name, event){
         break;
       }  
       case 'clicked-pinned-icon': {
+        let isPinned = event;
 
-        // Store pinned history number and branch
-        localState.pinnedHistoryNumber = localState.historyNumber;
-        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
-        localState.pinnedBranchNumber = localState.branchNumber;
-        
-        // Store find settings
-        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
-        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
-        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
-        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
-        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
-
-        
-        // Set or unset
-        if ( localState.pinnedCommit === '' ){
-            // Do not allow to pin if outside history mode
-            if ( getMode() === 'HISTORY'){
-                localState.pinnedCommit = localState.historyHash;
-                updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
-
-            }
+        if (localState.graphWindow){
+            // Draw in graph window, and in main window 
+            let div = graph_win.window.document.getElementById( localState.historyHash );
+            div.firstElementChild.firstElementChild.click(); // pin-icon in graph window (which calls drawPinImage)
         }else{
-            // OK to unpin in any mode
-            localState.pinnedCommit = '';
-            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');   
-                         
-            //// Uncheck also in graph window
-            //if (localState.graphWindow && localState.pinnedDiv !== ''){
-                //localState.pinnedDiv.firstChild.firstChild.click(); // Click pinned element in graph.html
-            //}
+            // draw only in main window (since graph window not open)
+            drawPinImage(isPinned); 
         }
-
         break;
       }     
       case 'clicked-pinned-hash': {
@@ -1673,6 +1650,36 @@ async function _callback( name, event){
     };
 // ================= END CALLBACK ================= 
 } 
+
+function drawPinImage(isPinned){
+
+
+        // Store pinned history number and branch
+        localState.pinnedHistoryNumber = localState.historyNumber;
+        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
+        localState.pinnedBranchNumber = localState.branchNumber;
+        
+        // Store find settings
+        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
+        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
+        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
+        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
+
+        
+        // Set or unset
+        if ( isPinned && ( getMode() === 'HISTORY' ) ){
+            // Do not allow to pin if outside history mode
+            localState.pinnedCommit = localState.historyHash;
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+        }
+        if (!isPinned){
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+    
+}
+
 async function _loopTimer( timerName, delayInMs){
     
     // Define timer  
@@ -3198,18 +3205,18 @@ function setStatusBar( text){
         }
         
         // Pinned commit
-        if (localState.pinnedCommit !== ''){
-            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
-            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
-                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
-            }
-        }else{
+        if (localState.pinnedCommit === ''){
             let hashText = '';
             if ( getMode() === 'HISTORY'){
                 hashText = '< ' + localState.historyHash.substring(0,6) + ' >';
             }
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== hashText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
+            }
+        }else{
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
         }
     }

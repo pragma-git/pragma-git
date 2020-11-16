@@ -402,20 +402,18 @@ async function readBranchHistory(){ // history of current branch (--first-parent
 
 
 // Callbacks
-function setPinned(hash){
+function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
-    
-    
-    // Update hash
+
+    localState.pinnedCommit = hash; 
     localState.historyHash = hash;
     localState.historyNumber = util.findObjectIndex(history,'hash', hash);
+    //opener._callback('clicked-pinned-icon', isPinned);
+    opener.drawPinImage(isPinned);
     
-    // Update pinned commit
-    //localState.pinnedCommit = hash;  // This should be set by callback (otherwise its if clauses fails) :
-    opener._callback('clicked-pinned-icon');
     console.log(localState.pinnedDiv);
 }
-async function setHistoricalCommit(hash){
+async function setHistoricalCommit(hash){ // Called prior to DOM update
     // Get item number in history of current branch (or NaN if off-branch)
     localState.historyNumber = util.findObjectIndex(history,'hash', hash); 
     
@@ -593,7 +591,7 @@ function drawGraph( document, graphText, history){
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
-                body += '<div class="text">' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
+                body += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
@@ -657,4 +655,5 @@ function drawPinnedImage(hash){
     const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
     const PIN_IMG2 = ' src="images/pinned_disabled.png"> ';
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
+    //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }

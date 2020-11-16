@@ -157,6 +157,7 @@
                     CHECKED = evt.target.src.includes('enabled');
                     DIV = evt.target.parentElement.parentElement;
                     SELECTED = DIV.classList.contains('selected');
+                    hash = DIV.id;
                 }
                 
             //
@@ -202,9 +203,10 @@
                         DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
                         DIV.classList.add('selected');
                         
-                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
+                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
                         localState.pinnedDiv.classList.remove('selected');  
                     }catch(err){}
+                    setPinned(hash, true);
                     localState.pinnedDiv = DIV; // Remember this as pinned.  Keep the old selected
                 }
                               
@@ -219,6 +221,7 @@
                         localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
                         localState.pinnedDiv.classList.remove('selected');  
                     }catch(err){}
+                    setPinned(hash, true);
                     localState.pinnedDiv = DIV;
                     localState.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
                 }
@@ -228,8 +231,9 @@
                     console.log('4) CLICKED_PIN && CHECKED && SELECTED'); 
                     DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
                     try{
-                        DIV.classList.remove('selected')
+                        DIV.classList.remove('selected');
                     }catch(err){};
+                    setPinned(hash, false);
                     localState.pinnedDiv = ''; // Forget pinned.  Keep the old selected
                 }
 
