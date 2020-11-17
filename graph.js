@@ -1,6 +1,11 @@
 // ---------
 // INIT
 // ---------
+
+
+const test = 0; // test = 0, use Pragma-git.  test = 1 (complicated), 2 (simple), 3 (defining examples) use test cases
+
+
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
@@ -32,9 +37,11 @@ let history = '';
 //
 // Example graphs
 //
-var graphText =  testGraph();
-function testGraph(){
+var graphText;
+function testGraph(i){
 // Real Example : git log --graph --date-order --oneline   
+switch (i) {
+ case 1 : {
 graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SPM viewer
 * 7fe5f6f Fix accidental commit
 *   d267661 Merge remote-tracking branch 'origin/develop' into develop
@@ -287,9 +294,11 @@ graphText = String.raw`* 7ac659d (HEAD -> develop, origin/develop) Add script SP
 | * f5ed85c Fix Histogram script
 | * 610f7ed Updated Help/About`
 
+break;
+}case 2 : {
 
 // Some crazy examples
-graphText2 = String.raw`
+graphText = String.raw`
  * *   *  *  * *  *    * *  * *    
  * |  /   |  |  \  \   | |  | |   
  * | /   /    \  \  \  |/    \|    
@@ -321,8 +330,11 @@ graphText2 = String.raw`
    *   * *      *  
                          
 `
+
+break;
+}case 3 : {
 // Examples defining algorithm
-graphText2 = String.raw`
+graphText = String.raw`
  * *      * *  A * *      * *  
   \|      |/   A  \|      |/           
    |\    /|    A   |\    /|    
@@ -348,8 +360,10 @@ graphText2 = String.raw`
 /   |   *  F     |   *       
              NOTE: requires space not to fail
                   
-`   
-
+`  
+break;
+} 
+}
 return graphText;
 }
 
@@ -362,7 +376,7 @@ async function injectIntoJs(document){
     win = gui.Window.get();
     
     let folder = state.repos[ state.repoNumber].localFolder;
-    let graphText = 'Error reading graph';
+    //let graphText = 'Error reading graph';
      
     // Find complete history graph
     try{
@@ -379,6 +393,10 @@ async function injectIntoJs(document){
     //   If not --first-parent, then all commits will be shown with commit number
     history = await opener.gitHistory();
     console.log(history);
+    
+    if (test !== 0 ){
+        graphText = testGraph(test); // Draw one of included test cases
+    }
 
     // Draw full graph, and label current branch
     let branchHistory = await readBranchHistory();
