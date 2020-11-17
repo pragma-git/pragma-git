@@ -727,6 +727,8 @@ async function _callback( name, event){
                 localState.historyNumber = util.findObjectIndex(history,'hash', localState.pinnedCommit); 
                 localState.historyHash = localState.pinnedCommit;
                 localState.historyString = historyMessage(history, localState.historyNumber);
+                
+                selectInGraph(localState.historyHash);
 
 
             } else {
@@ -738,7 +740,6 @@ async function _callback( name, event){
             
                  
         // Display
-        
             localState.mode = 'HISTORY';
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data)); 
@@ -1674,14 +1675,7 @@ async function _callback( name, event){
             ); 
         console.log(settings_win);        
     };
-    function selectInGraph(hash){
-        
-        if (localState.graphWindow){  
-            let div = graph_win.window.document.getElementById( hash );
-            div.firstElementChild.click();
-        }
-    }
-// ================= END CALLBACK ================= 
+   // ================= END CALLBACK ================= 
 } 
 
 async function _loopTimer( timerName, delayInMs){
@@ -2972,6 +2966,13 @@ function setPath( additionalPath){
     }
     
 }
+function selectInGraph(hash){
+        
+        if (localState.graphWindow){  
+            let div = graph_win.window.document.getElementById( hash );
+            div.firstElementChild.click();
+        }
+    }
 
 
 // Dialogs

@@ -383,6 +383,28 @@ async function injectIntoJs(document){
     // Draw full graph, and label current branch
     let branchHistory = await readBranchHistory();
     await drawGraph( document, graphText, branchHistory);
+
+    
+
+    // Select current history commit in opened graph
+    try{
+        let divSelect = document.getElementById( localState.historyHash );
+        divSelect.classList.add('selected');  
+        localState.selectedDiv = divSelect;
+    }catch(err){  
+    }
+    
+    // Select pinned commit in opened graph
+    try{
+        let divPin = document.getElementById( localState.pinnedCommit );
+        divPin.firstElementChild.firstElementChild.src = 'images/pinned_enabled.png' 
+        divPin.firstElementChild.classList.add('selected');  
+        localState.pinnedDiv = divPin;
+    }catch(err){  
+    }
+    
+        
+
 }
 
 // Util
