@@ -1832,9 +1832,14 @@ async function _update(){
             if (modeName == 'HISTORY'){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;'
+                
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;'
             }
         }catch(err){  
             console.log(err);
