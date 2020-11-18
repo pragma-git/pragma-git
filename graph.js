@@ -374,6 +374,11 @@ return graphText;
 // Start
 async function injectIntoJs(document){
     win = gui.Window.get();
+      
+    // For systems that have multiple workspaces (virtual screens)
+    if ( win.canSetVisibleOnAllWorkspaces() ){
+        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+    }
     
     let folder = state.repos[ state.repoNumber].localFolder;
     //let graphText = 'Error reading graph';

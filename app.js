@@ -652,13 +652,13 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-graph':{
-        //if (localState.notesWindow.open == true) {
-            //try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
-            //return
-        //}
-        //let fileName = document.getElementById('top-titlebar-repo-text').innerText;
-        //let filePath = notesDir + pathsep + fileName + '.md';
-        //global.arguments = [ filePath ];  // send through global.arguments
+                    
+        if ( localState.graphWindow == true ){
+            try{ graph_win.focus(); }catch(err){ localState.graphWindow.open = false}
+            return
+        }
+          
+
         gui.Window.open('graph.html',
             {
                 id: 'testWindowId',
