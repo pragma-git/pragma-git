@@ -652,16 +652,14 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-graph':{
-                    
-        if ( localState.graphWindow == true ){
-            try{ graph_win.focus(); }catch(err){ localState.graphWindow.open = false}
-            return
-        }
-          
+         
+        // Remember graph_win handle
+        let old_graph_win = graph_win;
 
+        // Open new window (will open above old)
         gui.Window.open('graph.html',
             {
-                id: 'testWindowId',
+                id: 'graphWindowId',
                 position: 'center',
                 width: 600,
                 height: 600,
@@ -670,6 +668,9 @@ async function _callback( name, event){
             ,
             win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
             )  
+            
+        // Close old graph-window
+        old_graph_win.close()
         
         localState.graphWindow = true;
         break;
