@@ -21,7 +21,7 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 var win
 
 const DEV = false;  // Show additional info if DEV=true
-var body = '';  // This is where output is collected before putting it into body element
+var graphContent = '';  // This is where output is collected before putting it into graphContent element
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                        ';
@@ -521,7 +521,7 @@ function drawGraph( document, graphText, history){
         }
 
         // Parse row
-        body += '<div class="firstcol"></div> ' // First column on row
+        graphContent += '<div class="firstcol"></div> ' // First column on row
         for(var i = 0 ; i < thisRow.length ; i++){
             let total = '';
             let found = '';
@@ -636,18 +636,18 @@ function drawGraph( document, graphText, history){
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
-                body += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
+                graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
                 
             }else if ( i == (thisRow.length - 1) ) {
                 // Print out info for non-commit rows
-                body += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
+                graphContent += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
             }
     
-            // Make div with content from above
-            body += '<div>' + total +'</div>';
+            // Make div with graphContent from above
+            graphContent += '<div>' + total +'</div>';
             
             if (found !== ''){
                 sumFound += ' ' + found;
@@ -677,9 +677,9 @@ function drawGraph( document, graphText, history){
         }    
     }
     
-    // Print to body element
+    // Print to graphContent element
     console.log(document);
-    document.body.innerHTML += body;  
+    document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
 function drawCommitRow(hash, text, isDev){

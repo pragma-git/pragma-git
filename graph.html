@@ -7,23 +7,38 @@
 
     <!-- Styling graph-->
     <style> 
+        
+        
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+        }
+        
+        
         /* Set outline: 0.01px to show */
         
-        div { 
-            position: relative; 
-            float: left; 
-            height: 24; 
-            width: 12; 
-            outline: 0.0px dotted orange; outline-offset: -0.005px 
+        div {
+            position: relative;
+            float: left;
+            height: 24;
+            width: 12;
+            outline: 0.0px dotted orange;
+            outline-offset: -0.005px;
         }
         
         pre { margin: 2px; }
+        
+        #graphContent {
+            width: auto;
+            height: auto;
+        }
         
         .firstcol { clear: both;}
 
         .text{
             width: auto;
             cursor: pointer;
+            font-size: 10pt;
         }
         
         .node {
@@ -99,7 +114,7 @@
 
    
     </style>
-    
+
     <!-- Styling div-click -->
     <style> 
         .selected{
@@ -113,7 +128,17 @@
     </style>
              
     <body>   <!-- Empty body, fill in with injectIntoJs in graph.js --> 
-    
+        <h2>Commit Graph 
+        
+        <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+            onclick="opener._callback('clicked-about');" 
+            onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+        </h2>
+        
+        <div id="graphContent" class="content"> 
+        </div>
     </body>                
 
     <script> <!-- User interactions --> 
