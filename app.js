@@ -195,6 +195,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
         localState.graphWindow = false; // True when graph window is open
+        localState.helpWindow = false; // True when help window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
@@ -791,6 +792,53 @@ async function _callback( name, event){
         break;
       }
 
+      // Help
+       case 'help': {
+           
+        console.log('Help pressed');
+        
+        let fileName = event;
+                
+        if ( localState.helpWindow == true ){
+            return
+        }
+
+        
+        // Open new window -- and create closed-callback
+        let about_win = gui.Window.open(
+            'HELP/' + fileName + '#/new_page', 
+            {   id: 'helpId',
+                position: 'center',
+                width: 600,
+                height: 700   
+            },
+            function(cWindows){ 
+                cWindows.on('closed', 
+                    function(){
+                        localState.helpWindow = false;
+                        cWindows = null;  // dereference
+                    }
+                );
+                
+                cWindows.on('loaded', 
+                    function(){
+                         // For systems that have multiple workspaces (virtual screens)
+                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
+                        }
+                    }
+                )
+            }
+        );
+
+        // Show that window is open
+        localState.helpWindow = true;
+ 
+        break;
+      }
+     
+      
       // TEST
      
       default: {

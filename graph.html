@@ -127,16 +127,18 @@
 
     </style>
              
-    <body>   <!-- Empty body, fill in with injectIntoJs in graph.js --> 
+    <body> 
         <h2>Commit Graph 
         
+        <!-- Help button --> 
         <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-            onclick="opener._callback('clicked-about');" 
+            onclick="opener._callback('help','graph_help.html');" 
             onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
             onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
             src="images/questionmark_black.png" >
         </h2>
         
+          <!-- Empty content, fill in with injectIntoJs in graph.js --> 
         <div id="graphContent" class="content"> 
         </div>
     </body>                
