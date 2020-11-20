@@ -670,10 +670,11 @@ async function _callback( name, event){
             win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
             )  
             
+        localState.graphWindow = true;
+            
         // Close old graph-window
         old_graph_win.close()
         
-        localState.graphWindow = true;
         break;
       }  
       case 'clicked-pinned-icon': {
