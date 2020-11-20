@@ -132,7 +132,7 @@
         
         <!-- Help button --> 
         <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-            onclick="opener._callback('help','graph_help.html');" 
+            onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
             onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
             onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
             src="images/questionmark_black.png" >

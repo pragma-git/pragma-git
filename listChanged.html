@@ -112,17 +112,20 @@
 </head>
 <body>
     
-    <h2>List of modified files</h2>
+    <h2>List of modified files
+            <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+            onclick="let evt = {}; evt.name='Modified Files';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+        </h2>
     
     <p>
         
     </p>
     
     <!--  CHANGED FILES -- this title is changed in listChanges.js if history mode--> 
-    <button class="collapsible" id="listFiles">&nbsp; Files that will be stored (checkboxed):</button>  <!--  History mode : "Files changed since previous revision : --> 
-    
- 
-    <div class="content">
+
            
         <table style="width:100%"> 
             <thead><tr>
@@ -145,90 +148,8 @@
          <br>
          </div>
 
-    </div><br>
 
-        
-    <!--  INSTRUCTIONS FOLDABLE HEADER--> 
-    <button class="collapsible" id="instructions">&nbsp;
-                <img id="about-icon" style='vertical-align:middle;' height="17" width="17"  
-                onclick="_callback('clicked-about');" 
-                onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
-                onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
-                src="images/questionmark.png">&nbsp; Instructions :
-    </button>
-    
-    <div class="content">
-        
-        <!--  1) INSTRUCTIONS CHANGED FILES (disabled in listChanged.js, if history-list --> 
-        <div id="instructionsHEAD">
-            
-            <p>
-            <b>Changed files history</b>:<br>
-            This window shows files that have changed since the last stored revision.
-            </p>
-                
-        
-            <dl>
-              <dt>The icons show how the files were changed </dt>
-                <dd> <img src="images/added.png"  height="17" width="17"> is a new file, which did not exist in previous revision </dd>
-                <dd> <img src="images/modified.png"  height="17" width="17"> is a file that has changed since previous revision </dd>
-                <dd> <img src="images/deleted.png"  height="17" width="17"> is a file that has been deleted (but existed in previous revision)  </dd>
-              <dt></dt>
-            </dl>
-  
-                  
-                
-            <p><b>Check-boxes </b>:<br>
-            Pragma-git assumes that you wish to store all files you are working with.  
-            This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
-            </p>
-            
-            <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
-                  
-            <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
-            
-            <p><b>Other file operations </b>: </p>     
-              
-            <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
-            <p><b>(diff)</b> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
-            <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
-            <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
-            
-            
-            <p>Not all options are available for every type of change.  
-            For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
-            Therefore the "diff" linke will not be visible.
-            The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
-    
-        </div>
-    
-    
-        <!--  2) INSTRUCTIONS HISTORY FILES (disabled in listChanged.js, if file-list for HEAD -->        
-        <div id="instructionsHistory">
-            <p>
-            <b>Changed files history</b>:<br>
-            This window shows files that have changed between this revision, and previous revision.
-            </p>
-            
-            <dl>
-              <dt>The icons show how the files were changed </dt>
-                <dd> <img src="images/added.png"  height="17" width="17"> is a new file, which did not exist in previous revision </dd>
-                <dd> <img src="images/modified.png"  height="17" width="17"> is a file that has changed since previous revision </dd>
-                <dd> <img src="images/deleted.png"  height="17" width="17"> is a file that was deleted in this revision (but existed in previous revision)  </dd>
-                <dd> <img src="images/renamed.png"  height="17" width="17"> is a file that was renamed this revision (existed with other name in previous revision)  </dd>
-              <dt></dt>
-            </dl>
-  
-              
-            <p><b>(diff)</b> opens the diff viewer, and shows how the file changed between this and previous revision.  
-            Uses the built-in diff viewer, or an external viewer defined in settings</p>
-    
-    
-        </div>        
-    
-    
-    </div>
-
+ 
 <!--  Warning dialog for restore  --> 
 
 <dialog id="restoreDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
@@ -263,30 +184,6 @@
 </script>
 
 
-  
-
-
-
-
-<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
-<script>
-    var coll = document.getElementsByClassName("collapsible");
-    var i;
-    
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener(
-        "click", 
-        function() {
-            this.classList.toggle("active");
-            var content = this.nextElementSibling;
-            if (content.style.maxHeight){
-                content.style.maxHeight = null;
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-            } 
-        });
-    }
-</script>
 
 
 <!--  Onload, call javascript file  --> 

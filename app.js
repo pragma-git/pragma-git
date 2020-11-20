@@ -797,16 +797,17 @@ async function _callback( name, event){
            
         console.log('Help pressed');
         
-        let fileName = event;
+        let fileName = 'HELP' + pathsep + event.name + '.html';
                 
         if ( localState.helpWindow == true ){
             return
         }
 
+        let text = fs.readFileSync(fileName);
         
         // Open new window -- and create closed-callback
         let about_win = gui.Window.open(
-            'HELP/' + fileName + '#/new_page', 
+            'HELP' + pathsep + 'TEMPLATE_help.html',
             {   id: 'helpId',
                 position: 'center',
                 width: 600,
@@ -827,6 +828,9 @@ async function _callback( name, event){
                             cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
                             cWindows.setAlwaysOnTop(state.alwaysOnTop);
                         }
+                        cWindows.window.document.getElementById("inner-content").innerHTML= text; // Set text in window
+                        cWindows.window.document.getElementById("title").innerHTML= event.name; // Set title in window
+                        cWindows.window.document.getElementById("name").innerText= event.name; // Set title in window
                     }
                 )
             }

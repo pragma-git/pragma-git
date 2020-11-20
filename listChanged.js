@@ -61,7 +61,6 @@ async function injectIntoJs(document) {
 
     // Draw table
     origFiles = createFileTable(status_data);
-    document.getElementById('listFiles').click();  // Open collapsed section 
     
     
     // Change text that does not match History mode 
@@ -74,8 +73,6 @@ async function injectIntoJs(document) {
         }else{
             document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
         }
-    }else{
-        document.getElementById('instructionsHistory').style.display = 'none'; // Only show instructions for HEAD file-list
     }
 
 
