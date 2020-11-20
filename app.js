@@ -3024,6 +3024,7 @@ function selectInGraph(hash){
         
         if (localState.graphWindow){  
             let div = graph_win.window.document.getElementById( hash );
+            div.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
             div.firstElementChild.click();
         }
     }
