@@ -158,6 +158,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var notes_win;
         var changed_win;
         var resolve_win;
+        var graph_win;
  
       
     // Files & folders
@@ -193,6 +194,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.aboutWindow = false; // True when conflicts window is open
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
+        localState.graphWindow = false; // True when graph window is open
+        localState.helpWindow = false; // True when help window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
@@ -403,7 +406,23 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find-button' :{
-        resetHistoryPointer();          
+        //resetHistoryPointer();   
+        
+        var history = await gitHistory();
+        localState.historyNumber = 0;
+        localState.historyLength = history.length;
+        localState.historyHash = history[localState.historyNumber].hash;   
+        localState.historyString = historyMessage(history, localState.historyNumber);
+    
+         _setMode('HISTORY');
+         
+        textOutput.value = localState.historyString;
+        writeTextOutput( textOutput);
+        
+        status_data = await gitShowHistorical();
+        setStatusBar( fileStatusString( status_data));
+        
+        selectInGraph(localState.historyHash);           
         break;
       }
       case 'help-on-find' :{
@@ -633,56 +652,41 @@ async function _callback( name, event){
         
         break;
       }
-      case 'clicked-stash-button': {
-          
-    // Stash -- ask to overwrite if stash exists
-        try{
-            let stash_status;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
-                .stash(['list'], onStash);
-            function onStash(err, result ){  stash_status = result }
+      case 'clicked-graph':{
+         
+        // Remember graph_win handle
+        let old_graph_win = graph_win;
+
+        // Open new window (will open above old)
+        gui.Window.open('graph.html',
+            {
+                id: 'graphWindowId',
+                position: 'center',
+                width: 600,
+                height: 600,
+                title: "Graph"
+            }
+            ,
+            win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
+            )  
             
-            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
-                // Ask permission to overwrite stash
-                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                document.getElementById('stashOverwriteDialog').showModal();
-            }else{
-                // No stash exists, OK to stash
-                gitStash();
-            }
-        }catch(err){  
-            console.log(err);
-        }
+        // Close old graph-window
+        old_graph_win.close()
+        
+        localState.graphWindow = true;
         break;
-      }     
+      }  
       case 'clicked-pinned-icon': {
+        let isPinned = event;
 
-        // Store pinned history number and branch
-        localState.pinnedHistoryNumber = localState.historyNumber;
-        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
-        localState.pinnedBranchNumber = localState.branchNumber;
-        
-        // Store find settings
-        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
-        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
-        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
-        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
-        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
-
-        
-        // Set or unset
-        if ( localState.pinnedCommit === '' ){
-            // Do not allow to pin if outside history mode
-            if ( getMode() === 'HISTORY'){
-                localState.pinnedCommit = localState.historyHash;
-                updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
-            }
+        if (localState.graphWindow){
+            // Draw in graph window, and in main window 
+            let div = graph_win.window.document.getElementById( localState.historyHash );
+            div.firstElementChild.firstElementChild.click(); // pin-icon in graph window (which calls drawPinImage)
         }else{
-            // OK to unpin in any mode
-            localState.pinnedCommit = '';
-            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+            // draw only in main window (since graph window not open)
+            drawPinImage(isPinned); 
         }
-
         break;
       }     
       case 'clicked-pinned-hash': {
@@ -725,6 +729,8 @@ async function _callback( name, event){
                 localState.historyNumber = util.findObjectIndex(history,'hash', localState.pinnedCommit); 
                 localState.historyHash = localState.pinnedCommit;
                 localState.historyString = historyMessage(history, localState.historyNumber);
+                
+                selectInGraph(localState.historyHash);
 
 
             } else {
@@ -736,7 +742,6 @@ async function _callback( name, event){
             
                  
         // Display
-        
             localState.mode = 'HISTORY';
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data)); 
@@ -756,7 +761,28 @@ async function _callback( name, event){
         
         break;
       } 
-      
+      case 'clicked-stash-button': {
+          
+    // Stash -- ask to overwrite if stash exists
+        try{
+            let stash_status;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .stash(['list'], onStash);
+            function onStash(err, result ){  stash_status = result }
+            
+            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
+                // Ask permission to overwrite stash
+                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                document.getElementById('stashOverwriteDialog').showModal();
+            }else{
+                // No stash exists, OK to stash
+                gitStash();
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }           
       case 'clicked-stash_pop-button': {
         gitStashPop();
         break; 
@@ -766,6 +792,55 @@ async function _callback( name, event){
         break;
       }
 
+      // Help
+       case 'help': {
+           
+        console.log('Help pressed');
+        
+        let fileName = event;
+                
+        if ( localState.helpWindow == true ){
+            return
+        }
+
+        
+        // Open new window -- and create closed-callback
+        let about_win = gui.Window.open(
+            'HELP/' + fileName + '#/new_page', 
+            {   id: 'helpId',
+                position: 'center',
+                width: 600,
+                height: 700   
+            },
+            function(cWindows){ 
+                cWindows.on('closed', 
+                    function(){
+                        localState.helpWindow = false;
+                        cWindows = null;  // dereference
+                    }
+                );
+                
+                cWindows.on('loaded', 
+                    function(){
+                         // For systems that have multiple workspaces (virtual screens)
+                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
+                        }
+                    }
+                )
+            }
+        );
+
+        // Show that window is open
+        localState.helpWindow = true;
+ 
+        break;
+      }
+     
+      
+      // TEST
+     
       default: {
         // code block
       }  
@@ -1426,6 +1501,9 @@ async function _callback( name, event){
             
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));
+            
+            selectInGraph(localState.historyHash);
+            
 
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
@@ -1448,6 +1526,9 @@ async function _callback( name, event){
         
         var numberOfBranches = state.repos.length;
         if (localState.historyNumber < 0){
+            
+            selectInGraph(localState.historyHash);
+            
             // Leave history browsing
             localState.historyNumber = -1;
             localState.historyString = "";
@@ -1457,6 +1538,7 @@ async function _callback( name, event){
             writeTextOutput( textOutput);
             _setMode('UNKNOWN');
             await _update()
+            
         }else{
             // Show history
             
@@ -1486,6 +1568,9 @@ async function _callback( name, event){
             // Store hash
             
             localState.historyHash = history[localState.historyNumber].hash;
+            
+            selectInGraph(localState.historyHash);
+            
         }
     }
     function messageKeyUpEvent() { 
@@ -1552,8 +1637,8 @@ async function _callback( name, event){
     };
     function resetHistoryPointer(){
         localState.historyNumber = -1; // Reset to current
-        downArrowClicked();
-        //_setMode('UNKNOWN');
+        downArrowClicked(); 
+        
     }
     function clearFindFields(){
         document.getElementById('findTextInput').value = "";
@@ -1613,9 +1698,9 @@ async function _callback( name, event){
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
-    };
-    
+    }; 
     function listChanged(){
+        
 
         
         gui.Window.open('listChanged.html#/new_page' ,
@@ -1639,8 +1724,9 @@ async function _callback( name, event){
             ); 
         console.log(settings_win);        
     };
-// ================= END CALLBACK ================= 
+   // ================= END CALLBACK ================= 
 } 
+
 async function _loopTimer( timerName, delayInMs){
     
     // Define timer  
@@ -1789,9 +1875,14 @@ async function _update(){
             if (modeName == 'HISTORY'){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;'
+                
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;'
             }
         }catch(err){  
             console.log(err);
@@ -2924,6 +3015,13 @@ function setPath( additionalPath){
     }
     
 }
+function selectInGraph(hash){
+        
+        if (localState.graphWindow){  
+            let div = graph_win.window.document.getElementById( hash );
+            div.firstElementChild.click();
+        }
+    }
 
 
 // Dialogs
@@ -3166,12 +3264,7 @@ function setStatusBar( text){
         }
         
         // Pinned commit
-        if (localState.pinnedCommit !== ''){
-            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
-            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
-                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
-            }
-        }else{
+        if (localState.pinnedCommit === ''){
             let hashText = '';
             if ( getMode() === 'HISTORY'){
                 hashText = '< ' + localState.historyHash.substring(0,6) + ' >';
@@ -3179,17 +3272,27 @@ function setStatusBar( text){
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== hashText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
             }
+        }else{
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
+            }
         }
     }
 }
 function fileStatusString( status_data){
+
     
     let historyStatus = '&nbsp;&nbsp;  (' 
         + ( localState.historyNumber + 1 )  
         + ' of ' 
         + localState.historyLength 
         + ')';
-    
+ 
+    if ( isNaN(localState.historyNumber) ){
+        historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
+    }
+       
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
@@ -3217,6 +3320,34 @@ function fileStatusString( status_data){
         }
     }
 };
+function drawPinImage(isPinned){
+
+
+        // Store pinned history number and branch
+        localState.pinnedHistoryNumber = localState.historyNumber;
+        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
+        localState.pinnedBranchNumber = localState.branchNumber;
+        
+        // Store find settings
+        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
+        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
+        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
+        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
+
+        
+        // Set or unset
+        if ( isPinned && ( getMode() === 'HISTORY' ) ){
+            // Do not allow to pin if outside history mode
+            localState.pinnedCommit = localState.historyHash;
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+        }
+        if (!isPinned){
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+    
+}
 
 // Settings
 function saveSettings(){
