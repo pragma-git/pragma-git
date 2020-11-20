@@ -3279,7 +3279,7 @@ function setStatusBar( text){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
             }
         }else{
-            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            let pinnedText = '< <u>vs ' + localState.pinnedCommit.substring(0,6) + '</u> >';
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
@@ -3564,6 +3564,8 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
+    document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
     
  
 }
