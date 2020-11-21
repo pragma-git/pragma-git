@@ -656,6 +656,9 @@ async function _callback( name, event){
          
         // Remember graph_win handle
         let old_graph_win = graph_win;
+        try{
+            graph_win.focus();
+        }catch(err){}
 
         // Open new window (will open above old)
         gui.Window.open('graph.html',
@@ -794,52 +797,67 @@ async function _callback( name, event){
       }
 
       // Help
-       case 'help': {
+      case 'help': {
            
         console.log('Help pressed');
         
         let fileName = 'HELP' + pathsep + event.name + '.html';
-                
+        let text = fs.readFileSync(fileName);
+                        
+        // Update text            
         if ( localState.helpWindow == true ){
+            updateText( help_win.document, event.name, text);
             return
         }
-
-        let text = fs.readFileSync(fileName);
         
-        // Open new window -- and create closed-callback
-        let about_win = gui.Window.open(
-            'HELP' + pathsep + 'TEMPLATE_help.html',
-            {   id: 'helpId',
-                position: 'center',
-                width: 600,
-                height: 700   
-            },
-            function(cWindows){ 
-                cWindows.on('closed', 
-                    function(){
-                        localState.helpWindow = false;
-                        cWindows = null;  // dereference
-                    }
-                );
+        // Local function - update text in html
+        function updateText( document, name, text){
+            help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
+            help_win.document.getElementById("title").innerHTML= name; // Set window title
+            help_win.document.getElementById("name").innerText= name; // Set document first header           
+        };
                 
-                cWindows.on('loaded', 
-                    function(){
-                         // For systems that have multiple workspaces (virtual screens)
-                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
-                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
+
+        // Open new window -- and create closed-callback
+        if ( localState.helpWindow == false ){
+            gui.Window.open(
+                'HELP' + pathsep + 'TEMPLATE_help.html',
+                {   id: 'helpId',
+                    position: 'center',
+                    width: 600,
+                    height: 700   
+                },
+                function(cWindows){ 
+                    cWindows.on('closed', 
+                        function(){
+                            localState.helpWindow = false;
+                            cWindows = null;  // dereference
                         }
-                        cWindows.window.document.getElementById("inner-content").innerHTML= text; // Set text in window
-                        cWindows.window.document.getElementById("title").innerHTML= event.name; // Set title in window
-                        cWindows.window.document.getElementById("name").innerText= event.name; // Set title in window
-                    }
-                )
-            }
-        );
+                    );
+                    
+                    cWindows.on('loaded', 
+                        function(){
+                             // For systems that have multiple workspaces (virtual screens)
+                            if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                                cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                                cWindows.setAlwaysOnTop(state.alwaysOnTop);
+                            }
+                            //cWindows.window.document.getElementById("inner-content").innerHTML= text; // Set text in window
+                            //cWindows.window.document.getElementById("title").innerHTML= event.name; // Set title in window
+                            //cWindows.window.document.getElementById("name").innerText= event.name; // Set title in window
+                            
+                            help_win = cWindows.window;
+                            updateText( help_win.document, event.name, text);
+                        }
+                    )
+                }
+            );
+        }
 
         // Show that window is open
         localState.helpWindow = true;
- 
+
+
         break;
       }
      
