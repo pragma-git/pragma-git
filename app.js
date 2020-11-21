@@ -811,7 +811,8 @@ async function _callback( name, event){
         function updateText( document, name, text){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
             help_win.document.getElementById("title").innerHTML= name; // Set window title
-            help_win.document.getElementById("name").innerText= name; // Set document first header           
+            help_win.document.getElementById("name").innerText= name; // Set document first header  
+            help_win.focus();         
         };
                 
 
