@@ -392,7 +392,15 @@ async function injectIntoJs(document){
     }catch(err){        
         console.log(err);
     }
-
+    
+    
+    // Write header text
+    let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
+    let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
+    document.getElementById('repoName').innerText = repoName;
+    document.getElementById('branchName').innerText = branchName;
+    
+    
     // History from Pragma-git (honoring settings)
     //   If --first-parent  then off-branch commits will yield branch-number NaN, and be marked 'off-branch' by Pragma-git
     //   If not --first-parent, then all commits will be shown with commit number
@@ -403,11 +411,11 @@ async function injectIntoJs(document){
         graphText = testGraph(test); // Draw one of included test cases
     }
 
+    
     // Draw full graph, and label current branch
     let branchHistory = await readBranchHistory();
     await drawGraph( document, graphText, branchHistory);
 
-    
 
     // Select current history commit in opened graph
     try{
