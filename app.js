@@ -3290,7 +3290,7 @@ function setStatusBar( text){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
             }
         }else{
-            let pinnedText = '< <u>vs ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
             if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
                  document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
             }
