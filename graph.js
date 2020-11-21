@@ -497,6 +497,8 @@ function drawGraph( document, graphText, history){
     // history   output from  git log with --oneParent (used to find which commits are in current branch)
     
     
+    graphContent = '';
+    
     graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
     
     console.log(graphText)

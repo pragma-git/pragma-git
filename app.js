@@ -653,12 +653,12 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-graph':{
-         
-        // Remember graph_win handle
-        let old_graph_win = graph_win;
-        try{
-            graph_win.focus();
-        }catch(err){}
+
+        // If window open, redraw and bail out
+        if ( localState.graphWindow == true ){
+            graph_win.window.injectIntoJs(graph_win.window.document);
+            return
+        }
 
         // Open new window (will open above old)
         gui.Window.open('graph.html',
@@ -674,9 +674,6 @@ async function _callback( name, event){
             )  
             
         localState.graphWindow = true;
-            
-        // Close old graph-window
-        old_graph_win.close()
         
         break;
       }  
@@ -842,10 +839,6 @@ async function _callback( name, event){
                                 cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
                                 cWindows.setAlwaysOnTop(state.alwaysOnTop);
                             }
-                            //cWindows.window.document.getElementById("inner-content").innerHTML= text; // Set text in window
-                            //cWindows.window.document.getElementById("title").innerHTML= event.name; // Set title in window
-                            //cWindows.window.document.getElementById("name").innerText= event.name; // Set title in window
-                            
                             help_win = cWindows.window;
                             updateText( help_win.document, event.name, text);
                         }
