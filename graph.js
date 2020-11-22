@@ -434,7 +434,7 @@ async function injectIntoJs(document){
     try{
         let divPin = document.getElementById( localState.pinnedCommit );
         divPin.firstElementChild.firstElementChild.src = 'images/pinned_enabled.png' 
-        divPin.firstElementChild.classList.add('selected');  
+        divPin.classList.add('selected');  
         localState.pinnedDiv = divPin;
     }catch(err){  
     }
