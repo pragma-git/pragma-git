@@ -10,9 +10,9 @@
     "toolbar": false,
     "frame": false,
     "position": "center",
-    "width": 670,
+    "width": 750,
     "height": 148,
-    "min_width": 670,
+    "min_width": 750,
     "min_height": 148,
     "icon": "./images/icon.png"
   },
