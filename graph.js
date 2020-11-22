@@ -421,7 +421,12 @@ async function injectIntoJs(document){
     try{
         let divSelect = document.getElementById( localState.historyHash );
         divSelect.classList.add('selected');  
-        localState.selectedDiv = divSelect;
+        
+        // Selected should not be graphed if
+        // - same commit is pinned
+        if (localState.pinnedCommit !== localState.historyHash ) {
+            localState.selectedDiv = divSelect;
+        }
     }catch(err){  
     }
     

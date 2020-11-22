@@ -162,22 +162,31 @@
 
     
         // One eventlister for all clicks
-        document.body.addEventListener('click', function (evt) {
-            
-            // <div class='text'> <pre> <img class='pinned-icon'> text which is clicked, causing target to be 'pre' </pre> </div>  
-
+        document.body.addEventListener( 'click', function (evt) {
+            // HTML structure:
+            //
+            // <div class='text'> <pre> <img class='pinned-icon'> commit text </pre> </div>  
+            //
+            // Click text is a click in      target = <pre>  =>   CLICKED_TEXT = true   CLICKED_PIN  = false
+            // Click checkbox is a click in  target = <img>  =>   CLICKED_TEXT = false  CLICKED_PIN  = true
+            //
+            // Therefore the <div> element has to be fetched two different ways into DIV
+            //
+            // Furthermore, state can be
+            //    SELECTED = marked as selected (may or may not be CHECKED)
+            //    CHECKED  = pinned (which means it also will be SELECTED)
             
             //
             // Determine what was clicked
             //
                 
-                let parent = evt.target.parentElement; // Parent to clicked pre
-                
+                let parent = evt.target.parentElement; // Parent to clicked pre (correct if pre was clicked)
                 let CLICKED_TEXT = parent.classList.contains('text');
-                let CLICKED_PIN = evt.target.classList.contains('pinned-icon');
+                
+                let CLICKED_PIN = evt.target.classList.contains('pinned-icon'); // This is correct element if img was clicked
                  
             //
-            // Determine state when clicked
+            // Determine state of current element, when clicked
             //           
                 let CHECKED = false;
                 let SELECTED = false;
@@ -197,85 +206,127 @@
                 }
                 
             //
-            // Perform action depending on state and what clicked
+            // CLICKED_TEXT -- Perform action depending on state (can be SELECTED already, or NOT SELECTED )
             //
-                
-                // 1) Click checked text :     Do not deselect this, deselect previous
-                if ( CLICKED_TEXT && CHECKED && SELECTED){
-                    console.log('1) CLICKED_TEXT && CHECKED && SELECTED');
-                    // Deselect previous
-                    try{
-                        localState.selectedDiv.classList.remove('selected');
-                    }catch(err){}
-                                        
-                    // Set selected empty 
-                    localState.selectedDiv = '';   // Forget selected             
-                }
-                
-                // 2a) Click not selected text (thus unchecked) =>  select message
-                else if ( CLICKED_TEXT && !SELECTED && !CHECKED){    
-                    console.log('2a) CLICKED_TEXT && !SELECTED && !CHECKED'); 
-                    try{
-                        DIV.classList.add('selected'); // Select this
-                        localState.selectedDiv.classList.remove('selected');  // Deselect previous 
-                    }catch(err){}
-                    localState.selectedDiv = DIV;  // Remember this as selected
-                }
-                
-                // 2b) Click unchecked selected text  =>  deselect message
-                else if ( CLICKED_TEXT && SELECTED && !CHECKED){        
-                    console.log('2b) CLICKED_TEXT && SELECTED && !CHECKED'); 
-                    try{
-                        DIV.classList.remove('selected');  // Deselect this
-                    }catch(err){}
-                    localState.selectedDiv = '';  // Forget selected
-                }
-                             
-                // 3a) Click unchecked pin-icon, not selected text   =>  pin=on, select message
-                else if ( CLICKED_PIN && !CHECKED && !SELECTED){
-                    console.log('3a) CLICKED_PIN && !CHECKED && !SELECTED'); 
-                    // Select and pinned image
-                    try{
-                        DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
-                        DIV.classList.add('selected');
-                        
-                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
-                        localState.pinnedDiv.classList.remove('selected');  
-                    }catch(err){}
-                    setPinned(hash, true);
-                    localState.pinnedDiv = DIV; // Remember this as pinned.  Keep the old selected
-                }
-                              
-                // 3b) Click unchecked pin-icon, with selected text    =>  pin=on, select message
-                else if ( CLICKED_PIN && !CHECKED && SELECTED){
-                    console.log('3b) CLICKED_PIN && !CHECKED && SELECTED'); 
-                    // Select and pinned image
-                    try{
-                        DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
-                        DIV.classList.add('selected');
-                        
-                        localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin
-                        localState.pinnedDiv.classList.remove('selected');  
-                    }catch(err){}
-                    setPinned(hash, true);
-                    localState.pinnedDiv = DIV;
-                    localState.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
-                }
-                             
-                // 4) Click checked pin-icon (thus with selected text)   =>  pin=off, deselect message
-                else if ( CLICKED_PIN && CHECKED && SELECTED){
-                    console.log('4) CLICKED_PIN && CHECKED && SELECTED'); 
-                    DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
-                    try{
+            
+                if (CLICKED_TEXT){
+                    console.log('CLICKED_TEXT ');
+                    
+                    // This is simple 
+                    // - if selected, unselect and remember no selected
+                    // - if not selected, select and remember this one
+                    
+                    if ( SELECTED){
+                        // Remove selected and forget
                         DIV.classList.remove('selected');
-                    }catch(err){};
-                    setPinned(hash, false);
-                    localState.pinnedDiv = ''; // Forget pinned.  Keep the old selected
-                }
+                        localState.selectedDiv = '';  
+                        
+                    }else{
+                        // Remove previously selected
+                        try{
+                            localState.selectedDiv.classList.remove('selected');
+                        }catch(err){
+                        }                        
+                        // Select the new one and remember
+                        DIV.classList.add('selected');
+                        localState.selectedDiv = DIV;  
+                    }
+                    myLog()  
 
+                }
+                
+            //
+            // CLICKED_PIN -- Perform action depending on state (can be NOT CHECKED already, or CHECKED )
+            //
+            
+                if (CLICKED_PIN){
+                    
+                    console.log('CLICKED_PIN ');
+                    
+                    // This is simple 
+                    // - if not pinned, pin and forget old selected
+                    // - if pinned, unpin and make this selected
+                    
+                    //
+                    // UNCHECKED -- PIN THIS    
+                    // 
+                                   
+                        if ( !CHECKED ){                        
+    
+                            // Remove old pinned
+                            try{
+                                localState.pinnedDiv.classList.remove('selected');  
+                                localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
+                                    
+                            }catch(err){}  
+     
+                            // Remove old selected
+                            try{
+                                localState.selectedDiv.classList.remove('selected');  
+                                localState.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
+                            }catch(err){}  
+                             
+                            // Pin new
+                            try{
+                                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                                DIV.classList.add('selected');
+                            }catch(err){}  
+                            
+                                                   
+                            setPinned(hash, true);        // Set pinned commit in main window                
+                            localState.pinnedDiv = DIV;   // Remember this as pinned.  Keep the old selected       
+                            myLog()
+                            
+                        }
+
+                    //         
+                    // CHECKED -- UN-PIN THIS 
+                    //
+                                    
+                        if ( CHECKED ){                        
+    
+                            // Remove old selected
+                            try{
+                                localState.selectedDiv.classList.remove('selected');
+                            }catch(err){
+                            }  
+                                                 
+                            // Un-pin
+                            try{
+                                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                                DIV.classList.remove('selected');
+                            }catch(err){}  
+           
+                            localState.pinnedDiv = '';    // Forget this as pinned.
+                            setPinned(hash, false);       // Clear pinned commit in main window 
+                                           
+                            // Select this commit and remember
+                            DIV.classList.add('selected');
+                            localState.selectedDiv = DIV;                       
+    
+                            myLog()
+                            
+                        } 
+
+                }
     
         }, 
         false);
+        
+        function myLog(){
+            try{
+                console.log( 'localState.pinnedDiv = ' + localState.pinnedDiv.firstChild.innerText)
+            }catch(err){
+                console.log('localState.pinnedDiv = ')
+            }
+            
+            try{
+            console.log( 'localState.selectedDiv = ' + localState.selectedDiv.firstChild.innerText)
+            }catch(err){
+                console.log('localState.selectedDiv = ')
+            }
+            console.log('---------------------------------------------------------------------------------');
+        }
     
         </script>
         
