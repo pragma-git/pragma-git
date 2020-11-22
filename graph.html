@@ -216,10 +216,16 @@
                     // - if selected, unselect and remember no selected
                     // - if not selected, select and remember this one
                     
-                    if ( SELECTED){
-                        // Remove selected and forget
-                        DIV.classList.remove('selected');
-                        localState.selectedDiv = '';  
+                    if ( SELECTED ){
+                        
+                        if ( CHECKED ){
+                            // Special case if Pinned  -- let pinned be, remove previously selected
+                            localState.selectedDiv.classList.remove('selected');
+                            localState.selectedDiv = '';  
+                            
+                        }else{
+                            // Don't allow unselecting
+                        }
                         
                     }else{
                         // Remove previously selected
