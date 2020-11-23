@@ -1545,12 +1545,15 @@ async function _callback( name, event){
         var numberOfBranches = state.repos.length;
         if (localState.historyNumber < 0){
             
-            selectInGraph(localState.historyHash);
+            //selectInGraph(localState.historyHash);
             
             // Leave history browsing
             localState.historyNumber = -1;
             localState.historyString = "";
             localState.historyHash = "";
+            
+            selectInGraph(localState.historyHash);
+            
             //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
             textOutput.value = '';
             writeTextOutput( textOutput);
@@ -3036,9 +3039,17 @@ function setPath( additionalPath){
 function selectInGraph(hash){
         
         if (localState.graphWindow){  
-            let div = graph_win.window.document.getElementById( hash );
-            div.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
-            div.firstElementChild.click();
+            
+            if (hash !==''){
+                // Select by clicking
+                let div = graph_win.window.document.getElementById( hash );
+                div.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+                div.firstElementChild.click();
+            }else{
+                // Deselect
+                let div = graph_win.window.document.getElementById(localState.selectedDiv.id);
+                div.classList.remove('selected');
+            }
         }
     }
 
