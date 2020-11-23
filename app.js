@@ -657,6 +657,7 @@ async function _callback( name, event){
         // If window open, redraw and bail out
         if ( localState.graphWindow == true ){
             graph_win.window.injectIntoJs(graph_win.window.document);
+            graph_win.focus();
             return
         }
 
