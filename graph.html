@@ -11,7 +11,8 @@
         
         body{
             font-family: Arial;
-            font-size: 11pt;
+            font-size: 10pt;
+            width: max-content;
         }
         
         
@@ -26,7 +27,11 @@
             outline-offset: -0.005px;
         }
         
-        pre { margin: 2px; }
+        pre {
+            margin: 2px;
+            font-family: inherit;
+            font-size: inherit;
+        }
         
         #graphContent {
             width: auto;
@@ -38,13 +43,14 @@
         .text{
             width: auto;
             cursor: pointer;
-            font-size: 10pt;
+            font-size: inherit;
         }
         
         .decoration {
+            float: left;
             font-weight: bold;
             color: DarkBlue;
-            
+            font-size: inherit;
         }
         
         .node {
