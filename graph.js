@@ -386,7 +386,7 @@ async function injectIntoJs(document){
     // Find complete history graph
     try{
         // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%s <span class="decoration">%d</span>H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
+        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
         await simpleGit( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){graphText = result; console.log(result); };
     }catch(err){        
@@ -529,8 +529,15 @@ function drawGraph( document, graphText, history){
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
         let hashInThisRow = splitted[row].substring(startOfHash + 2); // Skip H=
         
+        // Separate log row from decorate (at end now when hash removed)
+        let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash); // Skip D=
+        
+        
         // Current row
-        let thisRow = splitted[row].substring(0, startOfHash);
+        let thisRow = splitted[row].substring(0, startOfDecore);
+        thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
+        
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
@@ -651,7 +658,8 @@ function drawGraph( document, graphText, history){
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
-                graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, thisRow.substring(i), DEV) + ' </div>'; 
+                graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
+                graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
@@ -697,9 +705,9 @@ function drawGraph( document, graphText, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
-function drawCommitRow(hash, text, isDev){
+function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text + `   ` + sumFound +  `</pre>`;
+        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre>`;
     }else{
         return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
     }
