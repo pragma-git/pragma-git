@@ -35,7 +35,7 @@
 
 # - no windows icons.   5) or 6) above 
 
-
+cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     
 # Clean old builds
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
