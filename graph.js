@@ -532,6 +532,7 @@ function drawGraph( document, graphText, history){
         // Separate log row from decorate (at end now when hash removed)
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
         let decoration = splitted[row].substring(startOfDecore + 2, startOfHash); // Skip D=
+        decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
         
         
         // Current row
