@@ -26,7 +26,15 @@ mkdir "$TMP" 2>/dev/null
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 EXIT="$TMP/exit"                     # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-# 
+# Bail out if already running
+if [  -f "$RUNNING" ] ; then
+    echo  " " >> "$TMP/mergelog.txt"
+    echo  "$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
+    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
+    exit
+fi
+
+# Store input parameters for Pragma-git to pick them up
 echo $1 > "$TMP/first"
 echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"
@@ -43,5 +51,9 @@ done
 # Exited Pragma-merge
 EXITCODE=$(cat "$EXIT")
 rm "$EXIT"
+
+echo  " " >> "$TMP/mergelog.txt"
+echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"
+echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/mergelog.txt"
 
 exit $EXITCODE

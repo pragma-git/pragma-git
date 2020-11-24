@@ -123,12 +123,10 @@
  <!-------------------------------------------------------------------------------------------->             
         <h4>Help</h4>
                                
-            <p>Help for the main window is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            <p>Help is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            This icon also appears in many opened windows.
             </p>
-                               
-            <p>Instructions for windows that are opened outside the main windown are found at the bottom of each window, and can be read by clicking on the banner :
-            <img style='vertical-align:middle;' src="images/instructions-button.png"  height="24">
-            </p>  
+
         <hr>          
 
  <!-------------------------------------------------------------------------------------------->             
@@ -168,7 +166,15 @@
         <br>
         <br>
         <hr>           
-            
+    <!-------------------------------------------------------------------------------------------->  
+        <h4>Advanced usage</h4>       
+        
+        <img style='vertical-align:middle;' src="images/Cheat-sheet-advanced.png" width="80%">
+    
+        <br>
+        <br>
+        <hr>           
+                      
  <!-------------------------------------------------------------------------------------------->                                  
         <h3>Learn more</h3>   
         <hr>  
@@ -181,19 +187,21 @@
                 <dd>&nbsp;</dd>
                 <dt><i>These buttons are always visible :</i></dt>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
-                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project</dd>
+                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project.<a href="#NOTES">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
+                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
-                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. View it as a temporary Store, which leaves no trace in the revision history</dd>
-                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
-                    <dd>&nbsp;</dd>
-                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
+                    
+                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
                     
                 <dt><i>These buttons are visible only when they can be used :</i></dt>
@@ -204,6 +212,16 @@
                 <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
                 <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
                     <dd>&nbsp;</dd>
+                <dd> <img src="images/pinned_disabled_black.png"  height="17" width="17"> 
+                <img src="images/pinned_enabled_black.png"  height="17" width="17">Mark a historical commit to compare other commit with </dd>
+                    <dd>&nbsp;</dd>
+                 
+                    
+                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history</dd>
+                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
+                    <dd>&nbsp;</dd>   
+                    
+                    
                 <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
                     <dd>&nbsp;</dd>
                 </dd>
@@ -402,7 +420,7 @@
         <hr>      
 
  <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Store version with short description </h4>
+         <h4 id="STORE">Store version with short description </h4>
              <p>
                 When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
                 you may store a named revision of the project. The nice thing about the revision control system is, 
@@ -429,7 +447,7 @@
          <hr>    
             
  <!-------------------------------------------------------------------------------------------->                                  
-           <h4>Project Notes </h4>                    
+           <h4 id="NOTES">Project Notes </h4>                    
             <p> You may write personal notes for each repository.  The format is "markdown" rich text, 
             which you can type in a visual mode (what you see is what you get), or in a traditional markdown editor.  
             You change mode at the bottom-right of the editor.
@@ -525,8 +543,40 @@
             </p> 
                         
         <br>
-        <hr>               
-     
+        <hr> 
+                      
+ <!-------------------------------------------------------------------------------------------->        
+      <iframe id="SEARCH"  src="about_search.html" frameborder="0" style="width:100%;height:100%;" 
+          onload='content=document.getElementById("SEARCH");
+          content.style.height="";
+          content.style.height=content.contentWindow.document.documentElement.scrollHeight'> </iframe>
+          
+          <hr>
+ <!-------------------------------------------------------------------------------------------->             
+
+         <h4 id="SEARCH2">History - comparing with fixed commit </h4>            
+         
+         
+        <p>When in history mode, either by clicking down arrow, or search, the difference in the status bar is shown relative previous commit.
+        </p>
+        
+        <p>Enabling the checkbox 
+            <img src="images/pinned_disabled_black.png"  height="17" width="17"> <img src="images/pinned_enabled_black.png"  height="17" width="17">
+            sets the current commit as the reference, and when moving in history the differences are relative this commit.
+        </p>        
+              
+        <p>The difference is always shown as a comparison between the newest to the oldest commit, 
+        regardless if the current commit is newer or older than the fixed commit.  This eliminates the 
+        problem that the same file can be marked as new or deleted in a comparison between two commits, depending on which of the two commits was fixed.
+        </p>       
+            
+      
+        
+        <br>
+        <br>
+        
+        <hr> 
+
  <!-------------------------------------------------------------------------------------------->             
          <h2 id="INSTALLATION">Installation </h2>
         <hr>             

@@ -3,6 +3,9 @@
     <title>Pragma-git</title>
     
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="slider_switch.css" />
+    
+    
     <script src="app.js"></script>
     
 
@@ -26,7 +29,8 @@
         <!-- Icon About  --> 
         <div class="about-icon"> 
             <img id="about-icon"    height="17" width="17"  
-                onclick="_callback('clicked-about');" 
+                onclick="updateImageUrl('about-icon', 'images/questionmark.png');
+                        _callback('clicked-about');" 
                 onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
                 onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
                 src="images/questionmark.png">
@@ -38,26 +42,29 @@
             
             <!-- Text Repo  --> 
             &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
-                onclick="_callback('clicked-repo', 'menu')" 
+                onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
+                        _callback('clicked-repo', 'menu')" 
                 onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
                 >&#x25BE;</div>
                 
             <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                onclick="_callback('clicked-repo', 'cycle')" 
+                onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
                 onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
             </div>
             
             <!-- Text Branch  --> 
             &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
-                onclick="_callback('clicked-branch', 'menu')" 
+                onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
+                         _callback('clicked-branch', 'menu')" 
                 onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
                 >&#x25BE;</div>
                 
                 <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                onclick="_callback('clicked-branch', 'cycle')" 
+                onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
+                         _callback('clicked-branch', 'cycle')" 
                 onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                 onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
             </div>)
@@ -66,7 +73,8 @@
             <!-- Icon Notes  -->                             
             <div class="top-titlebar-notes-icon">
                 <img id="top-titlebar-notes-icon" height="17" width="17" 
-                    onclick="_callback('clicked-notes')"
+                    onclick="updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');
+                             _callback('clicked-notes')"
                     onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
                     onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
                     src="images/notes.png">
@@ -86,7 +94,8 @@
         <!-- Icon Branch  -->                             
         <div class="top-titlebar-branch-icon">
             <img id="top-titlebar-branch-icon" height="17" width="17" 
-                onclick="document.getElementById('branchNameInputDialog').showModal();" 
+                onclick="updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');
+                         document.getElementById('branchNameInputDialog').showModal();" 
                 onmouseover="updateImageUrl('top-titlebar-branch-icon', 'images/branch_hover.png');" 
                 onmouseout= "updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');" 
                 src="images/branch.png">
@@ -96,7 +105,8 @@
         <!-- Icon Merge  -->                             
         <div class="top-titlebar-merge-icon">
             <img id="top-titlebar-merge-icon" height="17" width="17" 
-                onclick="_callback('clicked-merge-button')" 
+                onclick="updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');
+                         _callback('clicked-merge-button')" 
                 onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
                 onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
                 src="images/merge.png">
@@ -116,7 +126,8 @@
         <!-- Icon Push  -->         
         <div class="top-titlebar-push-icon">
             <img id="top-titlebar-push-icon" height="17" width="17" 
-                onclick="_callback('clicked-push-button')" 
+                onclick="updateImageUrl('top-titlebar-push-icon', 'images/push.png');
+                         _callback('clicked-push-button')" 
                 onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
                 onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
                 src="images/push.png">
@@ -126,7 +137,8 @@
         <!-- Icon Tag  -->                             
         <div class="top-titlebar-tag-icon">
             <img id="top-titlebar-tag-icon" height="17" width="auto" 
-                onclick="_callback('clicked-tag-button');" 
+                onclick="updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');
+                         _callback('clicked-tag-button');" 
                 onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
                 onmouseout= "updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');" 
                 src="images/tag.png">
@@ -168,25 +180,50 @@
                 <tr>
                     <!-- History arrows  --> 
                     <td>
-                        <table id="arrow_table">               
+                        <table id="arrow_table">  
+                        <tr height="auto">
+                            <td> 
+
+                            </td> 
+                        </tr>      
                         <tr>
-                            <td>
-                                <img id="up-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-up-arrow')" 
-                                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
-                                src="images/up-arrow.png">
+                            <td> 
                             </td> 
                         </tr>            
-                        <tr>
+                        <tr height="17px">
+                            <td>
+                                <img id="up-arrow"  height="17" width="17" 
+                                    onclick="_callback( 'clicked-up-arrow')" 
+                                    onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                                    src="images/up-arrow.png">
+                            </td> 
+                        </tr>            
+                        <tr height="17px">
                             <td>
                                 <img id="down-arrow"  height="17" width="17" 
-                                onclick="_callback( 'clicked-down-arrow')"  
-                                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
-                                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
-                                src="images/down-arrow.png">
+                                    onclick="_callback( 'clicked-down-arrow')"  
+                                    onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                                    onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                                    src="images/down-arrow.png">
                             </td> 
-                        </tr>
+                        </tr> 
+                        <tr>
+                            <td> 
+                            </td> 
+                        </tr>       
+                         <!-- Icon Find  -->   
+                        <tr height="auto"  style="height: fit-content">
+                            <td>
+                                <img id="bottom-titlebar-find-icon" height="17" width="17" 
+                                    onclick="updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');
+                                             _callback('clicked-find');updateContentStyle();"
+                                    onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
+                                    onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
+                                    src="images/find.png">
+                            </td> 
+                        </tr>   
+
                         </table>
                     </td>
                     
@@ -202,16 +239,78 @@
                 
                 <!-- Collapsable html output  --> 
                 <tr id="output_row" style="visibility:collapse">
-                    <td></td>
                     <td>
+                
+                    </td>
+                    <td class="message_column">
                         <div id="output_text">
-                            dasdfasfdas
+                                                        
+                            <div class="group">
+                                <label for="findTextInput">  <span id="mess_text" style="color: #000000">message</span> &nbsp;
+                                    <label class="switch">
+                                        <input id="message_code_switch" type="checkbox" class="slider round" onclick="colorSwitchTexts();find_button.click()">
+                                        <span class="slider round"></span> 
+                                    </label>
+                                    &nbsp; <span id="code_text" style="color: #aaaaaa">code-change</span> 
+                                </label>
+                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
+                            </div>
+                            
+                            &nbsp;&nbsp;
+                            
+                             
+                            <div class="group">
+                                <label for="findFileInput"> file</label>
+                                <input id="findFileInput" type="text" placeholder="file name"  size="25" onkeydown="clickFind()"/>
+                            </div>
+                            
+                            
+                            &nbsp;&nbsp;
+                                                       
+                            <div class="group">
+                                <label for="findDateInputAfter"> since (oldest)</label>
+                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12" onkeydown="clickFind()"/> 
+                            </div>
+                            
+                            -
+                            
+                            <div class="group">
+                                <label for="findDateInputBefore"> until (newest)</label>
+                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12" onkeydown="clickFind()"/>
+                            </div>
+                            
+                            &nbsp;
+
+                            <img id="about-icon-find"   style='vertical-align:middle;'  height="17" width="17"  
+                                onclick="_callback('help-on-find')" 
+                                onmouseover="updateImageUrl('about-icon-find', 'images/questionmark_black.png');" 
+                                onmouseout= "updateImageUrl('about-icon-find', 'images/questionmark_hover.png');" 
+                                src="images/questionmark_hover.png">
                         </div>
                         
                     </td>
-                    <td></td>
+                    <td>
+                            <button id="find_button" onclick="_callback('clicked-find-button')" >Find</button>
+                            
+                    </td>
                 </tr>
             </table>
+            <script>
+                function clickFind() {
+                    if (event.keyCode == 13) {
+                        find_button.click();
+                    } 
+                }
+                function colorSwitchTexts(){
+                    if ( document.getElementById("message_code_switch").checked ){
+                        document.getElementById('code_text').setAttribute('style','color: #000000');
+                        document.getElementById('mess_text').setAttribute('style','color: #aaaaaa');
+                    }else{
+                        document.getElementById('code_text').setAttribute('style','color: #aaaaaa');
+                        document.getElementById('mess_text').setAttribute('style','color: #000000');
+                    }
+                }
+            </script>    
 
 
         </div>
@@ -226,24 +325,88 @@
         <!-- Icon Folder  -->  
         <div class="bottom-titlebar-folder-icon">
             <img id="bottom-titlebar-folder-icon"  height="17" width="17"
-                onclick="_callback('clicked-folder')" 
+                onclick="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');
+                         _callback('clicked-folder')" 
                 onmouseover="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder_hover.png');" 
                 onmouseout="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');" 
                 src="images/folder.png">
             </div>
             
  
-         <!-- Text Status  -->     
-        <div id="bottom-titlebar-text" class="bottom-titlebar-text" 
-                onclick="_callback('clicked-status-text')">
+         <!-- Text Status and pinned icon  -->     
+
+       <div id="bottom-titlebar-div" class="bottom-titlebar-text">
+    
+    
+            <!-- Text status  -->  
+            <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" 
+                onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                         _callback('clicked-status-text')"
+                         
+                onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
+                onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >
             </div>
+            &nbsp;
             
+            
+             <div class="bottom-titlebar-more-icon">          
+                <img id="more" style="vertical-align:middle;" height="17" width="17" 
+                                    onclick="_callback( 'clicked-graph')" 
+                                    onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
+                                    onmouseout="updateImageUrl('more', 'images/more.png');" 
+                                    src="images/more.png">
+            </div> 
+            &nbsp;
+                         
+            <!-- Icon Pinned  -->                             
+            <div class="top-titlebar-pinned-icon">
+                <img id="top-titlebar-pinned-icon" height="17" width="17" 
+                    onclick=" wasPinned = (localState.pinnedCommit !== ''); 
+                              isPinned = !wasPinned;
+                              _callback('clicked-pinned-icon',isPinned)"                     
+                    
+                             
+                    onmouseover="if (localState.pinnedCommit === ''){ 
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+                                 } else {
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+                                 }" 
+                                 
+                    onmouseout="if (localState.pinnedCommit === ''){ 
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+                                 } else {
+                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled.png');
+                                 }" 
+                                 
+                    src="images/pinned_disabled.png">
+            </div> 
+            &nbsp;
+            
+                
+            <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
+            <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
+                onclick="if (localState.pinnedCommit !== ''){
+                            document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                            _callback('clicked-pinned-hash');
+                        }"
+                        
+                onmouseover="if (localState.pinnedCommit !== ''){ 
+                                .getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa'); 
+                            }" 
+                            
+                onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+            </div>
+        </div>     
+
+
+
             
                                                
         <!-- Icon Stash  -->                             
         <div class="bottom-titlebar-stash-icon">
             <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
-                onclick="_callback('clicked-stash-button')" 
+                onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
+                         _callback('clicked-stash-button')" 
                 onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
                 onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
                 src="images/stash.png">
@@ -253,7 +416,8 @@
         <!-- Icon Stash pop  -->                             
         <div class="bottom-titlebar-stash_pop-icon">
             <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
-                onclick="_callback('clicked-stash_pop-button')" 
+                onclick="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');
+                         _callback('clicked-stash_pop-button')" 
                 onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
                 onmouseout= "updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');" 
                 src="images/stash_pop.png">
@@ -266,7 +430,8 @@
         <!-- Icon Settings  -->  
         <div class="bottom-titlebar-settings-field">
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
-                onclick="_callback('clicked-settings')"
+                onclick="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');
+                         _callback('clicked-settings')"
                 onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 
                 onmouseout="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');" 
                 src="images/settings.png">
@@ -324,7 +489,7 @@
 
     <!-- Branch creation -->   
   
-    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black; max-height: 90%">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="branchNameTextarea" 
@@ -333,17 +498,32 @@
                 placeholder="name of new branch"
                 onkeyup= "_callback('newBranchNameKeyUp', this);"></textarea>
             <br>
-
             <br>
-        
+
+  
+         <div>      
         <button  id="newBranchNameEntered"
-            onclick="document.getElementById('branchNameInputDialog').close();_callback('addBranchButtonPressed', this.value);document.getElementById('branchNameTextarea').value='';">
+            onclick="document.getElementById('branchNameInputDialog').close();
+            _callback('addBranchButtonPressed', this.value);
+            document.getElementById('branchNameTextarea').value='';
+            document.getElementById('gitflow').value='none';">
             OK
         </button>           
         <button id="cancelBranchNameInputDialog"
-            onclick="document.getElementById('branchNameInputDialog').close();document.getElementById('branchNameTextarea').value='';">
+            onclick="document.getElementById('branchNameInputDialog').close();
+            document.getElementById('branchNameTextarea').value='';
+            document.getElementById('gitflow').value='none';">
             Cancel
-        </button>  
+        </button> 
+         
+          <select id="gitflow" name="gitflow"  style="float: right;">
+            <option value="none">none</option>
+            <option value="feature">feature/</option>
+            <option value="release">release/</option>
+            <option value="hotfix">hotfix/</option>
+          </select>
+          <label for="gitflow" style="float: right;">Prefix:</label>
+          </div>
     </dialog>      
 
 

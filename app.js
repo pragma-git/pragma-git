@@ -155,6 +155,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Handles to windows
         var settings_win;
+        var notes_win;
+        var changed_win;
+        var resolve_win;
+        var graph_win;
  
       
     // Files & folders
@@ -179,7 +183,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // State variables
         var localState = [];
         localState.historyNumber = -1;
-        localState.branchNumber = 0;  
+        localState.historyLength = 0;  // Number available in history or search 
+        localState.branchNumber = 0;   // Used only when changing to next branch -- otherwise branch as in current repository TODO : Update value when changing Repo
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
@@ -189,6 +194,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.aboutWindow = false; // True when conflicts window is open
         localState.notesWindow = {};
         localState.notesWindow.open = false; // True when notes window is open
+        localState.graphWindow = false; // True when graph window is open
+        localState.helpWindow = false; // True when help window is open
+        
+        localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
     // Display text
         var textOutput = {
@@ -233,28 +242,35 @@ async function _callback( name, event){
     console.log('_callback = ' + name);
     console.log(event);
     switch(name) {
-      case 'clicked-store-button': {
-        storeButtonClicked();
-        break;
-      }
-      case 'clicked-minimize-button': {
-        win.minimize();
-        break;
-      }
-      case 'message_key_up': {
-        messageKeyUpEvent();
-        break;
-      }
-      case 'clicked-up-arrow': {
-        upArrowClicked();
-        break;
-      }
-      case 'clicked-down-arrow': {
-        downArrowClicked();
+
+      // Top title-bar
+      case 'clicked-about': {
+        showAbout();
         break;
       }
       case 'clicked-repo': {
         repoClicked(event);
+        clearFindFields();
+        
+        // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
+        localState.pinnedCommit = ''; 
+        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+        
+        break;
+      }
+      case 'clickedRepoContextualMenu': {
+        console.log('Selected repo = ' + event.selectedRepo);
+        console.log('Selected repo = ' + event.selectedRepoNumber);
+        state.repoNumber = event.selectedRepoNumber;
+        gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
+        
+        // Update remote info immediately
+        gitFetch();  
+        
+        clearFindFields();
+        localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
+        _setMode('UNKNOWN');
+        
         break;
       }
       case 'clicked-branch': {
@@ -275,6 +291,7 @@ async function _callback( name, event){
             console.log(err);
         }  
         
+        localState.branchNumber = event.branchNumber;  
         _setMode('UNKNOWN');
 
         // Reset some variables
@@ -282,20 +299,9 @@ async function _callback( name, event){
         
         break;
       }
-      case 'clickedRepoContextualMenu': {
-        console.log('Selected repo = ' + event.selectedRepo);
-        console.log('Selected repo = ' + event.selectedRepoNumber);
-        state.repoNumber = event.selectedRepoNumber;
-        
-        // Update remote info immediately
-        gitFetch();  
-        
-        _setMode('UNKNOWN');
-        
-        break;
-      }
       case 'clicked-notes':{
         if (localState.notesWindow.open == true) {
+            try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
             return
         }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
@@ -308,11 +314,129 @@ async function _callback( name, event){
                 width: 600,
                 height: 600,
                 title: "Notes"
-            })  
+            },
+            win=>win.on('loaded', () => notes_win = nw.Window.get(win.window))
+            )  
         
         localState.notesWindow.open = true;
         break;
       }
+      case 'clicked-push-button': {
+        gitPush();
+        break;
+      }
+      case 'clicked-pull-button': {
+        gitPull();
+        break;
+      }
+      case 'clicked-merge-button': {
+        mergeClicked();
+        break; 
+      }     
+      case 'clickedMergeContextualMenu' : {
+        let selectedBranch = event;
+        console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
+        console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
+        gitMerge( event.currentBranch, event.selectedBranch); 
+        break;
+      }
+      case 'tagSelected': { // Called from tagList.js
+        switch (event.buttonText ){
+            case 'Checkout' :
+                checkoutTag(event.selected);
+                break;
+            case 'Delete' :
+                deleteTag(event.selected);
+                break;
+        }
+        break;
+      }
+      case 'clicked-close-button': {
+        closeWindow();
+        break;
+      }
+      case 'clicked-minimize-button': {
+        win.minimize();
+        break;
+      }
+
+      // Middle field
+      case 'message_key_up': {
+        messageKeyUpEvent();
+        break;
+      }
+      case 'file-dropped': {
+        dropFile( event); 
+        break;
+      }
+      case 'clicked-store-button': {
+        storeButtonClicked();
+        break;
+      }
+        
+      // History
+      case 'clicked-up-arrow': {
+        upArrowClicked();
+        break;
+      }
+      case 'clicked-down-arrow': {
+        downArrowClicked();
+        break;
+      }
+      case 'clicked-find': {
+        let delta = 40; 
+        let fix = -1; // One pixel move settles visibility somehow
+        if (document.getElementById('output_row').style.visibility == 'collapse' ){
+            // Show find
+            document.getElementById('output_row').style.visibility = 'visible';
+            window.resizeTo(win.width, win.height + fix);
+            window.resizeTo(win.width, win.height + delta);
+        }else{
+            // Hide find
+            document.getElementById('output_row').style.visibility = 'collapse';
+            window.resizeTo(win.width, win.height - delta);
+            window.resizeTo(win.width, win.height - fix);
+            
+            resetHistoryPointer();  // Go to first in history
+            upArrowClicked();// Get out of history
+            
+        }
+        let element = document.getElementById('inner-content');
+
+        break;
+      }
+      case 'clicked-find-button' :{
+        //resetHistoryPointer();   
+        
+        var history = await gitHistory();
+        localState.historyNumber = 0;
+        localState.historyLength = history.length;
+        localState.historyHash = history[localState.historyNumber].hash;   
+        localState.historyString = historyMessage(history, localState.historyNumber);
+    
+         _setMode('HISTORY');
+         
+        textOutput.value = localState.historyString;
+        writeTextOutput( textOutput);
+        
+        status_data = await gitShowHistorical();
+        setStatusBar( fileStatusString( status_data));
+        
+        selectInGraph(localState.historyHash);           
+        break;
+      }
+      case 'help-on-find' :{
+        gui.Window.open(
+            'about_search.html#/new_page', 
+            {   id: 'aboutSearchWindowId3',
+                position: 'center',
+                width: 600,
+                height: 600
+            });         
+        break;
+      }
+
+      // Dialogs
       case 'newBranchNameKeyUp': {
         let string = document.getElementById("branchNameTextarea").value ;
         document.getElementById("branchNameTextarea").value = util.branchCharFilter( string) ;
@@ -331,6 +455,16 @@ async function _callback( name, event){
         console.log(event);
 
         let newBranchName = document.getElementById('branchNameTextarea').value;
+        let gitflowPrefix = document.getElementById('gitflow').value + '/' ;
+        
+        if ( gitflowPrefix === 'none/'){
+            gitflowPrefix = '';
+        }
+        
+        if ( gitflowPrefix.length > 1){
+            newBranchName = gitflowPrefix + newBranchName;
+        }
+        
 
         
         // Create and checkout new branch
@@ -407,32 +541,6 @@ async function _callback( name, event){
         break;
 
       }
-      case 'clicked-folder': {
-        folderClicked();
-        break;
-      }
-      case 'clicked-stash-button': {
-          
-    // Stash -- ask to overwrite if stash exists
-        try{
-            let stash_status;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
-                .stash(['list'], onStash);
-            function onStash(err, result ){  stash_status = result }
-            
-            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
-                // Ask permission to overwrite stash
-                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                document.getElementById('stashOverwriteDialog').showModal();
-            }else{
-                // No stash exists, OK to stash
-                gitStash();
-            }
-        }catch(err){  
-            console.log(err);
-        }
-        break;
-      }     
       case 'stashOverwriteDialog': {
          {
         console.log('stashOverwriteDialog -- returned ' + event);
@@ -455,62 +563,22 @@ async function _callback( name, event){
         gitStash();
         break;   
       }     
-      case 'clicked-stash_pop-button': {
-        gitStashPop();
-        break; 
-      }      
-      case 'clicked-push-button': {
-        gitPush();
-        break;
-      }
-      case 'clicked-pull-button': {
-        gitPull();
-        break;
-      }
-      case 'clicked-merge-button': {
-        mergeClicked();
-        break; 
-      }     
-      case 'clickedMergeContextualMenu' : {
-        let selectedBranch = event;
-        console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
-        console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
-        gitMerge( event.currentBranch, event.selectedBranch); 
-        break;
-      }
-      case 'clicked-settings': {
-        showSettings();
-        break;
-      }
-      case 'clicked-about': {
-        showAbout();
-        break;
-      }
-      case 'clicked-close-button': {
-        closeWindow();
-        break;
-      }
-      case 'clicked-status-text' : {
-        if (localState.fileListWindow == true) {
-                return
-        }
+      case 'detachedHeadDialog': {
+        console.log('detachedHeadDialog -- returned ' + event);
+        
+        switch (event) {
+            case  'Delete' : {
+                // Move out of "detached Head" (losing track of it)
+                branchClicked(false);
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
             
-        let status_data = await gitStatus();
-        
-        if (status_data.conflicted.length > 0){
-            resolveConflicts(state.repos[state.repoNumber].localFolder);
-        }else{
-            listChanged();
         }
-        
-        localState.fileListWindow = true;
-        
-        break;
-      }
-      case 'file-dropped': {
-        dropFile( event); 
-        break;
-      }
+        break; 
+      } // end case 'detachedHeadDialog'  
       case 'initializeRepoOK' : {
           
         setStatusBar( 'Initializing git');
@@ -557,32 +625,240 @@ async function _callback( name, event){
           
         break;  
       }
-      case 'detachedHeadDialog': {
-        console.log('detachedHeadDialog -- returned ' + event);
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move out of "detached Head" (losing track of it)
-                branchClicked(false);
-                break;
-            }    
-            case  'Cancel' : {
-                break;
-            }          
-            
-        }
-        break; 
-      } // end case 'detachedHeadDialog'  
-      case 'tagSelected': { // Called from tagList.js
-        switch (event.buttonText ){
-            case 'Checkout' :
-                checkoutTag(event.selected);
-                break;
-            case 'Delete' :
-                deleteTag(event.selected);
-                break;
-        }
+
+      // Bottom title-bar
+      case 'clicked-folder': {
+        folderClicked();
+        break;
       }
+      case 'clicked-status-text' : {
+        if (localState.fileListWindow == true) {          
+            try{ 
+                resolve_win.focus();
+                return
+            }catch(err){ 
+            }    
+        }
+            
+        let status_data = await gitStatus();
+        
+        if (status_data.conflicted.length > 0){
+            resolveConflicts(state.repos[state.repoNumber].localFolder);
+        }else{
+            listChanged();
+        }
+        
+        localState.fileListWindow = true;
+        
+        break;
+      }
+      case 'clicked-graph':{
+
+        // If window open, redraw and bail out
+        if ( localState.graphWindow == true ){
+            graph_win.window.injectIntoJs(graph_win.window.document);
+            graph_win.focus();
+            return
+        }
+
+        // Open new window (will open above old)
+        gui.Window.open('graph.html',
+            {
+                id: 'graphWindowId',
+                position: 'center',
+                width: 600,
+                height: 600,
+                title: "Graph"
+            }
+            ,
+            win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
+            )  
+            
+        localState.graphWindow = true;
+        
+        break;
+      }  
+      case 'clicked-pinned-icon': {
+        let isPinned = event;
+
+        if (localState.graphWindow){
+            // Draw in graph window, and in main window 
+            let div = graph_win.window.document.getElementById( localState.historyHash );
+            div.firstElementChild.firstElementChild.click(); // pin-icon in graph window (which calls drawPinImage)
+        }else{
+            // draw only in main window (since graph window not open)
+            drawPinImage(isPinned); 
+        }
+        break;
+      }     
+      case 'clicked-pinned-hash': {
+        
+        // Strategy : 
+        // If needed, change branch and apply filter => sure that pinned commit is found in history
+
+        // If not pinned branch, change to pinned branch
+
+            if (localState.pinnedBranch !== document.getElementById('top-titlebar-branch-text').innerText){
+                let event = {};
+                event.selectedBranch = localState.pinnedBranch;
+                event.branchNumber = localState.pinnedBranchNumber;
+                _callback('clickedBranchContextualMenu', event);
+            }   
+
+        
+        // If pinned filter settings is different from when pinned, return to search terms when pinned
+        
+            if (    ( document.getElementById('findTextInput').value + document.getElementById('findFileInput').value
+                     + document.getElementById('findDateInputAfter').value + document.getElementById('findDateInputBefore').value ) 
+                    !==
+                    ( localState.pinned_findTextInput + localState.pinned_findFileInput 
+                     + localState.pinned_findDateInputAfter + localState.pinned_findDateInputBefore )    
+                )
+                {
+                    document.getElementById('findTextInput').value = localState.pinned_findTextInput;
+                    document.getElementById('findFileInput').value = localState.pinned_findFileInput;
+                    document.getElementById('findDateInputAfter').value = localState.pinned_findDateInputAfter;
+                    document.getElementById('findDateInputBefore').value =  localState.pinned_findDateInputBefore;    
+                    document.getElementById("message_code_switch").checked = localState.pinned_findCode;            
+                }
+
+        // Jump to correct place in history (checking that pinned is indeed available)
+        
+            let history = await gitHistory();
+
+            if ( !isNaN( util.findObjectIndex(history,'hash', localState.pinnedCommit) ) ){
+                // Set localState
+                localState.historyNumber = util.findObjectIndex(history,'hash', localState.pinnedCommit); 
+                localState.historyHash = localState.pinnedCommit;
+                localState.historyString = historyMessage(history, localState.historyNumber);
+                
+                selectInGraph(localState.historyHash);
+
+
+            } else {
+                console.log('ERROR -- could not find pinned commit');
+                console.log('ERROR -- lookup found historical commit = ' + history[ localState.pinnedHistoryNumber].hash );
+                console.log('ERROR -- not the same as  pinned commit = ' + localState.pinnedCommit );
+
+            }           
+            
+                 
+        // Display
+            localState.mode = 'HISTORY';
+            status_data = await gitShowHistorical();
+            setStatusBar( fileStatusString( status_data)); 
+            await _update();
+
+        // Call again if not in history of branch
+        
+            if ( isNaN( util.findObjectIndex(history,'hash', localState.pinnedCommit) ) ){
+                document.getElementById('down-arrow').click();
+                localState.historyNumber = localState.pinnedHistoryNumber;
+                document.getElementById('bottom-titlebar-pinned-text').click()
+                localState.mode = 'HISTORY';
+                status_data = await gitShowHistorical();
+                await setStatusBar( fileStatusString( status_data)); 
+            }
+             
+        
+        break;
+      } 
+      case 'clicked-stash-button': {
+          
+    // Stash -- ask to overwrite if stash exists
+        try{
+            let stash_status;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .stash(['list'], onStash);
+            function onStash(err, result ){  stash_status = result }
+            
+            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
+                // Ask permission to overwrite stash
+                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
+                document.getElementById('stashOverwriteDialog').showModal();
+            }else{
+                // No stash exists, OK to stash
+                gitStash();
+            }
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }           
+      case 'clicked-stash_pop-button': {
+        gitStashPop();
+        break; 
+      }      
+      case 'clicked-settings': {
+        showSettings();
+        break;
+      }
+
+      // Help
+      case 'help': {
+           
+        console.log('Help pressed');
+        
+        let fileName = 'HELP' + pathsep + event.name + '.html';
+        let text = fs.readFileSync(fileName);
+                        
+        // Update text            
+        if ( localState.helpWindow == true ){
+            updateText( help_win.document, event.name, text);
+            return
+        }
+        
+        // Local function - update text in html
+        function updateText( document, name, text){
+            help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
+            help_win.document.getElementById("title").innerHTML= name; // Set window title
+            help_win.document.getElementById("name").innerText= name; // Set document first header  
+            help_win.focus();         
+        };
+                
+
+        // Open new window -- and create closed-callback
+        if ( localState.helpWindow == false ){
+            gui.Window.open(
+                'HELP' + pathsep + 'TEMPLATE_help.html',
+                {   id: 'helpId',
+                    position: 'center',
+                    width: 600,
+                    height: 700   
+                },
+                function(cWindows){ 
+                    cWindows.on('closed', 
+                        function(){
+                            localState.helpWindow = false;
+                            cWindows = null;  // dereference
+                        }
+                    );
+                    
+                    cWindows.on('loaded', 
+                        function(){
+                             // For systems that have multiple workspaces (virtual screens)
+                            if ( cWindows.canSetVisibleOnAllWorkspaces() ){
+                                cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+                                cWindows.setAlwaysOnTop(state.alwaysOnTop);
+                            }
+                            help_win = cWindows.window;
+                            updateText( help_win.document, event.name, text);
+                        }
+                    )
+                }
+            );
+        }
+
+        // Show that window is open
+        localState.helpWindow = true;
+
+
+        break;
+      }
+     
+      
+      // TEST
+     
       default: {
         // code block
       }  
@@ -596,7 +872,7 @@ async function _callback( name, event){
     async function repoClicked( type){
         
         //
-        // Show branch menu
+        // Show menu
         //
         if (type == 'menu'){
             var menu = new gui.Menu();
@@ -638,8 +914,8 @@ async function _callback( name, event){
             await menu.popup( Math.trunc(pos.left) -10,24);
             
             
-            return; // BAIL OUT
-
+            return; // BAIL OUT --  
+            // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
         }
         
 
@@ -652,6 +928,7 @@ async function _callback( name, event){
             if (state.repoNumber >= numberOfRepos){
                 state.repoNumber = 0;
             }
+            gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
         }
         
         // Update remote info immediately
@@ -662,6 +939,14 @@ async function _callback( name, event){
     async function branchClicked( detectDetachedBranch, type){
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
         
+        // If HISTORY, reset history counter without changing branch
+        if ( getMode() === 'HISTORY'){
+            resetHistoryPointer(); 
+            upArrowClicked(); // Get out of history
+            return;
+        }
+        
+        
         // Determine status of local repository
         var status_data;  
         try{
@@ -670,9 +955,9 @@ async function _callback( name, event){
             console.log('Error in unComittedFiles,  calling  _mainLoop()');
             console.log(err);
         }
-        
+    
         //
-        // If Detached Head (dialog if needed, then bail out)
+        // If Detached Head (dialog and bail out if changes have been made to detached Head)
         //
         if (detectDetachedBranch && status_data.current == 'HEAD' ){ 
             
@@ -711,16 +996,20 @@ async function _callback( name, event){
 
         }
         
-        
+        // Reached here if  :
+        // - branch named HEAD without changes
+        // - other branch with given name  (not called HEAD)
      
-        // Determine if no files to commit
-        var uncommitedFiles = status_data.changedFiles;
 
+        //
+        // Checkout branch, or tell user to commit 
+        //
     
-        // Checkout branch  /  Warn about uncommited (if that setting is enabled)
+        var uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+
         if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
-            // Let user know that they need to commit before changing branch
-            //await writeTimedMessage( 'Before changing branch :' + os.EOL + 'Add description and Store ...', true, WAIT_TIME)
+            // Tell user to commit first (if that setting is enabled)
+            
             let tempOutput = {};
             tempOutput.placeholder = 'Before changing branch :' + os.EOL + 'Add description and Store ...';
             tempOutput.value = '';
@@ -728,6 +1017,9 @@ async function _callback( name, event){
             
             
         }else{
+            // Checkout will be performed
+            // - next branch 
+            // - same as currentBranch if detached HEAD
                 
             // Determine local branches
             var branchList;
@@ -737,17 +1029,19 @@ async function _callback( name, event){
                 console.log('Error determining local branches, in branchClicked()');
                 console.log(err);
             }
+
             
             //
-            // TODO : as is, this routine can be called with intention to 1) chose branch from a menu, 2) cycle branches. How to know selected ?
-            //
-            
-            //
-            // Show branch menu
+            // Alt 1) Show branch menu
             //
             if (type == 'menu'){
                 var menu = new gui.Menu();
                 let menuItems = branchList;
+                
+                // If detached HEAD, remove one item from menu
+                if (status_data.current === 'HEAD') { 
+                    menuItems.shift();  // Remove first item
+                }
                 
                 let currentBranch = status_data.current;
         
@@ -756,48 +1050,48 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
-                for (var i = 0; i < menuItems.length; ++i) {
-                    if (currentBranch != menuItems[i]){
-                        let myEvent = [];
-                        myEvent.selectedBranch = menuItems[i];
-                        myEvent.currentBranch = currentBranch;
-                        menu.append(
-                            new gui.MenuItem(
-                                { 
-                                    label: menuItems[i], 
-                                    click: () => { _callback('clickedBranchContextualMenu',myEvent);} 
-                                } 
-                            )
-                        );
-                        console.log(menuItems[i]);
-                    }else{
-                        console.log('Skipped current branch = ' + menuItems[i]);
-                    }
-        
-                }
+                makeBranchMenu(menu, currentBranch, menuItems, 'clickedBranchContextualMenu')
 
         
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
                 await menu.popup( Math.trunc(pos.left) - 10,24);
                     
-                return // BAIL OUT
+                return // BAIL OUT -- branch will be set from menu callback
             }
 
             
             //
-            // Cycle through local branches
+            // Alt 2) Cycle through local branches
             //
-            if (type == 'cycle'){            
-                localState.branchNumber = localState.branchNumber + 1;
-                var numberOfBranches = branchList.length;
-                if (localState.branchNumber >= numberOfBranches){
-                    localState.branchNumber = 0;
+            if (type == 'cycle'){ 
+
+                // Get branch name
+                
+                let branchName; 
+                if (status_data.current === 'HEAD') { 
+                    
+                    // Make sure branch number within range
+                    if (localState.branchNumber >= branchList.length){
+                        localState.branchNumber = 0;
+                    }
+                    // Keep branch number. Get that branch from branchList         
+                    branchName = branchList[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                }else {
+                    // Normal branch
+                    
+                    // Cycle branch number
+                    localState.branchNumber = localState.branchNumber + 1;
+                    if (localState.branchNumber >= branchList.length){
+                        localState.branchNumber = 0;
+                    }
+                    // Get branchname after cycling
+                    branchName = branchList[localState.branchNumber];
                 }
-                var branchName = branchList[localState.branchNumber];
     
         
                 // Checkout local branch
+                
                 try{
                     await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
                     function onCheckout(err, result){console.log(result)} 
@@ -807,7 +1101,7 @@ async function _callback( name, event){
                     console.log(err);
                 } 
             } 
-        }
+        } // End checking out branch
     
         console.log(branchList);
      
@@ -860,6 +1154,12 @@ async function _callback( name, event){
     }
     function closeWindow(a){
         console.log('Close argument = ' + a);  
+
+        
+        // Fold search fields
+        if (document.getElementById('output_row').style.visibility == 'visible' ){
+            _callback('clicked-find');
+        }
         
         // Store window position
         state.position = {}; // New level
@@ -873,6 +1173,7 @@ async function _callback( name, event){
           
         // Hide the window to give user the feeling of closing immediately
         this.hide();
+
     
         // If the new window is still open then close it.
         if (win !== null) {
@@ -900,32 +1201,19 @@ async function _callback( name, event){
   
         let menuItems = branchList;
         
+        // Remove HEAD from list, if it is there
+        if (currentBranch === 'HEAD') { 
+            menuItems.shift(); // Remove first element (which is where HEAD is in list)
+        }
+        
         // Add context menu title-row
         menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
-        for (var i = 0; i < menuItems.length; ++i) {
-            if (currentBranch != menuItems[i]){
-                let myEvent = [];
-                myEvent.selectedBranch = menuItems[i];
-                myEvent.currentBranch = currentBranch;
-                menu.append(
-                    new gui.MenuItem(
-                        { 
-                            label: menuItems[i], 
-                            click: () => { _callback('clickedMergeContextualMenu',myEvent);} 
-                        } 
-                    )
-                );
-                console.log(menuItems[i]);
-            }else{
-                console.log('Skipped current branch = ' + menuItems[i]);
-            }
+        makeBranchMenu(menu, currentBranch, menuItems, 'clickedMergeContextualMenu')
 
-        }
- 
-        
+        // Add helping text
         menu.append(new gui.MenuItem({ type: 'separator' }));
         menu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
 
@@ -981,7 +1269,6 @@ async function _callback( name, event){
                 
 
     }
-
     async function checkoutTag(tagName){
         
         // I want to checkout with commit-hash -- and not tag name.
@@ -1053,6 +1340,80 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     } 
+    function makeBranchMenu(menu, currentBranch, menuItems, callbackName){ // helper for branchClicked and mergeClicked
+        // menu is a nw.Menu
+        // currentBranch is a string
+        // menuItems is an array of branch names
+        // callbackName is a string
+        
+        
+            let cachedFirstPart = ' ';
+            let item = new gui.MenuItem({ label: 'dummy' }); // will make new one inside loop
+            let submenu = new gui.Menu(); // dummy
+                
+            for (var i = 0; i < menuItems.length; ++i) {
+                 
+                 
+                // For all branches not being current branch : 
+                if (currentBranch != menuItems[i]){
+                    let myEvent = [];
+                    myEvent.selectedBranch = menuItems[i];
+                    myEvent.currentBranch = currentBranch;
+                    myEvent.branchNumber = i;
+
+                    
+                    //--------------------------
+                    // Make submenu if branch containing '/'
+                    if ( menuItems[i].includes("/") ) {
+                        // Submenu
+                                                                
+                        // Split on '/'
+                        let firstPart = myEvent.selectedBranch.split('/',1);
+                        let secondPart = myEvent.selectedBranch.substring(myEvent.selectedBranch.indexOf('/')+1);
+
+                        // Reuse submenu if same firstPart as last time
+                        if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                            item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                            menu.append( item); // Add submenu to main menu
+                            
+                            submenu = new gui.Menu();  // Create empty submenu
+                        }
+                        
+                        // Add submenu-row to submenu
+                        submenu.append(new gui.MenuItem(
+                                { 
+                                    label: secondPart, 
+                                    click: () => { _callback(callbackName,myEvent);} 
+                                } 
+                            )
+                        );
+                        item.submenu = submenu;
+ 
+                        // Remember firstPart -- so I know it has happened more than once
+                        cachedFirstPart = firstPart;
+                        
+                    } else {
+                        // No submenu
+                        menu.append(
+                            new gui.MenuItem(
+                                { 
+                                    label: menuItems[i], 
+                                    click: () => { _callback(callbackName,myEvent);} 
+                                } 
+                            )
+                        );
+                        console.log(menuItems[i]);
+                    } // -----------------
+                    
+                }else{
+                    // Skip current branch
+                    console.log('Skipped current branch = ' + menuItems[i]);
+                }
+    
+            }           
+   
+        };
+
     // main window
     async function storeButtonClicked() { 
         
@@ -1095,14 +1456,9 @@ async function _callback( name, event){
         localState.historyNumber = localState.historyNumber + 1;
         
         // Get log
-        var history;
-        try{              
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'],onHistory);
-            function onHistory(err, result){console.log(result);console.log(err); history = result.all;} 
-                
-        }catch(err){        
-            console.log(err);
-        }
+        var history = await gitHistory();
+        
+        localState.historyLength = history.length;
         
         // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
         var historyBranchesAtPoint = ""; // Do not comment out this row !
@@ -1137,20 +1493,22 @@ async function _callback( name, event){
             
             localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
+            //// Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')';
             
-            // Branches on this commit
-            localState.historyString += historyBranchesAtPoint;
+            //// Branches on this commit
+            //localState.historyString += historyBranchesAtPoint;
 
-            // Message
-            localState.historyString += os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;
+            //// Message
+            //localState.historyString += os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display
             //localState.mode = 'HISTORY';
@@ -1159,8 +1517,11 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));
+            
+            selectInGraph(localState.historyHash);
+            
 
         }catch(err){       
             // Lands here if no repositories defined  or other errors 
@@ -1173,13 +1534,9 @@ async function _callback( name, event){
         console.log('up arrow clicked');
         
         // Get log
-        var history;
-        try{
-            await simpleGit(state.repos[state.repoNumber].localFolder).log( ['--first-parent'], onHistory);
-            function onHistory(err, result){console.log(result); history = result.all;} 
-        }catch(err){        
-            console.log(err);
-        }   
+        var history = await gitHistory();
+        
+        localState.historyLength = history.length;
     
         // Cycle through history
         var numberOfHistorySteps = history.length;
@@ -1187,30 +1544,38 @@ async function _callback( name, event){
         
         var numberOfBranches = state.repos.length;
         if (localState.historyNumber < 0){
+            
+            //selectInGraph(localState.historyHash);
+            
             // Leave history browsing
             localState.historyNumber = -1;
             localState.historyString = "";
             localState.historyHash = "";
+            
+            selectInGraph(localState.historyHash);
+            
             //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
             textOutput.value = '';
             writeTextOutput( textOutput);
             _setMode('UNKNOWN');
             await _update()
+            
         }else{
             // Show history
-            //_setMode('HISTORY');
             
-            localState.historyHash = history[localState.historyNumber].hash; // Store hash
+            //localState.historyHash = history[localState.historyNumber].hash; // Store hash
             
-            // Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            + ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].message
-            + os.EOL 
-            + os.EOL 
-            + history[localState.historyNumber].body;  
+            //// Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
+            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].message
+            //+ os.EOL 
+            //+ os.EOL 
+            //+ history[localState.historyNumber].body;  
+            
+            localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display            
             localState.mode = 'HISTORY';
@@ -1218,12 +1583,15 @@ async function _callback( name, event){
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
-            status_data = await gitShow(localState.historyHash);
+            status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));    
                   
             // Store hash
             
             localState.historyHash = history[localState.historyNumber].hash;
+            
+            selectInGraph(localState.historyHash);
+            
         }
     }
     function messageKeyUpEvent() { 
@@ -1288,6 +1656,17 @@ async function _callback( name, event){
         await _update();
 
     };
+    function resetHistoryPointer(){
+        localState.historyNumber = -1; // Reset to current
+        downArrowClicked(); 
+        
+    }
+    function clearFindFields(){
+        document.getElementById('findTextInput').value = "";
+        document.getElementById('findFileInput').value = "";
+        document.getElementById('findDateInputAfter').value = "";
+        document.getElementById('findDateInputBefore').value = "";
+    }    
 
     // status-bar
     function folderClicked(){
@@ -1300,6 +1679,7 @@ async function _callback( name, event){
         console.log('Settings button pressed');
         
         if ( getMode() == 'SETTINGS' ){
+            try{ settings_win.focus(); }catch(err){ }
             return
         }
         
@@ -1312,7 +1692,9 @@ async function _callback( name, event){
                 width: 600,
                 height: 700,
                 title: "Settings"
-            }
+            },
+            win=>win.on('loaded', () => settings_win = nw.Window.get(win.window))
+            
             ); 
         console.log(settings_win);
         localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
@@ -1325,33 +1707,47 @@ async function _callback( name, event){
             return
         }
         
-        resolve_win = gui.Window.open('resolveConflicts.html#/new_page' ,
+        gui.Window.open('resolveConflicts.html#/new_page' ,
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
                 width: 600,
                 height: 700,
                 title: "Resolve Conflicts"
-            }
+            },
+                win=>win.on('loaded', () => resolve_win = nw.Window.get(win.window))
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
-    };
-    
+    }; 
     function listChanged(){
-        resolve_win = gui.Window.open('listChanged.html#/new_page' ,
+        
+
+        
+        gui.Window.open('listChanged.html#/new_page' ,
             {
                 id: 'listChangedId',
                 position: 'center',
                 width: 600,
                 height: 700,
                 title: "List Changed Files"
-            }
+            },
+                win=>win.on('loaded', 
+                    () => {
+                        try{ 
+                            list_win.close(); // Close prior list_win if exists
+                        }catch(err){ 
+                        }
+                        list_win = nw.Window.get(win.window);
+                    }
+                )
+            
             ); 
         console.log(settings_win);        
     };
-// ================= END CALLBACK ================= 
+   // ================= END CALLBACK ================= 
 } 
+
 async function _loopTimer( timerName, delayInMs){
     
     // Define timer  
@@ -1429,13 +1825,13 @@ async function _update(){
         }
  
     //
-    // SET ICON VISIBILITY
+    // SET ICON VISIBILITY 
     //   
     
     let FALSE_IN_HISTORY_MODE  = !(modeName == 'HISTORY'); // Used in if statement to make it false when in history mode
        
     // If left conflicts window
-        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){
+        if ( localState.conflictsWindow && (modeName != 'CONFLICT') ){  
             localState.conflictsWindow = false;
         }
             
@@ -1494,6 +1890,25 @@ async function _update(){
             console.log(err);
         }
         
+               
+    // Pinned commit (show if in history mode)
+        try{
+            if (modeName == 'HISTORY'){
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;'
+                
+            }else{
+                document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+                
+                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;'
+            }
+        }catch(err){  
+            console.log(err);
+        }        
+               
                
     // Stash button (show if uncomitted files)
         try{
@@ -1616,10 +2031,9 @@ async function _update(){
             case 'HISTORY': {  
 
                 let status;
-                let hash = localState.historyHash;
             
                 try{
-                    status_data = await gitShow(hash);
+                    status_data = await gitShowHistorical();
                 }catch(err){
                     console.log('fileStatus -- caught error');
                     console.log(err);
@@ -2038,7 +2452,9 @@ async function gitStatus(){
     // Make safe for empty repos
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
+
     
+    // Handle normal status of uncommited
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder)
             .status( onStatus);
@@ -2050,33 +2466,43 @@ async function gitStatus(){
             + status_data.not_added.length 
             + status_data.created.length
             + status_data.deleted.length) > 0);
-        //console.log(status_data);
+            
         status_data.current;  // Name of current branch
-        
+
     }catch(err){
         console.log('Error in gitStatus()');
         console.log(err);
         
         // Substitute values, if status_data is unknown (because gitStatus fails with garbish out if not a repo)
-        status_data = [];
-        status_data.conflicted = [];
-        status_data.modified = []; // zero length
-        status_data.not_added = [];
-        status_data.created = [];
-        status_data.deleted = [];
-        status_data.changedFiles = false;
-        status_data.ahead = 0;
-        status_data.behind = 0;
-
+        status_data = createEmptyGitStatus();
     }
  
     // return fields : 
     //      changedFiles (boolean) 
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
-    return status_data;  
+    
+    return status_data;
+
+    //
+    // Internal functions
+    //
+        function createEmptyGitStatus(){
+            status_data = [];
+            status_data.conflicted = [];
+            status_data.modified = []; // zero length
+            status_data.not_added = [];
+            status_data.created = [];
+            status_data.deleted = [];
+            status_data.changedFiles = false;
+            status_data.ahead = 0;
+            status_data.behind = 0;
+            return status_data;
+        };
+
 }
-async function gitShow(commit){
+async function gitShowHistorical(){
+
     
     let showStatus;
     let outputStatus = []; // Will build a struct on this
@@ -2088,11 +2514,27 @@ async function gitShow(commit){
     
     outputStatus.files = [];
     
-    let hash = localState.historyHash;
+    // Set two commit hashes
+    let hash2 = localState.historyHash;
+    let hash = hash2 + '^1' + '..' + hash2; // Guess historical: compare first parent with current commit
     
+    // If pinned commit.   Difference between pinned and current history point, shows change going forward in time
+    if (localState.pinnedCommit !== ''){
+           
+        if ( await gitIsFirstCommitOldest( localState.pinnedCommit, localState.historyHash) ){
+            hash = localState.pinnedCommit + '..' + localState.historyHash; // compare pinned with current commit 
+            outputStatus.reversedOrder = false;
+        }else {
+            hash = localState.historyHash + '..' + localState.pinnedCommit; // Reverse order
+            outputStatus.reversedOrder = true;
+        }
+        console.log('git diff --name-status --oneline ' + hash);
+    }   
+
+    // Generate file status data
     try{
-        // Read status
-        hash = hash + '^1' + '..' + hash; // compare first parent with current commit
+
+        // Read diff
         await simpleGit(state.repos[state.repoNumber].localFolder).diff( ['--name-status','--oneline', hash], onWhatChanged);
         function onWhatChanged(err, result){ console.log(result); showStatus = result } 
         console.log('fileStatus -- hash = ' + hash);
@@ -2124,7 +2566,12 @@ async function gitShow(commit){
                         outputStatus.modified.push(fileName);
                         outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
                         break;
-                        
+                    
+                    case "R" : // Count renamed as Modified
+                        outputStatus.modified.push(fileName);
+                        outputStatus.files.push( { path : fileName, index: type , working_dir : ' '} ); // Alternative storage mimicing the files-field in git status  (useful for listChanged.js)
+                        break;
+                                                
                     default :
                         break; // catches if hashes are listed (as in a merge)
                 }
@@ -2134,23 +2581,32 @@ async function gitShow(commit){
             }
         }
 
-        
-        
-        
+
     }catch(err){
         console.log('fileStatus -- caught error');
         console.log(err);
     }
     
-    // Store in localState
-    localState.history_status_data = outputStatus;
-    
     return outputStatus;
     
 }
+async function gitSetLocalBranchNumber(){
+        
+    let branchSummary;
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
+        function onLog(err, result){console.log(result);console.log(err);branchSummary=result;}  
+        // branchSummary.current :  the checked-out branch name 
+        // branchSummary.all     :  an array of all branch names
+        localState.branchNumber = branchSummary.all.findIndex( (s) => { return (s === branchSummary.current) } ); // Search using javascript String.findIndex function (compare with current branchName) 
+    }catch (err){
+        console.log('Failed determining branchNumber');
+    }
+
+}
 async function gitBranchList(){
     let branchList;
-    
+   
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
         function onBranchList(err, result ){console.log(result); branchList = result.all};
@@ -2160,6 +2616,69 @@ async function gitBranchList(){
     }
     return branchList
 }
+async function gitHistory() {
+    let history;
+    
+    let searchMessage = document.getElementById('findTextInput').value;
+    let searchFile = document.getElementById('findFileInput').value;
+    let since = document.getElementById('findDateInputAfter').value;
+    let until = document.getElementById('findDateInputBefore').value;
+    
+    let command = [];
+    if (state.FirstParent){
+        command.push('--first-parent'); 
+    }
+    
+    // Add only if filter is visible
+    if (document.getElementById('output_row').style.visibility == 'visible' ){
+    
+        // Build command depending on input  
+        if ( !isNullOrWhitespace(searchMessage) ){
+            // Two options, message or code search
+            if ( document.getElementById("message_code_switch").checked ){
+                // message text
+                command.push('-S'); 
+                command.push(searchMessage);
+                command.push('--regexp-ignore-case'); 
+            }else{
+                // code
+                command.push('--grep'); 
+                command.push(searchMessage);
+                command.push('--regexp-ignore-case'); 
+            }
+        }
+         
+        if ( !isNullOrWhitespace(since) ){
+            command.push('--since'); 
+            command.push(since);
+        }
+         
+        if ( !isNullOrWhitespace(until) ){
+            command.push('--until'); 
+            command.push(until);
+        }
+        
+        if ( !isNullOrWhitespace(searchFile) ){
+            command.push('--'); 
+            command.push('*' + searchFile + '*' ); // Allow subfolders before file name, and partial file name
+        }
+    }
+ 
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).log( command, onHistory);
+        function onHistory(err, result){console.log(result); history = result.all; console.log(' ============ Found N = ' + history.length);} 
+    }catch(err){        
+        console.log(err);
+    }   
+    return history; 
+    
+    function isNullOrWhitespace( input ) {
+        return !input || !input.trim();
+    }
+    
+}
+
+
 async function gitLocalFolder(){
     
     let gitFolders = [];
@@ -2396,6 +2915,45 @@ async function gitMerge( currentBranchName, selectedBranchName){
     //textOutput.placeholder = 'Write description of Merge, and press Store';
     writeTextOutput( textOutput);
 }
+    
+async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+    // Checks if first parameter is older commit than second parameter
+    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
+    
+    // Cache functionality
+    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
+        await calculate(oldCommit, newCommit); // Sets all cached variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }
+    
+    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }else{
+        await calculate(oldCommit, newCommit);       // Sets cache variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
+    }
+
+    // Internal function - calculate true / false
+    async function calculate(oldCommit, newCommit){
+        
+        function onLog(err, result){ console.log(result); return result } 
+        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+        
+        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+        
+        // Remember cached inputs    
+        gitIsFirstCommitOldest.oldCommit = oldCommit;
+        gitIsFirstCommitOldest.newCommit = newCommit;
+        
+        // Remember cached output
+        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
+        
+        return;         
+    }
+}
+
 
 // Utility functions
 function getMode(){
@@ -2478,6 +3036,22 @@ function setPath( additionalPath){
     }
     
 }
+function selectInGraph(hash){
+        
+        if (localState.graphWindow){  
+            
+            if (hash !==''){
+                // Select by clicking
+                let div = graph_win.window.document.getElementById( hash );
+                div.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+                div.firstElementChild.click();
+            }else{
+                // Deselect
+                let div = graph_win.window.document.getElementById(localState.selectedDiv.id);
+                div.classList.remove('selected');
+            }
+        }
+    }
 
 
 // Dialogs
@@ -2565,6 +3139,7 @@ function focusTitlebars(focus) {
 }
 function updateContentStyle() {
     
+    
     // This is to make statusbar and titlebar position well
     var content = document.getElementById("content");
     if (!content)
@@ -2592,7 +3167,7 @@ function updateContentStyle() {
     contentStyle += "height: " + height  + "px; ";
     content.setAttribute("style", contentStyle);
     
-    // This is to make message textarea follow window resize
+    //// This is to make message textarea follow window resize
     //var message_area = document.getElementById("message");
     //var message_area_style = "height: " + (height - 28 - 8).toString() + "px; ";
     //message_area_style += "width: 100%; " ;
@@ -2654,7 +3229,41 @@ function readMessage(){
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
+function historyMessage(history, historyNumber ){
+            
+    // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
+    var historyBranchesAtPoint = ""; // Do not comment out this row !
+    //try{              
+        //await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--contains', history[historyNumber + 1].hash], onHistoryBranches );
+        //function onHistoryBranches(err, result){console.log(result);console.log(err); historyBranchesAtPoint = result.all;} 
+        //historyBranchesAtPoint = ' [ ' + historyBranchesAtPoint + ' ]'; 
+            
+    //}catch(err){        
+        //console.log(err);
+        //console.log(historyBranchesAtPoint )       
+    //}
+    
+    
+    
+    let historyHash = history[historyNumber].hash; // Store hash
+    
+    // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
+    let historyString = ( history[historyNumber].date).substring( 11,11+5) 
+    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')';
+    
+    // Branches on this commit
+    historyString += historyBranchesAtPoint;
 
+    // Message
+    historyString += os.EOL 
+    + os.EOL 
+    + history[historyNumber].message
+    + os.EOL 
+    + os.EOL 
+    + history[historyNumber].body;
+    
+    return historyString
+}
 
 
 // Output row (below message)
@@ -2683,17 +3292,45 @@ function setStatusBar( text){
         if ( document.getElementById('bottom-titlebar-text').innerHTML !== text){
             document.getElementById('bottom-titlebar-text').innerHTML = text;
         }
+        
+        // Pinned commit
+        if (localState.pinnedCommit === ''){
+            let hashText = '';
+            if ( getMode() === 'HISTORY'){
+                hashText = '< ' + localState.historyHash.substring(0,6) + ' >';
+            }
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== hashText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = hashText;
+            }
+        }else{
+            let pinnedText = '< <u>compared to ' + localState.pinnedCommit.substring(0,6) + '</u> >';
+            if ( document.getElementById('bottom-titlebar-pinned-text').innerHTML !== pinnedText){
+                 document.getElementById('bottom-titlebar-pinned-text').innerHTML = pinnedText;
+            }
+        }
     }
 }
 function fileStatusString( status_data){
+
     
+    let historyStatus = '&nbsp;&nbsp;  (' 
+        + ( localState.historyNumber + 1 )  
+        + ' of ' 
+        + localState.historyLength 
+        + ')';
+ 
+    if ( isNaN(localState.historyNumber) ){
+        historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
+    }
+       
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
         return 'Modified = ' 
-        + status_data.modified.length 
-        + ' |  New = ' + ( status_data.added.length )
-        + ' |  Deleted = ' + status_data.deleted.length;
+            + status_data.modified.length 
+            + ' |  New = ' + ( status_data.added.length )
+            + ' |  Deleted = ' + status_data.deleted.length
+            + ' ' + historyStatus;
         
     }else{
         // Normal operation, work on git status from HEAD
@@ -2713,6 +3350,34 @@ function fileStatusString( status_data){
         }
     }
 };
+function drawPinImage(isPinned){
+
+
+        // Store pinned history number and branch
+        localState.pinnedHistoryNumber = localState.historyNumber;
+        localState.pinnedBranch = document.getElementById('top-titlebar-branch-text').innerText;
+        localState.pinnedBranchNumber = localState.branchNumber;
+        
+        // Store find settings
+        localState.pinned_findTextInput = document.getElementById('findTextInput').value;
+        localState.pinned_findFileInput = document.getElementById('findFileInput').value;
+        localState.pinned_findDateInputAfter = document.getElementById('findDateInputAfter').value;
+        localState.pinned_findDateInputBefore = document.getElementById('findDateInputBefore').value;
+        localState.pinned_findCode = document.getElementById("message_code_switch").checked;
+
+        
+        // Set or unset
+        if ( isPinned && ( getMode() === 'HISTORY' ) ){
+            // Do not allow to pin if outside history mode
+            localState.pinnedCommit = localState.historyHash;
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+        }
+        if (!isPinned){
+            localState.pinnedCommit = '';
+            updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+        }
+    
+}
 
 // Settings
 function saveSettings(){
@@ -2725,7 +3390,7 @@ function saveSettings(){
         state.position.height = win.height;  
     
     // Save settings
-    var jsonString = JSON.stringify(state, null, 2);
+    let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
 }
 function loadSettings(settingsFile){
@@ -2738,7 +3403,7 @@ function loadSettings(settingsFile){
 
     try{
         // 1) Read json
-        jsonString = fs.readFileSync(settingsFile);
+        let jsonString = fs.readFileSync(settingsFile);
         state_in = JSON.parse(jsonString);
         
         console.log('state -- read from json file');
@@ -2792,6 +3457,7 @@ function loadSettings(settingsFile){
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
             state.onlyOneStash = setting( state_in.onlyOneStash, true);
             state.NoFF_merge = setting( state_in.NoFF_merge, true);
+            state.FirstParent = setting( state_in.FirstParent, true);
             
         // External tools (three levels -- state.tools.difftool )
             console.log('- setting external tools ');
@@ -2922,6 +3588,8 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
+    document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
+    document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
     
  
 }

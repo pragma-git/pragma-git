@@ -1,7 +1,7 @@
 {
+  "version": "develop",
   "name": "Pragma-git",
   "description": "Chrome platform app.",
-  "version": "0.5.3",
   "main": "app.html",
   "author": "Jan Axelsson",
   "license": "MIT",
@@ -10,10 +10,10 @@
     "toolbar": false,
     "frame": false,
     "position": "center",
-    "width": 460,
-    "height": 140,
-    "min_width": 350,
-    "min_height": 140,
+    "width": 750,
+    "height": 148,
+    "min_width": 750,
+    "min_height": 148,
     "icon": "./images/icon.png"
   },
   "scripts": {

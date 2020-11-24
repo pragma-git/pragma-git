@@ -1,0 +1,359 @@
+<html>
+    <head>
+        <title>Commit graph</title>
+        
+        <script src="graph.js"></script>
+    </head>
+
+    <!-- Styling graph-->
+    <style> 
+        
+        
+        body{
+            font-family: Arial;
+            font-size: 10pt;
+            width: max-content;
+        }
+        
+        
+        /* Set outline: 0.01px to show */
+        
+        div {
+            position: relative;
+            float: left;
+            height: 24;
+            width: 12;
+            outline: 0.0px dotted orange;
+            outline-offset: -0.005px;
+        }
+        
+        pre {
+            margin: 2px;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        #graphContent {
+            width: auto;
+            height: auto;
+        }
+        
+        .firstcol { clear: both;}
+
+        .text{
+            width: auto;
+            cursor: pointer;
+            font-size: inherit;
+        }
+        
+        .decoration {
+            float: left;
+            font-weight: bold;
+            color: DarkBlue;
+            font-size: inherit;
+        }
+        
+        .node {
+            position: absolute;
+             top: 8px;
+             left: 0.5px;
+             height: 50%;
+             width: 100%;
+             z-index: 10;
+        }        
+         
+        .bridge {
+            position: absolute;
+             top: 2px;
+             left: -6px;
+             height: 24px;
+             width: 24px;
+             z-index: 1;
+        }  
+        
+        .bridgeleft {
+             left: -150%;
+        } 
+        
+        .bridgeright {
+             left: 50%;
+        }
+               
+        .slash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        }    
+               
+        .wideslash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
+             z-index: 1;
+        }  
+                
+        .backslash { 
+             position: absolute; 
+             top: 12px;
+             left: 5px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        }  
+            
+        .widebackslash { 
+             position: absolute; 
+             top: 12px;
+             left: -7px;
+             height: 27px;
+             width: 27px;
+             z-index: 1;
+        }
+
+        .pipe {
+             position: absolute;
+             top: 12px;
+             left: -1px;
+             height: 27px;
+             width: 15px;
+             z-index: 1;
+        } 
+
+   
+    </style>
+
+    <!-- Styling div-click -->
+    <style> 
+        .selected{
+            color: green;
+            background: #cccccc;
+        }
+        .text:hover {
+            background: #bbbbbb;
+        }
+
+    </style>
+             
+    <body> 
+        <h2><span id='repoName'></span>
+        ( <img style="height: 12; width: 12" src="images/circle_green.png"> <u><span id='branchName'></span></u>)
+        
+        <!-- Help button --> 
+        <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+            onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+        </h2>
+        
+        <hr>
+        
+          <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+        <div id="graphContent" class="content"> 
+        </div>
+    </body>                
+
+    <script> <!-- User interactions --> 
+         
+        // On selection or pin, remember DIV in :    
+        var graph = {};
+        localState.pinnedDiv = '';  // Memory currently pinned DIV
+        localState.selectedDiv = '';// Memory currently selected DIV
+        
+
+    
+        // One eventlister for all clicks
+        document.body.addEventListener( 'click', function (evt) {
+            // HTML structure:
+            //
+            // <div class='text'> <pre> <img class='pinned-icon'> commit text </pre> </div>  
+            //
+            // Click text is a click in      target = <pre>  =>   CLICKED_TEXT = true   CLICKED_PIN  = false
+            // Click checkbox is a click in  target = <img>  =>   CLICKED_TEXT = false  CLICKED_PIN  = true
+            //
+            // Therefore the <div> element has to be fetched two different ways into DIV
+            //
+            // Furthermore, state can be
+            //    SELECTED = marked as selected (may or may not be CHECKED)
+            //    CHECKED  = pinned (which means it also will be SELECTED)
+            
+            //
+            // Determine what was clicked
+            //
+                
+                let parent = evt.target.parentElement; // Parent to clicked pre (correct if pre was clicked)
+                let CLICKED_TEXT = parent.classList.contains('text');
+                
+                let CLICKED_PIN = evt.target.classList.contains('pinned-icon'); // This is correct element if img was clicked
+                 
+            //
+            // Determine state of current element, when clicked
+            //           
+                let CHECKED = false;
+                let SELECTED = false;
+                let DIV = ''; // Currently clicked DIV
+                
+                // Set CHECKED and DIV depending on target
+                if (CLICKED_TEXT){
+                    CHECKED = evt.target.firstChild.src.includes('enabled');
+                    DIV = evt.target.parentElement;
+                    SELECTED = DIV.classList.contains('selected');
+                }
+                if (CLICKED_PIN){
+                    CHECKED = evt.target.src.includes('enabled');
+                    DIV = evt.target.parentElement.parentElement;
+                    SELECTED = DIV.classList.contains('selected');
+                    hash = DIV.id;
+                }
+                
+            //
+            // CLICKED_TEXT -- Perform action depending on state (can be SELECTED already, or NOT SELECTED )
+            //
+            
+                if (CLICKED_TEXT){
+                    console.log('CLICKED_TEXT ');
+                    
+                    // This is simple 
+                    // - if selected, unselect and remember no selected
+                    // - if not selected, select and remember this one
+                    
+                    if ( SELECTED ){
+                        
+                        if ( CHECKED ){
+                            // Special case if Pinned  -- let pinned be, remove previously selected
+                            localState.selectedDiv.classList.remove('selected');
+                            localState.selectedDiv = '';  
+                            
+                        }else{
+                            // Don't allow unselecting
+                        }
+                        
+                    }else{
+                        // Remove previously selected
+                        try{
+                            localState.selectedDiv.classList.remove('selected');
+                        }catch(err){
+                        }                        
+                        // Select the new one and remember
+                        DIV.classList.add('selected');
+                        localState.selectedDiv = DIV;  
+                    }
+                    myLog()  
+
+                }
+                
+            //
+            // CLICKED_PIN -- Perform action depending on state (can be NOT CHECKED already, or CHECKED )
+            //
+            
+                if (CLICKED_PIN){
+                    
+                    console.log('CLICKED_PIN ');
+                    
+                    // This is simple 
+                    // - if not pinned, pin and forget old selected
+                    // - if pinned, unpin and make this selected
+                    
+                    //
+                    // UNCHECKED -- PIN THIS    
+                    // 
+                                   
+                        if ( !CHECKED ){                        
+    
+                            // Remove old pinned
+                            try{
+                                localState.pinnedDiv.classList.remove('selected');  
+                                localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
+                                    
+                            }catch(err){}  
+     
+                            // Remove old selected
+                            try{
+                                localState.selectedDiv.classList.remove('selected');  
+                                localState.selectedDiv = '';  // Forget selected (because this one was selected, and is now pinned instead)
+                            }catch(err){}  
+                             
+                            // Pin new
+                            try{
+                                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                                DIV.classList.add('selected');
+                            }catch(err){}  
+                            
+                                                   
+                            setPinned(hash, true);        // Set pinned commit in main window                
+                            localState.pinnedDiv = DIV;   // Remember this as pinned.  Keep the old selected       
+                            myLog()
+                            
+                        }
+
+                    //         
+                    // CHECKED -- UN-PIN THIS 
+                    //
+                                    
+                        if ( CHECKED ){                        
+    
+                            // Remove old selected
+                            try{
+                                localState.selectedDiv.classList.remove('selected');
+                            }catch(err){
+                            }  
+                                                 
+                            // Un-pin
+                            try{
+                                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                                DIV.classList.remove('selected');
+                            }catch(err){}  
+           
+                            localState.pinnedDiv = '';    // Forget this as pinned.
+                            setPinned(hash, false);       // Clear pinned commit in main window 
+                                           
+                            // Select this commit and remember
+                            DIV.classList.add('selected');
+                            localState.selectedDiv = DIV;                       
+    
+                            myLog()
+                            
+                        } 
+
+                }
+    
+        }, 
+        false);
+        
+        function myLog(){
+            try{
+                console.log( 'localState.pinnedDiv = ' + localState.pinnedDiv.firstChild.innerText)
+            }catch(err){
+                console.log('localState.pinnedDiv = ')
+            }
+            
+            try{
+            console.log( 'localState.selectedDiv = ' + localState.selectedDiv.firstChild.innerText)
+            }catch(err){
+                console.log('localState.selectedDiv = ')
+            }
+            console.log('---------------------------------------------------------------------------------');
+        }
+    
+        </script>
+        
+        
+    <script> <!--  Onload, call javascript file  -->
+    window.addEventListener('DOMContentLoaded', (event) => {
+        console.log('settings.html :DOM fully loaded and parsed');
+        injectIntoJs(document);
+        }
+    );
+    window.addEventListener('unload', (event) => {
+        console.log('settings.html :DOM fully unloaded -- maybe window closed ');
+        closeWindow(window);
+        }
+    );
+</script>
+
+</html>
