@@ -277,7 +277,7 @@ async function _callback( name, event){
         branchClicked(true, event); // 'menu' or 'cycle'
                         
         // Update remote info immediately
-        //gitFetch();  
+        gitFetch();  
         
         break;
       }
@@ -299,7 +299,7 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
                         
         // Update remote info immediately
-        //gitFetch();  
+        gitFetch();  
 
         // Reset some variables
         localState.historyNumber = -1;
@@ -1043,8 +1043,6 @@ async function _callback( name, event){
             //
             if (type == 'menu'){
                 var menu = new gui.Menu();
-                let menuItems = branchList;
-
                 
                 let currentBranch = status_data.current;
         
@@ -1053,7 +1051,7 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
-                makeBranchMenu(menu, currentBranch, menuItems, 'clickedBranchContextualMenu')
+                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
         
                 // Popup as context menu
@@ -1075,21 +1073,21 @@ async function _callback( name, event){
                 if (status_data.current === 'HEAD') { 
                     
                     // Make sure branch number within range
-                    if (localState.branchNumber >= branchList.length){
+                    if (localState.branchNumber >= branchList.local.length){
                         localState.branchNumber = 0;
                     }
                     // Keep branch number. Get that branch from branchList         
-                    branchName = branchList[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                    branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
                 }else {
                     // Normal branch
                     
                     // Cycle branch number
                     localState.branchNumber = localState.branchNumber + 1;
-                    if (localState.branchNumber >= branchList.length){
+                    if (localState.branchNumber >= branchList.local.length){
                         localState.branchNumber = 0;
                     }
                     // Get branchname after cycling
-                    branchName = branchList[localState.branchNumber];
+                    branchName = branchList.local[localState.branchNumber];
                 }
     
         
@@ -1462,10 +1460,6 @@ async function _callback( name, event){
                             }
                         // END remotes
 
-                        
-                    // Make no submenu
-                    // Make menu without submenu
-                    // Make menu without submenu
                     }else {
                         menu.append(
                             new gui.MenuItem(
@@ -2690,6 +2684,7 @@ async function gitBranchList(){
             
             // Extend branchSummaryResult from simpleGit
             extendedBranchSummaryResult = result;
+            extendedBranchSummaryResult.local = []; // Local branches only
             
             // Set defauls for all branches
             for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
@@ -2716,6 +2711,12 @@ async function gitBranchList(){
                 if (hasRemoteMirror){
                     extendedBranchSummaryResult.branches[ remoteMirror ].hasLocalBranch = true;
                 }
+                
+                // Add to local if not starting with remote
+                if ( !branchName.startsWith('remotes') ){
+                    extendedBranchSummaryResult.local.push(branchName);
+                }
+                
 
             }
             console.log(extendedBranchSummaryResult); 
