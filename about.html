@@ -198,24 +198,29 @@
                     
                 <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
                 <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
-                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>
+                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>    
+                <dd> <img src="images/more_black.png"  height="17" width="17"> Shows a graphical view of the commit history   </dd>
                     <dd>&nbsp;</dd>
                     
                 <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
                     
+                    
+                    
                 <dt><i>These buttons are visible only when they can be used :</i></dt>
                     <dd>&nbsp;</dd>
                 <dd> <img src="images/branch_black.png"  height="17" width="17"> Create a new branch from your position </dd>
                 <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
-                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository</dd>
+                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository. Please click.</dd>
                 <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
                 <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
                     <dd>&nbsp;</dd>
-                <dd> <img src="images/pinned_disabled_black.png"  height="17" width="17"> 
-                <img src="images/pinned_enabled_black.png"  height="17" width="17">Mark a historical commit to compare other commit with </dd>
+                <dd> <img src="images/pinned_disabled_black.png"  height="17" width="17">Not marked, means that history is compared with previous commit </dd>
+                <dd><img src="images/pinned_enabled_black.png"  height="17" width="17">Marked checkbox, means that other commits are compared to the marked commit 
+                (indicated by text 'compared to') </dd>
                     <dd>&nbsp;</dd>
                  
+                <dd>  <span style='font-size: 15pt;'> &#x25B2;</span>  Button to get out of history browsing (shown beside branch name in history mode) </dd>   
                     
                 <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history</dd>
                 <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
@@ -233,6 +238,8 @@
                  
  <!-------------------------------------------------------------------------------------------->                           
          <h4>A little git dictionary</h4>
+         
+         Here follows a dictionary of a number  of terms used in git, and also how they can be understood in Pragma-git :
          <button class="collapsible" id="repoSettings">&nbsp; (click to view) </button> 
          <div  class="content">
 
@@ -251,11 +258,6 @@
                         <td>A version of all your project files, freezed to exactly this state forever</td>
                     </tr>
                                                
-                     <tr>
-                        <td>Project folder </td> 
-                        <td>A location for storing the files. See "Repository" below</td>
-                    </tr>
-                                  
                      <tr>
                         <td>Project folder </td> 
                         <td>A location for storing the files. See "Repository" below</td>
@@ -499,15 +501,22 @@
  <!-------------------------------------------------------------------------------------------->                                  
           <h4>History, and checkout </h4>    
              
-            <p><u>Browsing history</u> : As described above, the arrow buttons let you browse back in time.
+            <p><u>Browsing history</u> : As described above, the arrow buttons 
+            (<img style='vertical-align:middle;' src="images/down-arrow_hover.png"  height="17" width="17"><img style='vertical-align:middle;' src="images/up-arrow_hover.png"  height="17" width="17">) 
+            let you browse back in time.
+            Also, a graphical representation can be viewed by clicking the icon  <img style='vertical-align:middle;' src="images/more_black.png"  height="17" width="17">
             </p>
             
-            <p>When you view an old commit, the "Store-button" is changed into a "Checkout" button.  
-            Pressing "Checkout" sets the files in the project to the same state as it was when Stored. This is useful if you wish to test your work as it was at this time point.
+            <p>When you view an old commit, the "Store-button" 
+            <img style='vertical-align:middle;' src="images/store-button.png"  height="20"> 
+            is changed into a "Checkout" button
+            <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20">. 
+             
+            Pressing "Checkout" sets the files in the project to the same state as it was once, when Stored. This is useful if you wish to test your work as it was at this time point.
             If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
             </p>
             
-            <p><u>Peculiarity with git</u> : If you, however, change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
+            <p><u>Peculiarity with git</u> : If you change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
             </p>
                        
             <p><u>Detached HEAD branch</u> : The branch-name in the title bar is changed to "HEAD", which in git language is referred to as a "detached HEAD".
@@ -515,10 +524,10 @@
             </p>
             
             <p><u>Modified files in HEAD branch</u> : 
-            If you have modified any files from this checkout and want to keep your changes, you need to move those changes to another branch.
+            If you have modified any files after this checkout and want to keep your changes, you need to move those changes to another branch.
             </p>
                         
-            <p><u>Not Stored files</u> : The easiest way to do move modified (but not Stored) files from a detached HEAD is : 
+            <p><u>Not Stored files</u> : The easiest way to move modified (which are not Stored) files from a detached HEAD is : 
                 <ol>
                     <li>Press the stash button <img 'vertical-align:middle;' src="images/stash_black.png"  height="17" width="17"> </li><br>
                     <li>Click on the branch name (HEAD), until you are at the branch where you wish to add your changes to</li><br>
