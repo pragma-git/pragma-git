@@ -532,8 +532,12 @@ async function _callback( name, event){
             waitTime( WAIT_TIME);  
             
             // Push tag to remote
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
-            function onPush(err, result) {console.log(result) };
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+                function onPush(err, result) {console.log(result) };
+            }catch (err){
+                console.log('Failed pushing tag -- probably no remote repository' );
+            }
             
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
