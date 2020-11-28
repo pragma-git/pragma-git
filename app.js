@@ -1357,7 +1357,8 @@ async function _callback( name, event){
             let cachedFirstPart = ' ';
             let item = new gui.MenuItem({ label: 'dummy' }); // will make new one inside loop
             let submenu = new gui.Menu(); // dummy
-                
+            
+            // Loop all branches
             for (var i = 0; i < menuItems.length; ++i) {
                   
                 // For all branches not being current branch : 
@@ -1380,16 +1381,22 @@ async function _callback( name, event){
                         // Special case (ex. remotes/origin/branch )
                         //
                             let isRemoteBranch = (firstPart[0] === 'remotes');
-                            let isLocalBranch = !isRemoteBranch; 
-                            let hasLocalBranch = branchList.branches[ myEvent.selectedBranch ].hasLocalBranch;
-                            let hasOnlyRemote = !hasLocalBranch;
+                            let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
+                            let isLocalBranch = !isRemoteBranch;
                             
-                            // Remote with a local branch (Show local branch instead)
-                            if ( isRemoteBranch && hasLocalBranch ) { 
+                            //let isLocalBranch = !isRemoteBranch; 
+                            //let remoteLinkedFromLocal = branchList.branches[ myEvent.selectedBranch ].hasLocalBranch; // Means that a local branch is linked to this remote
+                            //let remoteNotLinkedFromLocal = !remoteLinkedFromLocal; // Not linked to local
+                            
+                            //let localExists =  branchList.branches[ myEvent.selectedBranch ].localExists; // Means that a local branch exists matching this
+                            //let localExistsButNotLinked = localExists && remoteNotLinkedFromLocal; // Should not show remote in menu
+                            
+                      
+/*                            if ( localExistsButNotLinked ) {            // Remote with a local branch (Show local branch instead)
                                  // Don't show remote if local exists (local is listed, in will be shown)
                                                    
-                            // Remote without local branch (Show remotes menu)
-                            }else if ( (isRemoteBranch && hasOnlyRemote) ) {
+                          
+                            }else if ( (isRemoteBranch && remoteNotLinkedFromLocal) ){  // Remote without local branch (Show remotes menu)
                                 // Show if remote without local branch
                                 
                                 // Exception (bail out) if merge which requires local branch
@@ -1423,8 +1430,7 @@ async function _callback( name, event){
                                 cachedFirstPart = firstPart;
                                 
                             // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
-                            }else if ( isLocalBranch ) {
-                                // Show if local branch (containing '/') 
+                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
                                 
                                 // Create submenu remotes -- reuse if same firstPart as last time
                                 if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
@@ -1448,10 +1454,8 @@ async function _callback( name, event){
                                 cachedFirstPart = firstPart;
                                 
                             // All other cases (Show)
-                            }else{
-                                
-                                // Always show
-                                                            
+                            }else{                                                      // Always show
+                        
                                  // Add submenu-row to submenu
                                 submenu.append(new gui.MenuItem(
                                         { 
@@ -1462,7 +1466,82 @@ async function _callback( name, event){
                                 ); 
                                 item.submenu = submenu;
                             }
-                        // END remotes
+                        // END remotes */
+
+                           if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
+                                 // a remote where a local exists (local is listed, in will be shown)
+                                                   
+                          
+                            }else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
+                                // Show if remote without local branch
+                                
+                                // Exception (bail out) if merge which requires local branch
+                                if ( callbackName === "clickedMergeContextualMenu"){
+                                    continue
+                                }
+                            
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+                                
+                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
+                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // All other cases (Show)
+                            }else{                                                      // Always show
+                        
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;
+                            }                        
 
                     }else {
                         menu.append(
@@ -2674,63 +2753,124 @@ async function gitSetLocalBranchNumber(){
 }
 async function gitBranchList(){
     
-    // This returns a struct being of the type branchSummaryResult from simpleGit
-    // with all branch names in struct.all
-    // The returned result adds the following field to the struct :
-    // - isNotLocal  - which is true if the branch starting with remote/ is not mirrored as a local branch.
+// This returns a struct being extended from the type branchSummaryResult from simpleGit
+// with all branch names in struct.all, and a few additional fields (see below) 
+    
+/*   BACKGROUND :
+     ------------
+     
+     Branch dev exists in many places:
+     a) dev is local
+     b) remotes/origin/dev is tracking remote repository. That is:  b) is local cache of c)
+     c) dev is branch on remote repository (referred to as origin/dev in local git)
+    
+     If a) is changed and commited, git knows that b) and therefore c) is not synced with a) 
+     Push updates c) and b) to be in sync with a)
+     Fetch syncs b) with c)
+    
+    
+     Tracking :
+    
+     If remote branch c) is not defined by an URL, c) cannot be updated, and b) will not be  updated  => Push arrow will be shown
+     Solution: turn off b) tracking c) [ git branch --unset-upstream dev ]. In this case I don't want to delete b), but hide it.
+    
+     When b) is tracking c) : Branch menu should
+     - show local branch a) 
+     - hide tracking branch b) if a) exists
+    
+     When b) is NOT tracking c) : Branch menu should
+     - show local branch a) 
+     - hide local branch b) if a) exists 
+    
+     That is: the same requirement, need to hide b) if a) exist.
+    
+    
+     THIS FUNCTION :
+     ---------------
+     This function returns extendedBranchSummaryResult, an extended version of SimpleGits BranchSummaryResult
+     (a simple duplicate of BranchSummaryResult with additional fields)
+    
+     which is extended with field SHOW :
+     *  extendedBranchSummaryResult.branches[ branchName].show  which is :
+        -- false if b) branch and has a local counterpart a) 
+        -- true  if b) branch and no local counterpart a) 
+        -- true if a) branch 
+    
+     and a special list of local a) branches in field LOCAL :
+     *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
+     
+     TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
+
+*/
 
     let extendedBranchSummaryResult;
-   
+    
+    // Create extended branch summary
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--all', '-vv'], onBranchList);
-        function onBranchList(err, result ){
-            console.log(result); 
-            
-            // Extend branchSummaryResult from simpleGit
-            extendedBranchSummaryResult = result;
-            extendedBranchSummaryResult.local = []; // Local branches only
-            
-            // Set defauls for all branches
-            for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
-                let branchName = extendedBranchSummaryResult.all[i];
-                extendedBranchSummaryResult.branches[branchName].hasLocalBranch = false; // 
-            }
-            
-            // Set hasLocalBranch for remote branches that are mirrored in local
-            for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
-                                
-                let branchName = extendedBranchSummaryResult.all[i];
-                
-                // -vv has the following property : result.branches.label of  
-                // format [origin/master] when a local branch is linked to this remote branch 
-                // no '[' if not linked
-                let shortRemoteMirror = extendedBranchSummaryResult.branches[ branchName].label.split(']')[0]; // Remove '[xxx]...' leaving [xxx
-                shortRemoteMirror = shortRemoteMirror.split(':')[0]; // Remove trailing colon, such as  "[origin/third: behind 1] A1"
-                
-                let isLinked = ( shortRemoteMirror[0] === '[' );
-                let remoteMirror = 'remotes/' + shortRemoteMirror.substring(1); // Removing first character ( = '[' ) from shortRemoteMirror
-                
-                // Set a flag in the remote mirror branch if local i:th item has remote mirror
-                let hasRemoteMirror = isLinked && extendedBranchSummaryResult.branches[ branchName].label.startsWith(shortRemoteMirror);
-                if (hasRemoteMirror){
-                    extendedBranchSummaryResult.branches[ remoteMirror ].hasLocalBranch = true;
-                }
-                
-                // Add to local if not starting with remote
-                if ( !branchName.startsWith('remotes') ){
-                    extendedBranchSummaryResult.local.push(branchName);
-                }
-                
-
-            }
-            console.log(extendedBranchSummaryResult); 
-            
-            };
+        console.log(extendedBranchSummaryResult);  
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
+    
     return extendedBranchSummaryResult;
+    
+    // Define local functions
+    function onBranchList(err, result ){
+        console.log(result); 
+        
+        
+        // Extend branchSummaryResult from simpleGit
+        extendedBranchSummaryResult = result;
+        extendedBranchSummaryResult.local = []; // Local branches only
+        
+        // Set defauls for all branches
+        for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
+            let branchName = extendedBranchSummaryResult.all[i];
+            extendedBranchSummaryResult.branches[branchName].show = true;
+        }
+
+        // Loop brances and set new fields
+        for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
+                            
+            let branchName = extendedBranchSummaryResult.all[i];
+
+            //
+            // Set extendedBranchSummaryResult.show for remote, this remote has an existing local with matching name
+            //               
+            
+                if ( branchName.startsWith('remotes') ){
+                    let remoteBranchName = branchName;
+                    extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
+                } 
+
+        }
+    }
+    
+    function localVersionExists( allBranchNames, remoteBranchToCheck){
+          
+        // Build local equivalent to remote name
+        let parts = remoteBranchToCheck.split('/').slice(2); // Everything from second slash ( remotes/origin/KEEPTHIS )
+        let derivedLocalName='';
+        for (let j=0; j < parts.length; j++){ 
+            derivedLocalName += parts.slice(j,j+1) + '/' ; // build parts
+        }
+        derivedLocalName = derivedLocalName.substring(0,derivedLocalName.length-1); // Remove trailing '/'     
+        
+        // At this point: a remote branch gives a correct derivedLocalName, which would match if a matching local exists
+        //                a local branch  gives a derivedLocalName equal to itself
+        
+        // Check if derivedLocalName (local version of branchName) exists
+        let result = false;
+        for (let j = 0; j < allBranchNames.length; j++) { // Loop all branches
+            if  ( derivedLocalName === allBranchNames[j] ){
+                result = true;
+            }
+        }
+        
+        return result;
+    }
 }
 async function gitHistory() {
     let history;
