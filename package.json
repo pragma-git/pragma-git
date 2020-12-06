@@ -29,7 +29,7 @@
   },
   "build": {
     "nwFlavor": "sdk",
-    "nwVersion": "v0.47.2",
+    "nwVersion": "v0.51.1",
     "mac": {
       "displayName": "Pragma-git",
       "copyright": "copyright",

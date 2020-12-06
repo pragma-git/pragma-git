@@ -547,6 +547,13 @@ async function injectIntoSettingsJs(document) {
     }else{
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
+    
+    // Write system information to divs
+    let VERSION = require('./package.json').version;
+    document.getElementById('version').innerText = VERSION;
+    document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
+    document.getElementById('platform').innerText = process.platform;
+    
 
     
     // Set values according to state variable
