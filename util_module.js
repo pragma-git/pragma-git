@@ -70,6 +70,7 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     return Number(foundIndex);
 }
 
+
 // Branch name filtered by allowed chars
 myModule.branchCharFilter = function ( string ){
     

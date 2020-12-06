@@ -349,13 +349,28 @@ async function _update(){
     
 }
 
-function closeWindow(){
+async function closeWindow(){
+    
+    // Handle two scenarios : 
+    // 1) no files were modified, 
+    // 2) files were modified
+    
+    let status_data = await opener.gitStatus();
+    if (status_data.changedFiles === false){
+        // Case 1)  no changed files : End conflict resolution from here
+        
+        // Pragma-git does not know that it needs to commit to finish the conflict resolution. 
+        // Force it to finish with a standard message.
+        await opener.gitAddCommitAndPush( 'Conflict resolved without modifying files');
+        
+    }else {
+        // Case 2) most common : Files are modified, and Pragma-git will know that a commit is required
+        localState.mode = 'UNKNOWN';
+        
+    }
 
-    // Return
-    localState.mode = 'UNKNOWN';
-    
+    // Close window and return
     localState.fileListWindow = false;  // Show to main program that window is closed
-    
     win.close();
     
 }

@@ -362,7 +362,37 @@ graphText = String.raw`
                   
 `  
 break;
-} 
+}case 4 : {
+graphText = String.raw`
+| * Fix ROI bug after 'Clear ROI' D=
+| * Add script SPM viewer D=
+| | *-.   WIP on develop: 7fe5f6f Fix accidental commit D= (refs/stash)
+| | |\ \  
+| |/ / /  
+| | * | index on develop: 7fe5f6f Fix accidental commit D=
+| |/ /  
+| | * untracked files on develop: 7fe5f6f Fix accidental commit D= 
+                        
+                       
+                       
+| | * | Faster ROI drawing D=
+| | * | Cleaned up ROI drawing D=
+* | | |   Merge remote-tracking branch 'origin/release' into release D=
+|\ \ \ \  
+| | |_|/  THIS CONNECTS ONE TOO LOW WHEN DRAWING 
+| |/| |   
+| | * |   Merge remote-tracking branch 'origin/DEVELOP' into DEVELOP D=
+| | |\ \  
+| |/ / /  
+|/| | /   
+| | |/    
+| * |   Merge branch 'DEVELOP' into release D=
+                                                  
+                                                                                                    
+                                                                                                                                                      
+`  
+break;
+}
 }
 return graphText;
 }
@@ -580,12 +610,12 @@ function drawGraph( document, graphText, history){
                 total += '<img class="wideslash"  src="images/wideslash.png">';  
                    
             // -------------
-            }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  ) ) {   
+            }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  || b(2,'_') ) ) {   
             // B) back-slash 
                 found = 'B1';
                 total += '<img class="backslash" src="images/backslash.png">';
                 
-            }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') )  ) {
+            }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') || b(-2,'_' )  )  ){
                 // B) slash 
                 found = 'B2';
                 total += '<img class="slash" src="images/slash.png">';
@@ -655,8 +685,35 @@ function drawGraph( document, graphText, history){
                     total += '<img class="backslash" src="images/backslash.png">';
                 }
             // -------------
-    
-            }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ') ){
+            }else if ( 
+                a(0,'-') &&
+                ( a(1,'*') || a(1,'\\')  || a(1,'|') || a(1,'/') || a(1,'_')  || a(1,'-') || a(1,'.') )   
+            ){
+            // G1) short bridge (checks for non-space node to right -- that way stopping it from being commit message)
+                found = 'G1';
+                total += '<img class="bridge" src="images/bridge.png">';
+            }else if (  
+                ( a(0,'*') || a(0,'\\')  || a(0,'|') || a(0,'/') || a(0,'_')  || a(0,'-') || a(0,'.')   )   && 
+                a(1,'-') 
+            ){
+            // G2) short bridge (non-space node to left -- I think this is correct, but have not seen this in the wild)
+                found = 'G2';
+                total += '<img class="bridge" src="images/bridge.png">';
+            // -------------
+            }else if (  a(0,'.') && b( 1,'\\')  ) {
+            // H1) point corner and '\'
+                found = 'H1';
+                total += '<img class="backslash" src="images/backslash.png">';
+            }else if (  a(0,'.') && b( -1,'/')  ) {
+            // H2) point corner and  '/'
+                found = 'H2';
+                total += '<img class="slash" src="images/slash.png">';
+            }else if (  a(0,'.') && b( 0,'|')  ) {
+            // H3) point corner and '|'
+                found = 'H3';
+                total += '<img class="slash" src="images/pipe.png">'; 
+            // -------------    
+            }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ')   ){
             // TEXT if nothing else
                 let rowText = '(' + row + ') ';
                 graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 

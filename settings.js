@@ -286,8 +286,6 @@ async function _callback( name, event){
                 document.getElementById(textareaId).style.color='red';
             }
 
-    
-            // git remote set-url origin https://JanAxelssonTest:jarkuC-9ryvra-migtyb@github.com/JanAxelssonTest/test.git
             
             break;
         }
@@ -549,6 +547,13 @@ async function injectIntoSettingsJs(document) {
     }else{
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
+    
+    // Write system information to divs
+    let VERSION = require('./package.json').version;
+    document.getElementById('version').innerText = VERSION;
+    document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
+    document.getElementById('platform').innerText = process.platform;
+    
 
     
     // Set values according to state variable
@@ -557,7 +562,6 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
-    document.getElementById('onlyOneStash').checked = state.onlyOneStash;
     document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
     
@@ -726,7 +730,7 @@ async function generateRepoTable(document, table, data) {
             textarea.value = element.remoteURL;
             cell.appendChild(textarea);
             
-                // Test-button
+            // Test-button (Set)
             cell = row.insertCell();
             cell.setAttribute("class", 'setURL');
             button = document.createElement('button');
@@ -734,6 +738,9 @@ async function generateRepoTable(document, table, data) {
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)");
             cell.appendChild(button);
+            
+            // Run test
+            button.click();
             
                           
             // Into table cell :  button

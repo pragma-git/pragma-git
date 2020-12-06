@@ -38,3 +38,16 @@ remote =
 **Pragma-git :** Stand in "master". Pull button should be visible; press it.
 
 **Expected :** /tmp/threeBranches is in conflict with remote master.
+
+ 
+
+### Detect remote branch
+
+**setup :** create_remote_only_branch.command
+
+**Pragma-git :** Stand in "master"
+
+**Expected :** /tmp/clonedRemote_branch_test_repo
+
+"second” and ”third” should be on remote only. Select them from branch dropdown
+remote submenu, and they should appear at menu top level

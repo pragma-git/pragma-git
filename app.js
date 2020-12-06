@@ -275,6 +275,10 @@ async function _callback( name, event){
       }
       case 'clicked-branch': {
         branchClicked(true, event); // 'menu' or 'cycle'
+                        
+        // Update remote info immediately
+        gitFetch();  
+        
         break;
       }
       case 'clickedBranchContextualMenu': { 
@@ -293,6 +297,9 @@ async function _callback( name, event){
         
         localState.branchNumber = event.branchNumber;  
         _setMode('UNKNOWN');
+                        
+        // Update remote info immediately
+        gitFetch();  
 
         // Reset some variables
         localState.historyNumber = -1;
@@ -525,8 +532,12 @@ async function _callback( name, event){
             waitTime( WAIT_TIME);  
             
             // Push tag to remote
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
-            function onPush(err, result) {console.log(result) };
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+                function onPush(err, result) {console.log(result) };
+            }catch (err){
+                console.log('Failed pushing tag -- probably no remote repository' );
+            }
             
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
@@ -541,28 +552,7 @@ async function _callback( name, event){
         break;
 
       }
-      case 'stashOverwriteDialog': {
-         {
-        console.log('stashOverwriteDialog -- returned ' + event);
-        
-        switch (event) {
-            case  'Replace' : {
-                gitStash();
-                break;
-            }    
-            case  'Cancel' : {
-                break;
-            }          
-            
-        }
-        break; 
-      } // end case 'stashOverwriteDialog' 
-          
-          
-          
-        gitStash();
-        break;   
-      }     
+    
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
         
@@ -764,22 +754,15 @@ async function _callback( name, event){
         break;
       } 
       case 'clicked-stash-button': {
-          
-    // Stash -- ask to overwrite if stash exists
+
         try{
             let stash_status;
             await simpleGit( state.repos[state.repoNumber].localFolder)
                 .stash(['list'], onStash);
             function onStash(err, result ){  stash_status = result }
             
-            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
-                // Ask permission to overwrite stash
-                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                document.getElementById('stashOverwriteDialog').showModal();
-            }else{
-                // No stash exists, OK to stash
-                gitStash();
-            }
+            gitStash();
+            
         }catch(err){  
             console.log(err);
         }
@@ -1036,12 +1019,6 @@ async function _callback( name, event){
             //
             if (type == 'menu'){
                 var menu = new gui.Menu();
-                let menuItems = branchList;
-                
-                // If detached HEAD, remove one item from menu
-                if (status_data.current === 'HEAD') { 
-                    menuItems.shift();  // Remove first item
-                }
                 
                 let currentBranch = status_data.current;
         
@@ -1050,7 +1027,7 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
-                makeBranchMenu(menu, currentBranch, menuItems, 'clickedBranchContextualMenu')
+                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
         
                 // Popup as context menu
@@ -1072,21 +1049,21 @@ async function _callback( name, event){
                 if (status_data.current === 'HEAD') { 
                     
                     // Make sure branch number within range
-                    if (localState.branchNumber >= branchList.length){
+                    if (localState.branchNumber >= branchList.local.length){
                         localState.branchNumber = 0;
                     }
                     // Keep branch number. Get that branch from branchList         
-                    branchName = branchList[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                    branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
                 }else {
                     // Normal branch
                     
                     // Cycle branch number
                     localState.branchNumber = localState.branchNumber + 1;
-                    if (localState.branchNumber >= branchList.length){
+                    if (localState.branchNumber >= branchList.local.length){
                         localState.branchNumber = 0;
                     }
                     // Get branchname after cycling
-                    branchName = branchList[localState.branchNumber];
+                    branchName = branchList.local[localState.branchNumber];
                 }
     
         
@@ -1200,12 +1177,7 @@ async function _callback( name, event){
         }
   
         let menuItems = branchList;
-        
-        // Remove HEAD from list, if it is there
-        if (currentBranch === 'HEAD') { 
-            menuItems.shift(); // Remove first element (which is where HEAD is in list)
-        }
-        
+
         // Add context menu title-row
         menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
         menu.append(new gui.MenuItem({ type: 'separator' }));
@@ -1340,20 +1312,27 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     } 
-    function makeBranchMenu(menu, currentBranch, menuItems, callbackName){ // helper for branchClicked and mergeClicked
+    function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
         // menu is a nw.Menu
         // currentBranch is a string
-        // menuItems is an array of branch names
+        // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
+        
+            let menuItems = branchList.all;
+                        
+            // If detached HEAD, remove one item from menu
+            if (currentBranch === 'HEAD') { 
+                menuItems.shift();  // Remove first item
+            }
         
         
             let cachedFirstPart = ' ';
             let item = new gui.MenuItem({ label: 'dummy' }); // will make new one inside loop
             let submenu = new gui.Menu(); // dummy
-                
+            
+            // Loop all branches
             for (var i = 0; i < menuItems.length; ++i) {
-                 
-                 
+                  
                 // For all branches not being current branch : 
                 if (currentBranch != menuItems[i]){
                     let myEvent = [];
@@ -1361,7 +1340,6 @@ async function _callback( name, event){
                     myEvent.currentBranch = currentBranch;
                     myEvent.branchNumber = i;
 
-                    
                     //--------------------------
                     // Make submenu if branch containing '/'
                     if ( menuItems[i].includes("/") ) {
@@ -1371,29 +1349,173 @@ async function _callback( name, event){
                         let firstPart = myEvent.selectedBranch.split('/',1);
                         let secondPart = myEvent.selectedBranch.substring(myEvent.selectedBranch.indexOf('/')+1);
 
-                        // Reuse submenu if same firstPart as last time
-                        if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                            item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                            menu.append( item); // Add submenu to main menu
+                        //
+                        // Special case (ex. remotes/origin/branch )
+                        //
+                            let isRemoteBranch = (firstPart[0] === 'remotes');
+                            let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
+                            let isLocalBranch = !isRemoteBranch;
                             
-                            submenu = new gui.Menu();  // Create empty submenu
-                        }
+                            //let isLocalBranch = !isRemoteBranch; 
+                            //let remoteLinkedFromLocal = branchList.branches[ myEvent.selectedBranch ].hasLocalBranch; // Means that a local branch is linked to this remote
+                            //let remoteNotLinkedFromLocal = !remoteLinkedFromLocal; // Not linked to local
+                            
+                            //let localExists =  branchList.branches[ myEvent.selectedBranch ].localExists; // Means that a local branch exists matching this
+                            //let localExistsButNotLinked = localExists && remoteNotLinkedFromLocal; // Should not show remote in menu
+                            
+                      
+/*                            if ( localExistsButNotLinked ) {            // Remote with a local branch (Show local branch instead)
+                                 // Don't show remote if local exists (local is listed, in will be shown)
+                                                   
+                          
+                            }else if ( (isRemoteBranch && remoteNotLinkedFromLocal) ){  // Remote without local branch (Show remotes menu)
+                                // Show if remote without local branch
+                                
+                                // Exception (bail out) if merge which requires local branch
+                                if ( callbackName === "clickedMergeContextualMenu"){
+                                    continue
+                                }
+                            
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+                                
+                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
+                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // All other cases (Show)
+                            }else{                                                      // Always show
                         
-                        // Add submenu-row to submenu
-                        submenu.append(new gui.MenuItem(
-                                { 
-                                    label: secondPart, 
-                                    click: () => { _callback(callbackName,myEvent);} 
-                                } 
-                            )
-                        );
-                        item.submenu = submenu;
- 
-                        // Remember firstPart -- so I know it has happened more than once
-                        cachedFirstPart = firstPart;
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;
+                            }
+                        // END remotes */
+
+                           if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
+                                 // a remote where a local exists (local is listed, in will be shown)
+                                                   
+                          
+                            }else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
+                                // Show if remote without local branch
+                                
+                                // Exception (bail out) if merge which requires local branch
+                                if ( callbackName === "clickedMergeContextualMenu"){
+                                    continue
+                                }
+                            
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+                                
+                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
+                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
+                                
+                                // Create submenu remotes -- reuse if same firstPart as last time
+                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append( item); // Add submenu to main menu
+                                    
+                                    submenu = new gui.Menu();  // Create empty submenu
+                                }
+
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;   
+                                
+                                // Remember firstPart -- so I know it has happened more than once
+                                cachedFirstPart = firstPart;
+                                
+                            // All other cases (Show)
+                            }else{                                                      // Always show
                         
-                    } else {
-                        // No submenu
+                                 // Add submenu-row to submenu
+                                submenu.append(new gui.MenuItem(
+                                        { 
+                                            label: secondPart, 
+                                            click: () => { _callback(callbackName,myEvent);} 
+                                        } 
+                                    )
+                                ); 
+                                item.submenu = submenu;
+                            }                        
+
+                    }else {
                         menu.append(
                             new gui.MenuItem(
                                 { 
@@ -1403,11 +1525,8 @@ async function _callback( name, event){
                             )
                         );
                         console.log(menuItems[i]);
-                    } // -----------------
-                    
-                }else{
-                    // Skip current branch
-                    console.log('Skipped current branch = ' + menuItems[i]);
+                    } 
+                    // -----------------
                 }
     
             }           
@@ -2605,16 +2724,125 @@ async function gitSetLocalBranchNumber(){
 
 }
 async function gitBranchList(){
-    let branchList;
-   
+    
+// This returns a struct being extended from the type branchSummaryResult from simpleGit
+// with all branch names in struct.all, and a few additional fields (see below) 
+    
+/*   BACKGROUND :
+     ------------
+     
+     Branch dev exists in many places:
+     a) dev is local
+     b) remotes/origin/dev is tracking remote repository. That is:  b) is local cache of c)
+     c) dev is branch on remote repository (referred to as origin/dev in local git)
+    
+     If a) is changed and commited, git knows that b) and therefore c) is not synced with a) 
+     Push updates c) and b) to be in sync with a)
+     Fetch syncs b) with c)
+    
+    
+     Tracking :
+    
+     If remote branch c) is not defined by an URL, c) cannot be updated, and b) will not be  updated  => Push arrow will be shown
+     Solution: turn off b) tracking c) [ git branch --unset-upstream dev ]. In this case I don't want to delete b), but hide it.
+    
+     When b) is tracking c) : Branch menu should
+     - show local branch a) 
+     - hide tracking branch b) if a) exists
+    
+     When b) is NOT tracking c) : Branch menu should
+     - show local branch a) 
+     - hide local branch b) if a) exists 
+    
+     That is: the same requirement, need to hide b) if a) exist.
+    
+    
+     THIS FUNCTION :
+     ---------------
+     This function returns extendedBranchSummaryResult, an extended version of SimpleGits BranchSummaryResult
+     (a simple duplicate of BranchSummaryResult with additional fields)
+    
+     which is extended with field SHOW :
+     *  extendedBranchSummaryResult.branches[ branchName].show  which is :
+        -- false if b) branch and has a local counterpart a) 
+        -- true  if b) branch and no local counterpart a) 
+        -- true if a) branch 
+    
+     and a special list of local a) branches in field LOCAL :
+     *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
+     
+     TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
+
+*/
+
+    let extendedBranchSummaryResult;
+    
+    // Create extended branch summary
     try{
-        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--list'], onBranchList);
-        function onBranchList(err, result ){console.log(result); branchList = result.all};
+        await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--all', '-vv'], onBranchList);
+        console.log(extendedBranchSummaryResult);  
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
-    return branchList
+    
+    return extendedBranchSummaryResult;
+    
+    // Define local functions
+    function onBranchList(err, result ){
+        console.log(result); 
+        
+        
+        // Extend branchSummaryResult from simpleGit
+        extendedBranchSummaryResult = result;
+        extendedBranchSummaryResult.local = []; // Local branches only
+        
+        // Set defauls for all branches
+        for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
+            let branchName = extendedBranchSummaryResult.all[i];
+            extendedBranchSummaryResult.branches[branchName].show = true;
+        }
+
+        // Loop brances and set new fields
+        for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
+                            
+            let branchName = extendedBranchSummaryResult.all[i];
+
+            //
+            // Set extendedBranchSummaryResult.show for remote, this remote has an existing local with matching name
+            //               
+            
+                if ( branchName.startsWith('remotes') ){
+                    let remoteBranchName = branchName;
+                    extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
+                } 
+
+        }
+    }
+    
+    function localVersionExists( allBranchNames, remoteBranchToCheck){
+          
+        // Build local equivalent to remote name
+        let parts = remoteBranchToCheck.split('/').slice(2); // Everything from second slash ( remotes/origin/KEEPTHIS )
+        let derivedLocalName='';
+        for (let j=0; j < parts.length; j++){ 
+            derivedLocalName += parts.slice(j,j+1) + '/' ; // build parts
+        }
+        derivedLocalName = derivedLocalName.substring(0,derivedLocalName.length-1); // Remove trailing '/'     
+        
+        // At this point: a remote branch gives a correct derivedLocalName, which would match if a matching local exists
+        //                a local branch  gives a derivedLocalName equal to itself
+        
+        // Check if derivedLocalName (local version of branchName) exists
+        let result = false;
+        for (let j = 0; j < allBranchNames.length; j++) { // Loop all branches
+            if  ( derivedLocalName === allBranchNames[j] ){
+                result = true;
+            }
+        }
+        
+        return result;
+    }
 }
 async function gitHistory() {
     let history;
@@ -2707,7 +2935,7 @@ async function gitAddCommitAndPush( message){
     try{
         status_data = await gitStatus();
     }catch(err){
-        console.log('Error in _mainLoop()');
+        console.log('Error in gitAddCommitAndPush()');
         console.log(err);
     }
     var currentBranch = status_data.current;
@@ -2733,12 +2961,20 @@ async function gitAddCommitAndPush( message){
     
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    //await simpleGit( state.repos[state.repoNumber].localFolder )
-        //.commit( message, {'--all' : null} , onCommit);
-    await simpleGit( state.repos[state.repoNumber].localFolder )
-        .commit( message, onCommit);        
-    function onCommit(err, result) {console.log(result) };
-    
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+        .commit( message, onCommit);    
+        function onCommit(err, result) {console.log(result) };
+    }catch(err){
+        console.log('Error in gitAddCommitAndPush()');
+        console.log(err);
+        
+        if ( err.toString().includes('empty ident name') ){
+            displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
+        }
+    }
+
+    // Push
     await waitTime( 1000);
     
     if (state.autoPushToRemote){ 
@@ -2757,12 +2993,6 @@ async function gitAddCommitAndPush( message){
 async function gitStash(){
     // Stash
     try{
-        // Drop old stashes
-        if (state.onlyOneStash){   
-            await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['clear'], onStashClear);
-            function onStashClear(err, result) {console.log(result);console.log(err) };
-        }
-        
         await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
         function onStash(err, result) {console.log(result);console.log(err) };
     
@@ -3455,7 +3685,6 @@ function loadSettings(settingsFile){
             console.log('- setting git settings');
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
-            state.onlyOneStash = setting( state_in.onlyOneStash, true);
             state.NoFF_merge = setting( state_in.NoFF_merge, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             
