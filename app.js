@@ -2963,7 +2963,7 @@ async function gitAddCommitAndPush( message){
     try{
         status_data = await gitStatus();
     }catch(err){
-        console.log('Error in _mainLoop()');
+        console.log('Error in gitAddCommitAndPush()');
         console.log(err);
     }
     var currentBranch = status_data.current;
@@ -2989,12 +2989,20 @@ async function gitAddCommitAndPush( message){
     
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    //await simpleGit( state.repos[state.repoNumber].localFolder )
-        //.commit( message, {'--all' : null} , onCommit);
-    await simpleGit( state.repos[state.repoNumber].localFolder )
-        .commit( message, onCommit);        
-    function onCommit(err, result) {console.log(result) };
-    
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+        .commit( message, onCommit);    
+        function onCommit(err, result) {console.log(result) };
+    }catch(err){
+        console.log('Error in gitAddCommitAndPush()');
+        console.log(err);
+        
+        if ( err.toString().includes('empty ident name') ){
+            displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
+        }
+    }
+
+    // Push
     await waitTime( 1000);
     
     if (state.autoPushToRemote){ 
