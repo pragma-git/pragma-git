@@ -1,7 +1,7 @@
 {
   "version": "0.0.0",
   "name": "Pragma-git",
-  "description": "Chrome platform app.",
+  "description": "The pragmatic git client",
   "main": "app.html",
   "author": "Jan Axelsson",
   "license": "MIT",
@@ -29,7 +29,7 @@
   },
   "build": {
     "nwFlavor": "sdk",
-    "nwVersion": "v0.51.1",
+    "nwVersion": "v0.50.1",
     "mac": {
       "displayName": "Pragma-git",
       "copyright": "copyright",
