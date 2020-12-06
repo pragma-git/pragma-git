@@ -252,7 +252,7 @@
                 <table>            
                   <tr style="border: none;">
                         <td>
-                            <label for="authorName"> Author's name :</label><br>
+                            <label for="authorName"> Author's name (required):</label><br>
                             <input id="authorName" type="text" size="30"/>
                         </td>
                         <td>                
@@ -269,10 +269,6 @@
                  <!--  Auto-push to remote -->
                 <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
-                
-                <!--  One stash stored per repository -->
-                <input type="checkbox" id="onlyOneStash" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="onlyOneStash"> Store only latest stash (drop older stashes)</label><br>
                 
                 <!--  --no-ff merge (gitflow recommends this) -->
                 <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
@@ -300,7 +296,7 @@
                     
                     <tr style="border: none;">
                         <td colspan="2">
-                            <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See instructions below) : </label><br>
+                            <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See h) : </label><br>
                             <input id="pathAddition" type="text" style="width: 100%;"/><br>
                         </td>
                     </tr>

@@ -562,7 +562,6 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
-    document.getElementById('onlyOneStash').checked = state.onlyOneStash;
     document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
     

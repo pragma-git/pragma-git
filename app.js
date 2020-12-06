@@ -552,28 +552,7 @@ async function _callback( name, event){
         break;
 
       }
-      case 'stashOverwriteDialog': {
-         {
-        console.log('stashOverwriteDialog -- returned ' + event);
-        
-        switch (event) {
-            case  'Replace' : {
-                gitStash();
-                break;
-            }    
-            case  'Cancel' : {
-                break;
-            }          
-            
-        }
-        break; 
-      } // end case 'stashOverwriteDialog' 
-          
-          
-          
-        gitStash();
-        break;   
-      }     
+    
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
         
@@ -775,22 +754,15 @@ async function _callback( name, event){
         break;
       } 
       case 'clicked-stash-button': {
-          
-    // Stash -- ask to overwrite if stash exists
+
         try{
             let stash_status;
             await simpleGit( state.repos[state.repoNumber].localFolder)
                 .stash(['list'], onStash);
             function onStash(err, result ){  stash_status = result }
             
-            if ( (state.onlyOneStash == true)&&(stash_status.length > 0) ){
-                // Ask permission to overwrite stash
-                //document.getElementById('doYouWantToOverWriteStashDialog').showModal();
-                document.getElementById('stashOverwriteDialog').showModal();
-            }else{
-                // No stash exists, OK to stash
-                gitStash();
-            }
+            gitStash();
+            
         }catch(err){  
             console.log(err);
         }
@@ -3021,12 +2993,6 @@ async function gitAddCommitAndPush( message){
 async function gitStash(){
     // Stash
     try{
-        // Drop old stashes
-        if (state.onlyOneStash){   
-            await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['clear'], onStashClear);
-            function onStashClear(err, result) {console.log(result);console.log(err) };
-        }
-        
         await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
         function onStash(err, result) {console.log(result);console.log(err) };
     
@@ -3719,7 +3685,6 @@ function loadSettings(settingsFile){
             console.log('- setting git settings');
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
-            state.onlyOneStash = setting( state_in.onlyOneStash, true);
             state.NoFF_merge = setting( state_in.NoFF_merge, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             
