@@ -1363,93 +1363,10 @@ async function _callback( name, event){
                             let isRemoteBranch = (firstPart[0] === 'remotes');
                             let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
                             let isLocalBranch = !isRemoteBranch;
-                            
-                            //let isLocalBranch = !isRemoteBranch; 
-                            //let remoteLinkedFromLocal = branchList.branches[ myEvent.selectedBranch ].hasLocalBranch; // Means that a local branch is linked to this remote
-                            //let remoteNotLinkedFromLocal = !remoteLinkedFromLocal; // Not linked to local
-                            
-                            //let localExists =  branchList.branches[ myEvent.selectedBranch ].localExists; // Means that a local branch exists matching this
-                            //let localExistsButNotLinked = localExists && remoteNotLinkedFromLocal; // Should not show remote in menu
-                            
-                      
-/*                            if ( localExistsButNotLinked ) {            // Remote with a local branch (Show local branch instead)
-                                 // Don't show remote if local exists (local is listed, in will be shown)
-                                                   
-                          
-                            }else if ( (isRemoteBranch && remoteNotLinkedFromLocal) ){  // Remote without local branch (Show remotes menu)
-                                // Show if remote without local branch
-                                
-                                // Exception (bail out) if merge which requires local branch
-                                if ( callbackName === "clickedMergeContextualMenu"){
-                                    continue
-                                }
-                            
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-                                
-                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
-                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
-                                
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
-                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // All other cases (Show)
-                            }else{                                                      // Always show
-                        
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;
-                            }
-                        // END remotes */
+ 
 
                            if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
-                                 // a remote where a local exists (local is listed, in will be shown)
+                                // a remote where a local exists (local is listed, in will be shown)
                                                    
                           
                             }else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
