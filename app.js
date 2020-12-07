@@ -3104,6 +3104,15 @@ function gitFetch(){ // Fetch and ls-remote
                 let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
                 let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
                 remoteShortBranchNames[row] = remoteBranchName; 
+                
+                // New version
+                let parts = splitted[row].split('/');
+                remoteBranchName = '';
+                for ( i = 2; i < parts.length - 1; i++ ){
+                    remoteBranchName += parts[i] + '/';
+                }
+                remoteBranchName += parts[parts.length - 1];
+                remoteShortBranchNames[row] = remoteBranchName; 
 
                 console.log( remoteBranchName );
             }
