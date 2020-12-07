@@ -199,6 +199,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
+        localState.cached = {};         // cache time-consuming things
+        localState.cached.branches = {};// cache branch info 
+        
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -219,6 +222,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
+        try {
+            gitFetch();
+        }catch (err){
+            
+        }
 
     // Inititate listening to Pragma-merge start signal
        const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
@@ -1464,6 +1472,12 @@ async function _callback( name, event){
                                 
                                 let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
                                 myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                
+                                // Mark if remote not existing on git server
+                                if ( ! branchList.branches[ menuItems[i]].existsOnRemote ){
+                                    secondPart =  secondPart + ' \u2B60  not on server ';
+                                }
                                 
                                  // Add submenu-row to submenu
                                 submenu.append(new gui.MenuItem(
@@ -2769,7 +2783,13 @@ async function gitBranchList(){
         -- true  if b) branch and no local counterpart a) 
         -- true if a) branch 
     
-     and a special list of local a) branches in field LOCAL :
+     and is extended with field EXISTSONREMOTE :
+     *  extendedBranchSummaryResult.branches[ branchName].existsOnRemote  which is :
+        -- true  if c) exists on remote git server (matching b)
+        -- false if c) does not exist (for b )
+        -- false for all local branch names (a)
+        
+     and extended with a special list of local a) branches in field LOCAL :
      *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
      
      TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
@@ -2779,6 +2799,7 @@ async function gitBranchList(){
     let extendedBranchSummaryResult;
     
     // Create extended branch summary
+    let tic = Date.now();
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--all', '-vv'], onBranchList);
         console.log(extendedBranchSummaryResult);  
@@ -2786,6 +2807,7 @@ async function gitBranchList(){
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
+    console.log( Date.now() - tic);
     
     return extendedBranchSummaryResult;
     
@@ -2804,7 +2826,7 @@ async function gitBranchList(){
             extendedBranchSummaryResult.branches[branchName].show = true;
         }
 
-        // Loop brances and set new fields
+        // Loop branches and set new fields
         for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
                             
             let branchName = extendedBranchSummaryResult.all[i];
@@ -2818,10 +2840,15 @@ async function gitBranchList(){
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
                 } 
 
+            //
+            // Set if remote exists on server (from cached)
+            //
+                extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
         }
-    }
-    
+    }  
+ } 
     function localVersionExists( allBranchNames, remoteBranchToCheck){
+        // Checks if remoteBranchToCheck (of format xxx/yyyy/THIS) exists as local version (=THIS) in allBranchNames
           
         // Build local equivalent to remote name
         let parts = remoteBranchToCheck.split('/').slice(2); // Everything from second slash ( remotes/origin/KEEPTHIS )
@@ -2844,7 +2871,7 @@ async function gitBranchList(){
         
         return result;
     }
-}
+
 async function gitHistory() {
     let history;
     
@@ -3045,16 +3072,61 @@ async function gitPush(){
     await waitTime( 1000);  
 
 }
-async function gitFetch(){
-    console.log('Running gitFetch()');
+function gitFetch(){ // Fetch and ls-remote
+    console.log('Starting gitFetch()');
      
     var error = "";
 
     // Fetch
      try{
-        await simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+
+        // Fetch
+        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
         function onFetch(err, result) {console.log(result) };
         
+        // List remote branches
+        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote);    
+        
+        async function onListRemote(err, result ){ 
+              
+            let b = await gitBranchList();
+            console.log(b);
+            console.log(result); 
+            console.log(err); 
+          
+            // Parse remote branch names
+            let splitted = result.split("\n");
+            console.log(splitted)
+
+            let remoteShortBranchNames = []; // Branch names existing on remote ( format: master)
+            
+            for(var row = 0; row < (splitted.length - 1); row++) {
+                let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
+                let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
+                remoteShortBranchNames[row] = remoteBranchName; 
+
+                console.log( remoteBranchName );
+            }
+            
+            localState.cached.branches = {};
+            // Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
+            for (let i = 0; i < b.all.length; i++) {
+                let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
+                
+                let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
+                
+                localState.cached.branches[ locallyListedBranchName] = {};
+                localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
+                
+                
+                console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
+                
+            }
+
+        }
+        
+        
+            
     }catch(err){
         console.log('Error in gitFetch()');
         console.log(err);
