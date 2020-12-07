@@ -1456,6 +1456,7 @@ async function _callback( name, event){
                                 // Create submenu remotes -- reuse if same firstPart as last time
                                 if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
                                     item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append(new gui.MenuItem({ type: 'separator' })); // Add separator
                                     menu.append( item); // Add submenu to main menu
                                     
                                     submenu = new gui.Menu();  // Create empty submenu
