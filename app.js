@@ -1376,7 +1376,19 @@ async function _callback( name, event){
                                 if ( callbackName === "clickedMergeContextualMenu"){
                                     continue
                                 }
-                            
+
+                                
+                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                
+                                // Mark if remote not existing on git server
+                                if ( ! branchList.branches[ menuItems[i]].existsOnRemote ){
+                                    console.log('Skip showing branch that is missing on remote.  Branch = ' + myEvent.selectedBranch);
+                                    secondPart =  secondPart + ' \u2B60  not on server ';
+                                    continue; // Stop from showing (I have obviously prepared for showing on line above)
+                                }
+                             
                                 
                                 // Create submenu remotes -- reuse if same firstPart as last time
                                 if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
@@ -1387,15 +1399,7 @@ async function _callback( name, event){
                                     submenu = new gui.Menu();  // Create empty submenu
                                 }
                                 
-                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
-                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
-                                
-                                
-                                // Mark if remote not existing on git server
-                                if ( ! branchList.branches[ menuItems[i]].existsOnRemote ){
-                                    secondPart =  secondPart + ' \u2B60  not on server ';
-                                }
-                                
+                                                               
                                  // Add submenu-row to submenu
                                 submenu.append(new gui.MenuItem(
                                         { 
@@ -2716,7 +2720,6 @@ async function gitBranchList(){
     let extendedBranchSummaryResult;
     
     // Create extended branch summary
-    let tic = Date.now();
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch(['--all', '-vv'], onBranchList);
         console.log(extendedBranchSummaryResult);  
@@ -2724,13 +2727,11 @@ async function gitBranchList(){
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
-    console.log( Date.now() - tic);
     
     return extendedBranchSummaryResult;
     
     // Define local functions
     function onBranchList(err, result ){
-        console.log(result); 
         
         
         // Extend branchSummaryResult from simpleGit
@@ -3031,7 +3032,7 @@ function gitFetch(){ // Fetch and ls-remote
                 remoteBranchName += parts[parts.length - 1];
                 remoteShortBranchNames[row] = remoteBranchName; 
 
-                console.log( remoteBranchName );
+                //console.log( remoteBranchName );
             }
             
             localState.cached.branches = {};
@@ -3045,7 +3046,7 @@ function gitFetch(){ // Fetch and ls-remote
                 localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
                 
                 
-                console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
+                //console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
                 
             }
 
