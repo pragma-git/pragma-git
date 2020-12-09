@@ -340,9 +340,15 @@ graphText = String.raw`
    |\    /|    A   |\    /|    
    * *  * *    A   * *  * *             
                          
+ | *    A | *  
+ | |\   A | |\        
+ |_|/   A *_|/    
+ | *    A | *     
+            
+                                                    
  \  \  \      /  /   / B \  \  \      /  /   /          
   |  *  \    |  *   /  B  |  *  \    |  *   /          
-                          
+                                                    
  *  *  *    C   *  *  *    
 /   |   \   C  /   |   \          
                
@@ -589,7 +595,8 @@ function drawGraph( document, graphText, history){
                     total += '<img class="node" src="images/circle_black.png">'; // Draw node
                 }
             }
-     
+
+            
             //
             // Draw lines
             //
@@ -610,7 +617,19 @@ function drawGraph( document, graphText, history){
                 total += '<img class="wideslash"  src="images/wideslash.png">';  
                    
             // -------------
-            }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  || b(2,'_') ) ) {   
+            }else if (  a(0,'\\')  && b(-2,'_')  && b(-1,'|')  && b(0,'/') ) {
+            // A) slash  - NEW (skip connecting pipe in some cases)
+                found = 'A3';
+                total += '<img class="slash" src="images/slash.png">';
+                
+            }else if (  a(0,'/')  && a(-1,'|')  && a(-2,'_') ) {
+            // A) slash  - NEW (skip connecting pipe draw, second part)
+                found = 'A4';
+                // Draw nothing
+             
+            // -------------   
+            }
+            else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  || b(2,'_') ) ) {   
             // B) back-slash 
                 found = 'B1';
                 total += '<img class="backslash" src="images/backslash.png">';
@@ -715,8 +734,16 @@ function drawGraph( document, graphText, history){
             // -------------    
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ')   ){
             // TEXT if nothing else
+            
+                // Different class when showing test cases
+                let cl = 'text';
+                if (test != 0) { 
+                    cl = 'courier';
+                }
+                
+                // Print Text part
                 let rowText = '(' + row + ') ';
-                graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
+                graphContent += '<div class="' + cl + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
                 graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
