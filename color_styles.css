@@ -1,0 +1,18 @@
+        
+.light {
+  --body-background: #FAFAFA;
+  --body-text: #000000;
+  
+  --graph-hover: #BBBBBB;
+  --graph-selected: #cccccc;
+  --graph-decoration-color: DarkBlue;
+}
+ 
+.dark {
+  --body-background: #454442;
+  --body-text: #FAFAFA;
+  
+  --graph-hover: #666666;
+  --graph-selected: #CCCCCC;
+  --graph-decoration-color: #BE9E0A;
+}   

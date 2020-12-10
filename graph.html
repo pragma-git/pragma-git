@@ -2,6 +2,8 @@
     <head>
         <title>Commit graph</title>
         
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
         <script src="graph.js"></script>
     </head>
 
@@ -13,8 +15,10 @@
             font-family: Arial;
             font-size: 10pt;
             width: max-content;
+            background: var(--body-background);
+            color: var(--body-text);
         }
-        
+    
         
         /* Set outline: 0.01px to show */
         
@@ -56,7 +60,7 @@
         .decoration {
             float: left;
             font-weight: bold;
-            color: DarkBlue;
+            color: var(--graph-decoration-color);
             font-size: inherit;
         }
         
@@ -138,15 +142,15 @@
     <style> 
         .selected{
             color: green;
-            background: #cccccc;
+            background: var(--graph-selected);
         }
         .text:hover {
-            background: #bbbbbb;
+            background: var(--graph-hover);
         }
 
     </style>
              
-    <body> 
+    <body class='light'> 
         <h2><span id='repoName'></span>
         ( <img style="height: 12; width: 12" src="images/circle_green.png"> <u><span id='branchName'></span></u>)
         
@@ -163,7 +167,15 @@
           <!-- Empty content, fill in with injectIntoJs in graph.js --> 
         <div id="graphContent" class="content"> 
         </div>
-    </body>                
+    </body>      
+    
+    <!-- Dark mode on/off --> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>
+              
 
     <script> <!-- User interactions --> 
          
