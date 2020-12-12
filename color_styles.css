@@ -5,16 +5,15 @@
   --body-background: #FAFAFA;
   --body-text: var(--text);
   
-  --button-background: unset;
-  --textarea-background: unset;
-  
   --graph-hover: #BBBBBB;
   --graph-selected: #CCCCCC;
   --graph-decoration-color: DarkBlue;
   
+  --textarea-background: unset;
+  
   --green-text: green;
   --red-text: red;
-  --grey-text: grey;
+  --grey-text: var(--text);
   
   --code-text: dark-grey;
 }
@@ -25,16 +24,15 @@
   --body-background: #454442;
   --body-text: var(--text);
   
-  --button-background: #696A6D;
-  --textarea-background: var( --button-background);
-  
   --graph-hover: #666666;
   --graph-selected: #CCCCCC;
   --graph-decoration-color: #BE9E0A;
   
+  --textarea-background: var( --button-background);
+  
   --green-text: #5ff35f;
   --red-text: #fd2020;
-  --grey-text: grey;
+  --grey-text: var(--text);
   
   --code-text: light-grey;
 }   
