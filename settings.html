@@ -2,6 +2,7 @@
     <head>
         <title>Settings</title>
         <script src="settings.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
     </head>
  
 
@@ -13,12 +14,11 @@
         body{
             font-family: Arial;
             font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
         }
 
-        
         th{
-            background-color: #444;
-            color: #fff;
             border-collapse: collapse;
             text-align:left;
             font-size: 12pt;
@@ -55,10 +55,6 @@
         .right{
             text-align:right;   
         }
-        textarea{ 
-            width: 100%;
-            line-height: 1;
-        }
         iframe{
             width: 100%;
         } 
@@ -91,6 +87,33 @@
         code{
             color: #006400; 
             font-size: 11pt;  
+            color: var(--code-text);
+        }
+        button{
+            color: var(--body-text);
+            background-color: var(--button-background);
+        }
+        textarea{ 
+            width: 100%;
+            line-height: 1;
+            color: var(--body-text);
+            background-color: var(--textarea-background);
+        }
+        input{
+            color: var(--body-text);
+            background-color: var(--textarea-background);
+        }
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        .grey{
+            color: var(--grey-text);
+        }
+        .orange{
+            color: var(--orange-text);
         }
         
         
@@ -146,7 +169,13 @@
     
     
 
-<body> 
+<body class='light'>     
+    <!-- Dark mode on/off --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>
      
     <div id="outer-content">
             

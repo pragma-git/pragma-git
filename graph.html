@@ -151,6 +151,15 @@
     </style>
              
     <body class='light'> 
+        
+        <!-- Dark mode on/off --> 
+        <script>
+            if (global.localState.dark){
+                document.body.classList.add('dark');
+            }
+        </script>        
+            
+        
         <h2><span id='repoName'></span>
         ( <img style="height: 12; width: 12" src="images/circle_green.png"> <u><span id='branchName'></span></u>)
         
@@ -168,13 +177,7 @@
         <div id="graphContent" class="content"> 
         </div>
     </body>      
-    
-    <!-- Dark mode on/off --> 
-    <script>
-        if (global.localState.dark){
-            document.body.classList.add('dark');
-        }
-    </script>
+
               
 
     <script> <!-- User interactions --> 

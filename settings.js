@@ -241,7 +241,7 @@ async function _callback( name, event){
         
             
             // Make black, to show user that something happened (if green or red before
-            document.getElementById(textareaId).style.color='grey';
+            document.getElementById(textareaId).classList.add('grey');
             
             
             //  Set remote URL 
@@ -262,7 +262,9 @@ async function _callback( name, event){
                     
                     console.log('Repository set URL failed');
                     console.log(err);
-                    document.getElementById(textareaId).style.color='orange';
+                    document.getElementById(textareaId).classList.add('red');
+                    document.getElementById(textareaId).classList.remove('grey');
+                    document.getElementById(textareaId).classList.remove('green');
                 }           
             }
 
@@ -276,14 +278,18 @@ async function _callback( name, event){
                     function onSetRemoteUrl(err, result ){console.log(result) };
                 
                 function onListRemote(err, result ){console.log(result) };
-                document.getElementById(textareaId).style.color='green';
+                document.getElementById(textareaId).classList.add('green');
+                document.getElementById(textareaId).classList.remove('grey');
+                document.getElementById(textareaId).classList.remove('red');
     
             }catch(err){
                 
                 //displayAlert('Failed verifying remote URL', err)
                 console.log('Repository test failed');
                 console.log(err);
-                document.getElementById(textareaId).style.color='red';
+                document.getElementById(textareaId).classList.add('red');
+                document.getElementById(textareaId).classList.remove('grey');
+                document.getElementById(textareaId).classList.remove('green');
             }
 
             

@@ -1,18 +1,40 @@
         
 .light {
+  --text:  #222222;
+  
   --body-background: #FAFAFA;
-  --body-text: #000000;
+  --body-text: var(--text);
+  
+  --button-background: unset;
+  --textarea-background: unset;
   
   --graph-hover: #BBBBBB;
-  --graph-selected: #cccccc;
+  --graph-selected: #CCCCCC;
   --graph-decoration-color: DarkBlue;
+  
+  --green-text: green;
+  --red-text: red;
+  --grey-text: grey;
+  
+  --code-text: dark-grey;
 }
  
 .dark {
+  --text:  #DDDDDD;
+  
   --body-background: #454442;
-  --body-text: #FAFAFA;
+  --body-text: var(--text);
+  
+  --button-background: #696A6D;
+  --textarea-background: var( --button-background);
   
   --graph-hover: #666666;
   --graph-selected: #CCCCCC;
   --graph-decoration-color: #BE9E0A;
+  
+  --green-text: #5ff35f;
+  --red-text: #fd2020;
+  --grey-text: grey;
+  
+  --code-text: light-grey;
 }   
