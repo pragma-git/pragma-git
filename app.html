@@ -2,14 +2,14 @@
 <head>
     <title>Pragma-git</title>
     
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="slider_switch.css" />
-    
     
     <script src="app.js"></script>
     
 
-    <!-- Drop folder border-->
+    <!-- Border for dropping folder-->
     <style>
         #content { border: 3px solid #dddddd; }
         #content.hover  { border: 3px dashed #333; }
@@ -19,8 +19,15 @@
 </head>
 
 
-<body>
+<body id='body' class='light'>
 
+    <!-- Dark mode on/off --> 
+    <script>
+        localState.dark=true
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>
     
     <!-- Top titlebar -->    
     
@@ -246,12 +253,12 @@
                         <div id="output_text">
                                                         
                             <div class="group">
-                                <label for="findTextInput">  <span id="mess_text" style="color: #000000">message</span> &nbsp;
+                                <label for="findTextInput">  <span id="mess_text" style="color: var(--text);">message</span> &nbsp;
                                     <label class="switch">
                                         <input id="message_code_switch" type="checkbox" class="slider round" onclick="colorSwitchTexts();find_button.click()">
                                         <span class="slider round"></span> 
                                     </label>
-                                    &nbsp; <span id="code_text" style="color: #aaaaaa">code-change</span> 
+                                    &nbsp; <span id="code_text" style="color: var(--dim-text);">code-change</span> 
                                 </label>
                                 <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
                             </div>
@@ -303,11 +310,11 @@
                 }
                 function colorSwitchTexts(){
                     if ( document.getElementById("message_code_switch").checked ){
-                        document.getElementById('code_text').setAttribute('style','color: #000000');
-                        document.getElementById('mess_text').setAttribute('style','color: #aaaaaa');
+                        document.getElementById('code_text').setAttribute('style','color: var(--text)');
+                        document.getElementById('mess_text').setAttribute('style','color: var(--dim-text)');
                     }else{
-                        document.getElementById('code_text').setAttribute('style','color: #aaaaaa');
-                        document.getElementById('mess_text').setAttribute('style','color: #000000');
+                        document.getElementById('code_text').setAttribute('style','color: var(--dim-text)');
+                        document.getElementById('mess_text').setAttribute('style','color: var(--text)');
                     }
                 }
             </script>    

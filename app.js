@@ -3393,9 +3393,12 @@ function updateContentStyle() {
     var contentStyle = "position: absolute; ";
     contentStyle += "left: " + left + "px; ";
     contentStyle += "top: " + top + "px; ";
-    contentStyle += "width: " + width + "px; ";
+    //contentStyle += "width: " + width + "px; ";
     contentStyle += "height: " + height  + "px; ";
     content.setAttribute("style", contentStyle);
+    
+    //var body = document.getElementById("body");
+    //body.setAttribute("style", "width:" + width + "px;");
     
     //// This is to make message textarea follow window resize
     //var message_area = document.getElementById("message");

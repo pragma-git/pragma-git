@@ -1,38 +1,47 @@
         
-.light {
+.light {  
+  /* General */
   --text:  #222222;
-  
-  --body-background: #FAFAFA;
   --body-text: var(--text);
+  --input-background: #FFFFFF;
+  --input-placeholder: #777777;
   
+  /* Graph */
   --graph-hover: #BBBBBB;
   --graph-selected: #CCCCCC;
   --graph-decoration-color: DarkBlue;
   
-  --textarea-background: unset;
-  
+  /* Settings */
   --green-text: green;
   --red-text: red;
   --grey-text: var(--text);
-  
   --code-text: dark-grey;
+  
+  /* Main */
+  --main-background: #DDDDDD;
+  --dim-text: #777777;
 }
  
 .dark {
+  /* General */
   --text:  #DDDDDD;
-  
   --body-background: #454442;
   --body-text: var(--text);
+  --input-background: #505050;
+  --input-placeholder: #999999;
   
+  /* Graph */
   --graph-hover: #666666;
   --graph-selected: #CCCCCC;
   --graph-decoration-color: #BE9E0A;
   
-  --textarea-background: var( --button-background);
-  
+  /* Settings */
   --green-text: #5ff35f;
   --red-text: #fd2020;
   --grey-text: var(--text);
-  
   --code-text: light-grey;
+  
+  /* Main */
+  --main-background: var(--body-background);
+  --dim-text: #777777;
 }   
