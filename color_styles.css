@@ -19,33 +19,48 @@
   
   /* Main */
   --main-background: #DDDDDD;
-  --dim-text: #777777; /* used in switch off */
+  --dim-text: #777777; 
   --message-color: #0033FF;
   --message-placeholder: var(--text);
 }
  
 .dark {
   /* General */
-  --text:  #DDDDDD;
-  --body-background: #454442;
-  --body-text: var(--text);
-  --input-background: #505050;
-  --input-placeholder: #999999;
+  --text:  #DDDDDD;                 /* in html and main windows (almost white) */
+  
+  --body-background: #454442;       /* in html windows (dark grey) */
+  --body-text: var(--text);         /* in html windows and inputs */
+  --link-color: #efc918;        /* in html windows */
   
   /* Graph */
-  --graph-hover: #666666;
-  --graph-selected: #CCCCCC;
-  --graph-decoration-color: #d6b51d;
+  --graph-hover: #666666;            /* (dark grey) */
+  --graph-selected: #CCCCCC;         /* (light grey) */
+  --graph-decoration-color: #d6b51d; /* (mustard yellow) */
   
   /* Settings */
-  --green-text: #5ff35f;
-  --red-text: #fd2020;
-  --grey-text: var(--text);
-  --code-text: light-grey;
+  --input-background: #505050;      /* in html windows (slightly less dark grey) */
+  --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
   
-  /* Main */
-  --main-background: var(--body-background);
-  --dim-text: #777777; /* used in switch off */
-  --message-color: #efc918;
-  --message-placeholder: var(--text);
+  --green-text: #5ff35f;         /* url works (green) */
+  --red-text: #fd2020;           /* url fails (red) */
+  --grey-text: var(--text);      /* (dark grey) */
+  --code-text: light-grey;       /* (dark grey) */
+  
+  /* Main window (different to rest of windows) */
+  --main-background: var(--body-background);    /* main window background color (same as for html) */
+  --dim-text: #777777;                          /* text switch off */
+  
+  --message-color: #efc918;                     /* message field: history and edit color (blue) */
+  --message-placeholder: var(--text);           /* message field: other texts */
 }   
+
+/* TESTS */
+
+/* Focus (blue rectangle when element in focus) */
+textarea:focus, input:focus {
+  outline: 0; /* Removes the default blue ring */
+
+  /* Now, let's create our own focus style */
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px grey;
+}

@@ -522,7 +522,7 @@ function createFileTable(status_data) {
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: blue; cursor: pointer");
+                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('restoreDialog').showModal();" );  // Opens dialog from html-page
@@ -533,7 +533,7 @@ function createFileTable(status_data) {
                 // Make delete link (only if modified or added) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'added'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: blue; cursor: pointer");
+                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
@@ -547,7 +547,7 @@ function createFileTable(status_data) {
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');
                 if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
-                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
                     diffLink.textContent=" (diff)";
                     return  diffLink;
@@ -578,7 +578,7 @@ function createFileTable(status_data) {
                         
                     }  
 
-                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                 }
@@ -605,7 +605,7 @@ function createFileTable(status_data) {
                     
                     
 
-                    diffLink.setAttribute('style', "color: blue; cursor: pointer");
+                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                     

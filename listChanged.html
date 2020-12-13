@@ -5,6 +5,8 @@
     
     <title>Changed files</title>
     
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
     <script src="listChanged.js"></script>
     
     <!-- As in settings.html -->
@@ -12,6 +14,11 @@
         body{
             font-family: Arial;
             font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+        span { 
+            color: var(--link-color); 
         }
         th{
             border-collapse: collapse;
@@ -110,7 +117,14 @@
 
     
 </head>
-<body>
+<body class='light'>
+    <!-- Dark mode on/off --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+    </script>
     
     <h2>List of modified files
             <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
