@@ -37,9 +37,7 @@ textarea{
     border-width: thin;
     background-color: var(--input-background);
 }  
-textarea::placeholder {
-  color: var(--input-placeholder);
-}
+
 
 .group{
     display: inline-block;
@@ -99,7 +97,12 @@ td {
 .message{
   width: 100%;
   height: 100%;
+  color: var(--message-color);
 }
+.message::placeholder {
+  color: var(--message-placeholder);
+}
+
 
 #arrow_table{
   height: inherit; 

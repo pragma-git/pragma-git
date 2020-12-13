@@ -19,7 +19,9 @@
   
   /* Main */
   --main-background: #DDDDDD;
-  --dim-text: #777777;
+  --dim-text: #777777; /* used in switch off */
+  --message-color: #0033FF;
+  --message-placeholder: var(--text);
 }
  
 .dark {
@@ -33,7 +35,7 @@
   /* Graph */
   --graph-hover: #666666;
   --graph-selected: #CCCCCC;
-  --graph-decoration-color: #BE9E0A;
+  --graph-decoration-color: #d6b51d;
   
   /* Settings */
   --green-text: #5ff35f;
@@ -43,5 +45,7 @@
   
   /* Main */
   --main-background: var(--body-background);
-  --dim-text: #777777;
+  --dim-text: #777777; /* used in switch off */
+  --message-color: #efc918;
+  --message-placeholder: var(--text);
 }   
