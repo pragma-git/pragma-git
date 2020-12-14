@@ -3835,7 +3835,11 @@ window.onfocus = function() {
 };
 window.onblur = function() { 
   console.log("blur");
-  focusTitlebars(false);
+  
+  // Do not blur if always on top
+  if ( state.alwaysOnTop === false){
+    focusTitlebars(false);  
+  }
 };
 window.onresize = function() {
   //win.reload();
