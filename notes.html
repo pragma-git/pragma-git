@@ -14,6 +14,8 @@
         <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css" />
         <link rel="stylesheet" href="node_modules/@toast-ui/editor/dist/toastui-editor.css" />
         
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
         
 
  <style>
@@ -27,6 +29,58 @@
     #editor{
         margin-top: -2px  /* I get scrollbars in window otherwise, because a build-in 1px border around editor. */
     }  
+    
+    /* modify toast-ui  general */ 
+    span, 
+    .te-editor,
+    .tui-editor-contents h1, 
+    .tui-editor-contents h2,  
+    .tui-editor-contents h3, 
+    .tui-editor-contents  h4,  
+    .tui-editor-contents h5,  
+    .tui-editor-contents h6,   
+    .tui-editor-contents ul,  
+    .tui-editor-contents ol,  
+    .tui-editor-contents li, 
+    .tui-editor-contents h6, 
+    .tui-editor-contents p,  
+    .tui-editor-contents table,  
+    .tui-editor-contents dir, 
+    .CodeMirror, 
+    .te-md-container, 
+    .tui-md-table.tui-md-marked-text,
+    .tui-md-heading1,
+    .tui-md-heading2, 
+    .tui-md-heading3,
+    .tui-md-heading4,
+    .tui-md-heading5,
+    .tui-md-heading6,
+    .tui-md-list-item
+    {
+        background: var(--body-background);
+        color: var(--body-text);
+    }
+    
+    /* modify toast-ui  code */ 
+    .tui-editor-contents pre,
+    .tui-editor-contents code,
+    .tui-md-code,
+    .tui-md-code-block,
+    .tui-md-code.tui-md-marked-text,
+    .tui-md-code-block.CodeMirror-linebackground 
+    {
+        background-color: var(--code-background);
+        color: var(--code-text);
+    }
+    
+    /* markdown */
+    .tui-md-code,
+    .tui-editor-contents .te-preview-highlight::after,
+    .tui-editor-contents th.te-preview-highlight,
+    .tui-editor-contents td.te-preview-highlight
+     {
+        background-color: rgba(255, 245, 131, 0.15);
+    }
 
     .outer-content {
         width: 100%;
@@ -41,7 +95,15 @@
 
 
   </head>
-  <body>
+  
+  <body class='light'>
+    <!-- Dark mode on/off --> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+    </script>
 
 
 <!--
