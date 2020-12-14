@@ -49,6 +49,9 @@
   /* Notes */
   --code-background: #606060;
   
+  /* Merge */
+  --merge-body-background: #999999;
+  
   /* Main window (different to rest of windows) */
   --main-background: var(--body-background);    /* main window background color (same as for html) */
   --dim-text: #777777;                          /* text switch off */
