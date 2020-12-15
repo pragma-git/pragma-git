@@ -17,6 +17,9 @@ body {
   font-family: Arial;
 }
 
+img {
+    filter: invert(0%)
+}
 
 label {
   font-size: 9pt; 

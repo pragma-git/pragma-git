@@ -57,6 +57,7 @@
             background: var(--body-background);
         }  
 
+
         .outer-content {
             width: 100%;
             height: auto;
@@ -86,10 +87,15 @@
           border-style: solid;
           border-width: 1px;
           border-radius: 2px;
-          border-color: black;
+          border-color: var( --body-text);
           float: left;
           display: block;
           margin-right: 2px;
+        }
+        
+        #up, #down{
+          color: var( --body-text);
+          border-color: var( --body-text);
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
