@@ -350,8 +350,10 @@ async function closeWindow(){
     state.settingsWindow.unfolded = {};
     for (i = 0; i < coll.length; i++) {
         state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
-
     }
+    
+    // Read Dark mode 
+    state.darkmode = document.querySelectorAll("input[name=darkmode]:checked")[0].value;
     
     // Set Git author name and email (stored in git, not in settings)
     try{
@@ -563,6 +565,8 @@ async function injectIntoSettingsJs(document) {
 
     
     // Set values according to state variable
+    document.getElementById(state.darkmode).checked = true;
+    
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
     document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
     

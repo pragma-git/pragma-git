@@ -3681,8 +3681,10 @@ function loadSettings(settingsFile){
         
         // Visual
             console.log('- setting visual settings');
+            state.darkmode = setting( state_in.darkmode, 'system');
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+            
         
         // Git
             console.log('- setting git settings');
@@ -3787,6 +3789,8 @@ function updateWithNewSettings(){
     // - settings.html                                 -- where the form element for the setting is shown
     
     
+    localState.dark = state.darkmode;
+    
     win.setAlwaysOnTop( state.alwaysOnTop );
     
     // For systems that have multiple workspaces (virtual screens)
@@ -3807,6 +3811,24 @@ function updateWithNewSettings(){
     if ( state.tools.mergetool.trim().length == 0 ){
         state.tools.mergetool = "pragma-git";
     }   
+
+    // Set dark mode
+    switch (state.darkmode) {
+      case 'system': {
+        localState.dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        break;
+      }
+      case 'light': {
+        localState.dark = false;
+        break;
+      }
+      case 'dark': {
+        localState.dark = true;
+        break;
+      }
+    }
+      
+    
 
 }
 

@@ -71,10 +71,12 @@ img{
 
 
 
-/* TESTS */
+/* Style inputs */
 
-/* Focus (blue rectangle when element in focus) */
-textarea:focus, input:focus {
+/* Focus (grey rectangle when element in focus) */
+textarea:focus, 
+input[type=text]:focus 
+{
   outline: 0; /* Removes the default blue ring */
 
   /* Now, let's create our own focus style */
