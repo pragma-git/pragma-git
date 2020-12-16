@@ -58,9 +58,9 @@
   
   /* Main window (different to rest of windows) */
   --main-background: var(--body-background);    /* main window background color (same as for html) */
-  --dim-text: #777777;                          /* text switch off */
+  --dim-text: #777777;                          /* search text-switch off-state */
   
-  --message-color: #efc918;                     /* message field: history and edit color (blue) */
+  --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
   --message-placeholder: var(--text);           /* message field: other texts */
 }   
 
