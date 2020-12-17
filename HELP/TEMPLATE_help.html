@@ -3,12 +3,21 @@
         <title id='title'>Template</title>  <!-- TITLE --> 
 
         <link rel="stylesheet" type="text/css" href="help.css" />
+        <link rel="stylesheet" type="text/css" href="../color_styles.css" />
+        
     </head>
 
  
     
 
-<body> 
+<body class='light'> 
+    
+    <!-- Dark mode on/off --> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>       
 
 <!-------------------------------------------------------------------------------------------->    
     <h2>Help on <span id='name'></h2>   <!-- TITLE --> 

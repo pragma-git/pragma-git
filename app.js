@@ -3393,9 +3393,12 @@ function updateContentStyle() {
     var contentStyle = "position: absolute; ";
     contentStyle += "left: " + left + "px; ";
     contentStyle += "top: " + top + "px; ";
-    contentStyle += "width: " + width + "px; ";
+    //contentStyle += "width: " + width + "px; ";
     contentStyle += "height: " + height  + "px; ";
     content.setAttribute("style", contentStyle);
+    
+    //var body = document.getElementById("body");
+    //body.setAttribute("style", "width:" + width + "px;");
     
     //// This is to make message textarea follow window resize
     //var message_area = document.getElementById("message");
@@ -3678,8 +3681,10 @@ function loadSettings(settingsFile){
         
         // Visual
             console.log('- setting visual settings');
+            state.darkmode = setting( state_in.darkmode, 'system');
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+            
         
         // Git
             console.log('- setting git settings');
@@ -3784,6 +3789,8 @@ function updateWithNewSettings(){
     // - settings.html                                 -- where the form element for the setting is shown
     
     
+    localState.dark = state.darkmode;
+    
     win.setAlwaysOnTop( state.alwaysOnTop );
     
     // For systems that have multiple workspaces (virtual screens)
@@ -3804,6 +3811,24 @@ function updateWithNewSettings(){
     if ( state.tools.mergetool.trim().length == 0 ){
         state.tools.mergetool = "pragma-git";
     }   
+
+    // Set dark mode
+    switch (state.darkmode) {
+      case 'system': {
+        localState.dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        break;
+      }
+      case 'light': {
+        localState.dark = false;
+        break;
+      }
+      case 'dark': {
+        localState.dark = true;
+        break;
+      }
+    }
+      
+    
 
 }
 
@@ -3832,7 +3857,11 @@ window.onfocus = function() {
 };
 window.onblur = function() { 
   console.log("blur");
-  focusTitlebars(false);
+  
+  // Do not blur if always on top
+  if ( state.alwaysOnTop === false){
+    focusTitlebars(false);  
+  }
 };
 window.onresize = function() {
   //win.reload();

@@ -2,12 +2,16 @@
     <head>
       <title>About</title>
       
+        <link rel="stylesheet" type="text/css" href="HELP/help.css" />
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
     </head>
     
     <style>
         body{
             font-family: Arial;
             font-size: 12pt;
+            background-color: var(--body-background);
+            color: var(--body-text);
         }
         
         h4{
@@ -17,7 +21,7 @@
             text-align:center;   
         }       
         code{
-            color: #006400; 
+            color: var(--code-text);
             font-size: 11pt;  
         }
         
@@ -37,6 +41,17 @@
         }
         td{
             padding: 6px;
+        }
+                
+        
+        img[src="images/Cheat-sheet.png"],
+        img[src="images/Cheat-sheet-advanced.png"], 
+        img[src="images/top-title-bar.png"] , 
+        img[src="images/bottom-status-bar.png"] , 
+        img[src="images/conflict-status-bar.png"] , 
+        img[src="images/top-title-bar.png"] 
+        {
+            filter: invert( 0% );
         }
 
 
@@ -87,8 +102,14 @@
     </style>
 
     
-
-<body>   
+<body class='light'> 
+    
+    <!-- Dark mode on/off --> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>    
     
       
 <div id="content">

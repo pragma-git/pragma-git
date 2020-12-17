@@ -2,6 +2,7 @@
     <head>
         <title>Settings</title>
         <script src="settings.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
     </head>
  
 
@@ -13,12 +14,11 @@
         body{
             font-family: Arial;
             font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
         }
 
-        
         th{
-            background-color: #444;
-            color: #fff;
             border-collapse: collapse;
             text-align:left;
             font-size: 12pt;
@@ -55,10 +55,6 @@
         .right{
             text-align:right;   
         }
-        textarea{ 
-            width: 100%;
-            line-height: 1;
-        }
         iframe{
             width: 100%;
         } 
@@ -91,7 +87,31 @@
         code{
             color: #006400; 
             font-size: 11pt;  
+            color: var(--code-text);
         }
+
+        textarea{ 
+            width: 100%;
+            line-height: 1;
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        input{
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        .grey{
+            color: var(--grey-text);
+        }
+
         
         
     </style>
@@ -146,7 +166,13 @@
     
     
 
-<body> 
+<body class='light'>     
+    <!-- Dark mode on/off --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+    </script>
      
     <div id="outer-content">
             
@@ -235,20 +261,30 @@
                 
         <div class="content">              
                 
-            <h4>Visual</h4>  
+            <h3>Visual</h3>  
+            
+                <!--  Dark mode -->
+                Dark mode setting (restart Pragma-git needed): <br>
+                <input type="radio" id="system" name="darkmode" value="system">
+                <label for="system">System setting</label><br>
+                <input type="radio" id="light" name="darkmode" value="light">
+                <label for="light">Light mode</label><br>
+                <input type="radio" id="dark" name="darkmode" value="dark">
+                <label for="dark">Dark mode</label><br><br> 
                    
+                
+                Window behavior : <br>   
                 <!--  Always on top -->
                 <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                 <label for="alwaysOnTop"> Always on top</label><br>
                    
                 <!--  On all workspaces (Mac and Linux virtual desktops) -->
                 <input type="checkbox" id="onAllWorkspaces" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br>
+                <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br><br>  
 
                 
-            <h4>Git Settings</h4>  
+            <h3>Git Settings</h3>  
                
-
                 <table>            
                   <tr style="border: none;">
                         <td>
@@ -279,7 +315,7 @@
             
              
               
-            <h4>Git tools (built-in if empty)</h4>  
+            <h3>Git tools (built-in if empty)</h3>  
 
                 <table>
                     <tr style="border: none;">

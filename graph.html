@@ -2,6 +2,8 @@
     <head>
         <title>Commit graph</title>
         
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
         <script src="graph.js"></script>
     </head>
 
@@ -13,8 +15,10 @@
             font-family: Arial;
             font-size: 10pt;
             width: max-content;
+            background: var(--body-background);
+            color: var(--body-text);
         }
-        
+    
         
         /* Set outline: 0.01px to show */
         
@@ -56,7 +60,7 @@
         .decoration {
             float: left;
             font-weight: bold;
-            color: DarkBlue;
+            color: var(--graph-decoration-color);
             font-size: inherit;
         }
         
@@ -130,6 +134,18 @@
              width: 15px;
              z-index: 1;
         } 
+        
+        .node, 
+        .noInvert, 
+        .pinned-icon 
+        {
+            filter: invert( 0% );
+        }
+        
+       
+        img[src="images/circle_black.png"]  {
+            filter: invert( var( --image-invert) );
+        }
 
    
     </style>
@@ -138,20 +154,29 @@
     <style> 
         .selected{
             color: green;
-            background: #cccccc;
+            background: var(--graph-selected);
         }
         .text:hover {
-            background: #bbbbbb;
+            background: var(--graph-hover);
         }
 
     </style>
              
-    <body> 
+    <body class='light'> 
+        
+        <!-- Dark mode on/off --> 
+        <script>
+            if (global.localState.dark){
+                document.body.classList.add('dark');
+            }
+        </script>        
+            
+        
         <h2><span id='repoName'></span>
-        ( <img style="height: 12; width: 12" src="images/circle_green.png"> <u><span id='branchName'></span></u>)
+        ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
         
         <!-- Help button --> 
-        <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+        <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
             onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
             onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
             onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
@@ -163,7 +188,9 @@
           <!-- Empty content, fill in with injectIntoJs in graph.js --> 
         <div id="graphContent" class="content"> 
         </div>
-    </body>                
+    </body>      
+
+              
 
     <script> <!-- User interactions --> 
          
