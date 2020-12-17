@@ -17,6 +17,7 @@ body {
   font-family: Arial;
 }
 
+
 img {
     filter: invert(0%)
 }
@@ -90,6 +91,13 @@ td {
 .settingsActionCell{
   text-align: center;
 }
+
+
+
+#up-arrow, #down-arrow, #bottom-titlebar-find-icon{
+  filter: brightness( var(--history-icon-brightness)) 
+}
+
 
 .message_column{
   width: 100%;

@@ -22,8 +22,11 @@
   /* Main */
   --main-background: #DDDDDD;
   --dim-text: #777777; 
+  
   --message-color: #0033FF;
   --message-placeholder: var(--text);
+  
+  --history-icon-brightness: 1;                 /* keep original */
 }
  
 .dark {
@@ -62,6 +65,8 @@
   
   --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
   --message-placeholder: var(--text);           /* message field: other texts */
+  
+  --history-icon-brightness: 10;                 /* make white */
 }   
 
 
