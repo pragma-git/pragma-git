@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
  
-    <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
     
     
     
@@ -31,6 +30,8 @@
     
     <script src="pragma-merge.js"></script>
     
+    
+    
  
  <!-- Ctrl-F search-->
 <link rel="stylesheet" href="node_modules/codemirror/lib/docs.css">   
@@ -47,6 +48,7 @@
 <script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
     
 
+    <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
     
      <style>
         html, body {
@@ -119,12 +121,16 @@
             border:none;
         }
         
-        .CodeMirror-merge-gap, .CodeMirror-gutter,
+        .CodeMirror-merge-gap, .CodeMirror-gutter
         #editor2, #right2, 
         #editor3, #left3, #right3 {
             background: var(--body-background);
             color: var(--body-text);
             border:none;
+        }
+        
+        .CodeMirror-merge-copy{
+            color: var(--merge-arrow);
         }
 
   </style>
