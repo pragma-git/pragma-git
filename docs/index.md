@@ -78,10 +78,13 @@ Installation
 -   Download
 
 -   Windows / Mac — download and run installer
-    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0))
+    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0&lst=))
 
--   Linux — download deb or rpm installer. Try to double-click and run.  
-    If that is not allowed :
+-   Linux — download deb or rpm installer
+    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0&lst=)).
+    Try to double-click and run.  
+    If that is not allowed (replace `INSTALLATION_FILE` with the path to the
+    installation file):
 
     -   Ubuntu, Linux Mint, etc (deb-format) :  
         `sudo dpkg --install INSTALLATION_FILE`
