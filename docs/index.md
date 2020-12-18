@@ -39,28 +39,24 @@ Screen shot
 Example screen shot with all the functions enabled (most of the time many of
 these icons will be hidden, and they are shown only when meaningful) :
 
-![](images/Pragma-git-screen-shot.png)
-
 Features
 --------
 
+![](https://raw.githubusercontent.com/JanAxelsson/Pragma-git/master/images/Pragma-git-screen-shot.png)
+
 -   Easy overview of current repository, branch and number of changed files
 
--   Dash-board small screen estate, fits on screen with other softwares  
-      
-    
+-   Dash-board small screen estate, fits on screen with other softwares
 
 -   Drag-and-drop to create or add repository
 
--   Note-taking, wysiwyg or markdown, with todo lists etc  
-    
+-   Note-taking, wysiwyg or markdown, with todo lists etc
 
 -   Auto-push to remote repository (can be disabled in settings)
 
 -   Auto-fetch, and indication if if pull is possible
 
--   Standard git features, such as branch, merge, push, pull, tag, stash  
-    
+-   Standard git features, such as branch, merge, push, pull, tag, stash
 
 -   History browser
 
@@ -68,8 +64,7 @@ Features
     instead)
 
 -   Settings, handling repository, branches, remotes, cloning as well as
-    software preferences  
-    
+    software preferences
 
 -   Fully git compatible, try it, and use together with other clients
 
@@ -80,7 +75,10 @@ Features
 Installation
 ------------
 
+-   Download
+
 -   Windows / Mac — download and run installer
+    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0))
 
 -   Linux — download deb or rpm installer. Try to double-click and run.  
     If that is not allowed :
