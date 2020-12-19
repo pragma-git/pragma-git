@@ -2556,6 +2556,14 @@ async function gitStatus(){
         };
 
 }
+async function gitReadConfig(){
+            
+        let out = [];
+        await simpleGit( state.repos[state.repoNumber].localFolder ).listConfig( onConfig)
+        function onConfig(err, result ){  out = result; console.log(out);console.log(err)}
+        
+        return out;
+}
 async function gitShowHistorical(){
 
     
@@ -2980,16 +2988,35 @@ async function gitPush(){
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
     
+    let configItems = await gitReadConfig();
 
     // Push
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
     try{
-        // Check that remote is configured
-        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote); 
+        // Bail out if remote not configured 
+        let c = configItems.all['remote.origin.url'];
+        if (c === undefined ||  c.trimEnd().trimStart() === '') {
+            console.log('URL empty or undefined'); // Nothing to push to
+            return
+        }else{
+            console.log('URL defined'); 
+        }
+
+        
+        // Test if remote works
+        await simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote); 
         function onListRemote(err, result) {console.log(result) };
         
-        await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
-        function onPush(err, result) {console.log(result) };
+        // remote.origin.mirror  -- two cases
+        if ( configItems.all['remote.origin.mirror'] === 'true'){
+            // 'mirror' incompatible with refspace ('origin') and '--tags'
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( currentBranch,{'--set-upstream' : null}, onPush);
+        }else{
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+        }
+        function onPush(err, result) {console.log(result) };  
+        
+
     }catch(err){
         displayAlert('Push Error', err);
     }
