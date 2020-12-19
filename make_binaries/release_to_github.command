@@ -2,15 +2,16 @@
 
 TOKEN_FILE="../mytoken.txt"
 
-TAG=0.7.2
+TAG=0.8.0
 REPO=JanAxelsson/Pragma-git
 
 RELEASE_TITLE='First release on GitHub'
 
 # Release Notes
 read -r -d '' RELEASE_NOTES << ---
-This is the first release of Pragma-git the pragmatic Git Client
+Dark mode introduced
 
+___
 The aim with Pragma-git is to be
 - ”pragmatic” — aiming to be the opposite to how many beginners perceive git
 - easy to start — and something to grow in for daily programming tasks
@@ -18,7 +19,6 @@ The aim with Pragma-git is to be
 
 Read more on the home page : https://janaxelsson.github.io/Pragma-git/
 
-___
 **Download the *one* installer that matches your system :**
 
 **-win-x64.exe** (Windows 64 bit)
