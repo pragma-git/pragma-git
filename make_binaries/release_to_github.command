@@ -1,13 +1,14 @@
 #!/bin/bash
 
-TOKEN_FILE="../mytoken.txt"
+# Modify  1) - 3) :
 
+# 1) Tag to use for this Release
 TAG=0.8.0
-REPO=JanAxelsson/Pragma-git
 
-RELEASE_TITLE='First release on GitHub'
+# 2) Release Title
+RELEASE_TITLE='Dark mode release'
 
-# Release Notes
+# 3) Release Notes
 read -r -d '' RELEASE_NOTES << ---
 Dark mode introduced
 
@@ -29,6 +30,9 @@ Read more on the home page : https://janaxelsson.github.io/Pragma-git/
 ---
 
 
+TOKEN_FILE="../mytoken.txt"
+REPO=JanAxelsson/Pragma-git
+
 cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 
 #
@@ -48,11 +52,6 @@ cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
       --title "$RELEASE_TITLE"
       
     # Upload binaries  
-    gh release upload \
-      $TAG \
-      '/Users/jan/Documents/Projects/Pragma-git/dist/win32/Pragma-git-installer.exe' \
-      --repo "$REPO" 
-      
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win32/Pragma-git*.exe)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
