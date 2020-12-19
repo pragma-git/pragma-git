@@ -75,14 +75,13 @@ Features
 Installation
 ------------
 
--   Download
+-   Windows / Mac — [Download
+    here](https://github.com/JanAxelsson/Pragma-git/releases/latest) and run
+    installer
 
--   Windows / Mac — download and run installer
-    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0&lst=))
-
--   Linux — download deb or rpm installer
-    ([link](https://www.dropbox.com/sh/wyrx7fq9nuvfgnb/AABHgmInOA2NinioGCYEE208a?dl=0&lst=)).
-    Try to double-click and run.  
+-   Linux — download deb or rpm ([Download
+    here](https://github.com/JanAxelsson/Pragma-git/releases/latest)). Try to
+    double-click and run.  
     If that is not allowed (replace `INSTALLATION_FILE` with the path to the
     installation file):
 

@@ -1,16 +1,18 @@
 #!/bin/bash
 
-TOKEN_FILE="../mytoken.txt"
+# Modify  1) - 3) :
 
-TAG=0.7.2
-REPO=JanAxelsson/Pragma-git
+# 1) Tag to use for this Release
+TAG=0.8.0
 
-RELEASE_TITLE='First release on GitHub'
+# 2) Release Title
+RELEASE_TITLE='Dark mode release'
 
-# Release Notes
+# 3) Release Notes
 read -r -d '' RELEASE_NOTES << ---
-This is the first release of Pragma-git the pragmatic Git Client
+Dark mode introduced
 
+___
 The aim with Pragma-git is to be
 - ”pragmatic” — aiming to be the opposite to how many beginners perceive git
 - easy to start — and something to grow in for daily programming tasks
@@ -18,7 +20,6 @@ The aim with Pragma-git is to be
 
 Read more on the home page : https://janaxelsson.github.io/Pragma-git/
 
-___
 **Download the *one* installer that matches your system :**
 
 **-win-x64.exe** (Windows 64 bit)
@@ -28,6 +29,9 @@ ___
 **-win-x86** (Windows 32 bit)
 ---
 
+
+TOKEN_FILE="../mytoken.txt"
+REPO=JanAxelsson/Pragma-git
 
 cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 
@@ -48,11 +52,6 @@ cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
       --title "$RELEASE_TITLE"
       
     # Upload binaries  
-    gh release upload \
-      $TAG \
-      '/Users/jan/Documents/Projects/Pragma-git/dist/win32/Pragma-git-installer.exe' \
-      --repo "$REPO" 
-      
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win32/Pragma-git*.exe)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
