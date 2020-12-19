@@ -199,6 +199,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
+        localState.cached = {};         // cache time-consuming things
+        localState.cached.branches = {};// cache branch info 
+        
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -219,6 +222,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
+        try {
+            gitFetch();
+        }catch (err){
+            
+        }
 
     // Inititate listening to Pragma-merge start signal
        const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
@@ -1355,93 +1363,10 @@ async function _callback( name, event){
                             let isRemoteBranch = (firstPart[0] === 'remotes');
                             let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
                             let isLocalBranch = !isRemoteBranch;
-                            
-                            //let isLocalBranch = !isRemoteBranch; 
-                            //let remoteLinkedFromLocal = branchList.branches[ myEvent.selectedBranch ].hasLocalBranch; // Means that a local branch is linked to this remote
-                            //let remoteNotLinkedFromLocal = !remoteLinkedFromLocal; // Not linked to local
-                            
-                            //let localExists =  branchList.branches[ myEvent.selectedBranch ].localExists; // Means that a local branch exists matching this
-                            //let localExistsButNotLinked = localExists && remoteNotLinkedFromLocal; // Should not show remote in menu
-                            
-                      
-/*                            if ( localExistsButNotLinked ) {            // Remote with a local branch (Show local branch instead)
-                                 // Don't show remote if local exists (local is listed, in will be shown)
-                                                   
-                          
-                            }else if ( (isRemoteBranch && remoteNotLinkedFromLocal) ){  // Remote without local branch (Show remotes menu)
-                                // Show if remote without local branch
-                                
-                                // Exception (bail out) if merge which requires local branch
-                                if ( callbackName === "clickedMergeContextualMenu"){
-                                    continue
-                                }
-                            
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-                                
-                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
-                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
-                                
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
-                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // All other cases (Show)
-                            }else{                                                      // Always show
-                        
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;
-                            }
-                        // END remotes */
+ 
 
                            if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
-                                 // a remote where a local exists (local is listed, in will be shown)
+                                // a remote where a local exists (local is listed, in will be shown)
                                                    
                           
                             }else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
@@ -1451,19 +1376,30 @@ async function _callback( name, event){
                                 if ( callbackName === "clickedMergeContextualMenu"){
                                     continue
                                 }
-                            
+
+                                
+                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                
+                                // Mark if remote not existing on git server
+                                if ( ! branchList.branches[ menuItems[i]].existsOnRemote ){
+                                    console.log('Skip showing branch that is missing on remote.  Branch = ' + myEvent.selectedBranch);
+                                    secondPart =  secondPart + ' \u2B60  not on server ';
+                                    continue; // Stop from showing (I have obviously prepared for showing on line above)
+                                }
+                             
                                 
                                 // Create submenu remotes -- reuse if same firstPart as last time
                                 if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
                                     item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    menu.append(new gui.MenuItem({ type: 'separator' })); // Add separator
                                     menu.append( item); // Add submenu to main menu
                                     
                                     submenu = new gui.Menu();  // Create empty submenu
                                 }
                                 
-                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
-                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
-                                
+                                                               
                                  // Add submenu-row to submenu
                                 submenu.append(new gui.MenuItem(
                                         { 
@@ -2768,7 +2704,13 @@ async function gitBranchList(){
         -- true  if b) branch and no local counterpart a) 
         -- true if a) branch 
     
-     and a special list of local a) branches in field LOCAL :
+     and is extended with field EXISTSONREMOTE :
+     *  extendedBranchSummaryResult.branches[ branchName].existsOnRemote  which is :
+        -- true  if c) exists on remote git server (matching b)
+        -- false if c) does not exist (for b )
+        -- false for all local branch names (a)
+        
+     and extended with a special list of local a) branches in field LOCAL :
      *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
      
      TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
@@ -2790,7 +2732,6 @@ async function gitBranchList(){
     
     // Define local functions
     function onBranchList(err, result ){
-        console.log(result); 
         
         
         // Extend branchSummaryResult from simpleGit
@@ -2803,7 +2744,7 @@ async function gitBranchList(){
             extendedBranchSummaryResult.branches[branchName].show = true;
         }
 
-        // Loop brances and set new fields
+        // Loop branches and set new fields
         for (let i = 0; i < extendedBranchSummaryResult.all.length; i++) {
                             
             let branchName = extendedBranchSummaryResult.all[i];
@@ -2817,10 +2758,15 @@ async function gitBranchList(){
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
                 } 
 
+            //
+            // Set if remote exists on server (from cached)
+            //
+                extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
         }
-    }
-    
+    }  
+ } 
     function localVersionExists( allBranchNames, remoteBranchToCheck){
+        // Checks if remoteBranchToCheck (of format xxx/yyyy/THIS) exists as local version (=THIS) in allBranchNames
           
         // Build local equivalent to remote name
         let parts = remoteBranchToCheck.split('/').slice(2); // Everything from second slash ( remotes/origin/KEEPTHIS )
@@ -2843,7 +2789,7 @@ async function gitBranchList(){
         
         return result;
     }
-}
+
 async function gitHistory() {
     let history;
     
@@ -3037,23 +2983,84 @@ async function gitPush(){
 
     // Push
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
-    
-    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
-    function onPush(err, result) {console.log(result) };
+    try{
+        // Check that remote is configured
+        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote); 
+        function onListRemote(err, result) {console.log(result) };
+        
+        await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+        function onPush(err, result) {console.log(result) };
+    }catch(err){
+        displayAlert('Push Error', err);
+    }
     
     await waitTime( 1000);  
 
 }
-async function gitFetch(){
-    console.log('Running gitFetch()');
+function gitFetch(){ // Fetch and ls-remote
+    console.log('Starting gitFetch()');
      
     var error = "";
 
     // Fetch
      try{
-        await simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+
+        // Fetch
+        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
         function onFetch(err, result) {console.log(result) };
         
+        // List remote branches
+        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote);    
+        
+        async function onListRemote(err, result ){ 
+              
+            let b = await gitBranchList();
+            console.log(b);
+            console.log(result); 
+            console.log(err); 
+          
+            // Parse remote branch names
+            let splitted = result.split("\n");
+            console.log(splitted)
+
+            let remoteShortBranchNames = []; // Branch names existing on remote ( format: master)
+            
+            for(var row = 0; row < (splitted.length - 1); row++) {
+                let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
+                let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
+                remoteShortBranchNames[row] = remoteBranchName; 
+                
+                // New version
+                let parts = splitted[row].split('/');
+                remoteBranchName = '';
+                for ( i = 2; i < parts.length - 1; i++ ){
+                    remoteBranchName += parts[i] + '/';
+                }
+                remoteBranchName += parts[parts.length - 1];
+                remoteShortBranchNames[row] = remoteBranchName; 
+
+                //console.log( remoteBranchName );
+            }
+            
+            localState.cached.branches = {};
+            // Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
+            for (let i = 0; i < b.all.length; i++) {
+                let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
+                
+                let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
+                
+                localState.cached.branches[ locallyListedBranchName] = {};
+                localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
+                
+                
+                //console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
+                
+            }
+
+        }
+        
+        
+            
     }catch(err){
         console.log('Error in gitFetch()');
         console.log(err);
@@ -3393,9 +3400,12 @@ function updateContentStyle() {
     var contentStyle = "position: absolute; ";
     contentStyle += "left: " + left + "px; ";
     contentStyle += "top: " + top + "px; ";
-    contentStyle += "width: " + width + "px; ";
+    //contentStyle += "width: " + width + "px; ";
     contentStyle += "height: " + height  + "px; ";
     content.setAttribute("style", contentStyle);
+    
+    //var body = document.getElementById("body");
+    //body.setAttribute("style", "width:" + width + "px;");
     
     //// This is to make message textarea follow window resize
     //var message_area = document.getElementById("message");
@@ -3678,8 +3688,10 @@ function loadSettings(settingsFile){
         
         // Visual
             console.log('- setting visual settings');
+            state.darkmode = setting( state_in.darkmode, 'system');
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+            
         
         // Git
             console.log('- setting git settings');
@@ -3784,6 +3796,8 @@ function updateWithNewSettings(){
     // - settings.html                                 -- where the form element for the setting is shown
     
     
+    localState.dark = state.darkmode;
+    
     win.setAlwaysOnTop( state.alwaysOnTop );
     
     // For systems that have multiple workspaces (virtual screens)
@@ -3804,6 +3818,24 @@ function updateWithNewSettings(){
     if ( state.tools.mergetool.trim().length == 0 ){
         state.tools.mergetool = "pragma-git";
     }   
+
+    // Set dark mode
+    switch (state.darkmode) {
+      case 'system': {
+        localState.dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        break;
+      }
+      case 'light': {
+        localState.dark = false;
+        break;
+      }
+      case 'dark': {
+        localState.dark = true;
+        break;
+      }
+    }
+      
+    
 
 }
 
@@ -3832,7 +3864,11 @@ window.onfocus = function() {
 };
 window.onblur = function() { 
   console.log("blur");
-  focusTitlebars(false);
+  
+  // Do not blur if always on top
+  if ( state.alwaysOnTop === false){
+    focusTitlebars(false);  
+  }
 };
 window.onresize = function() {
   //win.reload();

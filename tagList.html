@@ -2,9 +2,45 @@
     <head>
         <title>List tags</title>
         <script src="tagList.js"></script>
+    
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
+        <style>
+            body{
+                font-family: Arial;
+                font-size: 11pt;
+                background: var(--body-background);
+                color: var(--body-text);
+            }
+            
+            textarea{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+            
+            
+            select{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+        
+        </style>
     </head>
     
-    <body>
+<body class='light'>
+    <!-- Dark mode on/off --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+    </script>
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
               

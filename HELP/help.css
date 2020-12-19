@@ -1,9 +1,10 @@
         body{
             font-family: Arial;
             font-size: 11pt;
+            background-color: var(--body-background);
+            color: var(--body-text);
         }
-
-        
+                
         th{
             background-color: #444;
             color: #fff;
@@ -35,7 +36,7 @@
             margin-block-end: auto;
         }
         .instructHeader{
-            color: CornflowerBlue; 
+            color: var(--body-text);
         }
         .left, h3, h4{
             text-align:left;   
@@ -77,6 +78,9 @@
           text-align:right; 
         } 
         code{
-            color: #006400; 
+            color: var(--code-text); 
             font-size: 11pt;  
+        }
+        a{
+            color: var(--link-color);
         }

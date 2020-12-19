@@ -24,7 +24,7 @@ const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
-const BUFFERTROW = '                                                        ';
+const BUFFERTROW = '                                                                                                                                                                    ';
 
 
 // Global for whole app
@@ -340,9 +340,15 @@ graphText = String.raw`
    |\    /|    A   |\    /|    
    * *  * *    A   * *  * *             
                          
+ | *    A | *  
+ | |\   A | |\        
+ |_|/   A *_|/    
+ | *    A | *     
+            
+                                                    
  \  \  \      /  /   / B \  \  \      /  /   /          
   |  *  \    |  *   /  B  |  *  \    |  *   /          
-                          
+                                                    
  *  *  *    C   *  *  *    
 /   |   \   C  /   |   \          
                
@@ -576,8 +582,8 @@ function drawGraph( document, graphText, history){
         // Parse row
         graphContent += '<div class="firstcol"></div> ' // First column on row
         for(var i = 0 ; i < thisRow.length ; i++){
-            let total = '';
-            let found = '';
+            let total = ''; // Collect graph HTML for current row
+            let found = ''; // Record found item (used for logging)
 
             
             // Draw node
@@ -589,14 +595,25 @@ function drawGraph( document, graphText, history){
                     total += '<img class="node" src="images/circle_black.png">'; // Draw node
                 }
             }
-     
+
+            
             //
             // Draw lines
             //
             
-            // Select what to draw -- first hit wins :
+            // Select what to draw -- first hit wins (if-elseif chain)
+            // C1-C3 can draw more than one element (within same elseif test)
+            //
+            // Generally standing on character at coordinate a0, and comparing with characters at row a and b
+            // Exception to this is noted below (D2, D3)
+            //
+            // Graph text from git log must be padded with spaces on left and bottom, to allow look left, and look ahead
             
-            // -------------
+            // ------------------------------------------------------------------------------   
+            //    A1) -0-     A2) -0-     A3) --0     A4) --0
+            // a:     \|           |/           \         _|/
+            // b:      |\         /|          _|/      
+            //
             if (  a(0,'|') && a(-1, '\\') && b(0,'|') && b(1,'\\')  ) {
                 // A) Crossing down-right 
                 found = 'A1';
@@ -608,8 +625,22 @@ function drawGraph( document, graphText, history){
                 found = 'A2';
                 total += '<img class="pipe" src="images/pipe.png">';
                 total += '<img class="wideslash"  src="images/wideslash.png">';  
-                   
-            // -------------
+                    
+            }else if (  a(0,'\\')  && b(-2,'_')  && b(-1,'|')  && b(0,'/') ) {
+            // A3) slash  - skip connecting pipe in some cases
+                found = 'A3';
+                total += '<img class="slash" src="images/slash.png">';
+                
+            }else if (  a(0,'/')  && a(-1,'|')  && a(-2,'_') ) {
+            // A4) slash  - skip connecting pipe draw, second part
+                found = 'A4';
+                // Draw nothing
+             
+            // ------------------------------------------------------------------------------   
+            //    B1) 0--     B2) --0    X = anything but space  
+            // a:     \             /    B1: Y = [ space | / ]   
+            // b:      XY         YX     B2: Y = [ space | \ ]
+            //
             }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  || b(2,'_') ) ) {   
             // B) back-slash 
                 found = 'B1';
@@ -620,7 +651,12 @@ function drawGraph( document, graphText, history){
                 found = 'B2';
                 total += '<img class="slash" src="images/slash.png">';
              
-            // -------------   
+            // ------------------------------------------------------------------------------   
+            //    C1) -0      C2)  0      C3) 0-          C1: X = anything but [ space \ _ ]
+            // a:      |           |          \           C2: X = anything but space 
+            // b:     X            X           X          C3: X = anything but [ space / _ ]    
+            //  
+            // Note: Zero, one or more of C1-C3 can be true
             }else if (  a(0,'|')  ) {
                 
                 if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  && !b( -1,'_') ) {
@@ -640,7 +676,12 @@ function drawGraph( document, graphText, history){
                     found += ' C3';
                     total += '<img class="backslash" src="images/backslash.png">';
                 }
-            // -------------    
+                
+            // ------------------------------------------------------------------------------   
+            //    D2) -0-     D3) -0-     D1) -0-     NOTE: D2 and D3 is standing on b0 and comparing with previous
+            // a:       /         \            _  
+            // b:      _           _              
+            //              
             }else if (  a(0,'_') && prev( 1,'/') ) {
             // D) bridge
                 found = 'D2';
@@ -654,7 +695,11 @@ function drawGraph( document, graphText, history){
                 found = 'D1';
                 total += '<img class="bridge" src="images/bridge.png">';
               
-            // -------------
+            // ------------------------------------------------------------------------------   
+            //    E1)  0     E2)   0  
+            // a:      \           /       
+            // b:      /           \              
+            //      
             }else if (  a(0,'\\') && b(0,'/')  ) {
             // E) pipe 
                 found = 'E1';
@@ -665,7 +710,11 @@ function drawGraph( document, graphText, history){
                 found = 'E2';
                 total += '<img class="pipe" src="images/pipe.png">';
                 
-            // -------------
+            // ------------------------------------------------------------------------------   
+            //    F1) -0-     F2)  0      F3) -0-    
+            // a:      *           *           *       X = one of [ space | * ]
+            // b:     /X           X           X\    
+            //  
             }else if (  a(0,'*') ){ 
             // F) draw one or more lines from node
             
@@ -684,7 +733,12 @@ function drawGraph( document, graphText, history){
                     found += ' F3';
                     total += '<img class="backslash" src="images/backslash.png">';
                 }
-            // -------------
+                
+            // ------------------------------------------------------------------------------   
+            //    G1)  0-    G2)   0-  
+            // a:      -X          X-             X = one of [ * \ | / _ - . ]
+            // b:                 
+            //      
             }else if ( 
                 a(0,'-') &&
                 ( a(1,'*') || a(1,'\\')  || a(1,'|') || a(1,'/') || a(1,'_')  || a(1,'-') || a(1,'.') )   
@@ -699,7 +753,12 @@ function drawGraph( document, graphText, history){
             // G2) short bridge (non-space node to left -- I think this is correct, but have not seen this in the wild)
                 found = 'G2';
                 total += '<img class="bridge" src="images/bridge.png">';
-            // -------------
+                
+            // ------------------------------------------------------------------------------   
+            //    H1)  0-     H2)  -0      H3)  0    
+            // a:      .            .           .      
+            // b:       \          /            |    
+            //  
             }else if (  a(0,'.') && b( 1,'\\')  ) {
             // H1) point corner and '\'
                 found = 'H1';
@@ -712,11 +771,23 @@ function drawGraph( document, graphText, history){
             // H3) point corner and '|'
                 found = 'H3';
                 total += '<img class="slash" src="images/pipe.png">'; 
-            // -------------    
+                
+            // ------------------------------------------------------------------------------ 
+            //    COMMIT MESSAGE)      
+            //                                      not one of [ * \ | / _ space ] 
+            //    
             }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ')   ){
             // TEXT if nothing else
+            
+                // Different class when showing test cases
+                let cl = 'text';
+                if (test != 0) { 
+                    cl = 'courier';
+                }
+                
+                // Print Text part
                 let rowText = '(' + row + ') ';
-                graphContent += '<div class="text" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
+                graphContent += '<div class="' + cl + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
                 graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop

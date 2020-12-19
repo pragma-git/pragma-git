@@ -2,6 +2,8 @@ html {
   margin: 0px;
   padding: 0px;
   overflow: hidden;
+  background-color: var(--main-background);
+  border-color: var(--main-background);
 }
 
 body {
@@ -9,13 +11,15 @@ body {
   padding: 0px;
   width: 100%;
   height: 100%;
-  overflow: scroll;
-  background-color: #dddddd;
+  background-color: var(--main-background);
+  border-color: var(--main-background);
+  color: var(--text);
   font-family: Arial;
 }
-  
-textarea::-webkit-input-placeholder {
-  color: #222;
+
+
+img {
+    filter: invert(0%)
 }
 
 label {
@@ -24,7 +28,20 @@ label {
 }
 input{
     display: inline-block;
+    color: var(--text);
+    border-width: thin;
+    background-color: var(--input-background);
+}  
+input::placeholder {
+  color: var(--input-placeholder);
 }
+
+textarea{
+    color: var(--text);
+    border-width: thin;
+    background-color: var(--input-background);
+}  
+
 
 .group{
     display: inline-block;
@@ -39,7 +56,8 @@ input{
 
 
 div#content {
-  background-color: #dddddd;
+  background-color: var(--main-background);
+  border-color: var(--main-background);
   margin: 0px;
   padding: 0px;
 
@@ -56,6 +74,8 @@ div#inner-content {
 table#outer_table {
   width: auto;
   height: inherit;
+  background-color: var(--main-background);
+  border-color: var(--main-background);
 }
 
 tr#output_row {
@@ -72,6 +92,13 @@ td {
   text-align: center;
 }
 
+
+
+#up-arrow, #down-arrow, #bottom-titlebar-find-icon{
+  filter: brightness( var(--history-icon-brightness)) 
+}
+
+
 .message_column{
   width: 100%;
   margin-right: 6px;
@@ -81,7 +108,10 @@ td {
 .message{
   width: 100%;
   height: 100%;
-  color: #03F;
+  color: var(--message-color);
+}
+.message::placeholder {
+  color: var(--message-placeholder);
 }
 
 #arrow_table{
@@ -89,9 +119,6 @@ td {
 }
 
 
-div#message-wrapper{
-  margin-right: 6px;
-}
 
 .store-button{
   float: right; 
@@ -294,4 +321,7 @@ div#message-wrapper{
   background-color: #2a2c2c;
 }
 
+dialog{
+    width:95%;
+}
 

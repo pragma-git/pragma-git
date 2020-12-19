@@ -57,7 +57,7 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 
     # Build All platforms
     ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
-    --tasks win-x86,win-x64,linux-x86,linux-x64,mac-x64 \
+    --tasks win-x86,win-x64,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
     --name Pragma-git  \
     --concurrent true  \
@@ -84,15 +84,19 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     # Move .app to temporary folder
     mkdir ../dist/temp-macos
     mv "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/" ../dist/temp-macos
+
+    DIR=$(ls -1 ../dist/|grep  'mac-x64')
+    echo "$DIR.dmg" 
     
     # Work in destination folder (dist/mac) 
     mkdir ../dist/mac
     cd ../dist/mac
+    
      
     # Make .dmg in ../dist/temp-macos
     test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
     create-dmg \
-      --volname "Pragma-git-Installer" \
+      --volname "Mac-Pragma-git-Installer" \
       --volicon "../../Pragma-git/images/icon_installer.icns" \
       --window-pos 200 120 \
       --window-size 500 320 \
@@ -103,7 +107,7 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
       --app-drop-link 375 175 \
       --icon ".fseventsd"  1000 190 \
       --icon ".VolumeIcon.icns"  1000 190 \
-      "Pragma-git-Installer.dmg" \
+      "$(echo "$DIR.dmg")" \
       "../temp-macos/"
     
     # Clean up 
@@ -127,7 +131,7 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     DIR=$(ls -1 ../dist/|grep  'win-x64')
     makensis \
     -DEXEFOLDER=$DIR \
-    -DOUTPUT='win64\Pragma-git-installer.exe' \
+    -DOUTPUT="win64/$DIR.exe" \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
     windows_installer.nsi
@@ -142,7 +146,7 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     DIR=$(ls -1 ../dist/|grep  'win-x86')
     makensis \
     -DEXEFOLDER=$DIR \
-    -DOUTPUT='win32\Pragma-git-installer.exe' \
+    -DOUTPUT="win32/$DIR.exe" \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     -DPROGRAMFILESFOLDER='$PROGRAMFILES32' \
     windows_installer.nsi
