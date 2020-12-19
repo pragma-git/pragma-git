@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TOKEN_FILE="../mytoken.txt"
+
 TAG=0.7.2
 REPO=JanAxelsson/Pragma-git
 
@@ -34,8 +36,8 @@ cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 #
 
     # Login
-    #gh auth login --with-token < mytoken.txt
-    gh auth login --web
+    gh auth login --with-token < "$TOKEN_FILE"
+    #gh auth login --web
     
     # Create Release
     gh release create \
