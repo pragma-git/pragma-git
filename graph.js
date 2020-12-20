@@ -454,17 +454,20 @@ async function injectIntoJs(document){
 
 
     // Select current history commit in opened graph
-    try{
-        let divSelect = document.getElementById( localState.historyHash );
-        divSelect.classList.add('selected');  
+    //try{
+        //let divSelect = document.getElementById( localState.historyHash );
+        //divSelect.classList.add('selected');  
         
-        // Selected should not be graphed if
-        // - same commit is pinned
-        if (localState.pinnedCommit !== localState.historyHash ) {
-            localState.selectedDiv = divSelect;
-        }
-    }catch(err){  
-    }
+        //// Selected should not be graphed if
+        //// - same commit is pinned
+        //if (localState.pinnedCommit !== localState.historyHash ) {
+            //localState.selectedDiv = divSelect;
+        //}
+    //}catch(err){  
+    //}
+    try{
+        opener.selectInGraph(localState.historyHash);
+    }catch(err){}
     
     // Select pinned commit in opened graph
     try{

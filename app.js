@@ -424,20 +424,30 @@ async function _callback( name, event){
         //resetHistoryPointer();   
         
         var history = await gitHistory();
+        console.log(history);
         localState.historyNumber = 0;
-        localState.historyLength = history.length;
-        localState.historyHash = history[localState.historyNumber].hash;   
-        localState.historyString = historyMessage(history, localState.historyNumber);
+        localState.historyLength =  history.length;
+        localState.historyHash =  history[localState.historyNumber].hash;   
+        localState.historyString =  historyMessage(history, localState.historyNumber);
     
-         _setMode('HISTORY');
+        _setMode('HISTORY');
+         
+         
+        // Update history in graph
+        if (localState.graphWindow ){
+            await graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+        }
+        
+        //selectInGraph(localState.historyHash); 
          
         textOutput.value = localState.historyString;
         writeTextOutput( textOutput);
         
         status_data = await gitShowHistorical();
-        setStatusBar( fileStatusString( status_data));
+        console.log(status_data);
+        await setStatusBar( fileStatusString( status_data));
         
-        selectInGraph(localState.historyHash);           
+                  
         break;
       }
       case 'help-on-find' :{
@@ -1541,8 +1551,14 @@ async function _callback( name, event){
             console.log('downArrowClicked - numberOfBranches');
             console.log(numberOfBranches);
             if (localState.historyNumber == numberOfHistorySteps){
-                console.log('downArrowClicked - setting localState.historyNumber = 0');
+                console.log('downArrowClicked - setting localState.historyNumber = last');
                 localState.historyNumber = numberOfHistorySteps -1; // Set to last
+            }
+            
+            
+            if (localState.historyNumber > numberOfHistorySteps){
+                console.log('downArrowClicked - setting localState.historyNumber = 0');
+                localState.historyNumber = 0; // Set to first
             }
             
             
