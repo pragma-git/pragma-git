@@ -230,6 +230,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Inititate listening to Pragma-merge start signal
        const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
+       util.rm(SIGNALFILE);
        const watcher = chokidar.watch('file, dir, glob, or array', {
           ignored: /(^|[\/\\])\../, // ignore dotfiles
           persistent: true
