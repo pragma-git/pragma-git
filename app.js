@@ -407,6 +407,10 @@ async function _callback( name, event){
             document.getElementById('output_row').style.visibility = 'visible';
             window.resizeTo(win.width, win.height + fix);
             window.resizeTo(win.width, win.height + delta);
+            
+            if (localState.graphWindow ){
+                graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+            }
         }else{
             // Hide find
             document.getElementById('output_row').style.visibility = 'collapse';
@@ -415,6 +419,11 @@ async function _callback( name, event){
             
             resetHistoryPointer();  // Go to first in history
             upArrowClicked();// Get out of history
+            
+            if (localState.graphWindow ){
+                graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+            }
+        
             
         }
         let element = document.getElementById('inner-content');
