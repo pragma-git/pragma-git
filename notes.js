@@ -47,6 +47,13 @@ async function injectIntoNotesJs(document) {
 
 };
 function save(){
+    
+    // Bail out if find-in-nw has marked stuff
+    if (findInNw.total > 0){
+        console.log('WARNING DID NOT SAVE -- REASON: FIND IS OPEN, AND MARKS ARE INSERTED (Close find to save)');
+        return
+    }
+
     let content = "";
     try{
         content = editor.getMarkdown();
@@ -59,6 +66,10 @@ function save(){
 }
 
 function closeWindow(){
+    
+    // Clear tokens (if find is still open)
+    findInNw.clearTokens();   // Clear all <mark> inserted in html 
+    
     // Save file
     save(); 
     

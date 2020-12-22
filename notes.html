@@ -145,15 +145,35 @@
         const Editor = toastui.Editor;
         
         window.addEventListener('DOMContentLoaded', (event) => {
+            
+            // Start javascript
             console.log('notes.html :DOM fully loaded and parsed');
             injectIntoNotesJs(document);
-            }
-        );
+            
+            // Events for switch between Markdown and MouseOver
+            document.getElementsByClassName('te-switch-button')[0].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over');
+                findInNw.clearTokens();   // Clear all <mark> inserted in html 
+                findInNw.hideSearchBox(); // Hide search
+                }
+            );
+            document.getElementsByClassName('te-switch-button')[1].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over');
+                findInNw.clearTokens();  // Clear all <mark> inserted in html 
+                findInNw.hideSearchBox();// Hide search
+                }
+            );
+            
+            
+        });
+        
+        // Close 
         window.addEventListener('unload', (event) => {
             console.log('notes.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
             }
         );
+
     </script> 
         
     <!--  Add find  -->    
@@ -161,7 +181,7 @@
     <script src="extend_find-in-nw.js"></script>
     <script>
         findInNw.initialize();
-        extendFindInNw();
+        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
 
   </body>
