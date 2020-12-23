@@ -83,7 +83,32 @@ function extendFindInNw( elementToSearch){
      
       }; 
     //------------------------------------------------------------- 
-      
+    
+    // Perform case-insensitive search
+    
+    findInNw.search = function (text) {
+        this.clearTokens();
+        const elements = this.getElementsToSearch();
+        
+        elements.forEach(function (element) {
+        if (element.id !== 'find-in-nw-search-box') {
+            window.findAndReplaceDOMText(element, {
+            find: RegExp(text,'gi') ,
+            wrap: 'mark',
+            wrapClass: 'find-in-nw-token'
+            });
+        }
+        });
+        
+        this.lastSearched = text;
+        this.setDataPositionAttribute();
+        this.initCurrentToken();
+        this.updateCount();
+        this.highlightCurrentToken();
+    };
+
+    //------------------------------------------------------------- 
+
     // Start listening to new keys
     
       findInNw.keyBindings();
