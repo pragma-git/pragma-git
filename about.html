@@ -43,6 +43,9 @@
             padding: 6px;
         }
                 
+        img{
+            filter: invert( var(--image-invert) );
+        }        
         
         img[src="images/Cheat-sheet.png"],
         img[src="images/Cheat-sheet-advanced.png"], 
@@ -578,11 +581,14 @@
         <br>
         <hr> 
                       
- <!-------------------------------------------------------------------------------------------->        
-      <iframe id="SEARCH"  src="about_search.html" frameborder="0" style="width:100%;height:100%;" 
-          onload='content=document.getElementById("SEARCH");
-          content.style.height="";
-          content.style.height=content.contentWindow.document.documentElement.scrollHeight'> </iframe>
+ <!-------------------------------------------------------------------------------------------->   
+    <div id='SEARCH_TEXT'></div>
+ 
+    <script> <!-- script instead of iframe, otherwise find in html doesn't see this section--->
+        let text = require('fs').readFileSync('about_search.html');
+        document.getElementById("SEARCH_TEXT").innerHTML= text; // Set text in window
+    </script>  
+
           
           <hr>
  <!-------------------------------------------------------------------------------------------->             
@@ -680,6 +686,16 @@
         var VERSION = require('./package.json').version; 
         document.getElementById('version').innerText = VERSION;
 </script>
+  
+  
+          
+<!--  Add find  -->    
+<script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+<script src="extend_find-in-nw.js"></script>
+<script>
+    findInNw.initialize();
+    extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
+</script> 
   
 </body>
 </html>
