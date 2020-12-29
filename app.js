@@ -869,6 +869,28 @@ async function _callback( name, event){
      
       
       // TEST
+      case 'open-terminal': {
+        const terminalTab = require('terminal-tab');
+
+        const options = {
+          cwd: null,
+          env: null,
+          encoding: 'utf8'
+        }
+        
+        let folder = state.repos[ state.repoNumber].localFolder;
+        
+        let CLEAR = ';clear'; // Mac and linux
+        
+        if (process.platform === 'win32') { 
+            CLEAR = '&&cls'; // Windows  Note : called win32 also for 64-bit 
+        }
+        let command = "cd '" + folder + "'" + CLEAR;
+        
+        terminalTab.open( command, options)
+        
+        break;
+      }
      
       default: {
         // code block
