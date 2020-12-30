@@ -878,14 +878,16 @@ async function _callback( name, event){
           encoding: 'utf8'
         }
         
+        // Mac and linux
         let folder = state.repos[ state.repoNumber].localFolder;
+        let command = 'cd "' + folder + '";' + 'clear';
         
-        let CLEAR = ';clear'; // Mac and linux
-        
-        if (process.platform === 'win32') { 
-            CLEAR = '&&cls'; // Windows  Note : called win32 also for 64-bit 
+        // Windows  Note : called win32 also for 64-bit
+        if (process.platform === 'win32') {  
+            folder = path.normalize(folder);
+            let command = 'cd /d "' + folder + '" && ' + 'cls';
+            terminalTab.open( command, options)
         }
-        let command = "cd '" + folder + "'" + CLEAR;
         
         terminalTab.open( command, options)
         
