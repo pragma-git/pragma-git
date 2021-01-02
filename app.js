@@ -869,7 +869,7 @@ async function _callback( name, event){
      
       
       // TEST
-      case 'open-terminal': {
+      case 'clicked-terminal': {
         const terminalTab = require('terminal-tab');
 
         const options = {

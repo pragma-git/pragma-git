@@ -162,9 +162,17 @@ td {
   -webkit-app-region: no-drag;
 }
 
-.bottom-titlebar-text {
+.bottom-titlebar-terminal-icon{
   position: absolute;
   left: 28px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.bottom-titlebar-text {
+  position: absolute;
+  left: 56px;
   width: auto;
   margin-top: 6px;
   margin-bottom: 6px;
