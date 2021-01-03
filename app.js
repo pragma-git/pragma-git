@@ -649,6 +649,30 @@ async function _callback( name, event){
         folderClicked();
         break;
       }
+      case 'clicked-terminal': {
+        const terminalTab = require('terminal-tab');
+
+        const options = {
+          cwd: null,
+          env: null,
+          encoding: 'utf8'
+        }
+        
+        // Mac and linux
+        let folder = state.repos[ state.repoNumber].localFolder;
+        let command = 'cd "' + folder + '";' + 'clear';
+        
+        // Windows  Note : called win32 also for 64-bit
+        if (process.platform === 'win32') {  
+            folder = path.normalize(folder);
+            let command = 'cd /d "' + folder + '" && ' + 'cls';
+            terminalTab.open( command, options)
+        }
+        
+        terminalTab.open( command, options)
+        
+        break;
+      }     
       case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {          
             try{ 
@@ -869,31 +893,6 @@ async function _callback( name, event){
      
       
       // TEST
-      case 'clicked-terminal': {
-        const terminalTab = require('terminal-tab');
-
-        const options = {
-          cwd: null,
-          env: null,
-          encoding: 'utf8'
-        }
-        
-        // Mac and linux
-        let folder = state.repos[ state.repoNumber].localFolder;
-        let command = 'cd "' + folder + '";' + 'clear';
-        
-        // Windows  Note : called win32 also for 64-bit
-        if (process.platform === 'win32') {  
-            folder = path.normalize(folder);
-            let command = 'cd /d "' + folder + '" && ' + 'cls';
-            terminalTab.open( command, options)
-        }
-        
-        terminalTab.open( command, options)
-        
-        break;
-      }
-     
       default: {
         // code block
       }  
