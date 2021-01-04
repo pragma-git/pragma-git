@@ -923,21 +923,23 @@ async function _callback( name, event){
             for (var i = 0; i < state.repos.length; ++i) {
                 if (state.repoNumber != i ){
                     let myEvent = [];
-                    repoNames[i] = path.basename( state.repos[i].localFolder );
-                    myEvent.selectedRepo = repoNames[i];
+                    console.log(i);
+                    console.log(state.repos[i].localFolder);
+                    myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
                     myEvent.selectedRepoNumber = i;
                     myEvent.currentRepo = currentRepo;
+                    repoNames.push(myEvent.selectedRepo);
                     menu.append(
                         new gui.MenuItem(
                             { 
-                                label: repoNames[i], 
+                                label: myEvent.selectedRepo, 
                                 click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                             } 
                         )
                     );
                     console.log(repoNames[i]);
                 }else{
-                    console.log('Skipped current repo = ' + repoNames[i]);
+                    console.log('Skipped current repo = ' + path.basename( state.repos[i].localFolder ) );
                 }
     
             }
@@ -1093,30 +1095,33 @@ async function _callback( name, event){
             // Alt 2) Cycle through local branches
             //
             if (type == 'cycle'){ 
-
-                // Get branch name
                 
                 let branchName; 
-                if (status_data.current === 'HEAD') { 
-                    
-                    // Make sure branch number within range
-                    if (localState.branchNumber >= branchList.local.length){
-                        localState.branchNumber = 0;
+
+                // Get branch name (non-hidden)
+                do { 
+                    if (status_data.current === 'HEAD') { 
+                        
+                        // Make sure branch number within range
+                        if (localState.branchNumber >= branchList.local.length){
+                            localState.branchNumber = 0;
+                        }
+                        // Keep branch number. Get that branch from branchList         
+                        branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                    }else {
+                        // Normal branch
+                        
+                        // Cycle branch number
+                        localState.branchNumber = localState.branchNumber + 1;
+                        if (localState.branchNumber >= branchList.local.length){
+                            localState.branchNumber = 0;
+                        }
+                        // Get branchname after cycling
+                        branchName = branchList.local[localState.branchNumber];
                     }
-                    // Keep branch number. Get that branch from branchList         
-                    branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
-                }else {
-                    // Normal branch
-                    
-                    // Cycle branch number
-                    localState.branchNumber = localState.branchNumber + 1;
-                    if (localState.branchNumber >= branchList.local.length){
-                        localState.branchNumber = 0;
-                    }
-                    // Get branchname after cycling
-                    branchName = branchList.local[localState.branchNumber];
+                    console.log(branchName);
                 }
-    
+                while ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchList.local[localState.branchNumber]) ); // Look until non-hidden branch. NOTE: This can lock if all branches are hidden!!
         
                 // Checkout local branch
                 
@@ -1370,6 +1375,7 @@ async function _callback( name, event){
         // callbackName is a string
         
             let menuItems = branchList.all;
+            let numberOfHiddenBranches = 0;
                         
             // If detached HEAD, remove one item from menu
             if (currentBranch === 'HEAD') { 
@@ -1383,6 +1389,13 @@ async function _callback( name, event){
             
             // Loop all branches
             for (var i = 0; i < menuItems.length; ++i) {
+                
+                // Skip hidden menus
+                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, menuItems[i]) ){
+                    numberOfHiddenBranches = numberOfHiddenBranches + 1;
+                    continue
+                }
+                
                   
                 // For all branches not being current branch : 
                 if (currentBranch != menuItems[i]){
@@ -1508,8 +1521,14 @@ async function _callback( name, event){
                     // -----------------
                 }
     
-            }           
-   
+            }  
+            
+            // Indicate how many hidden branches exists
+            if (numberOfHiddenBranches > 0){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
+            }
+
         };
 
     // main window
@@ -2813,7 +2832,10 @@ async function gitBranchList(){
                 if ( branchName.startsWith('remotes') ){
                     let remoteBranchName = branchName;
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
-                } 
+                } else{
+                    extendedBranchSummaryResult.local.push( branchName );
+                }
+                
 
             //
             // Set if remote exists on server (from cached)

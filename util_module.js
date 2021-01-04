@@ -86,12 +86,28 @@ myModule.branchCharFilter = function ( string ){
     
 }
 
+// True if hidden branch
+myModule.isHiddenBranch = function( hiddenBranchNames, branchToCheck){
+    // Checks if localBranchToCheck is listed in hiddenBranchNames
+    if (hiddenBranchNames === undefined){
+        return false
+    }
+
+    let result = false;
+    for (let j = 0; j < hiddenBranchNames.length; j++) { // Loop all branches
+        if  ( branchToCheck === hiddenBranchNames[j] ){
+            result = true;
+        }
+    }
+    return result;
+}      
+
+// File system
 myModule.mkdir = function (dir){
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
     }
 }
-
 myModule.rm = function (f){
     if (fs.existsSync(f)){
         fs.unlinkSync(f);
