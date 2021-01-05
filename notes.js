@@ -61,7 +61,7 @@ async function injectIntoNotesJs(document) {
         options: {
           className: 'first',
           event: 'clickCustomButton',
-          tooltip: 'Custom Button',
+          tooltip: 'Search in Notes',
           el: button,
           text: '🔍',
           style: 'background-image: url("images/find.png");'
