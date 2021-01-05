@@ -42,7 +42,37 @@ async function injectIntoNotesJs(document) {
 
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
 
-    editor = new Editor( options);
+    editor =  new Editor( options);
+    
+    
+    
+    //
+    // Add search button to toolbar
+    //
+    
+    button = document.createElement('button');
+    button.setAttribute("id", 'find-icon');
+    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
+
+    
+    const toolbar = editor.getUI().getToolbar();
+    toolbar.insertItem(0, {
+        type: 'button',
+        options: {
+          className: 'first',
+          event: 'clickCustomButton',
+          tooltip: 'Custom Button',
+          el: button,
+          text: '🔍',
+          style: 'background-image: url("images/find.png");'
+        }
+    });
+    
+    
+    editor.eventManager.addEventType('clickCustomButton');
+    editor.eventManager.listen('clickCustomButton', function() {
+        findInNw.showSearchBox();
+    });
 
 
 };
