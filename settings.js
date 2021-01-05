@@ -44,6 +44,10 @@ async function _callback( name, event){
             console.log('hideBranchCheckboxChanged');
             console.log(event);
             
+            if (state.repos[ state.repoNumber].hiddenBranches == undefined){
+                state.repos[ state.repoNumber].hiddenBranches = [];
+            }
+            
             
             // Modify hidden branch
             if ( event.checked ){
