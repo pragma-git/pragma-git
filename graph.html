@@ -166,8 +166,13 @@
         
         <!-- Dark mode on/off --> 
         <script>
+            
+            let PINNED_ENABLED_IMAGE = 'images/pinned_enabled.png';
+            let PINNED_DISABLED_IMAGE = 'images/pinned_disabled.png';
             if (global.localState.dark){
                 document.body.classList.add('dark');
+                PINNED_ENABLED_IMAGE = 'images/pinned_enabled_dark_mode.png';
+                PINNED_DISABLED_IMAGE = 'images/pinned_disabled_dark_mode.png';
             }
         </script>        
             
@@ -310,7 +315,7 @@
                             // Remove old pinned
                             try{
                                 localState.pinnedDiv.classList.remove('selected');  
-                                localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
+                                localState.pinnedDiv.firstChild.firstChild.src = PINNED_DISABLED_IMAGE; // Uncheck previous pin (catch error if does not exist)
                                     
                             }catch(err){}  
      
@@ -322,7 +327,7 @@
                              
                             // Pin new
                             try{
-                                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                                DIV.firstChild.firstChild.src = PINNED_ENABLED_IMAGE;
                                 DIV.classList.add('selected');
                             }catch(err){}  
                             
@@ -347,7 +352,7 @@
                                                  
                             // Un-pin
                             try{
-                                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                                DIV.firstChild.firstChild.src = PINNED_DISABLED_IMAGE;
                                 DIV.classList.remove('selected');
                             }catch(err){}  
            

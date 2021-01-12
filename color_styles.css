@@ -35,8 +35,8 @@
   --image-invert: 80%;               /* invert black-transparent images to white
   
   /* Graph */
-  --graph-hover: #666666;            /* (dark grey) */
-  --graph-selected: #CCCCCC;         /* (light grey) */
+  --graph-hover: #999999;            /* (darker grey) */
+  --graph-selected: #CCCCCC;         /* (lighter grey) */
   --graph-decoration-color: #d6b51d; /* (mustard yellow) */
   
   /* Settings */
