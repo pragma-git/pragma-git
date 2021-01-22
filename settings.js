@@ -415,6 +415,7 @@ async function gitClone( folderName, repoURL){
     let repoWithExtension = repoURL.replace(/^.*[\\\/]/, '');
     let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
     let topFolder = folderName + pathsep + repoName;
+    topFolder = topFolder.replace(/[\\\/]$/, '')
 
     //// Clone
     //try{
