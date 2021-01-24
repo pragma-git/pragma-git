@@ -31,9 +31,7 @@ Read more on the home page : https://janaxelsson.github.io/Pragma-git/
 
 
 TOKEN_FILE="../mytoken.txt"
-REPO=JanAxelsson/Pragma-git
-
-cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
+REPO=pragma-git/pragma-git
 
 #
 # Create Release and Upload binaries
@@ -52,6 +50,8 @@ cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
       --title "$RELEASE_TITLE"
       
     # Upload binaries  
+    cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
+
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win32/Pragma-git*.exe)" 
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
