@@ -3067,7 +3067,7 @@ async function gitPush(){
         // Bail out if remote not configured 
         let c = configItems.all['remote.origin.url'];
         if (c === undefined ||  c.trimEnd().trimStart() === '') {
-            console.log('URL empty or undefined'); // Nothing to push to
+            console.log('URL empty or undefined'); // Nothing to push to 
             return
         }else{
             console.log('URL defined'); 
