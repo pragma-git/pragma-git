@@ -3081,7 +3081,7 @@ async function gitPush(){
         // remote.origin.mirror  -- two cases
         if ( configItems.all['remote.origin.mirror'] === 'true'){
             // 'mirror' incompatible with refspace ('origin') and '--tags'
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( currentBranch,{'--set-upstream' : null}, onPush);
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
         }else{
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
         }
