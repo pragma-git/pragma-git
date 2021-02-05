@@ -1,9 +1,7 @@
-Pragma-git
-==========
 
- 
+### *Pragma-git* 
 
-*Pragma-git* is a friendly pragmatic *git* control app, *fully compatible* with
+is a friendly pragmatic *git* control app, *fully compatible* with
 other git client softwares.
 
  
