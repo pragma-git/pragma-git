@@ -58,7 +58,9 @@ Features
 
 -   Standard git features, such as branch, merge, push, pull, tag, stash
 
--   History browser
+-   History browser + tree view
+
+-   Extensiv Search in commit history and inside code
 
 -   Builtin *pragma-merge* diff and merge tool (external tool may be used
     instead)
@@ -66,7 +68,7 @@ Features
 -   Settings, handling repository, branches, remotes, cloning as well as
     software preferences
 
--   Fully git compatible, try it, and use together with other clients
+-   Fully git compatible, use by iteself, or together with other clients
 
  
 
