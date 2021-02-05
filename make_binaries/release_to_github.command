@@ -3,14 +3,16 @@
 # Modify  1) - 3) :
 
 # 1) Tag to use for this Release
-TAG=0.8.0
+TAG=0.8.1
 
 # 2) Release Title
 RELEASE_TITLE='Dark mode release'
 
 # 3) Release Notes
 read -r -d '' RELEASE_NOTES << ---
-Dark mode introduced
+First release on pragma-git account on github
+
+Darkmode, search in all windows, 
 
 ___
 The aim with Pragma-git is to be

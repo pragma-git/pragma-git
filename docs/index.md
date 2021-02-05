@@ -42,7 +42,7 @@ these icons will be hidden, and they are shown only when meaningful) :
 Features
 --------
 
-![](https://raw.githubusercontent.com/JanAxelsson/Pragma-git/master/images/Pragma-git-screen-shot.png)
+![](https://raw.githubusercontent.com/pragma-git/pragma-git/main/images/Pragma-git-screen-shot.png)
 
 -   Easy overview of current repository, branch and number of changed files
 
@@ -76,11 +76,11 @@ Installation
 ------------
 
 -   Windows / Mac — [Download
-    here](https://github.com/JanAxelsson/Pragma-git/releases/latest) and run
+    here](https://github.com/pragma-git/pragma-git/releases/latest) and run
     installer
 
 -   Linux — download deb or rpm ([Download
-    here](https://github.com/JanAxelsson/Pragma-git/releases/latest)). Try to
+    here](https://github.com/pragma-git/pragma-git/releases/latest)). Try to
     double-click and run.  
     If that is not allowed (replace `INSTALLATION_FILE` with the path to the
     installation file):
