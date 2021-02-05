@@ -7,6 +7,7 @@
         <script src="graph.js"></script>
     </head>
 
+
     <!-- Styling graph-->
     <style> 
         
@@ -147,7 +148,6 @@
             filter: invert( var( --image-invert) );
         }
 
-   
     </style>
 
     <!-- Styling div-click -->
@@ -166,14 +166,27 @@
         
         <!-- Dark mode on/off --> 
         <script>
+            
+            let PINNED_ENABLED_IMAGE = 'images/pinned_enabled.png';
+            let PINNED_DISABLED_IMAGE = 'images/pinned_disabled.png';
             if (global.localState.dark){
                 document.body.classList.add('dark');
+                PINNED_ENABLED_IMAGE = 'images/pinned_enabled_dark_mode.png';
+                PINNED_DISABLED_IMAGE = 'images/pinned_disabled_dark_mode.png';
             }
         </script>        
             
         
         <h2><span id='repoName'></span>
         ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
+        
+        
+        <!-- Search button --> 
+        <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
+            onclick="findInNw.showSearchBox()" 
+            onmouseover="document.getElementById('find-icon').src='images/find.png' " 
+            onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+            src="images/find_black.png" >
         
         <!-- Help button --> 
         <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
@@ -302,7 +315,7 @@
                             // Remove old pinned
                             try{
                                 localState.pinnedDiv.classList.remove('selected');  
-                                localState.pinnedDiv.firstChild.firstChild.src = 'images/pinned_disabled.png'; // Uncheck previous pin (catch error if does not exist)
+                                localState.pinnedDiv.firstChild.firstChild.src = PINNED_DISABLED_IMAGE; // Uncheck previous pin (catch error if does not exist)
                                     
                             }catch(err){}  
      
@@ -314,7 +327,7 @@
                              
                             // Pin new
                             try{
-                                DIV.firstChild.firstChild.src = 'images/pinned_enabled.png';
+                                DIV.firstChild.firstChild.src = PINNED_ENABLED_IMAGE;
                                 DIV.classList.add('selected');
                             }catch(err){}  
                             
@@ -339,7 +352,7 @@
                                                  
                             // Un-pin
                             try{
-                                DIV.firstChild.firstChild.src = 'images/pinned_disabled.png';
+                                DIV.firstChild.firstChild.src = PINNED_DISABLED_IMAGE;
                                 DIV.classList.remove('selected');
                             }catch(err){}  
            
@@ -389,5 +402,16 @@
         }
     );
 </script>
+
+    
+        
+    <!--  Add find  -->    
+    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); //Make find-in-nw fit my purpose for graph and note
+    </script> 
+    
 
 </html>

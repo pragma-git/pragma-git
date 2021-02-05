@@ -2,10 +2,9 @@
 .light {  
   /* General */
   --text:  #222222;
-  --body-text: var(--text);
+  /* --body-text: var(--text); */
   --input-background: #FFFFFF;
   --input-placeholder: #777777;
-  
   --image-invert: 0%;               /* invert black-transparent images to white
   
   /* Graph */
@@ -21,11 +20,9 @@
   
   /* Main */
   --main-background: #DDDDDD;
-  --dim-text: #777777; 
-  
+  --dim-text: #777777;
   --message-color: #0033FF;
   --message-placeholder: var(--text);
-  
   --history-icon-brightness: 1;                 /* keep original */
 }
  
@@ -38,8 +35,8 @@
   --image-invert: 80%;               /* invert black-transparent images to white
   
   /* Graph */
-  --graph-hover: #666666;            /* (dark grey) */
-  --graph-selected: #CCCCCC;         /* (light grey) */
+  --graph-hover: #999999;            /* (darker grey) */
+  --graph-selected: #CCCCCC;         /* (lighter grey) */
   --graph-decoration-color: #d6b51d; /* (mustard yellow) */
   
   /* Settings */
@@ -68,7 +65,7 @@
 
 
 img{
-  filter: invert( var(--image-invert) ) ;
+  filter: invert( var(--image-invert) );
 }
 
 

@@ -40,6 +40,30 @@ async function _callback( name, event){
             state[id] = value;
             break;
         }
+        case 'hideBranchCheckboxChanged': {
+            console.log('hideBranchCheckboxChanged');
+            console.log(event);
+            
+            if (state.repos[ state.repoNumber].hiddenBranches == undefined){
+                state.repos[ state.repoNumber].hiddenBranches = [];
+            }
+            
+            
+            // Modify hidden branch
+            if ( event.checked ){
+                // Add if checked
+                state.repos[ state.repoNumber].hiddenBranches.push(selectedBranch);
+            }else{
+                // Remove branch
+                let branchIndex = state.repos[ state.repoNumber].hiddenBranches.indexOf(selectedBranch);
+                state.repos[ state.repoNumber].hiddenBranches.splice(branchIndex,1);
+            }
+            
+            
+            console.log(state.repos[ state.repoNumber].hiddenBranches);
+            
+            break;
+        }
         case 'folderSelectButton' : {
             //This calls the hidden folder dialog input-element in settings.html
             document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
@@ -80,7 +104,10 @@ async function _callback( name, event){
             console.log(event);
             value = event.checked;
                 
-            try{            
+            try{                    
+                // Set state (so it will be updated in main program)
+                state.repoNumber = Number(id);  // id can be a string
+                        
                 // Replace table 
                 document.getElementById("branchesTableBody").innerHTML = ""; 
                 
@@ -102,9 +129,7 @@ async function _callback( name, event){
                 
                 // Show current repo
                 document.getElementById("currentRepo").innerHTML = myLocalFolder;
-                
-                // Set state (so it will be updated in main program)
-                state.repoNumber = Number(id);  // id can be a string
+
 
                 
             }catch(err){
@@ -390,6 +415,7 @@ async function gitClone( folderName, repoURL){
     let repoWithExtension = repoURL.replace(/^.*[\\\/]/, '');
     let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
     let topFolder = folderName + pathsep + repoName;
+    topFolder = topFolder.replace(/[\\\/]$/, '')
 
     //// Clone
     //try{
@@ -898,7 +924,7 @@ async function generateRepoTable(document, table, data) {
 }
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
-    let cell, text, button;
+    let cell, text, button, checkbox;
  
  
     //
@@ -907,16 +933,33 @@ async function generateBranchTable(document, table, branchlist) {
        
     // Loop rows in data
     for (let element of branchlist) {
+        
+        let hiddenBranch = util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, element);
+        
         console.log('Element = ' + element );
         let row = table.insertRow();
 
          // Into table cell :   Branch name text
         cell = row.insertCell();
         cell.setAttribute("class", 'branchName');
-        text = document.createTextNode( element );
+        text = document.createTextNode( element);
         cell.appendChild(text);
+        
+        
+        // Into table cell :  checkbox for hidden branch
+        cell = row.insertCell();
+        checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.checked = hiddenBranch;
+        checkbox.id = 30000 + index;        
+        checkbox.setAttribute('onclick', 
+            "selectedBranch = '"  + element + "';" + 
+            "_callback('hideBranchCheckboxChanged', this );"); 
+        cell.appendChild(checkbox);
+        
+        
  
-        // Into table cell :  button
+        // Into table cell :  button to delete branch
         cell = row.insertCell();
         cell.setAttribute("class", 'branchAction');
         

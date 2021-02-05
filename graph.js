@@ -465,11 +465,14 @@ async function injectIntoJs(document){
         }
     }catch(err){  
     }
+    try{
+        opener.selectInGraph(localState.historyHash);
+    }catch(err){}
     
     // Select pinned commit in opened graph
     try{
         let divPin = document.getElementById( localState.pinnedCommit );
-        divPin.firstElementChild.firstElementChild.src = 'images/pinned_enabled.png' 
+        divPin.firstElementChild.firstElementChild.src = PINNED_ENABLED_IMAGE; // Note -- defined in graph.html, dark/light mode image paths
         divPin.classList.add('selected');  
         localState.pinnedDiv = divPin;
     }catch(err){  
@@ -850,7 +853,7 @@ function drawNonCommitRow(hash, text, isDev){
 }
 function drawPinnedImage(hash){
     const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
-    const PIN_IMG2 = ' src="images/pinned_disabled.png"> ';
+    const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }

@@ -1,5 +1,7 @@
 !include "MUI2.nsh"
 
+Unicode True
+
 Name "Pragma-git"
 BrandingText "Jan Axelsson"
 

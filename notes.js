@@ -42,11 +42,48 @@ async function injectIntoNotesJs(document) {
 
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
 
-    editor = new Editor( options);
+    editor =  new Editor( options);
+    
+    
+    
+    //
+    // Add search button to toolbar
+    //
+    
+    button = document.createElement('button');
+    button.setAttribute("id", 'find-icon');
+    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
+
+    
+    const toolbar = editor.getUI().getToolbar();
+    toolbar.insertItem(0, {
+        type: 'button',
+        options: {
+          className: 'first',
+          event: 'clickCustomButton',
+          tooltip: 'Search in Notes',
+          el: button,
+          text: '🔍',
+          style: 'background-image: url("images/find.png");'
+        }
+    });
+    
+    
+    editor.eventManager.addEventType('clickCustomButton');
+    editor.eventManager.listen('clickCustomButton', function() {
+        findInNw.showSearchBox();
+    });
 
 
 };
 function save(){
+    
+    // Bail out if find-in-nw has marked stuff
+    if (findInNw.total > 0){
+        console.log('WARNING DID NOT SAVE -- REASON: FIND IS OPEN, AND MARKS ARE INSERTED (Close find to save)');
+        return
+    }
+
     let content = "";
     try{
         content = editor.getMarkdown();
@@ -59,6 +96,10 @@ function save(){
 }
 
 function closeWindow(){
+    
+    // Clear tokens (if find is still open)
+    findInNw.clearTokens();   // Clear all <mark> inserted in html 
+    
     // Save file
     save(); 
     

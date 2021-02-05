@@ -230,6 +230,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Inititate listening to Pragma-merge start signal
        const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
+       util.rm(SIGNALFILE);
        const watcher = chokidar.watch('file, dir, glob, or array', {
           ignored: /(^|[\/\\])\../, // ignore dotfiles
           persistent: true
@@ -406,6 +407,10 @@ async function _callback( name, event){
             document.getElementById('output_row').style.visibility = 'visible';
             window.resizeTo(win.width, win.height + fix);
             window.resizeTo(win.width, win.height + delta);
+            
+            if (localState.graphWindow ){
+                graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+            }
         }else{
             // Hide find
             document.getElementById('output_row').style.visibility = 'collapse';
@@ -414,6 +419,11 @@ async function _callback( name, event){
             
             resetHistoryPointer();  // Go to first in history
             upArrowClicked();// Get out of history
+            
+            if (localState.graphWindow ){
+                graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+            }
+        
             
         }
         let element = document.getElementById('inner-content');
@@ -424,20 +434,30 @@ async function _callback( name, event){
         //resetHistoryPointer();   
         
         var history = await gitHistory();
+        console.log(history);
         localState.historyNumber = 0;
-        localState.historyLength = history.length;
-        localState.historyHash = history[localState.historyNumber].hash;   
-        localState.historyString = historyMessage(history, localState.historyNumber);
+        localState.historyLength =  history.length;
+        localState.historyHash =  history[localState.historyNumber].hash;   
+        localState.historyString =  historyMessage(history, localState.historyNumber);
     
-         _setMode('HISTORY');
+        _setMode('HISTORY');
+         
+         
+        // Update history in graph
+        if (localState.graphWindow ){
+            await graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
+        }
+        
+        //selectInGraph(localState.historyHash); 
          
         textOutput.value = localState.historyString;
         writeTextOutput( textOutput);
         
         status_data = await gitShowHistorical();
-        setStatusBar( fileStatusString( status_data));
+        console.log(status_data);
+        await setStatusBar( fileStatusString( status_data));
         
-        selectInGraph(localState.historyHash);           
+                  
         break;
       }
       case 'help-on-find' :{
@@ -629,6 +649,30 @@ async function _callback( name, event){
         folderClicked();
         break;
       }
+      case 'clicked-terminal': {
+        const terminalTab = require('terminal-tab');
+
+        const options = {
+          cwd: null,
+          env: null,
+          encoding: 'utf8'
+        }
+        
+        // Mac and linux
+        let folder = state.repos[ state.repoNumber].localFolder;
+        let command = 'cd "' + folder + '";' + 'clear';
+        
+        // Windows  Note : called win32 also for 64-bit
+        if (process.platform === 'win32') {  
+            folder = path.normalize(folder);
+            let command = 'cd /d "' + folder + '" && ' + 'cls';
+            terminalTab.open( command, options)
+        }
+        
+        terminalTab.open( command, options)
+        
+        break;
+      }     
       case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {          
             try{ 
@@ -849,7 +893,6 @@ async function _callback( name, event){
      
       
       // TEST
-     
       default: {
         // code block
       }  
@@ -880,21 +923,23 @@ async function _callback( name, event){
             for (var i = 0; i < state.repos.length; ++i) {
                 if (state.repoNumber != i ){
                     let myEvent = [];
-                    repoNames[i] = path.basename( state.repos[i].localFolder );
-                    myEvent.selectedRepo = repoNames[i];
+                    console.log(i);
+                    console.log(state.repos[i].localFolder);
+                    myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
                     myEvent.selectedRepoNumber = i;
                     myEvent.currentRepo = currentRepo;
+                    repoNames.push(myEvent.selectedRepo);
                     menu.append(
                         new gui.MenuItem(
                             { 
-                                label: repoNames[i], 
+                                label: myEvent.selectedRepo, 
                                 click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                             } 
                         )
                     );
                     console.log(repoNames[i]);
                 }else{
-                    console.log('Skipped current repo = ' + repoNames[i]);
+                    console.log('Skipped current repo = ' + path.basename( state.repos[i].localFolder ) );
                 }
     
             }
@@ -1050,30 +1095,33 @@ async function _callback( name, event){
             // Alt 2) Cycle through local branches
             //
             if (type == 'cycle'){ 
-
-                // Get branch name
                 
                 let branchName; 
-                if (status_data.current === 'HEAD') { 
-                    
-                    // Make sure branch number within range
-                    if (localState.branchNumber >= branchList.local.length){
-                        localState.branchNumber = 0;
+
+                // Get branch name (non-hidden)
+                do { 
+                    if (status_data.current === 'HEAD') { 
+                        
+                        // Make sure branch number within range
+                        if (localState.branchNumber >= branchList.local.length){
+                            localState.branchNumber = 0;
+                        }
+                        // Keep branch number. Get that branch from branchList         
+                        branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                    }else {
+                        // Normal branch
+                        
+                        // Cycle branch number
+                        localState.branchNumber = localState.branchNumber + 1;
+                        if (localState.branchNumber >= branchList.local.length){
+                            localState.branchNumber = 0;
+                        }
+                        // Get branchname after cycling
+                        branchName = branchList.local[localState.branchNumber];
                     }
-                    // Keep branch number. Get that branch from branchList         
-                    branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
-                }else {
-                    // Normal branch
-                    
-                    // Cycle branch number
-                    localState.branchNumber = localState.branchNumber + 1;
-                    if (localState.branchNumber >= branchList.local.length){
-                        localState.branchNumber = 0;
-                    }
-                    // Get branchname after cycling
-                    branchName = branchList.local[localState.branchNumber];
+                    console.log(branchName);
                 }
-    
+                while ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchList.local[localState.branchNumber]) ); // Look until non-hidden branch. NOTE: This can lock if all branches are hidden!!
         
                 // Checkout local branch
                 
@@ -1327,6 +1375,7 @@ async function _callback( name, event){
         // callbackName is a string
         
             let menuItems = branchList.all;
+            let numberOfHiddenBranches = 0;
                         
             // If detached HEAD, remove one item from menu
             if (currentBranch === 'HEAD') { 
@@ -1340,6 +1389,13 @@ async function _callback( name, event){
             
             // Loop all branches
             for (var i = 0; i < menuItems.length; ++i) {
+                
+                // Skip hidden menus
+                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, menuItems[i]) ){
+                    numberOfHiddenBranches = numberOfHiddenBranches + 1;
+                    continue
+                }
+                
                   
                 // For all branches not being current branch : 
                 if (currentBranch != menuItems[i]){
@@ -1465,8 +1521,14 @@ async function _callback( name, event){
                     // -----------------
                 }
     
-            }           
-   
+            }  
+            
+            // Indicate how many hidden branches exists
+            if (numberOfHiddenBranches > 0){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
+            }
+
         };
 
     // main window
@@ -1541,8 +1603,14 @@ async function _callback( name, event){
             console.log('downArrowClicked - numberOfBranches');
             console.log(numberOfBranches);
             if (localState.historyNumber == numberOfHistorySteps){
-                console.log('downArrowClicked - setting localState.historyNumber = 0');
+                console.log('downArrowClicked - setting localState.historyNumber = last');
                 localState.historyNumber = numberOfHistorySteps -1; // Set to last
+            }
+            
+            
+            if (localState.historyNumber > numberOfHistorySteps){
+                console.log('downArrowClicked - setting localState.historyNumber = 0');
+                localState.historyNumber = 0; // Set to first
             }
             
             
@@ -2556,6 +2624,14 @@ async function gitStatus(){
         };
 
 }
+async function gitReadConfig(){
+            
+        let out = [];
+        await simpleGit( state.repos[state.repoNumber].localFolder ).listConfig( onConfig)
+        function onConfig(err, result ){  out = result; console.log(out);console.log(err)}
+        
+        return out;
+}
 async function gitShowHistorical(){
 
     
@@ -2756,7 +2832,10 @@ async function gitBranchList(){
                 if ( branchName.startsWith('remotes') ){
                     let remoteBranchName = branchName;
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
-                } 
+                } else{
+                    extendedBranchSummaryResult.local.push( branchName );
+                }
+                
 
             //
             // Set if remote exists on server (from cached)
@@ -2980,16 +3059,35 @@ async function gitPush(){
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
     
+    let configItems = await gitReadConfig();
 
     // Push
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
     try{
-        // Check that remote is configured
-        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote); 
+        // Bail out if remote not configured 
+        let c = configItems.all['remote.origin.url'];
+        if (c === undefined ||  c.trimEnd().trimStart() === '') {
+            console.log('URL empty or undefined'); // Nothing to push to 
+            return
+        }else{
+            console.log('URL defined'); 
+        }
+
+        
+        // Test if remote works
+        await simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote); 
         function onListRemote(err, result) {console.log(result) };
         
-        await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
-        function onPush(err, result) {console.log(result) };
+        // remote.origin.mirror  -- two cases
+        if ( configItems.all['remote.origin.mirror'] === 'true'){
+            // 'mirror' incompatible with refspace ('origin') and '--tags'
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
+        }else{
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+        }
+        function onPush(err, result) {console.log(result) };  
+        
+
     }catch(err){
         displayAlert('Push Error', err);
     }

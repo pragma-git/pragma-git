@@ -568,14 +568,8 @@ function createFileTable(status_data) {
                                                
                     // Correct if pinned commit                        
                     if (localState.pinnedCommit !== ''){ 
-                        commit2 = localState.pinnedCommit + ":" + file;
-                        commit1 = commit + ":" + file;    
-
-                        if (  !status_data.reversedOrder ){
-                            commit2 = commit + ":" + file;
-                            commit1 = localState.pinnedCommit + ":" + file; 
-                        }
-                        
+                        commit1 = localState.pinnedCommit + ":" + file;
+                        commit2 = commit + ":" + file;           
                     }  
 
                     diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
@@ -593,14 +587,8 @@ function createFileTable(status_data) {
                              
                     // Correct if pinned commit                        
                     if (localState.pinnedCommit !== ''){ 
-                        commit2 = localState.pinnedCommit + ":" + substrings[2];
-                        commit1 = commit + ":" + substrings[1];    
-
-                        if (  !status_data.reversedOrder ){
-                            commit2 = commit + ":" + substrings[2];
-                            commit1 = localState.pinnedCommit + ":" + substrings[1]; 
-                        }
-                        
+                        commit1 = localState.pinnedCommit + ":" + substrings[2];
+                        commit2 = commit + ":" + substrings[1];      
                     }   
                     
                     

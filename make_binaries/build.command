@@ -15,9 +15,12 @@
 # Prerequisits nwjs-phoenix-builder
 
 # 4) brew cask install wine-stable --no-quarantine
-# 5) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  Högerklicka Öppna efter nedladdning för att tillåta.
+# 5) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  
+#    Flytta till /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/rcedit-x64.exe
+#    Högerklicka Öppna efter nedladdning för att tillåta.
+#
 # 6) rm ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe  \
-#    ln -s /Users/jan/Downloads/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe
+#    ln -s /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe
 
 
 # To create installers
@@ -25,6 +28,7 @@
 # 7) brew install makensis # For making windows installer
 # 8) brew install create-dmg # For creating mac installer
 # 9) sudo gem install fpm # For linux .deb creation
+#    run later version : /usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin/fpm  instead of  fpm
 # 10) brew install gnu-tar # (tar for macos, for fpm)
 # 11) brew install rpm
 
@@ -35,7 +39,53 @@
 
 # - no windows icons.   5) or 6) above 
 
-cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
+
+    COLOR=5
+    tput setaf $COLOR; tput setaf $COLOR; echo ' '
+    echo '============================'
+    echo 'PREPARE ENVIRONMENT'
+    echo '============================'
+    tput sgr0
+
+    # Run newer version of fpm
+    export PATH="/usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin:$PATH"
+    export PATH="/usr/local/Cellar/ruby/3.0.0_1/bin:$PATH"
+    which ruby
+    which fpm
+
+    
+#
+# Install everything in package.json
+#    
+#
+    tput setaf $COLOR; tput setaf $COLOR; echo ' '
+    echo '============================'
+    echo 'INSTALLING FROM package.json'
+    echo '============================'
+    tput sgr0
+    
+	cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/
+    npm install
+
+    tput setaf $COLOR; echo ' '
+    echo '=================================='
+    echo 'INSTALLING FROM merge/package.json'
+    echo '=================================='
+    tput sgr0
+    
+	cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/merge
+    npm install
+
+#
+# Clean folders
+#
+#
+    tput setaf $COLOR; echo ' '
+    echo '============================'
+    echo 'CLEAN OLD BUILDS'
+    echo '============================'
+    tput sgr0
+
     
 # Clean old builds
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
@@ -44,15 +94,19 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win64
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/linux64
     
+    echo 'done'
 
 
 #
 # Build dists into : "/Users/jan/Documents/Projects/Pragma-git/dist"
 #
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '=========================='
     echo 'BUILDING FOR ALL PLATFORMS'
     echo '=========================='
+    tput sgr0
+    
+    cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 
 
     # Build All platforms
@@ -75,10 +129,11 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 #
 # Build Mac installer
 #
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '======================'
     echo 'INSTALLER MACOS 64-BIT'
     echo '======================'
+    tput sgr0
 
 
     # Move .app to temporary folder
@@ -121,10 +176,12 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 # Build Windows installers
 #
 
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '===================='
     echo 'INSTALLER WIN 64-BIT'
     echo '===================='
+    tput sgr0
+    
     rm -r ../dist/win64
     mkdir ../dist/win64
 
@@ -136,10 +193,12 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
     -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
     windows_installer.nsi
 
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '===================='
     echo 'INSTALLER WIN 32-BIT'
     echo '===================='
+    tput sgr0
+    
     rm -r ../dist/win32
     mkdir ../dist/win32
 
@@ -157,10 +216,12 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 # Build Linux DEB installer
 #
 
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '============================'
     echo 'INSTALLER LINUX 64-BIT (DEB)'
     echo '============================'
+    tput sgr0
+    
     cd ~/Documents/Projects/Pragma-git/dist
     rm linux64/*.deb
     mkdir linux64
@@ -195,10 +256,12 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 # Build Linux RPM installer
 #
 
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '============================'
     echo 'INSTALLER LINUX 64-BIT (RPM)'
     echo '============================'
+    tput sgr0
+    
     cd ~/Documents/Projects/Pragma-git/dist
     rm linux64/*.rpm
     mkdir linux64
@@ -234,9 +297,10 @@ cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
 #
 # DONE
 #
-    echo ' '
+    tput setaf $COLOR; echo ' '
     echo '=====' 
     echo 'DONE '
-    echo '====='     
+    echo '====='   
+    tput sgr0  
 
-    read -n 1 -s -r -p "DONE : Press any key to continue" && echo ' '
+    read -n 1 -s -r -p "DONE : Press any key to continue" && tput setaf $COLOR; echo ' '
