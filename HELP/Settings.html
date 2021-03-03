@@ -60,7 +60,7 @@
     This section describes how to set up user-names and passwords for remote repositories.
 
         
-     <h4>Creating an account </h4> 
+     <h4>(I) Creating an account </h4> 
          
          
          <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
@@ -74,28 +74,46 @@
         </p>
         
         
-     <h4>Using your link (address / url) </h4> 
+     <h4>(II) Authentication </h4> 
+     
+        <p>
+            Login to a repository may require some kind of authentication. Some alternatives are : 
+            <ol>
+                <li>Access token (Github has moved towards this -- see  
+                <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
+                <li>Old fashioned user-name and password
+            </ol>
+        
+        </p>
          
-                                        
+         
+ 
+     <h4>(III) Using your link (address / url) </h4> 
+                                            
          <p>Paste the link to your repository into the text-field under "Remote repository". 
-            Modify by adding <code>user:password</code>, and an <code>@</code>-sign added : <br>
-            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.<br>
-            In the pasted link,  <br>
-            <code style = "margin-left: 15px">USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> <br>
-            are exchanged with their proper values.  For instance :<br>
-            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
          </p>  
          
-                                
+         
+         <p>
+            <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
+            <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+            For instance :<br>
+            <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
+         </p>  
+         
+         <p>
+            <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
+            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
+            For instance :<br>
+            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
+         </p>  
+
+                    
          <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="../images/seturl-button.png"  height="24" > button.
-            If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
-            "Set" button again.
-         </p>     
-                                 
-         <p>Adjust your remote repository text until the "Set" button creates a green text, then it should work.
+            If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
          </p>   
                                  
-         <p>If git is using a credential manager, you can now remove the password (and ':' character) and test if it now works without storing the password in the link.
+         <p>If git is using a credential manager, you can now remove the <code>:password</code> (note the <code>:</code>code>) and test if it now works without storing the password in the link.
          Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
          </p>         
          
