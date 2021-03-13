@@ -9,7 +9,7 @@
         <div id="instructionsHEAD">
             
             <p>
-            <b>Changed files history</b>:<br>
+            <h4>Changed files history</h4>
             This window shows files that have changed since the last stored revision.
             </p>
                 
@@ -24,35 +24,35 @@
   
                   
                 
-            <p><b>Check-boxes </b>:<br>
-            Pragma-git assumes that you wish to store all files you are working with.  
-            This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
-            </p>
-            
-            <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
+            <h4>Check-boxes</h4>
+                <p>Pragma-git assumes that you wish to store all files you are working with.  
+                This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
+                </p>
+                
+                <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
+                      
+                <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+                
+            <h4>Other file operations</h4>     
                   
-            <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+                <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
+                <p><b>(diff)</b> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
+                <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                
             
-            <p><b>Other file operations </b>: </p>     
-              
-            <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
-            <p><b>(diff)</b> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
-            <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
-            <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
-            
-            
-            <p>Not all options are available for every type of change.  
-            For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
-            Therefore the "diff" linke will not be visible.
-            The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
-    
+                <p>Not all options are available for every type of change.  
+                For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
+                Therefore the "diff" linke will not be visible.
+                The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
+        
         </div>
     
     
         <!--  2) INSTRUCTIONS HISTORY FILES (disabled in listChanged.js, if file-list for HEAD -->        
         <div id="instructionsHistory">
             <p>
-            <b>Changed files history</b>:<br>
+            <h4>Changed files history</h4>
             This window shows files that have changed between this revision, and previous revision.
             </p>
             

@@ -1,22 +1,32 @@
-        
-<p>
-The commit tree shows commits on the current branch in green, and commits on other branches as black. 
-Note, the correct branch can only be deduced if the recommended settings "Merge without fast-forward" is used.
-</p>  
+ <h4>Current branch</h4>       
+    <p>
+    The commit tree shows commits on the current branch in green <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_green.png" >
+    , and commits on other branches without color <img style="height: 12; width: 12; vertical-align:middle;" src="../images/circle_black.png">. 
+    Note, the correct branch can only be deduced if the recommended settings "Merge without fast-forward" is used.
+    </p>  
 
-<p>
+
+<h4>Navigating</h4> 
+    <p>
+    Moving the mouse pointer over the commit message, a grey shaddow appears, together with a checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">.
+    <p>
+
+
+<h4>Select commit</h4>     
+    </p>
+    Clicking on the commit makes the text green, and moves history to the selected commit.  The main window is updated to display this commit.  
+    The main window can be used as before, looking for changes, clicking on the modified files to get a list of changes to prior commit, etc.
+    <p>
+   
+<h4>Compare with fixed commit</h4>    
+    </p>
+    Clicking the checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">
+    , makes the checked commit a fixed historical commit (<img src="../images/pinned_enabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">). 
+    </p>
     
-</p>
-Moving the mouse pointer over the commit message, a grey shaddow appears, together with a checkbox.
-<p>
+    <p>
+    Selecting the text of any other commit (not the checkbox) 
+    moves history to the newly selected commit (both in graph and in main window).
+    The bottom of the main window is updated to display number of modified files between these two commits (exactly as using the checkbox and the arrow navigation directly in the main window).  
+    </p>
     
-</p>
-Clicking on the commit makes the text green, and also shows this historical commit in the main window.  
-The main window can be used as before, looking for changes, clicking on the modified files to get a list of changes to prior commit, etc.
-<p>
-    
-</p>
-Clicking the checkbox, makes the checked commit a fixed historical commit. Clicking on the text (not the checkbox) of any other commit
-shows the second selected commit in the main window, and the modified file at the bottom of the main window indicates the difference
-between these two commits.  Exactly the same as using the checkbox and the arrows directly in the main window.  
-</p>

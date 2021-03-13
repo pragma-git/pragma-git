@@ -5,7 +5,7 @@
   /* --body-text: var(--text); */
   --input-background: #FFFFFF;
   --input-placeholder: #777777;
-  --image-invert: 0%;               /* invert black-transparent images to white
+  --image-invert: 0%;               /* invert black-transparent images to white  */
   
   /* Graph */
   --graph-hover: #BBBBBB;
@@ -32,7 +32,8 @@
   --body-background: #454442;       /* in html windows (dark grey) */
   --body-text: var(--text);         /* in html windows and inputs */
   --link-color: #efc918;            /* in html windows */
-  --image-invert: 80%;               /* invert black-transparent images to white
+  --image-invert: 80%;               /* invert black-transparent images to white */
+  --header-color: #d6b51d;
   
   /* Graph */
   --graph-hover: #999999;            /* (darker grey) */
