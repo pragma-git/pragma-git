@@ -3387,7 +3387,9 @@ function selectInGraph(hash){
             }
         }
     }
-
+function getSettingsDir(){
+    return settingsDir;
+}
 
 // Dialogs
 async function tag_list_dialog(){

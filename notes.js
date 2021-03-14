@@ -73,7 +73,36 @@ async function injectIntoNotesJs(document) {
     editor.eventManager.listen('clickCustomButton', function() {
         findInNw.showSearchBox();
     });
+    
+    
+    //
+    // Add help button to toolbar
+    //
+    
+    button2 = document.createElement('button');
+    button2.setAttribute("id", 'help-icon');
+    button2.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/questionmark_hover.png" >';
 
+    const END = 100; //Too high position number, makes sure lands right-most
+    toolbar.insertItem(END, {
+        type: 'button',
+        options: {
+          className: 'first',
+          event: 'clickCustomButton2',
+          tooltip: 'Help for Notes window',
+          el: button2,
+          text: '🔍',
+          style: ''
+        }
+    });
+    
+    
+    editor.eventManager.addEventType('clickCustomButton2');
+    editor.eventManager.listen('clickCustomButton2', function() {
+        let evt = {}; 
+        evt.name='Notes';
+        opener._callback('help',evt); 
+    });
 
 };
 function save(){
