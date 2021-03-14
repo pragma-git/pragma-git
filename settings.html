@@ -362,8 +362,16 @@
                 
                 Platform:
                 <div><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+                Settings folder:
+                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+                 <script>
+                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
+                 </script>    
                  
-                                
+                 
+                                                
                 <br>
                  Your system's path as seen by Pragma-git :<br>
                 <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
