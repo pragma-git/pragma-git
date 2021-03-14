@@ -2,10 +2,12 @@
 .light {  
   /* General */
   --text:  #222222;
-  /* --body-text: var(--text); */
+  --link-color: blue;            /* in html windows */
+  --body-text: var(--text);
   --input-background: #FFFFFF;
   --input-placeholder: #777777;
   --image-invert: 0%;               /* invert black-transparent images to white  */
+  --header-color: #2F5496;
   
   /* Graph */
   --graph-hover: #BBBBBB;
@@ -16,7 +18,7 @@
   --green-text: green;
   --red-text: red;
   --grey-text: var(--text);
-  --code-text: dark-grey;
+  --code-text: #c14d4d;
   
   /* Main */
   --main-background: #DDDDDD;
@@ -31,7 +33,7 @@
   --text:  #DDDDDD;                 /* in html and main windows (almost white) */
   --body-background: #454442;       /* in html windows (dark grey) */
   --body-text: var(--text);         /* in html windows and inputs */
-  --link-color: #efc918;            /* in html windows */
+  --link-color: #f3da67;            /* in html windows */
   --image-invert: 80%;               /* invert black-transparent images to white */
   --header-color: #d6b51d;
   
@@ -46,7 +48,7 @@
   --green-text: #5ff35f;         /* url works (green) */
   --red-text: #fd2020;           /* url fails (red) */
   --grey-text: var(--text);      /* (dark grey) */
-  --code-text: #d6b51d;       /* (dark grey) */
+  --code-text: #a2a2a2;       /* (dark grey) */
   
   /* Notes */
   --code-background: #606060;
