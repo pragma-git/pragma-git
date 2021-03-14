@@ -310,12 +310,10 @@ function initUI() {
 
 // Show button states
 function enable(id){
-    document.getElementById(id).classList.remove('disabled');
-    document.getElementById(id).classList.add('enabled');
+    document.getElementById(id).checked = true;
 }
 function disable(id){
-    document.getElementById(id).classList.remove('enabled');
-    document.getElementById(id).classList.add('disabled');
+    document.getElementById(id).checked = false;
 }
 
 // Make readonly
@@ -418,9 +416,8 @@ function closeWindowNicely(exitCode){
     }
     
     // Store gui mode settings
-    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').classList.contains('enabled');
-    global.state.pragmaMerge.align = document.getElementById('align').classList.contains('enabled');
-            
+    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
+    global.state.pragmaMerge.align = document.getElementById('align').checked;
 
     win.close();
 }

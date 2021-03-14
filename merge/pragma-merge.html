@@ -57,6 +57,7 @@
             width: 100%;
             height: 100%;
             background: var(--body-background);
+            color: var( --body-text);
         }  
 
 
@@ -64,14 +65,6 @@
             width: 100%;
             height: auto;
         }
-        
-        .enabled{
-            background: lightgreen;
-        }
-        .disabled{
-            background: white;
-        }
-        
      
      </style>
         
@@ -95,7 +88,12 @@
           margin-right: 2px;
         }
         
-        #up, #down{
+        span.checkbox {   
+          float: left;
+          display: block;
+        }
+        
+        #up, #down, #align, #hide-unchanged{
           color: var( --body-text);
           border-color: var( --body-text);
         }
@@ -173,10 +171,19 @@
     
     <p style="margin-right: 10 px;"> 
         <div>
-        <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
-        <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
-        <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
-        <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+            <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
+            <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
+    
+    <!--
+            <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
+            <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+    -->
+    
+            <span class=checkbox>
+            <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
+            <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+            </span>
+            
         </div>
         
         
