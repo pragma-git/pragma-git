@@ -30,13 +30,19 @@
         margin-top: -2px  /* I get scrollbars in window otherwise, because a build-in 1px border around editor. */
     }  
     
-    /* modify toast-ui  general */ 
-    span, 
-    .te-editor,
+    
     .tui-editor-contents h1, 
     .tui-editor-contents h2,  
     .tui-editor-contents h3, 
-    .tui-editor-contents  h4,  
+    .tui-editor-contents  h4
+    {
+        background: var(--body-background);
+        color: var(--header-color);
+    }
+    
+    /* modify toast-ui  general */ 
+    span, 
+    .te-editor, 
     .tui-editor-contents h5,  
     .tui-editor-contents h6,   
     .tui-editor-contents ul,  
@@ -70,7 +76,7 @@
     .tui-md-code-block.CodeMirror-linebackground 
     {
         background-color: var(--code-background);
-        color: var(--code-text);
+        color: var(--notes-code-text);
     }
     
     /* markdown */
@@ -80,6 +86,11 @@
     .tui-editor-contents td.te-preview-highlight
      {
         background-color: rgba(255, 245, 131, 0.15);
+    }
+    
+    .tui-md-heading    
+    {
+        color: var(--header-color);
     }
 
     .outer-content {

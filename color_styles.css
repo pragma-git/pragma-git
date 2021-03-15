@@ -19,13 +19,17 @@
   --red-text: red;
   --grey-text: var(--text);
   --code-text: #c14d4d;
+    
+  /* Notes */
+  --code-background: #DDDDDD;         /* (lighter grey) */
+  --notes-code-text: var(--code-text);
   
   /* Main */
-  --main-background: #DDDDDD;
+  --main-background: #EEEEEE;
   --dim-text: #777777;
   --message-color: #0033FF;
   --message-placeholder: var(--text);
-  --history-icon-brightness: 1;                 /* keep original */
+  --history-icon-brightness: 1;     /* keep original */
 }
  
 .dark {
@@ -45,13 +49,14 @@
   /* Settings */
   --input-background: #505050;      /* in html windows (slightly less dark grey) */
   --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
-  --green-text: #5ff35f;         /* url works (green) */
-  --red-text: #fd2020;           /* url fails (red) */
-  --grey-text: var(--text);      /* (dark grey) */
-  --code-text: #a2a2a2;       /* (dark grey) */
+  --green-text: #5ff35f;            /* url works (green) */
+  --red-text: #fd2020;              /* url fails (red) */
+  --grey-text: var(--text);      
+  --code-text: #a2a2a2;             /* (light grey) */
   
   /* Notes */
-  --code-background: #606060;
+  --code-background: #505050;
+  --notes-code-text: #d6b51d;
   
   /* Merge */
   --merge-color: black;
