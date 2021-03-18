@@ -6,7 +6,8 @@
         <link rel="stylesheet" type="text/css" href="../color_styles.css" />
         
     </head>
-
+    
+     
  
     
 
@@ -20,7 +21,13 @@
     </script>       
 
 <!-------------------------------------------------------------------------------------------->    
-    <h2>Help on <span id='name'></h2>   <!-- TITLE --> 
+    <h2>Help on <span id='name'></span>
+        <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('about-icon').src='../images/find.png' " 
+                onmouseout="document.getElementById('about-icon').src='../images/find_hover.png' " 
+                src="../images/find_hover.png" >
+    </h2>   <!-- TITLE --> 
 <!-------------------------------------------------------------------------------------------->       
     
                 
@@ -47,6 +54,5 @@
         extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
 
- 
 </body>
 </html>
