@@ -119,11 +119,18 @@
             <hr>   
                 
                 
-            <!-- OK / CANCEL buttons -->     
+            <!-- OK / CANCEL buttons (Use 'Set' button in Settings from OK button click )-->     
             <p>                        
                 <button id="ok" 
-                    onclick=
-                    "opener.document.getElementById(state.repoNumber + 10000).value = build(); 
+                    onclick = "
+                    let textarea_id = state.repoNumber + 10000;
+                    opener.document.getElementById(textarea_id).value = build(); 
+                    
+                    let evt=[]; 
+                    evt.innerHTML = 'Set';
+                    evt.id = state.repoNumber + 20000;
+                    opener._callback('setButtonClicked',evt);
+                    
                     window.close()"
                 >
                 OK
@@ -162,8 +169,10 @@
             repoName = util.branchCharFilter( repoName) ;
             document.getElementById('repoName').value = repoName;
             
-            
-            let url = 'https://' + token + '@github.com/' + username + '/' + repoName + '.git';
+            if (token != ''){
+                token = token + '@';
+            }
+            let url = 'https://' + token + 'github.com/' + username + '/' + repoName + '.git';
             
             document.getElementById('outputUrl').textContent = url;
             
@@ -237,6 +246,10 @@
                 let account = strings[3];
                 let repo = strings[4].split('.')[0];  // repo.git -> repo
                 let token = strings[2].split('@')[0]; // token@github.com -> token
+                
+                if ( token == 'github.com'){
+                    token = '';
+                }
                 
                 document.getElementById('accountName').value = account;
                 document.getElementById('token').value = token;
