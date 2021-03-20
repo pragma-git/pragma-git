@@ -1,0 +1,253 @@
+<html>
+    <head>
+        <title>Create Github Repository</title>
+        <script src="settings.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    </head>
+ 
+
+      
+      
+ <!-- settings window  -->        
+    
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+
+
+        textarea{
+            width: 400;
+            line-height: 1;
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+            margin-right:20px;
+        }
+        input{
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        
+        input, label {
+            display:block;
+        }
+
+        a{
+            color: var(--link-color);
+        }
+        
+    </style>
+    
+     
+ 
+    
+
+<body id='body' class='light'>     
+    <!-- Dark mode on/off --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+        
+    </script>
+     
+    <div id="outer-content" style="width: fit-content;padding: 10px;">
+            
+        <div id="inner-content">
+                
+            <h2 id="header_Settings">Create Github Repository 
+        
+<!-- HELP HERE
+            <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
+                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                src="images/questionmark_black.png" >
+-->
+                
+            </h2>
+        
+        
+            <hr>              
+
+
+            <h3>Configure:</h3>  
+            
+            <!--  Add username / account name  --> 
+            <p>
+                <label for="accountName">
+                    Github username 
+                    (<a href="#" onclick="nw.Window.open(
+                        'https://github.com/join');">Register a Github account</a>)
+                </label>
+                <textarea id="accountName" placeholder="Github account name" oninput="build()"></textarea>  
+            </p>
+            
+                            
+            <!-- Add Access Token --> 
+            <p>                        
+                <label for="token">Access Token or username:token 
+                    (<a href="#" onclick="nw.Window.open(
+                        'https://github.com/settings/tokens');">Create an access token</a>)
+                </label>
+                <textarea id="token" placeholder="Paste Github-account access token here" oninput="build()"></textarea>  
+            </p>
+        
+             
+            <!-- Add Repository --> 
+            <p>                        
+                <label for="repoName">Repository</label>
+                <textarea id="repoName" placeholder="Github name of repository" oninput="build()"></textarea>
+                                
+                <button id="createGithubRepo" onclick="createRepo()">Create</button>
+
+            </p>
+            
+<!--
+            <div id=outputUrl></div>
+-->
+            <p>
+                <label for="outputUrl">Generated url</label>
+                <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
+            </p>
+            
+            <hr>   
+                
+                
+            <!-- OK / CANCEL buttons -->     
+            <p>                        
+                <button id="ok" 
+                    onclick=
+                    "opener.document.getElementById(state.repoNumber + 10000).value = build(); 
+                    window.close()"
+                >
+                OK
+                </button>   
+                                    
+                <button id="cancel"  onclick="window.close()"> Cancel </button>
+            </p>   
+            
+
+        </div>
+    </div>
+    
+    
+    <script>
+        // Set window size to match content
+        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') );
+        let dx = document.getElementById('outer-content').scrollWidth;
+        let dy = document.getElementById('body').scrollHeight;
+        
+        let hx = window.outerWidth - window.innerWidth;
+        let hy = window.outerHeight - window.innerHeight;
+        window.resizeTo(dx + hx + 2 * padding +16 , dy + hy + 2 * padding + 16);
+    </script>
+    
+    
+    <script>
+        // Build git url
+        function build(){
+            
+            // Read textareas
+            let username = document.getElementById('accountName').value;
+            let token = document.getElementById('token').value;
+            let repoName = document.getElementById('repoName').value;
+            
+            // Verify repo name
+            repoName = util.branchCharFilter( repoName) ;
+            document.getElementById('repoName').value = repoName;
+            
+            
+            let url = 'https://' + token + '@github.com/' + username + '/' + repoName + '.git';
+            
+            document.getElementById('outputUrl').textContent = url;
+            
+            return url;
+        }
+        build();
+    </script>
+    
+     <script>
+        // Create Repo
+        function createRepo(){
+                  
+            let NEW_REPO = document.getElementById('repoName').value;
+            let TOKEN = document.getElementById('token').value;
+            
+            let JSON={
+                'name' :  NEW_REPO,
+                'private' : true,
+                'description' : 'Created with Pragma-git'
+                }; 
+                
+            let headers = { 
+                'Authorization' : `token ${TOKEN}` 
+            }
+
+            
+            fetch('https://api.github.com/user/repos', { 
+                method : 'GET', 
+                headers : headers, 
+                body : JSON 
+                }
+            )
+            .then(checkStatus)  
+            .catch( err => console.log(err)); 
+
+            
+            function checkStatus (res) {
+                console.log(res);
+                if (res.status >= 200 && res.status < 300) {
+                    return res
+                } else {
+                    let err = new Error(res.statusText)
+                    err.response = res
+                throw err
+                }
+            }
+
+        }
+        build();
+    </script>   
+    
+    
+    
+    <script>
+        window.addEventListener(
+            'DOMContentLoaded', 
+            (event) => {
+                console.log('Create_github_repository.html :DOM fully loaded and parsed');
+                
+                // Import modules
+                const util = require('./util_module.js'); // Pragma-git common functions
+                const fetch = require('node-fetch');
+                
+                // Parse existing url
+                
+                let textarea = opener.document.getElementById(state.repoNumber + 10000).value;
+                let strings = textarea.split('/');
+                
+                // "https://JanAxelssonTest:13241121251413142@github.com/JanAxelssonTest/test3.git" 
+                // ->  ["https:", "", "JanAxelssonTest@github.com", "JanAxelssonTest", "test3.git"]
+                let account = strings[3];
+                let repo = strings[4].split('.')[0];  // repo.git -> repo
+                let token = strings[2].split('@')[0]; // token@github.com -> token
+                
+                document.getElementById('accountName').value = account;
+                document.getElementById('token').value = token;
+                document.getElementById('repoName').value = repo;
+                
+                build(); // update html
+                
+            }
+        );
+
+    </script>
+ 
+</body>
+</html>

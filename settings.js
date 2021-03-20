@@ -320,6 +320,14 @@ async function _callback( name, event){
             
             break;
         }
+        case 'makeUrlButtonClicked': {
+            // For :
+            // - Build a url
+            
+            nw.Window.open('Create_github_repository.html', {});
+
+            break;
+        }
 
     } // End switch
     
@@ -774,7 +782,7 @@ async function generateRepoTable(document, table, data) {
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)");
             cell.appendChild(button);
-            
+                       
             // Run test
             button.click();
             
