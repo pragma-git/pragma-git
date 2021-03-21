@@ -41,6 +41,13 @@
             color: var(--link-color);
         }
         
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        
     </style>
     
      
@@ -60,7 +67,7 @@
             
         <div id="inner-content">
                 
-            <h2 id="header_Settings">Create Github Repository 
+            <h2 id="header_Settings">Github Remote Repository 
         
 <!-- HELP HERE
             <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
@@ -73,10 +80,10 @@
             </h2>
         
         
-            <hr>              
+        <hr>              
 
 
-            <h3>Configure Account:</h3>  
+            <h3>Account:</h3>  
             
             <!--  Add username / account name  --> 
             <p>
@@ -99,47 +106,17 @@
             </p>
         
  
-            <hr>  
+        <hr>  
 
-            <h3>Configure Repository :</h3>  
+            <h3>Existing Repository :</h3>  
                         
             <p>                        
-                <label for="repoName">Repository Name (existing, or new)</label>
+                <label for="repoName">Existing Repository Name</label>
                 <textarea id="repoName" placeholder="Github name of existing or new repository" oninput="build()"></textarea>
 
             </p>
             
-                              
-  
-            <div style="border:1px solid grey;padding:10px">
-                
-                <!-- Add Repository -->   
-                
-                
-                The following two inputs only apply when creating a new repository:        
-                
-            
-                <p>
-                    <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
-                    <label for="privateRepo">Private repository (public if not checked)</label>
-                </p>
-                
-                
-                <p>                        
-                    <label for="repoDescription">Description (only when creating new repository)</label>
-                    <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build()"></textarea>               
-                </p>
-                
-                
-                <p>                           
-                    <button id="createGithubRepo" onclick="createRepo()">Create New Remote Repository</button>
-                </p>
-                
-            </div>
-            
-            <hr>  
-            
-
+ 
             <!-- URL preview -->  
             <p>
                 <label for="outputUrl">Generated url</label>
@@ -161,11 +138,68 @@
                     
                     window.close()"
                 >
-                Update Setting
+                Close, Update Setting
                 </button>   
                                     
                 <button id="cancel"  onclick="window.close()"> Cancel </button>
-            </p>   
+            </p> 
+
+        <hr>   
+        <hr>                
+  
+            
+            <h3>Create Remote Github Repository :</h3>  
+            
+            <!-- Add Repository -->   
+            
+            
+            The following two inputs only apply when creating a new repository:        
+            
+        
+            <p>
+                <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
+                <label for="privateRepo">Private repository (public if not checked)</label>
+            </p>
+                        
+            <p>                        
+                <label for="newRepoName">Name of New Repository</label>
+                <textarea id="newRepoName" placeholder="Github name of existing or new repository" oninput="build()"></textarea>
+
+            </p>
+            
+            
+            <p>                        
+                <label for="repoDescription">Description (only when creating new repository)</label>
+                <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build()"></textarea>               
+            </p>
+            
+            
+            <p>                           
+                <button id="createGithubRepo" onclick="createRepo()">Create New Remote Repository</button>                
+                
+                <button 
+                    onclick = "
+                    let textarea_id = state.repoNumber + 10000;
+                    opener.document.getElementById(textarea_id).value = build(); 
+                    
+                    let evt=[]; 
+                    evt.innerHTML = 'Set';
+                    evt.id = state.repoNumber + 20000;
+                    opener._callback('setButtonClicked',evt);
+                    
+                    window.close()"
+                >
+                Close, Update Setting
+                </button>  
+                
+            </p>
+
+           
+            
+            <p>                        
+                <div id="newRepoStatus"></div>             
+            </p>           
+  
             
 
         </div>
@@ -180,7 +214,7 @@
         
         let hx = window.outerWidth - window.innerWidth;
         let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(dx + hx + 2 * padding +16 , dy + hy + 2 * padding + 16);
+        window.resizeTo(dx + hx + 2 * padding +16 , dy + hy + 2 * padding + 100);
     </script>
     
     
@@ -213,7 +247,7 @@
         // Create Repo
         function createRepo(){
                   
-            let NEW_REPO = document.getElementById('repoName').value;
+            let NEW_REPO = document.getElementById('newRepoName').value;
             let TOKEN = document.getElementById('token').value;
             let DESCRIPTION = document.getElementById('repoDescription').value;
             let PRIVATE = document.getElementById('privateRepo').checked;
@@ -227,15 +261,14 @@
             let headers = { 
                 'Authorization' : `token ${TOKEN}`
             }
+            console.log(headers);
             
             let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
+            console.log(body);
             
             fetch('https://api.github.com/user/repos', {
                 method: 'POST',
-                headers: {
-                    'Authorization': 'token ec584fc8e3eabcd724d1014bcd843db052604420',
-                    'Content-Type': 'application/json; charset=UTF-8'
-                },
+                headers: headers,
                 body: body
             })
             .then(checkStatus)  
@@ -245,8 +278,17 @@
             function checkStatus (res) {
                 console.log(res);
                 if (res.status >= 200 && res.status < 300) {
+                    // Update repo textarea
+                    document.getElementById('repoName').value = document.getElementById('newRepoName').value;
+                    document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
+                    document.getElementById('newRepoStatus').classList.add('green');
+                    document.getElementById('newRepoStatus').classList.remove('red');
+                    
                     return res
                 } else {
+                    document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO}`;
+                    document.getElementById('newRepoStatus').classList.add('red');
+                    document.getElementById('newRepoStatus').classList.remove('green');
                     let err = new Error(res.statusText)
                     err.response = res
                 throw err
