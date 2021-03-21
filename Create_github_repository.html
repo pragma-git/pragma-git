@@ -76,7 +76,7 @@
             <hr>              
 
 
-            <h3>Configure:</h3>  
+            <h3>Configure Account:</h3>  
             
             <!--  Add username / account name  --> 
             <p>
@@ -98,26 +98,54 @@
                 <textarea id="token" placeholder="Paste Github-account access token here" oninput="build()"></textarea>  
             </p>
         
-             
-            <!-- Add Repository --> 
+ 
+            <hr>  
+
+            <h3>Configure Repository :</h3>  
+                        
             <p>                        
-                <label for="repoName">Repository</label>
-                <textarea id="repoName" placeholder="Github name of repository" oninput="build()"></textarea>
-                                
-                <button id="createGithubRepo" onclick="createRepo()">Create</button>
+                <label for="repoName">Repository Name (existing, or new)</label>
+                <textarea id="repoName" placeholder="Github name of existing or new repository" oninput="build()"></textarea>
 
             </p>
             
-<!--
-            <div id=outputUrl></div>
--->
+                              
+  
+            <div style="border:1px solid grey;padding:10px">
+                
+                <!-- Add Repository -->   
+                
+                
+                The following two inputs only apply when creating a new repository:        
+                
+            
+                <p>
+                    <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
+                    <label for="privateRepo">Private repository (public if not checked)</label>
+                </p>
+                
+                
+                <p>                        
+                    <label for="repoDescription">Description (only when creating new repository)</label>
+                    <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build()"></textarea>               
+                </p>
+                
+                
+                <p>                           
+                    <button id="createGithubRepo" onclick="createRepo()">Create New Remote Repository</button>
+                </p>
+                
+            </div>
+            
+            <hr>  
+            
+
+            <!-- URL preview -->  
             <p>
                 <label for="outputUrl">Generated url</label>
                 <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
             </p>
-            
-            <hr>   
-                
+             
                 
             <!-- OK / CANCEL buttons (Use 'Set' button in Settings from OK button click )-->     
             <p>                        
@@ -133,7 +161,7 @@
                     
                     window.close()"
                 >
-                OK
+                Update Setting
                 </button>   
                                     
                 <button id="cancel"  onclick="window.close()"> Cancel </button>
@@ -187,28 +215,33 @@
                   
             let NEW_REPO = document.getElementById('repoName').value;
             let TOKEN = document.getElementById('token').value;
+            let DESCRIPTION = document.getElementById('repoDescription').value;
+            let PRIVATE = document.getElementById('privateRepo').checked;
             
-            let JSON={
-                'name' :  NEW_REPO,
-                'private' : true,
-                'description' : 'Created with Pragma-git'
-                }; 
+            //let JSON={
+                //'name' :  'aaa',
+                //'private' : 'true',
+                //'description' : 'Created with Pragma-git'
+                //}; 
                 
             let headers = { 
-                'Authorization' : `token ${TOKEN}` 
+                'Authorization' : `token ${TOKEN}`
             }
-
             
-            fetch('https://api.github.com/user/repos', { 
-                method : 'GET', 
-                headers : headers, 
-                body : JSON 
-                }
-            )
+            let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
+            
+            fetch('https://api.github.com/user/repos', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'token ec584fc8e3eabcd724d1014bcd843db052604420',
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: body
+            })
             .then(checkStatus)  
             .catch( err => console.log(err)); 
 
-            
+
             function checkStatus (res) {
                 console.log(res);
                 if (res.status >= 200 && res.status < 300) {
@@ -245,7 +278,7 @@
                 // ->  ["https:", "", "JanAxelssonTest@github.com", "JanAxelssonTest", "test3.git"]
                 let account = strings[3];
                 let repo = strings[4].split('.')[0];  // repo.git -> repo
-                let token = strings[2].split('@')[0]; // token@github.com -> token
+                let token = strings[2].split('@')[0]; // token@github.com -> token  (or 'github.com' if no '@')
                 
                 if ( token == 'github.com'){
                     token = '';

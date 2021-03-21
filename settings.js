@@ -302,7 +302,7 @@ async function _callback( name, event){
                     await simpleGit().raw(  commands, onListRemote);
                     function onSetRemoteUrl(err, result ){console.log(result) };
                 
-                function onListRemote(err, result ){console.log(result) };
+                function onListRemote(err, result ){console.log(result);console.log(err) };
                 document.getElementById(textareaId).classList.add('green');
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.remove('red');
