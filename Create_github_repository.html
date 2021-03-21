@@ -69,13 +69,13 @@
                 
             <h2 id="header_Settings">Github Remote Repository 
         
-<!-- HELP HERE
+<!-- HELP HERE -->
             <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-                onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
+                onclick="let evt = {}; evt.name='Github';opener.opener._callback('help',evt);" 
                 onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                 src="images/questionmark_black.png" >
--->
+
                 
             </h2>
         
@@ -88,9 +88,14 @@
             <!--  Add username / account name  --> 
             <p>
                 <label for="accountName">
-                    Github username 
-                    (<a href="#" onclick="nw.Window.open(
-                        'https://github.com/join');">Register a Github account</a>)
+                    Github username (
+                    <a href="#" 
+                        onclick="nw.Window.open(
+                            'https://github.com/join', 
+                            { width: 768,height: 768, frame: true}
+                        )">
+                    Register a Github account
+                    </a>)
                 </label>
                 <textarea id="accountName" placeholder="Github account name" oninput="build()"></textarea>  
             </p>
@@ -98,9 +103,14 @@
                             
             <!-- Add Access Token --> 
             <p>                        
-                <label for="token">Access Token or username:token 
-                    (<a href="#" onclick="nw.Window.open(
-                        'https://github.com/settings/tokens');">Create an access token</a>)
+                <label for="token">Access Token or username:token (
+                    <a href="#" 
+                        onclick="nw.Window.open(
+                            'https://github.com/settings/tokens', 
+                            { width: 768,height: 768, frame: true}
+                        );">
+                    Create an access token
+                </a>)
                 </label>
                 <textarea id="token" placeholder="Paste Github-account access token here" oninput="build()"></textarea>  
             </p>
@@ -214,7 +224,7 @@
         
         let hx = window.outerWidth - window.innerWidth;
         let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(dx + hx + 2 * padding +16 , dy + hy + 2 * padding + 100);
+        window.resizeTo(dx + hx + 1 * padding , dy + hy + 2 * padding + 100);
     </script>
     
     

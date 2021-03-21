@@ -1,0 +1,126 @@
+ 
+ <style>
+    dl{
+       text-indent: 20px; 
+    }
+    
+    dt{
+        font-weight: bold;
+        text-decoration: underline;
+        display: list-item;          /* This has to be "list-item"                                               */
+        list-style-type: disc;       /* See https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type     */
+        list-style-position: inside; /* See https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-position */
+
+    }
+    
+    dd{
+        margin-bottom: 10px;
+        text-indent: 20px; 
+    }
+ 
+ </style>
+
+
+  <h4>What is Github</h4>       
+    <p>
+    Github is a remote git-repository. 
+    You may connect your local repository to this, and can use this as a backup, to keep different computers
+    you work with in sync, or for cooperation with others.
+    </p> 
+
+ 
+ <h4>Setup</h4>       
+    <p>
+    Github requires an account (that is, a username), and a password. The location of the remote github repository 
+    is defined by an URL, of a format similar to "<code>https://...github.com..</code>".  This window helps you getting this correct.
+    </p>  
+
+  
+    <p>
+    A new account can be defined from the github website, by following the link "Register a Github account".
+    </p> 
+
+    <p>
+    An access token can also be defined from the github website, by following the link "Create an access token". 
+    The access token can act as a password for git, and give access to operations such as creating a new repository from within Pragma-git. 
+    </p>  
+
+    <p>
+    When creating an access token fill in the form on the github web-page (opened from the "Create an access token" link) :
+
+        <dl>
+            <dt>Note
+                <dd>type "pragma-git", or anything else that reminds you of why the token was created
+
+            
+            <dt>Repo checkbox
+                <dd>must be selected
+                    
+            <dt>User checkbox
+                <dd>must be selected
+                
+            <dt><button>Generate Token</button> button 
+                <dd>end by pressing this button to generate an access token
+            
+        </dl>
+        
+    
+        Finally, copy the token from the page, and paste it into the field "Access Token" (Pragma-git Github window).
+    </p>  
+
+ <h4>The URL</h4>  
+    <p>
+    This form in this window helps you to compose the correct URL from fields for username, access token, and existing repository.
+    A generated URL preview is shown below these fields. 
+    
+    </p> 
+
+    <p>
+    <button>Close, Update Setting</button> button closes this window and updates the URL in the settings window.
+    
+    </p> 
+
+    <p>
+    <button>Cancel</button>  button leaves the window keeping the old URL in the settings window.
+    </p> 
+ 
+ 
+ <h4>Create a Remote Github Repository</h4>  
+
+    <p>
+    As said before, this can be done via github's website.  However, this window makes the process simpler.   
+    The fields in this section are:
+
+        <dl style="text-indent: 10px;">
+            <dt>Private repository
+            <dd>a checkbox that makes the repository visible to only you and others 
+                who you have given your username, password and access token.
+            <dt>Name of New Repository
+                <dd>is obvious. This field inhibits forbidden characters to be typed, 
+                and exchanges others to allowed characters. This must be a new repository name, that does not already exist on your github account.
+    
+            <dt>Description
+                <dd>is a short text describing your repository, displayed in the github web-view.
+        </dl>
+        
+    </p> 
+        
+    <p>
+        <button>Create New Remote Repository</button> button creates a new repository
+        in you account (requires correct username and access token fields). 
+    </p> 
+     
+
+ <h4>Finish the Remote Repository creation</h4>          
+    <p>
+        A status message is shown below the buttons, displaying success or failure.
+        When succesful, the repository name is copied to the "Existing Repository Name" field.
+    </p> 
+    
+    <p>
+    <button>Close, Update Setting</button> button closes this window and updates the URL in the settings window.
+    </p> 
+
+    <p>
+    <button>Cancel</button>  button (higher up on the page) leaves the window keeping the old URL in the settings window.
+    </p>  
