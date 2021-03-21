@@ -57,20 +57,26 @@ TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
       
     # Play with this one:     
       
-    NEW_REPO='Test11111111'     
+    NEW_REPO='Test11111110'     
     F1="\"name\" : \"$NEW_REPO\""
     F2='"private" : true'
     F3='"description" : "Created with Pragma-git"'
     JSON="{$F1,$F2,$F3}"
     
-    TOKEN='075010adcf03f39814efa60b839a911a571287bf' 
+    TOKEN='ec584fc8e3eabcd724d1014bcd843db052604420' 
     USER='JanAxelsson'
     
     curl -i \
       --header "Authorization: token $TOKEN" \
       --data "$JSON"  \
       https://api.github.com/user/repos     
-      
+     
+     
+     
+    curl -i \
+      --header "Authorization: token 7010c51759b1249bb7f4a39d095d0c7780582669" \
+      --data '{"name" : "J4","private" : true,"description" : "Created with Pragma-git"}'  \
+      https://api.github.com/user/repos       
      
 #
 # CONNECT local to remote

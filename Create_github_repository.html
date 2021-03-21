@@ -245,7 +245,7 @@
     
      <script>
         // Create Repo
-        function createRepo(){
+        async function createRepo(){
                   
             let NEW_REPO = document.getElementById('newRepoName').value;
             let TOKEN = document.getElementById('token').value;
@@ -264,35 +264,49 @@
             console.log(headers);
             
             let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
-            console.log(body);
+            //console.log(body);
             
-            fetch('https://api.github.com/user/repos', {
-                method: 'POST',
-                headers: headers,
-                body: body
-            })
-            .then(checkStatus)  
-            .catch( err => console.log(err)); 
-
-
-            function checkStatus (res) {
-                console.log(res);
-                if (res.status >= 200 && res.status < 300) {
+            //fetch('https://api.github.com/user/repos', {
+                //method: 'POST',
+                //headers: headers,
+                //body: body
+            //})
+            //.then(checkStatus)  
+            //.catch( err => console.log(err)); 
+ 
+            
+            
+            try {
+                
+                const res = await fetch('https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: headers,
+                    body: body
+                })
+                
+                const json = await res.json();
+                const message = json.message;
+                const ok = res.ok;
+            
+                console.log(ok)
+                console.log(res.status)
+                console.log(json.message);
+                
+                if (ok){
                     // Update repo textarea
                     document.getElementById('repoName').value = document.getElementById('newRepoName').value;
                     document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
                     document.getElementById('newRepoStatus').classList.add('green');
                     document.getElementById('newRepoStatus').classList.remove('red');
-                    
-                    return res
+
                 } else {
-                    document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO}`;
+                    document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
                     document.getElementById('newRepoStatus').classList.add('red');
                     document.getElementById('newRepoStatus').classList.remove('green');
-                    let err = new Error(res.statusText)
-                    err.response = res
-                throw err
                 }
+                
+            } catch (error) {
+                console.log(error.response.body);
             }
 
         }
