@@ -216,15 +216,24 @@
                     <tbody id="settingsTableBody">
                     </tbody>
                 </table>
-
-                   
-                <!--  HIDDEN -->
-                
                 <input id = "cloneFolderInputButton" 
                     type="file" nwdirectory directory multiple="false" 
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
+ 
+              
+                 <h3>Tools on selected Repository : </h3>
+                 Setup remote for : <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button>
+
+
+                 <br>
+                 <br>
+                 <hr>
+
+                   
+                <!--  HIDDEN -->
+                
  
             <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
             

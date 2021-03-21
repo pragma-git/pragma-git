@@ -302,7 +302,7 @@ async function _callback( name, event){
                     await simpleGit().raw(  commands, onListRemote);
                     function onSetRemoteUrl(err, result ){console.log(result) };
                 
-                function onListRemote(err, result ){console.log(result) };
+                function onListRemote(err, result ){console.log(result);console.log(err) };
                 document.getElementById(textareaId).classList.add('green');
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.remove('red');
@@ -318,6 +318,14 @@ async function _callback( name, event){
             }
 
             
+            break;
+        }
+        case 'makeUrlButtonClicked': {
+            // For :
+            // - Build a url
+            
+            nw.Window.open('Create_github_repository.html', {});
+
             break;
         }
 
@@ -774,7 +782,7 @@ async function generateRepoTable(document, table, data) {
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)");
             cell.appendChild(button);
-            
+                       
             // Run test
             button.click();
             
