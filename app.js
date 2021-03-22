@@ -845,17 +845,28 @@ async function _callback( name, event){
         
         let fileName = 'HELP' + pathsep + event.name + '.html';
         let text = fs.readFileSync(fileName);
+        let title = 'Help on ' + event.name;
                         
         // Update text            
         if ( localState.helpWindow == true ){
-            updateText( help_win.document, event.name, text);
+            
+            // Delete menu for old help window
+            let oldTitle = help_win.document.title;
+            deleteWindowMenu(oldTitle);
+            
+            // Overwrite content for help window
+            updateText( event.name, title, text);
+            
+            // Update menu
+            addWindowMenu( title, 'help_win');
             return
         }
         
+        
         // Local function - update text in html
-        function updateText( document, name, text){
+        function updateText( name, title, text){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
-            help_win.document.getElementById("title").innerHTML= name; // Set window title
+            help_win.document.getElementById("title").innerText= title; // Set window title
             help_win.document.getElementById("name").innerText= name; // Set document first header  
             help_win.focus();         
         };
@@ -886,7 +897,9 @@ async function _callback( name, event){
                                 cWindows.setAlwaysOnTop(state.alwaysOnTop);
                             }
                             help_win = cWindows.window;
-                            updateText( help_win.document, event.name, text);
+                            updateText( event.name, title, text);
+                            addWindowMenu( title, 'help_win');
+                            
                         }
                     )
                 }

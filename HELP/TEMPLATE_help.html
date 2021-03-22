@@ -53,6 +53,16 @@
         findInNw.initialize();
         extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
+    
+    <!-- Event listeners--> 
+    <script>
+    
+        window.addEventListener('unload', (event) => {
+            let title = document.getElementById('title').innerText;
+            opener.deleteWindowMenu(title);
+            }
+        );
+    </script>
 
 </body>
 </html>
