@@ -159,6 +159,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var changed_win;
         var resolve_win;
         var graph_win;
+        var about_win;
+        var window_menu_handles_mapping = {}; // Will be filled in when making menu items in main menu
  
       
     // Files & folders
@@ -240,7 +242,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
        
     // Initiate pragma-git as default diff and merge tool
         gitDefineBuiltInMergeTool();
+
     
+    // Mac-menu
+    var mb; // Mac menubar
+    var macWindowsMenu; // Mac windows menu
     
 // ---------
 // FUNCTIONS 
@@ -323,15 +329,16 @@ async function _callback( name, event){
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
+        let title = 'Notes';
         gui.Window.open('notes.html',
             {
                 id: 'notesWindowId',
                 position: 'center',
                 width: 600,
                 height: 600,
-                title: "Notes"
+                title: title
             },
-            win=>win.on('loaded', () => notes_win = nw.Window.get(win.window))
+            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');} )
             )  
         
         localState.notesWindow.open = true;
@@ -702,6 +709,8 @@ async function _callback( name, event){
             graph_win.focus();
             return
         }
+        
+        let title = "Graph";
 
         // Open new window (will open above old)
         gui.Window.open('graph.html',
@@ -710,10 +719,10 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 600,
-                title: "Graph"
+                title: title
             }
             ,
-            win=>win.on('loaded', () => graph_win = nw.Window.get(win.window))
+            win=>win.on('loaded', () => {graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');} )
             )  
             
         localState.graphWindow = true;
@@ -1147,6 +1156,7 @@ async function _callback( name, event){
     function showAbout(){    
         console.log('About button pressed');
         
+        let title = 'About';
                 
         if ( localState.aboutWindow == true ){
             return
@@ -1154,12 +1164,13 @@ async function _callback( name, event){
 
         
         // Open new window -- and create closed-callback
-        let about_win = gui.Window.open(
+        gui.Window.open(
             'about.html#/new_page', 
             {   id: 'aboutWindowId',
                 position: 'center',
                 width: 600,
-                height: 700   
+                height: 700,
+                title: title   
             },
             function(cWindows){ 
                 cWindows.on('closed', 
@@ -1176,8 +1187,11 @@ async function _callback( name, event){
                             cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
                             cWindows.setAlwaysOnTop(state.alwaysOnTop);
                         }
+                        about_win = nw.Window.get(cWindows.window);
+                        addWindowMenu( title, 'about_win');
                     }
-                )
+                );
+
             }
         );
 
@@ -1808,16 +1822,16 @@ async function _callback( name, event){
         
         _setMode('SETTINGS');
         
-        settings_win = gui.Window.open('settings.html#/new_page' ,
+        let title = "Settings";
+        settings_win = gui.Window.open('settings.html' ,
             {
                 id: 'settingsWindowId',
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: "Settings"
+                title: title
             },
-            win=>win.on('loaded', () => settings_win = nw.Window.get(win.window))
-            
+            win=>win.on('loaded', () => {settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');} )
             ); 
         console.log(settings_win);
         localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
@@ -1825,6 +1839,8 @@ async function _callback( name, event){
     };
 
     function resolveConflicts( folder){
+        
+        let title = "Resolve Conflicts";
                
         if ( localState.conflictsWindow == true ){
             return
@@ -1836,16 +1852,16 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: "Resolve Conflicts"
+                title: title
             },
-                win=>win.on('loaded', () => resolve_win = nw.Window.get(win.window))
+                win=>win.on('loaded', () => {resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');} )
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
     }; 
     function listChanged(){
         
-
+        let title = "Changed Files";
         
         gui.Window.open('listChanged.html#/new_page' ,
             {
@@ -1853,7 +1869,7 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: "List Changed Files"
+                title: title
             },
                 win=>win.on('loaded', 
                     () => {
@@ -1862,6 +1878,7 @@ async function _callback( name, event){
                         }catch(err){ 
                         }
                         list_win = nw.Window.get(win.window);
+                        addWindowMenu( title, 'list_win');
                     }
                 )
             
@@ -1945,6 +1962,9 @@ async function _update(){
             localState.settings = false;
             updateWithNewSettings();
             saveSettings();
+                
+            // Remove from menu
+            deleteWindowMenu('Settings');
         }
  
     //
@@ -3441,6 +3461,57 @@ function displayAlert(title, message){
 }
 
 
+// Menu main-window
+function initializeWindowMenu(){
+        
+    // Get Mac menu
+    mb = new gui.Menu({type: 'menubar'});
+    mb.createMacBuiltin('Pragma-git');
+    gui.Window.get().menu = mb;
+    
+    macWindowsMenu = mb.items[2].submenu;
+    
+    // Add separator
+    macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+}
+function addWindowMenu(title,winHandleNameAsString){
+    
+    winHandle = eval(winHandleNameAsString); // Convert from string to handle
+    
+    let click = `() => { ${winHandleNameAsString}.focus(); }`;
+    
+    // Add new menu to Windows with callback
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: title, 
+                click: eval(click)
+            } 
+        )
+    ); 
+    
+    // Store mapping between Menu name and handle variable
+    window_menu_handles_mapping[title] = winHandleNameAsString;
+}
+function deleteWindowMenu(title){
+    
+    // Make of all items except deleted
+    let menuItemNumber = util.findObjectIndex( macWindowsMenu.items, 'label', title);
+    let guiMenuItems = macWindowsMenu.items;
+    guiMenuItems.splice(menuItemNumber, 1); // Remove menu to delete from list
+    
+    // Create new default menu
+    initializeWindowMenu();
+    console.log('macWindowsMenu.items.length = ' + macWindowsMenu.items.length);
+    
+    // Build new menu
+    for (var j = macWindowsMenu.items.length; j < guiMenuItems.length; j++){
+        let label = guiMenuItems[j].label;
+        let winHandleNameAsString = window_menu_handles_mapping[label];
+        addWindowMenu( guiMenuItems[j].label, winHandleNameAsString)
+    }
+
+}
+
 
 // Title bar
 function setTitleBar( id, text){
@@ -4010,6 +4081,9 @@ window.onload = function() {
   setTimeout(gitIsInstalled, 2000);
   
   win.setAlwaysOnTop( state.alwaysOnTop );
+  
+  initializeWindowMenu();
+  
 };
 
 

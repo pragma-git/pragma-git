@@ -523,6 +523,10 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
 }
 function closeWindow(){
     localState.graphWindow = false;  // Show to main program that window is closed
+    
+    // Remove from menu
+    opener.deleteWindowMenu('Graph');
+    
     win.close(); 
 }
 

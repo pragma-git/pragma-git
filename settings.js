@@ -404,11 +404,10 @@ async function closeWindow(){
     }catch(err){
         console.log('Failed storing git user.email');
     }
-    
-     
-    // Return
+
+    // Return (NOTE: Setting is finalized from app.js, this is different to other windows because Settings window is a'mode' in app.js)
     localState.mode = 'UNKNOWN';
-    
+ 
 }
 
 // Git

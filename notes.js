@@ -139,6 +139,8 @@ function closeWindow(){
     // Mark that closed
     global.localState.notesWindow.open = false;
     
+    // Remove from menu
+    opener.deleteWindowMenu('Notes');
 
     console.log('clicked close window');
 }
