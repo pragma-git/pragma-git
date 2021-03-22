@@ -3476,7 +3476,10 @@ function displayAlert(title, message){
 
 // Menu main-window
 function initializeWindowMenu(){
-        
+    if (process.platform !== 'darwin'){
+        return
+    }   
+    
     // Get Mac menu
     mb = new gui.Menu({type: 'menubar'});
     mb.createMacBuiltin('Pragma-git');
@@ -3488,6 +3491,10 @@ function initializeWindowMenu(){
     macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
 }
 function addWindowMenu(title,winHandleNameAsString){
+    
+    if (process.platform !== 'darwin'){
+        return
+    }   
     
     winHandle = eval(winHandleNameAsString); // Convert from string to handle
     
@@ -3506,6 +3513,10 @@ function addWindowMenu(title,winHandleNameAsString){
     window_menu_handles_mapping[title] = winHandleNameAsString;
 }
 function deleteWindowMenu(title){
+    
+    if (process.platform !== 'darwin'){
+        return
+    }   
     
     // Make of all items except deleted
     let menuItemNumber = util.findObjectIndex( macWindowsMenu.items, 'label', title);
