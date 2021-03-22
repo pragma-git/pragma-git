@@ -3554,7 +3554,7 @@ function updateImageUrl(image_id, new_image_url) {
     image.src = new_image_url;
 }
 function focusTitlebars(focus) {
-  var bg_color = focus ? "#3a3d3d" : "#7a7c7c";
+  var bg_color = focus ? "#404040" : "#303030";
     
   var titlebar = document.getElementById("top-titlebar");
   if (titlebar)
