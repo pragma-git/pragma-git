@@ -154,6 +154,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const tmpdir = os.tmpdir();
         
     // Handles to windows
+        var main_win;
         var settings_win;
         var notes_win;
         var changed_win;
@@ -3474,7 +3475,7 @@ function displayAlert(title, message){
 }
 
 
-// Menu main-window
+// MacOS Menu
 function initializeWindowMenu(){
     if (process.platform !== 'darwin'){
         return
@@ -3482,13 +3483,62 @@ function initializeWindowMenu(){
     
     // Get Mac menu
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Pragma-git');
+    mb.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    
+    // Assume Window menu is last to the right
+    let WindowMenu = mb.items.length - 1;
+    macWindowsMenu = mb.items[WindowMenu].submenu;
+    
+    // Make callback for "Bring all to front" (assume last mac menu item)
+    let bringAllToFrontIndex = macWindowsMenu.items.length -1;
+    // Does not seem to be able to change this 
+    //macWindowsMenu.items[3].click = eval(`() =>  showAllWindows( 3);`);
+    //macWindowsMenu.items[3].click = () =>  console.log('hej');
+    
+    
+    // Own menu to implement "Bring all to front"
+    mb.items[WindowMenu].submenu = macWindowsMenu;
     gui.Window.get().menu = mb;
     
-    macWindowsMenu = mb.items[2].submenu;
+    // Make functional copy of  "Bring all to front" menu
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: "Show all", 
+                click: () =>  showAllWindows( bringAllToFrontIndex)
+            } 
+        )
+    ); 
+     
+    // Make "Hide all but main" menu
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: 'Hide all', 
+                click: () =>  hideAllWindows( bringAllToFrontIndex)
+            } 
+        )
+    );   
+    
+         
+    // Make "Close all but main" menu
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: 'Close all', 
+                click: () =>  closeAllWindows( bringAllToFrontIndex)
+            } 
+        )
+    );  
+    
+    
+    // Rename and hide initial "Bring all to front" menu
+    macWindowsMenu.items[bringAllToFrontIndex].enabled=false
+    macWindowsMenu.items[bringAllToFrontIndex].label='All but main window:'
+    
     
     // Add separator
     macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+    
+    // Add main window to menu
+    addWindowMenu( 'Main Window', 'main_win');
 }
 function addWindowMenu(title,winHandleNameAsString){
     
@@ -3533,9 +3583,50 @@ function deleteWindowMenu(title){
         let winHandleNameAsString = window_menu_handles_mapping[label];
         addWindowMenu( guiMenuItems[j].label, winHandleNameAsString)
     }
-
 }
-
+function showAllWindows(bringAllToFrontIndex){
+    
+       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
+           try{
+                if (macWindowsMenu.items[i].type == 'normal') {
+                    eval(window_menu_handles_mapping[macWindowsMenu.items[i].label] ).focus() 
+                } 
+            }catch(err){}
+        }
+}
+function hideAllWindows(bringAllToFrontIndex){
+    
+       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
+           
+           let handle = eval( window_menu_handles_mapping[ macWindowsMenu.items[i].label ] );
+           try{
+                console.log(i);
+                console.log('A ' + macWindowsMenu.items[i].label);
+                if ( ( macWindowsMenu.items[i].label !== 'Main Window') && ( handle  !== undefined ) ){
+                    console.log('B ' + macWindowsMenu.items[i].label);
+                    handle .minimize() 
+                } 
+            }catch(err){
+                console.log('C ' + macWindowsMenu.items[i].label);
+                console.log(err);
+                if ( ( macWindowsMenu.items[i].type == 'normal' ) && ( handle  !== undefined ) ){
+                        nw.Window.get( handle ).minimize(); 
+                }
+            }
+        }
+}
+function closeAllWindows(bringAllToFrontIndex){
+    
+       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
+           if ( macWindowsMenu.items[i].label !== 'Main Window'){
+               try{
+                    if (macWindowsMenu.items[i].type == 'normal') {
+                        eval(window_menu_handles_mapping[macWindowsMenu.items[i].label] ).close() 
+                    } 
+                }catch(err){}
+            }
+        }
+}
 
 // Title bar
 function setTitleBar( id, text){
@@ -4071,6 +4162,7 @@ window.onresize = function() {
 };
 window.onload = function() {
   var win = nw.Window.get();
+  main_win = win;
   
   
   console.log('PATH 1 = ' + process.env.PATH);
@@ -4105,6 +4197,7 @@ window.onload = function() {
   setTimeout(gitIsInstalled, 2000);
   
   win.setAlwaysOnTop( state.alwaysOnTop );
+  
   
   initializeWindowMenu();
   
