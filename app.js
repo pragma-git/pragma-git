@@ -215,7 +215,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
         global.localState = localState; 
-        
 
     // Collect settings
         var repoSettings = {}; 
@@ -3425,6 +3424,7 @@ function getSettingsDir(){
     return settingsDir;
 }
 
+
 // Dialogs
 async function tag_list_dialog(){
             
@@ -3481,64 +3481,100 @@ function initializeWindowMenu(){
         return
     }   
     
-    // Get Mac menu
+    // Assumption:  Window menu is last to the right
+    
+    
+    // Read localized Window name (using original Window menu)
+    let mb0 = new gui.Menu({type: 'menubar'});
+    mb0.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    
+    let localWindowMenuName = mb0.items[mb0.items.length -1].label;
+    
+    
+    // Replace with own Window Menu (use localized name from above)
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+
+    mb.append(
+        new gui.MenuItem({
+            label: localWindowMenuName,
+            submenu: new gui.Menu()
+        })
+    );
+    
     
     // Assume Window menu is last to the right
-    let WindowMenu = mb.items.length - 1;
+    let WindowMenu = mb.items.length - 1;    
     macWindowsMenu = mb.items[WindowMenu].submenu;
     
-    // Make callback for "Bring all to front" (assume last mac menu item)
-    let bringAllToFrontIndex = macWindowsMenu.items.length -1;
-    // Does not seem to be able to change this 
-    //macWindowsMenu.items[3].click = eval(`() =>  showAllWindows( 3);`);
-    //macWindowsMenu.items[3].click = () =>  console.log('hej');
-    
-    
+
     // Own menu to implement "Bring all to front"
     mb.items[WindowMenu].submenu = macWindowsMenu;
-    gui.Window.get().menu = mb;
     
-    // Make functional copy of  "Bring all to front" menu
+    // Show menu
+    gui.Window.get().menu = mb;
+
+   
+    //
+    // Generate Window submenu items
+    //
+    
+    // First index where dynamic window submenues will be placed 
+    let firstWindowIndex = 6; // 0,1,2,4 are below created menues, 3,5 separators
+     
+     
+    // Menu : Minimize
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: "Minimize", 
+                key: 'M',
+                modifiers: "cmd",
+                click: () =>  minimizeWindow()
+            } 
+        )
+    );    
+ 
+ 
+    // Add separator
+    macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+    
+       
+    // Menu : Show all
+    let click = `() =>  { showAllWindows( ${firstWindowIndex} ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: "Show all", 
-                click: () =>  showAllWindows( bringAllToFrontIndex)
+                click: eval(click)
             } 
         )
     ); 
      
-    // Make "Hide all but main" menu
+    // Menu : Hide all
+    click = `() =>  { hideAllWindows( ${firstWindowIndex} ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: 'Hide all', 
-                click: () =>  hideAllWindows( bringAllToFrontIndex)
+                click: eval(click)
             } 
         )
     );   
     
-         
-    // Make "Close all but main" menu
+    // Menu : Close all
+    click = `() =>  { closeAllWindows( ${firstWindowIndex} ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: 'Close all', 
-                click: () =>  closeAllWindows( bringAllToFrontIndex)
+                click: eval(click)
             } 
         )
     );  
-    
-    
-    // Rename and hide initial "Bring all to front" menu
-    macWindowsMenu.items[bringAllToFrontIndex].enabled=false
-    macWindowsMenu.items[bringAllToFrontIndex].label='All but main window:'
-    
-    
+ 
     // Add separator
     macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
     
     // Add main window to menu
     addWindowMenu( 'Main Window', 'main_win');
+    
 }
 function addWindowMenu(title,winHandleNameAsString){
     
@@ -3584,48 +3620,63 @@ function deleteWindowMenu(title){
         addWindowMenu( guiMenuItems[j].label, winHandleNameAsString)
     }
 }
-function showAllWindows(bringAllToFrontIndex){
-    
-       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
-           try{
-                if (macWindowsMenu.items[i].type == 'normal') {
-                    eval(window_menu_handles_mapping[macWindowsMenu.items[i].label] ).focus() 
-                } 
-            }catch(err){}
-        }
+function showAllWindows(firstWindowIndex){
+
+    gui.Window.getAll( 
+        
+        function allWindowsCallback( windows) {
+            for (let i = 0; i < windows.length; i++) {
+                let win_handle =  windows[i];
+                win_handle.focus();
+            }    
+        } 
+    );
 }
-function hideAllWindows(bringAllToFrontIndex){
+function hideAllWindows(firstWindowIndex){
+
+        gui.Window.getAll( 
+        
+            function allWindowsCallback( windows) {
+                for (let i = 0; i < windows.length; i++) {
+                    let win_handle =  windows[i];
+                    if ( win_handle.title !== 'Pragma-git'){
+                        win_handle.minimize();
+                    }
+                }    
+
+            } 
+        );
+}
+function closeAllWindows(firstWindowIndex){
     
-       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
-           
-           let handle = eval( window_menu_handles_mapping[ macWindowsMenu.items[i].label ] );
-           try{
-                console.log(i);
-                console.log('A ' + macWindowsMenu.items[i].label);
-                if ( ( macWindowsMenu.items[i].label !== 'Main Window') && ( handle  !== undefined ) ){
-                    console.log('B ' + macWindowsMenu.items[i].label);
-                    handle .minimize() 
-                } 
-            }catch(err){
-                console.log('C ' + macWindowsMenu.items[i].label);
-                console.log(err);
-                if ( ( macWindowsMenu.items[i].type == 'normal' ) && ( handle  !== undefined ) ){
-                        nw.Window.get( handle ).minimize(); 
+        gui.Window.getAll( 
+        
+            function allWindowsCallback( windows) {
+                for (let i = 0; i < windows.length; i++) {
+                    let win_handle =  windows[i];
+                    if ( win_handle.title !== 'Pragma-git'){
+                        win_handle.close();
+                    }
+                }    
+
+            } 
+        );
+        
+        
+}
+function minimizeWindow(){
+
+    gui.Window.getAll( 
+        
+        function allWindowsCallback( windows) {
+            for (let i = 0; i < windows.length; i++) {
+                let win_handle =  windows[i];
+                if ( win_handle.window.document.hasFocus() ){
+                    win_handle.minimize();
                 }
-            }
-        }
-}
-function closeAllWindows(bringAllToFrontIndex){
-    
-       for (let i = bringAllToFrontIndex; i < macWindowsMenu.items.length; i++) { 
-           if ( macWindowsMenu.items[i].label !== 'Main Window'){
-               try{
-                    if (macWindowsMenu.items[i].type == 'normal') {
-                        eval(window_menu_handles_mapping[macWindowsMenu.items[i].label] ).close() 
-                    } 
-                }catch(err){}
-            }
-        }
+            }    
+        } 
+    ); 
 }
 
 // Title bar
@@ -3702,6 +3753,7 @@ function updateContentStyle() {
 
   
 }
+
 
 // Message
 function writeTextOutput(textOutputStruct){
@@ -3801,6 +3853,7 @@ function clearOutputRow( ){
     document.getElementById("output_row").style.visibility = 'collapsed';
     document.getElementById("output_text").innerHTML = '';
 }
+
 
 // Statusbar
 function updateStatusBar( text){
@@ -3904,6 +3957,7 @@ function drawPinImage(isPinned){
         }
     
 }
+
 
 // Settings
 function saveSettings(){
@@ -4124,6 +4178,7 @@ function updateWithNewSettings(){
     
 
 }
+
 
 // Dev test
 function dev_show_all_icons(){
