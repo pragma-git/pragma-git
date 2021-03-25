@@ -2502,6 +2502,7 @@ function startPragmaMerge(){
 
 }
 
+
 // Git commands
 async function gitIsInstalled(){
     var isInstalled = false;
@@ -2963,7 +2964,6 @@ async function gitHistory() {
     }
     
 }
-
 
 async function gitLocalFolder(){
     
@@ -3518,10 +3518,7 @@ function initializeWindowMenu(){
     //
     // Generate Window submenu items
     //
-    
-    // First index where dynamic window submenues will be placed 
-    let firstWindowIndex = 6; // 0,1,2,4 are below created menues, 3,5 separators
-     
+   
      
     // Menu : Minimize
     macWindowsMenu.append(new gui.MenuItem(
@@ -3532,6 +3529,17 @@ function initializeWindowMenu(){
                 click: () =>  minimizeWindow()
             } 
         )
+    );  
+     
+    // Menu : Close
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: "Close", 
+                key: 'W',
+                modifiers: "cmd",
+                click: () =>  closeSelectedWindow()
+            } 
+        )
     );    
  
  
@@ -3540,7 +3548,7 @@ function initializeWindowMenu(){
     
        
     // Menu : Show all
-    let click = `() =>  { showAllWindows( ${firstWindowIndex} ) } `;
+    let click = `() =>  { showAllWindows( ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: "Show all", 
@@ -3550,7 +3558,7 @@ function initializeWindowMenu(){
     ); 
      
     // Menu : Hide all
-    click = `() =>  { hideAllWindows( ${firstWindowIndex} ) } `;
+    click = `() =>  { hideAllWindows( ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: 'Hide all', 
@@ -3560,7 +3568,7 @@ function initializeWindowMenu(){
     );   
     
     // Menu : Close all
-    click = `() =>  { closeAllWindows( ${firstWindowIndex} ) } `;
+    click = `() =>  { closeAllWindows( ) } `;
     macWindowsMenu.append(new gui.MenuItem(
             { 
                 label: 'Close all', 
@@ -3620,7 +3628,7 @@ function deleteWindowMenu(title){
         addWindowMenu( guiMenuItems[j].label, winHandleNameAsString)
     }
 }
-function showAllWindows(firstWindowIndex){
+function showAllWindows(){
 
     gui.Window.getAll( 
         
@@ -3632,7 +3640,7 @@ function showAllWindows(firstWindowIndex){
         } 
     );
 }
-function hideAllWindows(firstWindowIndex){
+function hideAllWindows(){
 
         gui.Window.getAll( 
         
@@ -3647,7 +3655,7 @@ function hideAllWindows(firstWindowIndex){
             } 
         );
 }
-function closeAllWindows(firstWindowIndex){
+function closeAllWindows(){
     
         gui.Window.getAll( 
         
@@ -3678,6 +3686,21 @@ function minimizeWindow(){
         } 
     ); 
 }
+function closeSelectedWindow(){
+
+    gui.Window.getAll( 
+        
+        function allWindowsCallback( windows) {
+            for (let i = 0; i < windows.length; i++) {
+                let win_handle =  windows[i];
+                if ( win_handle.window.document.hasFocus() ){
+                    win_handle.close();
+                }
+            }    
+        } 
+    ); 
+}
+
 
 // Title bar
 function setTitleBar( id, text){
