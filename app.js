@@ -3423,6 +3423,36 @@ function selectInGraph(hash){
 function getSettingsDir(){
     return settingsDir;
 }
+function closeAllChildWindows( inputWin){
+    // This function loops all open windows.
+    // Window that have inputWin as parent = child window, and are closed.
+    // Windows are identified by their title
+    
+    let inputTitle = inputWin.window.document.title;
+    
+    // Loop all windows and close if child to parent
+    gui.Window.getAll( 
+    
+        function allWindowsCallback( windows) {
+            
+            // Loop all windows
+            for (let i = 0; i < windows.length; i++) {
+                
+                let win_handle =  windows[i];
+                try{   
+                    let parentTitle = win_handle.window.opener.document.title;
+                    // Close if child window (its parent has same title as inputWin)
+                    if (parentTitle == inputTitle){
+                        win_handle.close();
+                    }
+                }catch(err){
+                }
+            }    
+        } 
+    );    
+    
+    
+}
 
 
 // Dialogs

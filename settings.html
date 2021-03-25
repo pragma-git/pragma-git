@@ -491,6 +491,7 @@
     );
     window.addEventListener('unload', (event) => {
         console.log('settings.html :DOM fully unloaded -- maybe window closed ');
+        opener.closeAllChildWindows( window);
         closeWindow(window);
         }
     );
