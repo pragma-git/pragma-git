@@ -122,7 +122,7 @@
                         
             <p>                        
                 <label for="repoName">Existing Repository Name</label>
-                <textarea id="repoName" placeholder="Github name of existing or new repository" oninput="build()"></textarea>
+                <textarea id="repoName" placeholder="Github name of existing repository" oninput="build()"></textarea>
 
             </p>
             
@@ -154,11 +154,13 @@
                 <button id="cancel"  onclick="window.close()"> Cancel </button>
             </p> 
 
-        <hr>   
+        <br> 
+        <br> 
         <hr>                
   
             
-            <h3>Create Remote Github Repository :</h3>  
+            <h2>Create Remote Github Repository :</h2>   
+        <hr>  
             
             <!-- Add Repository -->   
             
@@ -173,7 +175,7 @@
                         
             <p>                        
                 <label for="newRepoName">Name of New Repository</label>
-                <textarea id="newRepoName" placeholder="Github name of existing or new repository" oninput="build()"></textarea>
+                <textarea id="newRepoName" placeholder="Github name of new repository" oninput="build()"></textarea>
 
             </p>
             
@@ -185,9 +187,24 @@
             
             
             <p>                           
-                <button id="createGithubRepo" onclick="createRepo()">Create New Remote Repository</button>                
+                <button id="createGithubRepo" onclick="createRepo()">1) Create New Remote Repository</button>                
+
                 
+            </p>
+
+           
+            
+            <p>                        
+                <div id="newRepoStatus"></div>             
+            </p> 
+                      
+                       
+            <p>
+
+           
+            
                 <button 
+                    id = "ok2" 
                     onclick = "
                     let textarea_id = state.repoNumber + 10000;
                     opener.document.getElementById(textarea_id).value = build(); 
@@ -199,19 +216,15 @@
                     
                     window.close()"
                 >
-                Close, Update Setting
+                2) Close, Update Setting
                 </button>  
-                
+            
+                     
+                <button id="cancel2"  onclick="window.close()" style="display: none;"> Cancel </button>
             </p>
 
            
             
-            <p>                        
-                <div id="newRepoStatus"></div>             
-            </p>           
-  
-            
-
         </div>
     </div>
     
@@ -308,11 +321,20 @@
                     document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
                     document.getElementById('newRepoStatus').classList.add('green');
                     document.getElementById('newRepoStatus').classList.remove('red');
+                    
+                    
+                    document.getElementById('ok2').style="display: block;" ;
+                    document.getElementById('cancel2').style="display: none;" ;
 
                 } else {
                     document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
                     document.getElementById('newRepoStatus').classList.add('red');
                     document.getElementById('newRepoStatus').classList.remove('green');
+                    
+                    
+                    document.getElementById('ok2').style="display: none;" ;
+                    document.getElementById('cancel2').style="display: block;" ;
+                    
                 }
                 
             } catch (error) {

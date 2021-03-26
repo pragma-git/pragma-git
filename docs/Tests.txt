@@ -109,7 +109,6 @@ TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
     curl -i \
       -X 'DELETE' \
       -H "Authorization: token $TOKEN" \
-      -H "Accept: application/vnd.github.nebula-preview+json" \
       "https://api.github.com/repos/$USER/$DELETE_REPO"
 
 
