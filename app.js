@@ -271,6 +271,13 @@ async function _callback( name, event){
         localState.pinnedCommit = ''; 
         updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
         
+                
+        // Update repo in settings_win 
+        try{
+            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        }catch(err){ 
+        }
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -285,6 +292,13 @@ async function _callback( name, event){
         clearFindFields();
         localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         _setMode('UNKNOWN');
+
+        
+        // Update repo in settings_win 
+        try{
+            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        }catch(err){ 
+        }
         
         break;
       }

@@ -100,6 +100,11 @@ async function _callback( name, event){
             break;
         }
         case 'repoRadiobuttonChanged': {
+            // Callback called the following alternative ways:
+            // 1) User clicks radiobutton in settings window_menu_handles_mapping
+            // 2) User selects repository in main window, which initiates this callback
+            
+            
             console.log('repoRadiobuttonChanged');
             console.log(event);
             value = event.checked;
@@ -130,6 +135,8 @@ async function _callback( name, event){
                 // Show current repo
                 document.getElementById("currentRepo").innerHTML = myLocalFolder;
 
+                // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
+                document.getElementById(id).checked=true
 
                 
             }catch(err){
