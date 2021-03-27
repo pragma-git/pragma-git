@@ -410,75 +410,115 @@ return graphText;
 // Start
 async function injectIntoJs(document){
     win = gui.Window.get();
-      
+    
+    //
+    // Init
+    //  
+    
+          
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
     }
     
     let folder = state.repos[ state.repoNumber].localFolder;
-    //let graphText = 'Error reading graph';
-     
-    // Find complete history graph
-    try{
-        // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-        let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
-        await simpleGit( folder).raw(  commands, onCreateBranch);
-        function onCreateBranch(err, result ){graphText = result; console.log(result); };
-    }catch(err){        
-        console.log(err);
-    }
     
     
-    // Write header text
-    let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
-    let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-    document.getElementById('repoName').innerText = repoName;
-    document.getElementById('branchName').innerText = branchName;
-    
-    
-    // History from Pragma-git (honoring settings)
-    //   If --first-parent  then off-branch commits will yield branch-number NaN, and be marked 'off-branch' by Pragma-git
-    //   If not --first-parent, then all commits will be shown with commit number
-    history = await opener.gitHistory();
-    console.log(history);
-    
-    if (test !== 0 ){
-        graphText = testGraph(test); // Draw one of included test cases
-    }
-
-    
-    // Draw full graph, and label current branch
-    let branchHistory = await readBranchHistory();
-    await drawGraph( document, graphText, branchHistory, history);
-
-
-    // Select current history commit in opened graph
-    try{
-        let divSelect = document.getElementById( localState.historyHash );
-        divSelect.classList.add('selected');  
+    //
+    // Read history
+    //    
         
-        // Selected should not be graphed if
-        // - same commit is pinned
-        if (localState.pinnedCommit !== localState.historyHash ) {
-            localState.selectedDiv = divSelect;
+        // History from Pragma-git (honoring settings)
+        //   If --first-parent  then off-branch commits will yield branch-number NaN, and be marked 'off-branch' by Pragma-git
+        //   If not --first-parent, then all commits will be shown with commit number
+        history = await opener.gitHistory();
+        console.log(history);
+        
+        if (test !== 0 ){
+            graphText = testGraph(test); // Draw one of included test cases
         }
-    }catch(err){  
-    }
-    try{
-        opener.selectInGraph(localState.historyHash);
-    }catch(err){}
     
-    // Select pinned commit in opened graph
-    try{
-        let divPin = document.getElementById( localState.pinnedCommit );
-        divPin.firstElementChild.firstElementChild.src = PINNED_ENABLED_IMAGE; // Note -- defined in graph.html, dark/light mode image paths
-        divPin.classList.add('selected');  
-        localState.pinnedDiv = divPin;
-    }catch(err){  
-    }
-    
+
+    //
+    // Take 1 : Parse first N rows (quicker)
+    //
+        const firstPassN = 80;
         
+        // Write header text
+        let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
+        let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
+        document.getElementById('repoName').innerText = repoName;
+        document.getElementById('branchName').innerText = branchName;
+     
+         
+        // Find short history graph
+        try{
+            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
+            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '-' + firstPassN, '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
+            await simpleGit( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+        }catch(err){        
+            console.log(err);
+        }
+    
+    
+        // Draw full graph, and label current branch
+        let branchHistory = await readBranchHistory();
+        await drawGraph( document, graphText, branchHistory, history);
+        
+    
+    //
+    // Take 2 : Parse all rows 
+    //
+         
+         
+        // Find complete history graph
+        try{
+            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
+            commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
+            await simpleGit( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+        }catch(err){        
+            console.log(err);
+        }
+        
+         
+        // Draw full graph, and label current branch
+        branchHistory = await readBranchHistory();
+        await drawGraph( document, graphText, branchHistory, history);
+           
+    
+    //
+    // Draw current and pinned commits
+    //
+             
+    
+        // Select current history commit in opened graph
+        try{
+            let divSelect = document.getElementById( localState.historyHash );
+            divSelect.classList.add('selected');  
+            
+            // Selected should not be graphed if
+            // - same commit is pinned
+            if (localState.pinnedCommit !== localState.historyHash ) {
+                localState.selectedDiv = divSelect;
+            }
+        }catch(err){  
+        }
+        try{
+            opener.selectInGraph(localState.historyHash);
+        }catch(err){}
+        
+        // Select pinned commit in opened graph
+        try{
+            let divPin = document.getElementById( localState.pinnedCommit );
+            divPin.firstElementChild.firstElementChild.src = PINNED_ENABLED_IMAGE; // Note -- defined in graph.html, dark/light mode image paths
+            divPin.classList.add('selected');  
+            localState.pinnedDiv = divPin;
+        }catch(err){  
+        }
+        
+            
 
 }
 
