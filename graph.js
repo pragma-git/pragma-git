@@ -450,7 +450,7 @@ async function injectIntoJs(document){
     
     // Draw full graph, and label current branch
     let branchHistory = await readBranchHistory();
-    await drawGraph( document, graphText, branchHistory);
+    await drawGraph( document, graphText, branchHistory, history);
 
 
     // Select current history commit in opened graph
@@ -546,11 +546,12 @@ async function gitCommitMessage(hash){
 }
 
 // GUI 
-function drawGraph( document, graphText, history){
+function drawGraph( document, graphText, branchHistory, history){
     
     // document  HTML document
     // graphText output from  raw git log graph
-    // history   output from  git log with --oneParent (used to find which commits are in current branch)
+    // branchHistory   output from  git log with --oneParent (used to find which commits are in current branch)
+    // history  the history after search, used to set different color for  commits found/not found in Search
     
     
     graphContent = '';
@@ -585,6 +586,19 @@ function drawGraph( document, graphText, history){
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
+        
+                    
+        // Determine if commit is found in history
+        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
+        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
+        
+        let styling = '';
+        if (notFoundInSearch){
+            styling = ' notInSearch';
+            console.log('STYLING : ' + thisRow);
+        }
+            
+        
 
         // Parse row
         graphContent += '<div class="firstcol"></div> ' // First column on row
@@ -596,7 +610,7 @@ function drawGraph( document, graphText, history){
             // Draw node
             if (  a(0,'*') ){
                 // Figure out if local branch, or not
-                if ( util.findObjectIndexStartsWith(history,'hash', hashInThisRow) >= 0){
+                if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     total += '<img class="node" src="images/circle_green.png">'; // Draw node
                 }else{
                     total += '<img class="node" src="images/circle_black.png">'; // Draw node
@@ -794,7 +808,7 @@ function drawGraph( document, graphText, history){
                 
                 // Print Text part
                 let rowText = '(' + row + ') ';
-                graphContent += '<div class="' + cl + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
+                graphContent += '<div class="' + cl + styling + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
                 graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
                 sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
