@@ -32,10 +32,13 @@
             outline-offset: -0.005px;
         }
         
-        pre {
+        pre { /* Move down, to match circle images */
             margin: 2px;
             font-family: inherit;
             font-size: inherit;
+            vertical-align: bottom;
+            position: relative;
+            top: 4px;
         }
         
         #graphContent {
@@ -45,17 +48,28 @@
         
         .firstcol { clear: both;}
 
+        .date{
+            width: 90px;
+            color: grey;
+        }
+
         .text{
             width: auto;
             cursor: pointer;
             font-size: inherit;
         }
+        
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
         .courier{ 
             width: auto;
             cursor: pointer;
             font-size: inherit;
             font-family: monospace;
+        }
+        
+        .notInSearch{
+            font-style: italic;
+            color: grey;
         }
         
         .decoration {
@@ -146,11 +160,6 @@
        
         img[src="images/circle_black.png"]  {
             filter: invert( var( --image-invert) );
-        }
-        
-        .notInSearch{
-            font-style: italic;
-            color: grey;
         }
 
     </style>

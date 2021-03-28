@@ -20,6 +20,8 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 
 var win
 
+var sumFound;
+
 const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
 
@@ -437,6 +439,10 @@ async function injectIntoJs(document){
         if (test !== 0 ){
             graphText = testGraph(test); // Draw one of included test cases
         }
+        
+    
+        // Commit log output format
+        const messageFormat = '--format=%s T=%aI D=%d H=%H';  // %aI = author date, strict ISO 8601 format
     
 
     //
@@ -449,12 +455,11 @@ async function injectIntoJs(document){
         let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
-     
          
         // Find short history graph
         try{
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '-' + firstPassN, '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
+            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '-' + firstPassN, messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -475,7 +480,7 @@ async function injectIntoJs(document){
         // Find complete history graph
         try{
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '--format=%s D=%d H=%H']; // %d decorate, %s message, H= catch phrase, %H long hash
+            commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -604,45 +609,72 @@ function drawGraph( document, graphText, branchHistory, history){
     let splitted = graphText.split("\n");
     console.log(splitted)
     
+    let previousDate = ''
+    
     
     // Loop each row
     
     for(var row = 0; row < (splitted.length - 1); row++) {
         let sumFound ='';
         
-        // Separate log row from ending long hash
+        // Example row format :
+        // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
+        
+        // Hash : Separate log row from ending long hash
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
         let hashInThisRow = splitted[row].substring(startOfHash + 2); // Skip H=
         
-        // Separate log row from decorate (at end now when hash removed)
+        // Decoration : Separate log row from decorate (at end now when hash removed)
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
         let decoration = splitted[row].substring(startOfDecore + 2, startOfHash); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+         
+        // Date : Separate log row from date (at end now when decorate removed)
+        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... D=%d (ends in decoration)
+        let date = splitted[row].substring(startOfDate + 2, startOfDecore); // Skip D=
+        date = date.substring(0,10);
+       
         
+        if (date == previousDate){
+            date = '';
+        }else{
+            previousDate = date;
+        }
+               
         
         // Current row
-        let thisRow = splitted[row].substring(0, startOfDecore);
+        let thisRow = splitted[row].substring(0, startOfDate);
         thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-        
+
+
+        // Parse missing features (= lines withoug commits)
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
+                
+        if (startOfDate == -1){
+            date = ''; // When no hash found (lines without commits)
+        }
+        
         
                     
-        // Determine if commit is found in history
+        // Style if commit is not in history (because of search)
         let index = util.findObjectIndex( history, 'hash', hashInThisRow );
         let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
         
         let styling = '';
         if (notFoundInSearch){
             styling = ' notInSearch';
-            console.log('STYLING : ' + thisRow);
         }
-            
-        
 
+        
+        //
         // Parse row
+        //
         graphContent += '<div class="firstcol"></div> ' // First column on row
+        
+        graphContent += '<div class="date"><pre>' +  date + '</pre></div>'; // Show date (TODO: let this line be turned on/off)
+        
         for(var i = 0 ; i < thisRow.length ; i++){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
@@ -849,9 +881,9 @@ function drawGraph( document, graphText, branchHistory, history){
                 
                 // Print Text part
                 let rowText = '(' + row + ') ';
+                sumFound += ' ' + thisRow.substring(i);
                 graphContent += '<div class="' + cl + styling + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
                 graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
-                sumFound += ' ' + thisRow.substring(i);
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
                 
@@ -861,12 +893,14 @@ function drawGraph( document, graphText, branchHistory, history){
             }
     
             // Make div with graphContent from above
-            graphContent += '<div>' + total +'</div>';
+            graphContent += '<div>' + total + '</div>';
             
             if (found !== ''){
                 sumFound += ' ' + found;
             }
         }
+        
+        // Log parsing
         console.log('ROW = ' + row + '  '  +sumFound);
         
         function a(index, c){
