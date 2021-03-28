@@ -556,8 +556,9 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
     
     // Set history in main window
     localState.historyHash = hash;
-    localState.historyString = await gitCommitMessage(hash);
+    localState.historyString = opener.historyMessage(history, localState.historyNumber);
     localState.historyLength = history.length;
+    
     await opener._setMode('HISTORY');
     await opener._update();
 }
