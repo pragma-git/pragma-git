@@ -598,10 +598,10 @@ async function gitCommitMessage(hash){
 // GUI 
 function drawGraph( document, graphText, branchHistory, history){
     
-    // document  HTML document
-    // graphText output from  raw git log graph
-    // branchHistory   output from  git log with --oneParent (used to find which commits are in current branch)
-    // history  the history after search, used to set different color for  commits found/not found in Search
+    // document :       HTML document
+    // graphText :      output from  raw git log graph
+    // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
+    // history :        the history after search, used to set different color for  commits found/not found in Search
     
     
     graphContent = '';
@@ -675,13 +675,17 @@ function drawGraph( document, graphText, branchHistory, history){
         //
         // Parse row
         //
+        
+        // Empty column
         graphContent += '<div class="firstcol"></div> ' // First column on row
         
+         // Show/hide date
         if (state.graph.showdate){
             document.getElementById('showDate').checked = state.graph.showdate;
-            graphContent += '<div class="date"><pre>' +  date + '</pre></div>'; // Show/hide date
+            graphContent += '<div class="date"><pre>' +  date + '</pre></div>';
         }
         
+        // Parse git log graphics
         for(var i = 0 ; i < thisRow.length ; i++){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
@@ -705,7 +709,7 @@ function drawGraph( document, graphText, branchHistory, history){
             // Select what to draw -- first hit wins (if-elseif chain)
             // C1-C3 can draw more than one element (within same elseif test)
             //
-            // Generally standing on character at coordinate a0, and comparing with characters at row a and b
+            // Generally standing on character at coordinate a0, and comparing with characters at next rows a and b
             // Exception to this is noted below (D2, D3)
             //
             // Graph text from git log must be padded with spaces on left and bottom, to allow look left, and look ahead
