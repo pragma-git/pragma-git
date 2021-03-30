@@ -191,26 +191,36 @@
         </script>        
             
         
-        <h2><span id='repoName'></span>
-        ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
-        
-        
-        <!-- Search button --> 
-        <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
-            onclick="findInNw.showSearchBox()" 
-            onmouseover="document.getElementById('find-icon').src='images/find.png' " 
-            onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-            src="images/find_black.png" >
-        
-        <!-- Help button --> 
-        <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
-            onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
-            onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-            onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-            src="images/questionmark_black.png" >
+        <h2>
+            <span id='repoName'></span>
+            
+            ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
+            
+            
+            <!-- Search button --> 
+            <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
+                onclick="findInNw.showSearchBox()" 
+                onmouseover="document.getElementById('find-icon').src='images/find.png' " 
+                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                src="images/find_black.png" >
+            
+            <!-- Help button --> 
+            <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
+                onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
+                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                src="images/questionmark_black.png" >
+
         </h2>
         
         <hr>
+        
+        <div style="width: unset; position: absolute; right: 15;">
+            <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
+            <label for="showDate">Show Date</label>
+        </div> 
+        
+        <br>
         
           <!-- Empty content, fill in with injectIntoJs in graph.js --> 
         <div id="graphContent" class="content"> 

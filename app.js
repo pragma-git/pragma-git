@@ -4084,6 +4084,7 @@ function loadSettings(settingsFile){
             state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
             state_in.notesWindow = setting( state_in.notesWindow, {} ); 
             state_in.pragmaMerge = setting( state_in.pragmaMerge, {} ); 
+            state_in.graph = setting( state_in.graph, {} ); 
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
@@ -4136,6 +4137,10 @@ function loadSettings(settingsFile){
             state.pragmaMerge = setting( state_in.pragmaMerge, {} );
             state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
             state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
+            
+        // Graph window
+            state.graph = setting( state_in.graph, {} );
+            state.graph.showdate = setting( state_in.graph.showdate, false );
 
     //
     // Post-process state

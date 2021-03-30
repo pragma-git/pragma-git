@@ -570,6 +570,10 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
 function closeWindow(){
     localState.graphWindow = false;  // Show to main program that window is closed
     
+    // Store setting
+    state.graph.showdate = document.getElementById('showDate').checked;
+    opener.saveSettings();
+    
     // Remove from menu
     opener.deleteWindowMenu('Graph');
     
@@ -673,7 +677,10 @@ function drawGraph( document, graphText, branchHistory, history){
         //
         graphContent += '<div class="firstcol"></div> ' // First column on row
         
-        graphContent += '<div class="date"><pre>' +  date + '</pre></div>'; // Show date (TODO: let this line be turned on/off)
+        if (state.graph.showdate){
+            document.getElementById('showDate').checked = state.graph.showdate;
+            graphContent += '<div class="date"><pre>' +  date + '</pre></div>'; // Show/hide date
+        }
         
         for(var i = 0 ; i < thisRow.length ; i++){
             let total = ''; // Collect graph HTML for current row
