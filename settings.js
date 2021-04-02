@@ -147,17 +147,7 @@ async function _callback( name, event){
         }        
         case 'newBranchNameKeyUp': {
 
-            let string = document.getElementById("branchNameTextarea").value;
-            // Remove ^~?:*[\ 
-            string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
-            // Remove more
-            string = string.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
-            string = string.replace( ' ', ''); // Removing space
-            string = string.replace( '..', '.'); // Removing consecutive dots@{
-            string = string.replace( '@{', '@'); // Stop sequence @{
-            
-            
-            document.getElementById("branchNameTextarea").value = string;
+            document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)
             break;   
         }           
         case 'addBranchButtonPressed': {
@@ -880,6 +870,7 @@ async function generateRepoTable(document, table, data) {
             
             textarea = document.createElement('textarea');
             textarea.setAttribute("id", index);  // ID  
+            textarea.placeholder="Clone creates subfolder in this folder";
             
             innerCell.appendChild(textarea);
                
@@ -892,6 +883,7 @@ async function generateRepoTable(document, table, data) {
         
         textarea = document.createElement('textarea');
         textarea.setAttribute("id", index + 10000);  // ID
+        textarea.placeholder="URL to clone from"; 
         cell.appendChild(textarea);
         
             // Test-button
@@ -952,16 +944,11 @@ async function generateBranchTable(document, table, branchlist) {
         
         console.log('Element = ' + element );
         let row = table.insertRow();
-
-         // Into table cell :   Branch name text
-        cell = row.insertCell();
-        cell.setAttribute("class", 'branchName');
-        text = document.createTextNode( element);
-        cell.appendChild(text);
         
         
         // Into table cell :  checkbox for hidden branch
         cell = row.insertCell();
+        cell.setAttribute("class", 'hiddenBranch');
         checkbox = document.createElement('input');
         checkbox.type = "checkbox";
         checkbox.checked = hiddenBranch;
@@ -973,6 +960,13 @@ async function generateBranchTable(document, table, branchlist) {
         
         
  
+         // Into table cell :   Branch name text
+        cell = row.insertCell();
+        cell.setAttribute("class", 'branchName');
+        text = document.createTextNode( element);
+        cell.appendChild(text);
+
+
         // Into table cell :  button to delete branch
         cell = row.insertCell();
         cell.setAttribute("class", 'branchAction');
@@ -995,6 +989,10 @@ async function generateBranchTable(document, table, branchlist) {
     //
     let row = table.insertRow();
     
+    
+    // Empty (no checkbox on this row)
+    cell = row.insertCell();
+    cell.setAttribute("class", 'hiddenBranch');
      
     // Into table cell :   Branch name textarea
     cell = row.insertCell();
@@ -1005,6 +1003,7 @@ async function generateBranchTable(document, table, branchlist) {
     textarea.setAttribute( "onkeyup", "_callback('newBranchNameKeyUp', this);");  
     textarea.innerHTML = "";
     //textarea.onclick = forgetButtonClicked;
+    textarea.placeholder="Name of new branch" 
     
     cell.appendChild(textarea);
     

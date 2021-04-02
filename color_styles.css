@@ -1,92 +1,143 @@
+/* CSS style for all windows except main window */
         
 .light {  
-  /* General */
-  --text:  #222222;
-  --link-color: blue;            /* in html windows */
-  --body-text: var(--text);
-  --input-background: #FFFFFF;
-  --input-placeholder: #777777;
-  --image-invert: 0%;               /* invert black-transparent images to white  */
-  --header-color: #2F5496;
-  
-  /* Graph */
-  --graph-hover: #BBBBBB;
-  --graph-selected: #CCCCCC;
-  --graph-decoration-color: DarkBlue;
-  
-  /* Settings */
-  --green-text: green;
-  --red-text: red;
-  --grey-text: var(--text);
-  --code-text: #c14d4d;
+    /* General */
+    --text:  #222222;
+    --link-color: blue;            /* in html windows */
+    --body-text: var(--text);
+    --input-background: #FFFFFF;
+    --input-placeholder: #777777;
+    --image-invert: 0%;               /* invert black-transparent images to white  */
+    --header-color: #2F5496;
     
-  /* Notes */
-  --code-background: #DDDDDD;         /* (lighter grey) */
-  --notes-code-text: var(--code-text);
-  
-  /* Main */
-  --main-background: #EEEEEE;
-  --dim-text: #777777;
-  --message-color: #0033FF;
-  --message-placeholder: var(--text);
-  --history-icon-brightness: 1;     /* keep original */
+    /* Graph */
+    --graph-hover: #BBBBBB;
+    --graph-selected: #CCCCCC;
+    --graph-decoration-color: DarkBlue;
+    
+    /* Settings */
+    --green-text: green;
+    --red-text: red;
+    --grey-text: var(--text);
+    --code-text: #c14d4d;
+    
+    /* Notes */
+    --code-background: #DDDDDD;         /* (lighter grey) */
+    --notes-code-text: var(--code-text);
+    
+    /* Main */
+    --main-background: #EEEEEE;
+    --dim-text: #777777;
+    --message-color: #0033FF;
+    --message-placeholder: var(--text);
+    --history-icon-brightness: 1;     /* keep original */
 }
  
 .dark {
-  /* General */
-  --text:  #DDDDDD;                 /* in html and main windows (almost white) */
-  --body-background: #454442;       /* in html windows (dark grey) */
-  --body-text: var(--text);         /* in html windows and inputs */
-  --link-color: #f3da67;            /* in html windows */
-  --image-invert: 80%;               /* invert black-transparent images to white */
-  --header-color: #d6b51d;
-  
-  /* Graph */
-  --graph-hover: #999999;            /* (darker grey) */
-  --graph-selected: #CCCCCC;         /* (lighter grey) */
-  --graph-decoration-color: #d6b51d; /* (mustard yellow) */
-  
-  /* Settings */
-  --input-background: #505050;      /* in html windows (slightly less dark grey) */
-  --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
-  --green-text: #5ff35f;            /* url works (green) */
-  --red-text: #fd2020;              /* url fails (red) */
-  --grey-text: var(--text);      
-  --code-text: #a2a2a2;             /* (light grey) */
-  
-  /* Notes */
-  --code-background: #505050;
-  --notes-code-text: #d6b51d;
-  
-  /* Merge */
-  --merge-color: black;
-  --merge-body-background: #999999;
-  --merge-arrow: #999999;
-  
-  /* Main window (different to rest of windows) */
-  --main-background: var(--body-background);    /* main window background color (same as for html) */
-  --dim-text: #777777;                          /* search text-switch off-state */
-  --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
-  --message-placeholder: var(--text);           /* message field: other texts */
-  --history-icon-brightness: 10;                 /* make white */
+    /* General */
+    --text:  #DDDDDD;                 /* in html and main windows (almost white) */
+    --body-background: #454442;       /* in html windows (dark grey) */
+    --body-text: var(--text);         /* in html windows and inputs */
+    --link-color: #f3da67;            /* in html windows */
+    --image-invert: 80%;               /* invert black-transparent images to white */
+    --header-color: #d6b51d;
+    
+    /* Graph */
+    --graph-hover: #999999;            /* (darker grey) */
+    --graph-selected: #CCCCCC;         /* (lighter grey) */
+    --graph-decoration-color: #d6b51d; /* (mustard yellow) */
+    
+    /* Settings */
+    --input-background: #505050;      /* in html windows (slightly less dark grey) */
+    --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
+    --green-text: #5ff35f;            /* url works (green) */
+    --red-text: #fd2020;              /* url fails (red) */
+    --grey-text: var(--text);      
+    --code-text: #a2a2a2;             /* (light grey) */
+    
+    /* Notes */
+    --code-background: #505050;
+    --notes-code-text: #d6b51d;
+    
+    /* Merge */
+    --merge-color: black;
+    --merge-body-background: #999999;
+    --merge-arrow: #999999;
+    
+    /* Main window (different to rest of windows) */
+    --main-background: var(--body-background);    /* main window background color (same as for html) */
+    --dim-text: #777777;                          /* search text-switch off-state */
+    --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
+    --message-placeholder: var(--text);           /* message field: other texts */
+    --history-icon-brightness: 10;                 /* make white */
 }   
 
 
-img{
-  filter: invert( var(--image-invert) );
-}
+
+/*                */
+/* Style inputs   */
+/*                */
+
+
+    /* Focus (grey rectangle when element in focus) */
+    textarea:focus, 
+    input[type=text]:focus 
+    {
+        outline: 0; /* Removes the default blue ring */
+        
+        /* Now, let's create our own focus style */
+        border-radius: 3px;
+        box-shadow: 0 0 0 2px grey;
+    }
+            
+    textarea{ 
+        width: 100%;
+        line-height: 1;
+        color: var(--body-text);
+        border-width: thin;
+        background-color: var(--input-background);
+    }
+    input{
+        color: var(--body-text);
+        border-width: thin;
+        background-color: var(--input-background);
+    }
 
 
 
-/* Style inputs */
+/*                */
+/* Style elements */
+/*                */
 
-/* Focus (grey rectangle when element in focus) */
-textarea:focus, 
-input[type=text]:focus 
-{
-  outline: 0; /* Removes the default blue ring */
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background-color: var(--body-background);
+            color: var(--body-text);
+        }
 
-  /* Now, let's create our own focus style */
-  border-radius: 3px;
-  box-shadow: 0 0 0 2px grey;
-}
+
+        h1, h2, h3, h4{
+            text-align:left; 
+            color: var(--header-color);
+        }
+        h4{
+            margin-block-end: auto;
+        }        
+        
+        img{
+            filter: invert( var(--image-invert) );
+        }
+
+        
+        code{
+            color: var(--code-text); 
+            font-size: 11pt;  
+        }
+        a{
+            color: var(--link-color);
+        }
+        
+        iframe{
+            width: 100%;
+        } 

@@ -161,6 +161,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var resolve_win;
         var graph_win;
         var about_win;
+        var merge_win;
         var window_menu_handles_mapping = {}; // Will be filled in when making menu items in main menu
  
       
@@ -2505,14 +2506,18 @@ async function _setMode( inputModeName){
 }
 
 function startPragmaMerge(){
+    
+    let title = "Pragma-merge";
     gui.Window.open('merge/pragma-merge.html', { 
             id: 'settingsWindowId',
             position: 'center',
             width: 600,
             height: 700,
-            title: 'Pragma-merge'
-        } 
-    );
+            title: title
+        },
+            win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
+    ); 
+    
 
 }
 

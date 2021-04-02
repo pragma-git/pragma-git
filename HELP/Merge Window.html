@@ -1,0 +1,60 @@
+ 
+
+
+  <h4>Introduction</h4>       
+    <p>
+    This window shows differences between two commits.  It can also be used as a difference editor, where uncommited files can be compared to a previous state, and each change can be edited.
+    </p> 
+         
+    <p>
+    This window is also activated when conflicts between file versions are found in merges between two branches, or between the remote and the local repository.
+    </p>  
+ 
+ <h4>Frames</h4>       
+    <p>
+    In difference mode, 2 frames are shown.  They are labelled according to their function, but generally speaking the left frame displays the modified file and the right the already stored file.
+    </p>     
+     
+    <p>
+    In merge mode, you can select to see 2 or 3 frames (<button>two-way</button>  or <button>three-way</button> button).  2 frames works as in difference mode.  
+    In 3 frame mode, the middle frame is the result from your merge, and changes can be selected to be moved into the middle frame from either of the two files displayed in left and right frames.
+    </p>  
+
+
+ <h4>Save</h4>  
+      
+    <p>
+    If you have modified the files with the diff or merge tool, you need to press the <button>Save</button> button.
+    Otherwise press  <button>Cancel</button>  button.
+    </p> 
+ 
+    <p>
+    Closing the window other ways is the same as pressing <button>Cancel</button>  button.
+    </p> 
+
+ <h4>Display settings</h4>  
+
+    <p>
+    <input type="checkbox" id="align"><label for="align"> align</label> - makes the same rows in the displayed files be aligned.
+    </p> 
+
+    <p>
+    <input type="checkbox" id="hide_unchanged"> <label for="hide_unchanged"> hide unchanged</label> - hides rows that are equal in the displayed files.
+    Hidden sections of the text are displayed as <code>(...)</code>
+    </p> 
+
+
+    <p>
+    <code>(...)</code> - click a hidden section to unhide it. 
+    </p> 
+
+
+
+ <h4>Navigation buttons</h4>       
+    <p>
+       ⬇ - go to next modified text block
+    </p>  
+    <p>
+       ⬆ - go to previous modified text block
+    </p>  
+

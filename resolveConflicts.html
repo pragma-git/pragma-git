@@ -220,6 +220,7 @@
     window.addEventListener(
         'unload', 
         (event) => {
+            opener.deleteWindowMenu("Resolve Conflicts");
             console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
         }

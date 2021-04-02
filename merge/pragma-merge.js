@@ -68,6 +68,10 @@ var options = optionsTemplate;
 var dv = {}; // initUI sets this CodeMirror.MergeView instance 
 dv.panes = panes; // Initial value
 
+        
+// Define help icon
+const helpIcon = `<img style="vertical-align:middle;float: right" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
+
 //-----------
 // FUNCTIONS
 //-----------
@@ -199,13 +203,13 @@ function initUI() {
         // html
         document.getElementById('left3').innerHTML = 'this ';
         document.getElementById('editor3').innerHTML = 'merge here ';
-        document.getElementById('right3').innerHTML = 'other';
+        document.getElementById('right3').innerHTML = 'other' + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'collapse';
         document.getElementById('Headers3').style.visibility = 'visible';
         
-        disable('two-way');
-        enable('three-way');
+        disable2('two-way');
+        enable2('three-way');
       }  
       
       if ( panes == 2){
@@ -266,15 +270,15 @@ function initUI() {
         } 
         
         // Apply mode-dependency html
-        document.getElementById('editor2').innerHTML = editorLabel;
-        document.getElementById('right2').innerHTML = rightViewerLabel;
+        document.getElementById('editor2').innerHTML = editorLabel
+        document.getElementById('right2').innerHTML = rightViewerLabel + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'visible';
         document.getElementById('Headers3').style.visibility = 'collapse';
           
            
-        enable('two-way');
-        disable('three-way');
+        enable2('two-way');
+        disable2('three-way');
       }
 
 
@@ -314,6 +318,15 @@ function enable(id){
 }
 function disable(id){
     document.getElementById(id).checked = false;
+}
+
+function enable2(id){
+    document.getElementById(id).classList.remove('disabled');
+    document.getElementById(id).classList.add('enabled');
+}
+function disable2(id){
+    document.getElementById(id).classList.remove('enabled');
+    document.getElementById(id).classList.add('disabled');
 }
 
 // Make readonly
@@ -418,6 +431,10 @@ function closeWindowNicely(exitCode){
     // Store gui mode settings
     global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
     global.state.pragmaMerge.align = document.getElementById('align').checked;
+    
+    
+    // Remove from menu
+    opener.deleteWindowMenu('Pragma-merge');
 
     win.close();
 }
