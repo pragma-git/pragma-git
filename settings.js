@@ -439,7 +439,8 @@ async function gitClone( folderName, repoURL){
     
     try{
         // 1) Clone bare repo
-        let options = ['--mirror']
+        //let options = ['--mirror'];
+        let options =['--bare'];
         let bareFolderName = topFolder + pathsep + '.git'; // Make a bare repository 
         await simpleGit( folderName).clone(  repoURL, bareFolderName,options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
