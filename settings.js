@@ -421,35 +421,16 @@ async function gitClone( folderName, repoURL){
     let topFolder = folderName + pathsep + repoName;
     topFolder = topFolder.replace(/[\\\/]$/, '')
 
-    //// Clone
-    //try{
-        //await simpleGit( folderName).clone(  repoURL, onClone);
-        //function onClone(error, result ){console.log(result);console.log(error) }; 
-    //}catch(err){ 
-        //console.log(err);
-        
-        //displayAlert('Failed cloning', err)
-        //return
-    //}
 
-    // Clone all branches
-    //    ( this is done by making a bare repo in topFolder/.git : 
-    //      and then undoing the bare repo : git config --unset core.bare)
-    
-    
+    // Clone
+
     try{
-        // 1) Clone bare repo
-        //let options = ['--mirror'];
-        let options =['--bare'];
-        let bareFolderName = topFolder + pathsep + '.git'; // Make a bare repository 
-        await simpleGit( folderName).clone(  repoURL, bareFolderName,options, onClone);
+        // 1) Clone 
+        let options = [];
+        await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
         
-        // 2) Make a real repo 
-        await simpleGit( topFolder ).raw( [  'config', '--unset' , 'core.bare'] , onConfig);
-        function onConfig(err, result) {console.log(result); console.log(err) };
-        
-        // 3) Checkout default branch
+        // 2) Checkout default branch
         await simpleGit(topFolder).checkout( onCheckout);
         function onCheckout(err, result){console.log(result)};
         
