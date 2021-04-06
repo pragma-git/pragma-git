@@ -1,0 +1,139 @@
+<html>
+    <head>
+        <title>Credentials</title>
+    
+        <link rel="stylesheet" type="text/css" href="../color_styles.css" />
+        
+        <style>
+            body{
+                font-family: Arial;
+                font-size: 11pt;
+                background: var(--body-background);
+                color: var(--body-text);
+            }
+            
+            textarea{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+            
+            
+            select{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+        
+        </style>
+    </head>
+    
+<body class='light'>
+    <!-- Dark mode on/off --> 
+<!--
+    <script>
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+    </script>
+-->
+
+        <div id="outerContent"  style="width: fit-content;padding: 10px">
+              
+        <label for="pwd">Access Token / Password</label><br>
+        <textarea id="pwd" 
+            rows="1" 
+            cols="50" 
+            ></textarea>
+        <br>
+        <br>
+  
+        <br>
+        <br>
+        
+        <button  id="Select-button" onclick="OK_clicked();"> OK  </button>    
+        <button  id="Select-button" onclick="Cancel_clicked();"> Cancel  </button>   
+        </div>
+    </body>
+    
+    <!--  Functions  --> 
+    <script>
+         
+        var fs = require('fs');
+        var os = require('os');
+        const pathsep = require('path').sep;  // Os-dependent path separator
+        
+        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+
+        const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';  
+        const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
+        const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
+
+
+        function OK_clicked(){
+            let message = document.getElementById('pwd').value;
+            
+            ExitMessage( message); 
+            Exit( 0);
+        }   
+        
+        
+        function Cancel_clicked(){
+            Exit( 1);
+        }
+         
+        
+        function ExitMessage( message){
+         
+            try{
+                fs.writeFileSync(EXITMESSAGEFILE,message,'utf8'); // Exit code as string
+            }catch(err){
+                console.log('FAILED SAVING EXIT MESSAGE TO FILE = ' + EXITMESSAGEFILE);
+                console.log(err);
+                fs.writeFileSync(EXITMESSAGEFILE,'FAILED SAVING EXIT MESSAGE TO FILE','utf8');// Special message if failed
+            }
+        }       
+        
+        
+        function Exit( exitCode){
+         
+            try{
+                fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+            }catch(err){
+                console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
+                console.log(err);
+                fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+            }
+            
+            // Remove file, to let script know it has stopped
+            try {
+                fs.unlinkSync(SIGNALFILE)
+            
+            } catch(err) {
+                console.error(err)
+            }
+            window.close();
+        }
+   
+ 
+    </script>  
+    
+       
+    <!--  Onload, call javascript file  --> 
+    <script>
+
+        window.addEventListener(
+            'unload', 
+            (event) => {
+                Cancel_clicked();
+                
+            }
+        );
+    </script>
+    
+</html>

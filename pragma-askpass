@@ -1,0 +1,61 @@
+#!/bin/bash -x
+
+
+# Home dir
+if [ -z ${SYSTEMDRIVE+x} ]
+then
+    # Mac or Linux  
+    TMP="$HOME/.Pragma-git/.tmp"
+    echo "Mac or Linux" > "$TMP/askpasslog.txt"
+    env >> "$TMP/askpasslog.txt"
+    echo $(pwd) > "$TMP/repo_path"
+    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
+else
+    # Windows
+    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    echo "WINDOWS" > "$TMP/askpasslog.txt"
+    env >> "$TMP/askpasslog.txt"
+    echo $(pwd -W) > "$TMP/repo_path"
+    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
+fi
+
+
+
+mkdir "$TMP" 2>/dev/null
+
+RUNNING="$TMP/pragma-askpass-running"  # Pragma-git looks for this file, and starts askpass
+EXIT="$TMP/exit-pragma-askpass"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+
+EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to console
+
+# Bail out if already running
+if [  -f "$RUNNING" ] ; then
+    echo  " " >> "$TMP/askpass.txt"
+    echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
+    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
+    exit
+fi
+
+# Store input parameters for Pragma-git to pick them up (nothing here)
+
+
+# Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
+touch "$RUNNING" 
+while [  -f "$RUNNING" ]
+do
+  sleep 1 
+done
+
+# Exited Pragma-askpass
+EXITCODE=$(cat "$EXIT")
+rm "$EXIT"
+
+# Print to stdout
+echo $(cat "$EXITMESSAGEFILE")
+rm "$EXITMESSAGEFILE"
+
+echo  " " >> "$TMP/askpasslog.txt"
+echo  "$(date) EXIT pragma-askpass" >> "$TMP/askpass.txt"
+echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/askpass.txt"
+
+exit $EXITCODE
