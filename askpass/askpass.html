@@ -34,14 +34,14 @@
     
 <body class='light'>
     <!-- Dark mode on/off --> 
-<!--
+
     <script>
-        if (localState.dark){
+        if (opener.localState.dark){
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
     </script>
--->
+
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
               
@@ -52,9 +52,7 @@
             ></textarea>
         <br>
         <br>
-  
-        <br>
-        <br>
+
         
         <button  id="Select-button" onclick="OK_clicked();"> OK  </button>    
         <button  id="Select-button" onclick="Cancel_clicked();"> Cancel  </button>   
@@ -134,6 +132,19 @@
                 
             }
         );
+    </script>
+    
+    <script>
+            
+    // Set size to match content
+    let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
+    let dx = document.getElementById('outerContent').scrollWidth;
+    let dy = document.getElementById('outerContent').scrollHeight;
+    
+    let hx = window.outerWidth - window.innerWidth;
+    let hy = window.outerHeight - window.innerHeight;
+    window.resizeTo(dx + hx + 2 * padding , dy + hy + padding + 16);
+   
     </script>
     
 </html>

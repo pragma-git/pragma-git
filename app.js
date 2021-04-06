@@ -177,8 +177,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
         
-        // Pragma-merge : Signalling files and folders 
+        // Pragma-merge : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+        
+        const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
         const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
@@ -233,6 +235,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         }catch (err){
             
         }
+
 
     // Inititate listening to Pragma-merge start signal
        
@@ -1243,6 +1246,10 @@ async function _callback( name, event){
     }
     function closeWindow(a){
         console.log('Close argument = ' + a);  
+        
+        
+        // Remove signaling file
+        util.rm(MAINSIGNALFILE);
 
         
         // Fold search fields
@@ -4366,6 +4373,10 @@ window.onload = function() {
   
   
   initializeWindowMenu();
+  
+          
+  // Write signal file that pragma-git is running
+  fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
   
 };
 

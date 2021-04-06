@@ -23,12 +23,21 @@ fi
 
 mkdir "$TMP" 2>/dev/null
 
-RUNNING="$TMP/pragma-askpass-running"  # Pragma-git looks for this file, and starts askpass
-EXIT="$TMP/exit-pragma-askpass"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
+RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
+EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to console
+EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
 
-# Bail out if already running
+# Bail out if pragma-git not running
+if [ ! -f "$MAINSIGNALFILE" ] ; then
+    echo  " " >> "$TMP/askpass.txt"
+    echo  "$(date) Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" >> "$TMP/askpass.txt"
+    echo  "$(date) Bail out, require pragma-git to be up" >> "$TMP/askpass.txt"
+    exit
+fi
+
+# Bail out if askpass already running
 if [  -f "$RUNNING" ] ; then
     echo  " " >> "$TMP/askpass.txt"
     echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
@@ -48,11 +57,11 @@ done
 
 # Exited Pragma-askpass
 EXITCODE=$(cat "$EXIT")
-#rm "$EXIT"
+rm "$EXIT"
 
 # Print to stdout
 echo $(cat "$EXITMESSAGEFILE")
-#rm "$EXITMESSAGEFILE"
+rm "$EXITMESSAGEFILE"
 
 echo  " " >> "$TMP/askpasslog.txt"
 echo  "$(date) EXIT pragma-askpass" >> "$TMP/askpass.txt"
