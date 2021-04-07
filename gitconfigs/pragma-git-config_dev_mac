@@ -2,3 +2,5 @@
     cmd = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    
 
+[core]
+    askpass = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-askpass
