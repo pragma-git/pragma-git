@@ -459,7 +459,7 @@ async function injectIntoJs(document){
         // Find short history graph
         try{
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '-' + firstPassN, messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
+            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--all', '--pretty', '-' + firstPassN, messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -480,7 +480,7 @@ async function injectIntoJs(document){
         // Find complete history graph
         try{
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
+            commands = [ 'log', '--graph', '--date-order', '--oneline', '--all', '--pretty', messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
