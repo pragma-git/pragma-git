@@ -442,7 +442,7 @@ async function injectIntoJs(document){
         
     
         // Commit log output format
-        const messageFormat = '--format=%s T=%aI D=%d H=%H';  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=%s T=%aI D=%d H=%H N=%N';  // %aI = author date, strict ISO 8601 format
     
 
     //
@@ -623,19 +623,24 @@ function drawGraph( document, graphText, branchHistory, history){
         
         // Example row format :
         // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
+ 
+        // Notes : Separate log row from ending Notes
+        let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=       
         
         // Hash : Separate log row from ending long hash
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-        let hashInThisRow = splitted[row].substring(startOfHash + 2); // Skip H=
+        let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
         
         // Decoration : Separate log row from decorate (at end now when hash removed)
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash); // Skip D=
+        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+        decoration += noteInThisRow;
          
         // Date : Separate log row from date (at end now when decorate removed)
-        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... D=%d (ends in decoration)
-        let date = splitted[row].substring(startOfDate + 2, startOfDecore); // Skip D=
+        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
+        let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
         date = date.substring(0,10);
        
         
@@ -651,13 +656,13 @@ function drawGraph( document, graphText, branchHistory, history){
         thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
 
 
-        // Parse missing features (= lines withoug commits)
+        // Parse missing features (= lines without commits)
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
                 
         if (startOfDate == -1){
-            date = ''; // When no hash found (lines without commits)
+            date = ''; // When no date found (set blank date)
         }
         
         

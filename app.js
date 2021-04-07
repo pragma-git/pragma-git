@@ -3050,6 +3050,18 @@ async function gitAddCommitAndPush( message){
             displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
         }
     }
+    
+    // TEST: Add branch in git notes
+    try{   
+        let message = `branch=${currentBranch}`;
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .raw( [  'notes', 'add' , '-m', message ] , onNotes);
+        function onNotes(err, result) {console.log(result) };
+    }catch(err){
+        console.log('Error in gitAddCommitAndPush() -- creating branch-note');
+        console.log(err);
+    }   
+    
 
     // Push
     await waitTime( 1000);
