@@ -45,7 +45,7 @@
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
               
-        <label for="pwd">Access Token / Password</label><br>
+        <label id="pwdlabel" for="pwd">Access Token / Password</label><br>
         <textarea id="pwd" 
             rows="1" 
             cols="50" 
@@ -59,7 +59,7 @@
         </div>
     </body>
     
-    <!--  Functions  --> 
+    <!--  Init and Functions  --> 
     <script>
          
         var fs = require('fs');
@@ -71,6 +71,9 @@
         const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';  
         const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
         const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
+        
+        const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`);
+        document.getElementById('pwdlabel').innerText = ARG1;
 
 
         function OK_clicked(){
@@ -117,6 +120,18 @@
             }
             window.close();
         }
+
+ 
+        function loadFile(filePath)  { 
+            let content = "";
+            try{
+                content = fs.readFileSync(filePath,'utf8');
+            }catch(err){
+                
+            }
+            
+            return content;
+        } 
    
  
     </script>  

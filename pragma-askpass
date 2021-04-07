@@ -1,6 +1,5 @@
 #!/bin/bash 
 
-
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
 then
@@ -19,7 +18,7 @@ else
     echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
 fi
 
-
+echo $@ >>  "$TMP/askpasslog.txt"
 
 mkdir "$TMP" 2>/dev/null
 
@@ -46,7 +45,7 @@ if [  -f "$RUNNING" ] ; then
 fi
 
 # Store input parameters for Pragma-git to pick them up (nothing here)
-
+echo $1 > "$TMP/askpass_first"
 
 # Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
 touch "$RUNNING" 
@@ -61,8 +60,12 @@ rm "$EXIT"
 
 # Print to stdout
 echo $(cat "$EXITMESSAGEFILE")
-rm "$EXITMESSAGEFILE"
 
+# Clean up
+rm "$EXITMESSAGEFILE"
+rm "$TMP/askpass_first"
+
+# Log
 echo  " " >> "$TMP/askpasslog.txt"
 echo  "$(date) EXIT pragma-askpass" >> "$TMP/askpass.txt"
 echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/askpass.txt"
