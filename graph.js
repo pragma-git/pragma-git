@@ -412,10 +412,14 @@ return graphText;
 // Start
 async function injectIntoJs(document){
     win = gui.Window.get();
-    
+        
     //
     // Init
     //  
+    
+    
+    document.getElementById('showDate').checked = state.graph.showdate;
+    document.getElementById('showAll').checked = state.graph.showall;
     
           
     // For systems that have multiple workspaces (virtual screens)
@@ -424,8 +428,7 @@ async function injectIntoJs(document){
     }
     
     let folder = state.repos[ state.repoNumber].localFolder;
-    
-    
+
     //
     // Read history
     //    
@@ -442,25 +445,35 @@ async function injectIntoJs(document){
         
     
         // Commit log output format
-        const messageFormat = '--format=%s T=%aI D=%d H=%H';  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=%s T=%aI D=%d H=%H N=%N';  // %aI = author date, strict ISO 8601 format
     
 
     //
     // Take 1 : Parse first N rows (quicker)
     //
-        const firstPassN = 80;
+        const firstPassN = 55;
         
         // Write header text
         let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
         let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
+        
+        // Normal log command    
+        let commands = [ 'log',  '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
+         
+        // Show all log command 
+        if (state.graph.showall){
+            commands = [ 'log',  '--branches', '--tags', '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
+        }
+ 
          
         // Find short history graph
         try{
-            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', '-' + firstPassN, messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
-            await simpleGit( folder).raw(  commands, onCreateBranch);
+            let shortHistoryCommand= [...commands]; // Clone
+            shortHistoryCommand.push('-' + firstPassN);
+            
+            await simpleGit( folder).raw(  shortHistoryCommand, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
             console.log(err);
@@ -479,8 +492,6 @@ async function injectIntoJs(document){
          
         // Find complete history graph
         try{
-            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            commands = [ 'log', '--graph', '--date-order', '--oneline', '--pretty', messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -522,9 +533,7 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
-        
-            
-
+ 
 }
 
 // Util
@@ -572,7 +581,9 @@ function closeWindow(){
     
     // Store setting
     state.graph.showdate = document.getElementById('showDate').checked;
+    state.graph.showall = document.getElementById('showAll').checked;
     opener.saveSettings();
+
     
     // Remove from menu
     opener.deleteWindowMenu('Graph');
@@ -623,19 +634,24 @@ function drawGraph( document, graphText, branchHistory, history){
         
         // Example row format :
         // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
+ 
+        // Notes : Separate log row from ending Notes
+        let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=       
         
         // Hash : Separate log row from ending long hash
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-        let hashInThisRow = splitted[row].substring(startOfHash + 2); // Skip H=
+        let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
         
         // Decoration : Separate log row from decorate (at end now when hash removed)
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash); // Skip D=
+        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+        decoration += '  ' + noteInThisRow;
          
         // Date : Separate log row from date (at end now when decorate removed)
-        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... D=%d (ends in decoration)
-        let date = splitted[row].substring(startOfDate + 2, startOfDecore); // Skip D=
+        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
+        let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
         date = date.substring(0,10);
        
         
@@ -651,13 +667,13 @@ function drawGraph( document, graphText, branchHistory, history){
         thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
 
 
-        // Parse missing features (= lines withoug commits)
+        // Parse missing features (= lines without commits)
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
                 
         if (startOfDate == -1){
-            date = ''; // When no hash found (lines without commits)
+            date = ''; // When no date found (set blank date)
         }
         
         
@@ -681,15 +697,16 @@ function drawGraph( document, graphText, branchHistory, history){
         
          // Show/hide date
         if (state.graph.showdate){
-            document.getElementById('showDate').checked = state.graph.showdate;
             graphContent += '<div class="date"><pre>' +  date + '</pre></div>';
         }
+        
         
         // Parse git log graphics
         for(var i = 0 ; i < thisRow.length ; i++){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
 
+            // TODO: Here I can color depending on what branch it was on
             
             // Draw node
             if (  a(0,'*') ){
@@ -697,7 +714,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     total += '<img class="node" src="images/circle_green.png">'; // Draw node
                 }else{
-                    total += '<img class="node" src="images/circle_black.png">'; // Draw node
+                    total += '<img class="node unknown" src="images/circle_black.png">'; // Draw node
                 }
             }
 
