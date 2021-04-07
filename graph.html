@@ -232,10 +232,19 @@
         <hr>
         
         <div style="width: unset; position: absolute; right: 15;">
+
+
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
-            <label for="showDate">Show Date</label>
+            <label for="showDate" style="position: relative;" >Show Date</label>
+            
+            
+
+            <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
+            <label for="showAll" style="position: relative;" >Show All</label>
+
+
         </div> 
-        
+
         <br>
         
           <!-- Empty content, fill in with injectIntoJs in graph.js --> 

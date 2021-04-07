@@ -424,8 +424,7 @@ async function injectIntoJs(document){
     }
     
     let folder = state.repos[ state.repoNumber].localFolder;
-    
-    
+
     //
     // Read history
     //    
@@ -455,12 +454,28 @@ async function injectIntoJs(document){
         let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
+        
+        // Log command
+        let commands = [ 'log', '--graph', '--date-order', '--oneline',  '--pretty', messageFormat];
+         
+        console.log(commands);       
+        if (state.graph.showall){
+            commands.push('--all');
+        }
+        
+        let shortHistoryCommand= [...commands]; // Clone
+
+        
+        console.log(commands);
          
         // Find short history graph
         try{
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            let commands = [ 'log', '--graph', '--date-order', '--oneline', '--all', '--pretty', '-' + firstPassN, messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
-            await simpleGit( folder).raw(  commands, onCreateBranch);
+        console.log(shortHistoryCommand);
+            shortHistoryCommand.push('-' + firstPassN);
+            
+        console.log(shortHistoryCommand);
+            await simpleGit( folder).raw(  shortHistoryCommand, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
             console.log(err);
@@ -479,8 +494,9 @@ async function injectIntoJs(document){
          
         // Find complete history graph
         try{
+            
+        console.log(commands);
             // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-            commands = [ 'log', '--graph', '--date-order', '--oneline', '--all', '--pretty', messageFormat]; // %d decorate, %s message, H= catch phrase, %H long hash
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -522,6 +538,13 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
+        
+        
+    
+    document.getElementById('showDate').checked = state.graph.showdate;
+    document.getElementById('showAll').checked = state.graph.showall;
+    
+    
         
             
 
@@ -572,7 +595,9 @@ function closeWindow(){
     
     // Store setting
     state.graph.showdate = document.getElementById('showDate').checked;
+    state.graph.showall = document.getElementById('showAll').checked;
     opener.saveSettings();
+
     
     // Remove from menu
     opener.deleteWindowMenu('Graph');
@@ -686,9 +711,9 @@ function drawGraph( document, graphText, branchHistory, history){
         
          // Show/hide date
         if (state.graph.showdate){
-            document.getElementById('showDate').checked = state.graph.showdate;
             graphContent += '<div class="date"><pre>' +  date + '</pre></div>';
         }
+        
         
         // Parse git log graphics
         for(var i = 0 ; i < thisRow.length ; i++){

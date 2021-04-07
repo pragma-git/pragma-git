@@ -4158,6 +4158,8 @@ function loadSettings(settingsFile){
         // Graph window
             state.graph = setting( state_in.graph, {} );
             state.graph.showdate = setting( state_in.graph.showdate, false );
+            state.graph.showall = setting( state_in.graph.showall, false );
+            
 
     //
     // Post-process state
