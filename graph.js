@@ -647,7 +647,6 @@ function drawGraph( document, graphText, branchHistory, history){
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
         let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-        decoration += '  ' + noteInThisRow;
          
         // Date : Separate log row from date (at end now when decorate removed)
         let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
@@ -665,7 +664,11 @@ function drawGraph( document, graphText, branchHistory, history){
         // Current row
         let thisRow = splitted[row].substring(0, startOfDate);
         thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-
+        
+        console.log('startOfNote = ' + startOfNote);
+        if (noteInThisRow.length > 0){
+            thisRow += ` (${noteInThisRow})`;
+        }
 
         // Parse missing features (= lines without commits)
         if (startOfHash == -1){
