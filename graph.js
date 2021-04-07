@@ -695,6 +695,7 @@ function drawGraph( document, graphText, branchHistory, history){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
 
+            // TODO: Here I can color depending on what branch it was on
             
             // Draw node
             if (  a(0,'*') ){
@@ -702,7 +703,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     total += '<img class="node" src="images/circle_green.png">'; // Draw node
                 }else{
-                    total += '<img class="node" src="images/circle_black.png">'; // Draw node
+                    total += '<img class="node unknown" src="images/circle_black.png">'; // Draw node
                 }
             }
 
