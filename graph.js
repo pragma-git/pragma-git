@@ -412,10 +412,14 @@ return graphText;
 // Start
 async function injectIntoJs(document){
     win = gui.Window.get();
-    
+        
     //
     // Init
     //  
+    
+    
+    document.getElementById('showDate').checked = state.graph.showdate;
+    document.getElementById('showAll').checked = state.graph.showall;
     
           
     // For systems that have multiple workspaces (virtual screens)
@@ -447,7 +451,7 @@ async function injectIntoJs(document){
     //
     // Take 1 : Parse first N rows (quicker)
     //
-        const firstPassN = 80;
+        const firstPassN = 55;
         
         // Write header text
         let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
@@ -455,26 +459,20 @@ async function injectIntoJs(document){
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
         
-        // Log command
-        let commands = [ 'log', '--graph', '--date-order', '--oneline',  '--pretty', messageFormat];
+        // Normal log command    
+        let commands = [ 'log',  '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
          
-        console.log(commands);       
+        // Show all log command 
         if (state.graph.showall){
-            commands.push('--all');
+            commands = [ 'log',  '--branches', '--tags', '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
         }
-        
-        let shortHistoryCommand= [...commands]; // Clone
-
-        
-        console.log(commands);
+ 
          
         // Find short history graph
         try{
-            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
-        console.log(shortHistoryCommand);
+            let shortHistoryCommand= [...commands]; // Clone
             shortHistoryCommand.push('-' + firstPassN);
             
-        console.log(shortHistoryCommand);
             await simpleGit( folder).raw(  shortHistoryCommand, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -494,9 +492,6 @@ async function injectIntoJs(document){
          
         // Find complete history graph
         try{
-            
-        console.log(commands);
-            // Emulate 'git log --graph --date-order --oneline' with addition of long-hash at end
             await simpleGit( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){graphText = result; console.log(result); };
         }catch(err){        
@@ -538,16 +533,7 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
-        
-        
-    
-    document.getElementById('showDate').checked = state.graph.showdate;
-    document.getElementById('showAll').checked = state.graph.showall;
-    
-    
-        
-            
-
+ 
 }
 
 // Util
@@ -661,7 +647,7 @@ function drawGraph( document, graphText, branchHistory, history){
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
         let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-        decoration += noteInThisRow;
+        decoration += '  ' + noteInThisRow;
          
         // Date : Separate log row from date (at end now when decorate removed)
         let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
