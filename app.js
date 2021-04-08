@@ -3210,7 +3210,9 @@ function gitFetch(){ // Fetch and ls-remote
      
     var error = "";
 
+    //
     // Fetch
+    //
      try{
 
         // Fetch
@@ -3266,14 +3268,32 @@ function gitFetch(){ // Fetch and ls-remote
             }
 
         }
-        
-        
-            
+
     }catch(err){
         console.log('Error in gitFetch()');
         console.log(err);
         error = err;
     }
+    
+    
+            
+    //
+    // Get notes (git fetch origin refs/notes/*:refs/notes/*)  really want to get branchname notes, but why not get all
+    //
+    
+    try{
+
+        // Fetch
+        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( 'origin', 'refs/notes/*:refs/notes/*', onFetch);
+        function onFetch(err, result) {console.log(result) };        
+        
+        
+    }catch(err){
+        console.log('Error in gitFetch() -- failed getting notes');
+        console.log(err);
+        error = err;
+    }    
+    
   
 }
 async function gitPull(){
