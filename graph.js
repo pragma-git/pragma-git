@@ -657,7 +657,7 @@ function drawGraph( document, graphText, branchHistory, history){
         if (date == previousDate){
             date = '';
         }else{
-            previousDate = date;
+            previousDate = date; 
         }
                
         
