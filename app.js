@@ -3104,7 +3104,7 @@ async function gitAddCommitAndPush( message){
     }   
     
 
-    // Push
+    // Push 
     await waitTime( 1000);
     
     if (state.autoPushToRemote){ 
@@ -3188,7 +3188,12 @@ async function gitPush(){
             // 'mirror' incompatible with refspace ('origin') and '--tags'
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
         }else{
+            // Push commits and tags, and set upstream
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+            
+            // Push branchname notes (git push origin refs/notes/branchname)
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);
+            
         }
         function onPush(err, result) {console.log(result) };  
         
