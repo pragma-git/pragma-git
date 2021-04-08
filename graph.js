@@ -624,7 +624,7 @@ function drawGraph( document, graphText, branchHistory, history){
     let splitted = graphText.split("\n");
     console.log(splitted)
     
-    let previousDate = ''
+    let previousDate = 'dummy'
     
     
     // Loop each row
@@ -660,13 +660,22 @@ function drawGraph( document, graphText, branchHistory, history){
         let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
         let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
         date = date.substring(0,10);
-       
         
-        if (date == previousDate){
-            date = '';
+                        
+        if (startOfDate == -1){
+            date = ''; // When no date found (set blank date)
         }else{
-            previousDate = date; 
+            // Only show date when new date
+            if (date == previousDate){
+                date = '';
+            }else{
+                // Keep date, and remember new date
+                previousDate = date; 
+            }
         }
+        
+       
+
                
         
         // Current row
@@ -682,11 +691,7 @@ function drawGraph( document, graphText, branchHistory, history){
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
-                
-        if (startOfDate == -1){
-            date = ''; // When no date found (set blank date)
-        }
-        
+
         
                     
         // Style if commit is not in history (because of search)
