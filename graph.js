@@ -630,6 +630,14 @@ function drawGraph( document, graphText, branchHistory, history){
     // Loop each row
     
     for(var row = 0; row < (splitted.length - 1); row++) {
+        
+                        
+        // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
+        if (isDumbRow(splitted[row])){
+            continue // skip row
+        }
+        
+        
         let sumFound ='';
         
         // Example row format :
@@ -919,8 +927,10 @@ function drawGraph( document, graphText, branchHistory, history){
                 continue // skip rest of row
                 
             }else if ( i == (thisRow.length - 1) ) {
+
                 // Print out info for non-commit rows
                 graphContent += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
+                
             }
     
             // Make div with graphContent from above
@@ -954,6 +964,8 @@ function drawGraph( document, graphText, branchHistory, history){
             let answer = currentRow[i+index] === c;
             return answer;
         }    
+        
+
     }
     
     // Print to graphContent element
@@ -961,6 +973,15 @@ function drawGraph( document, graphText, branchHistory, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
+            function isDumbRow(s){
+                
+                for(let j = 0 ; j < s.length ; j++){
+                    if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
+                        return false
+                    }
+                }
+                return true
+            }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
         return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre>`;
