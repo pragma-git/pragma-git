@@ -473,8 +473,8 @@ async function injectIntoJs(document){
             let shortHistoryCommand= [...commands]; // Clone
             shortHistoryCommand.push('-' + firstPassN);
             
-            await simpleGit( folder).raw(  shortHistoryCommand, onCreateBranch);
-            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
+            function onLog(err, result ){graphText = result; console.log(result); };  
         }catch(err){        
             console.log(err);
         }
@@ -492,8 +492,8 @@ async function injectIntoJs(document){
          
         // Find complete history graph
         try{
-            await simpleGit( folder).raw(  commands, onCreateBranch);
-            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  commands, onLog);
+            function onLog(err, result ){graphText = result; console.log(result); };
         }catch(err){        
             console.log(err);
         }

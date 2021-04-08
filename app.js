@@ -3092,14 +3092,14 @@ async function gitAddCommitAndPush( message){
         }
     }
     
-    // TEST: Add branch in git notes
+    // TEST: Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
     try{   
         let message = `branch=${currentBranch}`;
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', 'add' , '-m', message ] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
         function onNotes(err, result) {console.log(result) };
     }catch(err){
-        console.log('Error in gitAddCommitAndPush() -- creating branch-note');
+        console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
         console.log(err);
     }   
     
