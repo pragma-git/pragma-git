@@ -3094,7 +3094,7 @@ async function gitAddCommitAndPush( message){
     
     // TEST: Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
     try{   
-        let message = `branch=${currentBranch}`;
+        let message = currentBranch;
         await simpleGit( state.repos[state.repoNumber].localFolder )
             .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
         function onNotes(err, result) {console.log(result) };
