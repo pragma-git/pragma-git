@@ -3,6 +3,7 @@
 .light {  
     /* General */
     --text:  #222222;
+    --body-background: #FFFFFF;       /* in html windows  */
     --link-color: blue;            /* in html windows */
     --body-text: var(--text);
     --input-background: #FFFFFF;
@@ -26,7 +27,7 @@
     --notes-code-text: var(--code-text);
     
     /* Main */
-    --main-background: #EEEEEE;
+    --main-background: var(--body-background); 
     --dim-text: #777777;
     --message-color: #0033FF;
     --message-placeholder: var(--text);
@@ -70,11 +71,7 @@
     --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
     --message-placeholder: var(--text);           /* message field: other texts */
     --history-icon-brightness: 10;                 /* make white */
-    
-            
-    --saturate: 50;
-    --opacity: 0.9;
-    --brightness: 2;
+
 }   
 
 

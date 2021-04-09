@@ -500,6 +500,11 @@ async function injectIntoJs(document){
         let branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
         
+        // Draw node-color header
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+    
+            
     
     //
     // Take 2 : Parse all rows 
@@ -519,10 +524,10 @@ async function injectIntoJs(document){
         branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
     
-    //
-    // Draw node-color header
-    //       
-    drawBranchColorHeader( branchNames);
+
+        // Draw node-color header
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
     
     //
     // Draw current and pinned commits
@@ -569,6 +574,21 @@ async function readBranchHistory(){ // history of current branch (--first-parent
         console.log(err);
     }  
     return history;
+}
+function getColorFileName( name){
+    // Determine name of color class
+    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+    
+    // Test, to show all colors on nodes without notes
+    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    
+    if ( branchNames.has(name) ){
+        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+        let colorName = colorImageNameDefinitions[ colorNumber];
+        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    }
+    return colorFileName
 }
 
 
@@ -672,7 +692,7 @@ function drawGraph( document, graphText, branchHistory, history){
         if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
             if ( !branchNames.has(noteInThisRow) ){
                 // New noteInThisRow
-                branchNames.set(noteInThisRow, branchNames.size); // Register branchName 
+                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
             }
         }
         console.log(branchNames);
@@ -752,9 +772,9 @@ function drawGraph( document, graphText, branchHistory, history){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
 
-            // TODO: Here I can color depending on what branch it was on
-            
+            //
             // Draw node
+            //
             if (  a(0,'*') ){
                 // Figure out if current branch, or not
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
@@ -1065,25 +1085,9 @@ function drawBranchColorHeader( branchNames){
         
         let colorFileName = getColorFileName(key)
         
-        let html = `<div> <img class="node" src="${colorFileName}"> </div> <pre> ${key} </pre>`;
+        let html = `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
         
-        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html + '<br>';
+        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html;
     }
     
-}
-
-function getColorFileName( name){
-    // Determine name of color class
-    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
-    
-    // Test, to show all colors on nodes without notes
-    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
-    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
-    
-    if ( branchNames.has(name) ){
-        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
-        let colorName = colorImageNameDefinitions[ colorNumber];
-        colorFileName = `images/circle_colors/circle_${colorName}.png`;
-    }
-    return colorFileName
 }

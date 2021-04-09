@@ -14,7 +14,8 @@
         
         body{
             font-family: Arial;
-            font-size: 10pt;
+            font-size: 10pt; 
+            width: -webkit-fill-available;
             background: var(--body-background);
             color: var(--body-text);
         }
@@ -41,9 +42,17 @@
         }
         
         #graphContent {
-            width: auto;
+            width: max-content;
             height: auto;
         }
+        
+        .rightInsert {
+            background-color: var(--body-background);
+            width: fit-content;
+            height: fit-content;
+        }
+
+
         
         .firstcol { clear: both;}
 
@@ -53,7 +62,7 @@
         }
 
         .text{
-            width: auto;
+            width: fit-content;
             cursor: pointer;
             font-size: inherit;
         }
@@ -164,10 +173,7 @@
 
 
     </style>
-    
-    <!-- Placeholder for generating color styles -->
-    <style id="generatedStyles">
-    </style>
+
 
     <!-- Styling div-click -->
     <style> 
@@ -216,15 +222,13 @@
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                 src="images/questionmark_black.png" >
 
-
             <hr>
-        </h2>
-   
-        
-        <div style="width: unset; position: absolute; right: 15;">
 
-            <br>
-            
+        </h2>
+
+        
+        <div id="rightInsert" class="rightInsert" style="width: unset; position: absolute; right: 15; z-index: 20;">
+
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
             <label for="showDate" style="position: relative;" >Show Date</label>
             
@@ -232,26 +236,26 @@
 
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
-            
+      
             <br><br>
-
-
-              <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
-              <br>
-                    
-            <div id="colorHeader" class="floatingHeader"> 
+            
+            <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
+            <div id="colorHeader"> 
             </div>
 
-        <br>
-        </div> 
+        </div>  
         
         
- <div style="width:fit-content;">         
-          <!-- Empty content, fill in with injectIntoJs in graph.js --> 
-        <div id="graphContent" class="content"> 
-        </div>
-
- </div>          
+                
+        
+         <div style="width:fit-content;">         
+                  <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                <div id="graphContent" class="content"> 
+                </div>
+        
+         </div> 
+  
+         
     </body>      
 
               
