@@ -70,6 +70,11 @@
     --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
     --message-placeholder: var(--text);           /* message field: other texts */
     --history-icon-brightness: 10;                 /* make white */
+    
+            
+    --saturate: 50;
+    --opacity: 0.9;
+    --brightness: 2;
 }   
 
 
@@ -141,3 +146,4 @@
         iframe{
             width: 100%;
         } 
+

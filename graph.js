@@ -5,6 +5,21 @@
 
 const test = 0; // test = 0, use Pragma-git.  test = 1 (complicated), 2 (simple), 3 (defining examples) use test cases
 
+// Note: colorImageNameDefinitions values are echoed to console, when generating colored images with script 'colorize.bash'
+const colorImageNameDefinitions = [
+'red',
+'blue',
+'orange',
+'purple',
+'salmon',
+'orange4',
+'tan',
+'goldenrod1',
+'olive',
+'LawnGreen',
+'PaleTurquoise1',
+'DeepSkyBlue'
+]
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
@@ -626,6 +641,8 @@ function drawGraph( document, graphText, branchHistory, history){
     
     let previousDate = 'dummy'
     
+    let branchNames = new Map(); // map  branchname => index 0, 1, 2, ...
+    
     
     // Loop each row
     
@@ -643,11 +660,19 @@ function drawGraph( document, graphText, branchHistory, history){
         // Example row format :
         // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
  
-        // Notes : Separate log row from ending Notes
+        // Notes : Separate log row from Notes at end
         let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=       
+        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=    
         
-        // Hash : Separate log row from ending long hash
+        if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+            if ( !branchNames.has(noteInThisRow) ){
+                // New noteInThisRow
+                branchNames.set(noteInThisRow, branchNames.size); // Register branchName 
+            }
+        }
+        console.log(branchNames);
+        
+        // Hash : Separate log row from long hash (at end now when Notes removed)
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
         let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
         
@@ -726,11 +751,30 @@ function drawGraph( document, graphText, branchHistory, history){
             
             // Draw node
             if (  a(0,'*') ){
-                // Figure out if local branch, or not
+                // Figure out if current branch, or not
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
+                    // current branch
                     total += '<img class="node" src="images/circle_green.png">'; // Draw node
                 }else{
-                    total += '<img class="node unknown" src="images/circle_black.png">'; // Draw node
+                    // not current branch, draw colored circle depending on commit branch name
+                    
+                    // Determine name of color class
+                    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+                    
+                    // Test, to show all colors on nodes without notes
+                    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+                    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    
+                    if ( branchNames.has(noteInThisRow) ){
+                        let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+                        let colorName = colorImageNameDefinitions[ colorNumber];
+                        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    }
+                    
+                    total += `<img class="node" src="${colorFileName}">`; // Draw node
+                    
+                    
+                    
                 }
             }
 
@@ -1002,8 +1046,10 @@ function drawNonCommitRow(hash, text, isDev){
     }
 }
 function drawPinnedImage(hash){
+    
     const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
     const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }
+
