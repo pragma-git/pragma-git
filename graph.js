@@ -39,6 +39,7 @@ var sumFound;
 
 const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
+var branchNames;    // map  branchname => index 0, 1, 2, ... calculated in drawGraph
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -517,7 +518,11 @@ async function injectIntoJs(document){
         // Draw full graph, and label current branch
         branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
-           
+    
+    //
+    // Draw node-color header
+    //       
+    drawBranchColorHeader( branchNames);
     
     //
     // Draw current and pinned commits
@@ -641,7 +646,7 @@ function drawGraph( document, graphText, branchHistory, history){
     
     let previousDate = 'dummy'
     
-    let branchNames = new Map(); // map  branchname => index 0, 1, 2, ...
+    branchNames = new Map();   // Empty list of branch names
     
     
     // Loop each row
@@ -1052,4 +1057,33 @@ function drawPinnedImage(hash){
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }
+function drawBranchColorHeader( branchNames){
+    branchNames.forEach(handleMapElements);
 
+    function handleMapElements(value, key, map) {
+        console.log(`m[${key}] = ${value}`);
+        
+        let colorFileName = getColorFileName(key)
+        
+        let html = `<div> <img class="node" src="${colorFileName}"> </div> <pre> ${key} </pre>`;
+        
+        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html + '<br>';
+    }
+    
+}
+
+function getColorFileName( name){
+    // Determine name of color class
+    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+    
+    // Test, to show all colors on nodes without notes
+    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    
+    if ( branchNames.has(name) ){
+        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+        let colorName = colorImageNameDefinitions[ colorNumber];
+        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    }
+    return colorFileName
+}
