@@ -2,4 +2,5 @@
     cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    
 
-# git config --global include.path "~/.Pragma-git/pragma-git-config"
+[core]
+    askpass = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass

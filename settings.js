@@ -255,7 +255,7 @@ async function _callback( name, event){
                
             console.log('setButtonClicked');
             console.log(event);
-            value = event.value;
+            //value = event.value;
             
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
@@ -296,7 +296,14 @@ async function _callback( name, event){
                 //await simpleGit().listRemote( remoteURL, onListRemote);
                 
                     const commands = [ 'ls-remote', remoteURL];
-                    await simpleGit().raw(  commands, onListRemote);
+                    
+                    // Two versions, with and without askpass dialog
+                    if ( event.type == 'no_askpass'){
+                        await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
+                    }else{
+                        await simpleGit().raw(  commands, onListRemote); // default askpass 
+                    }
+                    
                     function onSetRemoteUrl(err, result ){console.log(result) };
                 
                 function onListRemote(err, result ){console.log(result);console.log(err) };
@@ -758,11 +765,11 @@ async function generateRepoTable(document, table, data) {
             button = document.createElement('button');
             button.setAttribute("id", index + 20000);
             button.innerHTML = 'Set';
-            button.setAttribute("onclick", "_callback('setButtonClicked',this)");
+            button.setAttribute("onclick", "_callback('setButtonClicked',this)"); // this.type='submit'; 
             cell.appendChild(button);
                        
             // Run test
-            button.click();
+            _callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
             
                           
             // Into table cell :  button

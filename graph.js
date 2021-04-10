@@ -5,6 +5,21 @@
 
 const test = 0; // test = 0, use Pragma-git.  test = 1 (complicated), 2 (simple), 3 (defining examples) use test cases
 
+// Note: colorImageNameDefinitions values are echoed to console, when generating colored images with script 'colorize.bash'
+const colorImageNameDefinitions = [
+'red',
+'blue',
+'orange',
+'purple',
+'salmon',
+'orange4',
+'tan',
+'goldenrod1',
+'olive',
+'LawnGreen',
+'PaleTurquoise1',
+'DeepSkyBlue'
+]
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
@@ -24,6 +39,7 @@ var sumFound;
 
 const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
+var branchNames;    // map  branchname => index 0, 1, 2, ... calculated in drawGraph
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -473,8 +489,8 @@ async function injectIntoJs(document){
             let shortHistoryCommand= [...commands]; // Clone
             shortHistoryCommand.push('-' + firstPassN);
             
-            await simpleGit( folder).raw(  shortHistoryCommand, onCreateBranch);
-            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
+            function onLog(err, result ){graphText = result; console.log(result); };  
         }catch(err){        
             console.log(err);
         }
@@ -484,6 +500,11 @@ async function injectIntoJs(document){
         let branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
         
+        // Draw node-color header
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+    
+            
     
     //
     // Take 2 : Parse all rows 
@@ -492,8 +513,8 @@ async function injectIntoJs(document){
          
         // Find complete history graph
         try{
-            await simpleGit( folder).raw(  commands, onCreateBranch);
-            function onCreateBranch(err, result ){graphText = result; console.log(result); };
+            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  commands, onLog);
+            function onLog(err, result ){graphText = result; console.log(result); };
         }catch(err){        
             console.log(err);
         }
@@ -502,7 +523,11 @@ async function injectIntoJs(document){
         // Draw full graph, and label current branch
         branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
-           
+    
+
+        // Draw node-color header
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
     
     //
     // Draw current and pinned commits
@@ -549,6 +574,21 @@ async function readBranchHistory(){ // history of current branch (--first-parent
         console.log(err);
     }  
     return history;
+}
+function getColorFileName( name){
+    // Determine name of color class
+    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+    
+    // Test, to show all colors on nodes without notes
+    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    
+    if ( branchNames.has(name) ){
+        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+        let colorName = colorImageNameDefinitions[ colorNumber];
+        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+    }
+    return colorFileName
 }
 
 
@@ -624,22 +664,40 @@ function drawGraph( document, graphText, branchHistory, history){
     let splitted = graphText.split("\n");
     console.log(splitted)
     
-    let previousDate = ''
+    let previousDate = 'dummy'
+    
+    branchNames = new Map();   // Empty list of branch names
     
     
     // Loop each row
     
     for(var row = 0; row < (splitted.length - 1); row++) {
+        
+                        
+        // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
+        if (isDumbRow(splitted[row])){
+            continue // skip row
+        }
+        
+        
         let sumFound ='';
         
         // Example row format :
         // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
  
-        // Notes : Separate log row from ending Notes
+        // Notes : Separate log row from Notes at end
         let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=       
+        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=    
         
-        // Hash : Separate log row from ending long hash
+        if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+            if ( !branchNames.has(noteInThisRow) ){
+                // New noteInThisRow
+                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+            }
+        }
+        console.log(branchNames);
+        
+        // Hash : Separate log row from long hash (at end now when Notes removed)
         let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
         let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
         
@@ -647,35 +705,43 @@ function drawGraph( document, graphText, branchHistory, history){
         let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
         let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
         decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-        decoration += '  ' + noteInThisRow;
          
         // Date : Separate log row from date (at end now when decorate removed)
         let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
         let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
         date = date.substring(0,10);
-       
         
-        if (date == previousDate){
-            date = '';
+                        
+        if (startOfDate == -1){
+            date = ''; // When no date found (set blank date)
         }else{
-            previousDate = date;
+            // Only show date when new date
+            if (date == previousDate){
+                date = '';
+            }else{
+                // Keep date, and remember new date
+                previousDate = date; 
+            }
         }
+        
+       
+
                
         
         // Current row
         let thisRow = splitted[row].substring(0, startOfDate);
         thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-
+        
+        console.log('startOfNote = ' + startOfNote);
+        if (noteInThisRow.length > 0){
+            thisRow += ` (${noteInThisRow})`;
+        }
 
         // Parse missing features (= lines without commits)
         if (startOfHash == -1){
             thisRow = splitted[row]; // When no hash found (lines without commits)
         }
-                
-        if (startOfDate == -1){
-            date = ''; // When no date found (set blank date)
-        }
-        
+
         
                     
         // Style if commit is not in history (because of search)
@@ -706,15 +772,34 @@ function drawGraph( document, graphText, branchHistory, history){
             let total = ''; // Collect graph HTML for current row
             let found = ''; // Record found item (used for logging)
 
-            // TODO: Here I can color depending on what branch it was on
-            
+            //
             // Draw node
+            //
             if (  a(0,'*') ){
-                // Figure out if local branch, or not
+                // Figure out if current branch, or not
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
+                    // current branch
                     total += '<img class="node" src="images/circle_green.png">'; // Draw node
                 }else{
-                    total += '<img class="node unknown" src="images/circle_black.png">'; // Draw node
+                    // not current branch, draw colored circle depending on commit branch name
+                    
+                    // Determine name of color class
+                    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+                    
+                    // Test, to show all colors on nodes without notes
+                    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+                    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    
+                    if ( branchNames.has(noteInThisRow) ){
+                        let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+                        let colorName = colorImageNameDefinitions[ colorNumber];
+                        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    }
+                    
+                    total += `<img class="node" src="${colorFileName}">`; // Draw node
+                    
+                    
+                    
                 }
             }
 
@@ -916,8 +1001,10 @@ function drawGraph( document, graphText, branchHistory, history){
                 continue // skip rest of row
                 
             }else if ( i == (thisRow.length - 1) ) {
+
                 // Print out info for non-commit rows
                 graphContent += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
+                
             }
     
             // Make div with graphContent from above
@@ -951,6 +1038,8 @@ function drawGraph( document, graphText, branchHistory, history){
             let answer = currentRow[i+index] === c;
             return answer;
         }    
+        
+
     }
     
     // Print to graphContent element
@@ -958,6 +1047,15 @@ function drawGraph( document, graphText, branchHistory, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
+            function isDumbRow(s){
+                
+                for(let j = 0 ; j < s.length ; j++){
+                    if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
+                        return false
+                    }
+                }
+                return true
+            }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
         return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre>`;
@@ -973,8 +1071,23 @@ function drawNonCommitRow(hash, text, isDev){
     }
 }
 function drawPinnedImage(hash){
+    
     const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
     const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
+}
+function drawBranchColorHeader( branchNames){
+    branchNames.forEach(handleMapElements);
+
+    function handleMapElements(value, key, map) {
+        console.log(`m[${key}] = ${value}`);
+        
+        let colorFileName = getColorFileName(key)
+        
+        let html = `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
+        
+        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html;
+    }
+    
 }

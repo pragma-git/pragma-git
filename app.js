@@ -177,11 +177,16 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
         
-        // Pragma-merge : Signalling files and folders 
+        // Pragma-merge : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
-        //const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  // Set below
-        const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
         
+        const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
+        
+        const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
+        const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
+        
+        const ASKPASSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running'; 
+        const EXITASKPASSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
         
     
     // State variables
@@ -231,16 +236,28 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
         }
 
+
     // Inititate listening to Pragma-merge start signal
-       const SIGNALFILE = settingsDir + pathsep + '.tmp' + pathsep + 'pragma-merge-running';
-       util.rm(SIGNALFILE);
-       const watcher = chokidar.watch('file, dir, glob, or array', {
+       
+       util.rm(MERGESIGNALFILE);
+       const merge_watcher = chokidar.watch('file, dir, glob, or array', {
           ignored: /(^|[\/\\])\../, // ignore dotfiles
           persistent: true
         });
-       watcher.add(SIGNALFILE);
-       watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
-       
+       merge_watcher.add(MERGESIGNALFILE);
+       merge_watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
+
+
+    // Inititate listening to askpass start signal
+       util.rm(ASKPASSIGNALFILE);
+       const askpass_watcher = chokidar.watch('file, dir, glob, or array', {
+          ignored: /(^|[\/\\])\../, // ignore dotfiles
+          persistent: true
+        });
+       askpass_watcher.add(ASKPASSIGNALFILE);
+       askpass_watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaAskPass() } )
+
+              
     // Initiate pragma-git as default diff and merge tool
         gitDefineBuiltInMergeTool();
 
@@ -1229,6 +1246,10 @@ async function _callback( name, event){
     }
     function closeWindow(a){
         console.log('Close argument = ' + a);  
+        
+        
+        // Remove signaling file
+        util.rm(MAINSIGNALFILE);
 
         
         // Fold search fields
@@ -2509,7 +2530,7 @@ function startPragmaMerge(){
     
     let title = "Pragma-merge";
     gui.Window.open('merge/pragma-merge.html', { 
-            id: 'settingsWindowId',
+            id: 'mergeWindowId',
             position: 'center',
             width: 600,
             height: 700,
@@ -2520,7 +2541,24 @@ function startPragmaMerge(){
     
 
 }
-
+function startPragmaAskPass(){
+     console.log('askpass');
+     
+         
+    let title = "Password";
+    gui.Window.open('askpass/askpass.html', { 
+            id: 'askpassWindowId',
+            position: 'center',
+            width: 300,
+            height: 400,
+            title: title
+        },
+            win=>win.on('loaded', () => {} )
+    ); 
+    
+    //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
+    
+}
 
 // Git commands
 async function gitIsInstalled(){
@@ -2567,8 +2605,11 @@ async function gitDefineBuiltInMergeTool(){
     }catch(err){
         
     }
-    util.rm(SIGNALFILE);     // rm 'pragma-merge-running'
-    util.rm(EXITSIGNALFILE); // rm 'exit'
+    util.rm(MERGESIGNALFILE);       // rm 'pragma-merge-running'
+    util.rm(EXITMERGESIGNALFILE);   // rm 'exit-pragma-merge'
+    
+    util.rm(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
+    util.rm(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
     
     
     // Find config file
@@ -3051,19 +3092,19 @@ async function gitAddCommitAndPush( message){
         }
     }
     
-    // TEST: Add branch in git notes
+    // TEST: Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
     try{   
-        let message = `branch=${currentBranch}`;
+        let message = currentBranch;
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', 'add' , '-m', message ] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
         function onNotes(err, result) {console.log(result) };
     }catch(err){
-        console.log('Error in gitAddCommitAndPush() -- creating branch-note');
+        console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
         console.log(err);
     }   
     
 
-    // Push
+    // Push 
     await waitTime( 1000);
     
     if (state.autoPushToRemote){ 
@@ -3147,7 +3188,12 @@ async function gitPush(){
             // 'mirror' incompatible with refspace ('origin') and '--tags'
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
         }else{
+            // Push commits and tags, and set upstream
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+            
+            // Push branchname notes (git push origin refs/notes/branchname)
+            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);
+            
         }
         function onPush(err, result) {console.log(result) };  
         
@@ -3164,7 +3210,9 @@ function gitFetch(){ // Fetch and ls-remote
      
     var error = "";
 
+    //
     // Fetch
+    //
      try{
 
         // Fetch
@@ -3220,14 +3268,32 @@ function gitFetch(){ // Fetch and ls-remote
             }
 
         }
-        
-        
-            
+
     }catch(err){
         console.log('Error in gitFetch()');
         console.log(err);
         error = err;
     }
+    
+    
+            
+    //
+    // Get notes (git fetch origin refs/notes/*:refs/notes/*)  really want to get branchname notes, but why not get all
+    //
+    
+    try{
+
+        // Fetch
+        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( 'origin', 'refs/notes/*:refs/notes/*', onFetch);
+        function onFetch(err, result) {console.log(result) };        
+        
+        
+    }catch(err){
+        console.log('Error in gitFetch() -- failed getting notes');
+        console.log(err);
+        error = err;
+    }    
+    
   
 }
 async function gitPull(){
@@ -4346,6 +4412,10 @@ window.onload = function() {
   
   
   initializeWindowMenu();
+  
+          
+  // Write signal file that pragma-git is running
+  fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
   
 };
 
