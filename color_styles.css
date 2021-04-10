@@ -15,6 +15,7 @@
     --graph-hover: #BBBBBB;
     --graph-selected: #CCCCCC;
     --graph-decoration-color: DarkBlue;
+    --border-color: var(--text);
     
     /* Settings */
     --green-text: green;
@@ -47,6 +48,7 @@
     --graph-hover: #999999;            /* (darker grey) */
     --graph-selected: #CCCCCC;         /* (lighter grey) */
     --graph-decoration-color: #d6b51d; /* (mustard yellow) */
+    --border-color: var(--text);
     
     /* Settings */
     --input-background: #505050;      /* in html windows (slightly less dark grey) */

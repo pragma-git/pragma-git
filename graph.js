@@ -593,7 +593,7 @@ function getColorFileName( name){
 
 
 // Callbacks
-function setPinned(hash, isPinned){ // Called from EventListener added in html
+async function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
 
     localState.pinnedCommit = hash; 
@@ -603,6 +603,7 @@ function setPinned(hash, isPinned){ // Called from EventListener added in html
     opener.drawPinImage(isPinned);
     
     console.log(localState.pinnedDiv);
+    
 }
 async function setHistoricalCommit(hash){ // Called prior to DOM update
     // Get item number in history of current branch (or NaN if off-branch)
@@ -776,10 +777,12 @@ function drawGraph( document, graphText, branchHistory, history){
             // Draw node
             //
             if (  a(0,'*') ){
+                let id = `id="img_${hashInThisRow}" `;
+                
                 // Figure out if current branch, or not
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
-                    total += '<img class="node" src="images/circle_green.png">'; // Draw node
+                    total += '<img class="node" ' + id + 'src="images/circle_green.png">'; // Draw node
                 }else{
                     // not current branch, draw colored circle depending on commit branch name
                     
@@ -796,7 +799,7 @@ function drawGraph( document, graphText, branchHistory, history){
                         colorFileName = `images/circle_colors/circle_${colorName}.png`;
                     }
                     
-                    total += `<img class="node" src="${colorFileName}">`; // Draw node
+                    total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node
                     
                     
                     
@@ -1058,7 +1061,7 @@ function drawGraph( document, graphText, branchHistory, history){
             }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre>`;
+        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
     }else{
         return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
     }
@@ -1078,6 +1081,7 @@ function drawPinnedImage(hash){
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }
 function drawBranchColorHeader( branchNames){
+    
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
@@ -1089,5 +1093,60 @@ function drawBranchColorHeader( branchNames){
         
         document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html;
     }
+    
+}
+async function manuallySetNodeBranchNames( name){
+    
+    let oldest = localState.selectedDiv.id;
+    let newest = localState.pinnedDiv.id;
+    
+    let hashes = `${oldest}^..${newest}`;
+    let foundHashes = '';
+         
+    // Find hashes
+    try{
+        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
+        //const options = {'--oneline' : null,  '--pretty': null, '--format': '%H', hashes: null} 
+        //await simpleGit( state.repos[ state.repoNumber].localFolder).raw(  commands, onLog);
+        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, onLog);
+    }catch(err){        
+        console.log(err);
+    }
+    
+    //
+    // Function called by log - process each found hash
+    //
+    function onLog(err, result ){ 
+        console.log(result); 
+        foundHashes = result.latest.hash.split('\n');
+        
+        // Iterate found hashes and redraw
+        foundHashes.forEach(myFunction);
+
+        // Internal function iterated -- drawing new image
+        function myFunction(hashString) {
+            
+            let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+            let img_id = `img_${cleanedHashString}`;
+                                
+            // Add branchname to map if not existing
+            if ( !branchNames.has(name) ){
+                branchNames.set(name, branchNames.size);  
+            }
+            
+            let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+            let colorName = colorImageNameDefinitions[ colorNumber];
+            colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                        
+            let imgSource = colorFileName;
+            document.getElementById(img_id).src = imgSource;
+        }
+     // --------------------------------------------       
+
+    };  
+    
+    console.log(foundHashes); 
+    
+    
     
 }

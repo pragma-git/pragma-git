@@ -19,7 +19,7 @@
             background: var(--body-background);
             color: var(--body-text);
         }
-    
+  
         
         /* Set outline: 0.01px to show */
         
@@ -40,8 +40,9 @@
             position: relative;
             top: 4px;
         }
+
         
-        #graphContent {
+        #graphContent, #colorHeader {
             width: max-content;
             height: auto;
         }
@@ -50,8 +51,15 @@
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
+            position: fixed; 
+            right: 15; 
+            z-index: 20;
+            
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            padding: 10px;
         }
-
 
         
         .firstcol { clear: both;}
@@ -201,7 +209,7 @@
             }
         </script>        
             
-        
+    
         <h2>
             <span id='repoName'></span>
             
@@ -209,14 +217,14 @@
             
             
             <!-- Search button --> 
-            <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
+            <img id="find-icon" style='vertical-align:middle;position: fixed; right: 45; ' height="17" width="17"  
                 onclick="findInNw.showSearchBox()" 
                 onmouseover="document.getElementById('find-icon').src='images/find.png' " 
                 onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
                 src="images/find_black.png" >
             
             <!-- Help button --> 
-            <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
+            <img id="about-icon" style='vertical-align:middle;position: fixed; right: 15; ' height="17" width="17"  
                 onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
                 onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
@@ -227,7 +235,7 @@
         </h2>
 
         
-        <div id="rightInsert" class="rightInsert" style="width: unset; position: absolute; right: 15; z-index: 20;">
+        <div id="rightInsert" class="rightInsert">
 
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
             <label for="showDate" style="position: relative;" >Show Date</label>
@@ -236,8 +244,15 @@
 
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
+            
+            <br>
+            <br>
+            
+            
+            <button id="test" onclick="manuallySetNodeBranchNames( 'develop')"> Test </button>
       
-            <br><br>
+            <br>
+            <br>
             
             <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
             <div id="colorHeader"> 
