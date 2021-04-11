@@ -386,11 +386,8 @@
                     
                     else if ( SELECTED ){
                         localState.shiftSelectedDiv = '';
-                        
-                        
-                        // Remove shiftSelectedDivs 
-                        let shiftSelected = document.getElementsByClassName('multimarked');
-                        Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })
+
+                        removeShiftClickedRange();
                         
                         
                         if ( CHECKED ){
@@ -404,10 +401,7 @@
                     }else{
                         // Remove previously selected
                         localState.shiftSelectedDiv = '';
-                        
-                        // Remove shiftSelectedDivs 
-                        let shiftSelected = document.getElementsByClassName('multimarked');
-                        Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })
+                        removeShiftClickedRange();
                         
                         try{
                             localState.selectedDiv.classList.remove('selected');
@@ -420,8 +414,8 @@
                     }
                     myLog()  
 
-        
-                        }
+                    return
+                }
                 
             //
             // CLICKED_PIN -- Perform action depending on state (can be NOT CHECKED already, or CHECKED )
@@ -496,10 +490,22 @@
                             
                         } 
 
+                        return
                 }
+                
+                           
+                // Clickd elsewhere 
+                removeShiftClickedRange()           
     
         }, 
         false);
+        
+        
+        function removeShiftClickedRange(){
+            // Remove shiftSelectedDivs 
+            let shiftSelected = document.getElementsByClassName('multimarked');
+            Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })      
+        }
         
         function myLog(){
             try{
