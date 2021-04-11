@@ -528,6 +528,9 @@ async function injectIntoJs(document){
         // Draw node-color header
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
         drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+        
+        // Populate branch-name edit menu
+        populateDropboxBranchSelection();
     
     //
     // Draw current and pinned commits
@@ -558,7 +561,7 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
- 
+
 }
 
 // Util
@@ -1085,6 +1088,7 @@ function drawPinnedImage(hash){
 }
 function drawBranchColorHeader( branchNames){
     
+    document.getElementById('colorHeader').innerHTML = '';
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
@@ -1098,8 +1102,23 @@ function drawBranchColorHeader( branchNames){
     }
     
 }
+async function populateDropboxBranchSelection(){
+    let extendedBranchList = await opener.gitBranchList();
+    let localBranches = extendedBranchList.local;
+    let html = '';
+    localBranches.forEach( function(value){
+        html += `<option value="${value}">${value}</option>`
+    });
+    
+    document.getElementById('branchDropboxSelection').innerHTML = html;
+}
 
-async function loopSelectedRange( name, myFunction){
+async function applyBranchNameEdit(){
+    await loopSelectedRange( setNodeBranchNames);
+    drawBranchColorHeader( branchNames);
+}
+async function loopSelectedRange( myFunction){
+
     
     let oldest = localState.selectedDiv.id;
     let newest = localState.shiftSelectedDiv.id;
@@ -1136,6 +1155,8 @@ async function loopSelectedRange( name, myFunction){
     }; 
     function setNodeBranchNames(hashString) {
         
+        let name = document.getElementById('branchDropboxSelection').value;
+        
         let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
         let id = cleanedHashString;
         let img_id = `img_${cleanedHashString}`;
@@ -1159,60 +1180,3 @@ async function loopSelectedRange( name, myFunction){
         localState.shiftSelectedDiv = '';
     };
 
-
-// OLD REMOVE:
-async function manuallySetNodeBranchNames2( name){
-    
-    let oldest = localState.selectedDiv.id;
-    let newest = localState.pinnedDiv.id;
-    
-    let hashes = `${oldest}^..${newest}`;
-    let foundHashes = '';
-         
-    // Find hashes
-    try{
-        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
-        //const options = {'--oneline' : null,  '--pretty': null, '--format': '%H', hashes: null} 
-        //await simpleGit( state.repos[ state.repoNumber].localFolder).raw(  commands, onLog);
-        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, onLog);
-    }catch(err){        
-        console.log(err);
-    }
-    
-    //
-    // Function called by log - process each found hash
-    //
-    function onLog(err, result ){ 
-        console.log(result); 
-        foundHashes = result.latest.hash.split('\n');
-        
-        // Iterate found hashes and redraw
-        foundHashes.forEach(myFunction);
-
-        // Internal function iterated -- drawing new image
-        function myFunction(hashString) {
-            
-            let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
-            let img_id = `img_${cleanedHashString}`;
-                                
-            // Add branchname to map if not existing
-            if ( !branchNames.has(name) ){
-                branchNames.set(name, branchNames.size);  
-            }
-            
-            let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
-            let colorName = colorImageNameDefinitions[ colorNumber];
-            colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                        
-            let imgSource = colorFileName;
-            document.getElementById(img_id).src = imgSource;
-        }
-     // --------------------------------------------       
-
-    };  
-    
-    console.log(foundHashes); 
-    
-    
-    
-}

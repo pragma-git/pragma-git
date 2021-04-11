@@ -70,7 +70,6 @@
             width: fit-content;
             height: fit-content;
             position: fixed; 
-            right: 15; 
             z-index: 20;
             
             border-color: var(--border-color);
@@ -78,7 +77,26 @@
             border-width: thin;
             padding: 10px;
             
-            margin-top: 140px;
+            right: 15px;
+            
+            margin-top: 240px;
+        }
+        
+        .branchNameEditInsert{
+            background-color: var(--body-background);
+            width: fit-content;
+            height: fit-content;
+            position: fixed; 
+            z-index: 20;
+            
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            padding: 10px;
+            
+            
+            right: 15px;
+            margin-top: 100px;
         }
 
         
@@ -260,7 +278,6 @@
             </h2>
         </div>
 
-        
         <div id="rightInsert" class="rightInsert">
 
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
@@ -270,12 +287,7 @@
 
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
-            
-            <br>
-            <br>
-            
-            
-            <button id="test" onclick="loopSelectedRange( 'develop', setNodeBranchNames)"> Test </button>
+
       
             <br>
             <br>
@@ -286,7 +298,28 @@
 
         </div>  
         
+ 
         
+        <div id="branchNameEditInsert" class="branchNameEditInsert">
+            
+            Assign range to branch = 
+            <br>
+            <br>
+
+            <!-- Empty dropdown menu, filled in by graph.js --> 
+            <select id="branchDropboxSelection" name="branchDropboxSelection"  style="float: left;">
+            </select>
+            
+            
+            <br>
+            <br>
+            
+            <button id="applyBranchNameEdit" onclick="applyBranchNameEdit()"> Apply </button>
+            <button id="cancelBranchNameEdit" > Cancel </button>
+    
+            <br>
+        </div>       
+
                 
         
          <div style="width:fit-content;">         
@@ -325,6 +358,13 @@
             // Furthermore, state can be
             //    SELECTED = marked as selected (may or may not be CHECKED)
             //    CHECKED  = pinned (which means it also will be SELECTED)
+            
+            //
+            // Bail out for these
+            //
+                if (evt.target.id == 'branchDropboxSelection'){
+                    return
+                }
             
             //
             // Determine what was clicked
@@ -370,7 +410,7 @@
                         localState.shiftSelectedDiv = DIV;
                         
                         // Mark everything between selected and shift-clicked text
-                        loopSelectedRange( 'develop', markNodeTexts);
+                        loopSelectedRange( markNodeTexts);
                         
                         // Clear previous marking
                         //localState.selectedDiv.classList.remove('selected');
