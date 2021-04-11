@@ -41,12 +41,29 @@
             top: 4px;
         }
 
+
         
-        #graphContent, #colorHeader {
+        #graphContent {
+            width: max-content;
+            height: auto;
+            margin-top: 80px;
+        }
+               
+        #colorHeader {
             width: max-content;
             height: auto;
         }
+ 
+        #header{
+            position: fixed;
+            top: 0px;
+            height:auto; 
+            width: -webkit-fill-available;
+            background-color: var(--body-background);
+            z-index: 30;
+        }
         
+               
         .rightInsert {
             background-color: var(--body-background);
             width: fit-content;
@@ -59,6 +76,8 @@
             border-style: dotted;
             border-width: thin;
             padding: 10px;
+            
+            margin-top: 140px;
         }
 
         
@@ -209,30 +228,31 @@
             }
         </script>        
             
+        <div id='header'>
+            <h2>
+                <span id='repoName'></span>
+                
+                ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
+                
+                
+                <!-- Search button --> 
+                <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
+                    onclick="findInNw.showSearchBox()" 
+                    onmouseover="document.getElementById('find-icon').src='images/find.png' " 
+                    onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
+                
+                <!-- Help button --> 
+                <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
+                    onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                    src="images/questionmark_black.png" >
     
-        <h2>
-            <span id='repoName'></span>
-            
-            ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
-            
-            
-            <!-- Search button --> 
-            <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
-                onclick="findInNw.showSearchBox()" 
-                onmouseover="document.getElementById('find-icon').src='images/find.png' " 
-                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-                src="images/find_black.png" >
-            
-            <!-- Help button --> 
-            <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
-                onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
-                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-                src="images/questionmark_black.png" >
-
-            <hr>
-
-        </h2>
+                <hr>
+    
+            </h2>
+        </div>
 
         
         <div id="rightInsert" class="rightInsert">
