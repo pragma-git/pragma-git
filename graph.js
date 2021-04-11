@@ -606,6 +606,7 @@ async function setPinned(hash, isPinned){ // Called from EventListener added in 
     
 }
 async function setHistoricalCommit(hash){ // Called prior to DOM update
+
     // Get item number in history of current branch (or NaN if off-branch)
     localState.historyNumber = util.findObjectIndex(history,'hash', hash); 
     
@@ -1061,9 +1062,11 @@ function drawGraph( document, graphText, branchHistory, history){
             }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+        return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
     }else{
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+        return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
     }
 }
 function drawNonCommitRow(hash, text, isDev){
@@ -1095,7 +1098,70 @@ function drawBranchColorHeader( branchNames){
     }
     
 }
-async function manuallySetNodeBranchNames( name){
+
+async function loopSelectedRange( name, myFunction){
+    
+    let oldest = localState.selectedDiv.id;
+    let newest = localState.shiftSelectedDiv.id;
+    
+    let hashes = `${oldest}^..${newest}`;
+    let foundHashes = '';
+         
+    // Find hashes
+    try{
+        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
+        //const options = {'--oneline' : null,  '--pretty': null, '--format': '%H', hashes: null} 
+        //await simpleGit( state.repos[ state.repoNumber].localFolder).raw(  commands, onLog);
+        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, onLog);
+    }catch(err){        
+        console.log(err);
+    }
+    
+    function onLog(err, result ){ 
+        console.log(result); 
+        foundHashes = result.latest.hash.split('\n');
+        
+        // Iterate found hashes and redraw
+        foundHashes.forEach(myFunction);
+    }
+        
+}
+    // Two myFunctions doing different things
+    function markNodeTexts(hashString) {
+        
+        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+        let id = cleanedHashString;
+ 
+        document.getElementById(id).classList.add('multimarked');
+    }; 
+    function setNodeBranchNames(hashString) {
+        
+        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+        let id = cleanedHashString;
+        let img_id = `img_${cleanedHashString}`;
+                            
+        // Add branchname to map if not existing
+        if ( !branchNames.has(name) ){
+            branchNames.set(name, branchNames.size);  
+        }
+        
+        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+        let colorName = colorImageNameDefinitions[ colorNumber];
+        colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    
+        let imgSource = colorFileName;
+        document.getElementById(img_id).src = imgSource;
+        
+        // Remove selected 
+        document.getElementById(id).classList.remove('multimarked');
+        
+        // Clean shiftSelectedDiv (this will be done every time, but its simplest that way)
+        localState.shiftSelectedDiv = '';
+    };
+
+
+// OLD REMOVE:
+async function manuallySetNodeBranchNames2( name){
     
     let oldest = localState.selectedDiv.id;
     let newest = localState.pinnedDiv.id;

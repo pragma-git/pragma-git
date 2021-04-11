@@ -18,6 +18,7 @@
             width: -webkit-fill-available;
             background: var(--body-background);
             color: var(--body-text);
+            user-select: none; /* inibit automatic selection marking on web page */
         }
   
         
@@ -211,6 +212,11 @@
         .text:hover {
             background: var(--graph-hover);
         }
+        
+        
+        .multimarked{
+            background: yellow;
+        }
 
     </style>
              
@@ -269,7 +275,7 @@
             <br>
             
             
-            <button id="test" onclick="manuallySetNodeBranchNames( 'develop')"> Test </button>
+            <button id="test" onclick="loopSelectedRange( 'develop', setNodeBranchNames)"> Test </button>
       
             <br>
             <br>
@@ -299,8 +305,9 @@
          
         // On selection or pin, remember DIV in :    
         var graph = {};
-        localState.pinnedDiv = '';  // Memory currently pinned DIV
-        localState.selectedDiv = '';// Memory currently selected DIV
+        localState.pinnedDiv = '';          // Memory currently pinned DIV
+        localState.selectedDiv = '';        // Memory currently selected DIV
+        localState.shiftSelectedDiv = '';   // Memory shift-selected DIV
         
 
     
@@ -353,18 +360,42 @@
             //
             
                 if (CLICKED_TEXT){
-                    console.log('CLICKED_TEXT ');
+                    console.log('CLICKED_TEXT ');  
                     
+                                      
+                    //
+                    // Shift-select of range
+                    //
+                    if (event.shiftKey){
+                        localState.shiftSelectedDiv = DIV;
+                        
+                        // Mark everything between selected and shift-clicked text
+                        loopSelectedRange( 'develop', markNodeTexts);
+                        
+                        // Clear previous marking
+                        //localState.selectedDiv.classList.remove('selected');
+                    }
+                    
+                    
+                    
+                    // Selected (without shift key)
+                    //
                     // This is simple 
                     // - if selected, unselect and remember no selected
                     // - if not selected, select and remember this one
                     
-                    if ( SELECTED ){
+                    else if ( SELECTED ){
+                        localState.shiftSelectedDiv = '';
+                        
+                        
+                        // Remove shiftSelectedDivs 
+                        let shiftSelected = document.getElementsByClassName('multimarked');
+                        Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })
+                        
                         
                         if ( CHECKED ){
                             // Special case if Pinned  -- let pinned be, remove previously selected
-                            localState.selectedDiv.classList.remove('selected');
-                            localState.selectedDiv = '';  
+                            localState.selectedDiv.classList.remove('selected'); 
                             
                         }else{
                             // Don't allow unselecting
@@ -372,17 +403,25 @@
                         
                     }else{
                         // Remove previously selected
+                        localState.shiftSelectedDiv = '';
+                        
+                        // Remove shiftSelectedDivs 
+                        let shiftSelected = document.getElementsByClassName('multimarked');
+                        Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })
+                        
                         try{
                             localState.selectedDiv.classList.remove('selected');
                         }catch(err){
                         }                        
                         // Select the new one and remember
+                        setHistoricalCommit( DIV.id );
                         DIV.classList.add('selected');
                         localState.selectedDiv = DIV;  
                     }
                     myLog()  
 
-                }
+        
+                        }
                 
             //
             // CLICKED_PIN -- Perform action depending on state (can be NOT CHECKED already, or CHECKED )
