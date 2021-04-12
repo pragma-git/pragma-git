@@ -3092,17 +3092,17 @@ async function gitAddCommitAndPush( message){
         }
     }
     
-    // TEST: Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-    try{   
-        let message = currentBranch;
-        await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
-        function onNotes(err, result) {console.log(result) };
-    }catch(err){
-        console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
-        console.log(err);
-    }   
-    
+    // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
+    //try{   
+        //let message = currentBranch;
+        //await simpleGit( state.repos[state.repoNumber].localFolder )
+            //.raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
+        //function onNotes(err, result) {console.log(result) };
+    //}catch(err){
+        //console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
+        //console.log(err);
+    //}   
+    await gitRemberBranch( 'HEAD', currentBranch);
 
     // Push 
     await waitTime( 1000);
@@ -3118,6 +3118,18 @@ async function gitAddCommitAndPush( message){
     writeTextOutput( textOutput);
     _setMode('UNKNOWN');  
     await _update()
+}
+async asyncFunction gitRemberBranch( hash, name){
+    // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
+    try{   
+        let message = name;
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message, hash] , onNotes);
+        function onNotes(err, result) {console.log(result) };
+    }catch(err){
+        console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
+        console.log(err);
+    }  
 }
 
 async function gitStash(){

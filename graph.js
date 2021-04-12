@@ -46,7 +46,7 @@ const BUFFERTROW = '                                                            
 
 
 // Global for whole app
-var state = global.state; // internal copy of global.state
+var state = global.state; // internal name of global.state
 var localState = global.localState; 
 
 // Global in this window
@@ -594,7 +594,6 @@ function getColorFileName( name){
     return colorFileName
 }
 
-
 // Callbacks
 async function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
@@ -1054,15 +1053,16 @@ function drawGraph( document, graphText, branchHistory, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
-            function isDumbRow(s){
-                
-                for(let j = 0 ; j < s.length ; j++){
-                    if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
-                        return false
-                    }
-                }
-                return true
+    function isDumbRow(s){
+        // Dumb row is defined as consisting only of '|' connections, without any nodes
+        // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
+        for(let j = 0 ; j < s.length ; j++){
+            if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
+                return false
             }
+        }
+        return true
+    }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
         //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
@@ -1086,6 +1086,8 @@ function drawPinnedImage(hash){
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }
+
+// Stored branch name
 function drawBranchColorHeader( branchNames){
     
     document.getElementById('colorHeader').innerHTML = '';
@@ -1112,7 +1114,6 @@ async function populateDropboxBranchSelection(){
     
     document.getElementById('branchDropboxSelection').innerHTML = html;
 }
-
 async function applyBranchNameEdit(){
     await loopSelectedRange( setNodeBranchNames);
     drawBranchColorHeader( branchNames);
@@ -1129,23 +1130,21 @@ async function loopSelectedRange( myFunction){
     // Find hashes
     try{
         const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
-        //const options = {'--oneline' : null,  '--pretty': null, '--format': '%H', hashes: null} 
-        //await simpleGit( state.repos[ state.repoNumber].localFolder).raw(  commands, onLog);
         await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, onLog);
     }catch(err){        
         console.log(err);
     }
     
+    // Called by git log, delegating work to myFunction :
     function onLog(err, result ){ 
         console.log(result); 
         foundHashes = result.latest.hash.split('\n');
         
-        // Iterate found hashes and redraw
+        // Iterate found hashes and call myFunction
         foundHashes.forEach(myFunction);
     }
         
 }
-    // Two myFunctions doing different things
     function markNodeTexts(hashString) {
         
         let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
