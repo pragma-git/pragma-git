@@ -1119,29 +1119,35 @@ async function applyBranchNameEdit(){
     drawBranchColorHeader( branchNames);
 }
 async function loopSelectedRange( myFunction){
+    console.log(`loopSelectedRange on function = ${Function.name}`);
 
     
     let oldest = localState.selectedDiv.id;
     let newest = localState.shiftSelectedDiv.id;
     
     let hashes = `${oldest}^..${newest}`;
+    
+    console.log(`hashes range = ${hashes}`);
     let foundHashes = '';
          
     // Find hashes
     try{
         const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
-        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, onLog);
+        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, await onLog);
     }catch(err){        
         console.log(err);
     }
     
     // Called by git log, delegating work to myFunction :
-    function onLog(err, result ){ 
+    async function onLog(err, result ){ 
         console.log(result); 
         foundHashes = result.latest.hash.split('\n');
+        console.log(foundHashes); 
         
         // Iterate found hashes and call myFunction
-        foundHashes.forEach(myFunction);
+        for (const hash of foundHashes) {
+            await myFunction(hash);
+        }
     }
         
 }
@@ -1152,7 +1158,9 @@ async function loopSelectedRange( myFunction){
  
         document.getElementById(id).classList.add('multimarked');
     }; 
-    function setNodeBranchNames(hashString) {
+    async function setNodeBranchNames(hashString) {
+        
+        console.log(`Enter setNodeBranchNames with hash = ${hashString}`);
         
         let name = document.getElementById('branchDropboxSelection').value;
         
@@ -1164,18 +1172,24 @@ async function loopSelectedRange( myFunction){
         if ( !branchNames.has(name) ){
             branchNames.set(name, branchNames.size);  
         }
-        
+       
+        // Set image
         let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
         let colorName = colorImageNameDefinitions[ colorNumber];
-        colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    
-        let imgSource = colorFileName;
-        document.getElementById(img_id).src = imgSource;
+        document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;
+        
+        // Set name
+        await opener.gitRememberBranch( cleanedHashString, name);
         
         // Remove selected 
         document.getElementById(id).classList.remove('multimarked');
         
         // Clean shiftSelectedDiv (this will be done every time, but its simplest that way)
         localState.shiftSelectedDiv = '';
+        
+        
+        console.log(`Exit setNodeBranchNames with hash = ${hashString}`);
+        
+        injectIntoJs(document);
     };
 

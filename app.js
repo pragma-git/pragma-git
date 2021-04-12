@@ -3119,15 +3119,14 @@ async function gitAddCommitAndPush( message){
     _setMode('UNKNOWN');  
     await _update()
 }
-async asyncFunction gitRemberBranch( hash, name){
+async function gitRememberBranch( hash, name){
     // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
     try{   
-        let message = name;
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message, hash] , onNotes);
-        function onNotes(err, result) {console.log(result) };
+            .raw( [  'notes', '--ref', 'branchname', 'add' , '-f', '-m', name, hash] , onNotes);
+        function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err) };
     }catch(err){
-        console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
+        console.log('Error in gitRememberBranch() -- creating branch-note');   
         console.log(err);
     }  
 }
