@@ -1107,10 +1107,20 @@ function drawBranchColorHeader( branchNames){
 async function populateDropboxBranchSelection(){
     let extendedBranchList = await opener.gitBranchList();
     let localBranches = extendedBranchList.local;
+    let allBranches = extendedBranchList.branches;
     let html = '';
+    
+    // Local branches
+    html += '<optgroup label="Local branches">';
     localBranches.forEach( function(value){
         html += `<option value="${value}">${value}</option>`
     });
+    html += '</optgroup>';
+       
+    //  Commands
+    html += '<optgroup label="Commands">';
+    html += `<option value="remove">Unset branch name</option>`
+    html += '</optgroup>';
     
     document.getElementById('branchDropboxSelection').innerHTML = html;
 }
@@ -1160,11 +1170,31 @@ async function loopSelectedRange( myFunction){
     }; 
     async function setNodeBranchNames(hashString) {
         
+        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
         console.log(`Enter setNodeBranchNames with hash = ${hashString}`);
         
         let name = document.getElementById('branchDropboxSelection').value;
         
-        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+        //
+        // Do commands and bail out
+        //
+        if ( name == 'remove'){
+            // Remove from git notes (git notes --ref=branchname remove )
+            try{   
+                await simpleGit( state.repos[state.repoNumber].localFolder )
+                    .raw( [  'notes', '--ref', 'branchname', 'remove' , cleanedHashString] , onNotes);
+                function onNotes(err, result) {console.log( `Remove note for hash = ${cleanedHashString} `);console.log(result);console.log(err) };
+            }catch(err){
+                console.log('Error in setNodeBranchNames() -- removing branch-note');   
+                console.log(err);
+            }  
+            // Bail out when command done
+            return;
+        }
+        
+        //
+        // Set branch name
+        //
         let id = cleanedHashString;
         let img_id = `img_${cleanedHashString}`;
                             
