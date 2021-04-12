@@ -18,8 +18,9 @@
             width: -webkit-fill-available;
             background: var(--body-background);
             color: var(--body-text);
+            user-select: none; /* inibit automatic selection marking on web page */
         }
-    
+  
         
         /* Set outline: 0.01px to show */
         
@@ -40,18 +41,65 @@
             position: relative;
             top: 4px;
         }
+
+
         
         #graphContent {
             width: max-content;
             height: auto;
+            margin-top: 80px;
+        }
+               
+        #colorHeader {
+            width: max-content;
+            height: auto;
+        }
+ 
+        #header{
+            position: fixed;
+            top: 0px;
+            height:auto; 
+            width: -webkit-fill-available;
+            background-color: var(--body-background);
+            z-index: 30;
         }
         
+               
         .rightInsert {
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
+            position: fixed; 
+            z-index: 20;
+            
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            padding: 10px;
+            
+            right: 15px;
+            
+            margin-top: 120px;
         }
-
+        
+        .branchNameEditInsert{
+            background-color: var(--body-background);
+            width: fit-content;
+            height: fit-content;
+            position: fixed; 
+            z-index: 20;
+            
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            padding: 10px;
+            
+            visibility: hidden;
+            
+            
+            right: 35px;
+            margin-top: 140px;
+        }
 
         
         .firstcol { clear: both;}
@@ -184,6 +232,11 @@
         .text:hover {
             background: var(--graph-hover);
         }
+        
+        
+        .multimarked{
+            background: yellow;
+        }
 
     </style>
              
@@ -201,33 +254,33 @@
             }
         </script>        
             
-        
-        <h2>
-            <span id='repoName'></span>
-            
-            ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
-            
-            
-            <!-- Search button --> 
-            <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
-                onclick="findInNw.showSearchBox()" 
-                onmouseover="document.getElementById('find-icon').src='images/find.png' " 
-                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-                src="images/find_black.png" >
-            
-            <!-- Help button --> 
-            <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
-                onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
-                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-                src="images/questionmark_black.png" >
+        <div id='header'>
+            <h2>
+                <span id='repoName'></span>
+                
+                ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
+                
+                
+                <!-- Search button --> 
+                <img id="find-icon" style='vertical-align:middle;position: absolute; right: 45; ' height="17" width="17"  
+                    onclick="findInNw.showSearchBox()" 
+                    onmouseover="document.getElementById('find-icon').src='images/find.png' " 
+                    onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
+                
+                <!-- Help button --> 
+                <img id="about-icon" style='vertical-align:middle;position: absolute; right: 15; ' height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
+                    onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                    src="images/questionmark_black.png" >
+    
+                <hr>
+    
+            </h2>
+        </div>
 
-            <hr>
-
-        </h2>
-
-        
-        <div id="rightInsert" class="rightInsert" style="width: unset; position: absolute; right: 15; z-index: 20;">
+        <div id="rightInsert" class="rightInsert">
 
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
             <label for="showDate" style="position: relative;" >Show Date</label>
@@ -236,8 +289,10 @@
 
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
+
       
-            <br><br>
+            <br>
+            <br>
             
             <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
             <div id="colorHeader"> 
@@ -245,7 +300,28 @@
 
         </div>  
         
+ 
         
+        <div id="branchNameEditInsert" class="branchNameEditInsert">
+            
+            Assign range to branch = 
+            <br>
+            <br>
+
+            <!-- Empty dropdown menu, filled in by graph.js --> 
+            <select id="branchDropboxSelection" name="branchDropboxSelection"  style="float: left;">
+            </select>
+            
+            
+            <br>
+            <br>
+            
+            <button id="applyBranchNameEdit" onclick="applyBranchNameEdit()"> Apply </button>
+            <button id="cancelBranchNameEdit" > Cancel </button>
+    
+            <br>
+        </div>       
+
                 
         
          <div style="width:fit-content;">         
@@ -264,8 +340,9 @@
          
         // On selection or pin, remember DIV in :    
         var graph = {};
-        localState.pinnedDiv = '';  // Memory currently pinned DIV
-        localState.selectedDiv = '';// Memory currently selected DIV
+        localState.pinnedDiv = '';          // Memory currently pinned DIV
+        localState.selectedDiv = '';        // Memory currently selected DIV
+        localState.shiftSelectedDiv = '';   // Memory shift-selected DIV
         
 
     
@@ -283,6 +360,13 @@
             // Furthermore, state can be
             //    SELECTED = marked as selected (may or may not be CHECKED)
             //    CHECKED  = pinned (which means it also will be SELECTED)
+            
+            //
+            // Bail out for these
+            //
+                if (evt.target.id == 'branchDropboxSelection'){
+                    return
+                }
             
             //
             // Determine what was clicked
@@ -318,18 +402,40 @@
             //
             
                 if (CLICKED_TEXT){
-                    console.log('CLICKED_TEXT ');
+                    console.log('CLICKED_TEXT ');  
                     
+                                      
+                    //
+                    // Shift-select of range
+                    //
+                    if (event.shiftKey){
+                        localState.shiftSelectedDiv = DIV;
+                        
+                        // Mark everything between selected and shift-clicked text
+                        loopSelectedRange( markNodeTexts);
+                        
+                        
+                        document.getElementById('branchNameEditInsert').style.visibility = 'visible'
+                        
+                    }
+                    
+                    
+                    
+                    // Selected (without shift key)
+                    //
                     // This is simple 
                     // - if selected, unselect and remember no selected
                     // - if not selected, select and remember this one
                     
-                    if ( SELECTED ){
+                    else if ( SELECTED ){
+                        localState.shiftSelectedDiv = '';
+
+                        removeShiftClickedRange();
+                        
                         
                         if ( CHECKED ){
                             // Special case if Pinned  -- let pinned be, remove previously selected
-                            localState.selectedDiv.classList.remove('selected');
-                            localState.selectedDiv = '';  
+                            localState.selectedDiv.classList.remove('selected'); 
                             
                         }else{
                             // Don't allow unselecting
@@ -337,16 +443,21 @@
                         
                     }else{
                         // Remove previously selected
+                        localState.shiftSelectedDiv = '';
+                        removeShiftClickedRange();
+                        
                         try{
                             localState.selectedDiv.classList.remove('selected');
                         }catch(err){
                         }                        
                         // Select the new one and remember
+                        setHistoricalCommit( DIV.id );
                         DIV.classList.add('selected');
                         localState.selectedDiv = DIV;  
                     }
                     myLog()  
 
+                    return
                 }
                 
             //
@@ -422,10 +533,26 @@
                             
                         } 
 
+                        return
                 }
+                
+                           
+                // Clickd elsewhere 
+                removeShiftClickedRange()           
     
         }, 
         false);
+        
+        
+        function removeShiftClickedRange(){
+            
+            // Remove shiftSelectedDivs 
+            let shiftSelected = document.getElementsByClassName('multimarked');
+            Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })   
+            
+            // Hide edit box
+            document.getElementById('branchNameEditInsert').style.visibility = 'hidden'
+        }
         
         function myLog(){
             try{
@@ -438,6 +565,12 @@
             console.log( 'localState.selectedDiv = ' + localState.selectedDiv.firstChild.innerText)
             }catch(err){
                 console.log('localState.selectedDiv = ')
+            }
+            
+            try{
+            console.log( 'localState.shiftSelectedDiv = ' + localState.shiftSelectedDiv.firstChild.innerText)
+            }catch(err){
+                console.log('localState.shiftSelectedDiv = ')
             }
             console.log('---------------------------------------------------------------------------------');
         }

@@ -46,7 +46,7 @@ const BUFFERTROW = '                                                            
 
 
 // Global for whole app
-var state = global.state; // internal copy of global.state
+var state = global.state; // internal name of global.state
 var localState = global.localState; 
 
 // Global in this window
@@ -528,6 +528,9 @@ async function injectIntoJs(document){
         // Draw node-color header
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
         drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+        
+        // Populate branch-name edit menu
+        populateDropboxBranchSelection();
     
     //
     // Draw current and pinned commits
@@ -558,7 +561,7 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
- 
+
 }
 
 // Util
@@ -591,9 +594,8 @@ function getColorFileName( name){
     return colorFileName
 }
 
-
 // Callbacks
-function setPinned(hash, isPinned){ // Called from EventListener added in html
+async function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
 
     localState.pinnedCommit = hash; 
@@ -603,8 +605,10 @@ function setPinned(hash, isPinned){ // Called from EventListener added in html
     opener.drawPinImage(isPinned);
     
     console.log(localState.pinnedDiv);
+    
 }
 async function setHistoricalCommit(hash){ // Called prior to DOM update
+
     // Get item number in history of current branch (or NaN if off-branch)
     localState.historyNumber = util.findObjectIndex(history,'hash', hash); 
     
@@ -776,10 +780,12 @@ function drawGraph( document, graphText, branchHistory, history){
             // Draw node
             //
             if (  a(0,'*') ){
+                let id = `id="img_${hashInThisRow}" `;
+                
                 // Figure out if current branch, or not
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
-                    total += '<img class="node" src="images/circle_green.png">'; // Draw node
+                    total += '<img class="node" ' + id + 'src="images/circle_green.png">'; // Draw node
                 }else{
                     // not current branch, draw colored circle depending on commit branch name
                     
@@ -796,7 +802,7 @@ function drawGraph( document, graphText, branchHistory, history){
                         colorFileName = `images/circle_colors/circle_${colorName}.png`;
                     }
                     
-                    total += `<img class="node" src="${colorFileName}">`; // Draw node
+                    total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node
                     
                     
                     
@@ -1047,20 +1053,23 @@ function drawGraph( document, graphText, branchHistory, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
-            function isDumbRow(s){
-                
-                for(let j = 0 ; j < s.length ; j++){
-                    if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
-                        return false
-                    }
-                }
-                return true
+    function isDumbRow(s){
+        // Dumb row is defined as consisting only of '|' connections, without any nodes
+        // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
+        for(let j = 0 ; j < s.length ; j++){
+            if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
+                return false
             }
+        }
+        return true
+    }
 function drawCommitRow(hash, decoration, text, isDev){
     if (isDev){
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre>`;
+        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+        return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
     }else{
-        return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+        return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
     }
 }
 function drawNonCommitRow(hash, text, isDev){
@@ -1077,7 +1086,11 @@ function drawPinnedImage(hash){
     return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
 }
+
+// Stored branch name
 function drawBranchColorHeader( branchNames){
+    
+    document.getElementById('colorHeader').innerHTML = '';
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
@@ -1091,3 +1104,92 @@ function drawBranchColorHeader( branchNames){
     }
     
 }
+async function populateDropboxBranchSelection(){
+    let extendedBranchList = await opener.gitBranchList();
+    let localBranches = extendedBranchList.local;
+    let html = '';
+    localBranches.forEach( function(value){
+        html += `<option value="${value}">${value}</option>`
+    });
+    
+    document.getElementById('branchDropboxSelection').innerHTML = html;
+}
+async function applyBranchNameEdit(){
+    await loopSelectedRange( setNodeBranchNames);
+    drawBranchColorHeader( branchNames);
+}
+async function loopSelectedRange( myFunction){
+    console.log(`loopSelectedRange on function = ${Function.name}`);
+
+    
+    let oldest = localState.selectedDiv.id;
+    let newest = localState.shiftSelectedDiv.id;
+    
+    let hashes = `${oldest}^..${newest}`;
+    
+    console.log(`hashes range = ${hashes}`);
+    let foundHashes = '';
+         
+    // Find hashes
+    try{
+        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
+        await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, await onLog);
+    }catch(err){        
+        console.log(err);
+    }
+    
+    // Called by git log, delegating work to myFunction :
+    async function onLog(err, result ){ 
+        console.log(result); 
+        foundHashes = result.latest.hash.split('\n');
+        console.log(foundHashes); 
+        
+        // Iterate found hashes and call myFunction
+        for (const hash of foundHashes) {
+            await myFunction(hash);
+        }
+    }
+        
+}
+    function markNodeTexts(hashString) {
+        
+        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+        let id = cleanedHashString;
+ 
+        document.getElementById(id).classList.add('multimarked');
+    }; 
+    async function setNodeBranchNames(hashString) {
+        
+        console.log(`Enter setNodeBranchNames with hash = ${hashString}`);
+        
+        let name = document.getElementById('branchDropboxSelection').value;
+        
+        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
+        let id = cleanedHashString;
+        let img_id = `img_${cleanedHashString}`;
+                            
+        // Add branchname to map if not existing
+        if ( !branchNames.has(name) ){
+            branchNames.set(name, branchNames.size);  
+        }
+       
+        // Set image
+        let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
+        let colorName = colorImageNameDefinitions[ colorNumber];
+        document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;
+        
+        // Set name
+        await opener.gitRememberBranch( cleanedHashString, name);
+        
+        // Remove selected 
+        document.getElementById(id).classList.remove('multimarked');
+        
+        // Clean shiftSelectedDiv (this will be done every time, but its simplest that way)
+        localState.shiftSelectedDiv = '';
+        
+        
+        console.log(`Exit setNodeBranchNames with hash = ${hashString}`);
+        
+        injectIntoJs(document);
+    };
+
