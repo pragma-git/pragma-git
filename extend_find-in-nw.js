@@ -113,4 +113,8 @@ function extendFindInNw( elementToSearch){
     
       findInNw.keyBindings();
       findInNw.keyDownPressed();  
+      
+              
+      document.getElementById('find-in-nw-search-box').style.zIndex = 1000000;
+
 }

@@ -782,31 +782,28 @@ function drawGraph( document, graphText, branchHistory, history){
             if (  a(0,'*') ){
                 let id = `id="img_${hashInThisRow}" `;
                 
-                // Figure out if current branch, or not
+                // Figure out if known or current branch
+               let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+                
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
-                    total += '<img class="node" ' + id + 'src="images/circle_green.png">'; // Draw node
-                }else{
-                    // not current branch, draw colored circle depending on commit branch name
-                    
-                    // Determine name of color class
-                    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
-                    
-                    // Test, to show all colors on nodes without notes
-                    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
-                    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    
-                    if ( branchNames.has(noteInThisRow) ){
-                        let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
-                        let colorName = colorImageNameDefinitions[ colorNumber];
-                        colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    }
-                    
-                    total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node
-                    
-                    
-                    
+                    colorFileName = 'images/circle_green.png'; // Draw node
                 }
+
+
+                // Test, to show all colors on nodes without notes
+                //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+                //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                
+                if ( branchNames.has(noteInThisRow) ){
+                    let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+                    let colorName = colorImageNameDefinitions[ colorNumber];
+                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                }
+                    
+                total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node   
+                
+                
             }
 
             
@@ -1090,7 +1087,21 @@ function drawPinnedImage(hash){
 // Stored branch name
 function drawBranchColorHeader( branchNames){
     
-    document.getElementById('colorHeader').innerHTML = '';
+    
+    const colorFileName = 'images/circle_green.png';
+    
+    document.getElementById('colorHeader').innerHTML = 
+    `<div>  <img class="node" src="${colorFileName}"> </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> Unknown parent branch </pre> 
+    </div> <br>
+    
+    `;
+        
+    
+    
+    
+    
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
