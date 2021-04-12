@@ -1154,6 +1154,11 @@ async function loopSelectedRange( myFunction){
         foundHashes = result.latest.hash.split('\n');
         console.log(foundHashes); 
         
+        // Sometimes a complicated commit path is when oldest == newest. Simplify this known case
+        if ( newest === oldest ){
+            foundHashes = [ oldest ];
+        }
+        
         // Iterate found hashes and call myFunction
         for (const hash of foundHashes) {
             await myFunction(hash);
