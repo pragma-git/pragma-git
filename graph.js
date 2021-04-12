@@ -1198,7 +1198,7 @@ async function loopSelectedRange( myFunction){
             // Remove from git notes (git notes --ref=branchname remove )
             try{   
                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'notes', '--ref', 'branchname', 'remove' , cleanedHashString] , onNotes);
+                    .raw( [  'notes', '--ref', 'branchname', 'remove' , '--ignore-missing', cleanedHashString] , onNotes);
                 function onNotes(err, result) {console.log( `Remove note for hash = ${cleanedHashString} `);console.log(result);console.log(err) };
             }catch(err){
                 console.log('Error in setNodeBranchNames() -- removing branch-note');   
