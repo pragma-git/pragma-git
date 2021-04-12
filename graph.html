@@ -79,7 +79,7 @@
             
             right: 15px;
             
-            margin-top: 240px;
+            margin-top: 120px;
         }
         
         .branchNameEditInsert{
@@ -94,9 +94,11 @@
             border-width: thin;
             padding: 10px;
             
+            visibility: hidden;
             
-            right: 15px;
-            margin-top: 100px;
+            
+            right: 35px;
+            margin-top: 140px;
         }
 
         
@@ -412,8 +414,9 @@
                         // Mark everything between selected and shift-clicked text
                         loopSelectedRange( markNodeTexts);
                         
-                        // Clear previous marking
-                        //localState.selectedDiv.classList.remove('selected');
+                        
+                        document.getElementById('branchNameEditInsert').style.visibility = 'visible'
+                        
                     }
                     
                     
@@ -542,9 +545,13 @@
         
         
         function removeShiftClickedRange(){
+            
             // Remove shiftSelectedDivs 
             let shiftSelected = document.getElementsByClassName('multimarked');
-            Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })      
+            Array.from(shiftSelected).forEach((element) => { element.classList.remove('multimarked'); })   
+            
+            // Hide edit box
+            document.getElementById('branchNameEditInsert').style.visibility = 'hidden'
         }
         
         function myLog(){
