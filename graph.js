@@ -1116,14 +1116,26 @@ function drawBranchColorHeader( branchNames){
     
 }
 async function populateDropboxBranchSelection(){
-    let extendedBranchList = await opener.gitBranchList();
-    let localBranches = extendedBranchList.local;
-    let allBranches = extendedBranchList.branches;
+
     let html = '';
     
     // Local branches
+    let localBranches;
+    try{
+        localBranches = await simpleGit(state.repos[state.repoNumber].localFolder).branchLocal( );
+        console.log(localBranches);  
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+        return
+    }
+    
+    function onBranchList(err, result ){
+        localBranches = result;
+    }
+
     html += '<optgroup label="Local branches">';
-    localBranches.forEach( function(value){
+    localBranches.all.forEach( function(value){
         html += `<option value="${value}">${value}</option>`
     });
     html += '</optgroup>';
@@ -1147,13 +1159,21 @@ async function loopSelectedRange( myFunction){
     let newest = localState.shiftSelectedDiv.id;
     
     let hashes = `${oldest}^..${newest}`;
+
+    let commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];    
+         
+    // Sometimes a complicated commit path is when oldest == newest. Simplify this known case
+    if ( newest === oldest ){
+        hashes = oldest;
+        commands = [ '--oneline',  '--pretty', '--format="%H"',  hashes];
+    }
+    
     
     console.log(`hashes range = ${hashes}`);
     let foundHashes = '';
          
     // Find hashes
     try{
-        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
         await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, await onLog);
     }catch(err){        
         console.log(err);
@@ -1205,6 +1225,7 @@ async function loopSelectedRange( myFunction){
                 console.log(err);
             }  
             // Bail out when command done
+            injectIntoJs(document); // Update view
             return;
         }
         
