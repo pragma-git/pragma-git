@@ -19,7 +19,9 @@ const colorImageNameDefinitions = [
 'LawnGreen',
 'PaleTurquoise1',
 'DeepSkyBlue'
-]
+];
+
+const unsetNodeImageFile = 'images/circle_black.png';
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
@@ -580,7 +582,7 @@ async function readBranchHistory(){ // history of current branch (--first-parent
 }
 function getColorFileName( name){
     // Determine name of color class
-    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+    let colorFileName = unsetNodeImageFile;
     
     // Test, to show all colors on nodes without notes
     //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
@@ -783,7 +785,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 let id = `id="img_${hashInThisRow}" `;
                 
                 // Figure out if known or current branch
-               let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+               let colorFileName = unsetNodeImageFile;
                 
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
@@ -1201,10 +1203,11 @@ async function loopSelectedRange( myFunction){
                 await myFunction(cleanedHashString);
                 //await opener.waitTime(1000);
                 
-                // Redraw when last is done
+                // Redraw when last is done (this is only way I got it not to call  injectIntoJs(document)  prematurely)
                 if ( (cleanedHashString == oldest) && ( myFunction.name == 'setNodeBranchNames')){
                     console.log('DONE WITH LAST -- CALL injectIntoJs(document) ');
                     injectIntoJs(document);
+                    await myFunction(cleanedHashString);
                 }
                 
             }catch(err){
@@ -1220,6 +1223,8 @@ async function loopSelectedRange( myFunction){
         document.getElementById(id).classList.add('multimarked');
     }; 
     async function setNodeBranchNames(hashString) {
+        var start = window.performance.now();
+        var end;
  
         console.log(`Enter setNodeBranchNames with hash = ${hashString}  ${document.getElementById(hashString).innerText}`);
         
@@ -1234,6 +1239,10 @@ async function loopSelectedRange( myFunction){
                 await simpleGit( state.repos[state.repoNumber].localFolder )
                     .raw( [  'notes', '--ref', 'branchname', 'remove' , '--ignore-missing', hashString] , onNotes);
                 function onNotes(err, result) {console.log( `Remove note for hash = ${hashString} `);console.log(result);};
+                    
+                let colorFileName = unsetNodeImageFile;
+                document.getElementById( `img_${hashString}`).src = colorFileName;
+                
             }catch(err){
                 console.log('Error in setNodeBranchNames() -- removing branch-note');   
                 console.log(err);
@@ -1260,6 +1269,7 @@ async function loopSelectedRange( myFunction){
         
         // Set name
         await opener.gitRememberBranch( hashString, name);
+        end = window.performance.now();
         
         // Remove selected 
         document.getElementById(id).classList.remove('multimarked');
@@ -1269,6 +1279,8 @@ async function loopSelectedRange( myFunction){
         
         
         console.log(`Exit setNodeBranchNames with hash = ${hashString}`);
+        
+        console.log(`Execution time: ${end - start} ms`);
 
     };
 
