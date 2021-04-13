@@ -1168,6 +1168,9 @@ async function loopSelectedRange( myFunction){
         commands = [ '--oneline',  '--pretty', '--format="%H"',  hashes];
     }
     
+    console.log(`oldest =  ${ document.getElementById(oldest).innerText} ` );
+    console.log(`newest =  ${ document.getElementById(newest).innerText} ` );
+    
     
     console.log(`hashes range = ${hashes}`);
     let foundHashes = '';
@@ -1192,22 +1195,33 @@ async function loopSelectedRange( myFunction){
         
         // Iterate found hashes and call myFunction
         for (const hash of foundHashes) {
-            await myFunction(hash);
+            let cleanedHashString = hash.replace(/\"/g,''); // Remove extra '"' -signs
+            try{
+                console.log(`CALL  in loopSelectedRange(${myFunction.name}).onLog  with hash = ${cleanedHashString}   ${document.getElementById(cleanedHashString).innerText}`);
+                await myFunction(cleanedHashString);
+                //await opener.waitTime(1000);
+                
+                // Redraw when last is done
+                if ( (cleanedHashString == oldest) && ( myFunction.name == 'setNodeBranchNames')){
+                    console.log('DONE WITH LAST -- CALL injectIntoJs(document) ');
+                    injectIntoJs(document);
+                }
+                
+            }catch(err){
+                console.log(`ERROR in loopSelectedRange(${myFunction.name}).onLog  with hash = ${cleanedHashString}   ${document.getElementById(cleanedHashString).innerText}`);
+            }
         }
+        
     }
         
 }
     function markNodeTexts(hashString) {
-        
-        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
-        let id = cleanedHashString;
- 
+        let id = hashString;
         document.getElementById(id).classList.add('multimarked');
     }; 
     async function setNodeBranchNames(hashString) {
-        
-        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
-        console.log(`Enter setNodeBranchNames with hash = ${hashString}`);
+ 
+        console.log(`Enter setNodeBranchNames with hash = ${hashString}  ${document.getElementById(hashString).innerText}`);
         
         let name = document.getElementById('branchDropboxSelection').value;
         
@@ -1218,22 +1232,21 @@ async function loopSelectedRange( myFunction){
             // Remove from git notes (git notes --ref=branchname remove )
             try{   
                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'notes', '--ref', 'branchname', 'remove' , '--ignore-missing', cleanedHashString] , onNotes);
-                function onNotes(err, result) {console.log( `Remove note for hash = ${cleanedHashString} `);console.log(result);console.log(err) };
+                    .raw( [  'notes', '--ref', 'branchname', 'remove' , '--ignore-missing', hashString] , onNotes);
+                function onNotes(err, result) {console.log( `Remove note for hash = ${hashString} `);console.log(result);};
             }catch(err){
                 console.log('Error in setNodeBranchNames() -- removing branch-note');   
                 console.log(err);
             }  
             // Bail out when command done
-            injectIntoJs(document); // Update view
             return;
         }
         
         //
         // Set branch name
         //
-        let id = cleanedHashString;
-        let img_id = `img_${cleanedHashString}`;
+        let id = hashString;
+        let img_id = `img_${hashString}`;
                             
         // Add branchname to map if not existing
         if ( !branchNames.has(name) ){
@@ -1246,7 +1259,7 @@ async function loopSelectedRange( myFunction){
         document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;
         
         // Set name
-        await opener.gitRememberBranch( cleanedHashString, name);
+        await opener.gitRememberBranch( hashString, name);
         
         // Remove selected 
         document.getElementById(id).classList.remove('multimarked');
@@ -1256,7 +1269,6 @@ async function loopSelectedRange( myFunction){
         
         
         console.log(`Exit setNodeBranchNames with hash = ${hashString}`);
-        
-        injectIntoJs(document);
+
     };
 
