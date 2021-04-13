@@ -1092,29 +1092,40 @@ function drawBranchColorHeader( branchNames){
     
     const colorFileName = 'images/circle_green.png';
     
-    document.getElementById('colorHeader').innerHTML = 
+    let html = 
     `<div>  <img class="node" src="${colorFileName}"> </div>  
     <div class="text"> 
         <pre style="position: absolute; "> Unknown parent branch </pre> 
     </div> <br>
     
     `;
-        
     
+    html += 
+    `<div>  <img class="node" src="${unsetNodeImageFile}"> </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> Unknown branch </pre> 
+    </div> <br>
+
+    `;  
     
+    html += 
+    `<div>   </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> </pre> 
+    </div> <br>
     
-    
+    `;        
+          
+
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
         console.log(`m[${key}] = ${value}`);
-        
         let colorFileName = getColorFileName(key)
-        
-        let html = `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
-        
-        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html;
+        html += `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
     }
+    
+    document.getElementById('colorHeader').innerHTML = html;
     
 }
 async function populateDropboxBranchSelection(){
