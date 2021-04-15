@@ -705,7 +705,12 @@ async function _callback( name, event){
         if (process.platform === 'win32') {  
             folder = path.normalize(folder);
             let command = 'cd /d "' + folder + '" && ' + 'cls';
-            terminalTab.open( command, options)
+            
+            var isUncPath = require('is-unc-path');
+            if isUncPath(folder){
+                let command = 'pushd "' + folder + '" && ' + 'cls';
+            }
+            
         }
         
         terminalTab.open( command, options)
