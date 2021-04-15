@@ -707,7 +707,7 @@ async function _callback( name, event){
             let command = 'cd /d "' + folder + '" && ' + 'cls';
             
             var isUncPath = require('is-unc-path');
-            if isUncPath(folder){
+            if ( isUncPath(folder) ){
                 let command = 'pushd "' + folder + '" && ' + 'cls';
             }
             
