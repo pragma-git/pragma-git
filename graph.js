@@ -786,6 +786,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 
                 // Figure out if known or current branch
                let colorFileName = unsetNodeImageFile;
+               let tooltipText = 'unknown';
                 
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
@@ -801,9 +802,11 @@ function drawGraph( document, graphText, branchHistory, history){
                     let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
                     let colorName = colorImageNameDefinitions[ colorNumber];
                     colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    
+                    tooltipText = noteInThisRow;
                 }
                     
-                total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node   
+                total += `<img class="node" ${id} src="${colorFileName}" title="${tooltipText}">`; // Draw node   
                 
                 
             }
