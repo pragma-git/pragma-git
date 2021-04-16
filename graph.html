@@ -345,9 +345,46 @@
         localState.selectedDiv = '';        // Memory currently selected DIV
         localState.shiftSelectedDiv = '';   // Memory shift-selected DIV
         
+        document.getElementById('graphContent').style.zoom = 1;
+                
+        
+        //
+        // Event for scroll wheel
+        //      
+        window.addEventListener('wheel', function (evt) {
+            if (evt.ctrlKey) {
+                
+                
+                event.preventDefault();
+                
+                console.log(evt)
+                
+                
+                if (evt.deltaY > 0) {
+                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) - 0.1;
+                } else {
+                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) + 0.1;
+                }
+                
+                if ( Number( document.getElementById('graphContent').style.zoom ) < 0.5 ){
+                    document.getElementById('graphContent').style.zoom = 0.5;
+                }
+                
+                if ( Number( document.getElementById('graphContent').style.zoom ) > 2 ){
+                    document.getElementById('graphContent').style.zoom = 2;
+                }
+            }
+            return
+        }, { passive: false });
+  
 
+        
+ 
     
+    
+        //
         // One eventlister for all clicks
+        //
         document.body.addEventListener( 'click', function (evt) {
             // HTML structure:
             //
@@ -601,6 +638,7 @@
         findInNw.initialize();
         extendFindInNw(); //Make find-in-nw fit my purpose for graph and note
     </script> 
+
     
 
 </html>
