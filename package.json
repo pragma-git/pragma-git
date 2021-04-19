@@ -18,7 +18,7 @@
     "icon": "./images/icon.png"
   },
   "scripts": {
-    "start": "nw ."
+    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs ."
   },
   "dependencies": {
     "@toast-ui/editor": "^2.3.1",
