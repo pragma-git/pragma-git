@@ -124,13 +124,7 @@ async function _callback( name, event){
                 
                 
                 generateBranchTable( document, table, branchList); // generate the table first
-                
-                // Match size if unfolded (otherwise, mixup for icons '-' instead of '+'
-                if ( document.getElementById("repoSettings").classList.contains('active') ){
-                    increaseDivSize('foldableDiv1');
-                }
-                
-    
+
                 
                 // Show current repo
                 document.getElementById("currentRepo").innerHTML = myLocalFolder;
@@ -175,8 +169,6 @@ async function _callback( name, event){
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
-            increaseDivSize('foldableDiv1');
-            
             break;
         }
         case 'deleteBranchClicked' : {
@@ -197,7 +189,6 @@ async function _callback( name, event){
                     document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
                 }else{                      
                     displayAlert('Failed deleting branch', err);  
-                    increaseDivSize('foldableDiv1');     
                     console.log('Error deleting local branch');
                     console.log(err);
                 }
@@ -210,7 +201,6 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
 
 
@@ -230,7 +220,6 @@ async function _callback( name, event){
             }catch(err){ 
                 
                 displayAlert('Failed deleting branch', err);  
-                increaseDivSize('foldableDiv1');     
                 console.log('Error deleting local branch');
                 console.log(err);
                 return
@@ -242,7 +231,6 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
             break;
         }
@@ -385,8 +373,16 @@ async function closeWindow(){
     // Read collapsible into state
     state.settingsWindow = {}; 
     state.settingsWindow.unfolded = {};
-    for (i = 0; i < coll.length; i++) {
-        state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
+    for (i = 0; i < tabButton.length; i++) {
+        state.settingsWindow.unfolded[tabButton[i].id] = ( tabButton[i].classList[1] == 'active');
+    }
+    
+    // Read tab into state
+    state.settingsWindow.selectedTab = 0;  // First tab default
+    for (i = 0; i < tabButton.length; i++) {
+        if ( tabButton[i].classList[1] == 'active'){
+            state.settingsWindow.selectedTab = i;
+        }
     }
     
     // Read Dark mode 
@@ -501,10 +497,7 @@ async function gitClone( folderName, repoURL){
     document.getElementById("branchesTableBody").innerHTML = ""; 
     generateBranchTable( document, table, branchList); // generate the new branch table 
     
-    increaseDivSize('foldableDiv1');
-            
-
-        
+  
 
 } 
 async function gitBranchList( folderName){
@@ -554,6 +547,11 @@ return configList
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
+
+
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
+
  
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
@@ -622,33 +620,6 @@ async function injectIntoSettingsJs(document) {
     // Build repo table
     await createHtmlTable(document);  
 
-    // Fold / unfold as last time
-    for (entry of Object.entries( state.settingsWindow.unfolded) ) {
-        console.log( entry);
-        let id = entry[0];
-        let unfolded = entry[1];
-        if (unfolded == true){
-            console.log('injectIntoSettingsJs -- unfolding :' + id);
-            quickUnfold( document.getElementById(id)); 
-        }
-    }
-
-
-    //
-    // Internal function
-    //
-    async function quickUnfold(foldableButton){
-        let content = foldableButton.nextElementSibling;
-        console.log(content);
-        
-        // Quick unfold
-        content.classList.add('quickUnfold'); 
-        foldableButton.click();
-    
-        // Set transition time back after giving time  for redraw
-        setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
-    
-    };
 
 
 };
@@ -1010,10 +981,6 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
-function  increaseDivSize(id){
-    let content = document.getElementById(id);
-     content.style.maxHeight = content.scrollHeight + "px";
-};
 
 function displayAlert(title, message){
     // Writes into alertDialog in settins.html

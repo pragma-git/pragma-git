@@ -1,17 +1,106 @@
 
-    <p>The settings window have three sections which may be collapsed. You click on the "+" or "-" sign of the header to change the visibility of a section.
-    The three setting sections are:
+    <p>The settings are displayed in the following three tabs :
         <dl>
-            <dd><b>Repository settings </b> , where repositories and branches are handled</dd>
-            <dd><b>Software settings </b> , where software and git settings are handled</dd>
+            <dd><b>Software  </b> , where software and git settings are handled</dd>
+            <dd><b>Repository </b> , where repositories and branches are handled</dd>
             <dd><b>System info </b> , which display information relevant to support, and the system path as seen by Pragma-git </dd>
         </dl>     
     </p>
 
-<hr>    
+<hr>   
+<!--------------------------------------------------------------------------------------------> 
+
+<h2 class="instructHeader">Tab "Software Settings"</h2> 
+<hr>                                 
+<!--------------------------------------------------------------------------------------------> 
+    <p>The software settings are grouped as follow : 
+        <dl>
+            <dt><h4>Visual</h4></dt>
+                <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
+                    <ul>
+                        <li>System setting : follow the light/dark theme set in the system</li>
+                        <li>Light mode :  light theme</li>
+                        <li>Dark mode :  dark theme</li>
+                    </ul>
+                 </dd>
+                <dd><b>- Always on top </b> , makes the main window always be on top of other program windows </dd>
+                <br>
+                <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
+                <br>
+                <br>
+                
+                
+            <dt><h4>Git Settings</h4></dt> 
+                <br>
+                                         
+                <dd><b>- Author's name </b> : 
+                    Required field. Modify your name (on all your repositories on this computer)</dd>
+                <br>
+                                             
+                <dd><b>- Author's email </b> : 
+                    Modify your email (on all your repositories on this computer)</dd>
+                <br>
+                
+                <dd><b>- Branch change only if all files are stored </b> : 
+                    Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
+                <br>
+                
+                <dd><b>- Auto-push to remote when Store clicked </b> : 
+                    The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
+                <br>
+
+                                             
+                <dd><b>- Merge without fast-forward </b> : 
+                    This is default, and makes clearer merges.  This guarantees that a commit is created when merging,
+                    where the commit message can clarify the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.
+                    It is also recommended to enable this setting because searches will be easier to understand (see below setting).</dd>
+                <br>
+                                             
+                <dd><b>- Search in current branch </b> : 
+                    This is default, and makes search look in current branch.  This makes searches less confusing, since the 
+                    result follow a logical flow, and does not jump back and forth between branches.
+                    However: Results where fast-forward merge (above setting) are used will be confusing, 
+                    and if fast-forward-merges are your settings, it is recommended to disable the "Search in current branch" 
+                    setting.   <dd>
+                <br>
+
+                    
+                <br>
+                
+                
+            <dt><h4>Git tools</h4></dt>
+                <dd>
+                <p> Pragma-git has a built-in diff and merge tool.  
+                If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
+                 If you have your favorite Diff and Merge tool it may be used instead. 
+                 <br>
+                There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+                are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+                Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
+                The settings for external tools are :
+                 <br>
+                 </dd>
+                
+                <br>
+                <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
+                <br>
+                <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
+                <br>
+                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
+                    This can be fixed, by adding the path to the tools in this field.
+                    If you have different diff and merge tools, two paths may be needed.
+                    The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
+                </dd>
+                <br>
+         </dl>     
+    </p>
+       
+    
+    <hr>  
+ 
  <!-------------------------------------------------------------------------------------------->   
         
-<h2 class="instructHeader">Section : "Repository Settings"</h2>
+<h2 class="instructHeader">Tab : "Repository Settings"</h2>
 <hr>    
  <!-------------------------------------------------------------------------------------------->  
 
@@ -146,93 +235,13 @@
         
     
     <hr>               
+             
 <!--------------------------------------------------------------------------------------------> 
 
-<h2 class="instructHeader">Section "Software Settings"</h2> 
+<h2 class="instructHeader">Tab "System info"</h2> 
 <hr>                                 
 <!--------------------------------------------------------------------------------------------> 
-    <p>These are the software settings : 
-        <dl>
-            <dt><h4>Visual</h4></dt>
-                <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
-                    <ul>
-                        <li>System setting : follow the light/dark theme set in the system</li>
-                        <li>Light mode :  light theme</li>
-                        <li>Dark mode :  dark theme</li>
-                    </ul>
-                 </dd>
-                <dd><b>- Always on top </b> , makes the main window always be on top of other program windows </dd>
-                <br>
-                <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
-                <br>
-                <br>
-                
-                
-            <dt><h4>Git Settings</h4></dt> 
-                <br>
-                                         
-                <dd><b>- Author's name </b> : 
-                    Required field. Modify your name (on all your repositories on this computer)</dd>
-                <br>
-                                             
-                <dd><b>- Author's email </b> : 
-                    Modify your email (on all your repositories on this computer)</dd>
-                <br>
-                
-                <dd><b>- Branch change only if all files are stored </b> : 
-                    Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
-                <br>
-                
-                <dd><b>- Auto-push to remote when Store clicked </b> : 
-                    The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
-                <br>
-
-                                             
-                <dd><b>- Merge without fast-forward </b> : 
-                    This is default, and makes clearer merges.  This guarantees that a commit is created when merging,
-                    where the commit message can clarify the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.
-                    It is also recommended to enable this setting because searches will be easier to understand (see below setting).</dd>
-                <br>
-                                             
-                <dd><b>- Search in current branch </b> : 
-                    This is default, and makes search look in current branch.  This makes searches less confusing, since the 
-                    result follow a logical flow, and does not jump back and forth between branches.
-                    However: Results where fast-forward merge (above setting) are used will be confusing, 
-                    and if fast-forward-merges are your settings, it is recommended to disable the "Search in current branch" 
-                    setting.   <dd>
-                <br>
-
-                    
-                <br>
-                
-                
-            <dt><h4>Git tools</h4></dt>
-                <dd>
-                <p> Pragma-git has a built-in diff and merge tool.  
-                If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
-                 If you have your favorite Diff and Merge tool it may be used instead. 
-                 <br>
-                There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
-                are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
-                Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
-                The settings for external tools are :
-                 <br>
-                 </dd>
-                
-                <br>
-                <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
-                <br>
-                <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
-                <br>
-                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
-                    This can be fixed, by adding the path to the tools in this field.
-                    If you have different diff and merge tools, two paths may be needed.
-                    The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
-                </dd>
-                <br>
-         </dl>     
-    </p>
-
+    <p>This shows information that can be used for problem solving </pp>
     <br>
 
     <br>

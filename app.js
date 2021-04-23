@@ -704,9 +704,31 @@ async function _callback( name, event){
         // Windows  Note : called win32 also for 64-bit
         if (process.platform === 'win32') {  
             folder = path.normalize(folder);
-            let command = 'cd /d "' + folder + '" && ' + 'cls';
-            terminalTab.open( command, options)
+            command = 'cd /d "' + folder + '" && ' + 'cls';
+            
+            var isUncPath = require('is-unc-path');
+            if ( isUncPath(folder) ){
+                command = 'pushd "' + folder + '" & ' + 'cls & echo NOTE : OPEN UNC PATH = ' + folder + ' (TEMPORARY MOUNT POINT)';
+                
+                // TODO, make a script to find network maopped pahts; run : 
+                // powershell -Command "& {Get-WmiObject Win32_MappedLogicalDisk |  select Name, ProviderName}"
+                // 
+                /*  Get output in the form:
+                  Name ProviderName
+                  ---- ------------
+                  G:   \\vll.se\gemensam
+                  H:   \\vll.se\users\HJ\jaax02
+                  K:   \\vll.se\data
+                  P:   \\vll.se\program
+                 */
+                 // Find the mapped name (G: etc) and replace path with part matching ProviderName
+
+            }
+            
         }
+
+ 
+        
         
         terminalTab.open( command, options)
         
@@ -1136,10 +1158,61 @@ async function _callback( name, event){
                 // Add names of all branches
                 makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
-        
+
+                // Fix for Windows (rewrite menus having submenues, to force update)
+                
+                if (process.platform === 'win32') {  // Windows  Note : called win32 also for 64-bit
+                    let N = menu.items.length;
+            
+                    for (i = 0; i < N; i++) {
+                        if (menu.items[i].submenu !== undefined){
+                            let temp = menu.items[i];
+                            console.log(i + ':   updating menu =' + temp.label);
+                            menu.remove(menu.items[ i ]);
+                            menu.insert(temp, i);
+                        }
+                    }
+                }
+                
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
                 await menu.popup( Math.trunc(pos.left) - 10,24);
+
+                    
+                return // BAIL OUT -- branch will be set from menu callback
+            }
+            //
+            // Alt 1) Show branch menu
+            //
+            if (type == 'menu'){
+                var menu = new gui.Menu();
+                
+                let currentBranch = status_data.current;
+        
+                // Add context menu title-row
+                menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                        
+                // Add names of all branches
+                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+
+
+                // Fix for Windows (rewrite menus to update submenus; no harm in other OSes)
+                let N = menu.items.length;
+        
+                for (i = 0; i < N; i++) {
+					if (menu.items[i].submenu !== undefined){
+	                    let temp = menu.items[i];
+	                    console.log(i + ':   updating menu =' + temp.label);
+	                    menu.remove(menu.items[ i ]);
+	                    menu.insert(temp, i);
+					}
+                }
+                
+                // Popup as context menu
+                let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
+                await menu.popup( Math.trunc(pos.left) - 10,24);
+
                     
                 return // BAIL OUT -- branch will be set from menu callback
             }
@@ -4218,10 +4291,10 @@ function loadSettings(settingsFile){
         
         // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
             state.settingsWindow = setting( state_in.settingsWindow, {} );
-            state.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, [] );
-            state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
-            state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
-            state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, [] );
+            
+            // Remove historical settings (used when folding instead of tabs)
+            delete state.settingsWindow.unfolded;
         
         // Notes window (this setting is updated when closing notes window)
             state.notesWindow = setting( state_in.notesWindow, {} );

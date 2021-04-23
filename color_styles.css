@@ -22,6 +22,8 @@
     --red-text: red;
     --grey-text: var(--text);
     --code-text: #c14d4d;
+    --tab-selected: #888888;
+    --tab-deselected: #CCCCCC;
     
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
@@ -57,6 +59,8 @@
     --red-text: #fd2020;              /* url fails (red) */
     --grey-text: var(--text);      
     --code-text: #a2a2a2;             /* (light grey) */
+    --tab-selected: #d6b51d;
+    --tab-deselected: #DDDDDD;
     
     /* Notes */
     --code-background: #505050;
