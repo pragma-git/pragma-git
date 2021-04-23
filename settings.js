@@ -548,10 +548,6 @@ return configList
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
 
-
-    // Set tab from setting
-    tabButton[state.settingsWindow.selectedTab].click();
-
  
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
@@ -620,6 +616,10 @@ async function injectIntoSettingsJs(document) {
     // Build repo table
     await createHtmlTable(document);  
 
+
+
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
 
 
 };
