@@ -104,6 +104,10 @@
           width: fit-content;
         }
         
+        .indented{
+            padding-left: 50px;
+        }
+        
  
  
      /* Settings : Text colors */         
@@ -343,10 +347,14 @@
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
  
-              
-                 <h3>Tools for selected Repository : </h3>
-                 <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                 -  help defining remote Github repository (setup, or create new)
+ 
+ 
+                  <div class="indented">
+                     <h3>Tools for selected Repository : </h3>
+                     <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
+                     -  help defining remote Github repository (setup, or create new)
+                  </div>
+
 
 
                  <br>
@@ -361,7 +369,7 @@
             
 
     
-            <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->              
+            <div id="hide" class="indented">   <!--  This div hides verything enclosed if empty repos list -->              
                             
                 <h3>Branches in selected project </h3>  
                 
