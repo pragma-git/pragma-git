@@ -207,8 +207,8 @@
                <br><br>
                     <div class="wrapper">
                         <div class="buttonWrapper">
-                              <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv1">Repository</button>
-                              <button class="tab-button" data-id="foldableDiv2">Software</button>
+                              <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
+                              <button class="tab-button" data-id="foldableDiv1">Repository</button>
                               <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
                         </div>
                     </div>
@@ -228,77 +228,6 @@
       
 
  <!--  TABLES  -->                 
-
-     
-       
-            
-    <!--  REPO SETTINGS -- foldable header --> 
-                    
-        <div class="content" id="foldableDiv1" > 
-        <h3>Repository table </h3>  
-
-                
-                <!--  REPOSITORY TABLE -->
-                <table style="width:100%"> 
-                    <thead><tr>
-                        <th class="localFolder">Local folder</th>
-                        <th class="remoteURL">Remote repository</th>
-                        <th class="testURL"  style="text-align: center">Remote</th>
-                        <th class="repoAction"  style="text-align: center">Action</th>
-                    </tr></thead>
-                    <tbody id="settingsTableBody">
-                    </tbody>
-                </table>
-                <input id = "cloneFolderInputButton" 
-                    type="file" nwdirectory directory multiple="false" 
-                    style='visibility: hidden;' 
-                    onchange="_callback('folderSelectButtonPressed',this)" 
-                    name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
- 
-              
-                 <h3>Tools for selected Repository : </h3>
-                 <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                 -  help defining remote Github repository (setup, or create new)
-
-
-                 <br>
-                 <br>
-                 <hr>
-
-                   
-            <!--  HIDDEN -->
-                
- 
-            <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-            
-
-    
-            <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->              
-                            
-                <h3>Branches in selected project </h3>  
-                
-                    <p>  <span id="currentRepo"></span></p>
-                
-                    
-    
-                    <!--  BRANCH TABLE -->  
-                    <table style="width:fit-content;"> 
-                        <thead ><tr>
-                            <th class="hiddenBranch">Hide</th>
-                            <th class="branchName">Branch</th>
-                            <th class="branchAction">Action</th>
-                        <tbody id="branchesTableBody">
-                        </tbody>
-                    </table>    
-        
-            </div> 
-        <br>   
-            
-        </div> 
-        
-         
-        <!--  End hiding part (hiding if no repo defined)  -->
- <br>
 
 
        
@@ -385,8 +314,79 @@
                 <br>
 
     
-        </div><!-- foldable content -->
+        </div>
                 <br>
+     
+       
+            
+    <!--  REPO SETTINGS -- foldable header --> 
+                    
+        <div class="content" id="foldableDiv1" > 
+        <h3>Repository table </h3>  
+
+                
+                <!--  REPOSITORY TABLE -->
+                <table style="width:100%"> 
+                    <thead><tr>
+                        <th class="localFolder">Local folder</th>
+                        <th class="remoteURL">Remote repository</th>
+                        <th class="testURL"  style="text-align: center">Remote</th>
+                        <th class="repoAction"  style="text-align: center">Action</th>
+                    </tr></thead>
+                    <tbody id="settingsTableBody">
+                    </tbody>
+                </table>
+                <input id = "cloneFolderInputButton" 
+                    type="file" nwdirectory directory multiple="false" 
+                    style='visibility: hidden;' 
+                    onchange="_callback('folderSelectButtonPressed',this)" 
+                    name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
+ 
+              
+                 <h3>Tools for selected Repository : </h3>
+                 <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
+                 -  help defining remote Github repository (setup, or create new)
+
+
+                 <br>
+                 <br>
+                 <hr>
+
+                   
+            <!--  HIDDEN -->
+                
+ 
+            <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
+            
+
+    
+            <div id="hide">   <!--  This div hides verything enclosed if empty repos list -->              
+                            
+                <h3>Branches in selected project </h3>  
+                
+                    <p>  <span id="currentRepo"></span></p>
+                
+                    
+    
+                    <!--  BRANCH TABLE -->  
+                    <table style="width:fit-content;"> 
+                        <thead ><tr>
+                            <th class="hiddenBranch">Hide</th>
+                            <th class="branchName">Branch</th>
+                            <th class="branchAction">Action</th>
+                        <tbody id="branchesTableBody">
+                        </tbody>
+                    </table>    
+        
+            </div> 
+        <br>   
+            
+        </div> 
+        
+         
+        <!--  End hiding part (hiding if no repo defined)  -->
+ <br>
+
         
     <!--  SYSTEM INFO  -->     
         <div class="content" id="foldableDiv3"> 

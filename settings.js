@@ -124,13 +124,7 @@ async function _callback( name, event){
                 
                 
                 generateBranchTable( document, table, branchList); // generate the table first
-                
-                // Match size if unfolded (otherwise, mixup for icons '-' instead of '+'
-                if ( document.getElementById("repoSettings").classList.contains('active') ){
-                    increaseDivSize('foldableDiv1');
-                }
-                
-    
+
                 
                 // Show current repo
                 document.getElementById("currentRepo").innerHTML = myLocalFolder;
@@ -175,8 +169,6 @@ async function _callback( name, event){
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
-            increaseDivSize('foldableDiv1');
-            
             break;
         }
         case 'deleteBranchClicked' : {
@@ -197,7 +189,6 @@ async function _callback( name, event){
                     document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
                 }else{                      
                     displayAlert('Failed deleting branch', err);  
-                    increaseDivSize('foldableDiv1');     
                     console.log('Error deleting local branch');
                     console.log(err);
                 }
@@ -210,7 +201,6 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
 
 
@@ -230,7 +220,6 @@ async function _callback( name, event){
             }catch(err){ 
                 
                 displayAlert('Failed deleting branch', err);  
-                increaseDivSize('foldableDiv1');     
                 console.log('Error deleting local branch');
                 console.log(err);
                 return
@@ -242,7 +231,6 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
             break;
         }
@@ -509,10 +497,7 @@ async function gitClone( folderName, repoURL){
     document.getElementById("branchesTableBody").innerHTML = ""; 
     generateBranchTable( document, table, branchList); // generate the new branch table 
     
-    increaseDivSize('foldableDiv1');
-            
-
-        
+  
 
 } 
 async function gitBranchList( folderName){
@@ -996,10 +981,6 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
-function  increaseDivSize(id){
-    let content = document.getElementById(id);
-     content.style.maxHeight = content.scrollHeight + "px";
-};
 
 function displayAlert(title, message){
     // Writes into alertDialog in settins.html
