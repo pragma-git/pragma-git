@@ -385,8 +385,16 @@ async function closeWindow(){
     // Read collapsible into state
     state.settingsWindow = {}; 
     state.settingsWindow.unfolded = {};
-    for (i = 0; i < coll.length; i++) {
-        state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
+    for (i = 0; i < tabButton.length; i++) {
+        state.settingsWindow.unfolded[tabButton[i].id] = ( tabButton[i].classList[1] == 'active');
+    }
+    
+    // Read tab into state
+    state.settingsWindow.selectedTab = 0;  // First tab default
+    for (i = 0; i < tabButton.length; i++) {
+        if ( tabButton[i].classList[1] == 'active'){
+            state.settingsWindow.selectedTab = i;
+        }
     }
     
     // Read Dark mode 
@@ -554,6 +562,11 @@ return configList
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
+
+
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
+
  
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
@@ -622,33 +635,6 @@ async function injectIntoSettingsJs(document) {
     // Build repo table
     await createHtmlTable(document);  
 
-    // Fold / unfold as last time
-    for (entry of Object.entries( state.settingsWindow.unfolded) ) {
-        console.log( entry);
-        let id = entry[0];
-        let unfolded = entry[1];
-        if (unfolded == true){
-            console.log('injectIntoSettingsJs -- unfolding :' + id);
-            quickUnfold( document.getElementById(id)); 
-        }
-    }
-
-
-    //
-    // Internal function
-    //
-    async function quickUnfold(foldableButton){
-        let content = foldableButton.nextElementSibling;
-        console.log(content);
-        
-        // Quick unfold
-        content.classList.add('quickUnfold'); 
-        foldableButton.click();
-    
-        // Set transition time back after giving time  for redraw
-        setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
-    
-    };
 
 
 };

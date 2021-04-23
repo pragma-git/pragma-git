@@ -4291,10 +4291,10 @@ function loadSettings(settingsFile){
         
         // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
             state.settingsWindow = setting( state_in.settingsWindow, {} );
-            state.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, [] );
-            state.settingsWindow.unfolded.repoSettings = setting( state_in.settingsWindow.unfolded.repoSettings, true );
-            state.settingsWindow.unfolded.softwareSettings = setting( state_in.settingsWindow.unfolded.softwareSettings, false );
-            state.settingsWindow.unfolded.instructions = setting( state_in.settingsWindow.unfolded.instructions, false );
+            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, [] );
+            
+            // Remove historical settings (used when folding instead of tabs)
+            delete state.settingsWindow.unfolded;
         
         // Notes window (this setting is updated when closing notes window)
             state.notesWindow = setting( state_in.notesWindow, {} );

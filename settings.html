@@ -119,54 +119,62 @@
         }
     </style> 
 
-     
-    <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
-    <style> 
-        .collapsible {
-          background-color: #777;
-          color: white;
-          cursor: pointer;
-          padding: 8px;
-          width: 100%;
-          border: none;
-          text-align: left;
-          outline: none;
-          font-size: 15px;
+
+<!--       -->     
+<!-- Tabs  --> 
+<!--       --> 
+
+    
+    <style>
+         
+        #header{
+            position: fixed;
+            top: 0px;
+            height:auto; 
+            width: -webkit-fill-available;
+            background-color: var(--body-background);
+            z-index: 30;
+            display: contents;
         }
         
-        .active, .collapsible:hover {
-          background-color: #555;
-        }
-        
-        .collapsible:after {
-          content: '\002B'; /* Unicode character for "plus" sign (+) */
-          color: white;
-          font-weight: bold;
+        .buttonWrapper {
           float: left;
-          margin-left: 5px;
         }
         
-        .active:after {
-          content: "\2212"; /* Unicode character for "plus" sign (-) */
+        .wrapper{
+            border-bottom-style: solid;
+            display: flex;
         }
         
-        .content {
-          padding: 0 18px;
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.2s ease-out; 
+        .tab-button {
+          letter-spacing: 2px;
+          border: none;
+          padding: 10px;
+          background-color: var(--tab-deselected);
+          color: #232c3d;
+          font-size: 14px;
+          cursor: pointer;
+          transition: 0.5s;
+          width: fit-content;
         }
         
-        .quickUnfold {
-          transition: max-height 0.05s ease-out; 
-        }
         
-        #hide {
-            padding-left: 50;
+        button:hover {
+          background-color: #d5e3ff;
         }
 
+        
+        .tab-button.active {
+          background-color: var(--tab-selected);
+          border: none;
+        }
+
+        
+        
     </style>
     
+
+   
     
 
 <body class='light'>     
@@ -176,25 +184,48 @@
             document.body.classList.add('dark');
         }
     </script>
+
+    
+    
+     
+    
+
+<!--          -->     
+<!-- Content  --> 
+<!--          -->   
+    
+  
+            <div id="header">                 
+                <h2 id="header_Settings" style="display:contents">Settings</h2>
+            
+                    <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                        onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
+                        onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                        onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                        src="images/questionmark_black.png" >
+            
+               <br><br>
+                    <div class="wrapper">
+                        <div class="buttonWrapper">
+                              <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv1">Repository</button>
+                              <button class="tab-button" data-id="foldableDiv2">Software</button>
+                              <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                        </div>
+                    </div>
+            
+            </div>
+
+   
+
      
     <div id="outer-content">
             
         <div id="inner-content">
-                
-            <h2 id="header_Settings">Settings 
+
         
-            <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-                onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
-                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-                src="images/questionmark_black.png" >
-            </h2>
-        
-            <hr>
                 
                 <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-
-                
+      
 
  <!--  TABLES  -->                 
 
@@ -202,7 +233,6 @@
        
             
     <!--  REPO SETTINGS -- foldable header --> 
-    <button class="collapsible" id="repoSettings">&nbsp; Repository settings :</button>  
                     
         <div class="content" id="foldableDiv1" > 
         <h3>Repository table </h3>  
@@ -236,7 +266,7 @@
                  <hr>
 
                    
-                <!--  HIDDEN -->
+            <!--  HIDDEN -->
                 
  
             <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
@@ -264,16 +294,17 @@
             </div> 
         <br>   
             
-        </div>  
-  <!--  End hiding part  -->
+        </div> 
+        
+         
+        <!--  End hiding part (hiding if no repo defined)  -->
  <br>
 
 
        
     <!--  SOFTWARE SETTINGS -- foldable header--> 
-    <button class="collapsible" id="softwareSettings">&nbsp; Software settings :</button> 
                 
-        <div class="content">              
+        <div class="content" id="foldableDiv2">              
                 
             <h3>Visual</h3>  
             
@@ -358,12 +389,9 @@
                 <br>
         
     <!--  SYSTEM INFO  -->     
-    <button class="collapsible" id="instructions">&nbsp; System info :
-    </button>
-        <div class="content"> 
+        <div class="content" id="foldableDiv3"> 
  
                        
-                <hr> 
                 
                 <b>Information </b><br>
                 
@@ -463,27 +491,45 @@
 
 
 
-<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
-<script>
-    var coll = document.getElementsByClassName("collapsible");
-    var i;
+
     
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener(
-        "click", 
-        function() {
-            this.classList.toggle("active");
-            var content = this.nextElementSibling;
-            if (content.style.maxHeight){
-                content.style.maxHeight = null;
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-            } 
+
+<!--  Tabs --> 
+    <script>    
+        const tabs = document.querySelector(".wrapper");
+        const tabButton = document.querySelectorAll(".tab-button");
+        const myContents = document.querySelectorAll(".content");
+        
+        // Hide all 
+        myContents.forEach(cnt => {
+          cnt.style.display='none';
+          cnt.style.visibility='none';
+        });   
+        
+        
+        // Set event listener
+        tabs.onclick = e => {
             
-        });
-    }
-</script>
-                    
+          const id = e.target.dataset.id;
+          if (id) {
+            tabButton.forEach(btn => {
+              btn.classList.remove("active");
+            });
+            e.target.classList.add("active");
+
+            //const element = document.getElementById(id);
+            //element.classList.add("active");
+            
+            myContents.forEach(cnt => {
+              cnt.style.display='none';
+              cnt.style.visibility='none';
+            });           
+            document.getElementById(id).style.display='contents';
+            document.getElementById(id).style.visibility='visible';
+          }
+        }
+    </script>
+
 
 
 <!--  Onload, call javascript file  --> 
@@ -500,6 +546,9 @@
         }
     );
 </script>
+
+
+                    
 
  
 </body>
