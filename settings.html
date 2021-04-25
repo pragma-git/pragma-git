@@ -1,21 +1,12 @@
 <html>
-    <head>
-        <title>Settings</title>
-        <script src="settings.js"></script>
-        <link rel="stylesheet" type="text/css" href="color_styles.css" />
-    </head>
- 
-
-      
-      
- <!-- settings window  -->        
     
-    <style>
- 
-/*                */
-/* Style Tables   */
-/*                */
- 
+<head>
+    <title>Settings</title>
+    <script src="settings.js"></script>
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
+    <style> /* Style Tables   */
+    
         table{
             border-collapse: collapse;
             text-align:left;
@@ -39,11 +30,11 @@
         td{
             padding: 4px;
         }
- 
-
-/*                     */
-/* Style settings-page */
-/*                     */
+    
+    
+    /*                     */
+    /* Style settings-page */
+    /*                     */
         
         .instructHeader{
             color: var(--header-color);
@@ -54,9 +45,9 @@
         .right{
             text-align:right;   
         }
-
+    
         
- 
+    
      /* Settings : Repo-table */   
             
         /* Repository list */  
@@ -108,8 +99,8 @@
             padding-left: 50px;
         }
         
- 
- 
+    
+    
      /* Settings : Text colors */         
         
         .green{
@@ -122,15 +113,8 @@
             color: var(--grey-text);
         }
     </style> 
-
-
-<!--       -->     
-<!-- Tabs  --> 
-<!--       --> 
-
-    
-    <style>
-         
+    <style> /* Style Tabs     */
+       
         #header{
             position: fixed;
             top: 0px;
@@ -138,14 +122,15 @@
             width: -webkit-fill-available;
             background-color: var(--body-background);
             z-index: 30;
-            display: contents;
+            padding: 10;
+            
         }
         
         .buttonWrapper {
-          float: left;
+          /* float: left; */
         }
         
-        .wrapper{
+        .wrapper, .toolWrapper{
             border-bottom-style: solid;
             display: flex;
         }
@@ -160,175 +145,167 @@
           cursor: pointer;
           transition: 0.5s;
           width: fit-content;
+          outline: none;
+        }
+        
+        
+        .tab-button-small {
+          letter-spacing: 2px;
+          border: none;
+          padding: 8px;
+          background-color: var(--tab-deselected);
+          color: #232c3d;
+          font-size: 12px;
+          cursor: pointer;
+          transition: 0.5s;
+          width: fit-content;
+          outline: none;
         }
         
         
         button:hover {
           background-color: #d5e3ff;
         }
-
+    
         
-        .tab-button.active {
+        .tab-button.active, .tab-button-small.active{
           background-color: var(--tab-selected);
-          border: none;
+        }
+        
+        .tool-content{
+            margin-top: 12;
+            display: block;
+        }
+        
+        #outer-content{
+            margin: 20px;
+            margin-top: 100px;
         }
 
+    
         
         
     </style>
     
+</head> 
 
-   
-    
-
-<body class='light'>     
-    <!-- Dark mode on/off --> 
-    <script>
+<body class='light'>  
+       
+    <script>                <!-- Dark mode on/off --> 
         if (localState.dark){
             document.body.classList.add('dark');
         }
     </script>
-
+    <div id="header">        <!-- Header w tabs  -->                 
+        <h2 id="header_Settings" style="display:contents">Settings</h2>
     
+            <img id="about-icon" style='vertical-align:middle;position: absolute; right: 25;' height="17" width="17"  
+                onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
+                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                src="images/questionmark_black.png" >
     
-     
-    
-
-<!--          -->     
-<!-- Content  --> 
-<!--          -->   
-    
-  
-            <div id="header">                 
-                <h2 id="header_Settings" style="display:contents">Settings</h2>
-            
-                    <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-                        onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
-                        onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-                        onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-                        src="images/questionmark_black.png" >
-            
-               <br><br>
-                    <div class="wrapper">
-                        <div class="buttonWrapper">
-                              <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
-                              <button class="tab-button" data-id="foldableDiv1">Repository</button>
-                              <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
-                        </div>
-                    </div>
-            
+       <br><br>
+            <div class="wrapper">
+                <div class="buttonWrapper">
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                </div>
             </div>
+    </div> 
 
-   
-
-     
-    <div id="outer-content">
-            
+    <div id="outer-content"> <!-- Content  -->       
         <div id="inner-content">
-
-        
-                
-                <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-      
-
- <!--  TABLES  -->                 
-
-
-       
-    <!--  SOFTWARE SETTINGS -- foldable header--> 
-                
-        <div class="content" id="foldableDiv2">              
-                
-            <h3>Visual</h3>  
-            
-                <!--  Dark mode -->
-                Dark mode setting (restart Pragma-git needed): <br>
-                <input type="radio" id="system" name="darkmode" value="system">
-                <label for="system">System setting</label><br>
-                <input type="radio" id="light" name="darkmode" value="light">
-                <label for="light">Light mode</label><br>
-                <input type="radio" id="dark" name="darkmode" value="dark">
-                <label for="dark">Dark mode</label><br><br> 
-                   
-                
-                Window behavior : <br>   
-                <!--  Always on top -->
-                <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="alwaysOnTop"> Always on top</label><br>
-                   
-                <!--  On all workspaces (Mac and Linux virtual desktops) -->
-                <input type="checkbox" id="onAllWorkspaces" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br><br>  
-
-                
-            <h3>Git Settings</h3>  
-               
-                <table>            
-                  <tr style="border: none;">
-                        <td>
-                            <label for="authorName"> Author's name (required):</label><br>
-                            <input id="authorName" type="text" size="30"/>
-                        </td>
-                        <td>                
-                            <label for="authorEmail"> Author's email :</label><br>
-                            <input id="authorEmail" type="text" size="30"/>
-                        </td>
-                    </tr>
-                </table>  
-                            
-                <!--  Force commit before branch change -->
-                <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="forceCommitBeforeBranchChange"> Branch change only if all files are stored</label><br>
-                
-                 <!--  Auto-push to remote -->
-                <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
-                
-                <!--  --no-ff merge (gitflow recommends this) -->
-                <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="NoFF_merge"> Merge without fast-forward (merges becomes straight-forward to understand) </label><br>
-                <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
-                <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                <label for="FirstParent"> Search in current branch (require 'Merge without fast-forward' to be entire predictable)</label><br><br>
-            
-             
-              
-            <h3>Git tools (built-in if empty)</h3>  
-
-                <table>
-                    <tr style="border: none;">
-                        <td>
-                            <label for="gitDiffTool"> Diff tool :</label><br>
-                            <input id="gitDiffTool" type="text" size="30" />
-                        </td>
-                        <td>                
-                            <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                            <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
-                        </td>
-                    </tr>
+            <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>    
+            <div class="content" id="foldableDiv2">  <!--  SOFTWARE SETTINGS tab -->             
                     
-                    <tr style="border: none;">
-                        <td colspan="2">
-                            <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See help icon top right) : </label><br>
-                            <input id="pathAddition" type="text" style="width: 100%;"/><br>
-                        </td>
-                    </tr>
-                </table>
+                <h3>Visual</h3>  
                 
-                <br>
-
+                    <!--  Dark mode -->
+                    Dark mode setting (restart Pragma-git needed): <br>
+                    <input type="radio" id="system" name="darkmode" value="system">
+                    <label for="system">System setting</label><br>
+                    <input type="radio" id="light" name="darkmode" value="light">
+                    <label for="light">Light mode</label><br>
+                    <input type="radio" id="dark" name="darkmode" value="dark">
+                    <label for="dark">Dark mode</label><br><br> 
+                       
+                    
+                    Window behavior : <br>   
+                    <!--  Always on top -->
+                    <input type="checkbox" id="alwaysOnTop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="alwaysOnTop"> Always on top</label><br>
+                       
+                    <!--  On all workspaces (Mac and Linux virtual desktops) -->
+                    <input type="checkbox" id="onAllWorkspaces" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br><br>  
     
-        </div>
-                <br>
-     
-       
-            
-    <!--  REPO SETTINGS -- foldable header --> 
                     
-        <div class="content" id="foldableDiv1" > 
-        <h3>Repository table </h3>  
-
+                <h3>Git Settings</h3>  
+                   
+                    <!--  Author info -->
+                    <table>            
+                      <tr style="border: none;">
+                            <td>
+                                <label for="authorName"> Author's name (required):</label><br>
+                                <input id="authorName" type="text" size="30"/>
+                            </td>
+                            <td>                
+                                <label for="authorEmail"> Author's email :</label><br>
+                                <input id="authorEmail" type="text" size="30"/>
+                            </td>
+                        </tr>
+                    </table>  
+                                
+                    <!--  Force commit before branch change -->
+                    <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="forceCommitBeforeBranchChange"> Branch change only if all files are stored</label><br>
+                    
+                     <!--  Auto-push to remote -->
+                    <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
+                    
+                    <!--  --no-ff merge (gitflow recommends this) -->
+                    <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="NoFF_merge"> Merge without fast-forward (merges becomes straight-forward to understand) </label><br>
+                    <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
+                    <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="FirstParent"> Search in current branch (require 'Merge without fast-forward' to be entire predictable)</label><br><br>
                 
+                 
+                  
+                <h3>Git tools (built-in if empty)</h3>  
+    
+                    <table>
+                        <tr style="border: none;">
+                            <td>
+                                <label for="gitDiffTool"> Diff tool :</label><br>
+                                <input id="gitDiffTool" type="text" size="30" />
+                            </td>
+                            <td>                
+                                <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
+                                <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
+                            </td>
+                        </tr>
+                        
+                        <tr style="border: none;">
+                            <td colspan="2">
+                                <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See help icon top right) : </label><br>
+                                <input id="pathAddition" type="text" style="width: 100%;"/><br>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br>
+    
+        
+            </div>                
+            <div class="content" id="foldableDiv1" > <!--  REPO SETTINGS tab  --> 
+                <h3>Repository table </h3>  
+    
+                    
                 <!--  REPOSITORY TABLE -->
                 <table style="width:100%"> 
                     <thead><tr>
@@ -345,63 +322,68 @@
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
- 
- 
- 
-                  <div class="indented">
-                     <h3>Tools for selected Repository : </h3>
-                     <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                     -  help defining remote Github repository (setup, or create new)
-                  </div>
-
-
-
-                 <br>
-                 <br>
-                 <hr>
-
-                   
-            <!--  HIDDEN -->
-                
- 
-            <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
-            
-
     
-            <div id="hide" class="indented">   <!--  This div hides verything enclosed if empty repos list -->              
-                            
-                <h3>Branches in selected project </h3>  
-                
-                    <p>  <span id="currentRepo"></span></p>
-                
+    
+                <!--  TOOL TABS -->
+                <div id="toolHeader">      
+                    <h3>Tools </h3>
+  
                     
+                    <div class="toolWrapper" > 
+                        <div class="buttonWrapper">
+                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add</button>
+                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
+                        </div>
+                        <br>
+                        <br>
+                    </div>
+    
+    
+                    <div class="tool-content " id="cloneDiv" >
+                        cloneDiv
+                    </div>
+                    
+                    <div class="tool-content " id="addDiv" >
+                        addDiv
+                    </div>
+                    
+                    
+                    <div class="tool-content " id="gitHubDiv" >
+                         <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
+                         -  on selected repository : help define remote Github (setup, or create new)
+                    </div>
+    
+    
+                </div>
+            </div>
+            <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  --> 
+                <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
+    
+                <div id="hide" class="">   <!--  This div hides verything enclosed if empty repos list -->              
+                                    
+                    <h3 style="padding:0">Branches in selected project </h3>  
+                    
+                    <p>  <span id="currentRepo"></span></p>
     
                     <!--  BRANCH TABLE -->  
                     <table style="width:fit-content;"> 
-                        <thead ><tr>
-                            <th class="hiddenBranch">Hide</th>
-                            <th class="branchName">Branch</th>
-                            <th class="branchAction">Action</th>
+                        <thead>
+                            <tr>
+                                <th class="hiddenBranch">Hide</th>
+                                <th class="branchName">Branch</th>
+                                <th class="branchAction">Action</th>
+                            </tr>
+                        </thead>
                         <tbody id="branchesTableBody">
                         </tbody>
                     </table>    
         
-            </div> 
-        <br>   
-            
-        </div> 
-        
-         
-        <!--  End hiding part (hiding if no repo defined)  -->
- <br>
+                </div>    
+            </div>     
+            <div class="content" id="foldableDiv3">  <!--  SYSTEM INFO  tab --> 
 
-        
-    <!--  SYSTEM INFO  -->     
-        <div class="content" id="foldableDiv3"> 
- 
-                       
-                
-                <b>Information </b><br>
+                <h3>Information </h3>
                 
                 Pragma-git version:
                 <div><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
@@ -418,95 +400,68 @@
                  <script>
                      document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
                  </script>    
-                 
-                 
-                                                
+                           
                 <br>
                  Your system's path as seen by Pragma-git :<br>
                 <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
-                <br>   
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-            
 
-    
-        
+            </div>
         </div><!-- inner-content --> 
     </div><!-- content --> 
 
-    
-<!--          -->    
-<!-- Dialogs  -->   
-<!--          -->   
-
-<!--  General alert dialog  --> 
-
-<dialog id="alertDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
-    <p> 
-        <div id='alertTitle'></div><br>  
-        <div id='alertMessage'></div>  
-    </p>  
-    <button id="no"
-        onclick="document.getElementById('alertDialog').close();selectedBranch='';">
-        OK
-    </button>  
-</dialog>  
-                
-                
-
-<!--  Warning dialog for delete branch  --> 
-
-<dialog id="deleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
-    <p>This will delete your local branch.<br>  
-        Do your really want to remove the branch? 
-    </p>  
-    <button id="yes" 
-        onclick="document.getElementById('deleteBranchDialog').close();_callback('deleteBranchClicked',selectedBranch);">
-        Delete
-    </button>   
-    <button id="no"
-        onclick="document.getElementById('deleteBranchDialog').close();selectedBranch='';">
-        Cancel
-    </button>  
-</dialog>  
- 
-
-<!--  Warning dialog for force-delete branch  --> 
-
-<dialog id="forceDeleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
-    <p>The branch was not fully merged.  This means that there is work that will get lost when you delete the branch.  <br>
-        Delete the branch and loose non-merged work? 
-    </p>  
-    <button id="yes" 
-        onclick="document.getElementById('forceDeleteBranchDialog').close();_callback('forceDeleteBranchClicked',selectedBranch);">
-        Delete and loose
-    </button>   
-    <button id="no"
-        onclick="document.getElementById('forceDeleteBranchDialog').close();selectedBranch='';">
-        Cancel
-    </button>  
-</dialog>   
-  
- 
-<script>  <!--  selectedBranch used in dialog   -->
-    var selectedBranch;  // Will be set when clicking "Delete" (which is a dynamically generated link, created from javascript)
-</script>
-
-
-
-
-    
-
-<!--  Tabs --> 
-    <script>    
+    <!-- Dialogs  -->   
+    <dialog id="alertDialog" style="width:50%;background-color:#C00;border:1px dotted black;">              <!--  General alert dialog  --> 
+        <p> 
+            <div id='alertTitle'></div><br>  
+            <div id='alertMessage'></div>  
+        </p>  
+        <button id="no"
+            onclick="document.getElementById('alertDialog').close();selectedBranch='';">
+            OK
+        </button>  
+    </dialog>  
+    <dialog id="deleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">       <!--  Warning dialog for delete branch  -->  
+        <p>This will delete your local branch.<br>  
+            Do your really want to remove the branch? 
+        </p>  
+        <button id="yes" 
+            onclick="document.getElementById('deleteBranchDialog').close();_callback('deleteBranchClicked',selectedBranch);">
+            Delete
+        </button>   
+        <button id="no"
+            onclick="document.getElementById('deleteBranchDialog').close();selectedBranch='';">
+            Cancel
+        </button>  
+    </dialog>  
+    <dialog id="forceDeleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">      <!--  Warning dialog for force-delete branch  --> 
+        <p>The branch was not fully merged.  This means that there is work that will get lost when you delete the branch.  <br>
+            Delete the branch and loose non-merged work? 
+        </p>  
+        <button id="yes" 
+            onclick="document.getElementById('forceDeleteBranchDialog').close();_callback('forceDeleteBranchClicked',selectedBranch);">
+            Delete and loose
+        </button>   
+        <button id="no"
+            onclick="document.getElementById('forceDeleteBranchDialog').close();selectedBranch='';">
+            Cancel
+        </button>  
+    </dialog>   
+      
+    <!-- Scripts  -->       
+    <script>  <!--  Store selectedBranch used in dialog   -->
+        var selectedBranch;  // Will be set when clicking "Delete" (which is a dynamically generated link, created from javascript)
+    </script>
+    <script>  <!--  Tab functionality-->   
         const tabs = document.querySelector(".wrapper");
         const tabButton = document.querySelectorAll(".tab-button");
         const myContents = document.querySelectorAll(".content");
+        
+        
+        const toolTabs = document.querySelector(".toolWrapper");
+        const toolTabButton = document.querySelectorAll(".tab-button-small");
+        const toolMyContents = document.querySelectorAll(".tool-content");
+        
+        
         
         // Hide all 
         myContents.forEach(cnt => {
@@ -517,47 +472,64 @@
         
         // Set event listener
         tabs.onclick = e => {
-            
-          const id = e.target.dataset.id;
-          if (id) {
-            tabButton.forEach(btn => {
-              btn.classList.remove("active");
-            });
-            e.target.classList.add("active");
-
-            //const element = document.getElementById(id);
-            //element.classList.add("active");
-            
-            myContents.forEach(cnt => {
-              cnt.style.display='none';
-              cnt.style.visibility='none';
-            });           
-            document.getElementById(id).style.display='contents';
-            document.getElementById(id).style.visibility='visible';
-          }
+        
+            const id = e.target.dataset.id;
+            if (id) {
+                tabButton.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+                
+                //const element = document.getElementById(id);
+                //element.classList.add("active");
+                
+                myContents.forEach(cnt => {
+                    cnt.style.display='none';
+                    cnt.style.visibility='none';
+                });           
+                document.getElementById(id).style.display='contents';
+                document.getElementById(id).style.visibility='visible';
+            }
         }
+        
+        
+        // Set event listener
+        toolTabs.onclick = e => {
+        
+            const id = e.target.dataset.id;
+            if (id) {
+                toolTabButton.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+                
+                //const element = document.getElementById(id);
+                //element.classList.add("active");
+                
+                toolMyContents.forEach(cnt => {
+                    cnt.style.display='none';
+                    cnt.style.visibility='none';
+                });           
+                document.getElementById(id).style.display='block';
+                document.getElementById(id).style.visibility='visible';
+            }
+        }
+        
+    </script>
+    <script>  <!--  Event listeners (load and unload of document  --> 
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('settings.html :DOM fully loaded and parsed');
+            injectIntoSettingsJs(document);
+            }
+        );
+        window.addEventListener('unload', (event) => {
+            console.log('settings.html :DOM fully unloaded -- maybe window closed ');
+            opener.closeAllChildWindows( window);
+            closeWindow(window);
+            }
+        );
     </script>
 
-
-
-<!--  Onload, call javascript file  --> 
-<script>
-    window.addEventListener('DOMContentLoaded', (event) => {
-        console.log('settings.html :DOM fully loaded and parsed');
-        injectIntoSettingsJs(document);
-        }
-    );
-    window.addEventListener('unload', (event) => {
-        console.log('settings.html :DOM fully unloaded -- maybe window closed ');
-        opener.closeAllChildWindows( window);
-        closeWindow(window);
-        }
-    );
-</script>
-
-
-                    
-
- 
 </body>
+
 </html>

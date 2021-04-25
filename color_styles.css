@@ -81,7 +81,6 @@
 }   
 
 
-
 /*                */
 /* Style inputs   */
 /*                */
@@ -150,3 +149,8 @@
             width: 100%;
         } 
 
+    
+        #outer-content{
+            margin: 20px;
+        }
+    
