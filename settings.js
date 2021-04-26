@@ -191,8 +191,9 @@ async function _callback( name, event){
                 generateBranchTable( document, table, branchList); // generate the table first
 
                 
-                // Show current repo
-                document.getElementById("currentRepo").innerHTML = myLocalFolder;
+                    
+                // Update repo name
+                document.getElementById('currentRepo').innerText = ( await opener.gitLocalFolder() ).folderName;
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true

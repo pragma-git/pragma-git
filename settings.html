@@ -413,7 +413,7 @@
                     </div>                  
                     <div class="tool-content " id="gitHubDiv" > <!--  Github TAB -->
                          <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                         -  1) Setup remote Github URL, or 2) Create Github repository. Uses selected repository
+                         1) Setup remote Github URL, or 2) Create Github repository. Uses selected repository
                     </div>
                 </div>
             </div>
@@ -422,10 +422,8 @@
     
                 <div id="hide" class="">   <!--  This div hides verything enclosed if empty repos list -->              
                                     
-                    <h3 style="padding:0">Branches in selected project </h3>  
-                    
-                    <p>  <span id="currentRepo"></span></p>
-    
+                    <h3 style="padding:0">Branches for : "<span id="currentRepo"></span>"</h3>  
+                        
                     <!--  BRANCH TABLE -->  
                     <table style="width:fit-content;"> 
                         <thead>
