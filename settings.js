@@ -91,10 +91,13 @@ async function _callback( name, event){
             // I know that the last row has index same as length of number of repos
             id = state.repos.length;
             
-            let folder = document.getElementById('cloneFolder').value;  // ID 3
-            let URL = document.getElementById('urlToClone').value; // ID 10003
+            let folder = document.getElementById('cloneFolder').value;  
+            let URL = document.getElementById('urlToClone').value; 
             
-            await gitClone( folder, URL);
+            document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
+            const dummy = await gitClone( folder, URL);
+            document.getElementById('cloneStatus').innerHTML = '';
+            
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
