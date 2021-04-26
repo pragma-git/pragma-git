@@ -66,13 +66,13 @@ async function _callback( name, event){
         }
         case 'folderSelectButton' : {
             //This calls the hidden folder dialog input-element in settings.html
-            document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
-            document.getElementById("cloneFolderInputButton").click();
+            document.getElementById("selectFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
+            document.getElementById("selectFolderInputButton").click();
             
             break;   
         }    
         case 'folderSelectButtonPressed' : {
-            //This should be called when hidden input-element is changed (see id="cloneFolderInputButton", in settings.html)
+            //This should be called when hidden input-element is changed (see id="selectFolderInputButton", in settings.html)
             console.log('Selected folder = ');
             console.log(event.value);
             console.log(event);
@@ -80,7 +80,8 @@ async function _callback( name, event){
             let localFolder = event.value;
             
             // I know that the last row has index same as length of number of repos
-            document.getElementById(state.repos.length).value = localFolder;
+            document.getElementById('cloneFolder').value = localFolder;
+            document.getElementById('addFolder').value = localFolder;
         
             break;
         }   
@@ -90,15 +91,76 @@ async function _callback( name, event){
             // I know that the last row has index same as length of number of repos
             id = state.repos.length;
             
-            let folder = document.getElementById(id).value;  // ID 3
-            let URL = document.getElementById( id + 10000).value; // ID 10003
+            let folder = document.getElementById('cloneFolder').value;  // ID 3
+            let URL = document.getElementById('urlToClone').value; // ID 10003
             
             await gitClone( folder, URL);
+            // Replace table 
+            document.getElementById("settingsTableBody").innerHTML = ""; 
+            createHtmlTable(document);
+
+        
+            break;
+        }  
+        case 'addRepoButtonPressed' : {
+            // If folder is a repo -> add
+            // If not a repo show dialog doYouWantToInitializeRepoDialog
+            // which calls _callback('initializeRepoOK')
+            
+            console.log('addRepoButtonPressed');
+
+            let folder = document.getElementById('addFolder').value;  
+            
+            // Dialog if repo does not exist
+            try{
+                var isRepo;
+                await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                
+                console.log('dropFolder CHECK IF REPO = ' + isRepo);
+                
+                // If not a repo
+                if (!isRepo){
+                    // Ask permisson to init repo
+                    localState.droppedRepoFolder = folder;
+                    document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                    return
+                } else {
+                    await opener.addExistingRepo( folder); 
+                    // Replace table 
+                    document.getElementById("settingsTableBody").innerHTML = ""; 
+                    createHtmlTable(document);
+                }
+            }catch(error){
+                console.log(error);
+            }
             
 
         
             break;
         }
+        case 'initializeRepoOK' : {
+            
+            await opener._callback('initializeRepoOK');
+            
+            let folder = document.getElementById('addFolder').value; 
+ 
+            // add repo to program
+            try {
+                await opener.addExistingRepo( folder); 
+                // Replace table 
+                document.getElementById("settingsTableBody").innerHTML = ""; 
+                createHtmlTable(document);
+            }catch(error){
+                console.log(error);
+            }
+    
+            // Update immediately
+            await opener._setMode('UNKNOWN');
+            await opener._update();
+              
+            break;  
+          }
         case 'repoRadiobuttonChanged': {
             // Callback called the following alternative ways:
             // 1) User clicks radiobutton in settings window_menu_handles_mapping
@@ -277,39 +339,9 @@ async function _callback( name, event){
                     document.getElementById(textareaId).classList.remove('green');
                 }           
             }
-
-            // Test if remote URL works
-            try{
-                let remoteURL = document.getElementById(textareaId).value;
-                //await simpleGit().listRemote( remoteURL, onListRemote);
-                
-                    const commands = [ 'ls-remote', remoteURL];
-                    
-                    // Two versions, with and without askpass dialog
-                    if ( event.type == 'no_askpass'){
-                        await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
-                    }else{
-                        await simpleGit().raw(  commands, onListRemote); // default askpass 
-                    }
-                    
-                    function onSetRemoteUrl(err, result ){console.log(result) };
-                
-                function onListRemote(err, result ){console.log(result);console.log(err) };
-                document.getElementById(textareaId).classList.add('green');
-                document.getElementById(textareaId).classList.remove('grey');
-                document.getElementById(textareaId).classList.remove('red');
-    
-            }catch(err){
-                
-                //displayAlert('Failed verifying remote URL', err)
-                console.log('Repository test failed');
-                console.log(err);
-                document.getElementById(textareaId).classList.add('red');
-                document.getElementById(textareaId).classList.remove('grey');
-                document.getElementById(textareaId).classList.remove('green');
-            }
-
             
+            testURL(textareaId, event);
+
             break;
         }
         case 'makeUrlButtonClicked': {
@@ -326,6 +358,39 @@ async function _callback( name, event){
 
 
 }
+
+async function testURL(textareaId, event){
+    // Test if remote URL works
+    try{
+        let remoteURL = document.getElementById(textareaId).value;
+        //await simpleGit().listRemote( remoteURL, onListRemote);
+        
+            const commands = [ 'ls-remote', remoteURL];
+            
+            // Two versions, with and without askpass dialog
+            if ( event.type == 'no_askpass'){
+                await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
+            }else{
+                await simpleGit().raw(  commands, onListRemote); // default askpass 
+            }
+            
+            function onSetRemoteUrl(err, result ){console.log(result) };
+        
+        function onListRemote(err, result ){console.log(result);console.log(err) };
+        document.getElementById(textareaId).classList.add('green');
+        document.getElementById(textareaId).classList.remove('grey');
+        document.getElementById(textareaId).classList.remove('red');
+
+    }catch(err){
+        
+        //displayAlert('Failed verifying remote URL', err)
+        console.log('Repository test failed');
+        console.log(err);
+        document.getElementById(textareaId).classList.add('red');
+        document.getElementById(textareaId).classList.remove('grey');
+        document.getElementById(textareaId).classList.remove('green');
+    }
+ }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
@@ -790,92 +855,83 @@ async function generateRepoTable(document, table, data) {
         }
     } // if any repos
     
-    //
-    // Add input for cloning
-    //
+    ////
+    //// Add input for cloning
+    ////
 
-        let cell, text, button, textarea, radiobutton
-        let row = table.insertRow();
+        //let cell, text, button, textarea, radiobutton
+        //let row = table.insertRow();
         
-        // Inner table
-        let innerCell;
-        let innerTable = document.createElement("table");
-        innerTable.setAttribute("id", 'cloneTable');
+        //// Inner table
+        //let innerCell;
+        //let innerTable = document.createElement("table");
+        //innerTable.setAttribute("id", 'cloneTable');
         
-        let innerTableRow = innerTable.insertRow();
-        innerTableRow.setAttribute("class", 'cloneTableRow');
+        //let innerTableRow = innerTable.insertRow();
+        //innerTableRow.setAttribute("class", 'cloneTableRow');
         
-        // Into first cell : put a small table inside first cell
-        cell = row.insertCell();
+        //// Into first cell : put a small table inside first cell
+        //cell = row.insertCell();
         
       
             
         
-            // Into table cell :  Folder dialog
+            //// Into table cell :  Folder dialog
 
-            innerCell = innerTableRow.insertCell();
-            innerCell.setAttribute("class", 'action');
+            //innerCell = innerTableRow.insertCell();
+            //innerCell.setAttribute("class", 'action');
             
-            button = document.createElement('button');
-            button.setAttribute("id", "folderSelectButton");  // ID
-            button.innerHTML = 'Folder';
-            button.style.verticalAlign = "middle";
+            //button = document.createElement('button');
+            //button.setAttribute("id", "folderSelectButton");  // ID
+            //button.innerHTML = 'Folder';
+            //button.style.verticalAlign = "middle";
             
-            button.setAttribute('onclick', '_callback("folderSelectButton",this)' ); 
+            //button.setAttribute('onclick', '_callback("folderSelectButton",this)' ); 
             
-            innerCell.appendChild(button);  
+            //innerCell.appendChild(button);  
  
-             //  Into table cell :  Local folder
-            innerCell = innerTableRow.insertCell();
-            innerCell.setAttribute("class", 'cloneLocalFolder');
+             ////  Into table cell :  Local folder
+            //innerCell = innerTableRow.insertCell();
+            //innerCell.setAttribute("class", 'cloneLocalFolder');
             
-            textarea = document.createElement('textarea');
-            textarea.setAttribute("id", index);  // ID  
-            textarea.placeholder="Clone creates subfolder in this folder";
+            //textarea = document.createElement('textarea');
+            //textarea.setAttribute("id", index);  // ID  
+            //textarea.placeholder="Clone creates subfolder in this folder";
             
-            innerCell.appendChild(textarea);
+            //innerCell.appendChild(textarea);
                
-        cell.appendChild(innerTable); 
+        //cell.appendChild(innerTable); 
 
 
-         //  Into table cell :  Remote URL textarea + button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'remoteURL');
+         ////  Into table cell :  Remote URL textarea + button
+        //cell = row.insertCell();
+        //cell.setAttribute("class", 'remoteURL');
         
-        textarea = document.createElement('textarea');
-        textarea.setAttribute("id", index + 10000);  // ID
-        textarea.placeholder="URL to clone from"; 
-        cell.appendChild(textarea);
+        //textarea = document.createElement('textarea');
+        //textarea.setAttribute("id", index + 10000);  // ID
+        //textarea.placeholder="URL to clone from"; 
+        //cell.appendChild(textarea);
         
-            // Test-button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'setURL');
-        button = document.createElement('button');
-        button.setAttribute("id", index + 20000);  // ID
-        button.innerHTML = 'Test';
-        button.setAttribute("onclick", "_callback('setButtonClicked',this)");
-        cell.appendChild(button);
+            //// Test-button
+        //cell = row.insertCell();
+        //cell.setAttribute("class", 'setURL');
+        //button = document.createElement('button');
+        //button.setAttribute("id", index + 20000);  // ID
+        //button.innerHTML = 'Test';
+        //button.setAttribute("onclick", "_callback('setButtonClicked',this)");
+        //cell.appendChild(button);
  
-        // Into table cell :  button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'repoAction');
-        
-        button = document.createElement('button');
-        button.setAttribute("id", "cloneButton");  // ID
-        button.innerHTML = 'Clone';
-        button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
-        cell.appendChild(button);       
-                      
         //// Into table cell :  button
         //cell = row.insertCell();
         //cell.setAttribute("class", 'repoAction');
         
         //button = document.createElement('button');
-        //button.setAttribute("id", index);
-        //button.innerHTML = 'Forget';
-        //button.onclick = forgetButtonClicked;
-
-        //cell.appendChild(button);
+        //button.setAttribute("id", "cloneButton");  // ID
+        //button.innerHTML = 'Clone';
+        //button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
+        //cell.appendChild(button);       
+                      
+ 
            
   //<input id="folder-open-dialog" type="file" nwdirectory nwworkingdir="" nwdirectorydesc="Please select a folder" role="hidden" />  
     

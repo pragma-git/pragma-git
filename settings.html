@@ -26,6 +26,7 @@
             border-bottom: 2px solid #ccc;
             font-size: 10pt;
         }
+
         
         td{
             padding: 4px;
@@ -77,22 +78,22 @@
             }
             
             .cloneLocalFolder{
-              width: 100%;
+                width: 100%;
             }
-        
+            
       
         
      /* Settings : Branch-table */       
         
         .hiddenBranch{
-          width: 50px;
+            width: 50px;
         } 
         .branchAction {
-          width: 15%;
-          text-align:right; 
+            width: 15%;
+            text-align:right; 
         }  
         .branchName{
-          width: fit-content;
+            width: fit-content;
         }
         
         .indented{
@@ -136,46 +137,65 @@
         }
         
         .tab-button {
-          letter-spacing: 2px;
-          border: none;
-          padding: 10px;
-          background-color: var(--tab-deselected);
-          color: #232c3d;
-          font-size: 14px;
-          cursor: pointer;
-          transition: 0.5s;
-          width: fit-content;
-          outline: none;
+            letter-spacing: 2px;
+            border: none;
+            padding: 10px;
+            background-color: var(--tab-deselected);
+            color: #232c3d;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.5s;
+            width: fit-content;
+            outline: none;
         }
         
         
         .tab-button-small {
-          letter-spacing: 2px;
-          border: none;
-          padding: 8px;
-          background-color: var(--tab-deselected);
-          color: #232c3d;
-          font-size: 12px;
-          cursor: pointer;
-          transition: 0.5s;
-          width: fit-content;
-          outline: none;
+            letter-spacing: 2px;
+            border: none;
+            padding: 8px;
+            background-color: var(--tab-deselected);
+            color: #232c3d;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.5s;
+            width: fit-content;
+            outline: none;
         }
         
         
         button:hover {
-          background-color: #d5e3ff;
+            background-color: #d5e3ff;
         }
     
         
         .tab-button.active, .tab-button-small.active{
-          background-color: var(--tab-selected);
+            background-color: var(--tab-selected);
         }
         
         .tool-content{
             margin-top: 12;
             display: block;
         }
+        
+        .toolTable{
+            width: 100%;
+        }
+        
+        .toolInputField{
+          width: 80%;
+        }
+
+                
+        tr.tool{
+            border-bottom: 0;
+        }
+
+        
+        .toolButton{
+            /* width: 100%; */
+        }
+        
         
         #outer-content{
             margin: 20px;
@@ -304,10 +324,7 @@
             </div>                
             <div class="content" id="foldableDiv1" > <!--  REPO SETTINGS tab  --> 
                 <h3>Repository table </h3>  
-    
-                    
-                <!--  REPOSITORY TABLE -->
-                <table style="width:100%"> 
+                <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
                         <th class="localFolder">Local folder</th>
                         <th class="remoteURL">Remote repository</th>
@@ -317,44 +334,83 @@
                     <tbody id="settingsTableBody">
                     </tbody>
                 </table>
-                <input id = "cloneFolderInputButton" 
+                <input id = "selectFolderInputButton" 
                     type="file" nwdirectory directory multiple="false" 
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
-    
-    
-                <!--  TOOL TABS -->
-                <div id="toolHeader">      
+
+                <div id="toolHeader">  <!--  TOOL TABS -->    
                     <h3>Tools </h3>
-  
-                    
                     <div class="toolWrapper" > 
                         <div class="buttonWrapper">
                               <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
                         </div>
-                        <br>
-                        <br>
                     </div>
-    
-    
-                    <div class="tool-content " id="cloneDiv" >
-                        cloneDiv
+                    <div class="tool-content " id="cloneDiv" >  <!--  Clone TAB -->
+                        Clone a remote repository to this computer :
+                        <table class="toolTable">
+                            <tbody>
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <textarea id="urlToClone"  placeholder="URL to clone from"></textarea>
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="testCloneUrl"  class="toolButton" onclick="testURL('urlToClone', {id: 'urlToClone', type: ''})">Test  &nbsp;URL</button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder"></textarea>
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                    </td>
+                                </tr>
+
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button>
+                                    </td>                                
+                                </tr>
+                                
+                            </tbody>
+                        </table>
+                    
                     </div>
-                    
-                    <div class="tool-content " id="addDiv" >
-                        addDiv
-                    </div>
-                    
-                    
-                    <div class="tool-content " id="gitHubDiv" >
+                    <div class="tool-content " id="addDiv" >    <!--  Add TAB -->
+                       Add a local repository from this computer :
+                        <table class="toolTable">
+                            <tbody>
+  
+                                <tr class="tool">
+                                    <td>
+                                        <textarea  id="addFolder" placeholder="Path to local folder"></textarea>
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                    </td>
+                                </tr>
+
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <button id="addRepoButton"  onclick="_callback('addRepoButtonPressed',this)">Add</button>
+                                    </td>                                
+                                </tr>
+                                
+                            </tbody>
+                        </table>                    
+                    </div>                  
+                    <div class="tool-content " id="gitHubDiv" > <!--  Github TAB -->
                          <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                         -  on selected repository : help define remote Github (setup, or create new)
+                         -  1) Setup remote Github URL, or 2) Create Github repository. Uses selected repository
                     </div>
-    
-    
                 </div>
             </div>
             <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  --> 
@@ -446,7 +502,22 @@
             Cancel
         </button>  
     </dialog>   
-      
+    <dialog id="doYouWantToInitializeRepoDialog" style="background-color:yellow;border:1px dotted black;">  <!-- Folder is not a repo --> 
+        <b>WARNING -- the selected folder is not a repository.</b><br>
+            Do you want to initialize this folder as a git repository ? <br>
+            <br>
+        
+        <button id="initializeRepoDialogOK" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK',this);">
+            Initialize
+        </button>   
+        <button id="initializeRepoDialogCancel" 
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+            Cancel
+        </button>     
+
+    </dialog>  
+     
     <!-- Scripts  -->       
     <script>  <!--  Store selectedBranch used in dialog   -->
         var selectedBranch;  // Will be set when clicking "Delete" (which is a dynamically generated link, created from javascript)
@@ -529,7 +600,7 @@
             }
         );
     </script>
-
+   
 </body>
 
 </html>
