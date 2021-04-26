@@ -19,7 +19,9 @@ const colorImageNameDefinitions = [
 'LawnGreen',
 'PaleTurquoise1',
 'DeepSkyBlue'
-]
+];
+
+const unsetNodeImageFile = 'images/circle_black.png';
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
@@ -580,7 +582,7 @@ async function readBranchHistory(){ // history of current branch (--first-parent
 }
 function getColorFileName( name){
     // Determine name of color class
-    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
+    let colorFileName = unsetNodeImageFile;
     
     // Test, to show all colors on nodes without notes
     //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
@@ -782,31 +784,31 @@ function drawGraph( document, graphText, branchHistory, history){
             if (  a(0,'*') ){
                 let id = `id="img_${hashInThisRow}" `;
                 
-                // Figure out if current branch, or not
+                // Figure out if known or current branch
+               let colorFileName = unsetNodeImageFile;
+               let tooltipText = 'unknown';
+                
                 if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
                     // current branch
-                    total += '<img class="node" ' + id + 'src="images/circle_green.png">'; // Draw node
-                }else{
-                    // not current branch, draw colored circle depending on commit branch name
-                    
-                    // Determine name of color class
-                    let colorFileName = 'images/circle_black.png'; // Default, if not stored in Notes
-                    
-                    // Test, to show all colors on nodes without notes
-                    //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
-                    //colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    
-                    if ( branchNames.has(noteInThisRow) ){
-                        let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
-                        let colorName = colorImageNameDefinitions[ colorNumber];
-                        colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    }
-                    
-                    total += `<img class="node" ${id} src="${colorFileName}">`; // Draw node
-                    
-                    
-                    
+                    colorFileName = 'images/circle_green.png'; // Draw node
                 }
+
+
+                // Test, to show all colors on nodes without notes
+                //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+                //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                
+                if ( branchNames.has(noteInThisRow) ){
+                    let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+                    let colorName = colorImageNameDefinitions[ colorNumber];
+                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    
+                    tooltipText = noteInThisRow;
+                }
+                    
+                total += `<img class="node" ${id} src="${colorFileName}" title="${tooltipText}">`; // Draw node   
+                
+                
             }
 
             
@@ -1090,27 +1092,74 @@ function drawPinnedImage(hash){
 // Stored branch name
 function drawBranchColorHeader( branchNames){
     
-    document.getElementById('colorHeader').innerHTML = '';
+    
+    const colorFileName = 'images/circle_green.png';
+    
+    let html = 
+    `<div>  <img class="node" src="${colorFileName}"> </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> Unknown parent branch </pre> 
+    </div> <br>
+    
+    `;
+    
+    html += 
+    `<div>  <img class="node" src="${unsetNodeImageFile}"> </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> Unknown branch </pre> 
+    </div> <br>
+
+    `;  
+    
+    html += 
+    `<div>   </div>  
+    <div class="text"> 
+        <pre style="position: absolute; "> </pre> 
+    </div> <br>
+    
+    `;        
+          
+
     branchNames.forEach(handleMapElements);
 
     function handleMapElements(value, key, map) {
         console.log(`m[${key}] = ${value}`);
-        
         let colorFileName = getColorFileName(key)
-        
-        let html = `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
-        
-        document.getElementById('colorHeader').innerHTML = document.getElementById('colorHeader').innerHTML + html;
+        html += `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
     }
+    
+    document.getElementById('colorHeader').innerHTML = html;
     
 }
 async function populateDropboxBranchSelection(){
-    let extendedBranchList = await opener.gitBranchList();
-    let localBranches = extendedBranchList.local;
+
     let html = '';
-    localBranches.forEach( function(value){
+    
+    // Local branches
+    let localBranches;
+    try{
+        localBranches = await simpleGit(state.repos[state.repoNumber].localFolder).branchLocal( );
+        console.log(localBranches);  
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+        return
+    }
+    
+    function onBranchList(err, result ){
+        localBranches = result;
+    }
+
+    html += '<optgroup label="Local branches">';
+    localBranches.all.forEach( function(value){
         html += `<option value="${value}">${value}</option>`
     });
+    html += '</optgroup>';
+       
+    //  Commands
+    html += '<optgroup label="Commands">';
+    html += `<option value="remove">Unset branch name</option>`
+    html += '</optgroup>';
     
     document.getElementById('branchDropboxSelection').innerHTML = html;
 }
@@ -1126,13 +1175,24 @@ async function loopSelectedRange( myFunction){
     let newest = localState.shiftSelectedDiv.id;
     
     let hashes = `${oldest}^..${newest}`;
+
+    let commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];    
+         
+    // Sometimes a complicated commit path is when oldest == newest. Simplify this known case
+    if ( newest === oldest ){
+        hashes = oldest;
+        commands = [ '--oneline',  '--pretty', '--format="%H"',  hashes];
+    }
+    
+    console.log(`oldest =  ${ document.getElementById(oldest).innerText} ` );
+    console.log(`newest =  ${ document.getElementById(newest).innerText} ` );
+    
     
     console.log(`hashes range = ${hashes}`);
     let foundHashes = '';
          
     // Find hashes
     try{
-        const commands = [ '--ancestry-path', '--oneline',  '--pretty', '--format="%H"',  hashes];
         await simpleGit( state.repos[ state.repoNumber].localFolder).log(  commands, await onLog);
     }catch(err){        
         console.log(err);
@@ -1144,29 +1204,72 @@ async function loopSelectedRange( myFunction){
         foundHashes = result.latest.hash.split('\n');
         console.log(foundHashes); 
         
+        // Sometimes a complicated commit path is when oldest == newest. Simplify this known case
+        if ( newest === oldest ){
+            foundHashes = [ oldest ];
+        }
+        
         // Iterate found hashes and call myFunction
         for (const hash of foundHashes) {
-            await myFunction(hash);
+            let cleanedHashString = hash.replace(/\"/g,''); // Remove extra '"' -signs
+            try{
+                console.log(`CALL  in loopSelectedRange(${myFunction.name}).onLog  with hash = ${cleanedHashString}   ${document.getElementById(cleanedHashString).innerText}`);
+                await myFunction(cleanedHashString);
+                //await opener.waitTime(1000);
+                
+                // Redraw when last is done (this is only way I got it not to call  injectIntoJs(document)  prematurely)
+                if ( (cleanedHashString == oldest) && ( myFunction.name == 'setNodeBranchNames')){
+                    console.log('DONE WITH LAST -- CALL injectIntoJs(document) ');
+                    injectIntoJs(document);
+                    await myFunction(cleanedHashString);
+                }
+                
+            }catch(err){
+                console.log(`ERROR in loopSelectedRange(${myFunction.name}).onLog  with hash = ${cleanedHashString}   ${document.getElementById(cleanedHashString).innerText}`);
+            }
         }
+        
     }
         
 }
     function markNodeTexts(hashString) {
-        
-        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
-        let id = cleanedHashString;
- 
+        let id = hashString;
         document.getElementById(id).classList.add('multimarked');
     }; 
     async function setNodeBranchNames(hashString) {
-        
-        console.log(`Enter setNodeBranchNames with hash = ${hashString}`);
+        var start = window.performance.now();
+        var end;
+ 
+        console.log(`Enter setNodeBranchNames with hash = ${hashString}  ${document.getElementById(hashString).innerText}`);
         
         let name = document.getElementById('branchDropboxSelection').value;
         
-        let cleanedHashString = hashString.replace(/\"/g,''); // Remove extra '"' -signs
-        let id = cleanedHashString;
-        let img_id = `img_${cleanedHashString}`;
+        //
+        // Do commands and bail out
+        //
+        if ( name == 'remove'){
+            // Remove from git notes (git notes --ref=branchname remove )
+            try{   
+                await simpleGit( state.repos[state.repoNumber].localFolder )
+                    .raw( [  'notes', '--ref', 'branchname', 'remove' , '--ignore-missing', hashString] , onNotes);
+                function onNotes(err, result) {console.log( `Remove note for hash = ${hashString} `);console.log(result);};
+                    
+                let colorFileName = unsetNodeImageFile;
+                document.getElementById( `img_${hashString}`).src = colorFileName;
+                
+            }catch(err){
+                console.log('Error in setNodeBranchNames() -- removing branch-note');   
+                console.log(err);
+            }  
+            // Bail out when command done
+            return;
+        }
+        
+        //
+        // Set branch name
+        //
+        let id = hashString;
+        let img_id = `img_${hashString}`;
                             
         // Add branchname to map if not existing
         if ( !branchNames.has(name) ){
@@ -1179,7 +1282,8 @@ async function loopSelectedRange( myFunction){
         document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;
         
         // Set name
-        await opener.gitRememberBranch( cleanedHashString, name);
+        await opener.gitRememberBranch( hashString, name);
+        end = window.performance.now();
         
         // Remove selected 
         document.getElementById(id).classList.remove('multimarked');
@@ -1190,6 +1294,7 @@ async function loopSelectedRange( myFunction){
         
         console.log(`Exit setNodeBranchNames with hash = ${hashString}`);
         
-        injectIntoJs(document);
+        console.log(`Execution time: ${end - start} ms`);
+
     };
 

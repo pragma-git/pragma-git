@@ -3175,7 +3175,7 @@ async function gitAddCommitAndPush( message){
         //console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
         //console.log(err);
     //}   
-    await gitRemberBranch( 'HEAD', currentBranch);
+    await gitRememberBranch( 'HEAD', currentBranch);
 
     // Push 
     await waitTime( 1000);

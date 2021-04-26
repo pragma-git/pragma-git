@@ -688,7 +688,10 @@ async function injectIntoSettingsJs(document) {
 
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
+<<<<<<< HEAD
     document.getElementById('cloneTab').click(); 
+=======
+>>>>>>> feature/remember_branch
 
 
 };
