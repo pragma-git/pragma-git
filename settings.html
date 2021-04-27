@@ -4,6 +4,7 @@
     <title>Settings</title>
     <script src="settings.js"></script>
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    <link rel="stylesheet" type="text/css" href="settings.css" />
     
     <style> /* Style Tables   */
     
@@ -36,6 +37,13 @@
     /*                     */
     /* Style settings-page */
     /*                     */
+    
+ 
+        #outer-content{
+            margin: 20px;
+            margin-top: 100px;
+        }
+
         
         .instructHeader{
             color: var(--header-color);
@@ -114,100 +122,8 @@
             color: var(--grey-text);
         }
     </style> 
-    <style> /* Style Tabs     */
-       
-        #header{
-            position: fixed;
-            top: 0px;
-            height:auto; 
-            width: -webkit-fill-available;
-            background-color: var(--body-background);
-            z-index: 30;
-            padding: 10;
-            
-        }
-        
-        .buttonWrapper {
-          /* float: left; */
-        }
-        
-        .wrapper, .toolWrapper{
-            border-bottom-style: solid;
-            display: flex;
-        }
-        
-        .tab-button {
 
-            letter-spacing: 2px;
-            border: none;
-            padding: 10px;
-            background-color: var(--tab-deselected);
-            color: #232c3d;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.5s;
-            width: fit-content;
-            outline: none;
-        }
-        
-        
-        .tab-button-small {
-            letter-spacing: 2px;
-            border: none;
-            padding: 8px;
-            background-color: var(--tab-deselected);
-            color: #232c3d;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.5s;
-            width: fit-content;
-            outline: none;
 
-        }
-        
-        
-        button:hover {
-            background-color: #d5e3ff;
-        }
-    
-        
-        .tab-button.active, .tab-button-small.active{
-            background-color: var(--tab-selected);
-        }
-        
-        .tool-content{
-            margin-top: 12;
-            display: block;
-        }
-        
-        .toolTable{
-            width: 100%;
-        }
-        
-        .toolInputField{
-          width: 80%;
-        }
-
-                
-        tr.tool{
-            border-bottom: 0;
-        }
-
-        
-        .toolButton{
-            /* width: 100%; */
-        }
-        
-        
-        #outer-content{
-            margin: 20px;
-            margin-top: 100px;
-        }
-
-    
-        
-        
-    </style>
     
 </head> 
 
