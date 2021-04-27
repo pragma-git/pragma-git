@@ -154,9 +154,14 @@
             </div>
     </div> 
 
-    <div id="outer-content"> <!-- Content  -->       
-        <div id="inner-content">
-            <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>    
+    <div id="outer-content"> <!-- Content  -->   
+        
+
+        <iframe id="emptyTable_iFrame"  src="settings_empty.html" frameborder="0"  > </iframe> 
+
+         
+           
+        <div id="inner-content">   
             <div class="content" id="foldableDiv2">  <!--  SOFTWARE SETTINGS tab -->             
                     
                 <h3>Visual</h3>  
@@ -336,24 +341,22 @@
             <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  --> 
                 <iframe id="emptyBranchTable_iFrame"  src="settings_empty.html" frameborder="0" > </iframe>
     
-                <div id="hide" class="">   <!--  This div hides verything enclosed if empty repos list -->              
                                     
-                    <h3 style="padding:0">Branches for : "<span id="currentRepo"></span>"</h3>  
-                        
-                    <!--  BRANCH TABLE -->  
-                    <table style="width:fit-content;"> 
-                        <thead>
-                            <tr>
-                                <th class="hiddenBranch">Hide</th>
-                                <th class="branchName">Branch</th>
-                                <th class="branchAction">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="branchesTableBody">
-                        </tbody>
-                    </table>    
+                <h3 style="padding:0">Branches for : "<span id="currentRepo"></span>"</h3>  
+                    
+                <!--  BRANCH TABLE -->  
+                <table style="width:fit-content;"> 
+                    <thead>
+                        <tr>
+                            <th class="hiddenBranch">Hide</th>
+                            <th class="branchName">Branch</th>
+                            <th class="branchAction">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchesTableBody">
+                    </tbody>
+                </table>    
         
-                </div>    
             </div>     
             <div class="content" id="foldableDiv3">  <!--  SYSTEM INFO  tab --> 
 

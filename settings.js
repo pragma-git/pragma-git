@@ -735,8 +735,15 @@ async function createHtmlTable(document){
 
     if (state.repos.length == 0){
         // Show what is needed for empty folder   
-        document.getElementById('hide').style.display = "none";
-        document.getElementById("emptyTable_iFrame").style.height ="auto"; 
+        let div = document.getElementById("emptyTable_iFrame");
+        div.onload = function() {
+            div.style.height =
+              div.contentWindow.document.body.scrollHeight + 'px';
+        }
+        
+        // Set tab from setting
+        let tab = 1; // Repository tab
+        tabButton[ tab ].click();
     }
 
 }
