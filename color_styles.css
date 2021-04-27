@@ -121,6 +121,7 @@
             font-size: 11pt;
             background-color: var(--body-background);
             color: var(--body-text);
+            margin: 20px;
         }
 
 
@@ -151,6 +152,6 @@
 
     
         #outer-content{
-            margin: 20px;
+            /* margin: 20px; */
         }
     
