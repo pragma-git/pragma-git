@@ -1158,21 +1158,23 @@ async function _callback( name, event){
                 // Add names of all branches
                 makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
-
                 // Fix for Windows (rewrite menus having submenues, to force update)
-                
                 if (process.platform === 'win32') {  // Windows  Note : called win32 also for 64-bit
+					var tempMenu = new gui.Menu();
                     let N = menu.items.length;
             
                     for (i = 0; i < N; i++) {
-                        if (menu.items[i].submenu !== undefined){
-                            let temp = menu.items[i];
+                       //if (menu.items[i].submenu !== undefined){
+                            //let temp = menu.items[i];
+                            let temp = JSON.parse(JSON.stringify(menu.items[i]));
                             console.log(i + ':   updating menu =' + temp.label);
-                            menu.remove(menu.items[ i ]);
-                            menu.insert(temp, i);
-                        }
+                            //menu.removeAt(i);
+                            tempMenu.append(temp);
+                        //}
                     }
+                    menu = tempMenu;
                 }
+
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
@@ -1196,19 +1198,23 @@ async function _callback( name, event){
                 // Add names of all branches
                 makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
-
-                // Fix for Windows (rewrite menus to update submenus; no harm in other OSes)
-                let N = menu.items.length;
-        
-                for (i = 0; i < N; i++) {
-					if (menu.items[i].submenu !== undefined){
-	                    let temp = menu.items[i];
-	                    console.log(i + ':   updating menu =' + temp.label);
-	                    menu.remove(menu.items[ i ]);
-	                    menu.insert(temp, i);
-					}
+                // Fix for Windows (rewrite menus having submenues, to force update)
+                if (process.platform === 'win32') {  // Windows  Note : called win32 also for 64-bit
+					var tempMenu = new gui.Menu();
+                    let N = menu.items.length;
+            
+                    for (i = 0; i < N; i++) {
+                       //if (menu.items[i].submenu !== undefined){
+                            //let temp = menu.items[i];
+                            let temp = JSON.parse(JSON.stringify(menu.items[i]));
+                            console.log(i + ':   updating menu =' + temp.label);
+                            //menu.removeAt(i);
+                            tempMenu.append(temp);
+                        //}
+                    }
+                    menu = tempMenu;
                 }
-                
+
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
                 await menu.popup( Math.trunc(pos.left) - 10,24);
@@ -1664,6 +1670,8 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                 menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
             }
+            
+ 
 
         };
 

@@ -37,7 +37,7 @@
  11) brew install rpm
 
 
-# Fix for 64-bit Macs
+# Fix for development on 64-bit Macs
  
   12) # wine64 should be called from wine command (wine fails on 64-bit systems)
       rm /usr/local/bin/wine \
