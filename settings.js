@@ -193,7 +193,9 @@ async function _callback( name, event){
                 
                     
                 // Update repo name
-                document.getElementById('currentRepo').innerText = ( await opener.gitLocalFolder() ).folderName;
+                let folderObject =  await opener.gitLocalFolder() ;
+                document.getElementById('shortCurrentRepo').innerText = folderObject.folderName;
+                document.getElementById('currentRepo').innerText = folderObject.folderPath;
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
