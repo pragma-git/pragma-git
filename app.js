@@ -269,6 +269,56 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 // FUNCTIONS 
 // ---------
+    function test1(){
+        var menu1 = new gui.Menu();
+        var submenu = new gui.Menu();
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        menu1.append(new gui.MenuItem({ label: 'Cut' }));
+        menu1.append(new gui.MenuItem({ label: 'Edit' }));
+        menu1.append(new gui.MenuItem({ label: 'Email' }));
+        menu1.append(new gui.MenuItem({ label: 'Play' }));
+        menu1.append(new gui.MenuItem({ label: 'Tick' }));
+        menu1.append(new gui.MenuItem({ icon: 'imgs/disk.png', label: 'Disk', submenu: submenu }));
+        menu1.popup(50,50);
+    }
+    function test2(){
+        var menu1 = new gui.Menu();
+        var submenu = new gui.Menu();
+        submenu = new gui.Menu();
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu = new gui.Menu();
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu = new gui.Menu();
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu = new gui.Menu();
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
+        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
+        menu1.append(new gui.MenuItem({ label: 'Cut' }));
+        menu1.append(new gui.MenuItem({ label: 'Edit' }));
+        menu1.append(new gui.MenuItem({ label: 'Email' }));
+        menu1.append(new gui.MenuItem({ label: 'Play' }));
+        menu1.append(new gui.MenuItem({ label: 'Tick' }));
+        menu1.append(new gui.MenuItem({ icon: 'imgs/disk.png', label: 'Disk', submenu: submenu }));
+        menu1.popup(50,50);
+    }
 
 // Main functions
 async function _callback( name, event){
@@ -1516,154 +1566,234 @@ async function _callback( name, event){
         // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
         
-            let menuItems = branchList.all;
+            let branchNames = branchList.all;
             let numberOfHiddenBranches = 0;
                         
             // If detached HEAD, remove one item from menu
             if (currentBranch === 'HEAD') { 
-                menuItems.shift();  // Remove first item
+                branchNames.shift();  // Remove first item
             }
         
         
             let cachedFirstPart = ' ';
-            let item = new gui.MenuItem({ label: 'dummy' }); // will make new one inside loop
-            let submenu = new gui.Menu(); // dummy
             
-            // Loop all branches
-            for (var i = 0; i < menuItems.length; ++i) {
+                 
+            //
+            // Loop branch list
+            //           
+            let i = 0;
+            while (i < branchNames.length){
                 
-                // Skip hidden menus
-                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, menuItems[i]) ){
-                    numberOfHiddenBranches = numberOfHiddenBranches + 1;
-                    continue
+                let firstPart = branchNames[i].split('/',1).toString();
+                let secondPart = branchNames[i].substring( branchNames[i].indexOf('/') + 1);
+                let myEvent = { selectedBranch: branchNames[i], currentBranch: currentBranch, branchNumber: i }; // Will be used when creating menu callback 
+                
+                //
+                // Skip hidden menus  TODO: this should be done many places
+                //
+                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
+                    console.log(`Hidden branch = ${branchNames[i]}`);
+                    numberOfHiddenBranches++; 
+                    i++;
                 }
                 
-                  
-                // For all branches not being current branch : 
-                if (currentBranch != menuItems[i]){
-                    let myEvent = [];
-                    myEvent.selectedBranch = menuItems[i];
-                    myEvent.currentBranch = currentBranch;
-                    myEvent.branchNumber = i;
-
-                    //--------------------------
-                    // Make submenu if branch containing '/'
-                    if ( menuItems[i].includes("/") ) {
-                        // Submenu
-                                                                
-                        // Split on '/'
-                        let firstPart = myEvent.selectedBranch.split('/',1);
-                        let secondPart = myEvent.selectedBranch.substring(myEvent.selectedBranch.indexOf('/')+1);
-
-                        //
-                        // Special case (ex. remotes/origin/branch )
-                        //
-                            let isRemoteBranch = (firstPart[0] === 'remotes');
-                            let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
-                            let isLocalBranch = !isRemoteBranch;
- 
-
-                           if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
-                                // a remote where a local exists (local is listed, in will be shown)
-                                                   
-                          
-                            }else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
-                                // Show if remote without local branch
-                                
-                                // Exception (bail out) if merge which requires local branch
-                                if ( callbackName === "clickedMergeContextualMenu"){
-                                    continue
-                                }
-
-                                
-                                let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
-                                myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
-                                
-                                
-                                // Mark if remote not existing on git server
-                                if ( ! branchList.branches[ menuItems[i]].existsOnRemote ){
-                                    console.log('Skip showing branch that is missing on remote.  Branch = ' + myEvent.selectedBranch);
-                                    secondPart =  secondPart + ' \u2B60  not on server ';
-                                    continue; // Stop from showing (I have obviously prepared for showing on line above)
-                                }
-                             
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append(new gui.MenuItem({ type: 'separator' })); // Add separator
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-                                
-                                                               
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
-                            }else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
-                                
-                                // Create submenu remotes -- reuse if same firstPart as last time
-                                if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
-                                    item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
-                                    menu.append( item); // Add submenu to main menu
-                                    
-                                    submenu = new gui.Menu();  // Create empty submenu
-                                }
-
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;   
-                                
-                                // Remember firstPart -- so I know it has happened more than once
-                                cachedFirstPart = firstPart;
-                                
-                            // All other cases (Show)
-                            }else{                                                      // Always show
+                //
+                // Simple menu item (not submenu)
+                //
+                else if ( !branchNames[i].includes("/") ) {
+                    menu.append( new gui.MenuItem( { label : branchNames[i],  click :  () => { _callback(callbackName,myEvent);}  }));    
+                    i++;                 
+                } 
+                 
+                // 
+                // Submenu 
+                //
+                else if ( branchNames[i].includes("/") ) {
+                    
+                    let submenu = new gui.Menu();
+                    cachedFirstPart = firstPart;
+                     
+                    // While same submenu
+                    while ( ( firstPart == cachedFirstPart ) && (i < branchNames.length - 1) ){
                         
-                                 // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
-                                        { 
-                                            label: secondPart, 
-                                            click: () => { _callback(callbackName,myEvent);} 
-                                        } 
-                                    )
-                                ); 
-                                item.submenu = submenu;
-                            }                        
+                        console.log( `firstPart = ${firstPart}   cachedFirstPart = ${cachedFirstPart} `);
+                                         
+                        // Split on '/'
+                        firstPart = branchNames[i].split('/',1).toString();
+                        secondPart = branchNames[i].substring(myEvent.selectedBranch.indexOf('/') + 1);
+                        
+                        // Logics
+                        let isRemoteBranch = (firstPart[0] === 'remotes');
+                        let isLocalBranch = !isRemoteBranch;
+                        let showRemote = branchList.branches[ branchNames[i] ].show;  
+                        
+                        if ( callbackName === "clickedMergeContextualMenu"){ showRemote = false } // Don't show remote if merge (which requires local branch)
 
-                    }else {
-                        menu.append(
-                            new gui.MenuItem(
-                                { 
-                                    label: menuItems[i], 
-                                    click: () => { _callback(callbackName,myEvent);} 
-                                } 
-                            )
-                        );
-                        console.log(menuItems[i]);
-                    } 
-                    // -----------------
+                        // Make submenu
+                        if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
+                            submenu.append( new gui.MenuItem({ label: secondPart,  click :  () => { _callback( callbackName, myEvent); }  })); 
+                        }   
+ 
+                        //// Make submenu
+                        //if ( isRemoteBranch && showRemote) {
+                            //submenu.append( new gui.MenuItem({ label: secondPart,  click :  () => { _callback( callbackName, myEvent); }  })); 
+                        //}
+                        //else if ( isLocalBranch ) { 
+                            //submenu.append( new gui.MenuItem({ label: secondPart,  click :  () => { _callback( callbackName, myEvent); }  })); 
+                        //}                                                  
+                        //cachedFirstPart = firstPart;
+                        
+
+                        i++;
+                        firstPart = branchNames[i].split('/',1);
+                        secondPart = branchNames[i].substring( branchNames[i].indexOf('/') + 1);
+                    }
+                    // Add finished submenu
+                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                    
                 }
     
-            }  
+  
+                
+                i++;
+            }
+            
+            //// Loop all branches
+            //for (var i = 0; i < branchNames.length; ++i) {
+                
+                //// Skip hidden menus
+                //if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
+                    //numberOfHiddenBranches = numberOfHiddenBranches + 1;
+                    //continue
+                //}
+                
+                  
+                //// For all branches not being current branch : 
+                //if (currentBranch != branchNames[i]){
+                    //let myEvent = [];
+                    //myEvent.selectedBranch = branchNames[i];
+                    //myEvent.currentBranch = currentBranch;
+                    //myEvent.branchNumber = i;
+ 
+
+                    ////--------------------------
+                    //// Make submenu if branch containing '/'
+                    //if ( branchNames[i].includes("/") ) {
+                        //// Submenu
+                                                                
+                        //// Split on '/'
+                        //let firstPart = myEvent.selectedBranch.split('/',1);
+                        //let secondPart = myEvent.selectedBranch.substring(myEvent.selectedBranch.indexOf('/')+1);
+
+                        ////
+                        //// Special case (ex. remotes/origin/branch )
+                        ////
+                            //let isRemoteBranch = (firstPart[0] === 'remotes');
+                            //let showRemote = branchList.branches[ myEvent.selectedBranch ].show;
+                            //let isLocalBranch = !isRemoteBranch;
+ 
+
+                           //if ( isRemoteBranch && ! showRemote ) {            // Remote which should not be shown
+                                //// a remote where a local exists (local is listed, in will be shown)
+                                                   
+                          
+                            //}else if ( (isRemoteBranch && showRemote) ){  // Remote without local branch (Show remotes menu)
+                                //// Show if remote without local branch
+                                
+                                //// Exception (bail out) if merge which requires local branch
+                                //if ( callbackName === "clickedMergeContextualMenu"){
+                                    //continue
+                                //}
+
+                                
+                                //let partAfterRemotesOrigin = secondPart.substring(myEvent.selectedBranch.indexOf('/') );
+                                //myEvent.selectedBranch = partAfterRemotesOrigin;// Set local branch as checkout -> a local branch will be created in callback
+                                
+                                
+                                //// Mark if remote not existing on git server
+                                //if ( ! branchList.branches[ branchNames[i]].existsOnRemote ){
+                                    //console.log('Skip showing branch that is missing on remote.  Branch = ' + myEvent.selectedBranch);
+                                    //secondPart =  secondPart + ' \u2B60  not on server ';
+                                    //continue; // Stop from showing (I have obviously prepared for showing on line above)
+                                //}
+                             
+                                
+                                //// Create submenu remotes -- reuse if same firstPart as last time
+                                //if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    //item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    //menu.append(new gui.MenuItem({ type: 'separator' })); // Add separator
+                                    //menu.append( item); // Add submenu to main menu
+                                    
+                                    //submenu = new gui.Menu();  // Create empty submenu
+                                //}
+                                
+                                                               
+                                 //// Add submenu-row to submenu
+                                //submenu.append(new gui.MenuItem(
+                                        //{ 
+                                            //label: secondPart, 
+                                            //click: () => { _callback(callbackName,myEvent);} 
+                                        //} 
+                                    //)
+                                //); 
+                                //item.submenu = submenu;   
+                                
+                                //// Remember firstPart -- so I know it has happened more than once
+                                //cachedFirstPart = firstPart;
+                                
+                            //// A local branch containing '/' (Show in submenu,  'feature/xxx' in submenu  'feature'
+                            //}else if ( isLocalBranch ) {                                // Show if local branch (containing '/' -- for instance, feature/branchname ) 
+                                
+                                //// Create submenu remotes -- reuse if same firstPart as last time
+                                //if ( ( String(firstPart) !== String(cachedFirstPart) )  ){
+                                    //item = new gui.MenuItem({ label: firstPart }); // Menu-item that contains the submenu
+                                    //menu.append( item); // Add submenu to main menu
+                                    
+                                    //submenu = new gui.Menu();  // Create empty submenu
+                                //}
+
+                                 //// Add submenu-row to submenu
+                                //submenu.append(new gui.MenuItem(
+                                        //{ 
+                                            //label: secondPart, 
+                                            //click: () => { _callback(callbackName,myEvent);} 
+                                        //} 
+                                    //)
+                                //); 
+                                //item.submenu = submenu;   
+                                
+                                //// Remember firstPart -- so I know it has happened more than once
+                                //cachedFirstPart = firstPart;
+                                
+                            //// All other cases (Show)
+                            //}else{                                                      // Always show
+                        
+                                 //// Add submenu-row to submenu
+                                //submenu.append(new gui.MenuItem(
+                                        //{ 
+                                            //label: secondPart, 
+                                            //click: () => { _callback(callbackName,myEvent);} 
+                                        //} 
+                                    //)
+                                //); 
+                                //item.submenu = submenu;
+                            //}                        
+
+                    //}else {
+                        //menu.append(
+                            //new gui.MenuItem(
+                                //{ 
+                                    //label: branchNames[i], 
+                                    //click: () => { _callback(callbackName,myEvent);} 
+                                //} 
+                            //)
+                        //);
+                        //console.log(branchNames[i]);
+                    //} 
+                    //// -----------------
+                //}
+    
+            //}  
             
             // Indicate how many hidden branches exists
             if (numberOfHiddenBranches > 0){
