@@ -1161,7 +1161,7 @@ async function _callback( name, event){
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                await cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
+                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
                 
                 
                 cacheBranchMenu();    
