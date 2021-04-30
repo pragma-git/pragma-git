@@ -297,6 +297,8 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
+        cacheBranchMenu();
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -318,6 +320,8 @@ async function _callback( name, event){
             await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
         }catch(err){ 
         }
+        
+        cacheBranchMenu();
         
         break;
       }
@@ -569,6 +573,9 @@ async function _callback( name, event){
             console.log('Failed creating branch ');
             console.log(err);
         } 
+        
+        
+        cacheBranchMenu();
 
         _setMode('UNKNOWN');
         
@@ -628,6 +635,9 @@ async function _callback( name, event){
             case  'Delete' : {
                 // Move out of "detached Head" (losing track of it)
                 branchClicked(false);
+                
+                cacheBranchMenu();
+                
                 break;
             }    
             case  'Cancel' : {
