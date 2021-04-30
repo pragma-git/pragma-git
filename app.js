@@ -1628,6 +1628,11 @@ async function _callback( name, event){
                 // Submenu item
                 if ( isSubMenuItem ){
                         console.log( `Branch : ${firstPart}/${secondPart}`);
+                   
+                    // Special case for remote
+                    if (isRemoteBranch){    
+                        myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
+                    }
                     
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
@@ -1635,10 +1640,7 @@ async function _callback( name, event){
                             label: secondPart,  
                             click :  () => { _callback( callbackName, myEvent); }  
                         })); 
-                        console.log( `New submenu : ${secondPart}`);
-                    }else{
-                        console.log( `         : ${secondPart}`);
-                    }   
+                    }
                     
                     submenuInProgress = true;
                 }
