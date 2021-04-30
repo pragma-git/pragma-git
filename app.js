@@ -326,10 +326,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-branch': {
-        branchClicked(true, event); // 'menu' or 'cycle'
-                        
-        // Update remote info immediately
-        gitFetch();  
+        branchClicked(true, event); // 'menu' or 'cycle'≈
         
         break;
       }
@@ -1217,6 +1214,10 @@ async function _callback( name, event){
                 try{
                     await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
                     function onCheckout(err, result){console.log(result)} 
+                                                        
+                    // Update remote info immediately
+                    gitFetch();  
+        
     
                 }catch(err){        
                     console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
