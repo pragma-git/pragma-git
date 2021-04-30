@@ -130,6 +130,7 @@ var defaultPath = process.env.PATH;
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
+var cachedBranchMenu;  // Reason for this is to give some time for Windows-systems to populate popup branch menu (crash issues otherwise)
 
 
 // -----
@@ -269,56 +270,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 // FUNCTIONS 
 // ---------
-    function test1(){
-        var menu1 = new gui.Menu();
-        var submenu = new gui.Menu();
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        menu1.append(new gui.MenuItem({ label: 'Cut' }));
-        menu1.append(new gui.MenuItem({ label: 'Edit' }));
-        menu1.append(new gui.MenuItem({ label: 'Email' }));
-        menu1.append(new gui.MenuItem({ label: 'Play' }));
-        menu1.append(new gui.MenuItem({ label: 'Tick' }));
-        menu1.append(new gui.MenuItem({ icon: 'imgs/disk.png', label: 'Disk', submenu: submenu }));
-        menu1.popup(50,50);
-    }
-    function test2(){
-        var menu1 = new gui.Menu();
-        var submenu = new gui.Menu();
-        submenu = new gui.Menu();
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu = new gui.Menu();
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu = new gui.Menu();
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu = new gui.Menu();
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box1' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box2' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box3' }));
-        submenu.append(new gui.MenuItem({ type: 'checkbox', label: 'box4' }));
-        menu1.append(new gui.MenuItem({ label: 'Cut' }));
-        menu1.append(new gui.MenuItem({ label: 'Edit' }));
-        menu1.append(new gui.MenuItem({ label: 'Email' }));
-        menu1.append(new gui.MenuItem({ label: 'Play' }));
-        menu1.append(new gui.MenuItem({ label: 'Tick' }));
-        menu1.append(new gui.MenuItem({ icon: 'imgs/disk.png', label: 'Disk', submenu: submenu }));
-        menu1.popup(50,50);
-    }
 
 // Main functions
 async function _callback( name, event){
@@ -1197,45 +1148,26 @@ async function _callback( name, event){
             // Alt 1) Show branch menu
             //
             if (type == 'menu'){
-                var menu = new gui.Menu();
+                //var menu = new gui.Menu();
                 
                 let currentBranch = status_data.current;
         
                 // Add context menu title-row
-                menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
-                menu.append(new gui.MenuItem({ type: 'separator' }));
+                //cachedBranchMenu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
+                cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
-                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                //makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                await menu.popup( Math.trunc(pos.left) - 10,24);
-                    
-                return // BAIL OUT -- branch will be set from menu callback
-            }
-            //
-            // Alt 1) Show branch menu
-            //
-            if (type == 'menu'){
-                var menu = new gui.Menu();
+                await cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
                 
-                let currentBranch = status_data.current;
-        
-                // Add context menu title-row
-                menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
-                menu.append(new gui.MenuItem({ type: 'separator' }));
-                        
-                // Add names of all branches
-                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
-
-                // Popup as context menu
-                let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                await menu.popup( Math.trunc(pos.left) - 10,24);
-
-                    
+                
+                cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
+
 
             
             //
@@ -1281,6 +1213,9 @@ async function _callback( name, event){
                     console.log(err);
                 } 
             } 
+            
+            cacheBranchMenu();
+            
         } // End checking out branch
     
         console.log(branchList);
@@ -1524,110 +1459,6 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     } 
-    function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
-        // menu is a nw.Menu
-        // currentBranch is a string
-        // branchList is a struct where branchList.all is an array of branch names
-        // callbackName is a string
-        
-            let branchNames = branchList.all;
-                        
-            // If detached HEAD, remove one item from menu
-            if (currentBranch === 'HEAD') { 
-                branchNames.shift();  // Remove first item
-            }
-        
-        
-            //
-            // Loop branch list
-            //           
-            
-            let submenuInProgress = false;
-            let cachedFirstPart = ' ';
-            let numberOfHiddenBranches = 0;
-            let submenu = new gui.Menu(); // Prepare an empty submenu for future use
-            
-            for (var i = 0; i < branchNames.length; ++i) {
-                
-                // Populate utility variables 
-                let firstPart = branchNames[i].split('/',1).toString();
-                let secondPart = branchNames[i].substring( branchNames[i].indexOf('/') + 1);
-                let myEvent = { selectedBranch: branchNames[i], currentBranch: currentBranch, branchNumber: i }; // Will be used when creating menu callback 
-                
-                // Logics
-                let isSubMenuItem = branchNames[i].includes("/") ;
-                let requireNewSubMenu = (firstPart !== cachedFirstPart);
-
-                let isRemoteBranch = (firstPart === 'remotes');
-                let isLocalBranch = !isRemoteBranch;
-                let showRemote = branchList.branches[ branchNames[i] ].show; 
-                
-                // Don't show remote if merge (which requires local branch)
-                if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
-                    continue 
-                }
-                 
-                
-                // Show simple branch name 
-                if ( !isSubMenuItem ){
-                    menu.append( new gui.MenuItem( { label : branchNames[i],  click :  () => { _callback(callbackName,myEvent);}  }));    
-                }
-                 
-                // Add finished submenu to menu 
-                if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
-                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
-                    submenuInProgress = false;
-                    submenu = new gui.Menu(); // Prepare an empty submenu for future use
-                }                   
-                       
-                               
-                // Skip hidden menus  
-                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
-                    console.log(`Hidden branch = ${branchNames[i]}`);
-                    numberOfHiddenBranches++; 
-                    continue;
-                }
-                
-                
-                // Submenu item
-                if ( isSubMenuItem ){
-                        console.log( `Branch : ${firstPart}/${secondPart}`);
-                   
-                    // Special case for remote
-                    if (isRemoteBranch){    
-                        myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
-                    }
-                    
-                    // Add to submenu
-                    if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
-                        submenu.append( new gui.MenuItem( { 
-                            label: secondPart,  
-                            click :  () => { _callback( callbackName, myEvent); }  
-                        })); 
-                    }
-                    
-                    submenuInProgress = true;
-                }
-                cachedFirstPart = firstPart;
-  
-            } // End - branch list loop 
-                 
-                 
-            // Add last submenu to menu 
-            if ( submenuInProgress) {
-                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
-                
-            }   
-  
-            // Indicate how many hidden branches exists
-            if (numberOfHiddenBranches > 0){
-                menu.append(new gui.MenuItem({ type: 'separator' }));
-                menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
-            }
-            
- 
-
-        };
 
     // main window
     async function storeButtonClicked() { 
@@ -3465,6 +3296,132 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
     }
 }
 
+// Branch-menu caching
+
+async function cacheBranchMenu(){
+    
+
+    // Determine local branches
+    let branchList;
+    try{
+        cachedBranchMenu = await gui.Menu(); // clear cached menu
+        
+        branchList = await gitBranchList();
+        let currentBranch = 'dummy'; 
+        let temp = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu');
+        
+        
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+    }
+
+}
+    function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
+        // menu is a nw.Menu
+        // currentBranch is a string
+        // branchList is a struct where branchList.all is an array of branch names
+        // callbackName is a string
+        
+            let branchNames = branchList.all;
+                        
+            // If detached HEAD, remove one item from menu
+            if (currentBranch === 'HEAD') { 
+                branchNames.shift();  // Remove first item
+            }
+        
+        
+            //
+            // Loop branch list
+            //           
+            
+            let submenuInProgress = false;
+            let cachedFirstPart = ' ';
+            let numberOfHiddenBranches = 0;
+            let submenu = new gui.Menu(); // Prepare an empty submenu for future use
+            
+            for (var i = 0; i < branchNames.length; ++i) {
+                
+                // Populate utility variables 
+                let firstPart = branchNames[i].split('/',1).toString();
+                let secondPart = branchNames[i].substring( branchNames[i].indexOf('/') + 1);
+                let myEvent = { selectedBranch: branchNames[i], currentBranch: currentBranch, branchNumber: i }; // Will be used when creating menu callback 
+                
+                // Logics
+                let isSubMenuItem = branchNames[i].includes("/") ;
+                let requireNewSubMenu = (firstPart !== cachedFirstPart);
+
+                let isRemoteBranch = (firstPart === 'remotes');
+                let isLocalBranch = !isRemoteBranch;
+                let showRemote = branchList.branches[ branchNames[i] ].show; 
+                
+                // Don't show remote if merge (which requires local branch)
+                if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
+                    continue 
+                }
+                 
+                
+                // Show simple branch name 
+                if ( !isSubMenuItem ){
+                    menu.append( new gui.MenuItem( { label : branchNames[i],  click :  () => { _callback(callbackName,myEvent);}  }));    
+                }
+                 
+                // Add finished submenu to menu 
+                if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
+                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                    submenuInProgress = false;
+                    submenu = new gui.Menu(); // Prepare an empty submenu for future use
+                }                   
+                       
+                               
+                // Skip hidden menus  
+                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
+                    console.log(`Hidden branch = ${branchNames[i]}`);
+                    numberOfHiddenBranches++; 
+                    continue;
+                }
+                
+                
+                // Submenu item
+                if ( isSubMenuItem ){
+                        console.log( `Branch : ${firstPart}/${secondPart}`);
+                   
+                    // Special case for remote
+                    if (isRemoteBranch){    
+                        myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
+                    }
+                    
+                    // Add to submenu
+                    if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
+                        submenu.append( new gui.MenuItem( { 
+                            label: secondPart,  
+                            click :  () => { _callback( callbackName, myEvent); }  
+                        })); 
+                    }
+                    
+                    submenuInProgress = true;
+                }
+                cachedFirstPart = firstPart;
+  
+            } // End - branch list loop 
+                 
+                 
+            // Add last submenu to menu 
+            if ( submenuInProgress) {
+                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                
+            }   
+  
+            // Indicate how many hidden branches exists
+            if (numberOfHiddenBranches > 0){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
+            }
+            
+ 
+
+        };
+
 
 // Utility functions
 function getMode(){
@@ -4324,7 +4281,7 @@ function loadSettings(settingsFile){
     updateWithNewSettings();
     
     
-
+    cacheBranchMenu();
     
     return state;
 }
