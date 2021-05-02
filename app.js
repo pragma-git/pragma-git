@@ -3350,6 +3350,7 @@ async function cacheBranchMenu(){
             let cachedFirstPart = ' ';
             let numberOfHiddenBranches = 0;
             let submenu = new gui.Menu(); // Prepare an empty submenu for future use
+            let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
             
             for (var i = 0; i < branchNames.length; ++i) {
                 
@@ -3377,7 +3378,7 @@ async function cacheBranchMenu(){
                     menu.append( new gui.MenuItem( { label : branchNames[i],  click :  () => { _callback(callbackName,myEvent);}  }));    
                 }
                  
-                // Add finished submenu to menu 
+                // Add finished submenu to menu
                 if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
                     menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
                     submenuInProgress = false;
@@ -3404,17 +3405,36 @@ async function cacheBranchMenu(){
                     
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
-                        submenu.append( new gui.MenuItem( { 
-                            label: secondPart,  
-                            click :  () => { _callback( callbackName, myEvent); }  
-                        })); 
+                        
+                        if (isRemoteBranch ) {
+                            remoteSubmenu.append( new gui.MenuItem( { 
+                                label: secondPart,  
+                                click :  () => { _callback( callbackName, myEvent); }  
+                            })); 
+                            submenuInProgress = false;
+                        }else {
+                            submenu.append( new gui.MenuItem( { 
+                                label: secondPart,  
+                                click :  () => { _callback( callbackName, myEvent); }  
+                            })); 
+                            submenuInProgress = true;
+                        }
+                        
+                        console.log(`Local branch = ${branchNames[i]}`);
                     }
+ 
                     
-                    submenuInProgress = true;
                 }
                 cachedFirstPart = firstPart;
   
             } // End - branch list loop 
+                 
+                
+            // Add remotes to menu
+            if ( remoteSubmenu.items.length > 0 ){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
+            }
                  
                  
             // Add last submenu to menu 
