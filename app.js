@@ -1161,7 +1161,7 @@ async function _callback( name, event){
         
                 // Add context menu title-row
                 //cachedBranchMenu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
-                cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
+                //cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
                 //makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
