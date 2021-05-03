@@ -321,7 +321,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-branch': {
-        branchClicked(true, event); // 'menu' or 'cycle'
+        await branchClicked(true, event); // 'menu' or 'cycle'
                         
         // Update remote info immediately
         gitFetch();  
@@ -1196,7 +1196,7 @@ async function _callback( name, event){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 // Add names of all branches
-                makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                await makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
                 // Fix for Windows (rewrite menus having submenues, to force update)
                 if (process.platform === 'win32') {  // Windows  Note : called win32 also for 64-bit
@@ -1217,7 +1217,7 @@ async function _callback( name, event){
 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                await menu.popup( Math.trunc(pos.left) - 10,24);
+                menu.popup( Math.trunc(pos.left) - 10,24);
 
                     
                 return // BAIL OUT -- branch will be set from menu callback
