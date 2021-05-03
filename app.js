@@ -1167,14 +1167,14 @@ async function _callback( name, event){
                 let currentMenu = cachedBranchMenu;
                 // Add names of all branches
                 menu = new gui.Menu();
-                makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                //makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
                 currentMenu.popup( Math.trunc(pos.left) - 10,24);
 				//isPaused = true;                 
  
-                //cacheBranchMenu();    
+                cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
