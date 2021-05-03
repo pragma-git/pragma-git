@@ -1158,16 +1158,16 @@ async function _callback( name, event){
                 
                 
                 
-                var menu = await ( new gui.Menu() );
+                var menu = await (  gui.Menu() );
                 
                 let currentBranch = status_data.current;
         
                 // Add context menu title-row
-                menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
-                menu.append(new gui.MenuItem({ type: 'separator' }));
+                await menu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
+                await menu.append(new gui.MenuItem({ type: 'separator' }));
                         
                 //// Add names of all branches
-                //let temp = await makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                let temp = await makeBranchMenu(menu, currentBranch, branchList, 'clickedBranchContextualMenu')
 
                 //// Fix for Windows (rewrite menus having submenues, to force update)
                 //if (process.platform === 'win32') {  // Windows  Note : called win32 also for 64-bit
