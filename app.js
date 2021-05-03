@@ -1161,13 +1161,13 @@ async function _callback( name, event){
                 let currentBranch = status_data.current;
         
                 // Add context menu title-row
-                await cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
-                await cachedBranchMenu.insert(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }), 0);
+                cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+                cachedBranchMenu.insert(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }), 0);
                         
                 let currentMenu = cachedBranchMenu;
                 // Add names of all branches
-                menu = new gui.Menu();
-                //makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                menu = await new gui.Menu();
+                makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
@@ -1177,7 +1177,6 @@ async function _callback( name, event){
                 cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
-
 
 
             
