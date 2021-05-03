@@ -165,6 +165,7 @@ var cachedBranchMenu;  // Reason for this is to give some time for Windows-syste
         var merge_win;
         var window_menu_handles_mapping = {}; // Will be filled in when making menu items in main menu
  
+		var contextualMenuOpen = false;
       
     // Files & folders
         const STARTDIR = process.cwd(); // Folder where this file was started
@@ -1032,7 +1033,7 @@ async function _callback( name, event){
             // Popup as context menu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
             await menu.popup( Math.trunc(pos.left) -10,24);
-            
+
             
             return; // BAIL OUT --  
             // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
@@ -1163,15 +1164,17 @@ async function _callback( name, event){
                 //cachedBranchMenu.append(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }));
                 //cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
                         
+                let currentMenu = cachedBranchMenu;
                 // Add names of all branches
-                //makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
+                menu = new gui.Menu();
+                makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
-                
-                
-                cacheBranchMenu();    
+                currentMenu.popup( Math.trunc(pos.left) - 10,24);
+				//isPaused = true;                 
+ 
+                //cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
@@ -3310,7 +3313,6 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
 // Branch-menu caching
 
 async function cacheBranchMenu(){
-    
 
     // Determine local branches
     let branchList;
@@ -3325,7 +3327,7 @@ async function cacheBranchMenu(){
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
-    }
+    }                
 
 }
     function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
@@ -4396,7 +4398,7 @@ window.onfocus = function() {
 };
 window.onblur = function() { 
   console.log("blur");
-  
+ 
   // Do not blur if always on top
   if ( state.alwaysOnTop === false){
     focusTitlebars(false);  
