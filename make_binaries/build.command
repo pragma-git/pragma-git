@@ -101,7 +101,21 @@
     
 	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/askpass
     npm install
+    
+    
+     
 
+    tput setaf $COLOR; echo ' '
+    echo '=================================='
+    echo 'FIX rcedit-x64'
+    echo '=================================='
+    tput sgr0
+    
+    rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe 
+    ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
+
+    echo 'done'
+    
 #
 # Clean folders
 #
