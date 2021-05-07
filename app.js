@@ -130,7 +130,7 @@ var defaultPath = process.env.PATH;
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
-
+var workaround_store_submenus;
 
 // -----
 // INIT
@@ -1154,8 +1154,7 @@ async function _callback( name, event){
                 // let currentBranch = 'dummy'; 
                 // let temp = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu');
         
-                
-                
+
                 
                 
                 var menu = await (  gui.Menu() );
@@ -1487,6 +1486,9 @@ async function _callback( name, event){
         // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
         
+            workaround_store_submenus = [];  // Loose handles to submenus so they can be garbage collected
+                
+        
             let menuItems = branchList.all;
             let numberOfHiddenBranches = 0;
                         
@@ -1570,13 +1572,17 @@ async function _callback( name, event){
                                 
                                                                
                                  // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
+                                 
+                                
+                                let submenu_item = new gui.MenuItem(
                                         { 
                                             label: secondPart, 
                                             click: () => { _callback(callbackName,myEvent);} 
                                         } 
-                                    )
-                                ); 
+                                    );
+                                workaround_store_submenus.push(submenu_item);  
+                                
+                                submenu.append(submenu_item); 
                                 item.submenu = submenu;   
                                 
                                 // Remember firstPart -- so I know it has happened more than once
@@ -1594,13 +1600,16 @@ async function _callback( name, event){
                                 }
 
                                  // Add submenu-row to submenu
-                                submenu.append(new gui.MenuItem(
+                                 
+                                let submenu_item =  new gui.MenuItem(
                                         { 
                                             label: secondPart, 
                                             click: () => { _callback(callbackName,myEvent);} 
                                         } 
-                                    )
-                                ); 
+                                    );
+                                workaround_store_submenus.push(submenu_item); 
+                                
+                                submenu.append(submenu_item); 
                                 item.submenu = submenu;   
                                 
                                 // Remember firstPart -- so I know it has happened more than once
