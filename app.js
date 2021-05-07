@@ -133,6 +133,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 var cachedBranchMenu;  // Reason for this is to give some time for Windows-systems to populate popup branch menu (crash issues otherwise)
 
 
+var workaround_store_submenus;  // Workaround : Keep submenu-item references to avoid premature Windows10 garbage collection
+
 // -----
 // INIT
 // -----
@@ -3336,6 +3338,9 @@ async function cacheBranchMenu(){
         // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
         
+            
+            workaround_store_submenus = []; // Clear submenu-item references to avoid premature Windows10 garbage collection
+        
             let branchNames = branchList.all;
                         
             // If detached HEAD, remove one item from menu
@@ -3408,19 +3413,20 @@ async function cacheBranchMenu(){
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
                         
-                        if (isRemoteBranch ) {
-                            remoteSubmenu.append( new gui.MenuItem( { 
+                        let tempSubMenu = new gui.MenuItem( { 
                                 label: secondPart,  
                                 click :  () => { _callback( callbackName, myEvent); }  
-                            })); 
+                            });
+                        
+                        if (isRemoteBranch ) {
+                            remoteSubmenu.append( tempSubMenu); 
                             submenuInProgress = false;
                         }else {
-                            submenu.append( new gui.MenuItem( { 
-                                label: secondPart,  
-                                click :  () => { _callback( callbackName, myEvent); }  
-                            })); 
+                            submenu.append( tempSubMenu); 
                             submenuInProgress = true;
                         }
+                        
+                        workaround_store_submenus.push( tempSubMenu); // Keep submenu-item reference to avoid premature Windows10 garbage collection
                         
                         console.log(`Local branch = ${branchNames[i]}`);
                     }
