@@ -1161,6 +1161,8 @@ async function _callback( name, event){
                 //var menu = new gui.Menu();
                 
                 let currentBranch = status_data.current;
+                
+                await cacheBranchMenu();  
         
                 // Add context menu title-row
                 cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
@@ -1176,7 +1178,7 @@ async function _callback( name, event){
                 currentMenu.popup( Math.trunc(pos.left) - 10,24);
 				//isPaused = true;                 
  
-                cacheBranchMenu();    
+                //cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
