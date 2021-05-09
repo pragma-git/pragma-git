@@ -161,9 +161,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
-        var window_menu_handles_mapping = {}; // Will be filled in when making menu items in main menu
- 
-		var contextualMenuOpen = false;
+
       
     // Files & folders
         const STARTDIR = process.cwd(); // Folder where this file was started
@@ -207,10 +205,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.helpWindow = false; // True when help window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
-        
-        //localState.cached = {};         // cache time-consuming things
-        //localState.cached.branches = {};// cache branch info 
-        
+
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -263,15 +258,17 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     
     // Mac-menu
-    var mb; // Mac menubar
-    var macWindowsMenu; // Mac windows menu
-
+        var mb; // Mac menubar
+        var macWindowsMenu; // Mac windows menu
+        var window_menu_handles_mapping = {}; // Store handles for window menu items
     
+        
     // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
-    var cachedBranchMenu;  // Reason for this is to give some time for Windows-systems to populate popup branch menu (crash issues otherwise)
-    var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
-    var workaround_store_submenus; // Workaround : Keep submenu-item references to avoid premature Windows10 garbage collection
+        var cachedBranchMenu;  // Keep reference to popup menu, to avoid premature Windows10 garbage collection
+        var workaround_store_submenus; // Workaround : Keep references to all submenu-item, to avoid premature Windows10 garbage collection
 
+    // Cached objects
+        var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
     
 // ---------
 // FUNCTIONS 
@@ -2726,7 +2723,7 @@ async function gitBranchList(){
 /*   BACKGROUND :
      ------------
      
-     Branch dev exists in many places:
+     Branch,example branch "dev", exists in many places:
      a) dev is local
      b) remotes/origin/dev is tracking remote repository. That is:  b) is local cache of c)
      c) dev is branch on remote repository (referred to as origin/dev in local git)
@@ -2762,23 +2759,13 @@ async function gitBranchList(){
         -- false if b) branch and has a local counterpart a) 
         -- true  if b) branch and no local counterpart a) 
         -- true if a) branch 
-    
-     and is extended with field EXISTSONREMOTE :
-     *  extendedBranchSummaryResult.branches[ branchName].existsOnRemote  which is :
-        -- true  if c) exists on remote git server (matching b)
-        -- false if c) does not exist (for b )
-        -- false for all local branch names (a)
         
      and extended with a special list of local a) branches in field LOCAL :
      *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
      
-     TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
 
 */
 
-
-    console.log('ENTER GITBRANCHLIST');
-    console.log(state);
 
     let extendedBranchSummaryResult;
     
@@ -2790,11 +2777,7 @@ async function gitBranchList(){
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
-    
-    console.log(state);
-    
-    
-    console.log('END GITBRANCHLIST');
+
     return extendedBranchSummaryResult;
     
     
@@ -2829,12 +2812,7 @@ async function gitBranchList(){
                 } else{
                     extendedBranchSummaryResult.local.push( branchName );
                 }
-                
 
-            //
-            // Set if remote exists on server (from cached)
-            //
-                //extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
         }
     }  
  } 
@@ -3160,24 +3138,8 @@ function gitFetch(){ // Fetch and ls-remote
                 remoteBranchName += parts[parts.length - 1];
                 remoteShortBranchNames[row] = remoteBranchName; 
 
-                //console.log( remoteBranchName );
             }
-            
-            ////localState.cached.branches = {};
-            //// Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
-            //for (let i = 0; i < b.all.length; i++) {
-                //let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
-                
-                //let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
-                
-                ////localState.cached.branches[ locallyListedBranchName] = {};
-                ////localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
-                
-                
-                ////console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
-                
-            //}
-
+        
         }
 
     }catch(err){
