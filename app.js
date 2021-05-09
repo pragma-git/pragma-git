@@ -1319,11 +1319,12 @@ async function _callback( name, event){
         this.close(true);
     }   
     async function mergeClicked(){
-              
+
+        let branchList = cachedBranchList;
+
         // Create an empty context menu
-        var menu = new gui.Menu();
+        cachedBranchMenu = new gui.Menu();
         
-        let branchList = await gitBranchList();
         let currentBranch = " ";
         
         try{
@@ -1333,23 +1334,21 @@ async function _callback( name, event){
         }catch(err){
             console.log('Failed reading current branch');
         }
-  
-        let menuItems = branchList;
 
         // Add context menu title-row
-        menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
-        menu.append(new gui.MenuItem({ type: 'separator' }));
+        cachedBranchMenu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
+        cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
-        makeBranchMenu(menu, currentBranch, menuItems, 'clickedMergeContextualMenu')
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedMergeContextualMenu'); 
 
         // Add helping text
-        menu.append(new gui.MenuItem({ type: 'separator' }));
-        menu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
+        cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
+        cachedBranchMenu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left),24);
+        await cachedBranchMenu.popup( Math.trunc(pos.left),24);
                 
 
     }
