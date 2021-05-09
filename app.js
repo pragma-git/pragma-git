@@ -130,7 +130,10 @@ var defaultPath = process.env.PATH;
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
+<<<<<<< HEAD
 var workaround_store_submenus;
+=======
+>>>>>>> feature/restructure_branch_menus
 
 // -----
 // INIT
@@ -162,8 +165,7 @@ var workaround_store_submenus;
         var graph_win;
         var about_win;
         var merge_win;
-        var window_menu_handles_mapping = {}; // Will be filled in when making menu items in main menu
- 
+
       
     // Files & folders
         const STARTDIR = process.cwd(); // Folder where this file was started
@@ -207,10 +209,7 @@ var workaround_store_submenus;
         localState.helpWindow = false; // True when help window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
-        
-        localState.cached = {};         // cache time-consuming things
-        localState.cached.branches = {};// cache branch info 
-        
+
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -263,8 +262,17 @@ var workaround_store_submenus;
 
     
     // Mac-menu
-    var mb; // Mac menubar
-    var macWindowsMenu; // Mac windows menu
+        var mb; // Mac menubar
+        var macWindowsMenu; // Mac windows menu
+        var window_menu_handles_mapping = {}; // Store handles for window menu items
+    
+        
+    // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
+        var cachedBranchMenu;  // Keep reference to popup menu, to avoid premature Windows10 garbage collection
+        var workaround_store_submenus; // Workaround : Keep references to all submenu-item, to avoid premature Windows10 garbage collection
+
+    // Cached objects
+        var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
     
 // ---------
 // FUNCTIONS 
@@ -296,6 +304,8 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
+        //cacheBranchList();
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -318,13 +328,19 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
+        cacheBranchList();
+        
         break;
       }
       case 'clicked-branch': {
+<<<<<<< HEAD
         await branchClicked(true, event); // 'menu' or 'cycle'
                         
         // Update remote info immediately
         gitFetch();  
+=======
+        branchClicked(true, event); // 'menu' or 'cycle'≈
+>>>>>>> feature/restructure_branch_menus
         
         break;
       }
@@ -350,6 +366,8 @@ async function _callback( name, event){
 
         // Reset some variables
         localState.historyNumber = -1;
+        
+        cacheBranchList();
         
         break;
       }
@@ -568,6 +586,9 @@ async function _callback( name, event){
             console.log('Failed creating branch ');
             console.log(err);
         } 
+        
+        
+        cacheBranchList();
 
         _setMode('UNKNOWN');
         
@@ -627,6 +648,9 @@ async function _callback( name, event){
             case  'Delete' : {
                 // Move out of "detached Head" (losing track of it)
                 branchClicked(false);
+                
+                cacheBranchList();
+                
                 break;
             }    
             case  'Cancel' : {
@@ -997,14 +1021,16 @@ async function _callback( name, event){
                     
             // Add names of all repos
             for (var i = 0; i < state.repos.length; ++i) {
+                
+                let myEvent = [];
+                console.log(i);
+                console.log(state.repos[i].localFolder);
+                myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
+                myEvent.selectedRepoNumber = i;
+                myEvent.currentRepo = currentRepo;
+                repoNames.push(myEvent.selectedRepo);
+                    
                 if (state.repoNumber != i ){
-                    let myEvent = [];
-                    console.log(i);
-                    console.log(state.repos[i].localFolder);
-                    myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
-                    myEvent.selectedRepoNumber = i;
-                    myEvent.currentRepo = currentRepo;
-                    repoNames.push(myEvent.selectedRepo);
                     menu.append(
                         new gui.MenuItem(
                             { 
@@ -1015,7 +1041,18 @@ async function _callback( name, event){
                     );
                     console.log(repoNames[i]);
                 }else{
-                    console.log('Skipped current repo = ' + path.basename( state.repos[i].localFolder ) );
+                    
+                     menu.append(
+                        new gui.MenuItem(
+                            { 
+                                label: myEvent.selectedRepo, 
+                                type: 'checkbox',
+                                checked : true,
+                                enabled: false,
+                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
+                            } 
+                        )
+                    );                   
                 }
     
             }
@@ -1024,7 +1061,7 @@ async function _callback( name, event){
             // Popup as context menu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
             await menu.popup( Math.trunc(pos.left) -10,24);
-            
+
             
             return; // BAIL OUT --  
             // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
@@ -1050,6 +1087,9 @@ async function _callback( name, event){
     }
     async function branchClicked( detectDetachedBranch, type){
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
+
+        let branchList = cachedBranchList;
+
         
         // If HISTORY, reset history counter without changing branch
         if ( getMode() === 'HISTORY'){
@@ -1132,21 +1172,14 @@ async function _callback( name, event){
             // Checkout will be performed
             // - next branch 
             // - same as currentBranch if detached HEAD
-                
-            // Determine local branches
-            var branchList;
-            try{
-                branchList = await gitBranchList();
-            }catch(err){        
-                console.log('Error determining local branches, in branchClicked()');
-                console.log(err);
-            }
+
 
 
             //
             // Alt 1) Show branch menu
             //
             if (type == 'menu'){
+<<<<<<< HEAD
                 
                 //let cachedBranchMenu = await gui.Menu(); // clear cached menu
         
@@ -1192,6 +1225,25 @@ async function _callback( name, event){
                     
                 return // BAIL OUT -- branch will be set from menu callback
             }
+=======
+                cachedBranchMenu = new gui.Menu();
+                
+                let currentBranch = status_data.current;
+                
+                let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu'); 
+        
+                // Add context menu title-row
+                cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+                cachedBranchMenu.insert(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }), 0);
+                
+                // Popup as context menu
+                let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
+                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
+ 
+                return // BAIL OUT -- branch will be set from menu callback
+            }
+
+>>>>>>> feature/restructure_branch_menus
 
             
             //
@@ -1231,12 +1283,19 @@ async function _callback( name, event){
                 try{
                     await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
                     function onCheckout(err, result){console.log(result)} 
+                                                        
+                    // Update remote info immediately
+                    gitFetch();  
+        
     
                 }catch(err){        
                     console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
                     console.log(err);
                 } 
             } 
+            
+            cacheBranchList();
+            
         } // End checking out branch
     
         console.log(branchList);
@@ -1329,11 +1388,12 @@ async function _callback( name, event){
         this.close(true);
     }   
     async function mergeClicked(){
-              
+
+        let branchList = cachedBranchList;
+
         // Create an empty context menu
-        var menu = new gui.Menu();
+        cachedBranchMenu = new gui.Menu();
         
-        let branchList = await gitBranchList();
         let currentBranch = " ";
         
         try{
@@ -1343,23 +1403,21 @@ async function _callback( name, event){
         }catch(err){
             console.log('Failed reading current branch');
         }
-  
-        let menuItems = branchList;
 
         // Add context menu title-row
-        menu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
-        menu.append(new gui.MenuItem({ type: 'separator' }));
+        cachedBranchMenu.append(new gui.MenuItem({ label: 'Merge branch (select one) ... ', enabled : false }));
+        cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
                 
         // Add names of all branches
-        makeBranchMenu(menu, currentBranch, menuItems, 'clickedMergeContextualMenu')
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedMergeContextualMenu'); 
 
         // Add helping text
-        menu.append(new gui.MenuItem({ type: 'separator' }));
-        menu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
+        cachedBranchMenu.append(new gui.MenuItem({ type: 'separator' }));
+        cachedBranchMenu.append(new gui.MenuItem({ label: '... into branch "' + currentBranch +'"', enabled : false })); 
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left),24);
+        await cachedBranchMenu.popup( Math.trunc(pos.left),24);
                 
 
     }
@@ -1480,6 +1538,7 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
         
     } 
+<<<<<<< HEAD
     function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
         // menu is a nw.Menu
         // currentBranch is a string
@@ -1654,6 +1713,8 @@ async function _callback( name, event){
  
 
         };
+=======
+>>>>>>> feature/restructure_branch_menus
 
     // main window
     async function storeButtonClicked() { 
@@ -2898,7 +2959,7 @@ async function gitBranchList(){
 /*   BACKGROUND :
      ------------
      
-     Branch dev exists in many places:
+     Branch,example branch "dev", exists in many places:
      a) dev is local
      b) remotes/origin/dev is tracking remote repository. That is:  b) is local cache of c)
      c) dev is branch on remote repository (referred to as origin/dev in local git)
@@ -2934,19 +2995,13 @@ async function gitBranchList(){
         -- false if b) branch and has a local counterpart a) 
         -- true  if b) branch and no local counterpart a) 
         -- true if a) branch 
-    
-     and is extended with field EXISTSONREMOTE :
-     *  extendedBranchSummaryResult.branches[ branchName].existsOnRemote  which is :
-        -- true  if c) exists on remote git server (matching b)
-        -- false if c) does not exist (for b )
-        -- false for all local branch names (a)
         
      and extended with a special list of local a) branches in field LOCAL :
      *  extendedBranchSummaryResult.local  -- containing a list of only the local branches a) 
      
-     TODO: Add extendedBranchSummaryResult.branches[ branchName].tracked  to say if remote is tracked or not
 
 */
+
 
     let extendedBranchSummaryResult;
     
@@ -2958,10 +3013,13 @@ async function gitBranchList(){
         console.log('Error determining local branches, in branchClicked()');
         console.log(err);
     }
-    
+
     return extendedBranchSummaryResult;
     
+    
+    //
     // Define local functions
+    //
     function onBranchList(err, result ){
         
         
@@ -2990,12 +3048,7 @@ async function gitBranchList(){
                 } else{
                     extendedBranchSummaryResult.local.push( branchName );
                 }
-                
 
-            //
-            // Set if remote exists on server (from cached)
-            //
-                extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
         }
     }  
  } 
@@ -3321,24 +3374,8 @@ function gitFetch(){ // Fetch and ls-remote
                 remoteBranchName += parts[parts.length - 1];
                 remoteShortBranchNames[row] = remoteBranchName; 
 
-                //console.log( remoteBranchName );
             }
-            
-            localState.cached.branches = {};
-            // Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
-            for (let i = 0; i < b.all.length; i++) {
-                let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
-                
-                let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
-                
-                localState.cached.branches[ locallyListedBranchName] = {};
-                localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
-                
-                
-                //console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
-                
-            }
-
+        
         }
 
     }catch(err){
@@ -3490,6 +3527,160 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
         return;         
     }
 }
+
+// Branch-menu functions
+
+async function cacheBranchList(){
+
+    try{
+        cachedBranchList = await gitBranchList();
+        let currentBranch = cachedBranchList.current; 
+        
+    }catch(err){        
+        console.log('Error determining local branches, in branchClicked()');
+        console.log(err);
+    }                
+
+}
+function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
+        // menu is a nw.Menu
+        // currentBranch is a string
+        // branchList is a struct where branchList.all is an array of branch names
+        // callbackName is a string
+        
+            
+            workaround_store_submenus = []; // Clear submenu-item references to avoid premature Windows10 garbage collection
+        
+            let branchNames = branchList.all;
+                        
+            // If detached HEAD, remove one item from menu
+            if (currentBranch === 'HEAD') { 
+                branchNames.shift();  // Remove first item
+            }
+        
+        
+            //
+            // Loop branch list
+            //           
+            
+            let submenuInProgress = false;
+            let cachedFirstPart = ' ';
+            let numberOfHiddenBranches = 0;
+            let submenu = new gui.Menu(); // Prepare an empty submenu for future use
+            let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
+            
+            for (var i = 0; i < branchNames.length; ++i) {
+                
+                // Populate utility variables 
+                let firstPart = branchNames[i].split('/',1).toString();
+                let secondPart = branchNames[i].substring( branchNames[i].indexOf('/') + 1);
+                let myEvent = { selectedBranch: branchNames[i], currentBranch: currentBranch, branchNumber: i }; // Will be used when creating menu callback 
+                
+                // Logics
+                let isSubMenuItem = branchNames[i].includes("/") ;
+                let requireNewSubMenu = (firstPart !== cachedFirstPart);
+
+                let isRemoteBranch = (firstPart === 'remotes');
+                let isLocalBranch = !isRemoteBranch;
+                let showRemote = branchList.branches[ branchNames[i] ].show; 
+                
+                let isCurrentBranch = ( currentBranch === branchNames[i] );
+                
+                // Don't show remote if merge (which requires local branch)
+                if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
+                    continue 
+                }
+                 
+                
+                // Show simple branch name 
+                if ( !isSubMenuItem ){
+                    menu.append( new gui.MenuItem( { 
+                        label : branchNames[i], 
+                        type: 'checkbox',
+                        checked : isCurrentBranch,
+                        enabled: !isCurrentBranch,
+                        click :  () => { _callback(callbackName,myEvent);}  
+                    }));    
+                }
+                 
+                // Add finished submenu to menu
+                if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
+                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                    submenuInProgress = false;
+                    submenu = new gui.Menu(); // Prepare an empty submenu for future use
+                }                   
+                       
+                               
+                // Skip hidden menus  
+                if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
+                    console.log(`Hidden branch = ${branchNames[i]}`);
+                    numberOfHiddenBranches++; 
+                    continue;
+                }
+                
+                
+                // Submenu item
+                if ( isSubMenuItem ){
+                    //console.log( `Branch : ${firstPart}/${secondPart}`);
+                   
+                    // Special case for remote
+                    if (isRemoteBranch){    
+                        myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
+                    }
+                    
+                    // Add to submenu
+                    if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
+                        
+                        let tempSubMenu = new gui.MenuItem( { 
+                                label: secondPart,
+                                type: 'checkbox',
+                                checked : isCurrentBranch,
+                                enabled: !isCurrentBranch,  
+                                click :  () => { _callback( callbackName, myEvent); }  
+                            });
+                        
+                        if (isRemoteBranch && showRemote) {
+                            remoteSubmenu.append( tempSubMenu); 
+                            submenuInProgress = false;
+                        }else {
+                            submenu.append( tempSubMenu); 
+                            submenuInProgress = true;
+                        }
+                        
+                        workaround_store_submenus.push( tempSubMenu); // Keep submenu-item reference to avoid premature Windows10 garbage collection
+                        
+                        console.log(`${i}:  Local branch = ${branchNames[i]}  showRemote = ${showRemote} `);
+                    }
+ 
+                    
+                }
+                cachedFirstPart = firstPart;
+  
+            } // End - branch list loop 
+                 
+                
+            // Add remotes to menu
+            if ( remoteSubmenu.items.length > 0 ){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
+            }
+                 
+                 
+            // Add last submenu to menu 
+            if ( submenuInProgress) {
+                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                
+            }   
+  
+            // Indicate how many hidden branches exists
+            if (numberOfHiddenBranches > 0){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                menu.append(new gui.MenuItem({ label: '(' + numberOfHiddenBranches + ' hidden branches )', enabled : false }));
+            }
+            
+ 
+
+        };
 
 
 // Utility functions
@@ -4348,9 +4539,12 @@ function loadSettings(settingsFile){
 
     // Update using same functions as when leaving settings window
     updateWithNewSettings();
-    
-    
 
+    cacheBranchList();
+    
+    console.log('END LOAD SETTINGS');
+    console.log(localState);
+    console.log(state);
     
     return state;
 }
@@ -4434,7 +4628,7 @@ window.onfocus = function() {
 };
 window.onblur = function() { 
   console.log("blur");
-  
+ 
   // Do not blur if always on top
   if ( state.alwaysOnTop === false){
     focusTitlebars(false);  

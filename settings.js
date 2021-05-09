@@ -62,6 +62,9 @@ async function _callback( name, event){
             
             console.log(state.repos[ state.repoNumber].hiddenBranches);
             
+            // Update cached branch list
+            opener.cacheBranchList();
+                
             break;
         }
         case 'folderSelectButton' : {
@@ -138,6 +141,8 @@ async function _callback( name, event){
                 console.log(error);
             }
             
+            // Update cached branch list
+            opener.cacheBranchList();
 
         
             break;
@@ -199,6 +204,9 @@ async function _callback( name, event){
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
+                
+                // Update cached branch list
+                opener.cacheBranchList();
 
                 
             }catch(err){
@@ -237,6 +245,10 @@ async function _callback( name, event){
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
+            
+            // Update cached branch list
+            opener.cacheBranchList();
+            
             break;
         }
         case 'deleteBranchClicked' : {
@@ -271,6 +283,8 @@ async function _callback( name, event){
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
 
+            // Update cached branch list
+            opener.cacheBranchList();
 
             break;
         }
