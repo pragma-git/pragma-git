@@ -130,10 +130,6 @@ var defaultPath = process.env.PATH;
 var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
-var cachedBranchMenu;  // Reason for this is to give some time for Windows-systems to populate popup branch menu (crash issues otherwise)
-
-
-var workaround_store_submenus;  // Workaround : Keep submenu-item references to avoid premature Windows10 garbage collection
 
 // -----
 // INIT
@@ -269,6 +265,13 @@ var workaround_store_submenus;  // Workaround : Keep submenu-item references to 
     // Mac-menu
     var mb; // Mac menubar
     var macWindowsMenu; // Mac windows menu
+
+    
+    // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
+    var cachedBranchMenu;  // Reason for this is to give some time for Windows-systems to populate popup branch menu (crash issues otherwise)
+    var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
+    var workaround_store_submenus; // Workaround : Keep submenu-item references to avoid premature Windows10 garbage collection
+
     
 // ---------
 // FUNCTIONS 
@@ -300,7 +303,7 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchMenu();
+        cacheBranchList();
         
         break;
       }
@@ -324,7 +327,7 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchMenu();
+        cacheBranchList();
         
         break;
       }
@@ -575,7 +578,7 @@ async function _callback( name, event){
         } 
         
         
-        cacheBranchMenu();
+        cacheBranchList();
 
         _setMode('UNKNOWN');
         
@@ -636,7 +639,7 @@ async function _callback( name, event){
                 // Move out of "detached Head" (losing track of it)
                 branchClicked(false);
                 
-                cacheBranchMenu();
+                cacheBranchList();
                 
                 break;
             }    
@@ -1144,41 +1147,28 @@ async function _callback( name, event){
             // - next branch 
             // - same as currentBranch if detached HEAD
                 
-            // Determine local branches
-            var branchList;
-            try{
-                branchList = await gitBranchList();
-            }catch(err){        
-                console.log('Error determining local branches, in branchClicked()');
-                console.log(err);
-            }
+
+            let branchList = cachedBranchList;
 
             
             //
             // Alt 1) Show branch menu
             //
             if (type == 'menu'){
-                //var menu = new gui.Menu();
+                cachedBranchMenu = new gui.Menu();
                 
                 let currentBranch = status_data.current;
                 
-                await cacheBranchMenu();  
+                let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu'); 
         
                 // Add context menu title-row
                 cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
                 cachedBranchMenu.insert(new gui.MenuItem({ label: 'Switch to branch : ', enabled : false }), 0);
-                        
-                let currentMenu = cachedBranchMenu;
-                // Add names of all branches
-                menu = await new gui.Menu();
-                makeBranchMenu( await menu, currentBranch, branchList, 'clickedBranchContextualMenu')
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                currentMenu.popup( Math.trunc(pos.left) - 10,24);
-				//isPaused = true;                 
+                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
  
-                //cacheBranchMenu();    
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
@@ -1232,7 +1222,7 @@ async function _callback( name, event){
                 } 
             } 
             
-            cacheBranchMenu();
+            cacheBranchList();
             
         } // End checking out branch
     
@@ -3316,16 +3306,16 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
 
 // Branch-menu caching
 
-async function cacheBranchMenu(){
+async function cacheBranchList(){
 
     // Determine local branches
-    let branchList;
+    //let branchList;
     try{
-        cachedBranchMenu = await gui.Menu(); // clear cached menu
+        //cachedBranchMenu = await gui.Menu(); // clear cached menu
         
-        branchList = await gitBranchList();
+        cachedBranchList = await gitBranchList();
         let currentBranch = 'dummy'; 
-        let temp = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu');
+        //let temp = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu');
         
         
     }catch(err){        
@@ -3405,7 +3395,7 @@ async function cacheBranchMenu(){
                 
                 // Submenu item
                 if ( isSubMenuItem ){
-                        console.log( `Branch : ${firstPart}/${secondPart}`);
+                    //console.log( `Branch : ${firstPart}/${secondPart}`);
                    
                     // Special case for remote
                     if (isRemoteBranch){    
@@ -3430,7 +3420,7 @@ async function cacheBranchMenu(){
                         
                         workaround_store_submenus.push( tempSubMenu); // Keep submenu-item reference to avoid premature Windows10 garbage collection
                         
-                        console.log(`Local branch = ${branchNames[i]}`);
+                        //console.log(`Local branch = ${branchNames[i]}`);
                     }
  
                     
@@ -4322,7 +4312,7 @@ function loadSettings(settingsFile){
     updateWithNewSettings();
     
     
-    cacheBranchMenu();
+    cacheBranchList();
     
     return state;
 }
