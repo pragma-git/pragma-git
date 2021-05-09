@@ -1013,14 +1013,16 @@ async function _callback( name, event){
                     
             // Add names of all repos
             for (var i = 0; i < state.repos.length; ++i) {
+                
+                let myEvent = [];
+                console.log(i);
+                console.log(state.repos[i].localFolder);
+                myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
+                myEvent.selectedRepoNumber = i;
+                myEvent.currentRepo = currentRepo;
+                repoNames.push(myEvent.selectedRepo);
+                    
                 if (state.repoNumber != i ){
-                    let myEvent = [];
-                    console.log(i);
-                    console.log(state.repos[i].localFolder);
-                    myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
-                    myEvent.selectedRepoNumber = i;
-                    myEvent.currentRepo = currentRepo;
-                    repoNames.push(myEvent.selectedRepo);
                     menu.append(
                         new gui.MenuItem(
                             { 
@@ -1031,7 +1033,18 @@ async function _callback( name, event){
                     );
                     console.log(repoNames[i]);
                 }else{
-                    console.log('Skipped current repo = ' + path.basename( state.repos[i].localFolder ) );
+                    
+                     menu.append(
+                        new gui.MenuItem(
+                            { 
+                                label: myEvent.selectedRepo, 
+                                type: 'checkbox',
+                                checked : true,
+                                enabled: false,
+                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
+                            } 
+                        )
+                    );                   
                 }
     
             }
