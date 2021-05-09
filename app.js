@@ -208,8 +208,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
-        localState.cached = {};         // cache time-consuming things
-        localState.cached.branches = {};// cache branch info 
+        //localState.cached = {};         // cache time-consuming things
+        //localState.cached.branches = {};// cache branch info 
         
     // Display text
         var textOutput = {
@@ -303,7 +303,7 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchList();
+        //cacheBranchList();
         
         break;
       }
@@ -358,6 +358,8 @@ async function _callback( name, event){
 
         // Reset some variables
         localState.historyNumber = -1;
+        
+        cacheBranchList();
         
         break;
       }
@@ -1064,6 +1066,9 @@ async function _callback( name, event){
     }
     async function branchClicked( detectDetachedBranch, type){
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
+
+        let branchList = cachedBranchList;
+
         
         // If HISTORY, reset history counter without changing branch
         if ( getMode() === 'HISTORY'){
@@ -1146,9 +1151,7 @@ async function _callback( name, event){
             // Checkout will be performed
             // - next branch 
             // - same as currentBranch if detached HEAD
-                
 
-            let branchList = cachedBranchList;
 
             
             //
@@ -2761,6 +2764,10 @@ async function gitBranchList(){
 
 */
 
+
+    console.log('ENTER GITBRANCHLIST');
+    console.log(state);
+
     let extendedBranchSummaryResult;
     
     // Create extended branch summary
@@ -2772,9 +2779,16 @@ async function gitBranchList(){
         console.log(err);
     }
     
+    console.log(state);
+    
+    
+    console.log('END GITBRANCHLIST');
     return extendedBranchSummaryResult;
     
+    
+    //
     // Define local functions
+    //
     function onBranchList(err, result ){
         
         
@@ -2808,7 +2822,7 @@ async function gitBranchList(){
             //
             // Set if remote exists on server (from cached)
             //
-                extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
+                //extendedBranchSummaryResult.branches[ branchName ].existsOnRemote = localState.cached.branches[branchName].existsOnRemote
         }
     }  
  } 
@@ -3137,15 +3151,15 @@ function gitFetch(){ // Fetch and ls-remote
                 //console.log( remoteBranchName );
             }
             
-            localState.cached.branches = {};
+            //localState.cached.branches = {};
             // Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
             for (let i = 0; i < b.all.length; i++) {
                 let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
                 
                 let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
                 
-                localState.cached.branches[ locallyListedBranchName] = {};
-                localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
+                //localState.cached.branches[ locallyListedBranchName] = {};
+                //localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
                 
                 
                 //console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
@@ -3304,19 +3318,13 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
     }
 }
 
-// Branch-menu caching
+// Branch-menu functions
 
 async function cacheBranchList(){
 
-    // Determine local branches
-    //let branchList;
     try{
-        //cachedBranchMenu = await gui.Menu(); // clear cached menu
-        
         cachedBranchList = await gitBranchList();
-        let currentBranch = 'dummy'; 
-        //let temp = await makeBranchMenu( cachedBranchMenu, currentBranch, branchList, 'clickedBranchContextualMenu');
-        
+        let currentBranch = cachedBranchList.current; 
         
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
@@ -3324,7 +3332,7 @@ async function cacheBranchList(){
     }                
 
 }
-    function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
+function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
         // menu is a nw.Menu
         // currentBranch is a string
         // branchList is a struct where branchList.all is an array of branch names
@@ -3410,7 +3418,7 @@ async function cacheBranchList(){
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
-                        if (isRemoteBranch ) {
+                        if (isRemoteBranch && showRemote) {
                             remoteSubmenu.append( tempSubMenu); 
                             submenuInProgress = false;
                         }else {
@@ -3420,7 +3428,7 @@ async function cacheBranchList(){
                         
                         workaround_store_submenus.push( tempSubMenu); // Keep submenu-item reference to avoid premature Windows10 garbage collection
                         
-                        //console.log(`Local branch = ${branchNames[i]}`);
+                        console.log(`${i}:  Local branch = ${branchNames[i]}  showRemote = ${showRemote} `);
                     }
  
                     
@@ -4310,9 +4318,12 @@ function loadSettings(settingsFile){
 
     // Update using same functions as when leaving settings window
     updateWithNewSettings();
-    
-    
+
     cacheBranchList();
+    
+    console.log('END LOAD SETTINGS');
+    console.log(localState);
+    console.log(state);
     
     return state;
 }
