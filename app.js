@@ -3150,20 +3150,20 @@ function gitFetch(){ // Fetch and ls-remote
                 //console.log( remoteBranchName );
             }
             
-            //localState.cached.branches = {};
-            // Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
-            for (let i = 0; i < b.all.length; i++) {
-                let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
+            ////localState.cached.branches = {};
+            //// Loop local (including mirrors of remotes) -- determine which local has a remote equivalent
+            //for (let i = 0; i < b.all.length; i++) {
+                //let locallyListedBranchName = b.all[i];  // Branch names existing locally ( master, remotes/origin/master, ...)
                 
-                let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
+                //let existsOnRemote = localVersionExists( remoteShortBranchNames, locallyListedBranchName);  // Check if remote name exists (true if : locallyListedBranchName can be derived to remoteShortBranchNames)
                 
-                //localState.cached.branches[ locallyListedBranchName] = {};
-                //localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
+                ////localState.cached.branches[ locallyListedBranchName] = {};
+                ////localState.cached.branches[ locallyListedBranchName].existsOnRemote = existsOnRemote;
                 
                 
-                //console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
+                ////console.log( locallyListedBranchName + '  :' +  existsOnRemote); // Mis-use this function
                 
-            }
+            //}
 
         }
 
@@ -3373,6 +3373,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let isLocalBranch = !isRemoteBranch;
                 let showRemote = branchList.branches[ branchNames[i] ].show; 
                 
+                let isCurrentBranch = ( currentBranch === branchNames[i] );
+                
                 // Don't show remote if merge (which requires local branch)
                 if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
                     continue 
@@ -3381,7 +3383,13 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 // Show simple branch name 
                 if ( !isSubMenuItem ){
-                    menu.append( new gui.MenuItem( { label : branchNames[i],  click :  () => { _callback(callbackName,myEvent);}  }));    
+                    menu.append( new gui.MenuItem( { 
+                        label : branchNames[i], 
+                        type: 'checkbox',
+                        checked : isCurrentBranch,
+                        enabled: !isCurrentBranch,
+                        click :  () => { _callback(callbackName,myEvent);}  
+                    }));    
                 }
                  
                 // Add finished submenu to menu
@@ -3413,7 +3421,10 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
                         
                         let tempSubMenu = new gui.MenuItem( { 
-                                label: secondPart,  
+                                label: secondPart,
+                                type: 'checkbox',
+                                checked : isCurrentBranch,
+                                enabled: !isCurrentBranch,  
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
