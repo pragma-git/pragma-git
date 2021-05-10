@@ -707,6 +707,43 @@ async function injectIntoSettingsJs(document) {
     tabButton[state.settingsWindow.selectedTab].click();
 
     document.getElementById('cloneTab').click(); 
+    
+    
+    // Warn if no repos
+
+    if (state.repos.length == 0){
+        
+        // Warn if no repos
+        displayAlert(
+            "No repositories", 
+            
+            `<p>
+                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
+                <ol>
+                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
+            
+                    </li>
+                    or
+                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
+        
+            
+                    </li>
+        
+                </ol>
+                
+                
+                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
+            </p>
+            
+            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
+            </p>
+            `
+        );
+        
+        // Set tab from setting
+        let tab = 1; // Repository tab
+        tabButton[ tab ].click();
+    }
 
 
 
@@ -718,10 +755,13 @@ async function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
+    
+            
+    // branch table is generated inside generateRepoTable
+
+    
 
     // Repo table           
-        //document.getElementById("header_Forget").style.visibility = "visible"; 
-        document.getElementById("emptyTable_iFrame").style.height ="0px";
         
         let table = document.getElementById("settingsTableBody");
         console.log('Settings - data repos:');
@@ -743,24 +783,7 @@ async function createHtmlTable(document){
         
         await generateRepoTable( document, table, state.repos); // generate the table first
 
-        
-    // Current branch table 
-        document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
-        
-    // branch table is generated inside generateRepoTable
 
-    if (state.repos.length == 0){
-        // Show what is needed for empty folder   
-        let div = document.getElementById("emptyTable_iFrame");
-        div.onload = function() {
-            div.style.height =
-              div.contentWindow.document.body.scrollHeight + 'px';
-        }
-        
-        // Set tab from setting
-        let tab = 1; // Repository tab
-        tabButton[ tab ].click();
-    }
 
 }
 async function generateRepoTable(document, table, data) {
