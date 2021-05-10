@@ -3114,39 +3114,40 @@ function gitFetch(){ // Fetch and ls-remote
         simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
         function onFetch(err, result) {console.log(result) };
         
-        // List remote branches
-        simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote);    
+        // TODO : remove if I found no problems with this comment-out
+        //// List remote branches
+        //simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote);    
         
-        async function onListRemote(err, result ){ 
+        //async function onListRemote(err, result ){ 
               
-            let b = await gitBranchList();
-            console.log(b);
-            console.log(result); 
-            console.log(err); 
+            //let b = await gitBranchList();
+            //console.log(b);
+            //console.log(result); 
+            //console.log(err); 
           
-            // Parse remote branch names
-            let splitted = result.split("\n");
-            console.log(splitted)
+            //// Parse remote branch names
+            //let splitted = result.split("\n");
+            //console.log(splitted)
 
-            let remoteShortBranchNames = []; // Branch names existing on remote ( format: master)
+            //let remoteShortBranchNames = []; // Branch names existing on remote ( format: master)
             
-            for(var row = 0; row < (splitted.length - 1); row++) {
-                let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
-                let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
-                remoteShortBranchNames[row] = remoteBranchName; 
+            //for(var row = 0; row < (splitted.length - 1); row++) {
+                //let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
+                //let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
+                //remoteShortBranchNames[row] = remoteBranchName; 
                 
-                // New version
-                let parts = splitted[row].split('/');
-                remoteBranchName = '';
-                for ( i = 2; i < parts.length - 1; i++ ){
-                    remoteBranchName += parts[i] + '/';
-                }
-                remoteBranchName += parts[parts.length - 1];
-                remoteShortBranchNames[row] = remoteBranchName; 
+                //// New version
+                //let parts = splitted[row].split('/');
+                //remoteBranchName = '';
+                //for ( i = 2; i < parts.length - 1; i++ ){
+                    //remoteBranchName += parts[i] + '/';
+                //}
+                //remoteBranchName += parts[parts.length - 1];
+                //remoteShortBranchNames[row] = remoteBranchName; 
 
-            }
+            //}
         
-        }
+        //}
 
     }catch(err){
         console.log('Error in gitFetch()');
