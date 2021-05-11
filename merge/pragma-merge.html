@@ -108,7 +108,7 @@
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
-            height: calc(100vh - 86px);
+            /* height: calc(100vh / 0.5 - 86px ); */
         }
         
         .CodeMirror-merge-editor{
@@ -154,6 +154,7 @@
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>
 
 

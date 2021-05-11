@@ -55,12 +55,12 @@
     
 
 <body id='body' class='light'>     
-    <!-- Dark mode on/off --> 
+    <!-- Dark mode on/off , zoom --> 
     <script>
         if (localState.dark){
             document.body.classList.add('dark');
         }
-        
+        window.document.body.style.zoom = global.state.zoom;
     </script>
      
     <div id="outer-content" style="width: fit-content;">
@@ -233,13 +233,16 @@
     
     <script>
         // Set window size to match content
-        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') );
-        let dx = document.getElementById('outer-content').scrollWidth;
-        let dy = document.getElementById('body').scrollHeight;
+        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
+        let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
+        let dy = document.getElementById('body').scrollHeight * global.state.zoom;
         
         let hx = window.outerWidth - window.innerWidth;
         let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(dx + hx + 1 * padding , dy + hy + 2 * padding + 100);
+        window.resizeTo(
+            dx + hx * global.state.zoom + 1 * padding + 50 , 
+            dy + hy * global.state.zoom + 2 * padding + 100 / global.state.zoom
+        );
     </script>
     
     

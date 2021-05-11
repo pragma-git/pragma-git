@@ -243,7 +243,7 @@
              
     <body class='light'> 
         
-        <!-- Dark mode on/off --> 
+        <!-- Dark mode on/off , zoom --> 
         <script>
             
             let PINNED_ENABLED_IMAGE = 'images/pinned_enabled.png';
@@ -253,6 +253,8 @@
                 PINNED_ENABLED_IMAGE = 'images/pinned_enabled_dark_mode.png';
                 PINNED_DISABLED_IMAGE = 'images/pinned_disabled_dark_mode.png';
             }
+            
+            window.document.body.style.zoom = global.state.zoom;
         </script>        
             
         <div id='header'>

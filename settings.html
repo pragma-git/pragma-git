@@ -129,10 +129,11 @@
 
 <body class='light'>  
        
-    <script>                <!-- Dark mode on/off --> 
+    <script>                <!-- Dark mode on/off , zoom--> 
         if (localState.dark){
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>

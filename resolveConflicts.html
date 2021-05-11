@@ -84,12 +84,14 @@
     
 </head>
 <body class='light'>
-    <!-- Dark mode on/off --> 
+    <!-- Dark mode on/off , zoom --> 
     <script>
         if (localState.dark){
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
+        
+        window.document.body.style.zoom = global.state.zoom;
     </script>
     
     <h2>Resolve Conflicts

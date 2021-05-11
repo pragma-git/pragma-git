@@ -1055,7 +1055,7 @@ async function _callback( name, event){
     
             // Popup as context menu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left) -10,24);
+            await menu.popup( Math.trunc(pos.left * state.zoom) -10,24);
 
             
             return; // BAIL OUT --  
@@ -1187,7 +1187,7 @@ async function _callback( name, event){
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
+                cachedBranchMenu.popup( Math.trunc(pos.left * state.zoom ) - 10,24);
  
                 return // BAIL OUT -- branch will be set from menu callback
             }
@@ -1365,7 +1365,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await cachedBranchMenu.popup( Math.trunc(pos.left),24);
+        await cachedBranchMenu.popup( Math.trunc(pos.left * state.zoom),24);
                 
 
     }
@@ -1407,11 +1407,11 @@ async function _callback( name, event){
             )        
         )
 
-        
+    
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left),24);
+        await menu.popup( Math.trunc(pos.left * state.zoom),24);
                 
 
     }
@@ -4282,7 +4282,7 @@ function loadSettings(settingsFile){
     }
     
     
-    state.zoom = 0.9;
+    state.zoom = 1.5;
     
     // Scale minimum window size to zoom level
     win = gui.Window.get();

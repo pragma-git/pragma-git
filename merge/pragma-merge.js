@@ -98,6 +98,7 @@ function injectIntoJs(document) {
     }   
 
     initUI();
+
 };
 
 function loadFile(filePath)  { 
@@ -125,7 +126,7 @@ function mergeViewHeight(mergeView) {
     if (!editor) return 0;
     return editor.getScrollInfo().height;
   }
-  return Math.max(editorHeight(mergeView.leftOriginal()),
+  return global.state.zoom * Math.max(editorHeight(mergeView.leftOriginal()),
                   editorHeight(mergeView.editor()),
                   editorHeight(mergeView.rightOriginal()));
 }
@@ -308,6 +309,17 @@ function initUI() {
     }else{
         disable('hide-unchanged'); 
     }
+    
+    //
+    // Set size
+    //
+        
+    let elements = document.getElementsByClassName('CodeMirror');
+    for (i = 0;  i< elements.length; i++){
+        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
+    }
+    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
+    
 
 
 }
