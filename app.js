@@ -3902,7 +3902,7 @@ function updateContentStyle() {
     
     
     
-    window.document.body.style.zoom = 1.0;
+    window.document.body.style.zoom = 0.8;
     
     // zoom factor
     var zoom = document.body.style.zoom;
@@ -3914,8 +3914,8 @@ function updateContentStyle() {
     var tb_height = document.getElementById("top-titlebar").offsetHeight; // In same coordinates as window
     
     // Translate to zoomed in-window coordinates
-    var content_height = Math.round( height / zoom - 2 * tb_height );
-    var top = Math.round( tb_height - 3 / zoom );
+    var content_height = ( height / zoom - 2 * tb_height ) - 6;
+    var top = tb_height;
 
     // Set content size
     var contentStyle = "position: absolute; ";
@@ -3923,9 +3923,11 @@ function updateContentStyle() {
     contentStyle += "top: " + top + "px; ";
     contentStyle += "height: " + content_height  + "px; ";
     content.setAttribute("style", contentStyle);
- 
 
-  
+    console.log('-----------');
+    console.log(top);
+    console.log(content_height);
+    console.log('-----------');
 }
 
 
@@ -4412,12 +4414,13 @@ window.onload = function() {
   
   // Fix for overshoot of content outside window
   if (document.getElementById('content').offsetWidth > window.innerWidth){
+    console.log('overshoot');
     win.reload();
     updateContentStyle(); 
   }
 
    
-  win.width = win.width +1; // Try to force redraw -- to fix the layout problems
+  //win.width = win.width +1; // Try to force redraw -- to fix the layout problems
   
   updateContentStyle(); 
   win.show();
