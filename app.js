@@ -3899,35 +3899,50 @@ function focusTitlebars(focus) {
     titlebar.style.backgroundColor = bg_color;
 }
 function updateContentStyle() {
-    
-    
+ 
     
     window.document.body.style.zoom = 0.8;
     
     // zoom factor
     var zoom = document.body.style.zoom;
 
-    // Window size
+    // Window size (outer window size)
     var height = window.outerHeight;
+    var width = window.outerWidth;
     
-    // In window outer coordinates
+    // Element heights adding up to Window size
     var tb_height = document.getElementById("top-titlebar").offsetHeight; // In same coordinates as window
-    
+    var arrow_buttons_height = document.getElementById('arrow_table').offsetHeight;
+    var outputRowHeight = document.getElementById('output_row').offsetHeight; // Search folds out here
+       
     // Translate to zoomed in-window coordinates
     var content_height = ( height / zoom - 2 * tb_height ) - 6;
-    var top = tb_height;
 
+    
+    // Check if left column is lower than arrow_table => Resize window after 1 second
+    var left_height = document.getElementById('left-column').offsetHeight;
+    if( left_height <= arrow_buttons_height + 2){
+        setTimeout(
+        function(){
+            window.resizeTo( width, 2 * tb_height + arrow_buttons_height + outputRowHeight );
+            updateContentStyle()
+        }, 
+        1000); 
+    } 
+    
     // Set content size
+    var top = tb_height;
     var contentStyle = "position: absolute; ";
     contentStyle += "left: 0px; ";
     contentStyle += "top: " + top + "px; ";
     contentStyle += "height: " + content_height  + "px; ";
-    content.setAttribute("style", contentStyle);
+    document.getElementById('content').setAttribute("style", contentStyle);;
 
     console.log('-----------');
     console.log(top);
     console.log(content_height);
     console.log('-----------');
+
 }
 
 
