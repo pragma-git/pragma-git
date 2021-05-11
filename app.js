@@ -3357,22 +3357,11 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
                 
-                // Don't show remote if merge (which requires local branch)
+                // Don't show remote if merge-menu (because merge requires local branch)
                 if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
                     continue 
                 }
                  
-                
-                // Show simple branch name 
-                if ( !isSubMenuItem ){
-                    menu.append( new gui.MenuItem( { 
-                        label : branchNames[i], 
-                        type: 'checkbox',
-                        checked : isCurrentBranch,
-                        enabled: !isCurrentBranch,
-                        click :  () => { _callback(callbackName,myEvent);}  
-                    }));    
-                }
                  
                 // Add finished submenu to menu
                 if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
@@ -3389,6 +3378,17 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                     continue;
                 }
                 
+                
+                // Show simple branch name 
+                if ( !isSubMenuItem ){
+                    menu.append( new gui.MenuItem( { 
+                        label : branchNames[i], 
+                        type: 'checkbox',
+                        checked : isCurrentBranch,
+                        enabled: !isCurrentBranch,
+                        click :  () => { _callback(callbackName,myEvent);}  
+                    }));    
+                }
                 
                 // Submenu item
                 if ( isSubMenuItem ){
