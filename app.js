@@ -916,7 +916,7 @@ async function _callback( name, event){
            
         console.log('Help pressed');
         
-        let fileName = 'HELP' + pathsep + event.name + '.html';
+        let fileName = STARTDIR + pathsep + 'HELP' + pathsep + event.name + '.html';
         let text = fs.readFileSync(fileName);
         let title = 'Help on ' + event.name;
                         
