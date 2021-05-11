@@ -453,7 +453,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find': {
-        let delta = Math.round( 40 * state.zoom); 
+        let delta = Math.round( 40 * state.zoomMain); 
         let fix = -1; // One pixel move settles visibility somehow
         
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
@@ -1055,7 +1055,7 @@ async function _callback( name, event){
     
             // Popup as context menu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left * state.zoom) -10,24);
+            await menu.popup( Math.trunc(pos.left * state.zoomMain) -10,24);
 
             
             return; // BAIL OUT --  
@@ -1187,7 +1187,7 @@ async function _callback( name, event){
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                cachedBranchMenu.popup( Math.trunc(pos.left * state.zoom ) - 10,24);
+                cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10,24);
  
                 return // BAIL OUT -- branch will be set from menu callback
             }
@@ -1365,7 +1365,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await cachedBranchMenu.popup( Math.trunc(pos.left * state.zoom),24);
+        await cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain),24);
                 
 
     }
@@ -1411,7 +1411,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left * state.zoom),24);
+        await menu.popup( Math.trunc(pos.left * state.zoomMain),24);
                 
 
     }
@@ -3902,7 +3902,7 @@ function updateContentStyle() {
     
     
     // zoom factor
-    var zoom = state.zoom;
+    var zoom = state.zoomMain;
     window.document.body.style.zoom = zoom;
 
     // Window size is in screen coordinates
@@ -4213,6 +4213,9 @@ function loadSettings(settingsFile){
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
             
+            state.zoom = setting( state_in.zoom, '1.0');
+            state.zoomMain = setting( state_in.zoomMain, '1.0');
+            
         
         // Git
             console.log('- setting git settings');
@@ -4282,14 +4285,12 @@ function loadSettings(settingsFile){
     }
     
     
-    state.zoom = 1.5;
-    
     // Scale minimum window size to zoom level
     win = gui.Window.get();
         
     let manifest = require('./package.json');
-    let min_width =  Math.round( manifest.window.min_width * state.zoom );
-    let min_height = Math.round( manifest.window.min_height * state.zoom);
+    let min_width =  Math.round( manifest.window.min_width * state.zoomMain );
+    let min_height = Math.round( manifest.window.min_height * state.zoomMain);
     win.setMinimumSize( min_width, min_height);
 
     // Position window

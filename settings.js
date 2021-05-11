@@ -473,6 +473,10 @@ async function closeWindow(){
     // Read Dark mode 
     state.darkmode = document.querySelectorAll("input[name=darkmode]:checked")[0].value;
     
+    // Read zoom
+    state.zoom =  document.getElementById('zoom').value;
+    state.zoomMain = document.getElementById('zoomMain').value;
+    
     // Set Git author name and email (stored in git, not in settings)
     try{
         commands = [ 'config', '--global', 'user.name', document.getElementById('authorName').value];
@@ -688,8 +692,9 @@ async function injectIntoSettingsJs(document) {
         console.log(err);
     }
     
-    
-    
+    // Set Zoom
+    document.getElementById('zoom').value = state.zoom;
+    document.getElementById('zoomMain').value = state.zoomMain;
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
     if ( ! win.canSetVisibleOnAllWorkspaces() ){
