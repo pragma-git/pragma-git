@@ -11,6 +11,10 @@
     "toolbar": false,
     "frame": false,
     "position": "center",
+    "width": 775,
+    "height": 148,
+    "min_width": 850,
+    "min_height": 148,
     "icon": "./images/icon.png"
   },
   "scripts": {

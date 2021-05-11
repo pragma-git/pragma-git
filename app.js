@@ -453,13 +453,14 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find': {
-        let delta = 40; 
+        let delta = Math.round( 40 * state.zoom); 
         let fix = -1; // One pixel move settles visibility somehow
+        
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             // Show find
             document.getElementById('output_row').style.visibility = 'visible';
-            window.resizeTo(win.width, win.height + fix);
-            window.resizeTo(win.width, win.height + delta);
+            win.resizeTo(win.width, win.height + fix);
+            win.resizeTo(win.width, win.height + delta);
             
             if (localState.graphWindow ){
                 graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
@@ -467,8 +468,8 @@ async function _callback( name, event){
         }else{
             // Hide find
             document.getElementById('output_row').style.visibility = 'collapse';
-            window.resizeTo(win.width, win.height - delta);
-            window.resizeTo(win.width, win.height - fix);
+            win.resizeTo(win.width, win.height - delta);
+            win.resizeTo(win.width, win.height - fix);
             
             resetHistoryPointer();  // Go to first in history
             upArrowClicked();// Get out of history
@@ -476,10 +477,8 @@ async function _callback( name, event){
             if (localState.graphWindow ){
                 graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
             }
-        
             
         }
-        let element = document.getElementById('inner-content');
 
         break;
       }
@@ -3901,14 +3900,15 @@ function focusTitlebars(focus) {
 function updateContentStyle() {
  
     
-    window.document.body.style.zoom = 0.8;
     
     // zoom factor
-    var zoom = document.body.style.zoom;
+    var zoom = state.zoom;
+    window.document.body.style.zoom = zoom;
 
-    // Window size (outer window size)
-    var height = window.outerHeight;
-    var width = window.outerWidth;
+    // Window size is in screen coordinates
+    // Scale to window coordinates :
+    var height = window.outerHeight / zoom;
+    var width = window.outerWidth / zoom;
     
     // Element heights adding up to Window size
     var tb_height = document.getElementById("top-titlebar").offsetHeight; // In same coordinates as window
@@ -3916,19 +3916,8 @@ function updateContentStyle() {
     var outputRowHeight = document.getElementById('output_row').offsetHeight; // Search folds out here
        
     // Translate to zoomed in-window coordinates
-    var content_height = ( height / zoom - 2 * tb_height ) - 6;
+    var content_height = ( height  - 2 * tb_height ) - 6;
 
-    
-    // Check if left column is lower than arrow_table => Resize window after 1 second
-    var left_height = document.getElementById('left-column').offsetHeight;
-    if( left_height <= arrow_buttons_height + 2){
-        setTimeout(
-        function(){
-            window.resizeTo( width, 2 * tb_height + arrow_buttons_height + outputRowHeight );
-            updateContentStyle()
-        }, 
-        1000); 
-    } 
     
     // Set content size
     var top = tb_height;
@@ -4291,6 +4280,17 @@ function loadSettings(settingsFile){
     if ( state.repoNumber > state.repos.length ){
         state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
     }
+    
+    
+    state.zoom = 0.9;
+    
+    // Scale minimum window size to zoom level
+    win = gui.Window.get();
+        
+    let manifest = require('./package.json');
+    let min_width =  Math.round( manifest.window.min_width * state.zoom );
+    let min_height = Math.round( manifest.window.min_height * state.zoom);
+    win.setMinimumSize( min_width, min_height);
 
     // Position window
     try{
@@ -4303,11 +4303,10 @@ function loadSettings(settingsFile){
             state.position.y = screen.availTop;
         }
         
-        // Position and size window
-        win = gui.Window.get();
+        // Position and size from saved setting 
         win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height);
-
+        win.resizeTo( state.position.width, state.position.height );
+ 
       
     }catch(err){
         console.log('Error setting window position and size');
@@ -4376,8 +4375,6 @@ function updateWithNewSettings(){
         break;
       }
     }
-      
-    
     
 
 }
@@ -4421,25 +4418,14 @@ window.onresize = function() {
 window.onload = function() {
   var win = nw.Window.get();
   main_win = win;
-  
+
   
   console.log('PATH 1 = ' + process.env.PATH);
   defaultPath = process.env.PATH;
 
-  
-  // Fix for overshoot of content outside window
-  if (document.getElementById('content').offsetWidth > window.innerWidth){
-    console.log('overshoot');
-    win.reload();
-    updateContentStyle(); 
-  }
 
-   
-  //win.width = win.width +1; // Try to force redraw -- to fix the layout problems
-  
   updateContentStyle(); 
-  win.show();
-  //updateContentStyle(); 
+  updateContentStyle(); 
   
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
@@ -4457,12 +4443,12 @@ window.onload = function() {
   
   win.setAlwaysOnTop( state.alwaysOnTop );
   
-  
   initializeWindowMenu();
   
-          
   // Write signal file that pragma-git is running
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
+
+  win.show();
   
 };
 
