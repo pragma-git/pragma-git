@@ -64,6 +64,8 @@
         .outer-content {
             width: 100%;
             height: auto;
+            padding-right: 10px;
+            border:none;
         }
      
      </style>
@@ -73,6 +75,11 @@
     <style>   
         .CodeMirror { 
             line-height: 1.4; 
+        }
+        
+        #view{
+            padding-right: 8px;
+            padding-left: 2px;
         }
 
         span.clicky {
@@ -238,7 +245,8 @@
             console.log('merge.html :DOM fully unloaded -- maybe window closed ');
             finish('unloadWindow');
             }
-        );
+        );     
+        window.addEventListener('resize',  initUI );
     </script>  
 
 

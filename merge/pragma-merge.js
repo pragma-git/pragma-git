@@ -130,20 +130,14 @@ function mergeViewHeight(mergeView) {
                   editorHeight(mergeView.editor()),
                   editorHeight(mergeView.rightOriginal()));
 }
-function resize(mergeView) {
-  var height = mergeViewHeight(mergeView);
-  for(;;) {
-    if (mergeView.leftOriginal())
-      mergeView.leftOriginal().setSize(null, height);
-    mergeView.editor().setSize(null, height);
-    if (mergeView.rightOriginal())
-      mergeView.rightOriginal().setSize(null, height);
+function resize() {
+    
+    let elements = document.getElementsByClassName('CodeMirror');
+    for (i = 0;  i< elements.length; i++){
+        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
+    }
+    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
 
-    var newHeight = mergeViewHeight(mergeView);
-    if (newHeight >= height) break;
-    else height = newHeight;
-  }
-  mergeView.wrap.style.height = height + "px";
 }
 
 // Redraw 
@@ -314,11 +308,7 @@ function initUI() {
     // Set size
     //
         
-    let elements = document.getElementsByClassName('CodeMirror');
-    for (i = 0;  i< elements.length; i++){
-        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
-    }
-    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
+    resize();
     
 
 
