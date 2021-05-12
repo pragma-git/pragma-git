@@ -70,7 +70,7 @@ dv.panes = panes; // Initial value
 
         
 // Define help icon
-const helpIcon = `<img style="vertical-align:middle;float: right" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
+const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 10px" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
 
 //-----------
 // FUNCTIONS
