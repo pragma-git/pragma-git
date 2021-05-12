@@ -97,7 +97,7 @@
         box-shadow: 0 0 0 2px grey;
     }
             
-    textarea{ 
+    textarea{
         width: 100%;
         line-height: 1;
         color: var(--body-text);

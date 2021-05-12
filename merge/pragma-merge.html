@@ -58,12 +58,15 @@
             height: 100%;
             background: var(--body-background);
             color: var( --body-text);
+            overflow: hidden;
         }  
 
 
         .outer-content {
             width: 100%;
             height: auto;
+            padding-right: 10px;
+            border:none;
         }
      
      </style>
@@ -73,6 +76,11 @@
     <style>   
         .CodeMirror { 
             line-height: 1.4; 
+        }
+        
+        #view{
+            padding-right: 8px;
+            padding-left: 2px;
         }
 
         span.clicky {
@@ -108,7 +116,7 @@
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
-            height: calc(100vh - 86px);
+            /* height: calc(100vh / 0.5 - 86px ); */
         }
         
         .CodeMirror-merge-editor{
@@ -154,6 +162,7 @@
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>
 
 
@@ -237,7 +246,8 @@
             console.log('merge.html :DOM fully unloaded -- maybe window closed ');
             finish('unloadWindow');
             }
-        );
+        );     
+        window.addEventListener('resize',  initUI );
     </script>  
 
 

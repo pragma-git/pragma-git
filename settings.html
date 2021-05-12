@@ -129,10 +129,11 @@
 
 <body class='light'>  
        
-    <script>                <!-- Dark mode on/off --> 
+    <script>                <!-- Dark mode on/off , zoom--> 
         if (localState.dark){
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>
@@ -163,7 +164,7 @@
                 <h3>Visual</h3>  
                 
                     <!--  Dark mode -->
-                    Dark mode setting (restart Pragma-git needed): <br>
+                    Dark mode setting (restart needed): <br>
                     <input type="radio" id="system" name="darkmode" value="system">
                     <label for="system">System setting</label><br>
                     <input type="radio" id="light" name="darkmode" value="light">
@@ -180,6 +181,18 @@
                     <!--  On all workspaces (Mac and Linux virtual desktops) -->
                     <input type="checkbox" id="onAllWorkspaces" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br><br>  
+    
+     
+                    Window scaling  (restart needed): <br>   
+                    <!--  Zoom -->
+                    <input id="zoomMain" type="text" size="3"/>&nbsp;
+                    <label for="zoomMain"> Scale-factor for main window</label>
+                    
+                    <br> 
+                    
+                    <input id="zoom" type="text" size="3"/>&nbsp;
+                    <label for="zoom"> Scale-factor for other windows</label>
+    
     
                     
                 <h3>Git Settings</h3>  

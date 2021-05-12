@@ -70,7 +70,7 @@ dv.panes = panes; // Initial value
 
         
 // Define help icon
-const helpIcon = `<img style="vertical-align:middle;float: right" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
+const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 10px" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
 
 //-----------
 // FUNCTIONS
@@ -98,6 +98,7 @@ function injectIntoJs(document) {
     }   
 
     initUI();
+
 };
 
 function loadFile(filePath)  { 
@@ -125,24 +126,18 @@ function mergeViewHeight(mergeView) {
     if (!editor) return 0;
     return editor.getScrollInfo().height;
   }
-  return Math.max(editorHeight(mergeView.leftOriginal()),
+  return global.state.zoom * Math.max(editorHeight(mergeView.leftOriginal()),
                   editorHeight(mergeView.editor()),
                   editorHeight(mergeView.rightOriginal()));
 }
-function resize(mergeView) {
-  var height = mergeViewHeight(mergeView);
-  for(;;) {
-    if (mergeView.leftOriginal())
-      mergeView.leftOriginal().setSize(null, height);
-    mergeView.editor().setSize(null, height);
-    if (mergeView.rightOriginal())
-      mergeView.rightOriginal().setSize(null, height);
+function resize() {
+    
+    let elements = document.getElementsByClassName('CodeMirror');
+    for (i = 0;  i< elements.length; i++){
+        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
+    }
+    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
 
-    var newHeight = mergeViewHeight(mergeView);
-    if (newHeight >= height) break;
-    else height = newHeight;
-  }
-  mergeView.wrap.style.height = height + "px";
 }
 
 // Redraw 
@@ -308,6 +303,13 @@ function initUI() {
     }else{
         disable('hide-unchanged'); 
     }
+    
+    //
+    // Set size
+    //
+        
+    resize();
+    
 
 
 }

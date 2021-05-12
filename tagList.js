@@ -50,8 +50,8 @@ async function injectIntoJs(document) {
     
     // Set size to match content
     let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
-    let dx = document.getElementById('outerContent').scrollWidth;
-    let dy = document.getElementById('outerContent').scrollHeight;
+    let dx = document.getElementById('outerContent').scrollWidth * global.state.zoom;
+    let dy = document.getElementById('outerContent').scrollHeight * global.state.zoom;
     
     let hx = window.outerWidth - window.innerWidth;
     let hy = window.outerHeight - window.innerHeight;

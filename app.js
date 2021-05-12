@@ -270,6 +270,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
     
+    
+    
+    
 // ---------
 // FUNCTIONS 
 // ---------
@@ -450,13 +453,14 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-find': {
-        let delta = 40; 
+        let delta = Math.round( 40 * state.zoomMain); 
         let fix = -1; // One pixel move settles visibility somehow
+        
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             // Show find
             document.getElementById('output_row').style.visibility = 'visible';
-            window.resizeTo(win.width, win.height + fix);
-            window.resizeTo(win.width, win.height + delta);
+            win.resizeTo(win.width, win.height + fix);
+            win.resizeTo(win.width, win.height + delta);
             
             if (localState.graphWindow ){
                 graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
@@ -464,8 +468,8 @@ async function _callback( name, event){
         }else{
             // Hide find
             document.getElementById('output_row').style.visibility = 'collapse';
-            window.resizeTo(win.width, win.height - delta);
-            window.resizeTo(win.width, win.height - fix);
+            win.resizeTo(win.width, win.height - delta);
+            win.resizeTo(win.width, win.height - fix);
             
             resetHistoryPointer();  // Go to first in history
             upArrowClicked();// Get out of history
@@ -473,10 +477,8 @@ async function _callback( name, event){
             if (localState.graphWindow ){
                 graph_win.window.injectIntoJs(graph_win.window.document); // Draws graph, selected, and pinned 
             }
-        
             
         }
-        let element = document.getElementById('inner-content');
 
         break;
       }
@@ -914,7 +916,7 @@ async function _callback( name, event){
            
         console.log('Help pressed');
         
-        let fileName = 'HELP' + pathsep + event.name + '.html';
+        let fileName = STARTDIR + pathsep + 'HELP' + pathsep + event.name + '.html';
         let text = fs.readFileSync(fileName);
         let title = 'Help on ' + event.name;
                         
@@ -1053,7 +1055,7 @@ async function _callback( name, event){
     
             // Popup as context menu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left) -10,24);
+            await menu.popup( Math.trunc(pos.left * state.zoomMain) -10,24);
 
             
             return; // BAIL OUT --  
@@ -1185,7 +1187,7 @@ async function _callback( name, event){
                 
                 // Popup as context menu
                 let pos = document.getElementById("top-titlebar-branch-arrow").getBoundingClientRect();
-                cachedBranchMenu.popup( Math.trunc(pos.left) - 10,24);
+                cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10,24);
  
                 return // BAIL OUT -- branch will be set from menu callback
             }
@@ -1363,7 +1365,7 @@ async function _callback( name, event){
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await cachedBranchMenu.popup( Math.trunc(pos.left),24);
+        await cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain),24);
                 
 
     }
@@ -1405,11 +1407,11 @@ async function _callback( name, event){
             )        
         )
 
-        
+    
 
         // Popup as context menu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left),24);
+        await menu.popup( Math.trunc(pos.left * state.zoomMain),24);
                 
 
     }
@@ -3896,46 +3898,40 @@ function focusTitlebars(focus) {
     titlebar.style.backgroundColor = bg_color;
 }
 function updateContentStyle() {
+ 
     
     
-    // This is to make statusbar and titlebar position well
-    var content = document.getElementById("content");
-    if (!content)
-    return;
-    
-    var left = 0;
-    var top = 0;
-    var width = window.outerWidth; 
-    var height = window.outerHeight;
-    
-    var titlebar = document.getElementById("top-titlebar");
-    if (titlebar) {
-        height -= titlebar.offsetHeight + 32 + 2;
-        top += titlebar.offsetHeight;
-    }
-    titlebar = document.getElementById("bottom-titlebar");
-    
-    // Adjust content width by border
-    width -=   6 ; // Width in content border
-    
-    var contentStyle = "position: absolute; ";
-    contentStyle += "left: " + left + "px; ";
-    contentStyle += "top: " + top + "px; ";
-    //contentStyle += "width: " + width + "px; ";
-    contentStyle += "height: " + height  + "px; ";
-    content.setAttribute("style", contentStyle);
-    
-    //var body = document.getElementById("body");
-    //body.setAttribute("style", "width:" + width + "px;");
-    
-    //// This is to make message textarea follow window resize
-    //var message_area = document.getElementById("message");
-    //var message_area_style = "height: " + (height - 28 - 8).toString() + "px; ";
-    //message_area_style += "width: 100%; " ;
-    //message_area_style += "resize: none; " ;
-    //message_area.setAttribute("style", message_area_style);
+    // zoom factor
+    var zoom = state.zoomMain;
+    window.document.body.style.zoom = zoom;
 
-  
+    // Window size is in screen coordinates
+    // Scale to window coordinates :
+    var height = window.outerHeight / zoom;
+    var width = window.outerWidth / zoom;
+    
+    // Element heights adding up to Window size
+    var tb_height = document.getElementById("top-titlebar").offsetHeight; // In same coordinates as window
+    var arrow_buttons_height = document.getElementById('arrow_table').offsetHeight;
+    var outputRowHeight = document.getElementById('output_row').offsetHeight; // Search folds out here
+       
+    // Translate to zoomed in-window coordinates
+    var content_height = ( height  - 2 * tb_height ) - 6;
+
+    
+    // Set content size
+    var top = tb_height;
+    var contentStyle = "position: absolute; ";
+    contentStyle += "left: 0px; ";
+    contentStyle += "top: " + top + "px; ";
+    contentStyle += "height: " + content_height  + "px; ";
+    document.getElementById('content').setAttribute("style", contentStyle);;
+
+    console.log('-----------');
+    console.log(top);
+    console.log(content_height);
+    console.log('-----------');
+
 }
 
 
@@ -4217,6 +4213,9 @@ function loadSettings(settingsFile){
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
             
+            state.zoom = setting( state_in.zoom, '1.0');
+            state.zoomMain = setting( state_in.zoomMain, '1.0');
+            
         
         // Git
             console.log('- setting git settings');
@@ -4284,6 +4283,15 @@ function loadSettings(settingsFile){
     if ( state.repoNumber > state.repos.length ){
         state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
     }
+    
+    
+    // Scale minimum window size to zoom level
+    win = gui.Window.get();
+        
+    let manifest = require('./package.json');
+    let min_width =  Math.round( manifest.window.min_width * state.zoomMain );
+    let min_height = Math.round( manifest.window.min_height * state.zoomMain);
+    win.setMinimumSize( min_width, min_height);
 
     // Position window
     try{
@@ -4296,11 +4304,10 @@ function loadSettings(settingsFile){
             state.position.y = screen.availTop;
         }
         
-        // Position and size window
-        win = gui.Window.get();
+        // Position and size from saved setting 
         win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height);
-
+        win.resizeTo( state.position.width, state.position.height );
+ 
       
     }catch(err){
         console.log('Error setting window position and size');
@@ -4310,6 +4317,7 @@ function loadSettings(settingsFile){
 
     // Update using same functions as when leaving settings window
     updateWithNewSettings();
+    
 
     cacheBranchList();
     
@@ -4368,7 +4376,6 @@ function updateWithNewSettings(){
         break;
       }
     }
-      
     
 
 }
@@ -4412,24 +4419,14 @@ window.onresize = function() {
 window.onload = function() {
   var win = nw.Window.get();
   main_win = win;
-  
+
   
   console.log('PATH 1 = ' + process.env.PATH);
   defaultPath = process.env.PATH;
 
-  
-  // Fix for overshoot of content outside window
-  if (document.getElementById('content').offsetWidth > window.innerWidth){
-    win.reload();
-    updateContentStyle(); 
-  }
 
-   
-  win.width = win.width +1; // Try to force redraw -- to fix the layout problems
-  
   updateContentStyle(); 
-  win.show();
-  //updateContentStyle(); 
+  updateContentStyle(); 
   
   focusTitlebars(true);
   win.setAlwaysOnTop(true);
@@ -4447,12 +4444,12 @@ window.onload = function() {
   
   win.setAlwaysOnTop( state.alwaysOnTop );
   
-  
   initializeWindowMenu();
   
-          
   // Write signal file that pragma-git is running
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
+
+  win.show();
   
 };
 
