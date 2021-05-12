@@ -1210,7 +1210,7 @@ async function _callback( name, event){
                             localState.branchNumber = 0;
                         }
                         // Keep branch number. Get that branch from branchList         
-                        branchName = branchList.local[localState.branchNumber + 1]; // Hash of HEAD first in branchList, thus jump one position
+                        branchName = branchList.local[localState.branchNumber ]; 
                     }else {
                         // Normal branch
                         
