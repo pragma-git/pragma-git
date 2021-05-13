@@ -5,8 +5,22 @@
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
         
         <script src="graph.js"></script>
-    </head>
+        
+        
 
+        <!-- 
+        NOTE: Download svg.js from : https://cdnjs.com/libraries/svg.js
+        
+        Save downloaded file as : "lib/svg.js"
+        
+        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+    
+         -->
+        <script src="lib/svg.js"></script>
+
+
+    </head>
+    
 
     <!-- Styling graph-->
     <style> 
@@ -249,7 +263,15 @@
 
     </style>
              
-    <body class='light'> 
+    <body class='light' style="position: relative;"> 
+        
+        
+        
+        
+        <svg width="200" height="100%" style="position: absolute; top: 10px">
+            <circle cx="100" cy="100" r="100" fill="#529fca" />
+        </svg>
+        
         
         <!-- Dark mode on/off , zoom --> 
         <script>
@@ -290,6 +312,8 @@
     
             </h2>
         </div>
+        
+        <div id="drawing"></div>
 
         <div id="rightInsert" class="rightInsert">
 
@@ -637,7 +661,7 @@
         closeWindow(window);
         }
     );
-</script>
+    </script>
 
     
         

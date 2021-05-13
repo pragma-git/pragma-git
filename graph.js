@@ -563,6 +563,14 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
+        
+        
+        
+            draw = SVG().addTo('body').size('100%', '100%').size(document.body.scrollWidth, document.body.scrollHeight)
+            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,1000);
+            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,2000);
+            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,document.body.scrollHeight - 400);
+            console.log('document.body.scrollHeight = ' + document.body.scrollHeight)
 
 }
 
