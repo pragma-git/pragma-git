@@ -692,8 +692,10 @@ async function gitCommitMessage(hash){
         
     const COL_WIDTH = 20;
     const LEFT_OFFSET = 40;
+    const TOP_OFFSET = 80;
     const IMG_H = 12;
     const IMG_W = 12;
+    const NUMBER_OF_BRANCHES = 15
 
 function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
@@ -720,14 +722,13 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
     draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
     
-    const NumberOfBranches = 15
     
-      for (var i = 0; i < NumberOfBranches; i++) {
-        const x0 = LEFT_OFFSET + i * COL_WIDTH + 0.5 * IMG_W;
+      for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
+        const x0 = LEFT_OFFSET + i * COL_WIDTH;
         const x1 = x0;
-        const y0 = 0;
-        const y1 = splitted.length * ROW_HEIGHT;
-        draw.line( x0  , y0, x1, y1).stroke({ color: '#f06', width: 1})
+        const y0 = TOP_OFFSET ;
+        const y1 = TOP_OFFSET + splitted.length * ROW_HEIGHT;
+        draw.line( x0  , y0, x1, y1).stroke({ color: '#888', width: 0.25})
     }  
     
     // Loop each row
@@ -832,7 +833,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                 //colorFileName = `images/circle_colors/circle_${colorName}.png`;
                 
                 
-                let col = LEFT_OFFSET;  
+                let col = LEFT_OFFSET ;  
                 if ( branchNames.has(noteInThisRow) ){
                     let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
                     let colorName = colorImageNameDefinitions[ colorNumber];
@@ -845,7 +846,14 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         
         
         // Draw SVG
-        draw.image(colorFileName).size(IMG_W,IMG_H).move(col ,line * ROW_HEIGHT);
+        draw.image(colorFileName).
+            size(IMG_W,IMG_H).
+            move( col - 0.5 * IMG_W, TOP_OFFSET + line * ROW_HEIGHT - 0.5 * IMG_H); // Center image on coordinate point
+            
+        draw.line( col       , TOP_OFFSET + line * ROW_HEIGHT , 
+                   LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + line * ROW_HEIGHT).
+            stroke({ color: '#888', width: 0.25}); 
+        
         line++;
     }
     
