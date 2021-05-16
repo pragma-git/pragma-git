@@ -478,12 +478,39 @@ async function injectIntoJs(document){
         document.getElementById('branchName').innerText = branchName;
         
         // Normal log command    
-        let commands = [ 'log',  '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
+        let commands = [ 'log',  '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];       
          
         // Show all log command 
         if (state.graph.showall){
             commands = [ 'log',  '--branches', '--tags', '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
         }
+        
+        
+                
+        
+        // TEST : Swimlanes
+        
+            commands = [ 'log',  '--parents', '--date-order', '--oneline',  messageFormat];  
+            
+            try{
+                let shortHistoryCommand= [...commands]; // Clone
+                //shortHistoryCommand.push('-' + firstPassN);
+                
+                await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
+                function onLog(err, result ){graphText = result; console.log(result); };  
+            }catch(err){        
+                console.log(err);
+            }
+            
+            // Draw full graph, and label current branch
+            let branchHistory = await readBranchHistory();
+            await drawGraph_swim_lanes( document, graphText, branchHistory, history);
+            return
+        
+        
+ 
+        
+        
  
          
         // Find short history graph
@@ -497,9 +524,8 @@ async function injectIntoJs(document){
             console.log(err);
         }
     
-    
         // Draw full graph, and label current branch
-        let branchHistory = await readBranchHistory();
+        branchHistory = await readBranchHistory();
         await drawGraph( document, graphText, branchHistory, history);
         
         // Draw node-color header
@@ -661,6 +687,174 @@ async function gitCommitMessage(hash){
 }
 
 // GUI 
+
+    var draw;
+        
+    const COL_WIDTH = 20;
+    const LEFT_OFFSET = 40;
+    const IMG_H = 12;
+    const IMG_W = 12;
+
+function drawGraph_swim_lanes( document, graphText, branchHistory, history){
+    
+    // document :       HTML document
+    // graphText :      output from  raw git log graph
+    // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
+    // history :        the history after search, used to set different color for  commits found/not found in Search
+    
+    
+    graphContent = '';
+    
+    graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
+    
+    //console.log(graphText)
+    
+    let splitted = graphText.split("\n");
+    console.log(splitted)
+    
+    let previousDate = 'dummy'
+    
+    branchNames = new Map();   // Empty list of branch names
+    
+    const ROW_HEIGHT = 20;
+    
+    draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
+    
+    const NumberOfBranches = 15
+    
+      for (var i = 0; i < NumberOfBranches; i++) {
+        const x0 = LEFT_OFFSET + i * COL_WIDTH + 0.5 * IMG_W;
+        const x1 = x0;
+        const y0 = 0;
+        const y1 = splitted.length * ROW_HEIGHT;
+        draw.line( x0  , y0, x1, y1).stroke({ color: '#f06', width: 1})
+    }  
+    
+    // Loop each row
+    
+    let line = 0; 
+    
+    for(var row = 0; row < (splitted.length - 1); row++) {
+        
+                        
+        // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
+        if (isDumbRow(splitted[row])){
+            continue // skip row
+        }
+        
+        
+        let sumFound ='';
+        
+        // Example row format :
+        // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
+ 
+        // Notes : Separate log row from Notes at end
+        let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=    
+        
+        if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+            if ( !branchNames.has(noteInThisRow) ){
+                // New noteInThisRow
+                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+            }
+        }
+        //console.log(branchNames);
+        
+        // Hash : Separate log row from long hash (at end now when Notes removed)
+        let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+        let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
+        
+        // Decoration : Separate log row from decorate (at end now when hash removed)
+        let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
+        decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+         
+        // Date : Separate log row from date (at end now when decorate removed)
+        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
+        let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
+        date = date.substring(0,10);
+        
+                        
+        if (startOfDate == -1){
+            date = ''; // When no date found (set blank date)
+        }else{
+            // Only show date when new date
+            if (date == previousDate){
+                date = '';
+            }else{
+                // Keep date, and remember new date
+                previousDate = date; 
+            }
+        }
+        
+       
+
+               
+        
+        // Current row
+        let thisRow = splitted[row].substring(0, startOfDate);
+        thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
+        
+        if (noteInThisRow.length > 0){
+            thisRow += ` (${noteInThisRow})`;
+        }
+
+        // Parse missing features (= lines without commits)
+        if (startOfHash == -1){
+            thisRow = splitted[row]; // When no hash found (lines without commits)
+        }
+
+        
+                    
+        // Style if commit is not in history (because of search)
+        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
+        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
+        
+        let styling = '';
+        if (notFoundInSearch){
+            styling = ' notInSearch';
+        }
+        
+        
+        
+               // Figure out if known or current branch
+               let colorFileName = unsetNodeImageFile;
+               let tooltipText = 'unknown';
+                
+                if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
+                    // current branch
+                    colorFileName = 'images/circle_green.png'; // Draw node
+                }
+
+
+                // Test, to show all colors on nodes without notes
+                //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
+                //colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                
+                
+                let col = LEFT_OFFSET;  
+                if ( branchNames.has(noteInThisRow) ){
+                    let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+                    let colorName = colorImageNameDefinitions[ colorNumber];
+                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    tooltipText = noteInThisRow;
+                    col = LEFT_OFFSET + branchNames.get(noteInThisRow) * COL_WIDTH;  
+                }
+                console.log( 'row = ' + row  + '   colorNumber = ' + branchNames.get(noteInThisRow) % colorImageNameDefinitions.length + '    colorFileName =  ' + colorFileName);
+        
+        
+        
+        // Draw SVG
+        draw.image(colorFileName).size(IMG_W,IMG_H).move(col ,line * ROW_HEIGHT);
+        line++;
+    }
+    
+
+    
+}
+
+
+
 function drawGraph( document, graphText, branchHistory, history){
     
     // document :       HTML document
@@ -685,7 +879,7 @@ function drawGraph( document, graphText, branchHistory, history){
     
     // Loop each row
     
-    for(var row = 0; row < (splitted.length - 1); row++) {
+    for (var row = 0; row < (splitted.length - 1); row++) {
         
                         
         // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
