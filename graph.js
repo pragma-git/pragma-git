@@ -463,9 +463,9 @@ async function injectIntoJs(document){
         
     
         // Commit log output format
-        const messageFormat = '--format=%s T=%aI D=%d H=%H N=%N';  // %aI = author date, strict ISO 8601 format
-    
-
+        const messageFormat = '--format=%s T=%aI D=%d H=%H P=%P N=%N';  // %aI = author date, strict ISO 8601 format
+        //const messageFormat = '--format= { "S": "%s", "T": "%aI", "D": "%d", "H": "%H", "P": "%P", "N": "%N" ';   
+        
     //
     // Take 1 : Parse first N rows (quicker)
     //
@@ -490,7 +490,7 @@ async function injectIntoJs(document){
         
         // TEST : Swimlanes
         
-            commands = [ 'log',  '--parents', '--date-order', '--oneline',  messageFormat];  
+            //commands = [ 'log',  '--parents', '--date-order', '--oneline',  messageFormat];  
             
             try{
                 let shortHistoryCommand= [...commands]; // Clone
@@ -505,14 +505,12 @@ async function injectIntoJs(document){
             // Draw full graph, and label current branch
             let branchHistory = await readBranchHistory();
             await drawGraph_swim_lanes( document, graphText, branchHistory, history);
+            //await drawGraph( document, graphText, branchHistory, history);
             return
         
         
- 
         
         
- 
-         
         // Find short history graph
         try{
             let shortHistoryCommand= [...commands]; // Clone
@@ -746,63 +744,17 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         
         let sumFound ='';
         
-        // Example row format :
-        // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
  
-        // Notes : Separate log row from Notes at end
-        let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=    
+        // Disect git-log row into useful parts
+        [ date, hashInThisRow, thisRow, decoration, noteInThisRow] = splitGitLogRow( splitted[row] );
         
-        if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
-            if ( !branchNames.has(noteInThisRow) ){
-                // New noteInThisRow
-                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
-            }
-        }
-        //console.log(branchNames);
-        
-        // Hash : Separate log row from long hash (at end now when Notes removed)
-        let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-        let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
-        
-        // Decoration : Separate log row from decorate (at end now when hash removed)
-        let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
-        decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-         
-        // Date : Separate log row from date (at end now when decorate removed)
-        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
-        let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
-        date = date.substring(0,10);
-        
-                        
-        if (startOfDate == -1){
-            date = ''; // When no date found (set blank date)
+
+        // Only show date when new date
+        if (date == previousDate){
+            date = '';
         }else{
-            // Only show date when new date
-            if (date == previousDate){
-                date = '';
-            }else{
-                // Keep date, and remember new date
-                previousDate = date; 
-            }
-        }
-        
-       
-
-               
-        
-        // Current row
-        let thisRow = splitted[row].substring(0, startOfDate);
-        thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-        
-        if (noteInThisRow.length > 0){
-            thisRow += ` (${noteInThisRow})`;
-        }
-
-        // Parse missing features (= lines without commits)
-        if (startOfHash == -1){
-            thisRow = splitted[row]; // When no hash found (lines without commits)
+            // Keep date, and remember new date
+            previousDate = date; 
         }
 
         
@@ -841,7 +793,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                     tooltipText = noteInThisRow;
                     col = LEFT_OFFSET + branchNames.get(noteInThisRow) * COL_WIDTH;  
                 }
-                console.log( 'row = ' + row  + '   colorNumber = ' + branchNames.get(noteInThisRow) % colorImageNameDefinitions.length + '    colorFileName =  ' + colorFileName);
+                //console.log( 'row = ' + row  + '   colorNumber = ' + branchNames.get(noteInThisRow) % colorImageNameDefinitions.length + '    colorFileName =  ' + colorFileName);
         
         
         
@@ -860,9 +812,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
 
     
 }
-
-
-
 function drawGraph( document, graphText, branchHistory, history){
     
     // document :       HTML document
@@ -894,68 +843,19 @@ function drawGraph( document, graphText, branchHistory, history){
         if (isDumbRow(splitted[row])){
             continue // skip row
         }
-        
-        
+
         let sumFound ='';
         
-        // Example row format :
-        // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
- 
-        // Notes : Separate log row from Notes at end
-        let startOfNote = splitted[row].lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-        let noteInThisRow = splitted[row].substring(startOfNote + 2); // Skip N=    
+        // Disect git-log row into useful parts
+        [ date, hashInThisRow, thisRow, decoration, noteInThisRow] = splitGitLogRow( splitted[row] );
         
-        if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
-            if ( !branchNames.has(noteInThisRow) ){
-                // New noteInThisRow
-                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
-            }
-        }
-        console.log(branchNames);
-        
-        // Hash : Separate log row from long hash (at end now when Notes removed)
-        let startOfHash = splitted[row].lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-        let hashInThisRow = splitted[row].substring(startOfHash + 2, startOfNote - 1); // Skip H=
-        
-        // Decoration : Separate log row from decorate (at end now when hash removed)
-        let startOfDecore = splitted[row].lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-        let decoration = splitted[row].substring(startOfDecore + 2, startOfHash - 1); // Skip D=
-        decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-         
-        // Date : Separate log row from date (at end now when decorate removed)
-        let startOfDate = splitted[row].lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
-        let date = splitted[row].substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
-        date = date.substring(0,10);
-        
-                        
-        if (startOfDate == -1){
-            date = ''; // When no date found (set blank date)
+
+        // Only show date when new date
+        if (date == previousDate){
+            date = '';
         }else{
-            // Only show date when new date
-            if (date == previousDate){
-                date = '';
-            }else{
-                // Keep date, and remember new date
-                previousDate = date; 
-            }
-        }
-        
-       
-
-               
-        
-        // Current row
-        let thisRow = splitted[row].substring(0, startOfDate);
-        thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-        
-        console.log('startOfNote = ' + startOfNote);
-        if (noteInThisRow.length > 0){
-            thisRow += ` (${noteInThisRow})`;
-        }
-
-        // Parse missing features (= lines without commits)
-        if (startOfHash == -1){
-            thisRow = splitted[row]; // When no hash found (lines without commits)
+            // Keep date, and remember new date
+            previousDate = date; 
         }
 
         
@@ -968,6 +868,7 @@ function drawGraph( document, graphText, branchHistory, history){
         if (notFoundInSearch){
             styling = ' notInSearch';
         }
+        
 
         
         //
@@ -1265,6 +1166,70 @@ function drawGraph( document, graphText, branchHistory, history){
     document.getElementById('graphContent').innerHTML = graphContent; 
     
 }
+    function splitGitLogRow( gitLogRow ){
+        
+
+        
+        // gitLogRow -  is a full row from log
+        
+            // Example row format :
+            // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
+            // | * Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
+     
+     
+            // Pick row apart from back to start
+     
+            // Notes : Separate log row from Notes at end
+            let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+            let noteInThisRow = gitLogRow.substring(startOfNote + 2); // Skip N=    
+            
+            if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+                if ( !branchNames.has(noteInThisRow) ){
+                    // New noteInThisRow
+                    branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                }
+            }
+            
+            // Parents : Separate log row from long hash (at end now when Notes removed)
+            let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
+            let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
+            
+            // Hash : Separate log row from long hash (at end now when Parents removed)
+            let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+            let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
+            
+            // Decoration : Separate log row from decorate (at end now when hash removed)
+            let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+            let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
+            decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+             
+            // Date : Separate log row from date (at end now when decorate removed)
+            let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
+            let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
+            date = date.substring(0,10);
+            
+                            
+            if (startOfDate == -1){
+                date = ''; // When no date found (set blank date)
+            }
+            
+            // Current row
+            let thisRow = gitLogRow.substring(0, startOfDate);
+            thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
+            
+            if (noteInThisRow.length > 0){
+                thisRow += ` (${noteInThisRow})`;
+            }
+    
+            // Parse missing features (= lines without commits)
+            if (startOfHash == -1){
+                thisRow = gitLogRow; // When no hash found (lines without commits)
+            }
+    
+            
+            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow]
+        
+    }
     function isDumbRow(s){
         // Dumb row is defined as consisting only of '|' connections, without any nodes
         // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
@@ -1275,29 +1240,29 @@ function drawGraph( document, graphText, branchHistory, history){
         }
         return true
     }
-function drawCommitRow(hash, decoration, text, isDev){
-    if (isDev){
-        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
-        return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
-    }else{
-        //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
-        return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
+    function drawCommitRow(hash, decoration, text, isDev){
+        if (isDev){
+            //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+            return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+        }else{
+            //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+            return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
+        }
     }
-}
-function drawNonCommitRow(hash, text, isDev){
-    if (isDev){
-        return '<pre>'  +  text + '   ' + sumFound +  '</pre>';
-    }else{
-        return '<pre>'  +  text + '</pre>';
+    function drawNonCommitRow(hash, text, isDev){
+        if (isDev){
+            return '<pre>'  +  text + '   ' + sumFound +  '</pre>';
+        }else{
+            return '<pre>'  +  text + '</pre>';
+        }
     }
-}
-function drawPinnedImage(hash){
-    
-    const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
-    const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
-    return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
-    //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
-}
+    function drawPinnedImage(hash){
+        
+        const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
+        const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
+        return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
+        //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
+    }
 
 // Stored branch name
 function drawBranchColorHeader( branchNames){
