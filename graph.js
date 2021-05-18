@@ -505,6 +505,10 @@ async function injectIntoJs(document){
             let branchHistory = await readBranchHistory();
             await drawGraph_swim_lanes( document, graphText, branchHistory, history);
             //await drawGraph( document, graphText, branchHistory, history);
+            
+            
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
             return
         
         
@@ -717,6 +721,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
     //draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
     //draw = SVG().addTo( document.getElementById('mySvg') ).size(document.body.scrollWidth, document.body.scrollHeight )
+    
     draw = SVG();
     
     
@@ -814,6 +819,9 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
 
     document.getElementById('graphContent').innerHTML = graphContent; 
+    
+    
+    document.getElementById('mySvg').innerHTML = '';
     draw.addTo( document.getElementById('mySvg') ).
         size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
     
@@ -1303,7 +1311,7 @@ function drawBranchColorHeader( branchNames){
     
     let html = 
     `<div>  <img class="node" src="${colorFileName}"> </div>  
-    <div class="text"> 
+    <div class="colorHeaderText"> 
         <pre style="position: absolute; "> Unknown parent branch </pre> 
     </div> <br>
     
@@ -1311,7 +1319,7 @@ function drawBranchColorHeader( branchNames){
     
     html += 
     `<div>  <img class="node" src="${unsetNodeImageFile}"> </div>  
-    <div class="text"> 
+    <div class="colorHeaderText"> 
         <pre style="position: absolute; "> Unknown branch </pre> 
     </div> <br>
 
@@ -1319,7 +1327,7 @@ function drawBranchColorHeader( branchNames){
     
     html += 
     `<div>   </div>  
-    <div class="text"> 
+    <div class="colorHeaderText"> 
         <pre style="position: absolute; "> </pre> 
     </div> <br>
     
@@ -1331,7 +1339,7 @@ function drawBranchColorHeader( branchNames){
     function handleMapElements(value, key, map) {
         console.log(`m[${key}] = ${value}`);
         let colorFileName = getColorFileName(key)
-        html += `<div> <img class="node" src="${colorFileName}"> </div>  <div class="text"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
+        html += `<div> <img class="node" src="${colorFileName}"> </div>  <div class="colorHeaderText"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
     }
     
     document.getElementById('colorHeader').innerHTML = html;

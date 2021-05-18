@@ -69,14 +69,15 @@
         }
                
         #colorHeader {
-            width: max-content;
+            width: unset; 
             height: auto;
+            clear: both;
         }
         
         .colorHeaderText{
-            width: -webkit-fill-available;
             cursor: pointer;
             font-size: inherit;
+            right: -5px
         }
  
         #header{
@@ -94,34 +95,28 @@
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
-            position: fixed; 
+            position: fixed;
             z-index: 20;
-            
             border-color: var(--border-color);
             border-style: dotted;
             border-width: thin;
             padding: 10px;
-            
             right: 15px;
-            
             margin-top: 120px;
+            /* clear: both; */
         }
         
         .branchNameEditInsert{
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
-            position: fixed; 
+            position: fixed;
             z-index: 20;
-            
             border-color: var(--border-color);
             border-style: dotted;
             border-width: thin;
             padding: 10px;
-            
             visibility: hidden;
-            
-            
             right: 35px;
             margin-top: 140px;
         }
@@ -138,8 +133,7 @@
             width: fit-content;
             cursor: pointer;
             font-size: inherit;
-            float: ;
-            clear: left;
+            clear: left; 
             height: 40px;
         }
         
@@ -165,12 +159,12 @@
         
         .node {
             position: absolute;
-             top: 8px;
-             left: 0.5px;
-             height: 50%;
-             width: 100%;
-             z-index: 10;
-             cursor: help;
+            top: 8px;
+            left: 0.5px;
+            height: 50%;
+            width: 100%;
+            z-index: 10;
+            cursor: help;
         }        
          
         .bridge {
