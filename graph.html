@@ -63,6 +63,9 @@
             height: auto;
             margin-top: 80px;
             padding-left: 10;
+            top: -40px;
+            left: 250px;
+            vertical-align: middle;
         }
                
         #colorHeader {
@@ -135,6 +138,9 @@
             width: fit-content;
             cursor: pointer;
             font-size: inherit;
+            float: ;
+            clear: left;
+            height: 40px;
         }
         
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
@@ -350,12 +356,20 @@
             <br>
         </div>       
 
-                
+         
+
+
         
-         <div style="width:fit-content;">         
-                  <!-- Empty content, fill in with injectIntoJs in graph.js --> 
-                <div id="graphContent" class="content"> 
-                </div>
+        
+         <div style="width:fit-content;">  
+             
+             <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+             <div  id="mySvg" style="width:fit-content;">         
+             </div>             
+                    
+              <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+            <div id="graphContent" class="content"> 
+            </div>
         
          </div> 
   

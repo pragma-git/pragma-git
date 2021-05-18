@@ -464,7 +464,7 @@ async function injectIntoJs(document){
     
         // Commit log output format
         const messageFormat = '--format=%s T=%aI D=%d H=%H P=%P N=%N';  // %aI = author date, strict ISO 8601 format
-        //const messageFormat = '--format= { "S": "%s", "T": "%aI", "D": "%d", "H": "%H", "P": "%P", "N": "%N" ';   
+
         
     //
     // Take 1 : Parse first N rows (quicker)
@@ -478,11 +478,11 @@ async function injectIntoJs(document){
         document.getElementById('branchName').innerText = branchName;
         
         // Normal log command    
-        let commands = [ 'log',  '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];       
+        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty',    messageFormat];       
          
         // Show all log command 
         if (state.graph.showall){
-            commands = [ 'log',  '--branches', '--tags', '--graph', '--date-order', '--oneline',  '--pretty',    messageFormat];
+            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty',    messageFormat];
         }
         
         
@@ -490,7 +490,6 @@ async function injectIntoJs(document){
         
         // TEST : Swimlanes
         
-            //commands = [ 'log',  '--parents', '--date-order', '--oneline',  messageFormat];  
             
             try{
                 let shortHistoryCommand= [...commands]; // Clone
@@ -694,6 +693,7 @@ async function gitCommitMessage(hash){
     const IMG_H = 12;
     const IMG_W = 12;
     const NUMBER_OF_BRANCHES = 15
+    const ROW_HEIGHT = 40;
 
 function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
@@ -705,7 +705,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
     graphContent = '';
     
-    graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
     
     //console.log(graphText)
     
@@ -716,9 +715,12 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
     branchNames = new Map();   // Empty list of branch names
     
-    const ROW_HEIGHT = 20;
+    //draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
+    //draw = SVG().addTo( document.getElementById('mySvg') ).size(document.body.scrollWidth, document.body.scrollHeight )
+    draw = SVG();
     
-    draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
+    
+    //document.getElementById('mySvg').style.width = '300px';
     
     
       for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
@@ -762,11 +764,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         // Style if commit is not in history (because of search)
         let index = util.findObjectIndex( history, 'hash', hashInThisRow );
         let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-        
-        let styling = '';
-        if (notFoundInSearch){
-            styling = ' notInSearch';
-        }
+
         
         
         
@@ -802,14 +800,23 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             size(IMG_W,IMG_H).
             move( col - 0.5 * IMG_W, TOP_OFFSET + line * ROW_HEIGHT - 0.5 * IMG_H); // Center image on coordinate point
             
-        draw.line( col       , TOP_OFFSET + line * ROW_HEIGHT , 
-                   LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + line * ROW_HEIGHT).
-            stroke({ color: '#888', width: 0.25}); 
+        draw.line( col, 
+                   TOP_OFFSET + line * ROW_HEIGHT , 
+                   LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
+                   TOP_OFFSET + line * ROW_HEIGHT
+                ).stroke({ color: '#888', width: 0.25}); 
         
         line++;
+        
+        // Add message text
+        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
     }
     
 
+    document.getElementById('graphContent').innerHTML = graphContent; 
+    draw.addTo( document.getElementById('mySvg') ).
+        size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+    
     
 }
 function drawGraph( document, graphText, branchHistory, history){
@@ -1114,8 +1121,11 @@ function drawGraph( document, graphText, branchHistory, history){
                 // Print Text part
                 let rowText = '(' + row + ') ';
                 sumFound += ' ' + thisRow.substring(i);
-                graphContent += '<div class="' + cl + styling + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
-                graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
+                //graphContent += '<div class="' + cl + styling + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
+                //graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
+                
+                graphContent += parseMessage( hashInThisRow, thisRow.substring(i), decoration, notFoundInSearch)
+                
                 i = thisRow.length; // set end-of-loop
                 continue // skip rest of row
                 
@@ -1240,6 +1250,32 @@ function drawGraph( document, graphText, branchHistory, history){
         }
         return true
     }
+    function drawPinnedImage(hash){
+        
+        const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
+        const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
+        return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
+        //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
+    }        
+    function parseMessage( hash, text, decoration, notFoundInSearch){
+        
+        let cl = 'text';
+        
+        let styling = '';
+        if (notFoundInSearch){
+            styling = ' notInSearch';
+        }
+        
+        
+        let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text +  `</pre>` + ' </div>' ; 
+        html += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
+        //html += decoration 
+        
+        //return '<div>' + html + '</div> <br>'
+        return html 
+    };
+ 
+    // TODO : remove (?)
     function drawCommitRow(hash, decoration, text, isDev){
         if (isDev){
             //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
@@ -1256,13 +1292,8 @@ function drawGraph( document, graphText, branchHistory, history){
             return '<pre>'  +  text + '</pre>';
         }
     }
-    function drawPinnedImage(hash){
-        
-        const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
-        const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
-        return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
-        //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
-    }
+       
+       
 
 // Stored branch name
 function drawBranchColorHeader( branchNames){
