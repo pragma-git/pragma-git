@@ -727,16 +727,10 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
     branchNames = new Map();   // Empty list of branch names
     
-    //draw = SVG().addTo('body').size('100%', splitted.length * ROW_HEIGHT).size(document.body.scrollWidth, document.body.scrollHeight)
-    //draw = SVG().addTo( document.getElementById('mySvg') ).size(document.body.scrollWidth, document.body.scrollHeight )
-    
     draw = SVG();
-    
-    
-    //document.getElementById('mySvg').style.width = '300px';
-    
-    
-      for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
+
+    // Draw vertical lines for each swim-lane
+    for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
         const x0 = LEFT_OFFSET + i * COL_WIDTH;
         const x1 = x0;
         const y0 = TOP_OFFSET ;
@@ -744,8 +738,9 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         draw.line( x0  , y0, x1, y1).stroke({ color: '#888', width: 0.25})
     }  
     
+    //
     // Loop each row
-    
+    //
     let line = 0; 
     
     for(var row = 0; row < (splitted.length - 1); row++) {
@@ -755,67 +750,45 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         if (isDumbRow(splitted[row])){
             continue // skip row
         }
-        
-        
-        let sumFound ='';
-        
- 
+
         // Disect git-log row into useful parts
         [ date, hashInThisRow, thisRow, decoration, noteInThisRow] = splitGitLogRow( splitted[row] );
+              
+        // Style if commit is not in history (because of search)
+        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
+        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
+ 
+        // Figure out if known or current branch
+        let colorFileName = unsetNodeImageFile;
+        let tooltipText = 'unknown';
         
+        if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
+            // current branch
+            colorFileName = 'images/circle_green.png'; // Draw node
+        }
 
-        // Only show date when new date
+        // Get image file name
+        let col = LEFT_OFFSET ;  
+        if ( branchNames.has(noteInThisRow) ){
+            let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
+            let colorName = colorImageNameDefinitions[ colorNumber];
+            colorFileName = `images/circle_colors/circle_${colorName}.png`;
+            tooltipText = noteInThisRow;
+            col = LEFT_OFFSET + branchNames.get(noteInThisRow) * COL_WIDTH;  
+        }
+
+        // Add date (only print when date is different to previous)
         if (date == previousDate){
             date = '';
         }else{
             // Keep date, and remember new date
             previousDate = date; 
         }
+        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
+        
+        // Add message text
+        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
 
-        
-                    
-        // Style if commit is not in history (because of search)
-        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
-        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-
-        
-        
-        
-               // Figure out if known or current branch
-               let colorFileName = unsetNodeImageFile;
-               let tooltipText = 'unknown';
-                
-                if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
-                    // current branch
-                    colorFileName = 'images/circle_green.png'; // Draw node
-                }
-
-
-                // Test, to show all colors on nodes without notes
-                //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
-                //colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                
-                
-                let col = LEFT_OFFSET ;  
-                if ( branchNames.has(noteInThisRow) ){
-                    let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
-                    let colorName = colorImageNameDefinitions[ colorNumber];
-                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    tooltipText = noteInThisRow;
-                    col = LEFT_OFFSET + branchNames.get(noteInThisRow) * COL_WIDTH;  
-                }
-                //console.log( 'row = ' + row  + '   colorNumber = ' + branchNames.get(noteInThisRow) % colorImageNameDefinitions.length + '    colorFileName =  ' + colorFileName);
-        
-
-        
-         // Show/hide date
-        //if (state.graph.showdate){
-            dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
-        //}
-        
-        
-        
-        
         // Draw SVG
         draw.image(colorFileName).
             size(IMG_W,IMG_H).
@@ -826,22 +799,24 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                    LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
                    TOP_OFFSET + line * ROW_HEIGHT
                 ).stroke({ color: '#888', width: 0.25}); 
-        
+ 
+       
+        // Prepare for next row                         
         line++;
-        
-        // Add message text
-        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
     }
-     
+    
+    // 
+    // Attach data to HTML
+    //
     document.getElementById('datesSwimLane').innerHTML = dateContent;      
 
-    document.getElementById('mySvg').innerHTML = '';
+    document.getElementById('mySvg').innerHTML = ''; // Clear
     draw.addTo( document.getElementById('mySvg') ).
         size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
 
     document.getElementById('graphContent').innerHTML = graphContent;    
 
-    toggleDate( state.graph.showdate)
+    toggleDate( state.graph.showdate); // Show / hide date column
 
 }
 function drawGraph( document, graphText, branchHistory, history){
