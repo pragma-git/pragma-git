@@ -754,13 +754,29 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             continue // skip row
         }
 
+
         // Disect git-log row into useful parts
         [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents] = splitGitLogRow( splitted[row] );
-   
+ 
+ 
+        // Add date (only print when date is different to previous)
+        if (date == previousDate){
+            date = '';
+        }else{
+            // Keep date, and remember new date
+            previousDate = date; 
+        }
+        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
+ 
               
         // Style if commit is not in history (because of search)
         let index = util.findObjectIndex( history, 'hash', hashInThisRow );
         let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
+        
+
+        // Add message text
+        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
+        
  
         // Figure out if known or current branch
         let colorFileName = unsetNodeImageFile;
@@ -771,8 +787,11 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             colorFileName = 'images/circle_green.png'; // Draw node
         }
 
+
+
         // When branch is known from Notes
-        let col = LEFT_OFFSET ;  
+        let col = LEFT_OFFSET ; 
+        let x0 = 0; 
         if ( branchNames.has(noteInThisRow) ){
             
             // Get image file name
@@ -780,11 +799,14 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             let colorName = colorImageNameDefinitions[ colorNumber];
             colorFileName = `images/circle_colors/circle_${colorName}.png`;
             tooltipText = noteInThisRow;
-            col = LEFT_OFFSET + branchNames.get(noteInThisRow) * COL_WIDTH;  
+            
+            // Get column 
+            x0 = branchNames.get(noteInThisRow);  // In column coordinates
+            col = LEFT_OFFSET + x0 * COL_WIDTH;   // In pixel coordinates
 
         }
-            
-
+ 
+ 
         // Record coordinates of commit with parents
         for (let i = 0; i < parents.length; i++){
             
@@ -792,7 +814,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             if (branchNames.has(noteInThisRow) ){
                 x = branchNames.get(noteInThisRow);
             }
-            
             
             let array = [ x , line ];
             if (childMap.has( parents[i] )){
@@ -802,19 +823,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             } 
         }
 
-        
-
-        // Add date (only print when date is different to previous)
-        if (date == previousDate){
-            date = '';
-        }else{
-            // Keep date, and remember new date
-            previousDate = date; 
-        }
-        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
-        
-        // Add message text
-        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
  
         // Draw SVG horizontal help-line TODO : 
         draw.line( col, 
@@ -822,39 +830,56 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                    LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
                    TOP_OFFSET + line * ROW_HEIGHT
                 ).stroke({ color: '#888', width: 0.25}); 
+                
  
         // Draw SVG line between nodes
         if ( childMap.has( hashInThisRow ) ){
             let coordinatePairs = childMap.get(hashInThisRow);
             for (let i = 0; i < coordinatePairs.length; i++){
-                let x0 = coordinatePairs[i][0];
-                let y0 = coordinatePairs[i][1];
+                let x1 = coordinatePairs[i][0];
+                let y1 = coordinatePairs[i][1];
                 
-                let x = LEFT_OFFSET + x0 * COL_WIDTH;
-                let y = TOP_OFFSET + y0 * ROW_HEIGHT
-                
-                
-                 draw.line( col, 
-                       TOP_OFFSET + line * ROW_HEIGHT , 
-                       x , 
-                       y
-                    ).stroke({ color: '#888', width: 3}); 
-                    
-                console.log( ' line = ' + line + '  :  (' + col + ',' + TOP_OFFSET + line * ROW_HEIGHT + ')  to  ('   + x + ',' + y + ')' );
+                drawConnection( draw, x0, line, x1, y1)
             }
         }
         
-        
-        // Draw SVG commit node
-        draw.image(colorFileName).
-            size(IMG_W,IMG_H).
-            move( col - 0.5 * IMG_W, TOP_OFFSET + line * ROW_HEIGHT - 0.5 * IMG_H); // Center image on coordinate point
-           
-       
+        // Draw commit node
+        drawNode( draw, x0, line, colorFileName);
+
        
         // Prepare for next row                         
         line++;
     }
+  
+    
+    // 
+    // Internal functions
+    //   
+    function drawConnection( draw, x0, y0, x1, y1){
+        // Inputs : column and row for first and second point
+        
+        // Convert to pixel coordinates
+        let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
+        let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
+        
+        let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
+        let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
+                
+        // Draw connection        
+        draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});        
+    };
+    
+    function drawNode( draw, x0, y0, colorFileName){
+        
+        // Convert from col / row to pixel coordinates
+        let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
+        let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
+        
+        draw.image(colorFileName).
+        size(IMG_W,IMG_H).
+        move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
+    };
+    
     
     // 
     // Attach data to HTML
