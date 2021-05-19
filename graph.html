@@ -57,17 +57,26 @@
         }
 
 
+        #displayedContent{
+            padding-left: 20px;
+            margin-top: 80px;
+        }
+        
+        #datesSwimLane{
+            margin-top: 6px;
+        }
+
         
         #graphContent {
+            position: absolute;
+            left: 350px;
             width: max-content;
             height: auto;
-            margin-top: 80px;
             padding-left: 10;
-            top: -40px;
-            left: 250px;
-            vertical-align: middle;
+            vertical-align: top;
+            margin-top: -6px; /* 0.5 * IMG_H */
         }
-               
+                       
         #colorHeader {
             width: unset; 
             height: auto;
@@ -127,6 +136,9 @@
         .date{
             width: 90px;
             color: grey;
+            clear: both;
+            top: -12;
+            height: 40;
         }
 
         .text{
@@ -306,11 +318,10 @@
             </h2>
         </div>
         
-        <div id="drawing"></div>
 
         <div id="rightInsert" class="rightInsert">
 
-            <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
+            <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; toggleDate(state.graph.showdate);"> 
             <label for="showDate" style="position: relative;" >Show Date</label>
             
             &nbsp;
@@ -355,7 +366,11 @@
 
         
         
-         <div style="width:fit-content;">  
+         <div id="displayedContent" style="width:fit-content;">  
+             
+             <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+             <div id="datesSwimLane" style="width:fit-content;">         
+             </div>      
              
              <!-- Empty content, fill in with injectIntoJs in graph.js --> 
              <div  id="mySvg" style="width:fit-content;">         

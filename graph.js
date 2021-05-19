@@ -41,6 +41,8 @@ var sumFound;
 
 const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
+var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
+
 var branchNames;    // map  branchname => index 0, 1, 2, ... calculated in drawGraph
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
@@ -590,14 +592,7 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
-        
-        
-        
-            draw = SVG().addTo('body').size('100%', '100%').size(document.body.scrollWidth, document.body.scrollHeight)
-            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,1000);
-            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,2000);
-            rect = draw.rect(400, 400).attr({ fill: '#ff6' }).move(500,document.body.scrollHeight - 400);
-            console.log('document.body.scrollHeight = ' + document.body.scrollHeight)
+
 
 }
 
@@ -671,6 +666,19 @@ function closeWindow(){
     
     win.close(); 
 }
+function toggleDate( show){
+    if (show){
+          document.getElementById('datesSwimLane').style.visibility = 'visible';  
+          document.getElementById('datesSwimLane').style.width = 'fit-content'; 
+          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width'];  
+    }else{
+          document.getElementById('datesSwimLane').style.visibility = 'hidden';  
+          document.getElementById('datesSwimLane').style.width = '0'; 
+          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width']; 
+    }
+    document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
+
+}
 
 // Git
 async function gitCommitMessage(hash){
@@ -689,15 +697,6 @@ async function gitCommitMessage(hash){
 
 // GUI 
 
-    var draw;
-        
-    const COL_WIDTH = 20;
-    const LEFT_OFFSET = 40;
-    const TOP_OFFSET = 80;
-    const IMG_H = 12;
-    const IMG_W = 12;
-    const NUMBER_OF_BRANCHES = 15
-    const ROW_HEIGHT = 40;
 
 function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
@@ -705,10 +704,19 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     // graphText :      output from  raw git log graph
     // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
     // history :        the history after search, used to set different color for  commits found/not found in Search
+
+    //var draw;
+        
+    const COL_WIDTH = 20;
+    const LEFT_OFFSET = 10;
+    const IMG_H = 12;
+    const IMG_W = 12;
+    const TOP_OFFSET = 0.5 * IMG_H;
+    const NUMBER_OF_BRANCHES = 15
+    const ROW_HEIGHT = 40;    
     
-    
-    graphContent = '';
-    
+    var graphContent = '';
+    var dateContent = '';
     
     //console.log(graphText)
     
@@ -798,6 +806,14 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                 }
                 //console.log( 'row = ' + row  + '   colorNumber = ' + branchNames.get(noteInThisRow) % colorImageNameDefinitions.length + '    colorFileName =  ' + colorFileName);
         
+
+        
+         // Show/hide date
+        //if (state.graph.showdate){
+            dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
+        //}
+        
+        
         
         
         // Draw SVG
@@ -816,16 +832,17 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         // Add message text
         graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
     }
-    
+     
+    document.getElementById('datesSwimLane').innerHTML = dateContent;      
 
-    document.getElementById('graphContent').innerHTML = graphContent; 
-    
-    
     document.getElementById('mySvg').innerHTML = '';
     draw.addTo( document.getElementById('mySvg') ).
         size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
-    
-    
+
+    document.getElementById('graphContent').innerHTML = graphContent;    
+
+    toggleDate( state.graph.showdate)
+
 }
 function drawGraph( document, graphText, branchHistory, history){
     
