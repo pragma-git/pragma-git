@@ -697,7 +697,24 @@ async function gitCommitMessage(hash){
 }
 
 // GUI 
+        
+    // Node image
+    const IMG_H = 12;
+    const IMG_W = 12;
+        
+    // Grid dimensions
+    const COL_WIDTH = 20;
+    const LEFT_OFFSET = 10;
+    const TOP_OFFSET = 0.5 * IMG_H;
+    const ROW_HEIGHT = 40;   // Note : hard coded in graph.html css
+          
+    // Merge and Branch connections
+    var R = 15; // arc radius for branch and merge.  Note : R <= COL_WIDTH & R <= ROW_HEIGHT
+    
+    
+    const NUMBER_OF_BRANCHES = 15 // TODO : make as big as necessary.  Maybe find number of local branches
 
+     
 
 function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
@@ -707,14 +724,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     // history :        the history after search, used to set different color for  commits found/not found in Search
 
     //var draw;
-        
-    const COL_WIDTH = 20;
-    const LEFT_OFFSET = 10;
-    const IMG_H = 12;
-    const IMG_W = 12;
-    const TOP_OFFSET = 0.5 * IMG_H;
-    const NUMBER_OF_BRANCHES = 15
-    const ROW_HEIGHT = 40;    
+
     
     var graphContent = '';
     var dateContent = '';
@@ -731,6 +741,14 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     childMap = new Map();  // List of children for commits
     
     draw = SVG();
+    
+    // Define arcs used for branch and merge curves
+    const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`).fill('none').stroke({ color: '#888', width: 3, linecap: 'round', linejoin: 'round' });
+    const arcBranch = draw.defs().use(arc).move(-R,-R);
+    const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
+
+    
+
 
     // Draw vertical lines for each swim-lane
     for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
@@ -759,25 +777,11 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents] = splitGitLogRow( splitted[row] );
  
  
-        // Add date (only print when date is different to previous)
-        if (date == previousDate){
-            date = '';
-        }else{
-            // Keep date, and remember new date
-            previousDate = date; 
-        }
-        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
- 
               
         // Style if commit is not in history (because of search)
         let index = util.findObjectIndex( history, 'hash', hashInThisRow );
         let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-        
 
-        // Add message text
-        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
-        
- 
         // Figure out if known or current branch
         let colorFileName = unsetNodeImageFile;
         let tooltipText = 'unknown';
@@ -804,7 +808,23 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             x0 = branchNames.get(noteInThisRow);  // In column coordinates
             col = LEFT_OFFSET + x0 * COL_WIDTH;   // In pixel coordinates
 
+        }else{
+            //continue
         }
+         
+
+        // Add message text 
+        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
+        
+ 
+        // Add date (only print when date is different to previous)
+        if (date == previousDate){
+            date = '';
+        }else{
+            // Keep date, and remember new date
+            previousDate = date; 
+        }
+        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
  
  
         // Record coordinates of commit with parents
@@ -839,7 +859,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                 let x1 = coordinatePairs[i][0];
                 let y1 = coordinatePairs[i][1];
                 
-                drawConnection( draw, x0, line, x1, y1)
+                drawConnection( draw, x0, line, x1, y1, R)
             }
         }
         
@@ -851,11 +871,12 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         line++;
     }
   
+  
     
     // 
     // Internal functions
     //   
-    function drawConnection( draw, x0, y0, x1, y1){
+    function drawConnection( draw, x0, y0, x1, y1, R){
         // Inputs : column and row for first and second point
         
         // Convert to pixel coordinates
@@ -865,8 +886,23 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
         let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
                 
-        // Draw connection        
-        draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});        
+                
+        // Draw connection   
+        if (x1 == x0){
+            draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});  
+        }     
+        // Branch
+        if (x1 > x0){
+            draw.line( X0, Y0, X1 - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+            draw.use(arcBranch).move( X1, Y0  );
+            draw.line( X1, Y0 - R, X1, Y1).stroke({ color: '#888', width: 3}); // vertical
+        }
+        // Merge
+        if (x1 < x0){
+            draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
+            draw.use(arcMerge).move( X0, Y1  );
+            draw.line( X1, Y1, X0 - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+        }
     };
     
     function drawNode( draw, x0, y0, colorFileName){
