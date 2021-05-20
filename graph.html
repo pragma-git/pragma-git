@@ -24,7 +24,9 @@
 
     <!-- Styling graph-->
     <style> 
-        
+        :root {
+            --textRowHeight : 25; /* ROW_HEIGHT for text, date, and grid for drawing in graph.js */
+        }
         
         body{
             font-family: Arial;
@@ -138,7 +140,7 @@
             color: grey;
             clear: both;
             top: -12;
-            height: 40;
+            height: var(--textRowHeight);
         }
 
         .text{
@@ -146,7 +148,7 @@
             cursor: pointer;
             font-size: inherit;
             clear: left; 
-            height: 40px;
+            height: var(--textRowHeight);
         }
         
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
