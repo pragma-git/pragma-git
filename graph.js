@@ -43,8 +43,9 @@ const DEV = false;  // Show additional info if DEV=true
 var graphContent = '';  // This is where output is collected before putting it into graphContent element
 var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
 
-var branchNames;    // map  branchname => index 0, 1, 2, ... calculated in drawGraph
-var childMap ;      // Store mapping from parent to child [x ,y ] coordinates
+var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
+var childMap ;          // Store mapping from parent to child [x ,y ] coordinates
+var commitArray;   // Store each commit
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -731,8 +732,8 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         
         branchNames = new Map();   // Empty list of branch names
         childMap = new Map();  // List of children for commits
-        
-        
+        commitArray = [];
+ 
         let splitted = graphText.split("\n");
         console.log(splitted)
         
@@ -759,122 +760,141 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         }  
     
     //
-    // Loop each row
+    // Loop each row - collect commit info
     //
-    let line = 0; 
+        let line = 0; 
+        
+        for(var row = 0; row < (splitted.length - 1); row++) {
+            
+                            
+            // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
+            if (isDumbRow(splitted[row])){
+                continue // skip row
+            }
     
-    for(var row = 0; row < (splitted.length - 1); row++) {
-        
-                        
-        // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
-        if (isDumbRow(splitted[row])){
-            continue // skip row
-        }
+            // Disect git-log row into useful parts
+            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents] = splitGitLogRow( splitted[row] );
+     
+     
+            // Style if commit is not in history (because of search)
+            let index = util.findObjectIndex( history, 'hash', hashInThisRow );
+            let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
+    
+    
+            // Figure out if known or current branch
+            let colorFileName = unsetNodeImageFile;
+            let tooltipText = 'unknown';
 
 
-        // Disect git-log row into useful parts
-        [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents] = splitGitLogRow( splitted[row] );
- 
- 
-              
-        // Style if commit is not in history (because of search)
-        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
-        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-
-        // Figure out if known or current branch
-        let colorFileName = unsetNodeImageFile;
-        let tooltipText = 'unknown';
-        
-        if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
-            // current branch
-            colorFileName = 'images/circle_green.png'; // Draw node
-        }
-
-
-
-        // When branch is known from Notes
-        let col = LEFT_OFFSET ; 
-        let x0 = 0; 
-        if ( branchNames.has(noteInThisRow) ){
+            // When branch is known from Notes
+            let x0 = 0; 
+            if ( branchNames.has(noteInThisRow) ){
+                x0 = branchNames.get(noteInThisRow);  // In column coordinates
+            }
+             
+             
+            // Add message text 
+            graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
             
-            // Get image file name
-            let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
-            let colorName = colorImageNameDefinitions[ colorNumber];
-            colorFileName = `images/circle_colors/circle_${colorName}.png`;
-            tooltipText = noteInThisRow;
             
-            // Get column 
-            x0 = branchNames.get(noteInThisRow);  // In column coordinates
-            col = LEFT_OFFSET + x0 * COL_WIDTH;   // In pixel coordinates
-
-        }else{
-            //continue
+            // Add date (only print when date is different to previous)
+            if (date == previousDate){
+                date = '';
+            }else{
+                // Keep date, and remember new date
+                previousDate = date; 
+            }
+            dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
+     
+     
+            // Record coordinates of commit with parents
+            for (let i = 0; i < parents.length; i++){
+                
+                let x = 0; // default column
+                if (branchNames.has(noteInThisRow) ){
+                    x = branchNames.get(noteInThisRow);
+                }
+                
+                let array = [ x , line ];
+                if (childMap.has( parents[i] )){
+                    childMap.get( parents[i] ).push( array) ;
+                }else{
+                    childMap.set( parents[i],  [ array ] ); // Coordinates x is branch number, line is obviously displayed line number
+                } 
+            }
+            
+            // Store commit info
+            let thisCommit = {};
+            thisCommit.x = x0;
+            thisCommit.y = line; 
+            thisCommit.branchName = noteInThisRow;
+            thisCommit.hash = hashInThisRow;
+            
+            commitArray.push( thisCommit);
+                           
+            line++;
+        }
+        
+     
+    //
+    // Draw connections between nodes
+    //   
+    
+        for(var j = 0; j < (commitArray.length - 1); j++) { 
+ 
+            let x0 = commitArray[j].x;
+            let line = commitArray[j].y;
+            let branchName = commitArray[j].branchName;
+            
+            let hashInThisRow = commitArray[j].hash;
+  
+  
+            // Draw SVG horizontal help-line TODO : 
+            draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
+                       TOP_OFFSET + line * ROW_HEIGHT , 
+                       LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
+                       TOP_OFFSET + line * ROW_HEIGHT
+                    ).stroke({ color: '#888', width: 0.25}); 
+                    
+     
+            // Draw SVG line between nodes
+            if ( childMap.has( hashInThisRow ) ){
+                let coordinatePairs = childMap.get(hashInThisRow);
+                for (let i = 0; i < coordinatePairs.length; i++){
+                    let x1 = coordinatePairs[i][0];
+                    let y1 = coordinatePairs[i][1];
+                    
+                    drawConnection( draw, x0, line, x1, y1, R)
+                }
+            }
         }
          
-
-        // Add message text 
-        graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
-        
- 
-        // Add date (only print when date is different to previous)
-        if (date == previousDate){
-            date = '';
-        }else{
-            // Keep date, and remember new date
-            previousDate = date; 
-        }
-        dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
- 
- 
-        // Record coordinates of commit with parents
-        for (let i = 0; i < parents.length; i++){
+         
+    //
+    // Draw nodes (ontop of lines)
+    //   
+    
+        for(var j = 0; j < (commitArray.length - 1); j++) { 
+    
+            let x0 = commitArray[j].x;
+            let line = commitArray[j].y;
+            let branchName = commitArray[j].branchName;
             
-            let x = 0; // default column
-            if (branchNames.has(noteInThisRow) ){
-                x = branchNames.get(noteInThisRow);
-            }
+            let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+            let colorName = colorImageNameDefinitions[ colorNumber];
+            let colorFileName = `images/circle_colors/circle_${colorName}.png`;
             
-            let array = [ x , line ];
-            if (childMap.has( parents[i] )){
-                childMap.get( parents[i] ).push( array) ;
-            }else{
-                childMap.set( parents[i],  [ array ] ); // Coordinates x is branch number, line is obviously displayed line number
-            } 
+            // Draw commit node
+            drawNode( draw, x0, line, branchName);
         }
-
- 
-        // Draw SVG horizontal help-line TODO : 
-        draw.line( col, 
-                   TOP_OFFSET + line * ROW_HEIGHT , 
-                   LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
-                   TOP_OFFSET + line * ROW_HEIGHT
-                ).stroke({ color: '#888', width: 0.25}); 
-                
- 
-        // Draw SVG line between nodes
-        if ( childMap.has( hashInThisRow ) ){
-            let coordinatePairs = childMap.get(hashInThisRow);
-            for (let i = 0; i < coordinatePairs.length; i++){
-                let x1 = coordinatePairs[i][0];
-                let y1 = coordinatePairs[i][1];
-                
-                drawConnection( draw, x0, line, x1, y1, R)
-            }
-        }
-        
-        // Draw commit node
-        drawNode( draw, x0, line, colorFileName);
-
-       
-        // Prepare for next row                         
-        line++;
-    }
-  
-  
+           
+      
+      
     
     // 
     // Internal functions
     //   
+    
     function drawConnection( draw, x0, y0, x1, y1, R){
         // Inputs : column and row for first and second point
         
@@ -904,7 +924,34 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         }
     };
     
-    function drawNode( draw, x0, y0, colorFileName){
+    function drawNode( draw, x0, y0, branchName){
+        
+        // Figure out if known or current branch
+        let colorFileName = unsetNodeImageFile;
+        let tooltipText = 'unknown';
+        
+        if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
+            // current branch
+            colorFileName = 'images/circle_green.png'; // Draw node
+        }
+
+        // When branch is known from Notes
+        let col = LEFT_OFFSET ; 
+        if ( branchNames.has(branchName) ){
+            
+            // Get image file name
+            let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+            let colorName = colorImageNameDefinitions[ colorNumber];
+            colorFileName = `images/circle_colors/circle_${colorName}.png`;
+            tooltipText = branchName;
+            
+            // Get column 
+            col = LEFT_OFFSET + x0 * COL_WIDTH;   // In pixel coordinates
+
+        }else{
+            //continue
+        }
+
         
         // Convert from col / row to pixel coordinates
         let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
