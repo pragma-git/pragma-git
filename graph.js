@@ -21,6 +21,8 @@ const colorImageNameDefinitions = [
 'DeepSkyBlue'
 ];
 
+
+const UNIQUE_EOL = 'X3.17X';
 const unsetNodeImageFile = 'images/circle_black.png';
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
@@ -467,7 +469,7 @@ async function injectIntoJs(document){
         
     
         // Commit log output format
-        const messageFormat = '--format=%s T=%aI D=%d H=%H P=%P N=%N';  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
 
         
     //
@@ -739,7 +741,8 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         childMap = new Map();  // List of children for commits
         commitArray = [];
  
-        let splitted = graphText.split("\n");
+        //let splitted = graphText.split("\n");
+        let splitted = graphText.split( UNIQUE_EOL + '\n');
         console.log(splitted)
         
         let previousDate = 'dummy'
@@ -1343,7 +1346,10 @@ function drawGraph( document, graphText, branchHistory, history){
      
             // Notes : Separate log row from Notes at end
             let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-            let noteInThisRow = gitLogRow.substring(startOfNote + 2); // Skip N=    
+            let noteInThisRow = gitLogRow.substring(startOfNote + 2); // Skip N=  
+            
+            let multipleNotes = noteInThisRow.split('\n\n');
+            noteInThisRow = multipleNotes[ multipleNotes.length - 1].replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
             
             if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
                 if ( !branchNames.has(noteInThisRow) ){
@@ -1582,7 +1588,7 @@ async function loopSelectedRange( myFunction){
                 if ( (cleanedHashString == oldest) && ( myFunction.name == 'setNodeBranchNames')){
                     console.log('DONE WITH LAST -- CALL injectIntoJs(document) ');
                     injectIntoJs(document);
-                    await myFunction(cleanedHashString);
+                    //await myFunction(cleanedHashString);
                 }
                 
             }catch(err){
