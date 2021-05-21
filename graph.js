@@ -53,6 +53,7 @@ var localState = global.localState;
 
 // Global in this window
 let history = '';
+var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
 
 //
 // Example graphs
@@ -1092,6 +1093,12 @@ function drawPinnedImage(hash){
 // Stored branch name
 function drawBranchColorHeader( branchNames){
     
+    // Set new lastSelectedBranchName if incorrect
+    let firstBranchNameInBranchNames = branchNames.entries().next().value[0]; // First element of map
+    if ( !branchNames.has(firstBranchNameInBranchNames) ){
+        lastSelectedBranchName = firstBranchNameInBranchNames;
+    }
+    
     
     const colorFileName = 'images/circle_green.png';
     
@@ -1152,7 +1159,11 @@ async function populateDropboxBranchSelection(){
 
     html += '<optgroup label="Local branches">';
     localBranches.all.forEach( function(value){
-        html += `<option value="${value}">${value}</option>`
+        if (value == lastSelectedBranchName){
+            html += `<option value="${value}" selected="${value}">${value}</option>`
+        }else{
+            html += `<option value="${value}">${value}</option>`
+        }
     });
     html += '</optgroup>';
        
@@ -1243,6 +1254,7 @@ async function loopSelectedRange( myFunction){
         console.log(`Enter setNodeBranchNames with hash = ${hashString}  ${document.getElementById(hashString).innerText}`);
         
         let name = document.getElementById('branchDropboxSelection').value;
+        lastSelectedBranchName = name;
         
         //
         // Do commands and bail out
@@ -1262,6 +1274,7 @@ async function loopSelectedRange( myFunction){
                 console.log(err);
             }  
             // Bail out when command done
+            
             return;
         }
         
