@@ -715,7 +715,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         const COL_WIDTH = 20;
         const LEFT_OFFSET = 10;
         const TOP_OFFSET = 0.5 * IMG_H; 
-        const NUMBER_OF_BRANCHES = 15 // TODO : make as big as necessary.  Maybe find number of local branches
+        var NUMBER_OF_BRANCHES = 15 // Default, will be changed below
     
         // Get ROW_HEIGHT from graph.html css  
         r = document.querySelector(':root');
@@ -739,25 +739,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         
         let previousDate = 'dummy'
     
- 
-    // Initiate drawing
-           
-        draw = SVG();
-        
-        // Define arcs used for branch and merge curves
-        const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`).fill('none').stroke({ color: '#888', width: 3, linecap: 'round', linejoin: 'round' });
-        const arcBranch = draw.defs().use(arc).move(-R,-R);
-        const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
-    
-      
-        // Draw vertical lines for each swim-lane
-        for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
-            const x0 = LEFT_OFFSET + i * COL_WIDTH;
-            const x1 = x0;
-            const y0 = TOP_OFFSET ;
-            const y1 = TOP_OFFSET + splitted.length * ROW_HEIGHT;
-            draw.line( x0  , y0, x1, y1).stroke({ color: '#888', width: 0.25})
-        }  
+
     
     //
     // Loop each row - collect commit info
@@ -834,7 +816,28 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                            
             line++;
         }
+ 
+    //
+    // Initiate drawing
+    //
+        draw = SVG();
         
+        // Define arcs used for branch and merge curves
+        const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`).fill('none').stroke({ color: '#888', width: 3, linecap: 'round', linejoin: 'round' });
+        const arcBranch = draw.defs().use(arc).move(-R,-R);
+        const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
+    
+        NUMBER_OF_BRANCHES = branchNames.size;
+      
+        // Draw vertical lines for each swim-lane
+        for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
+            const x0 = LEFT_OFFSET + i * COL_WIDTH;
+            const x1 = x0;
+            const y0 = TOP_OFFSET ;
+            const y1 = TOP_OFFSET + splitted.length * ROW_HEIGHT;
+            //draw.line( x0  , y0, x1, y1).stroke({ color: '#888', width: 0.25})
+        }          
+     
      
     //
     // Draw connections between nodes
