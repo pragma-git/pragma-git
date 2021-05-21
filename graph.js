@@ -512,7 +512,12 @@ async function injectIntoJs(document){
             
             
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
-        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+        await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+        
+        
+        // Populate branch-name edit menu
+        await populateDropboxBranchSelection();
+        
             return
         
         
@@ -876,7 +881,8 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     //   
     
         for(var j = 0; j < (commitArray.length - 1); j++) { 
-            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName);
+            let id = 'img_' + commitArray[j].hash;
+            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, id );
         }
            
     
@@ -929,7 +935,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     };
     
     
-    function drawNode( draw, x0, y0, branchName){
+    function drawNode( draw, x0, y0, branchName, id){
         
         // Figure out if known or current branch
         let colorFileName = unsetNodeImageFile;
@@ -957,6 +963,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
         
         draw.image(colorFileName).
+        id(id).
         size(IMG_W,IMG_H).
         move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
     };
@@ -1633,7 +1640,11 @@ async function loopSelectedRange( myFunction){
         // Set image
         let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
         let colorName = colorImageNameDefinitions[ colorNumber];
-        document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;
+        try{
+            document.getElementById(img_id).href.baseVal = `images/circle_colors/circle_${colorName}.png`;  // svg node
+        }catch (err){
+            document.getElementById(img_id).src = `images/circle_colors/circle_${colorName}.png`;  // html img node
+        }
         
         // Set name
         await opener.gitRememberBranch( hashString, name);
