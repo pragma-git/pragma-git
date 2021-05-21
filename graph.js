@@ -879,11 +879,25 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName);
         }
            
+    
+    
+    // 
+    // Attach data to HTML
+    //
+        document.getElementById('datesSwimLane').innerHTML = dateContent;      
+    
+        document.getElementById('mySvg').innerHTML = ''; // Clear
+        draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+    
+        document.getElementById('graphContent').innerHTML = graphContent;    
+    
+        toggleDate( state.graph.showdate); // Show / hide date column    
       
  
-    // 
-    // Internal functions
-    //   
+
+    // ---------------
+    // LOCAL FUNCTIONS
+    // ---------------
     
     function drawConnection( draw, x0, y0, x1, y1, R){
         // Inputs : column and row for first and second point
@@ -927,7 +941,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         }
 
         // When branch is known from Notes
-        let col = LEFT_OFFSET ; 
         if ( branchNames.has(branchName) ){
             
             // Get image file name
@@ -935,10 +948,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             let colorName = colorImageNameDefinitions[ colorNumber];
             colorFileName = `images/circle_colors/circle_${colorName}.png`;
             tooltipText = branchName;
-            
-            // Get column 
-            col = LEFT_OFFSET + x0 * COL_WIDTH;   // In pixel coordinates
-
         }else{
             //continue
         }
@@ -951,21 +960,10 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         size(IMG_W,IMG_H).
         move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
     };
+
+
     
-    
-    // 
-    // Attach data to HTML
-    //
-    document.getElementById('datesSwimLane').innerHTML = dateContent;      
-
-    document.getElementById('mySvg').innerHTML = ''; // Clear
-    draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
-
-    document.getElementById('graphContent').innerHTML = graphContent;    
-
-    toggleDate( state.graph.showdate); // Show / hide date column
-
-}
+} // ------------------------------------------------------------
 function drawGraph( document, graphText, branchHistory, history){
     
     // document :       HTML document
