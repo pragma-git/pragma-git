@@ -835,19 +835,17 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             const x1 = x0;
             const y0 = TOP_OFFSET ;
             const y1 = TOP_OFFSET + splitted.length * ROW_HEIGHT;
-            //draw.line( x0  , y0, x1, y1).stroke({ color: '#888', width: 0.25})
         }          
      
      
     //
-    // Draw connections between nodes
+    // Draw nodes-connections & help-line
     //   
     
         for(var j = 0; j < (commitArray.length - 1); j++) { 
  
             let x0 = commitArray[j].x;
             let line = commitArray[j].y;
-            let branchName = commitArray[j].branchName;
             
             let hashInThisRow = commitArray[j].hash;
   
@@ -860,7 +858,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                     ).stroke({ color: '#888', width: 0.25}); 
                     
      
-            // Draw SVG line between nodes
+            // Draw connections between nodes
             if ( childMap.has( hashInThisRow ) ){
                 let coordinatePairs = childMap.get(hashInThisRow);
                 for (let i = 0; i < coordinatePairs.length; i++){
@@ -878,22 +876,11 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     //   
     
         for(var j = 0; j < (commitArray.length - 1); j++) { 
-    
-            let x0 = commitArray[j].x;
-            let line = commitArray[j].y;
-            let branchName = commitArray[j].branchName;
-            
-            let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
-            let colorName = colorImageNameDefinitions[ colorNumber];
-            let colorFileName = `images/circle_colors/circle_${colorName}.png`;
-            
-            // Draw commit node
-            drawNode( draw, x0, line, branchName);
+            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName);
         }
            
       
-      
-    
+ 
     // 
     // Internal functions
     //   
@@ -909,23 +896,24 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
                 
                 
-        // Draw connection   
+        // Draw vertical connection 
         if (x1 == x0){
             draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});  
         }     
-        // Branch
+        // Draw branch
         if (x1 > x0){
             draw.line( X0, Y0, X1 - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
             draw.use(arcBranch).move( X1, Y0  );
             draw.line( X1, Y0 - R, X1, Y1).stroke({ color: '#888', width: 3}); // vertical
         }
-        // Merge
+        // Draw merge
         if (x1 < x0){
             draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
             draw.use(arcMerge).move( X0, Y1  );
             draw.line( X1, Y1, X0 - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
         }
     };
+    
     
     function drawNode( draw, x0, y0, branchName){
         
@@ -955,7 +943,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             //continue
         }
 
-        
         // Convert from col / row to pixel coordinates
         let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
         let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
@@ -972,8 +959,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     document.getElementById('datesSwimLane').innerHTML = dateContent;      
 
     document.getElementById('mySvg').innerHTML = ''; // Clear
-    draw.addTo( document.getElementById('mySvg') ).
-        size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+    draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
 
     document.getElementById('graphContent').innerHTML = graphContent;    
 
