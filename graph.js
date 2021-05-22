@@ -754,7 +754,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     //
         let line = 0; 
         
-        for(var row = 0; row < (splitted.length - 1); row++) {
+        for(var row = 0; row < splitted.length; row++) {
             
                             
             // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
@@ -850,7 +850,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     // Draw nodes-connections & help-line
     //   
     
-        for(var j = 0; j < (commitArray.length - 1); j++) { 
+        for(var j = 0; j < commitArray.length ; j++) { 
  
             let x0 = commitArray[j].x;
             let line = commitArray[j].y;
@@ -883,7 +883,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     // Draw nodes (ontop of lines)
     //   
     
-        for(var j = 0; j < (commitArray.length - 1); j++) { 
+        for(var j = 0; j < commitArray.length ; j++) { 
             let id = 'img_' + commitArray[j].hash;
             drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, id );
         }

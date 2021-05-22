@@ -2979,15 +2979,6 @@ async function gitAddCommitAndPush( message){
     }
     
     // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-    //try{   
-        //let message = currentBranch;
-        //await simpleGit( state.repos[state.repoNumber].localFolder )
-            //.raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
-        //function onNotes(err, result) {console.log(result) };
-    //}catch(err){
-        //console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
-        //console.log(err);
-    //}   
     await gitRememberBranch( 'HEAD', currentBranch);
 
     // Push 
@@ -3007,12 +2998,13 @@ async function gitAddCommitAndPush( message){
 }
 async function gitRememberBranch( hash, name){
     
+    // The notes versions can be viewed from command line using :
+    //  git notes --ref branchname show HASH
+    // for instance
+    //  git notes --ref branchname show HEAD
+    
     try{   
-        // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-        //await simpleGit( state.repos[state.repoNumber].localFolder )
-            //.raw( [  'notes', '--ref', 'branchname', 'add' , '-f', '-m', name, hash] , onNotes);
-            
-        // Append branch in git notes (git notes --ref=branchname append -m 'name of branch')    
+        // Add branch in git notes (git notes --ref=branchname append -m 'name of branch')    
         await simpleGit( state.repos[state.repoNumber].localFolder )
             .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err) };
