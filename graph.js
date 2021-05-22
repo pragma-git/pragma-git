@@ -1409,10 +1409,6 @@ function drawGraph( document, graphText, branchHistory, history){
             // Current row
             let thisRow = message;
             thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-            
-            if (noteInThisRow.length > 0){
-                thisRow += ` (${noteInThisRow})`;
-            }
     
             // Parse missing features (= lines without commits)
             if (startOfHash == -1){
@@ -1441,7 +1437,6 @@ function drawGraph( document, graphText, branchHistory, history){
         const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
         const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
         return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
-        //return PIN_IMG1 + ` id="` + hash + `" ` + PIN_IMG2;
     }        
     function parseMessage( hash, text, decoration, notFoundInSearch){
         
@@ -1455,9 +1450,7 @@ function drawGraph( document, graphText, branchHistory, history){
         
         let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text +  `</pre>` + ' </div>' ; 
         html += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
-        //html += decoration 
-        
-        //return '<div>' + html + '</div> <br>'
+
         return html 
     };
  
