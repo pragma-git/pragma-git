@@ -23,7 +23,7 @@ const colorImageNameDefinitions = [
 
 
 const UNIQUE_EOL = 'X3.17X';
-const unsetNodeImageFile = 'images/circle_black.png';
+const unsetNodeImageFile = 'images/circle_grey.png';
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
@@ -469,7 +469,7 @@ async function injectIntoJs(document){
         
     
         // Commit log output format
-        const messageFormat = '--format=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
 
         
     //
@@ -484,11 +484,11 @@ async function injectIntoJs(document){
         document.getElementById('branchName').innerText = branchName;
         
         // Normal log command    
-        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty',    messageFormat];       
+        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];       
          
         // Show all log command 
         if (state.graph.showall){
-            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty',    messageFormat];
+            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];
         }
         
         
@@ -763,7 +763,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             }
     
             // Disect git-log row into useful parts
-            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents] = splitGitLogRow( splitted[row] );
+            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] );
      
      
             // Style if commit is not in history (because of search)
@@ -777,7 +777,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
 
 
             // When branch is known from Notes
-            let x0 = 0; 
+            let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
             if ( branchNames.has(noteInThisRow) ){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
@@ -797,10 +797,20 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
      
      
-            // Record coordinates of commit with parents
+            /* Record coordinates of commits and their children 
+               (in principle I could have stored parents for a node instead, but getting their coordinates would've required two passes)
+               So, the git parent info from each commit NODE, is transformed to a
+               childMap of the CHILDREN to a commit NODE 
+
+                   
+                         NODE                       CHILDREN
+                        / |  \   git commits   =>    \ | /      childMap
+                        PARENTS                       NODE 
+                            
+             */
             for (let i = 0; i < parents.length; i++){
                 
-                let x = 0; // default column
+                let x = graphNodeIndex; // default column
                 if (branchNames.has(noteInThisRow) ){
                     x = branchNames.get(noteInThisRow);
                 }
@@ -819,6 +829,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             thisCommit.y = line; 
             thisCommit.branchName = noteInThisRow;
             thisCommit.hash = hashInThisRow;
+            thisCommit.notFoundInSearch = notFoundInSearch;
             
             commitArray.push( thisCommit);
                            
@@ -831,7 +842,9 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         draw = SVG();
         
         // Define arcs used for branch and merge curves
-        const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`).fill('none').stroke({ color: '#888', width: 3, linecap: 'round', linejoin: 'round' });
+        const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`)
+            .fill('none')
+            .stroke({ color: '#888', width: 3  });
         const arcBranch = draw.defs().use(arc).move(-R,-R);
         const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
     
@@ -885,7 +898,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     
         for(var j = 0; j < commitArray.length ; j++) { 
             let id = 'img_' + commitArray[j].hash;
-            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, id );
+            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].notFoundInSearch,id );
         }
            
     
@@ -938,14 +951,15 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
     };
     
     
-    function drawNode( draw, x0, y0, branchName, id){
+    function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
         
         // Figure out if known or current branch
-        let colorFileName = unsetNodeImageFile;
+        let colorFileName;
         let tooltipText = 'unknown';
-        
-        if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
-            // current branch
+ 
+        if (notFoundInSearch){
+            colorFileName = unsetNodeImageFile;
+        }else{
             colorFileName = 'images/circle_green.png'; // Draw node
         }
 
@@ -1338,8 +1352,7 @@ function drawGraph( document, graphText, branchHistory, history){
         // gitLogRow -  is a full row from log
         
             // Example row format :
-            // T=Sun Mar 28 01:11:41 2021 S=Fix main window commit D= (HEAD -> develop) H=c52c473b6e43f8e34e663c537a5bfb2968e50fc1
-            // | * Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
+            // | * S=Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
      
      
             // Pick row apart from back to start
@@ -1349,7 +1362,11 @@ function drawGraph( document, graphText, branchHistory, history){
             let noteInThisRow = gitLogRow.substring(startOfNote + 2); // Skip N=  
             
             let multipleNotes = noteInThisRow.split('\n\n');
-            noteInThisRow = multipleNotes[ multipleNotes.length - 1].replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+            //multipleNotes = multipleNotes[ multipleNotes.length - 1].split('\n')[0]; // Remove everything after EOL
+            //noteInThisRow = multipleNotes[ multipleNotes.length - 1].replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+            
+            noteInThisRow = multipleNotes[ multipleNotes.length - 1].split('\n')[0]; // Take part before last EOL (some graphics curd gets there)
+            noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
             
             if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
                 if ( !branchNames.has(noteInThisRow) ){
@@ -1358,7 +1375,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 }
             }
             
-            // Parents : Separate log row from long hash (at end now when Notes removed)
+            // Parents : Separate log row from parents(at end now when Notes removed)
             let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
             let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
             
@@ -1372,17 +1389,25 @@ function drawGraph( document, graphText, branchHistory, history){
             decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
              
             // Date : Separate log row from date (at end now when decorate removed)
-            let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in decoration)
-            let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=%aI
+            let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
+            let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
             date = date.substring(0,10);
+              
+            // Message : Separate log row from message (at end now when date removed)
+            let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
+            let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
             
+            // Position of '*' node
+            let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
+            let goodGraphPart = graphPartOfText.split('\n');
+            let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
                             
             if (startOfDate == -1){
                 date = ''; // When no date found (set blank date)
             }
             
             // Current row
-            let thisRow = gitLogRow.substring(0, startOfDate);
+            let thisRow = message;
             thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
             
             if (noteInThisRow.length > 0){
@@ -1398,7 +1423,7 @@ function drawGraph( document, graphText, branchHistory, history){
             let parents = parentInThisRow.split(' ');
     
             
-            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents]
+            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex]
         
     }
     function isDumbRow(s){
