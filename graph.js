@@ -21,6 +21,8 @@ const colorImageNameDefinitions = [
 'DeepSkyBlue'
 ];
 
+var MODE = 'swim-lanes'
+//MODE = 'git-log-graph'
 
 const UNIQUE_EOL = 'X3.17X';
 const unsetNodeImageFile = 'images/circle_grey.png';
@@ -815,7 +817,11 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                     x = branchNames.get(noteInThisRow);
                 }
                 
-                let array = [ x , line ];
+                // Two versions 1) swim-lanes + unkown from git-log --graph, 2) All from git-log --graph
+                let array = [ x , line ];				// Alt 1) Swim-lanes
+                if (MODE == 'git-log-graph') {
+                	array = [ graphNodeIndex , line ];  // Alt 2) Git-log --graph
+        		}
                 if (childMap.has( parents[i] )){
                     childMap.get( parents[i] ).push( array) ;
                 }else{
@@ -825,7 +831,10 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
             
             // Store commit info
             let thisCommit = {};
-            thisCommit.x = x0;
+            thisCommit.x = x0;              	// Alt 1) Swim-lanes
+          	if (MODE == 'git-log-graph') {
+            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph
+        	}
             thisCommit.y = line; 
             thisCommit.branchName = noteInThisRow;
             thisCommit.hash = hashInThisRow;
