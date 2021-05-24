@@ -21,8 +21,7 @@ const colorImageNameDefinitions = [
 'DeepSkyBlue'
 ];
 
-var MODE = 'swim-lanes'
-//MODE = 'git-log-graph'
+var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
 
 const UNIQUE_EOL = 'X3.17X';
 const unsetNodeImageFile = 'images/circle_grey.png';
@@ -446,7 +445,13 @@ async function injectIntoJs(document){
     
     document.getElementById('showDate').checked = state.graph.showdate;
     document.getElementById('showAll').checked = state.graph.showall;
+    document.getElementById('message_code_switch').checked = state.graph.swimlanes;
     
+    if  ( state.graph.swimlanes ){
+        MODE = 'swim-lanes';
+    }else{
+        MODE = 'git-log-graph';
+    }
           
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
@@ -475,16 +480,20 @@ async function injectIntoJs(document){
 
         
     //
-    // Take 1 : Parse first N rows (quicker)
+    // Set HTML
     //
-        const firstPassN = 55;
-        
+
         // Write header text
         let repoName = opener.window.document.getElementById('top-titlebar-repo-text').innerText;
         let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
+
         
+    //
+    // Create git-log commands
+    //
+           
         // Normal log command    
         let commands = [ 'log',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];       
          
@@ -493,27 +502,26 @@ async function injectIntoJs(document){
             commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];
         }
         
+
         
-                
+    //
+    // Draw graph in HTML
+    //   
+            
+        try{
+            let shortHistoryCommand= [...commands]; // Clone
+            //shortHistoryCommand.push('-' + firstPassN);
+            
+            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
+            function onLog(err, result ){graphText = result; console.log(result); };  
+        }catch(err){        
+            console.log(err);
+        }
         
-        // TEST : Swimlanes
+        // Draw full graph, and label current branch
+        let branchHistory = await readBranchHistory();
+        await drawGraph( document, graphText, branchHistory, history);
         
-            
-            try{
-                let shortHistoryCommand= [...commands]; // Clone
-                //shortHistoryCommand.push('-' + firstPassN);
-                
-                await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
-                function onLog(err, result ){graphText = result; console.log(result); };  
-            }catch(err){        
-                console.log(err);
-            }
-            
-            // Draw full graph, and label current branch
-            let branchHistory = await readBranchHistory();
-            await drawGraph_swim_lanes( document, graphText, branchHistory, history);
-            //await drawGraph( document, graphText, branchHistory, history);
-            
             
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
         await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
@@ -521,58 +529,7 @@ async function injectIntoJs(document){
         
         // Populate branch-name edit menu
         await populateDropboxBranchSelection();
-        
-            return
-        
-        
-        
-        
-        // Find short history graph
-        try{
-            let shortHistoryCommand= [...commands]; // Clone
-            shortHistoryCommand.push('-' + firstPassN);
-            
-            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  shortHistoryCommand, onLog);
-            function onLog(err, result ){graphText = result; console.log(result); };  
-        }catch(err){        
-            console.log(err);
-        }
-    
-        // Draw full graph, and label current branch
-        branchHistory = await readBranchHistory();
-        await drawGraph( document, graphText, branchHistory, history);
-        
-        // Draw node-color header
-        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
-        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
-    
-            
-    
-    //
-    // Take 2 : Parse all rows 
-    //
-         
-         
-        // Find complete history graph
-        try{
-            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  commands, onLog);
-            function onLog(err, result ){graphText = result; console.log(result); };
-        }catch(err){        
-            console.log(err);
-        }
-        
-         
-        // Draw full graph, and label current branch
-        branchHistory = await readBranchHistory();
-        await drawGraph( document, graphText, branchHistory, history);
-    
-
-        // Draw node-color header
-        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
-        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
-        
-        // Populate branch-name edit menu
-        populateDropboxBranchSelection();
+ 
     
     //
     // Draw current and pinned commits
@@ -669,6 +626,7 @@ function closeWindow(){
     // Store setting
     state.graph.showdate = document.getElementById('showDate').checked;
     state.graph.showall = document.getElementById('showAll').checked;
+    state.graph.swimlanes = document.getElementById('message_code_switch').checked;  // True if swimlanes, false if normal git
     opener.saveSettings();
 
     
@@ -707,7 +665,7 @@ async function gitCommitMessage(hash){
 }
 
 // Graphics
-function drawGraph_swim_lanes( document, graphText, branchHistory, history){
+function drawGraph( document, graphText, branchHistory, history){
     // document :       HTML document
     // graphText :      output from  raw git log graph
     // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
@@ -724,7 +682,7 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         const COL_WIDTH = 20;
         const LEFT_OFFSET = 10;
         const TOP_OFFSET = 0.5 * IMG_H; 
-        var NUMBER_OF_BRANCHES = 15 // Default, will be changed below
+        var NUMBER_OF_BRANCHES = 1 // Default, will be changed below
     
         // Get ROW_HEIGHT from graph.html css  
         r = document.querySelector(':root');
@@ -829,12 +787,21 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
                 } 
             }
             
-            // Store commit info
+            // Store commit info & NUMBER_OF_BRANCHES
             let thisCommit = {};
             thisCommit.x = x0;              	// Alt 1) Swim-lanes
+            
           	if (MODE == 'git-log-graph') {
             	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph
-        	}
+                
+                if ( graphNodeIndex > NUMBER_OF_BRANCHES + 1){
+                    NUMBER_OF_BRANCHES = graphNodeIndex + 1
+                }
+                
+        	}else{
+                NUMBER_OF_BRANCHES = branchNames.size;
+            }
+            
             thisCommit.y = line; 
             thisCommit.branchName = noteInThisRow;
             thisCommit.hash = hashInThisRow;
@@ -857,7 +824,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
         const arcBranch = draw.defs().use(arc).move(-R,-R);
         const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
     
-        NUMBER_OF_BRANCHES = branchNames.size;
       
         // Draw vertical lines for each swim-lane
         for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
@@ -997,363 +963,6 @@ function drawGraph_swim_lanes( document, graphText, branchHistory, history){
 
     
 } // ------------------------------------------------------------
-function drawGraph( document, graphText, branchHistory, history){
-    
-    // document :       HTML document
-    // graphText :      output from  raw git log graph
-    // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
-    // history :        the history after search, used to set different color for  commits found/not found in Search
-    
-    
-    graphContent = '';
-    
-    graphText +=  "\n" + BUFFERTROW + "\n" + BUFFERTROW; 
-    
-    console.log(graphText)
-    
-    let splitted = graphText.split("\n");
-    console.log(splitted)
-    
-    let previousDate = 'dummy'
-    
-    branchNames = new Map();   // Empty list of branch names
-    
-    
-    // Loop each row
-    
-    for (var row = 0; row < (splitted.length - 1); row++) {
-        
-                        
-        // Skip row added by the git log format option %N  (contains only characters '|' and ' ')
-        if (isDumbRow(splitted[row])){
-            continue // skip row
-        }
-
-        let sumFound ='';
-        
-        // Disect git-log row into useful parts
-        [ date, hashInThisRow, thisRow, decoration, noteInThisRow] = splitGitLogRow( splitted[row] );
-        
-
-        // Only show date when new date
-        if (date == previousDate){
-            date = '';
-        }else{
-            // Keep date, and remember new date
-            previousDate = date; 
-        }
-
-        
-                    
-        // Style if commit is not in history (because of search)
-        let index = util.findObjectIndex( history, 'hash', hashInThisRow );
-        let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-        
-        let styling = '';
-        if (notFoundInSearch){
-            styling = ' notInSearch';
-        }
-        
-
-        
-        //
-        // Parse row
-        //
-        
-        // Empty column
-        graphContent += '<div class="firstcol"></div> ' // First column on row
-        
-         // Show/hide date
-        if (state.graph.showdate){
-            graphContent += '<div class="date"><pre>' +  date + '</pre></div>';
-        }
-        
-        
-        // Parse git log graphics
-        for(var i = 0 ; i < thisRow.length ; i++){
-            let total = ''; // Collect graph HTML for current row
-            let found = ''; // Record found item (used for logging)
-
-            //
-            // Draw node
-            //
-            if (  a(0,'*') ){
-                let id = `id="img_${hashInThisRow}" `;
-                
-                // Figure out if known or current branch
-               let colorFileName = unsetNodeImageFile;
-               let tooltipText = 'unknown';
-                
-                if ( util.findObjectIndexStartsWith(branchHistory,'hash', hashInThisRow) >= 0){
-                    // current branch
-                    colorFileName = 'images/circle_green.png'; // Draw node
-                }
-
-
-                // Test, to show all colors on nodes without notes
-                //let colorName = colorImageNameDefinitions[ row % colorImageNameDefinitions.length ];
-                //colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                
-                if ( branchNames.has(noteInThisRow) ){
-                    let colorNumber = branchNames.get(noteInThisRow) % colorImageNameDefinitions.length; // start again if too high number
-                    let colorName = colorImageNameDefinitions[ colorNumber];
-                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                    
-                    tooltipText = noteInThisRow;
-                }
-                    
-                total += `<img class="node" ${id} src="${colorFileName}" title="${tooltipText}">`; // Draw node   
-                
-                
-            }
-
-            
-            //
-            // Draw lines
-            //
-            
-            // Select what to draw -- first hit wins (if-elseif chain)
-            // C1-C3 can draw more than one element (within same elseif test)
-            //
-            // Generally standing on character at coordinate a0, and comparing with characters at next rows a and b
-            // Exception to this is noted below (D2, D3)
-            //
-            // Graph text from git log must be padded with spaces on left and bottom, to allow look left, and look ahead
-            
-            // ------------------------------------------------------------------------------   
-            //    A1) -0-     A2) -0-     A3) --0     A4) --0
-            // a:     \|           |/           \         _|/
-            // b:      |\         /|          _|/      
-            //
-            if (  a(0,'|') && a(-1, '\\') && b(0,'|') && b(1,'\\')  ) {
-                // A) Crossing down-right 
-                found = 'A1';
-                total += '<img class="pipe" src="images/pipe.png">';
-                total += '<img class="widebackslash" src="images/widebackslash.png">';  
-            }else if (  a(0,'|') && a(1, '/') && b(-1,'/') && b(0,'|')  ) {
-                
-                // A) Crossing down-left 
-                found = 'A2';
-                total += '<img class="pipe" src="images/pipe.png">';
-                total += '<img class="wideslash"  src="images/wideslash.png">';  
-                    
-            }else if (  a(0,'\\')  && b(-2,'_')  && b(-1,'|')  && b(0,'/') ) {
-            // A3) slash  - skip connecting pipe in some cases
-                found = 'A3';
-                total += '<img class="slash" src="images/slash.png">';
-                
-            }else if (  a(0,'/')  && a(-1,'|')  && a(-2,'_') ) {
-            // A4) slash  - skip connecting pipe draw, second part
-                found = 'A4';
-                // Draw nothing
-             
-            // ------------------------------------------------------------------------------   
-            //    B1) 0--     B2) --0    X = anything but space  
-            // a:     \             /    B1: Y = [ space | / ]   
-            // b:      XY         YX     B2: Y = [ space | \ ]
-            //
-            }else if (  a(0,'\\') && !b(1,' ') && ( b(2,' ') || b(2,'|') || b(2,'/')  || b(2,'_') ) ) {   
-            // B) back-slash 
-                found = 'B1';
-                total += '<img class="backslash" src="images/backslash.png">';
-                
-            }else if (  a(0,'/') && !b(-1,' ') && ( b(-2,' ') || b(-2,'|') || b(-2,'\\') || b(-2,'_' )  )  ){
-                // B) slash 
-                found = 'B2';
-                total += '<img class="slash" src="images/slash.png">';
-             
-            // ------------------------------------------------------------------------------   
-            //    C1) -0      C2)  0      C3) 0-          C1: X = anything but [ space \ _ ]
-            // a:      |           |          \           C2: X = anything but space 
-            // b:     X            X           X          C3: X = anything but [ space / _ ]    
-            //  
-            // Note: Zero, one or more of C1-C3 can be true
-            }else if (  a(0,'|')  ) {
-                
-                if (  a(0,'|') && !b( -1,'\\') && !b( -1,' ')  && !b( -1,'_') ) {
-                // C) slash 
-                    found += ' C1';
-                    total += '<img class="slash" src="images/slash.png">';
-                    
-                }
-                if (  a(0,'|') && !b( 0,' ') ) {
-                // C) pipe 
-                    found += ' C2';
-                    total += '<img class="pipe" src="images/pipe.png">';
-                    
-                }
-                if (  a(0,'|') && !b( 1,'/') && !b( 1,' ') && !b( 1,'_') ) {
-                // C) back-slash 
-                    found += ' C3';
-                    total += '<img class="backslash" src="images/backslash.png">';
-                }
-                
-            // ------------------------------------------------------------------------------   
-            //    D2) -0-     D3) -0-     D1) -0-     NOTE: D2 and D3 is standing on b0 and comparing with previous
-            // a:       /         \            _  
-            // b:      _           _              
-            //              
-            }else if (  a(0,'_') && prev( 1,'/') ) {
-            // D) bridge
-                found = 'D2';
-                total += '<img class="bridge bridgeleft" src="images/bridge.png">';
-            }else if (  a(0,'_')  && prev(-1,'\\') ){
-            // D) bridge
-                found = 'D3';
-                total += '<img class="bridge bridgeright" src="images/bridge.png">';
-                }else if (  a(0,'_') ) {
-            // D) bridge
-                found = 'D1';
-                total += '<img class="bridge" src="images/bridge.png">';
-              
-            // ------------------------------------------------------------------------------   
-            //    E1)  0     E2)   0  
-            // a:      \           /       
-            // b:      /           \              
-            //      
-            }else if (  a(0,'\\') && b(0,'/')  ) {
-            // E) pipe 
-                found = 'E1';
-                total += '<img class="pipe" src="images/pipe.png">';
-                
-            }else if (  a(0,'/') && b( 0,'\\')  ) {
-            // E) pipe 
-                found = 'E2';
-                total += '<img class="pipe" src="images/pipe.png">';
-                
-            // ------------------------------------------------------------------------------   
-            //    F1) -0-     F2)  0      F3) -0-    
-            // a:      *           *           *       X = one of [ space | * ]
-            // b:     /X           X           X\    
-            //  
-            }else if (  a(0,'*') ){ 
-            // F) draw one or more lines from node
-            
-                if (  a(0,'*') && b( -1,'/') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') ) ) {
-                // F) slash 
-                    found += ' F1';
-                    total += '<img class="slash" src="images/slash.png">'; 
-                }
-                if (  a(0,'*') && !b( 0,' ') && ( b( 0,'|')||b( 0,' ')||b( 0,'*') )  ) {
-                // F) pipe 
-                    found += ' F2';
-                    total += '<img class="pipe" src="images/pipe.png">';
-                }
-                if (  a(0,'*') && b( 1,'\\') && ( b( 0,'|')||b( 0,' ')||b( 0,'*')||b( 0,'_') ) ) {
-                // F) back-slash 
-                    found += ' F3';
-                    total += '<img class="backslash" src="images/backslash.png">';
-                }
-                
-            // ------------------------------------------------------------------------------   
-            //    G1)  0-    G2)   0-  
-            // a:      -X          X-             X = one of [ * \ | / _ - . ]
-            // b:                 
-            //      
-            }else if ( 
-                a(0,'-') &&
-                ( a(1,'*') || a(1,'\\')  || a(1,'|') || a(1,'/') || a(1,'_')  || a(1,'-') || a(1,'.') )   
-            ){
-            // G1) short bridge (checks for non-space node to right -- that way stopping it from being commit message)
-                found = 'G1';
-                total += '<img class="bridge" src="images/bridge.png">';
-            }else if (  
-                ( a(0,'*') || a(0,'\\')  || a(0,'|') || a(0,'/') || a(0,'_')  || a(0,'-') || a(0,'.')   )   && 
-                a(1,'-') 
-            ){
-            // G2) short bridge (non-space node to left -- I think this is correct, but have not seen this in the wild)
-                found = 'G2';
-                total += '<img class="bridge" src="images/bridge.png">';
-                
-            // ------------------------------------------------------------------------------   
-            //    H1)  0-     H2)  -0      H3)  0    
-            // a:      .            .           .      
-            // b:       \          /            |    
-            //  
-            }else if (  a(0,'.') && b( 1,'\\')  ) {
-            // H1) point corner and '\'
-                found = 'H1';
-                total += '<img class="backslash" src="images/backslash.png">';
-            }else if (  a(0,'.') && b( -1,'/')  ) {
-            // H2) point corner and  '/'
-                found = 'H2';
-                total += '<img class="slash" src="images/slash.png">';
-            }else if (  a(0,'.') && b( 0,'|')  ) {
-            // H3) point corner and '|'
-                found = 'H3';
-                total += '<img class="slash" src="images/pipe.png">'; 
-                
-            // ------------------------------------------------------------------------------ 
-            //    COMMIT MESSAGE)      
-            //                                      not one of [ * \ | / _ space ] 
-            //    
-            }else if (  !a(0,'*') && !a(0,'\\')  && !a(0,'|') && !a(0,'/') && !a(0,'_') && !a(0,' ')   ){
-            // TEXT if nothing else
-            
-                // Different class when showing test cases
-                let cl = 'text';
-                if (test != 0) { 
-                    cl = 'courier';
-                }
-                
-                // Print Text part
-                let rowText = '(' + row + ') ';
-                sumFound += ' ' + thisRow.substring(i);
-                //graphContent += '<div class="' + cl + styling + '" id="' + hashInThisRow + '" >' + drawCommitRow( hashInThisRow, decoration, thisRow.substring(i), DEV) + ' </div>' ; 
-                //graphContent += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
-                
-                graphContent += parseMessage( hashInThisRow, thisRow.substring(i), decoration, notFoundInSearch)
-                
-                i = thisRow.length; // set end-of-loop
-                continue // skip rest of row
-                
-            }else if ( i == (thisRow.length - 1) ) {
-
-                // Print out info for non-commit rows
-                graphContent += '<div class="text">' +  drawNonCommitRow(hashInThisRow, thisRow.substring(i), DEV) + '</div>';
-                
-            }
-    
-            // Make div with graphContent from above
-            graphContent += '<div>' + total + '</div>';
-            
-            if (found !== ''){
-                sumFound += ' ' + found;
-            }
-        }
-        
-        // Log parsing
-        console.log('ROW = ' + row + '  '  +sumFound);
-        
-        function a(index, c){
-            let currentRow = BUFFERTCOLS + thisRow;
-            index = index + BUFFERTCOLS.length;
-            let answer = currentRow[i+index] === c;
-            return answer;
-        }
-        
-        function b(index, c){
-            let nextRow = BUFFERTCOLS + splitted[ row + 1];
-            index = index + BUFFERTCOLS.length;
-            let answer = nextRow[i+index] === c;
-            return answer;
-        }    
-        
-        function prev(index, c){
-            let currentRow = BUFFERTCOLS + splitted[ row - 1];
-            index = index + BUFFERTCOLS.length;
-            let answer = currentRow[i+index] === c;
-            return answer;
-        }    
-        
-
-    }
-    
-    // Print to graphContent element
-    console.log(document);
-    document.getElementById('graphContent').innerHTML = graphContent; 
-    
-}
     function splitGitLogRow( gitLogRow ){
         
 
@@ -1492,7 +1101,7 @@ function drawBranchColorHeader( branchNames){
     let html = 
     `<div>  <img class="node" src="${colorFileName}"> </div>  
     <div class="colorHeaderText"> 
-        <pre style="position: absolute; "> Unknown parent branch </pre> 
+        <pre style="position: absolute; "> Unknown first-parent branch </pre> 
     </div> <br>
     
     `;

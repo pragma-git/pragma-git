@@ -116,9 +116,10 @@
 /* Style elements */
 /*                */
 
-        body{
+        body, .normal-text{
             font-family: Arial;
             font-size: 11pt;
+            font-weight: 400;
             background-color: var(--body-background);
             color: var(--body-text);
         }
@@ -130,7 +131,8 @@
         }
         h4{
             margin-block-end: auto;
-        }        
+        }  
+
         
         img{
             filter: invert( var(--image-invert) );
@@ -147,8 +149,7 @@
         
         iframe{
             width: 100%;
-        } 
-
+        }  
     
         #outer-content{
             margin: 20px;

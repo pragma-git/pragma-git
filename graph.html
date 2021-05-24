@@ -3,6 +3,7 @@
         <title>Commit graph</title>
         
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="slider_switch.css" /> 
         
         <script src="graph.js"></script>
         
@@ -300,6 +301,13 @@
                 
                 ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
                 
+                <span class="normal-text" style="display: inline;position: absolute; font-size: 11px; right: 120px;">             
+                        git 
+                        <label class="switch">
+                            <input id="message_code_switch" type="checkbox" class="slider round" onclick="state.graph.swimlanes = !state.graph.swimlanes; injectIntoJs(document);">
+                        <span class="slider round"></span> 
+                    </label> lanes
+                </span>
                 
                 <!-- Search button --> 
                 <img id="find-icon" style='vertical-align:middle;position: absolute; right: 65; ' height="17" width="17"  
@@ -330,8 +338,6 @@
 
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
-
-      
             <br>
             <br>
             
