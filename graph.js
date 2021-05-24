@@ -1118,7 +1118,7 @@ function drawBranchColorHeader( branchNames){
     html += `
     <div class="branchHeaderRow"> 
         <pre style="position: absolute; "> </pre> 
-    </div> <br>`;
+    </div>`;
     
           
 
@@ -1130,11 +1130,8 @@ function drawBranchColorHeader( branchNames){
     
     function handleMapElements(value, key, map) {
         // Write HTML text, and node image
-        console.log(`m[${key}] = ${value}`);
         let colorFileName = getColorFileName(key);
         let id = `branchHeader_${value}`;
-        
-        //html += `<div id="${id}"> <img class="node" src="${colorFileName}"> </div>  <div class="colorHeaderText"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
 
         html += `
         <div id="${id}" class="branchHeaderRow"> 
@@ -1147,20 +1144,16 @@ function drawBranchColorHeader( branchNames){
         if (key.length > longestBranchName){
             longestBranchName = key.length;
             idToLongestBranchName = id;
-            
-            console.log(idToLongestBranchName);
-            console.log(longestBranchName);
         }
     }
     
+    // Set HTML
     document.getElementById('colorHeader').innerHTML = html;
-    
-    
+
+    // Set width of Branch Color Header box
     if ( document.getElementById('colorHeader').style.width < document.getElementById(idToLongestBranchName).offsetWidth){ 
         document.getElementById('rightInsert').style.width = document.getElementById(idToLongestBranchName).offsetWidth + 20;
     }
-    console.log(idToLongestBranchName);
-    console.log(longestBranchName);
     
     
 }
