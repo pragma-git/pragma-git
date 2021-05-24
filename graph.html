@@ -45,9 +45,13 @@
             position: relative;
             float: left;
             height: 24;
-            width: 12;
+            /* width: 12; */
             outline: 0.0px dotted orange;
             outline-offset: -0.005px;
+        }
+        
+        .branchHeaderRow{
+            float: none;
         }
         
         pre { /* Move down, to match circle images */
@@ -57,16 +61,19 @@
             vertical-align: bottom;
             position: relative;
             top: 4px;
+            width: auto;
+            left: 20px;
         }
 
 
         #displayedContent{
-            padding-left: 20px;
+            /* padding-left: 20px; */
             margin-top: 80px;
         }
         
         #datesSwimLane{
             margin-top: 6px;
+            padding-right: 20px;
         }
 
         
@@ -81,7 +88,7 @@
         }
                        
         #colorHeader {
-            width: unset; 
+            /* width: unset; */
             height: auto;
             clear: both;
         }
@@ -115,7 +122,7 @@
             padding: 10px;
             right: 15px;
             margin-top: 120px;
-            /* clear: both; */
+            opacity: 0.8;
         }
         
         .branchNameEditInsert{
@@ -133,8 +140,6 @@
             margin-top: 140px;
         }
 
-        
-        .firstcol { clear: both;}
 
         .date{
             width: 90px;
@@ -177,73 +182,12 @@
             top: 8px;
             left: 0.5px;
             height: 50%;
-            width: 100%;
+            /* width: 100%; */
             z-index: 10;
             cursor: help;
+            width: 12px;
         }        
-         
-        .bridge {
-            position: absolute;
-             top: 2px;
-             left: -6px;
-             height: 24px;
-             width: 24px;
-             z-index: 1;
-        }  
-        
-        .bridgeleft {
-             left: -150%;
-        } 
-        
-        .bridgeright {
-             left: 50%;
-        }
-               
-        .slash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }    
-               
-        .wideslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }  
-                
-        .backslash { 
-             position: absolute; 
-             top: 12px;
-             left: 5px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }  
-            
-        .widebackslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }
-
-        .pipe {
-             position: absolute;
-             top: 12px;
-             left: -1px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        } 
-        
+   
         .node, 
         .noInvert, 
         .pinned-icon 

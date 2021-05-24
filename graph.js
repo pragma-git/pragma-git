@@ -1098,40 +1098,70 @@ function drawBranchColorHeader( branchNames){
     
     const colorFileName = 'images/circle_green.png';
     
-    let html = 
-    `<div>  <img class="node" src="${colorFileName}"> </div>  
-    <div class="colorHeaderText"> 
-        <pre style="position: absolute; "> Unknown first-parent branch </pre> 
-    </div> <br>
-    
-    `;
-    
-    html += 
-    `<div>  <img class="node" src="${unsetNodeImageFile}"> </div>  
-    <div class="colorHeaderText"> 
-        <pre style="position: absolute; "> Unknown branch </pre> 
-    </div> <br>
+    let html = '';
 
-    `;  
     
-    html += 
-    `<div>   </div>  
-    <div class="colorHeaderText"> 
+    html += `
+    <div class="branchHeaderRow"> 
+        <img class="node" src="${colorFileName}"> 
+        <pre style="position: absolute; "> Unknown first-parent branch </pre>
+    </div>`;
+    
+    
+    html += `
+    <div class="branchHeaderRow"> 
+        <img class="node" src="${unsetNodeImageFile}"> 
+        <pre style="position: absolute; "> Unknown branch </pre> 
+    </div>`;
+    
+    
+    html += `
+    <div class="branchHeaderRow"> 
         <pre style="position: absolute; "> </pre> 
-    </div> <br>
+    </div> <br>`;
     
-    `;        
           
 
-    branchNames.forEach(handleMapElements);
+    
+    let longestBranchName = ''
+    let idToLongestBranchName = '';
 
+    branchNames.forEach(handleMapElements);
+    
     function handleMapElements(value, key, map) {
+        // Write HTML text, and node image
         console.log(`m[${key}] = ${value}`);
-        let colorFileName = getColorFileName(key)
-        html += `<div> <img class="node" src="${colorFileName}"> </div>  <div class="colorHeaderText"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
+        let colorFileName = getColorFileName(key);
+        let id = `branchHeader_${value}`;
+        
+        //html += `<div id="${id}"> <img class="node" src="${colorFileName}"> </div>  <div class="colorHeaderText"> <pre style="position: absolute; "> ${key} </pre> </div> <br>`;
+
+        html += `
+        <div id="${id}" class="branchHeaderRow"> 
+            <img class="node" src="${colorFileName}"> 
+            <pre>${key}</pre>
+        </div>`;
+
+        
+        // Find longest branch name
+        if (key.length > longestBranchName){
+            longestBranchName = key.length;
+            idToLongestBranchName = id;
+            
+            console.log(idToLongestBranchName);
+            console.log(longestBranchName);
+        }
     }
     
     document.getElementById('colorHeader').innerHTML = html;
+    
+    
+    if ( document.getElementById('colorHeader').style.width < document.getElementById(idToLongestBranchName).offsetWidth){ 
+        document.getElementById('rightInsert').style.width = document.getElementById(idToLongestBranchName).offsetWidth + 20;
+    }
+    console.log(idToLongestBranchName);
+    console.log(longestBranchName);
+    
     
 }
 async function populateDropboxBranchSelection(){
