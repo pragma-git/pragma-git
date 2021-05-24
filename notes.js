@@ -49,32 +49,12 @@ async function injectIntoNotesJs(document) {
     //
     // Add search button to toolbar
     //
-    
-    button = document.createElement('button');
-    button.setAttribute("id", 'find-icon');
-    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
 
-    
+    const END = 100; //Too high position number, makes sure lands right-most
+     
+     
     const toolbar = editor.getUI().getToolbar();
-    toolbar.insertItem(0, {
-        type: 'button',
-        options: {
-          className: 'first',
-          event: 'clickCustomButton',
-          tooltip: 'Search in Notes',
-          el: button,
-          text: '🔍',
-          style: 'background-image: url("images/find.png");'
-        }
-    });
-    
-    
-    editor.eventManager.addEventType('clickCustomButton');
-    editor.eventManager.listen('clickCustomButton', function() {
-        findInNw.showSearchBox();
-    });
-    
-    
+ 
     //
     // Add help button to toolbar
     //
@@ -83,7 +63,6 @@ async function injectIntoNotesJs(document) {
     button2.setAttribute("id", 'help-icon');
     button2.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/questionmark_hover.png" >';
 
-    const END = 100; //Too high position number, makes sure lands right-most
     toolbar.insertItem(END, {
         type: 'button',
         options: {
@@ -92,7 +71,7 @@ async function injectIntoNotesJs(document) {
           tooltip: 'Help for Notes window',
           el: button2,
           text: '🔍',
-          style: ''
+          style: 'float:right'
         }
     });
     
@@ -103,6 +82,37 @@ async function injectIntoNotesJs(document) {
         evt.name='Notes';
         opener._callback('help',evt); 
     });
+    
+       
+       
+    //
+    // Add Search button to toolbar
+    //   
+        
+    button = document.createElement('button');
+    button.setAttribute("id", 'find-icon');
+    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
+
+
+    toolbar.insertItem(END, {
+        type: 'button',
+        options: {
+          className: 'first',
+          event: 'clickCustomButton',
+          tooltip: 'Search in Notes',
+          el: button,
+          text: '🔍',
+          style: 'background-image: url("images/find.png");float:right'
+        }
+    });
+    
+    
+    editor.eventManager.addEventType('clickCustomButton');
+    editor.eventManager.listen('clickCustomButton', function() {
+        findInNw.showSearchBox();
+    });
+    
+    
 
 };
 function save(){
