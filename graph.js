@@ -764,9 +764,9 @@ function drawGraph( document, graphText, branchHistory, history){
                childMap of the CHILDREN to a commit NODE 
 
                    
-                         NODE                       CHILDREN
+                         NODE                       CHILDREN                   x0  y0
                         / |  \   git commits   =>    \ | /      childMap
-                        PARENTS                       NODE 
+                        PARENTS                       NODE                     x1  y1
                             
              */
             for (let i = 0; i < parents.length; i++){
@@ -978,20 +978,9 @@ function drawGraph( document, graphText, branchHistory, history){
      
             // Notes : Separate log row from Notes at end
             let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-            let noteInThisRow = gitLogRow.substring(startOfNote + 2); // Skip N=  
-            
-            let multipleNotes = noteInThisRow.split('\n\n');
-            //multipleNotes = multipleNotes[ multipleNotes.length - 1].split('\n')[0]; // Remove everything after EOL
-            //noteInThisRow = multipleNotes[ multipleNotes.length - 1].replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
-            
-            noteInThisRow = multipleNotes[ multipleNotes.length - 1].split('\n')[0]; // Take part before last EOL (some graphics curd gets there)
-            noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
-            
+            let noteInThisRow = gitLogRow.substring(startOfNote + 2) ; // Skip N=  
             if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
-                if ( !branchNames.has(noteInThisRow) ){
-                    // New noteInThisRow
-                    branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
-                }
+                noteInThisRow = getLastBranchInNote( gitLogRow.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
             }
             
             // Parents : Separate log row from parents(at end now when Notes removed)
@@ -1041,6 +1030,47 @@ function drawGraph( document, graphText, branchHistory, history){
             return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex]
         
     }
+    
+        function getLastBranchInNote( noteInThisRow){
+            /*
+              Format from git log graph command:
+
+                N=feature/swim-lanes
+                |\  
+                | | develop
+                | | 
+                | | develop
+                | | 
+             
+              Strategy : 
+                - split by EOL
+                - get second to last
+                - split by ' ', and get last string 
+
+             */
+            
+            
+
+                        
+            let multipleNotes = noteInThisRow.split('\n');
+            let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
+            let endOfLastNote = lastNote[lastNote.length - 1];
+            
+            //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
+            //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+            
+            noteInThisRow = endOfLastNote;
+        
+            
+            if ( !branchNames.has(noteInThisRow) ){
+                // New noteInThisRow
+                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+            }
+
+            return noteInThisRow;
+        }
+    
+    
     function isDumbRow(s){
         // Dumb row is defined as consisting only of '|' connections, without any nodes
         // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
