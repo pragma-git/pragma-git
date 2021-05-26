@@ -187,6 +187,7 @@
             z-index: 10;
             cursor: help;
             width: 12px;
+            left: -20;
         }        
    
         .node, 
@@ -241,6 +242,19 @@
             
             window.document.body.style.zoom = global.state.zoom;
         </script>        
+        
+        <script>
+            function colorSwitchTexts(){
+                if ( document.getElementById("graph_mode_switch").checked ){
+                    document.getElementById('lanes').setAttribute('style','color: var(--text)');
+                    document.getElementById('git').setAttribute('style','color: var(--dim-text)');
+                }else{
+                    document.getElementById('lanes').setAttribute('style','color: var(--dim-text)');
+                    document.getElementById('git').setAttribute('style','color: var(--text)');
+                }
+            }
+                
+        </script>
             
         <div id='header'>
             <h2>
@@ -249,11 +263,12 @@
                 ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
                 
                 <span class="normal-text" style="display: inline;position: absolute; font-size: 11px; right: 120px;">             
-                        git 
+                        <span id="git">git</span> 
                         <label class="switch">
-                            <input id="message_code_switch" type="checkbox" class="slider round" onclick="state.graph.swimlanes = !state.graph.swimlanes; injectIntoJs(document);">
-                        <span class="slider round"></span> 
-                    </label> lanes
+                            <input id="graph_mode_switch" type="checkbox" class="slider round" onclick="state.graph.swimlanes = !state.graph.swimlanes; colorSwitchTexts(); injectIntoJs(document);">
+                            <span class="slider round"></span> 
+                        </label> 
+                        <span id="lanes">lanes</span> 
                 </span>
                 
                 <!-- Search button --> 

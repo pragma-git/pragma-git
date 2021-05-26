@@ -445,7 +445,8 @@ async function injectIntoJs(document){
     
     document.getElementById('showDate').checked = state.graph.showdate;
     document.getElementById('showAll').checked = state.graph.showall;
-    document.getElementById('message_code_switch').checked = state.graph.swimlanes;
+    document.getElementById('graph_mode_switch').checked = state.graph.swimlanes;
+    colorSwitchTexts(); // Set switch-text-colors (see graph.html)
     
     if  ( state.graph.swimlanes ){
         MODE = 'swim-lanes';
@@ -626,7 +627,7 @@ function closeWindow(){
     // Store setting
     state.graph.showdate = document.getElementById('showDate').checked;
     state.graph.showall = document.getElementById('showAll').checked;
-    state.graph.swimlanes = document.getElementById('message_code_switch').checked;  // True if swimlanes, false if normal git
+    state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if normal git
     opener.saveSettings();
 
     
