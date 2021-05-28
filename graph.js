@@ -105,9 +105,30 @@ async function injectIntoJs(document){
         //   If not --first-parent, then all commits will be shown with commit number
         history = await opener.gitHistory();
         console.log(history);
+<<<<<<< Updated upstream
     
         // Commit log output format
         const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
+=======
+        
+        if (test !== 0 ){
+            graphText = testGraph(test); // Draw one of included test cases
+        }
+    
+    
+    // Draw graph
+    try{
+        performGraphDrawing(document);
+    }catch (err){
+        
+    }  
+
+}
+async function performGraphDrawing(document, folder){
+            // Commit log output format
+        const messageFormat = '--format=%s T=%aI D=%d H=%H N=%N';  // %aI = author date, strict ISO 8601 format
+    
+>>>>>>> Stashed changes
 
         
     //
@@ -133,8 +154,21 @@ async function injectIntoJs(document){
             commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];
         }
         
+<<<<<<< Updated upstream
 
         
+=======
+        // Draw node-color header
+        document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+
+        
+    
+            
+    
+    //
+    // Take 2 : Parse all rows 
+>>>>>>> Stashed changes
     //
     // Draw graph in HTML
     //   
@@ -188,9 +222,16 @@ async function injectIntoJs(document){
             localState.pinnedDiv = divPin;
         }catch(err){  
         }
+<<<<<<< Updated upstream
 
 
+=======
+        
+>>>>>>> Stashed changes
 }
+
+
+
 
 // Util
 async function readBranchHistory(){ // history of current branch (--first-parent)
@@ -576,6 +617,7 @@ function drawGraph( document, graphText, branchHistory, history){
             colorFileName = 'images/circle_green.png'; // Draw node
         }
 
+<<<<<<< Updated upstream
         // When branch is known from Notes
         if ( branchNames.has(branchName) ){
             
@@ -586,6 +628,21 @@ function drawGraph( document, graphText, branchHistory, history){
             tooltipText = branchName;
         }else{
             //continue
+=======
+
+        [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] )
+        
+        //
+        // Parse row
+        //
+        
+        // Empty column
+        graphContent += '<div class="firstcol"></div> ' // First column on row
+        
+         // Show/hide date
+        if (state.graph.showdate){
+            graphContent += '<div class="date"><pre>' +  date + '</pre></div>';
+>>>>>>> Stashed changes
         }
 
         // Convert from col / row to pixel coordinates
@@ -708,6 +765,78 @@ function drawGraph( document, graphText, branchHistory, history){
         }
     
     
+<<<<<<< Updated upstream
+=======
+}
+  function splitGitLogRow( gitLogRow ){
+        
+
+        
+        // gitLogRow -  is a full row from log
+        
+            // Example row format :
+            // | * S=Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
+     
+     
+            // Pick row apart from back to start
+     
+            // Notes : Separate log row from Notes at end
+            let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+            let noteInThisRow = gitLogRow.substring(startOfNote + 2) ; // Skip N=  
+            if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+                noteInThisRow = getLastBranchInNote( gitLogRow.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
+            }
+            
+            // Parents : Separate log row from parents(at end now when Notes removed)
+            let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
+            let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
+            
+            // Hash : Separate log row from long hash (at end now when Parents removed)
+            let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+            let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
+            
+            // Decoration : Separate log row from decorate (at end now when hash removed)
+            let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+            let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
+            decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+             
+            // Date : Separate log row from date (at end now when decorate removed)
+            let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
+            let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
+            date = date.substring(0,10);
+              
+            // Message : Separate log row from message (at end now when date removed)
+            let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
+            let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
+            
+            // Position of '*' node
+            let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
+            let goodGraphPart = graphPartOfText.split('\n');
+            let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
+                            
+            if (startOfDate == -1){
+                date = ''; // When no date found (set blank date)
+            }
+            
+            // Current row
+            let thisRow = message;
+            thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
+    
+            // Parse missing features (= lines without commits)
+            if (startOfHash == -1){
+                thisRow = gitLogRow; // When no hash found (lines without commits)
+            }
+            
+            // Split parents into array
+            let parents = parentInThisRow.split(' ');
+    
+            
+            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex]
+        
+    }
+
+
+>>>>>>> Stashed changes
     function isDumbRow(s){
         // Dumb row is defined as consisting only of '|' connections, without any nodes
         // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
