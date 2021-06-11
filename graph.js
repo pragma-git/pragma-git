@@ -46,12 +46,16 @@ var graphContent = '';  // This is where output is collected before putting it i
 var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
 
 var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
-var childMap ;          // Store mapping from parent to child [x ,y ] coordinates
-var commitArray;   // Store each commit
+var childMap ;          // Store mapping from parent to child hashes
+
+var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
+var commitArray;        // Array with same commits as in nodeMap
+var forbiddenColumnsSet;// 
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
 
+let NUMBER_OF_KNOWN_BRANCHES = 0;  // This marks the last branch with known branchname in branchNames map
 
 // Global for whole app
 var state = global.state; // internal name of global.state
@@ -221,6 +225,13 @@ function getColorFileName( name){
     }
     return colorFileName
 }
+function stop(commit){
+    // Debug stop on commit selected in graph-window (use in conditional break-point in debugger)
+    //
+    // Create a conditional break point, and write condtion : stop(commit)
+    // (where variable commit is within scope)
+    return (opener.localState.historyHash == commit.hash)
+}
 
 // Callbacks
 async function setPinned(hash, isPinned){ // Called from EventListener added in html
@@ -307,7 +318,7 @@ function drawGraph( document, graphText, branchHistory, history){
         const IMG_W = 12;
             
         // Grid dimensions
-        const COL_WIDTH = 20;
+        const COL_WIDTH = 20; // 20
         const LEFT_OFFSET = 10;
         const TOP_OFFSET = 0.5 * IMG_H; 
         var NUMBER_OF_BRANCHES = 1 // Default, will be changed below
@@ -327,18 +338,19 @@ function drawGraph( document, graphText, branchHistory, history){
         
         branchNames = new Map();   // Empty list of branch names
         childMap = new Map();  // List of children for commits
+        nodeMap = new Map();  // Map of commit nodes
         commitArray = [];
+        
+        forbiddenColumnsSet = new Set();  
  
-        //let splitted = graphText.split("\n");
         let splitted = graphText.split( UNIQUE_EOL + '\n');
-        console.log(splitted)
         
         let previousDate = 'dummy'
     
 
     
     //
-    // Loop each row - collect commit info
+    // Pass 1 : Loop each row - collect commit info
     //
         let line = 0; 
         
@@ -366,13 +378,14 @@ function drawGraph( document, graphText, branchHistory, history){
 
             // When branch is known from Notes
             let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
+            x0 = 1; // This is where commits that have not been assigned a new x0 lands
             if ( branchNames.has(noteInThisRow) ){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
              
              
             // Add message text 
-            graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch)
+            graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
             
             
             // Add date (only print when date is different to previous)
@@ -385,40 +398,44 @@ function drawGraph( document, graphText, branchHistory, history){
             dateContent += '<div class="date"><pre>' +  date + '</pre></div>';
      
      
-            /* Record coordinates of commits and their children 
-               (in principle I could have stored parents for a node instead, but getting their coordinates would've required two passes)
+            /* Record children hashes
+               (Allows me to go up (children) and down (parents)
                So, the git parent info from each commit NODE, is transformed to a
-               childMap of the CHILDREN to a commit NODE 
+               childMap of the CHILDREN of a commit NODE 
 
                    
-                         NODE                       CHILDREN                   x0  y0
-                        / |  \   git commits   =>    \ | /      childMap
-                        PARENTS                       NODE                     x1  y1
+                     NODE                       CHILDREN                   
+                    / |  \   git commits   =>    \ | /      childMap(NODE-hash)  =>  array of CHILDREN-hashes
+                    PARENTS                       NODE      nodeMap(NODE-hash)   =>  commit node           
                             
              */
+             
+            // Make new entry for mapping from node to children
             for (let i = 0; i < parents.length; i++){
-                
-                let x = graphNodeIndex; // default column
-                if (branchNames.has(noteInThisRow) ){
-                    x = branchNames.get(noteInThisRow);
-                }
-                
-                // Two versions 1) swim-lanes + unkown from git-log --graph, 2) All from git-log --graph
-                let array = [ x , line ];				// Alt 1) Swim-lanes
-                if (MODE == 'git-log-graph') {
-                	array = [ graphNodeIndex , line ];  // Alt 2) Git-log --graph
-        		}
                 if (childMap.has( parents[i] )){
-                    childMap.get( parents[i] ).push( array) ;
+                    childMap.get( parents[i] ).push( hashInThisRow) ;
                 }else{
-                    childMap.set( parents[i],  [ array ] ); // Coordinates x is branch number, line is obviously displayed line number
+                    childMap.set( parents[i],  [ hashInThisRow ] ); 
                 } 
+
             }
+            
+            
             
             // Store commit info & NUMBER_OF_BRANCHES
             let thisCommit = {};
-            thisCommit.x = x0;              	// Alt 1) Swim-lanes
+
+            thisCommit.hash = hashInThisRow;
+            thisCommit.parents = parents;
+            thisCommit.branchName = noteInThisRow;
+            thisCommit.notFoundInSearch = notFoundInSearch;
+            thisCommit.message = thisRow;
             
+            
+            // Coordinates
+            thisCommit.y = line; 
+            
+            thisCommit.x = x0;              	// Alt 1) Swim-lanes
           	if (MODE == 'git-log-graph') {
             	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph
                 
@@ -430,14 +447,128 @@ function drawGraph( document, graphText, branchHistory, history){
                 NUMBER_OF_BRANCHES = branchNames.size + 1;
             }
             
-            thisCommit.y = line; 
-            thisCommit.branchName = noteInThisRow;
-            thisCommit.hash = hashInThisRow;
-            thisCommit.notFoundInSearch = notFoundInSearch;
-            
+
+            // Store thisCommit
             commitArray.push( thisCommit);
+            nodeMap.set( hashInThisRow, thisCommit);
                            
             line++;
+        }
+        
+      
+     NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
+     
+     for(var i = 0; i < NUMBER_OF_KNOWN_BRANCHES; i++) {
+        forbiddenColumnsSet.add(i);
+     }
+        
+     //
+     // Pass 2 : Identify same segments -- starting from top going down 
+     //          (keep if already known branchName, change otherwise)
+     //       
+        for(var i = 0; i < commitArray.length; i++) {
+            let commit = commitArray[i];
+            
+            if ( isStartOfSegment(commit)  ){
+                if ( !branchNames.has(commit.branchName)){
+                    commit.branchName = commit.hash;  // Name of branch = hash of latest commit
+                    
+                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}`);
+                
+                    if (commit.x > 0){ 
+                        NUMBER_OF_BRANCHES = branchNames.size +1; 
+                        forbiddenColumnsSet.add(i);
+                        branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
+                        commit.x = NUMBER_OF_BRANCHES;
+                    }
+                }
+               //continue // Skip to next i in loop
+            }
+            
+            nameBranchFromPriorInSegment(commit);
+            
+            if ( isEndOfSegment(commit) ){
+                console.log( `i = ${i}   END SEGMENT  ${commit.x} AT   ${commit.message}`);
+            }
+
+            //
+            // Internal functions
+            //
+            function isStartOfSegment(commit){
+                /*
+                 Start of Segment is the top-most commit o which :
+                 
+                     1) Merge  => new segment if not first-parent
+                             *      child
+                             |\   
+                             F o    F = first-parent,  
+                                    o = commit to test (commit variable in this function)
+                             
+                     2) o is last commit on branch        
+                                 o  o has no child
+                                 |
+                                 *    
+                */
+                if ( childMap.has(commit.hash) ){
+                    let childrenHashes = childMap.get(commit.hash); 
+                    
+                    if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
+                        let child = nodeMap.get( childrenHashes[0] );                       
+                        if ( child.parents[0] !== commit.hash ){
+                             // 1) o has one child *, AND its parent is not first-parent F
+                            return true
+                        }
+                    }
+       
+                }else{  
+                    // 2) o is last commit on segment    
+                    return true
+                }
+                return false
+            };  
+            function isEndOfSegment(commit){
+                /*
+                 End of Segment is the bottom-most commit o which :
+                 
+                     1) Branch  => end of segment if only one parent *  AND the parent has 2 children
+                             * o      
+                             |/   
+                             *       one parent
+                               
+                */      
+                if (commit.parents.length == 1){  
+                    let parent = nodeMap.get( commit.parents[0] );
+                    let childrenHashes = childMap.get(parent.hash);
+                    if (childrenHashes.length == 2){
+                        return true
+                    }
+                }     
+                return false               
+            }
+            function nameBranchFromPriorInSegment(commit){
+                /*
+                 Copy info from child, if in same segment as child
+                            *      child
+                            |
+                            o      commit
+                */
+                if ( childMap.has(commit.hash) ){
+                    // Find which child is matched to this commit
+                    let childrenHashes = childMap.get( commit.hash );
+                    for(var i = 0; i < childrenHashes.length; i++){
+                        let child = nodeMap.get( childrenHashes[i] );
+                        if ( child.parents[0] == commit.hash ){ 
+                            // Found the child to copy from
+                            if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
+                                commit.branchName = child.branchName;
+                                commit.x = child.x;
+                            }
+                        }
+                    }
+                }
+            }
+            // End internal functions
+
         }
  
     //
@@ -466,10 +597,10 @@ function drawGraph( document, graphText, branchHistory, history){
      
      
     //
-    // Draw nodes-connections & help-line
+    // PASS 3 : Draw nodes-connections & help-line
     //   
     
-        for(var j = 0; j < commitArray.length ; j++) { 
+        for(var j = 0; j < commitArray.length - 1; j++) { 
  
             let x0 = commitArray[j].x;
             let line = commitArray[j].y;
@@ -487,23 +618,24 @@ function drawGraph( document, graphText, branchHistory, history){
      
             // Draw connections between nodes
             if ( childMap.has( hashInThisRow ) ){
-                let coordinatePairs = childMap.get(hashInThisRow);
-                let numberOfChildren = coordinatePairs.length;
-                for (let i = 0; i < coordinatePairs.length; i++){
-                    let x1 = coordinatePairs[i][0];
-                    let y1 = coordinatePairs[i][1];
+                let childHashes = childMap.get(hashInThisRow);
+                let numberOfChildren = childHashes.length;
+                for (let i = 0; i < childHashes.length; i++){
+                    let x1 = nodeMap.get(childHashes[i]).x;
+                    let y1 = nodeMap.get(childHashes[i]).y;
                     
                     drawConnection( draw, x0, line, x1, y1, R, numberOfChildren)
                 }
+
             }
         }
          
          
     //
-    // Draw nodes (ontop of lines)
+    // PASS 4 : Draw nodes (ontop of lines)
     //   
     
-        for(var j = 0; j < commitArray.length ; j++) { 
+        for(var j = 0; j < commitArray.length - 1; j++) { 
             let id = 'img_' + commitArray[j].hash;
             drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].notFoundInSearch,id );
         }
@@ -516,7 +648,7 @@ function drawGraph( document, graphText, branchHistory, history){
         document.getElementById('datesSwimLane').innerHTML = dateContent;      
     
         document.getElementById('mySvg').innerHTML = ''; // Clear
-        draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+        draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (NUMBER_OF_BRANCHES + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
     
         document.getElementById('graphContent').innerHTML = graphContent;    
     
@@ -562,8 +694,6 @@ function drawGraph( document, graphText, branchHistory, history){
             }
         }
     };
-    
-    
     function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
         
         // Figure out if known or current branch
@@ -577,15 +707,15 @@ function drawGraph( document, graphText, branchHistory, history){
         }
 
         // When branch is known from Notes
-        if ( branchNames.has(branchName) ){
+        if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
             
             // Get image file name
             let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+
             let colorName = colorImageNameDefinitions[ colorNumber];
             colorFileName = `images/circle_colors/circle_${colorName}.png`;
             tooltipText = branchName;
-        }else{
-            //continue
+
         }
 
         // Convert from col / row to pixel coordinates
@@ -597,10 +727,6 @@ function drawGraph( document, graphText, branchHistory, history){
         size(IMG_W,IMG_H).
         move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
     };
-
-
-    
-} // ------------------------------------------------------------
     function splitGitLogRow( gitLogRow ){
         
 
@@ -665,49 +791,46 @@ function drawGraph( document, graphText, branchHistory, history){
     
             
             return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex]
-        
-    }
+      
+        // Internal functions
+            function getLastBranchInNote( noteInThisRow){
+                /*
+                  Format from git log graph command:
     
-        function getLastBranchInNote( noteInThisRow){
-            /*
-              Format from git log graph command:
-
-                N=feature/swim-lanes
-                |\  
-                | | develop
-                | | 
-                | | develop
-                | | 
-             
-              Strategy : 
-                - split by EOL
-                - get second to last
-                - split by ' ', and get last string 
-
-             */
+                    N=feature/swim-lanes
+                    |\  
+                    | | develop
+                    | | 
+                    | | develop
+                    | | 
+                 
+                  Strategy : 
+                    - split by EOL
+                    - get second to last
+                    - split by ' ', and get last string 
+    
+                 */
+                
+                
+    
+                            
+                let multipleNotes = noteInThisRow.split('\n');
+                let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
+                let endOfLastNote = lastNote[lastNote.length - 1];
+                
+                //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
+                //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+                
+                noteInThisRow = endOfLastNote;
             
-            
-
-                        
-            let multipleNotes = noteInThisRow.split('\n');
-            let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
-            let endOfLastNote = lastNote[lastNote.length - 1];
-            
-            //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
-            //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
-            
-            noteInThisRow = endOfLastNote;
-        
-            
-            if ( !branchNames.has(noteInThisRow) ){
-                // New noteInThisRow
-                branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                
+                if ( !branchNames.has(noteInThisRow) ){
+                    // New noteInThisRow
+                    branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                }
+    
+                return noteInThisRow;
             }
-
-            return noteInThisRow;
-        }
-    
-    
     function isDumbRow(s){
         // Dumb row is defined as consisting only of '|' connections, without any nodes
         // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
@@ -718,13 +841,22 @@ function drawGraph( document, graphText, branchHistory, history){
         }
         return true
     }
+           
+    }
+  
+    
+} // ------------------------------------------------------------
+ 
+    
     function drawPinnedImage(hash){
         
         const PIN_IMG1 = '<img class="pinned-icon" height="17" width="17" style="vertical-align:middle;"';
         const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
         return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     }        
-    function parseMessage( hash, text, decoration, notFoundInSearch){
+    function parseMessage( hash, text, decoration, notFoundInSearch, i){
+        
+        text = i + ' -- ' + text;
         
         let cl = 'text';
         
@@ -797,6 +929,12 @@ function drawBranchColorHeader( branchNames){
     branchNames.forEach(handleMapElements);
     
     function handleMapElements(value, key, map) {
+        
+        if (value > NUMBER_OF_KNOWN_BRANCHES){
+            return
+        }
+        
+        
         // Write HTML text, and node image
         let colorFileName = getColorFileName(key);
         let id = `branchHeader_${value}`;
