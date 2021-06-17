@@ -50,7 +50,7 @@ var childMap ;          // Store mapping from parent to child hashes
 
 var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
 var commitArray;        // Array with same commits as in nodeMap
-var forbiddenColumnsSet;// 
+var columnOccupiedStateArray; 
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -341,7 +341,7 @@ function drawGraph( document, graphText, branchHistory, history){
         nodeMap = new Map();  // Map of commit nodes
         commitArray = [];
         
-        forbiddenColumnsSet = new Set();  
+        columnOccupiedStateArray = [];  
  
         let splitted = graphText.split( UNIQUE_EOL + '\n');
         
@@ -457,9 +457,10 @@ function drawGraph( document, graphText, branchHistory, history){
         
       
      NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
+     let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
      
      for(var i = 0; i < NUMBER_OF_KNOWN_BRANCHES; i++) {
-        forbiddenColumnsSet.add(i);
+        columnOccupiedStateArray.push(100000); // Occupy until end
      }
         
      //
@@ -473,27 +474,89 @@ function drawGraph( document, graphText, branchHistory, history){
                 if ( !branchNames.has(commit.branchName)){
                     commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                     
-                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}`);
+                    console.log(columnOccupiedStateArray.toString());
                 
-                    if (commit.x > 0){ 
+                    //if (commit.x >= 0){ 
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
-                        forbiddenColumnsSet.add(i);
+                        commit.x = getBestLane(commit);
+                        markLaneAsOccupied(commit);
                         branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
-                        commit.x = NUMBER_OF_BRANCHES;
-                    }
+                        
+                        if (commit.x > HIGHEST_LANE){
+                            HIGHEST_LANE = commit.x;
+                        }
+                    //}
+                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+                    
+                    markLaneAsOccupied(commit);
                 }
-               //continue // Skip to next i in loop
+               continue // Skip to next i in loop
             }
             
+            markLaneAsOccupied(commit);             // Re-occupy
             nameBranchFromPriorInSegment(commit);
             
             if ( isEndOfSegment(commit) ){
-                console.log( `i = ${i}   END SEGMENT  ${commit.x} AT   ${commit.message}`);
+                if ( branchNames.get(commit.branchName) >= NUMBER_OF_KNOWN_BRANCHES){  // Only allow unknown branches to be put in same lanes
+                    markLaneAsFree(commit);
+                    console.log( `i = ${i}   END SEGMENT  ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+                    
+               }
             }
 
             //
             // Internal functions
             //
+            function markLaneAsFree(commit){
+                let lane = commit.x;
+                let until = nodeMap.get(commit.parents[0] ).y;
+                
+                columnOccupiedStateArray[ lane] = until;
+            }
+            function markLaneAsOccupied(commit){
+                let lane = commit.x;
+                let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
+                //until = 100000
+                
+                if ( lane >= columnOccupiedStateArray.length){
+                    columnOccupiedStateArray.push(until);
+                }else{
+                    columnOccupiedStateArray[ lane] = until;
+                }
+            }
+            function getBestLane(commit){
+                // Look for lowest row-number in all children
+                // That of parent[0] 
+                let previousMergeY = nodeMap.get(commit.parents[0]).y;
+                
+                let lowestY = previousMergeY;
+                let highestX = nodeMap.get(commit.parents[0]).x;
+                highestX = commit.x;
+                let childrenHashes;
+                if (childMap.has(commit.hash) ){
+                    childrenHashes = childMap.get( commit.hash );                
+                    for(let i = 0; i < childrenHashes.length; i++){
+                        let child = nodeMap.get(childrenHashes[i]);
+                        let childY = child.y;
+                        let childX = child.x;
+                        if (childY < lowestY){
+                            lowestY = childY;
+                        }
+                        if (childX > highestX){
+                            highestX = childX;
+                        }
+                    }
+                }
+
+                
+                let i = commit.x;  // Put to right
+                i = highestX ;
+                while ( ( i< columnOccupiedStateArray.length) && (columnOccupiedStateArray[i] > lowestY) ){
+                    i++;
+                }
+                return i;
+            };
+            
             function isStartOfSegment(commit){
                 /*
                  Start of Segment is the top-most commit o which :
@@ -513,7 +576,9 @@ function drawGraph( document, graphText, branchHistory, history){
                     let childrenHashes = childMap.get(commit.hash); 
                     
                     if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
-                        let child = nodeMap.get( childrenHashes[0] );                       
+                    //for(var i = 0; i < childrenHashes.length; i++){
+                        let child = nodeMap.get( childrenHashes[0] ); 
+                        //let child = nodeMap.get( childrenHashes[i] );                       
                         if ( child.parents[0] !== commit.hash ){
                              // 1) o has one child *, AND its parent is not first-parent F
                             return true
@@ -530,16 +595,17 @@ function drawGraph( document, graphText, branchHistory, history){
                 /*
                  End of Segment is the bottom-most commit o which :
                  
-                     1) Branch  => end of segment if only one parent *  AND the parent has 2 children
+                     1) Branch  => end of segment if only one parent P  AND the parent has 2 children  
                              * o      
                              |/   
-                             *       one parent
+                             P       one parent
                                
                 */      
-                if (commit.parents.length == 1){  
+
+                if (commit.parents.length >= 1){  
                     let parent = nodeMap.get( commit.parents[0] );
                     let childrenHashes = childMap.get(parent.hash);
-                    if (childrenHashes.length == 2){
+                    if (childrenHashes.length >= 2){
                         return true
                     }
                 }     
@@ -648,7 +714,7 @@ function drawGraph( document, graphText, branchHistory, history){
         document.getElementById('datesSwimLane').innerHTML = dateContent;      
     
         document.getElementById('mySvg').innerHTML = ''; // Clear
-        draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (NUMBER_OF_BRANCHES + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+        draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (HIGHEST_LANE + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
     
         document.getElementById('graphContent').innerHTML = graphContent;    
     
