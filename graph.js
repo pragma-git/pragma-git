@@ -458,11 +458,7 @@ function drawGraph( document, graphText, branchHistory, history){
       
      NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
      let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
-     
-     for(var i = 0; i < NUMBER_OF_KNOWN_BRANCHES; i++) {
-        //columnOccupiedStateArray.push(1000000); // Occupy until end
-     }
-        
+
      //
      // Pass 2 : Identify same segments -- starting from top going down 
      //          (keep if already known branchName, change otherwise)
@@ -475,32 +471,29 @@ function drawGraph( document, graphText, branchHistory, history){
                     commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                     
                     console.log(columnOccupiedStateArray.toString());
-                
-                    //if (commit.x >= 0){ 
-                        NUMBER_OF_BRANCHES = branchNames.size +1; 
-                        commit.x = getBestLane(commit);
-                        branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
-                        
-                        if (commit.x > HIGHEST_LANE){
-                            HIGHEST_LANE = commit.x;
-                        }
-                    //}
-                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+
+                    NUMBER_OF_BRANCHES = branchNames.size +1; 
+                    commit.x = getBestLane(commit);
+                    branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
                     
-                    markLaneAsOccupied(commit);
+                    if (commit.x > HIGHEST_LANE){
+                        HIGHEST_LANE = commit.x;
+                    }
+
+                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+
                 }
-               //continue // Skip to next i in loop
             }
             
             markLaneAsOccupied(commit);             // Re-occupy
             nameBranchFromPriorInSegment(commit);
             
             if ( isEndOfSegment(commit) ){
-                if ( branchNames.get(commit.branchName) >= NUMBER_OF_KNOWN_BRANCHES){  // Only allow unknown branches to be put in same lanes
+                //if ( branchNames.get(commit.branchName) >= NUMBER_OF_KNOWN_BRANCHES){  // Only allow unknown branches to be put in same lanes
                     markLaneAsFree(commit);
                     console.log( `i = ${i}   END SEGMENT  ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
                     
-               }
+               //}
             }
 
             //
@@ -509,36 +502,13 @@ function drawGraph( document, graphText, branchHistory, history){
             function markLaneAsFree(commit){
                 let lane = commit.x;
                 let until = nodeMap.get(commit.parents[0] ).y;
-                
-                // 
-                
-                //for(var i = 0; i < commit.parents.length; i++){
-                    //let y = nodeMap.get(commit.parents[i]).y;
-                    //if (until <  y){
-                        //until = y + 10;
-                    //}
-                    
-                //}
 
                 columnOccupiedStateArray[ lane] = until;
             }
             function markLaneAsOccupied(commit){
                 let lane = commit.x ;
                 let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
-                until = 1000000;  // Comment out this => Destroys Dicom2usb commit 93 and down
-                
-                // Problem -- I want 
-                
-                //for(var i = 0; i < commit.parents.length; i++){
-                    //let y = nodeMap.get(commit.parents[i]).y;
-                    //if (until <  y){
-                        //until = y + 10;
-                    //}
-                    
-                //}
-                
-                
-                
+     
                 if ( lane >= columnOccupiedStateArray.length){
                     columnOccupiedStateArray.push(until);
                 }else{
