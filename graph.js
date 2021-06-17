@@ -460,7 +460,7 @@ function drawGraph( document, graphText, branchHistory, history){
      let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
      
      for(var i = 0; i < NUMBER_OF_KNOWN_BRANCHES; i++) {
-        columnOccupiedStateArray.push(100000); // Occupy until end
+        //columnOccupiedStateArray.push(100000); // Occupy until end
      }
         
      //
@@ -490,7 +490,7 @@ function drawGraph( document, graphText, branchHistory, history){
                     
                     markLaneAsOccupied(commit);
                 }
-               continue // Skip to next i in loop
+               //continue // Skip to next i in loop
             }
             
             markLaneAsOccupied(commit);             // Re-occupy
