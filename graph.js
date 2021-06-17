@@ -510,12 +510,34 @@ function drawGraph( document, graphText, branchHistory, history){
                 let lane = commit.x;
                 let until = nodeMap.get(commit.parents[0] ).y;
                 
+                // 
+                
+                //for(var i = 0; i < commit.parents.length; i++){
+                    //let y = nodeMap.get(commit.parents[i]).y;
+                    //if (until <  y){
+                        //until = y + 10;
+                    //}
+                    
+                //}
+
                 columnOccupiedStateArray[ lane] = until;
             }
             function markLaneAsOccupied(commit){
-                let lane = commit.x;
-                //let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
-                let until = 1000000
+                let lane = commit.x ;
+                let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
+                until = 1000000;  // Comment out this => Destroys Dicom2usb commit 93 and down
+                
+                // Problem -- I want 
+                
+                //for(var i = 0; i < commit.parents.length; i++){
+                    //let y = nodeMap.get(commit.parents[i]).y;
+                    //if (until <  y){
+                        //until = y + 10;
+                    //}
+                    
+                //}
+                
+                
                 
                 if ( lane >= columnOccupiedStateArray.length){
                     columnOccupiedStateArray.push(until);
@@ -545,6 +567,10 @@ function drawGraph( document, graphText, branchHistory, history){
                             highestX = childX;
                         }
                     }
+                }else{
+                    // Typically this happens at HEAD of a branch
+                    highestX = commit.x;
+                    lowestY = commit.y + 1;  // Next commit
                 }
 
                 
