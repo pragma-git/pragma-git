@@ -378,7 +378,7 @@ function drawGraph( document, graphText, branchHistory, history){
 
             // When branch is known from Notes
             let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
-            x0 = 1; // This is where commits that have not been assigned a new x0 lands
+            x0 = 0; // This is where commits that have not been assigned a new x0 lands
             if ( branchNames.has(noteInThisRow) ){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
@@ -481,7 +481,7 @@ function drawGraph( document, graphText, branchHistory, history){
                     }
 
                     console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
-
+                
                 }
             }
             
@@ -501,7 +501,7 @@ function drawGraph( document, graphText, branchHistory, history){
             //
             function markLaneAsFree(commit){
                 let lane = commit.x;
-                let until = nodeMap.get(commit.parents[0] ).y;
+                let until = nodeMap.get(commit.parents[0] ).y + 2;
 
                 columnOccupiedStateArray[ lane] = until;
             }
