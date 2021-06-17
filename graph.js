@@ -460,7 +460,7 @@ function drawGraph( document, graphText, branchHistory, history){
      let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
      
      for(var i = 0; i < NUMBER_OF_KNOWN_BRANCHES; i++) {
-        //columnOccupiedStateArray.push(100000); // Occupy until end
+        //columnOccupiedStateArray.push(1000000); // Occupy until end
      }
         
      //
@@ -479,7 +479,6 @@ function drawGraph( document, graphText, branchHistory, history){
                     //if (commit.x >= 0){ 
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
                         commit.x = getBestLane(commit);
-                        markLaneAsOccupied(commit);
                         branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
                         
                         if (commit.x > HIGHEST_LANE){
@@ -515,8 +514,8 @@ function drawGraph( document, graphText, branchHistory, history){
             }
             function markLaneAsOccupied(commit){
                 let lane = commit.x;
-                let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
-                //until = 100000
+                //let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
+                let until = 1000000
                 
                 if ( lane >= columnOccupiedStateArray.length){
                     columnOccupiedStateArray.push(until);
