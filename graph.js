@@ -22,7 +22,7 @@ const colorImageNameDefinitions = [
 
 var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
 
-const UNIQUE_EOL = 'X3.17X';
+const UNIQUE_EOL = 'X3.17X';  // Used as EOL in git log to split rows to make it improbable to mix up output with EOL
 const unsetNodeImageFile = 'images/circle_grey.png';
 
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
@@ -50,7 +50,7 @@ var childMap ;          // Store mapping from parent to child hashes
 
 var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
 var commitArray;        // Array with same commits as in nodeMap
-var columnOccupiedStateArray; 
+var columnOccupiedStateArray; // Array used to mark occupied columns, stores last known occupied row-number of branch segment
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -63,11 +63,7 @@ var localState = global.localState;
 
 // Global in this window
 let history = '';
-
-//
-// Example graphs
-//
-var graphText;
+var graphText;  // Output from git log
 
 //
 // Functions
@@ -80,25 +76,23 @@ async function injectIntoJs(document){
     //
     // Init
     //  
-    
-    
-    document.getElementById('showDate').checked = state.graph.showdate;
-    document.getElementById('showAll').checked = state.graph.showall;
-    document.getElementById('graph_mode_switch').checked = state.graph.swimlanes;
-    colorSwitchTexts(); // Set switch-text-colors (see graph.html)
-    
-    if  ( state.graph.swimlanes ){
-        MODE = 'swim-lanes';
-    }else{
-        MODE = 'git-log-graph';
-    }
-          
-    // For systems that have multiple workspaces (virtual screens)
-    if ( win.canSetVisibleOnAllWorkspaces() ){
-        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    }
-    
-    let folder = state.repos[ state.repoNumber].localFolder;
+        document.getElementById('showDate').checked = state.graph.showdate;
+        document.getElementById('showAll').checked = state.graph.showall;
+        document.getElementById('graph_mode_switch').checked = state.graph.swimlanes;
+        colorSwitchTexts(); // Set switch-text-colors (see graph.html)
+        
+        if  ( state.graph.swimlanes ){
+            MODE = 'swim-lanes';
+        }else{
+            MODE = 'git-log-graph';
+        }
+              
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+        }
+        
+        let folder = state.repos[ state.repoNumber].localFolder;
 
     //
     // Read history
@@ -225,7 +219,7 @@ function getColorFileName( name){
     }
     return colorFileName
 }
-function stop(commit){
+function stop(commit){  // Use for conditional-debug-stop in debugger
     // Debug stop on commit selected in graph-window (use in conditional break-point in debugger)
     //
     // Create a conditional break point, and write condtion : stop(commit)
@@ -329,7 +323,7 @@ function drawGraph( document, graphText, branchHistory, history){
          
         // Merge and Branch connectors
         var R = 15; // arc radius for branch and merge.  Note : R <= COL_WIDTH & R <= ROW_HEIGHT
-    
+    console.log(graphText);
 
     // Initiate variables
         
@@ -355,39 +349,28 @@ function drawGraph( document, graphText, branchHistory, history){
         let line = 0; 
         
         for(var row = 0; row < splitted.length; row++) {
-            
-                            
-            //2021-05-27// Skip row added by the git log format option %N  (contains only characters '|' and ' ')
-            //if (isDumbRow(splitted[row])){
-                //continue // skip row
-            //}
     
             // Disect git-log row into useful parts
             [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] );
-     
      
             // Style if commit is not in history (because of search)
             let index = util.findObjectIndex( history, 'hash', hashInThisRow );
             let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
     
-    
             // Figure out if known or current branch
             let colorFileName = unsetNodeImageFile;
             let tooltipText = 'unknown';
 
-
             // When branch is known from Notes
             let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
-            x0 = 0; // This is where commits that have not been assigned a new x0 lands
+            //x0 = 0; // This is where commits that have not been assigned a new x0 lands
             if ( branchNames.has(noteInThisRow) ){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
              
-             
             // Add message text 
             graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
-            
-            
+                     
             // Add date (only print when date is different to previous)
             if (date == previousDate){
                 date = '';
@@ -437,7 +420,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
             thisCommit.x = x0;              	// Alt 1) Swim-lanes
           	if (MODE == 'git-log-graph') {
-            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph
+            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
                 
                 if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
                     NUMBER_OF_BRANCHES = graphNodeIndex + 1;
@@ -453,11 +436,11 @@ function drawGraph( document, graphText, branchHistory, history){
             nodeMap.set( hashInThisRow, thisCommit);
                            
             line++;
-        }
+        } // End for
         
       
-     NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
-     let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
+         NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
+         let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
 
      //
      // Pass 2 : Identify same segments -- starting from top going down 
@@ -499,92 +482,90 @@ function drawGraph( document, graphText, branchHistory, history){
             //
             // Internal functions
             //
-            function markLaneAsFree(commit){
-                let lane = commit.x;
-                let until = nodeMap.get(commit.parents[0] ).y + 2;
-
-                columnOccupiedStateArray[ lane] = until;
-            }
-            function markLaneAsOccupied(commit){
-                let lane = commit.x ;
-                let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
-     
-                if ( lane >= columnOccupiedStateArray.length){
-                    columnOccupiedStateArray.push(until);
-                }else{
+                function markLaneAsFree(commit){
+                    let lane = commit.x;
+                    let until = nodeMap.get(commit.parents[0] ).y + 2;
+    
                     columnOccupiedStateArray[ lane] = until;
                 }
-            }
-            function getBestLane(commit){
-                // Look for lowest row-number in all children
-                // That of parent[0] 
-                let previousMergeY = nodeMap.get(commit.parents[0]).y;
-                
-                let lowestY = previousMergeY;
-                let highestX = nodeMap.get(commit.parents[0]).x;
-                highestX = commit.x;
-                let childrenHashes;
-                if (childMap.has(commit.hash) ){
-                    childrenHashes = childMap.get( commit.hash );                
-                    for(let i = 0; i < childrenHashes.length; i++){
-                        let child = nodeMap.get(childrenHashes[i]);
-                        let childY = child.y;
-                        let childX = child.x;
-                        if (childY < lowestY){
-                            lowestY = childY;
-                        }
-                        if (childX > highestX){
-                            highestX = childX;
-                        }
+                function markLaneAsOccupied(commit){
+                    let lane = commit.x ;
+                    let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
+         
+                    if ( lane >= columnOccupiedStateArray.length){
+                        columnOccupiedStateArray.push(until);
+                    }else{
+                        columnOccupiedStateArray[ lane] = until;
                     }
-                }else{
-                    // Typically this happens at HEAD of a branch
-                    highestX = commit.x;
-                    lowestY = commit.y + 1;  // Next commit
                 }
-
-                
-                let i = commit.x;  // Put to right
-                i = highestX ;
-                while ( ( i< columnOccupiedStateArray.length) && (columnOccupiedStateArray[i] > lowestY) ){
-                    i++;
-                }
-                return i;
-            };
-            
-            function isStartOfSegment(commit){
-                /*
-                 Start of Segment is the top-most commit o which :
-                 
-                     1) Merge  => new segment if not first-parent
-                             *      child
-                             |\   
-                             F o    F = first-parent,  
-                                    o = commit to test (commit variable in this function)
-                             
-                     2) o is last commit on branch        
-                                 o  o has no child
-                                 |
-                                 *    
-                */
-                if ( childMap.has(commit.hash) ){
-                    let childrenHashes = childMap.get(commit.hash); 
+                function getBestLane(commit){
+                    // Look for lowest row-number in all children
+                    // That of parent[0] 
                     
-                    if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
-                    //for(var i = 0; i < childrenHashes.length; i++){
-                        let child = nodeMap.get( childrenHashes[0] ); 
-                        //let child = nodeMap.get( childrenHashes[i] );                       
-                        if ( child.parents[0] !== commit.hash ){
-                             // 1) o has one child *, AND its parent is not first-parent F
-                            return true
+                    let lowestY  = nodeMap.get(commit.parents[0]).y;
+                    let highestX = nodeMap.get(commit.parents[0]).x;
+                    highestX = commit.x;
+                    
+                    let childrenHashes;
+                    if (childMap.has(commit.hash) ){
+                        childrenHashes = childMap.get( commit.hash );                
+                        for(let i = 0; i < childrenHashes.length; i++){
+                            let child = nodeMap.get(childrenHashes[i]);
+    
+                            if (child.y < lowestY){
+                                lowestY = child.y;
+                            }
+                            if (child.x > highestX){
+                                highestX = child.x;
+                            }
                         }
+                    }else{
+                        // Typically this happens at HEAD of a branch
+                        highestX = commit.x;
+                        lowestY = commit.y + 1;  // Next commit
                     }
-       
-                }else{  
-                    // 2) o is last commit on segment    
-                    return true
-                }
-                return false
+    
+                    
+                    let i = highestX ;
+                    while ( ( i< columnOccupiedStateArray.length) && (columnOccupiedStateArray[i] > lowestY) ){
+                        i++;
+                    }
+                    return i;
+                };
+                
+                function isStartOfSegment(commit){
+                    /*
+                     Start of Segment is the top-most commit o which :
+                     
+                         1) Merge  => new segment if not first-parent
+                                 *      child
+                                 |\   
+                                 F o    F = first-parent,  
+                                        o = commit to test (commit variable in this function)
+                                 
+                         2) o is last commit on branch        
+                                     o  o has no child
+                                     |
+                                     *    
+                    */
+                    if ( childMap.has(commit.hash) ){
+                        let childrenHashes = childMap.get(commit.hash); 
+                        
+                        if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
+                        //for(var i = 0; i < childrenHashes.length; i++){
+                            let child = nodeMap.get( childrenHashes[0] ); 
+                            //let child = nodeMap.get( childrenHashes[i] );                       
+                            if ( child.parents[0] !== commit.hash ){
+                                 // 1) o has one child *, AND its parent is not first-parent F
+                                return true
+                            }
+                        }
+           
+                    }else{  
+                        // 2) o is last commit on segment    
+                        return true
+                    }
+                    return false
             };  
             function isEndOfSegment(commit){
                 /*
@@ -833,6 +814,7 @@ function drawGraph( document, graphText, branchHistory, history){
             let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
             let goodGraphPart = graphPartOfText.split('\n');
             let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
+            graphNodeIndex = 0.5 * graphNodeIndex;  // Every second column is unused
                             
             if (startOfDate == -1){
                 date = ''; // When no date found (set blank date)
@@ -851,7 +833,7 @@ function drawGraph( document, graphText, branchHistory, history){
             let parents = parentInThisRow.split(' ');
     
             
-            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex]
+            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] 
       
         // Internal functions
             function getLastBranchInNote( noteInThisRow){
@@ -934,22 +916,22 @@ function drawGraph( document, graphText, branchHistory, history){
     };
  
     // TODO : remove (?)
-    function drawCommitRow(hash, decoration, text, isDev){
-        if (isDev){
-            //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
-            return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
-        }else{
-            //return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
-            return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
-        }
-    }
-    function drawNonCommitRow(hash, text, isDev){
-        if (isDev){
-            return '<pre>'  +  text + '   ' + sumFound +  '</pre>';
-        }else{
-            return '<pre>'  +  text + '</pre>';
-        }
-    }
+    //function drawCommitRow(hash, decoration, text, isDev){
+        //if (isDev){
+            ////return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+            //return `<pre>` + drawPinnedImage(hash) +  text +  `   ` + sumFound +  `</pre><div>`;
+        //}else{
+            ////return `<pre onclick="setHistoricalCommit('` + hash + `')">` + drawPinnedImage(hash) +  text +  `</pre>`;
+            //return `<pre>` + drawPinnedImage(hash) +  text +  `</pre>`;
+        //}
+    //}
+    //function drawNonCommitRow(hash, text, isDev){
+        //if (isDev){
+            //return '<pre>'  +  text + '   ' + sumFound +  '</pre>';
+        //}else{
+            //return '<pre>'  +  text + '</pre>';
+        //}
+    //}
        
        
 
