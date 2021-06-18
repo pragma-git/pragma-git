@@ -363,8 +363,7 @@ function drawGraph( document, graphText, branchHistory, history){
 
             // When branch is known from Notes
             let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
-            //x0 = 0; // This is where commits that have not been assigned a new x0 lands
-            if ( branchNames.has(noteInThisRow) ){
+            if ( branchNames.has(noteInThisRow) && (MODE == 'swim-lanes')){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
              
@@ -441,6 +440,7 @@ function drawGraph( document, graphText, branchHistory, history){
       
          NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
          let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
+
 
      //
      // Pass 2 : Identify same segments -- starting from top going down 
@@ -534,84 +534,84 @@ function drawGraph( document, graphText, branchHistory, history){
                 };
                 
                 function isStartOfSegment(commit){
+                        /*
+                         Start of Segment is the top-most commit o which :
+                         
+                             1) Merge  => new segment if not first-parent
+                                     *      child
+                                     |\   
+                                     F o    F = first-parent,  
+                                            o = commit to test (commit variable in this function)
+                                     
+                             2) o is last commit on branch        
+                                         o  o has no child
+                                         |
+                                         *    
+                        */
+                        if ( childMap.has(commit.hash) ){
+                            let childrenHashes = childMap.get(commit.hash); 
+                            
+                            if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
+                            //for(var i = 0; i < childrenHashes.length; i++){
+                                let child = nodeMap.get( childrenHashes[0] ); 
+                                //let child = nodeMap.get( childrenHashes[i] );                       
+                                if ( child.parents[0] !== commit.hash ){
+                                     // 1) o has one child *, AND its parent is not first-parent F
+                                    return true
+                                }
+                            }
+               
+                        }else{  
+                            // 2) o is last commit on segment    
+                            return true
+                        }
+                        return false
+                };  
+                function isEndOfSegment(commit){
                     /*
-                     Start of Segment is the top-most commit o which :
+                     End of Segment is the bottom-most commit o which :
                      
-                         1) Merge  => new segment if not first-parent
-                                 *      child
-                                 |\   
-                                 F o    F = first-parent,  
-                                        o = commit to test (commit variable in this function)
-                                 
-                         2) o is last commit on branch        
-                                     o  o has no child
-                                     |
-                                     *    
+                         1) Branch  => end of segment if only one parent P  AND the parent has 2 children  
+                                 * o      
+                                 |/   
+                                 P       one parent
+                                   
+                    */      
+    
+                    if (commit.parents.length >= 1){  
+                        let parent = nodeMap.get( commit.parents[0] );
+                        let childrenHashes = childMap.get(parent.hash);
+                        if (childrenHashes.length >= 2){
+                            return true
+                        }
+                    }     
+                    return false               
+                }
+                function nameBranchFromPriorInSegment(commit){
+                    /*
+                     Copy info from child, if in same segment as child
+                                *      child
+                                |
+                                o      commit
                     */
                     if ( childMap.has(commit.hash) ){
-                        let childrenHashes = childMap.get(commit.hash); 
-                        
-                        if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
-                        //for(var i = 0; i < childrenHashes.length; i++){
-                            let child = nodeMap.get( childrenHashes[0] ); 
-                            //let child = nodeMap.get( childrenHashes[i] );                       
-                            if ( child.parents[0] !== commit.hash ){
-                                 // 1) o has one child *, AND its parent is not first-parent F
-                                return true
-                            }
-                        }
-           
-                    }else{  
-                        // 2) o is last commit on segment    
-                        return true
-                    }
-                    return false
-            };  
-            function isEndOfSegment(commit){
-                /*
-                 End of Segment is the bottom-most commit o which :
-                 
-                     1) Branch  => end of segment if only one parent P  AND the parent has 2 children  
-                             * o      
-                             |/   
-                             P       one parent
-                               
-                */      
-
-                if (commit.parents.length >= 1){  
-                    let parent = nodeMap.get( commit.parents[0] );
-                    let childrenHashes = childMap.get(parent.hash);
-                    if (childrenHashes.length >= 2){
-                        return true
-                    }
-                }     
-                return false               
-            }
-            function nameBranchFromPriorInSegment(commit){
-                /*
-                 Copy info from child, if in same segment as child
-                            *      child
-                            |
-                            o      commit
-                */
-                if ( childMap.has(commit.hash) ){
-                    // Find which child is matched to this commit
-                    let childrenHashes = childMap.get( commit.hash );
-                    for(var i = 0; i < childrenHashes.length; i++){
-                        let child = nodeMap.get( childrenHashes[i] );
-                        if ( child.parents[0] == commit.hash ){ 
-                            // Found the child to copy from
-                            if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
-                                commit.branchName = child.branchName;
-                                commit.x = child.x;
+                        // Find which child is matched to this commit
+                        let childrenHashes = childMap.get( commit.hash );
+                        for(var i = 0; i < childrenHashes.length; i++){
+                            let child = nodeMap.get( childrenHashes[i] );
+                            if ( child.parents[0] == commit.hash ){ 
+                                // Found the child to copy from
+                                if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
+                                    commit.branchName = child.branchName;
+                                    commit.x = child.x;
+                                }
                             }
                         }
                     }
                 }
-            }
             // End internal functions
-
-        }
+    
+        } // End for
  
     //
     // Initiate drawing
