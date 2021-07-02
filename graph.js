@@ -368,7 +368,7 @@ function drawGraph( document, graphText, branchHistory, history){
             }
              
             // Add message text 
-            graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
+            //graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
                      
             // Add date (only print when date is different to previous)
             if (date == previousDate){
@@ -412,6 +412,7 @@ function drawGraph( document, graphText, branchHistory, history){
             thisCommit.branchName = noteInThisRow;
             thisCommit.notFoundInSearch = notFoundInSearch;
             thisCommit.message = thisRow;
+            thisCommit.decoration = decoration;
             
             
             // Coordinates
@@ -440,63 +441,86 @@ function drawGraph( document, graphText, branchHistory, history){
       
          NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
          let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
-
+ 
 
      //
      // Pass 2 : Identify same segments -- starting from top going down 
-     //          (keep if already known branchName, change otherwise)
+     //          (keep if already known branchName, make new segment otherwise)
      //       
         for(var i = 0; i < commitArray.length; i++) {
             let commit = commitArray[i];
+            let initialLane = commit.x;
             
-            if ( isStartOfSegment(commit)  ){
+            commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
+            
+            // Start of Segment -- assign branch
+            if ( isStartOfSegment(commit)  ){  
+                commit.message = 'START -- ' + commit.message;  // DEBUG : Mark that first in segment
+                
+                // Assign a branchname if unknown
                 if ( !branchNames.has(commit.branchName)){
                     commit.branchName = commit.hash;  // Name of branch = hash of latest commit
-                    
-                    console.log(columnOccupiedStateArray.toString());
-
                     NUMBER_OF_BRANCHES = branchNames.size +1; 
-                    commit.x = getBestLane(commit);
-                    branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);
-                    
-                    if (commit.x > HIGHEST_LANE){
-                        HIGHEST_LANE = commit.x;
-                    }
-
-                    console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
-                
+                    branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);  // Register lane for this branch
                 }
+
+                // Set lane for this commit
+                branchNames.set( commit.branchName, getBestLane(commit));
+
+                console.log( `i = ${i}   NEW SEGMENT ${branchNames.get( commit.branchName)} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
             }
             
-            markLaneAsOccupied(commit);             // Re-occupy
-            nameBranchFromPriorInSegment(commit);
+            // Stay on same line for branch (commit.x is the lane number, or 'undefined')
+            commit.x = branchNames.get( commit.branchName)
+
             
-            if ( isEndOfSegment(commit) ){
+            // Override if better
+            //commit.x = getBestLane(commit);
+            
+            nameBranchFromPriorInSegment(commit);
+            commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,8)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}  <- ${initialLane}` // DEBUG : Write out columnOccupiedStateArray
+            
+            
+            markLaneAsOccupied(commit);             // Re-occupy
+            
+            if ( isEndOfSegment(commit)){ // NOTE: isEndOfSegment performs some actions ( marks lanes as free)
+                //commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                 //if ( branchNames.get(commit.branchName) >= NUMBER_OF_KNOWN_BRANCHES){  // Only allow unknown branches to be put in same lanes
-                    markLaneAsFree(commit);
-                    console.log( `i = ${i}   END SEGMENT  ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+                    //markLaneAsFree(commit);
                     
                //}
             }
+            
+                        
+            if (commit.x > HIGHEST_LANE){
+                HIGHEST_LANE = commit.x;
+            }
+            
+                         
+            // Add message text 
+            graphContent += parseMessage( commit.hash, commit.message, commit.decoration, commit.notFoundInSearch)
+                     
 
             //
             // Internal functions
             //
                 function markLaneAsFree(commit){
                     let lane = commit.x;
-                    let until = nodeMap.get(commit.parents[0] ).y + 2;
+                    let until = nodeMap.get(commit.parents[0] ).y +0 ;
     
                     columnOccupiedStateArray[ lane] = until;
                 }
                 function markLaneAsOccupied(commit){
                     let lane = commit.x ;
-                    let until = nodeMap.get(commit.parents[0]).y + 1;  // Add one extra row
-         
-                    if ( lane >= columnOccupiedStateArray.length){
-                        columnOccupiedStateArray.push(until);
-                    }else{
-                        columnOccupiedStateArray[ lane] = until;
+                    let until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+                    
+                    // Fill up if array too short
+                    while (lane > columnOccupiedStateArray.length){
+                        columnOccupiedStateArray.push(0);
                     }
+                    
+                    // Mark as occupied
+                    columnOccupiedStateArray[ lane] = until;
                 }
                 function getBestLane(commit){
                     // Look for lowest row-number in all children
@@ -504,7 +528,7 @@ function drawGraph( document, graphText, branchHistory, history){
                     
                     let lowestY  = nodeMap.get(commit.parents[0]).y;
                     let highestX = nodeMap.get(commit.parents[0]).x;
-                    highestX = commit.x;
+                    //highestX = commit.x;
                     
                     let childrenHashes;
                     if (childMap.has(commit.hash) ){
@@ -534,58 +558,90 @@ function drawGraph( document, graphText, branchHistory, history){
                 };
                 
                 function isStartOfSegment(commit){
-                        /*
-                         Start of Segment is the top-most commit o which :
-                         
-                             1) Merge  => new segment if not first-parent
-                                     *      child
-                                     |\   
-                                     F o    F = first-parent,  
-                                            o = commit to test (commit variable in this function)
-                                     
-                             2) o is last commit on branch        
-                                         o  o has no child
-                                         |
-                                         *    
-                        */
-                        if ( childMap.has(commit.hash) ){
-                            let childrenHashes = childMap.get(commit.hash); 
-                            
-                            if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
-                            //for(var i = 0; i < childrenHashes.length; i++){
-                                let child = nodeMap.get( childrenHashes[0] ); 
-                                //let child = nodeMap.get( childrenHashes[i] );                       
-                                if ( child.parents[0] !== commit.hash ){
-                                     // 1) o has one child *, AND its parent is not first-parent F
-                                    return true
+                    /*
+                     Start of Segment is the top-most commit o which :
+                     
+                         1) Merge  => new segment if not first-parent
+                                 *      child
+                                 |\   
+                                 F o    F = first-parent,  
+                                        o = commit to test (commit variable in this function)
+                                 
+                         2) o is last commit on branch        
+                                     o  o has no child
+                                     |
+                                     *    
+                    */
+                    if ( childMap.has(commit.hash) ){
+                        let childrenHashes = childMap.get(commit.hash); 
+                        
+                        // Try to see if NOT start of segment 
+                        if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
+                            for(var i = 0; i < childrenHashes.length; i++){
+                                let child = nodeMap.get( childrenHashes[i] );                       
+                                if ( child.parents[0] == commit.hash ){
+                                     // Found proof that commit is NOT start of segment
+                                    return false
                                 }
                             }
-               
-                        }else{  
-                            // 2) o is last commit on segment    
-                            return true
+                        // 1) Commit must be start of segment
+                        return true
                         }
-                        return false
+           
+                    }else{  
+                        // 2) o is last commit on branch    
+                        return true
+                    }
                 };  
                 function isEndOfSegment(commit){
                     /*
-                     End of Segment is the bottom-most commit o which :
+                     End of Segment is the bottom-most commit o.  
+                     o has at least two children, with o as first-parent :
                      
-                         1) Branch  => end of segment if only one parent P  AND the parent has 2 children  
-                                 * o      
+                         1) Branch point => end of segment more siblings than   
+                                 * c     *, c are two children that both has o as first-parent
                                  |/   
-                                 P       one parent
-                                   
-                    */      
-    
-                    if (commit.parents.length >= 1){  
-                        let parent = nodeMap.get( commit.parents[0] );
-                        let childrenHashes = childMap.get(parent.hash);
-                        if (childrenHashes.length >= 2){
-                            return true
+                                 o       o = commit
+                                 |       
+                                 
+                                 
+                                 * is not on a branch, but c is.  
+                    */ 
+                    
+                    let count = 0; // Number of segments converging at this commit  
+                    let lastOfSegment = [];
+                      
+                    if ( childMap.has(commit.hash) ){
+                        let childrenHashes = childMap.get(commit.hash); 
+                        
+                        // Identify end of segment and children to the end of segment
+                        if (childrenHashes.length >= 1){  
+                            for(var i = 0; i < childrenHashes.length; i++){
+                                let child = nodeMap.get( childrenHashes[i] );                       
+                                if ( child.parents[0] == commit.hash ){
+                                    if ( child.x !== commit.x ){  // Only branched segments have a last point
+                                        count ++;
+                                        lastOfSegment.push(child);  // Store last commit (c) in segment
+                                    }
+                                }
+                            }
                         }
-                    }     
-                    return false               
+                        
+                        // Unset columns for finished segments 
+                        if (count >= 1){  // is end of segment only if a branch point
+                            commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
+                            
+                             for(var i = 0; i < lastOfSegment.length; i++){              
+                                let lane = lastOfSegment[i].x;        
+                                //columnOccupiedStateArray[ lane ] = commit.y; // Take the chance to unoccupy closed lane
+                                columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
+                                console.log( `i = ${commit.y}   END SEGMENT  ${lastOfSegment[i].x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+                            }
+                        }
+
+                    }
+                    return (count >= 1);  // True if two or more 
+              
                 }
                 function nameBranchFromPriorInSegment(commit){
                     /*
@@ -897,10 +953,8 @@ function drawGraph( document, graphText, branchHistory, history){
         const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
         return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     }        
-    function parseMessage( hash, text, decoration, notFoundInSearch, i){
-        
-        text = i + ' -- ' + text;
-        
+    function parseMessage( hash, text, decoration, notFoundInSearch){
+                
         let cl = 'text';
         
         let styling = '';
