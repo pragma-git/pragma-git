@@ -479,21 +479,15 @@ function drawGraph( document, graphText, branchHistory, history){
                 // Assign a branchname if unknown
                 if ( !branchNames.has(commit.branchName)){
                     commit.branchName = commit.hash;  // Name of branch = hash of latest commit
-                    NUMBER_OF_BRANCHES = branchNames.size +1; 
-                    branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);  // Register lane for this branch
+                    
+                    //NUMBER_OF_BRANCHES = branchNames.size +1; 
+                    //branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);  // Register lane for this branch
+                    
+                    branchNames.set( commit.branchName, getBestLane(commit));
                 }
 
-                // Set lane for this commit
-                branchNames.set( commit.branchName, getBestLane(commit));
-
-
-                    console.log( `i = ${i}   NEW SEGMENT ${branchNames.get( commit.branchName)} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
-                //}else{
-                    //let initialLane = commit.x;
-                    //nameBranchFromPriorInSegment(commit);  // Get branch name and lane from child
-                    //commit.x = initialLane;
-                    //markLaneAsOccupied(commit);             // Re-occupy
-                }
+                console.log( `i = ${i}   NEW SEGMENT ${branchNames.get( commit.branchName)} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+            }
             
             let initialLane = commit.x;
             
