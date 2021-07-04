@@ -456,25 +456,32 @@ function drawGraph( document, graphText, branchHistory, history){
          
               *                                            (mergePoint)
               |\
-              | *  startOfSegment         on segment
+              | *  startOfSegment         on segment                          START when DEBUG==true
               | * 
               | *  segment ends here      on segment 
               |/
-              *    afterEndOfSegment      not on segment   (branchPoint)
+              *    afterEndOfSegment      not on segment   (branchPoint)      END when DEBUG==true
                
               First-parents afterEndOfSegment may have an unknown branch name.  Lane 0 is reserved for unknown first-parent branches.
 
         */
          
         for(var i = 0; i < commitArray.length; i++) {
+            
+            // Show DEBUG INFO in commit message
+            let DEBUG = true;
+            
+            
             let commit = commitArray[i];
             
-            commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
+            if (DEBUG) 
+                commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
             
             
             // Start of Segment -- assign branch
-            if ( isStartOfSegment(commit)  ){  
-                commit.message = 'START -- ' + commit.message;  // DEBUG : Mark that first in segment
+            if ( isStartOfSegment(commit)  ){ 
+                if (DEBUG) 
+                    commit.message = 'START -- ' + commit.message;  // DEBUG : Mark that first in segment
                 
                 // Assign a branchname if unknown
                 if ( !branchNames.has(commit.branchName)){
@@ -515,7 +522,9 @@ function drawGraph( document, graphText, branchHistory, history){
             
                 commit.occupiedColumns = [...columnOccupiedStateArray];  // Store copy of array in each commit
             
-                commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,8)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                
+                if (DEBUG) 
+                    commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,8)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
   
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
