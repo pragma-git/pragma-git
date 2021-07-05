@@ -457,7 +457,7 @@ function drawGraph( document, graphText, branchHistory, history){
               *                                            (mergePoint)
               |\
               | *  startOfSegment         on segment                          START when DEBUG==true
-              | * 
+              | *                         on segment
               | *  segment ends here      on segment 
               |/
               *    afterEndOfSegment      not on segment   (branchPoint)      END when DEBUG==true
@@ -772,19 +772,28 @@ function drawGraph( document, graphText, branchHistory, history){
     // PASS 3 : Draw nodes-connections & help-line
     //   
     
+        /*
+         
+             *    x1, y1 is coordiante of one of the children of commit
+             |
+             *    x0, y0 is coordinate of a commit
+          
+        */
+    
         for(var j = 0; j < commitArray.length - 1; j++) { 
  
-            let x0 = commitArray[j].x;
-            let line = commitArray[j].y;
+            let commit = commitArray[j];
+            let x0 = commit.x;
+            let y0 = commit.y;
             
-            let hashInThisRow = commitArray[j].hash;
+            let hashInThisRow = commit.hash;
   
   
             // Draw SVG horizontal help-line TODO : 
             draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
-                       TOP_OFFSET + line * ROW_HEIGHT , 
+                       TOP_OFFSET + y0 * ROW_HEIGHT , 
                        LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
-                       TOP_OFFSET + line * ROW_HEIGHT
+                       TOP_OFFSET + y0 * ROW_HEIGHT
                     ).stroke({ color: '#888', width: 0.25}); 
                     
      
@@ -793,10 +802,11 @@ function drawGraph( document, graphText, branchHistory, history){
                 let childHashes = childMap.get(hashInThisRow);
                 let numberOfChildren = childHashes.length;
                 for (let i = 0; i < childHashes.length; i++){
-                    let x1 = nodeMap.get(childHashes[i]).x;
-                    let y1 = nodeMap.get(childHashes[i]).y;
+                    let child = nodeMap.get(childHashes[i]);
+                    let x1 = child.x;
+                    let y1 = child.y;
                     
-                    drawConnection( draw, x0, line, x1, y1, R, numberOfChildren)
+                    drawConnection( draw, commit, child, R, numberOfChildren)
                 }
 
             }
@@ -831,40 +841,174 @@ function drawGraph( document, graphText, branchHistory, history){
     // ---------------
     // LOCAL FUNCTIONS
     // ---------------
-    
-    function drawConnection( draw, x0, y0, x1, y1, R, numberOfChildren){
+
+    function drawConnection( draw, commit, child, R, numberOfChildren){
         // Inputs : column and row for first and second point
         
-        // Convert to pixel coordinates
-        let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
-        let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
+        /*
+           Different connection types :
+           
+              (1) "going-around"                                            (2) "merge"             (3) "branch"      (4) "straight"
+                                                                                                
+                           x1                                                    x1                       x1                x1                        
+                        y1 * ------\    rounded corner, radius R             y1  * ---\               y1  *                 *
+                                   |                                                  |                   |                 |
+                                   |                                                  |                   |                 |
+                                   |                                                  |                   |                 |
+                   x0              |                                                  |                   |                 |
+               y0  *  -------------/    rounded corner, radius R                  y0  *          y0 * ----/                 *
+                                                                                     x0             x0                      x0
+                                   ^                                                            
+                                   |                                            x1 < x0               x1 > x0             x1 == x0
+                                lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
+                           
+                           
+              TODO : I can't identify when (5) or (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
+                                
+              (5)  "next-commit-merge"           
+                                                 
+                                                 
+                              x1                 
+                    /-------- *  y1              
+               y0  *                                           
+                   x0                            
+                                                 
+                        x1 > x0                      
+                        (y0 - y1) == 1           
+                                                        
+                                                               
+         */
         
-        let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
-        let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
+        // Get row and column coordinates
+            let x0 = commit.x;
+            let y0 = commit.y;
+            let x1 = child.x;
+            let y1 = child.y;
+        
+        // Get lineColumn
+        
+            let lineCol = x0; // Guess case (2)
+            
+            if (x1 > x0)
+                lineCol = x1;  // Case (3)
+                          
+            // Get new lane, if (2) o (3) is crossing a commit 
+            if ( isCrossingNode( commit, child) )
+                lineCol = getBestLane(commit);
+
                 
-                
-        // Draw vertical connection 
-        if (x1 == x0){
-            draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});  
-        }     
-        // Draw branch
-        if (x1 > x0){
-            draw.line( X0, Y0, X1 - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
-            draw.use(arcBranch).move( X1, Y0  );
-            draw.line( X1, Y0 - R, X1, Y1).stroke({ color: '#888', width: 3}); // vertical
-        }
-        // Draw merge
-        if (x1 < x0){
-            if (numberOfChildren >= 1){  // TODO: Now always true, try to understand how to make branch left symbol correct when needed
-                draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
-                draw.use(arcMerge).move( X0, Y1  );
-                draw.line( X1, Y1, X0 - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
-            }else{
-                draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
-                draw.use(arcBranch2).move( X1, Y0  );
-                draw.line( X1 + R , Y0, X0 , Y0).stroke({ color: '#888', width: 3}); // horizontal   
+
+        // Identify connection type
+            let type;
+
+            if (x0 == x1){
+                type = 4;  // Most common
+            }else{        
+                if ( (lineCol > x0) && (lineCol > x1) )
+                    type = 1;  
+                            
+                if (lineCol == x0)
+                    type = 2;
+                    
+                if (lineCol == x1)
+                    type = 3;  
+                    
+                //if ( (x1 > x0) && ( (y0 - y1) > 1) && ( commitArray[y1].occupiedColumns[x0] == y0))
+                    //type = 5;
+                    
             }
-        }
+        
+        // Convert to pixel coordinates (Capital letters)
+            let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
+            let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
+            
+            let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
+            let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
+            
+            let LINECOL = LEFT_OFFSET + lineCol * COL_WIDTH;
+            
+            
+        // Top horizontal
+            
+            if ((type == 1) || (type == 2)){
+                draw.line( X1, Y1, LINECOL - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                draw.use(arcMerge).move( LINECOL, Y1  ); // arc
+            }
+            
+            
+            if (type == 5 ){
+                draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                draw.use(arcMerge2).move( X0, Y1  ); // arc
+            }
+
+            
+        // Vertical
+        
+            switch (type){
+                case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                case 2: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                case 3: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                case 4: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+            }
+             
+            
+        // Bottom horizontal
+            
+            if ((type == 1) || (type == 3)){
+                draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                draw.use(arcBranch).move( LINECOL, Y0  ); // arc
+            }       
+            
+            
+        return    
+
+    
+         //   
+         // Internal function   
+         //
+            function isCrossingNode( commit, child){
+                
+                let x0 = commit.x;
+                let x1 = child.x;
+                
+                // Check if crossing a node between commit and child
+                for(let row = child.y + 1; row < commit.y ; row++){
+                    let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
+        
+                    if ( (x1 > x0) && ( c[x1] > commit.y) ){  // Compare with drawConnection, follow child lane x1
+                        return true
+                    }
+                    if ( (x1 < x0) && ( c[x0] > commit.y) ){   // Compare with drawConnection, follow commit lane x0
+                        return true
+                    }
+                }
+                return false
+                
+            }
+            
+            
+                    //// Draw vertical connection 
+        //if (x1 == x0){
+            //draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});  
+        //}     
+        //// Draw branch
+        //if (x1 > x0){
+            //draw.line( X0, Y0, X1 - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+            //draw.use(arcBranch).move( X1, Y0  );
+            //draw.line( X1, Y0 - R, X1, Y1).stroke({ color: '#888', width: 3}); // vertical
+        //}
+        //// Draw merge
+        //if (x1 < x0){
+            //if (numberOfChildren >= 1){  // TODO: Now always true, try to understand how to make branch left symbol correct when needed
+                //draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
+                //draw.use(arcMerge).move( X0, Y1  );
+                //draw.line( X1, Y1, X0 - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+            //}else{
+                //draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
+                //draw.use(arcBranch2).move( X1, Y0  );
+                //draw.line( X1 + R , Y0, X0 , Y0).stroke({ color: '#888', width: 3}); // horizontal   
+
+    
     };
     function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
         
