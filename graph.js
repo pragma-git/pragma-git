@@ -522,7 +522,7 @@ function drawGraph( document, graphText, branchHistory, history){
                    // Set first-parent (if branch was not explicitly named)
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
                    let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
-                   if ( isFirstParent(commit) && isUnknownBranch){
+                   if ( isFirstParent(commit) && isUnknownBranch ){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
                        
                    }
@@ -994,30 +994,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 return false
                 
             }
-            
-            
-                    //// Draw vertical connection 
-        //if (x1 == x0){
-            //draw.line( X0, Y0, X1, Y1).stroke({ color: '#888', width: 3});  
-        //}     
-        //// Draw branch
-        //if (x1 > x0){
-            //draw.line( X0, Y0, X1 - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
-            //draw.use(arcBranch).move( X1, Y0  );
-            //draw.line( X1, Y0 - R, X1, Y1).stroke({ color: '#888', width: 3}); // vertical
-        //}
-        //// Draw merge
-        //if (x1 < x0){
-            //if (numberOfChildren >= 1){  // TODO: Now always true, try to understand how to make branch left symbol correct when needed
-                //draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
-                //draw.use(arcMerge).move( X0, Y1  );
-                //draw.line( X1, Y1, X0 - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
-            //}else{
-                //draw.line( X0, Y0, X0, Y1 + R).stroke({ color: '#888', width: 3});  // vertical
-                //draw.use(arcBranch2).move( X1, Y0  );
-                //draw.line( X1 + R , Y0, X0 , Y0).stroke({ color: '#888', width: 3}); // horizontal   
 
-    
     };
     function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
         
@@ -1228,12 +1205,15 @@ function drawBranchColorHeader( branchNames){
     
     let longestBranchName = 'Unknown first-parent branch'
     let idToLongestBranchName = 'unknown_first_parent_header';
+    let count = 0;
     
     branchNames.forEach(handleMapElements);
     
     function handleMapElements(value, key, map) {
         
-        if (value > NUMBER_OF_KNOWN_BRANCHES){
+        count++;
+        
+        if (count > NUMBER_OF_KNOWN_BRANCHES){
             return
         }
         
