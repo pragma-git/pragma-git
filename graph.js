@@ -505,6 +505,7 @@ function drawGraph( document, graphText, branchHistory, history){
 
             
             // On a segment
+            
                 
                 // If unknown branch name -- get branchname and lane from child 
                 nameUnknownBranchFromPriorInSegment(commit);
@@ -522,10 +523,11 @@ function drawGraph( document, graphText, branchHistory, history){
                    // Set first-parent (if branch was not explicitly named)
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
                    let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
-                   if ( isFirstParent(commit) && isUnknownBranch ){
+                   if ( isOnFirstParentLane(commit) && isUnknownBranch ){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
-                       
                    }
+                   
+                   
                 }
            
             // Wrap up
@@ -615,7 +617,7 @@ function drawGraph( document, graphText, branchHistory, history){
                     return highestOccupiedCol
                     
                 };
-                function isFirstParent(commit){
+                function isOnFirstParentLane(commit){
                     
                      if ( childMap.has(commit.hash) ){
                         let childrenHashes = childMap.get(commit.hash); 
@@ -624,7 +626,7 @@ function drawGraph( document, graphText, branchHistory, history){
                         if (childrenHashes.length >= 1){  // Octupus merge >1, normal merge == 1
                             for(var i = 0; i < childrenHashes.length; i++){
                                 let child = nodeMap.get( childrenHashes[i] );                       
-                                if ( child.parents[0] == commit.hash ){
+                                if ( ( child.parents[0] == commit.hash ) && ( child.x == 0) ){
                                     return true
                                 }
                             }
