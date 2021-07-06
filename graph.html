@@ -339,16 +339,19 @@
         
          <div id="displayedContent" style="width:fit-content;">  
              
-             <!-- Empty content, fill in with injectIntoJs in graph.js --> 
-             <div id="datesSwimLane" style="width:fit-content;">         
-             </div>      
-             
-             <!-- Empty content, fill in with injectIntoJs in graph.js --> 
-             <div  id="mySvg" style="width:fit-content; height:fit-content">         
-             </div>             
-                    
-              <!-- Empty content, fill in with injectIntoJs in graph.js --> 
-            <div id="graphContent" class="content"> 
+             <div id="zoombox">
+                 
+                 <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                 <div id="datesSwimLane" style="width:fit-content;">         
+                 </div>      
+                 
+                 <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                 <div  id="mySvg" style="width:fit-content; height:fit-content">         
+                 </div>             
+                        
+                  <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                <div id="graphContent" class="content"> 
+                </div>
             </div>
         
          </div> 
@@ -382,17 +385,17 @@
                 
                 
                 if (evt.deltaY > 0) {
-                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) - 0.1;
+                    document.getElementById('zoombox').style.zoom = Number( document.getElementById('zoombox').style.zoom ) - 0.1;
                 } else {
-                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) + 0.1;
+                    document.getElementById('zoombox').style.zoom = Number( document.getElementById('zoombox').style.zoom ) + 0.1;
                 }
                 
-                if ( Number( document.getElementById('graphContent').style.zoom ) < 0.5 ){
-                    document.getElementById('graphContent').style.zoom = 0.5;
+                if ( Number( document.getElementById('zoombox').style.zoom ) < 0.5 ){
+                    document.getElementById('zoombox').style.zoom = 0.5;
                 }
                 
-                if ( Number( document.getElementById('graphContent').style.zoom ) > 2 ){
-                    document.getElementById('graphContent').style.zoom = 2;
+                if ( Number( document.getElementById('zoombox').style.zoom ) > 2 ){
+                    document.getElementById('zoombox').style.zoom = 2;
                 }
             }
             return
