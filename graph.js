@@ -470,7 +470,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
             // Config variables
             let DEBUG = true;       // true = show debug info on commit messages
-            let COMPRESS = false;   // true = compressed lanes 
+            let COMPRESS = true;   // true = compressed lanes 
             
             let commit = commitArray[i];
             
@@ -525,7 +525,12 @@ function drawGraph( document, graphText, branchHistory, history){
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
                    let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
                    if ( isOnFirstParentLane(commit) && isUnknownBranch ){
+                       let lane = commit.x;
+                       let nextCommitOnLane =  columnOccupiedStateArray[lane];
+                       columnOccupiedStateArray[lane] = lane;  // Set to same as lane to make  visual debugging easier
+                       
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
+                       columnOccupiedStateArray[0] = nextCommitOnLane;
                    }
                    
                    
@@ -613,8 +618,8 @@ function drawGraph( document, graphText, branchHistory, history){
                                 highestOccupiedCol = col + 1;
                             }else{
                                 // Here is the first non-occupied lane at this row
-                                if COMPRESS
-                                    break  
+                                if (COMPRESS)
+                                    break ;
                             }
                             col++;
                         }
@@ -723,11 +728,7 @@ function drawGraph( document, graphText, branchHistory, history){
                              for(var i = 0; i < lastOfSegment.length; i++){              
                                 let lane = lastOfSegment[i].x;      
                                 columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
-                                
-                                if (lane == 0) { // Block column until next parent   
-                                    columnOccupiedStateArray[ lane ] =  nodeMap.get( commit.parents[0] ).y;  
-                                }
-                                
+
                                 console.log( `i = ${commit.y}   END SEGMENT  ${lastOfSegment[i].x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
                             }
                         }
