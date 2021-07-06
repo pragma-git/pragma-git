@@ -405,7 +405,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
             
             
-            // Store commit info & NUMBER_OF_BRANCHES
+            // Store commit info & NUMBER_OF_BRANCHES (additional info will be added in PASS 2)
             let thisCommit = {};
 
             thisCommit.hash = hashInThisRow;
@@ -445,7 +445,7 @@ function drawGraph( document, graphText, branchHistory, history){
  
 
      //
-     // Pass 2 : Put commits on same segments on same lane 
+     // Pass 2 : Determine x-position for a commmit
      //          
      //       
      
@@ -471,7 +471,6 @@ function drawGraph( document, graphText, branchHistory, history){
             // Show DEBUG INFO in commit message
             let DEBUG = true;
             
-            
             let commit = commitArray[i];
             
             if (DEBUG) 
@@ -492,14 +491,15 @@ function drawGraph( document, graphText, branchHistory, history){
                     
                     branchNames.set( commit.branchName, getBestLane(commit));
                 }
-                commit.x = branchNames.get( commit.branchName)
+                
+                commit.x = branchNames.get( commit.branchName);
 
                 console.log( `i = ${i}   NEW SEGMENT ${branchNames.get( commit.branchName)} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
             }
 
             
             // On a segment
-
+                
                 // If unknown branch name -- get branchname and lane from child 
                 nameUnknownBranchFromPriorInSegment(commit);
                 
@@ -511,10 +511,12 @@ function drawGraph( document, graphText, branchHistory, history){
             // If after end of segment
                 if ( isAfterEndOfSegment(commit)){ // NOTE: isEndOfSegment performs some actions ( marks lanes as free)
 
-                   // Set first-parent
-                   if ( isFirstParent(commit) ){
+                   // Set first-parent (if branch was not explicitly named)
+                   //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
+                   let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
+                   if ( isFirstParent(commit) && isUnknownBranch){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
-                       branchNames.set( commit.hash, commit.x);  // Follow this as new branch
+                       //branchNames.set( commit.hash, commit.x);  // Follow this as new branch
                    }
                 }
            
@@ -524,7 +526,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
                 
                 if (DEBUG) 
-                    commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,8)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                    commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
   
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
@@ -605,7 +607,6 @@ function drawGraph( document, graphText, branchHistory, history){
                     return highestOccupiedCol
                     
                 };
-                
                 function isFirstParent(commit){
                     
                      if ( childMap.has(commit.hash) ){
@@ -626,7 +627,6 @@ function drawGraph( document, graphText, branchHistory, history){
                     return false                 
                     
                 }
-                
                 function isStartOfSegment(commit){
                     /*
                      Start of Segment is the top-most commit, o :
@@ -741,7 +741,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 }
             // End internal functions
     
-        } // End for
+        } // Pass 2, end loop
  
     //
     // Initiate drawing
@@ -792,7 +792,7 @@ function drawGraph( document, graphText, branchHistory, history){
             // Draw SVG horizontal help-line TODO : 
             draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
                        TOP_OFFSET + y0 * ROW_HEIGHT , 
-                       LEFT_OFFSET + NUMBER_OF_BRANCHES * COL_WIDTH , 
+                       LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
                        TOP_OFFSET + y0 * ROW_HEIGHT
                     ).stroke({ color: '#888', width: 0.25}); 
                     
