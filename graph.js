@@ -469,7 +469,7 @@ function drawGraph( document, graphText, branchHistory, history){
         for(var i = 0; i < commitArray.length; i++) {
             
             // Show DEBUG INFO in commit message
-            let DEBUG = true;
+            let DEBUG = false;
             
             let commit = commitArray[i];
             
@@ -536,7 +536,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
                 
                 if (DEBUG) 
-                    commit.message = `<i>${commit.message}</i>      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                    commit.message = `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
   
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
