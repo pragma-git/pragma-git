@@ -283,7 +283,7 @@ function toggleDate( show){
 }
 
 // Git
-async function gitCommitMessage(hash){
+async function gitCommitMessage(hash){ // TODO: remove 
     let folder = state.repos[ state.repoNumber].localFolder;
     let text = '';
     try{
@@ -445,7 +445,7 @@ function drawGraph( document, graphText, branchHistory, history){
  
 
      //
-     // Pass 2 : Determine x-position for a commmit
+     // PASS 2 : Determine x-position for a commmit
      //          
      //       
      
@@ -545,7 +545,7 @@ function drawGraph( document, graphText, branchHistory, history){
                          
 
             //
-            // Internal functions
+            // PASS 2 : Internal functions
             //
 
                 function markLaneAsOccupied(commit){
@@ -749,7 +749,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 }
             // End internal functions
     
-        } // Pass 2, end loop
+        } // End PASS 2
  
     //
     // Initiate drawing
@@ -765,21 +765,12 @@ function drawGraph( document, graphText, branchHistory, history){
         
         const arcMerge  = draw.defs().use(arc).flip('y').move(-R,-R);
         const arcMerge2  = draw.defs().use(arc).flip('both').move(-R,-R);
-    
-      
-        // Draw vertical lines for each swim-lane
-        for (var i = 0; i < NUMBER_OF_BRANCHES; i++) {
-            const x0 = LEFT_OFFSET + i * COL_WIDTH;
-            const x1 = x0;
-            const y0 = TOP_OFFSET ;
-            const y1 = TOP_OFFSET + splitted.length * ROW_HEIGHT;
-        }          
-     
+
      
     //
     // PASS 3 : Draw nodes-connections & help-line
     //   
-    
+
         /*
          
              *    x1, y1 is coordiante of one of the children of commit
@@ -818,7 +809,7 @@ function drawGraph( document, graphText, branchHistory, history){
                 }
 
             }
-        }
+        } 
          
          
     //
@@ -843,310 +834,306 @@ function drawGraph( document, graphText, branchHistory, history){
         document.getElementById('graphContent').innerHTML = graphContent;    
     
         toggleDate( state.graph.showdate); // Show / hide date column    
-      
- 
 
-    // ---------------
-    // LOCAL FUNCTIONS
-    // ---------------
-
-    function drawConnection( draw, commit, child, R, numberOfChildren){
-        // Inputs : column and row for first and second point
-        
-        /*
-           Different connection types :
-           
-              (1) "going-around"                                            (2) "merge"             (3) "branch"      (4) "straight"
-                                                                                                
-                           x1                                                    x1                       x1                x1                        
-                        y1 * ------\    rounded corner, radius R             y1  * ---\               y1  *                 *
-                                   |                                                  |                   |                 |
-                                   |                                                  |                   |                 |
-                                   |                                                  |                   |                 |
-                   x0              |                                                  |                   |                 |
-               y0  *  -------------/    rounded corner, radius R                  y0  *          y0 * ----/                 *
-                                                                                     x0             x0                      x0
-                                   ^                                                            
-                                   |                                            x1 < x0               x1 > x0             x1 == x0
-                                lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
-                           
-                           
-              TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
-                                
-              (5)  "next-commit-merge"           (6) "next-commit-branch"
-                    (3) but going high                (2) but going low                                
-                                                 
-                              x1                   x1
-                    /-------- *  y1            y1  * 
-                    |                              |
-                y0  *                              \------- *   y0 
-                   x0                                       x0
-                                                 
-                        x1 > x0                   x1 < x0    
-                     (y0 - y1) == 1              (y0 - y1) == 1         
-                                                        
-                                                               
-         */
-        
-        // Get row and column coordinates
-            let x0 = commit.x;
-            let y0 = commit.y;
-            let x1 = child.x;
-            let y1 = child.y;
-        
-        // Get lineColumn
-        
-            let lineCol = x0; // Guess case (2)
+    
+        function drawConnection( draw, commit, child, R, numberOfChildren){
+            // Inputs : column and row for first and second point
             
-            if (x1 > x0)
-                lineCol = x1;  // Case (3)
-                          
-            // Get new lane, if (2) o (3) is crossing a commit 
-            if ( isCrossingNode( commit, child) )
-                lineCol = getBestLane(commit);
-
+            /*
+               Different connection types :
+               
+                  (1) "going-around"                                            (2) "merge"             (3) "branch"      (4) "straight"
+                                                                                                    
+                               x1                                                    x1                       x1                x1                        
+                            y1 * ------\    rounded corner, radius R             y1  * ---\               y1  *                 *
+                                       |                                                  |                   |                 |
+                                       |                                                  |                   |                 |
+                                       |                                                  |                   |                 |
+                       x0              |                                                  |                   |                 |
+                   y0  *  -------------/    rounded corner, radius R                  y0  *          y0 * ----/                 *
+                                                                                         x0             x0                      x0
+                                       ^                                                            
+                                       |                                            x1 < x0               x1 > x0             x1 == x0
+                                    lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
+                               
+                               
+                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
+                                    
+                  (5)  "next-commit-merge"           (6) "next-commit-branch"
+                        (3) but going high                (2) but going low                                
+                                                     
+                                  x1                   x1
+                        /-------- *  y1            y1  * 
+                        |                              |
+                    y0  *                              \------- *   y0 
+                       x0                                       x0
+                                                     
+                            x1 > x0                   x1 < x0    
+                         (y0 - y1) == 1              (y0 - y1) == 1         
+                                                            
+                                                                   
+             */
+            
+            // Get row and column coordinates
+                let x0 = commit.x;
+                let y0 = commit.y;
+                let x1 = child.x;
+                let y1 = child.y;
+            
+            // Get lineColumn
+            
+                let lineCol = x0; // Guess case (2)
                 
-
-        // Identify connection type
-            let type;
-
-            if (x0 == x1){
-                type = 4;  // Most common
-            }else{        
-                if ( (lineCol > x0) && (lineCol > x1) )
-                    type = 1;  
-                            
-                if (lineCol == x0)
-                    type = 2;
+                if (x1 > x0)
+                    lineCol = x1;  // Case (3)
+                              
+                // Get new lane, if (2) o (3) is crossing a commit 
+                if ( isCrossingNode( commit, child) )
+                    lineCol = getBestLane(commit);
+    
                     
-                if (lineCol == x1)
-                    type = 3;  
-                    
-                //if ( (x1 > x0) && ( (y0 - y1) > 1) && ( commitArray[y1].occupiedColumns[x0] == y0))
-                    //type = 5;
-                    
-            }
+    
+            // Identify connection type
+                let type;
+    
+                if (x0 == x1){
+                    type = 4;  // Most common
+                }else{        
+                    if ( (lineCol > x0) && (lineCol > x1) )
+                        type = 1;  
+                                
+                    if (lineCol == x0)
+                        type = 2;
+                        
+                    if (lineCol == x1)
+                        type = 3;  
+                        
+                    //if ( (x1 > x0) && ( (y0 - y1) > 1) && ( commitArray[y1].occupiedColumns[x0] == y0))
+                        //type = 5;
+                        
+                }
+            
+            // Convert to pixel coordinates (Capital letters)
+                let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
+                let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
+                
+                let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
+                let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
+                
+                let LINECOL = LEFT_OFFSET + lineCol * COL_WIDTH;
+                
+                
+            // Top horizontal
+                
+                if ((type == 1) || (type == 2)){
+                    draw.line( X1, Y1, LINECOL - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.use(arcMerge).move( LINECOL, Y1  ); // arc
+                }
+                
+                
+                if (type == 5 ){
+                    draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.use(arcMerge2).move( X0, Y1  ); // arc
+                }
+    
+                
+            // Vertical
+            
+                switch (type){
+                    case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                    case 2: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                    case 3: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 4: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                }
+                 
+                
+            // Bottom horizontal
+                
+                if ((type == 1) || (type == 3)){
+                    draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.use(arcBranch).move( LINECOL, Y0  ); // arc
+                }       
+                
+                
+            return    
+    
         
-        // Convert to pixel coordinates (Capital letters)
+             //   
+             // Internal function   
+             //
+                function isCrossingNode( commit, child){
+                    
+                    let x0 = commit.x;
+                    let x1 = child.x;
+                    
+                    // Check if crossing a node between commit and child
+                    for(let row = child.y + 1; row < commit.y ; row++){
+                        let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
+            
+                        if ( (x1 > x0) && ( c[x1] > commit.y) ){  // Compare with drawConnection, follow child lane x1
+                            return true
+                        }
+                        if ( (x1 < x0) && ( c[x0] > commit.y) ){   // Compare with drawConnection, follow commit lane x0
+                            return true
+                        }
+                    }
+                    return false
+                    
+                }
+    
+        };
+        function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
+            
+            // Figure out if known or current branch
+            let colorFileName;
+            let tooltipText = 'unknown';
+     
+            if (notFoundInSearch){
+                colorFileName = unsetNodeImageFile;
+            }else{
+                colorFileName = 'images/circle_green.png'; // Draw node
+            }
+    
+            // When branch is known from Notes
+            if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
+                
+                // Get image file name
+                let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+    
+                let colorName = colorImageNameDefinitions[ colorNumber];
+                colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                tooltipText = branchName;
+    
+            }
+    
+            // Convert from col / row to pixel coordinates
             let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
             let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
             
-            let X1 = LEFT_OFFSET + x1 * COL_WIDTH;
-            let Y1 = TOP_OFFSET + y1 * ROW_HEIGHT
+            draw.image(colorFileName).
+            id(id).
+            size(IMG_W,IMG_H).
+            move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
+        };
+        function splitGitLogRow( gitLogRow ){
             
-            let LINECOL = LEFT_OFFSET + lineCol * COL_WIDTH;
-            
-            
-        // Top horizontal
-            
-            if ((type == 1) || (type == 2)){
-                draw.line( X1, Y1, LINECOL - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
-                draw.use(arcMerge).move( LINECOL, Y1  ); // arc
-            }
-            
-            
-            if (type == 5 ){
-                draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
-                draw.use(arcMerge2).move( X0, Y1  ); // arc
-            }
-
-            
-        // Vertical
-        
-            switch (type){
-                case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                case 2: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                case 3: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                case 4: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-            }
-             
-            
-        // Bottom horizontal
-            
-            if ((type == 1) || (type == 3)){
-                draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
-                draw.use(arcBranch).move( LINECOL, Y0  ); // arc
-            }       
-            
-            
-        return    
-
     
-         //   
-         // Internal function   
-         //
-            function isCrossingNode( commit, child){
-                
-                let x0 = commit.x;
-                let x1 = child.x;
-                
-                // Check if crossing a node between commit and child
-                for(let row = child.y + 1; row < commit.y ; row++){
-                    let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
-        
-                    if ( (x1 > x0) && ( c[x1] > commit.y) ){  // Compare with drawConnection, follow child lane x1
-                        return true
-                    }
-                    if ( (x1 < x0) && ( c[x0] > commit.y) ){   // Compare with drawConnection, follow commit lane x0
-                        return true
-                    }
+            
+            // gitLogRow -  is a full row from log
+            
+                // Example row format :
+                // | * S=Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
+         
+         
+                // Pick row apart from back to start
+         
+                // Notes : Separate log row from Notes at end
+                let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+                let noteInThisRow = gitLogRow.substring(startOfNote + 2) ; // Skip N=  
+                if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
+                    noteInThisRow = getLastBranchInNote( gitLogRow.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
                 }
-                return false
                 
-            }
-
-    };
-    function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
-        
-        // Figure out if known or current branch
-        let colorFileName;
-        let tooltipText = 'unknown';
- 
-        if (notFoundInSearch){
-            colorFileName = unsetNodeImageFile;
-        }else{
-            colorFileName = 'images/circle_green.png'; // Draw node
-        }
-
-        // When branch is known from Notes
-        if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
-            
-            // Get image file name
-            let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
-
-            let colorName = colorImageNameDefinitions[ colorNumber];
-            colorFileName = `images/circle_colors/circle_${colorName}.png`;
-            tooltipText = branchName;
-
-        }
-
-        // Convert from col / row to pixel coordinates
-        let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
-        let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
-        
-        draw.image(colorFileName).
-        id(id).
-        size(IMG_W,IMG_H).
-        move( X0 - 0.5 * IMG_W, Y0 - 0.5 * IMG_H); // Center image on coordinate point
-    };
-    function splitGitLogRow( gitLogRow ){
-        
-
-        
-        // gitLogRow -  is a full row from log
-        
-            // Example row format :
-            // | * S=Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
-     
-     
-            // Pick row apart from back to start
-     
-            // Notes : Separate log row from Notes at end
-            let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-            let noteInThisRow = gitLogRow.substring(startOfNote + 2) ; // Skip N=  
-            if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
-                noteInThisRow = getLastBranchInNote( gitLogRow.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
-            }
-            
-            // Parents : Separate log row from parents(at end now when Notes removed)
-            let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
-            let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
-            
-            // Hash : Separate log row from long hash (at end now when Parents removed)
-            let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-            let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
-            
-            // Decoration : Separate log row from decorate (at end now when hash removed)
-            let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-            let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
-            decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
-             
-            // Date : Separate log row from date (at end now when decorate removed)
-            let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
-            let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
-            date = date.substring(0,10);
-              
-            // Message : Separate log row from message (at end now when date removed)
-            let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
-            let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
-            
-            // Position of '*' node
-            let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
-            let goodGraphPart = graphPartOfText.split('\n');
-            let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
-            graphNodeIndex = 0.5 * graphNodeIndex;  // Every second column is unused
-                            
-            if (startOfDate == -1){
-                date = ''; // When no date found (set blank date)
-            }
-            
-            // Current row
-            let thisRow = message;
-            thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
-    
-            // Parse missing features (= lines without commits)
-            if (startOfHash == -1){
-                thisRow = gitLogRow; // When no hash found (lines without commits)
-            }
-            
-            // Split parents into array
-            let parents = parentInThisRow.split(' ');
-    
-            
-            return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] 
-      
-        // Internal functions
-            function getLastBranchInNote( noteInThisRow){
-                /*
-                  Format from git log graph command:
-    
-                    N=feature/swim-lanes
-                    |\  
-                    | | develop
-                    | | 
-                    | | develop
-                    | | 
+                // Parents : Separate log row from parents(at end now when Notes removed)
+                let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
+                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
+                
+                // Hash : Separate log row from long hash (at end now when Parents removed)
+                let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+                let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
+                
+                // Decoration : Separate log row from decorate (at end now when hash removed)
+                let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+                let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
+                decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
                  
-                  Strategy : 
-                    - split by EOL
-                    - get second to last
-                    - split by ' ', and get last string 
-    
-                 */
+                // Date : Separate log row from date (at end now when decorate removed)
+                let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
+                let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
+                date = date.substring(0,10);
+                  
+                // Message : Separate log row from message (at end now when date removed)
+                let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
+                let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
                 
-                
-    
-                            
-                let multipleNotes = noteInThisRow.split('\n');
-                let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
-                let endOfLastNote = lastNote[lastNote.length - 1];
-                
-                //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
-                //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
-                
-                noteInThisRow = endOfLastNote;
-            
-                
-                if ( !branchNames.has(noteInThisRow) ){
-                    // New noteInThisRow
-                    branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                // Position of '*' node
+                let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
+                let goodGraphPart = graphPartOfText.split('\n');
+                let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
+                graphNodeIndex = 0.5 * graphNodeIndex;  // Every second column is unused
+                                
+                if (startOfDate == -1){
+                    date = ''; // When no date found (set blank date)
                 }
-    
-                return noteInThisRow;
+                
+                // Current row
+                let thisRow = message;
+                thisRow = thisRow.replace(/</g, '&lt;').replace(/>/g, '&gt;');  // Make tags in text display correctly
+        
+                // Parse missing features (= lines without commits)
+                if (startOfHash == -1){
+                    thisRow = gitLogRow; // When no hash found (lines without commits)
+                }
+                
+                // Split parents into array
+                let parents = parentInThisRow.split(' ');
+        
+                
+                return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] 
+          
+            // Internal functions
+                function getLastBranchInNote( noteInThisRow){
+                    /*
+                      Format from git log graph command:
+        
+                        N=feature/swim-lanes
+                        |\  
+                        | | develop
+                        | | 
+                        | | develop
+                        | | 
+                     
+                      Strategy : 
+                        - split by EOL
+                        - get second to last
+                        - split by ' ', and get last string 
+        
+                     */
+                    
+                    
+        
+                                
+                    let multipleNotes = noteInThisRow.split('\n');
+                    let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
+                    let endOfLastNote = lastNote[lastNote.length - 1];
+                    
+                    //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
+                    //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+                    
+                    noteInThisRow = endOfLastNote;
+                
+                    
+                    if ( !branchNames.has(noteInThisRow) ){
+                        // New noteInThisRow
+                        branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                    }
+        
+                    return noteInThisRow;
+                }
+        function isDumbRow(s){
+            // Dumb row is defined as consisting only of '|' connections, without any nodes
+            // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
+            for(let j = 0 ; j < s.length ; j++){
+                if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
+                    return false
+                }
             }
-    function isDumbRow(s){
-        // Dumb row is defined as consisting only of '|' connections, without any nodes
-        // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
-        for(let j = 0 ; j < s.length ; j++){
-            if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
-                return false
-            }
+            return true
         }
-        return true
-    }
-           
-    }
-  
+               
+        }
+      
+
     
 } // ------------------------------------------------------------
     function drawPinnedImage(hash){
