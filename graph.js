@@ -468,8 +468,9 @@ function drawGraph( document, graphText, branchHistory, history){
          
         for(var i = 0; i < commitArray.length; i++) {
             
-            // Show DEBUG INFO in commit message
-            let DEBUG = false;
+            // Config variables
+            let DEBUG = true;       // true = show debug info on commit messages
+            let COMPRESS = false;   // true = compressed lanes 
             
             let commit = commitArray[i];
             
@@ -568,11 +569,11 @@ function drawGraph( document, graphText, branchHistory, history){
                     // That of parent[0] 
                     
                     /*
-                       For each commit, commit.occupiedColumns is an array showing 
+                       commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
                        
-                       Best lane is the lowest lane number available
+                       Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
                      
-                       The lane must be available from the child that is furthest up, called lowestY
+                       The lane must be available from the child that is furthest up, called lowestY down to the commit.
                        
                        Lane 0 is reserved for unknown first-parents
                      
@@ -610,6 +611,10 @@ function drawGraph( document, graphText, branchHistory, history){
                         while ( col < c.length ){
                             if ( row < c[col] ){
                                 highestOccupiedCol = col + 1;
+                            }else{
+                                // Here is the first non-occupied lane at this row
+                                if COMPRESS
+                                    break  
                             }
                             col++;
                         }
@@ -716,9 +721,13 @@ function drawGraph( document, graphText, branchHistory, history){
                             commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                             
                              for(var i = 0; i < lastOfSegment.length; i++){              
-                                let lane = lastOfSegment[i].x;        
-                                //columnOccupiedStateArray[ lane ] = commit.y; // Take the chance to unoccupy closed lane
+                                let lane = lastOfSegment[i].x;      
                                 columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
+                                
+                                if (lane == 0) { // Block column until next parent   
+                                    columnOccupiedStateArray[ lane ] =  nodeMap.get( commit.parents[0] ).y;  
+                                }
+                                
                                 console.log( `i = ${commit.y}   END SEGMENT  ${lastOfSegment[i].x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
                             }
                         }
