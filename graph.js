@@ -473,12 +473,18 @@ function drawGraph( document, graphText, branchHistory, history){
             
             let commit = commitArray[i];
             
+            // Can be used for determining (5) and (6) ? .  Not used so far -- maybe remove ?
+            commit.START = false;
+            commit.END = false;
+            
             if (DEBUG) 
                 commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
             
             
             // Start of Segment -- assign branch
             if ( isStartOfSegment(commit)  ){ 
+                commit.START = true;
+                
                 if (DEBUG) 
                     commit.message = 'START -- ' + commit.message;  // DEBUG : Mark that first in segment
                 
@@ -510,13 +516,15 @@ function drawGraph( document, graphText, branchHistory, history){
             
             // If after end of segment
                 if ( isAfterEndOfSegment(commit)){ // NOTE: isEndOfSegment performs some actions ( marks lanes as free)
+                    
+                    commit.END = true;
 
                    // Set first-parent (if branch was not explicitly named)
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
                    let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
                    if ( isFirstParent(commit) && isUnknownBranch){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
-                       //branchNames.set( commit.hash, commit.x);  // Follow this as new branch
+                       
                    }
                 }
            
@@ -863,18 +871,19 @@ function drawGraph( document, graphText, branchHistory, history){
                                 lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
                            
                            
-              TODO : I can't identify when (5) or (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
+              TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
                                 
-              (5)  "next-commit-merge"           
+              (5)  "next-commit-merge"           (6) "next-commit-branch"
+                    (3) but going high                (2) but going low                                
                                                  
+                              x1                   x1
+                    /-------- *  y1            y1  * 
+                    |                              |
+                y0  *                              \------- *   y0 
+                   x0                                       x0
                                                  
-                              x1                 
-                    /-------- *  y1              
-               y0  *                                           
-                   x0                            
-                                                 
-                        x1 > x0                      
-                        (y0 - y1) == 1           
+                        x1 > x0                   x1 < x0    
+                     (y0 - y1) == 1              (y0 - y1) == 1         
                                                         
                                                                
          */
