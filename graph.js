@@ -373,9 +373,6 @@ function drawGraph( document, graphText, branchHistory, history){
             if ( branchNames.has(noteInThisRow) && (MODE == 'swim-lanes')){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
-             
-            // Add message text 
-            //graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
                      
             // Add date (only print when date is different to previous)
             if (date == previousDate){
@@ -476,7 +473,7 @@ function drawGraph( document, graphText, branchHistory, history){
         for(var i = 0; i < commitArray.length; i++) {
             
             // Config variables
-            let DEBUG = true;       // true = show debug info on commit messages
+            let DEBUG = false;       // true = show debug info on commit messages
             let COMPRESS = true;   // true = compressed lanes 
             
             let commit = commitArray[i];
@@ -584,53 +581,73 @@ function drawGraph( document, graphText, branchHistory, history){
                        commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
                        
                        Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
-                     
                        The lane must be available from the child that is furthest up, called lowestY down to the commit.
                        
-                       Lane 0 is reserved for unknown first-parents
-                     
-                     
+                       
+                       Step 1) find the child highest up (lowestY), so range to search for free lanes are known
+                       Step 2) find the first occupied lane looking at children in above range
+                               COMPRESS = true : first unoccupied
+                               COMPRESS = false: to the right of the last occupied
+                                
+                       Step 3) if no child existed, highestOccupiedCol == highestX.  The backup, is to look for best lane for the previous commit
+                       
+
                     */
 
                     let lowestY  = commit.y;  // Start search at this commit
+                    let highestX = 0;         // Highest X of the nearest children -- start value for step 2.  If no children this is the value of highestOccupiedCol
 
                     
-                    // Find child that starts furthest up
-                    let childrenHashes;
-                    if (childMap.has(commit.hash) ){
-                        childrenHashes = childMap.get( commit.hash );                
-                        for(let i = 0; i < childrenHashes.length; i++){
-                            let child = nodeMap.get(childrenHashes[i]);
-    
-                            if (child.y < lowestY){
-                                lowestY = child.y;
-                            }
-                        }
-                    
-                    }else{
-                        // Typically this happens at HEAD of a branch
-                        lowestY = commit.y + 1;  // Next commit
-                    }
-                    
-                    // Find highest occupied column in range between lowestY and commit
-                    let highestOccupiedCol = 0;
-                    for(let row = lowestY; row < commit.y ; row++){
-                        let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
+                    // Step 1)  Find child that starts furthest up
                         
-                        // Find next occupied column      
-                        let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
-                        while ( col < c.length ){
-                            if ( row < c[col] ){
-                                highestOccupiedCol = col + 1;
-                            }else{
-                                // Here is the first non-occupied lane at this row
-                                if (COMPRESS)
-                                    break ;
+                        let childrenHashes;
+                        if (childMap.has(commit.hash) ){
+                            childrenHashes = childMap.get( commit.hash );                
+                            for(let i = 0; i < childrenHashes.length; i++){
+                                let child = nodeMap.get(childrenHashes[i]);
+        
+                                if (child.y < lowestY){
+                                    lowestY = child.y;
+                                }
+                                if (child.x > highestX){
+                                    highestX = child.x;
+                                }
                             }
-                            col++;
+                        
+                        }else{
+                            // Typically this happens at HEAD of a branch
+                            lowestY = commit.y + 1;  // Next commit
                         }
-                    }
-                    return highestOccupiedCol
+                    
+                    // Step 2)  Find highest occupied column in range between lowestY and commit
+                        
+                        let highestCandidateCol = highestX;  // Canditate for occupied column.  Reason to start here is that I don't want a lane to the left of any existing lane
+                        
+                        // Update candidate column until no more unoccupied (or until first unoccupied if COMPRESS = true)
+                        for(let row = lowestY; row < commit.y ; row++){
+                            let c = commitArray[row].occupiedColumns; // array containing : last occupied row (for each column)
+                            
+                            // Find next occupied column, and update candidate column      
+                            let col = highestCandidateCol; // Start value  (I know that array never becomes shorter with higher row)          
+                            while ( col < c.length ){
+                                if ( row < c[col] ){
+                                    highestCandidateCol = col + 1; 
+                                }else{
+                                    // Here is the first non-occupied lane at this row
+                                    if (COMPRESS)
+                                        break ;
+                                }
+                                col++;
+                            }
+                        }
+                        // Now the free column is known (with one caveat, tested in step 3)
+                        let freeColumn = highestCandidateCol;
+                    
+                    // Step 3)  If no children step 2 didn't work.  Find best lane for commit above.  
+                    //if ( (freeColumn == highestX) && (commit.y > 1) )
+                       // freeColumn = getBestLane( commitArray[commit.y - 1] );
+                        
+                    return freeColumn
                     
                 };
                 function isOnFirstParentLane(commit){
@@ -756,8 +773,8 @@ function drawGraph( document, graphText, branchHistory, history){
                         for(var i = 0; i < childrenHashes.length; i++){
                             let child = nodeMap.get( childrenHashes[i] );
                             if ( child.parents[0] == commit.hash ){ 
-                                // Found the child to copy from
-                                if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
+                                // Found the child to copy from -- if multiple children, keep the child most to the left
+                                if ( commit.branchName == "" ){  // Copy only if branchName is unknown 
                                     commit.branchName = child.branchName;
                                     commit.x = child.x;
                                     commit.unknownBranchName = child.unknownBranchName; 
