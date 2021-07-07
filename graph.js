@@ -872,7 +872,22 @@ function drawGraph( document, graphText, branchHistory, history){
         document.getElementById('graphContent').innerHTML = graphContent;    
     
         toggleDate( state.graph.showdate); // Show / hide date column    
+        
+        // Draw circle in correct color
+        let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
+        if ( branchNames.has(branchName) ){
 
+            if ( branchNames.get(branchName) < NUMBER_OF_KNOWN_BRANCHES ){
+                
+                // Get image file name
+                let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+                let colorName = colorImageNameDefinitions[ colorNumber];
+                colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                
+                // Change HTML image
+                document.getElementById('headerBranchCircle').src = colorFileName;
+            }
+        }
     
         function drawConnection( draw, commit, child, R, numberOfChildren){
             // Inputs : column and row for first and second point
@@ -1039,7 +1054,6 @@ function drawGraph( document, graphText, branchHistory, history){
             }
     
             // When branch is known from Notes
-            //if ( branchNames.has(branchName) && (branchNames.get(branchName) < NUMBER_OF_KNOWN_BRANCHES)){
             if ( branchNames.has(branchName) &&  !isUnknownBranchName) {
                 
                 // Get image file name
