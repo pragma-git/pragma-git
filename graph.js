@@ -25,7 +25,7 @@ var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
 const UNIQUE_EOL = 'X3.17X';  // Used as EOL in git log to split rows to make it improbable to mix up output with EOL
 const unsetNodeImageFile = 'images/circle_grey.png';
 
-var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
 const simpleGit = require('simple-git');  
@@ -282,23 +282,8 @@ function toggleDate( show){
 
 }
 
-// Git
-async function gitCommitMessage(hash){ // TODO: remove 
-    let folder = state.repos[ state.repoNumber].localFolder;
-    let text = '';
-    try{
-        // Emulate 'git show -s --format=%s ' with addition of long-hash at end
-        let commands = [ 'show', '-s', '--format=%B', hash]; // %B multi-line message
-        await simpleGit( folder).raw(  commands, onReadCommitMessage);
-        function onReadCommitMessage(err, result ){text = result; console.log(result); };
-    }catch(err){        
-        console.log(err);
-    }
-    return text;
-}
-
 // Graphics
-function drawGraph( document, graphText, branchHistory, history){
+async function drawGraph( document, graphText, branchHistory, history){
     // document :       HTML document
     // graphText :      output from  raw git log graph
     // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
@@ -355,6 +340,10 @@ function drawGraph( document, graphText, branchHistory, history){
     //
         let line = 0; 
         
+        
+        let branchList =  await opener.gitBranchList();
+        let localBranchList = branchList.local;
+        
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
@@ -397,50 +386,75 @@ function drawGraph( document, graphText, branchHistory, history){
              */
              
             // Make new entry for mapping from node to children
-            for (let i = 0; i < parents.length; i++){
-                if (childMap.has( parents[i] )){
-                    childMap.get( parents[i] ).push( hashInThisRow) ;
-                }else{
-                    childMap.set( parents[i],  [ hashInThisRow ] ); 
-                } 
-
-            }
-            
-            
-            
-            // Store commit info & NUMBER_OF_BRANCHES (additional info will be added in PASS 2)
-            let thisCommit = {};
-
-            thisCommit.hash = hashInThisRow;
-            thisCommit.parents = parents;
-            thisCommit.branchName = noteInThisRow;
-            thisCommit.notFoundInSearch = notFoundInSearch;
-            thisCommit.message = thisRow;
-            thisCommit.decoration = decoration;
-            thisCommit.unknownBranchName = !branchNames.has(noteInThisRow);
-            
-            
-            // Coordinates
-            thisCommit.y = line; 
-            
-            thisCommit.x = x0;              	// Alt 1) Swim-lanes
-          	if (MODE == 'git-log-graph') {
-            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
-                
-                if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
-                    NUMBER_OF_BRANCHES = graphNodeIndex + 1;
+                for (let i = 0; i < parents.length; i++){
+                    if (childMap.has( parents[i] )){
+                        childMap.get( parents[i] ).push( hashInThisRow) ;
+                    }else{
+                        childMap.set( parents[i],  [ hashInThisRow ] ); 
+                    } 
+    
                 }
                 
-        	}else{
-                NUMBER_OF_BRANCHES = branchNames.size + 1;
-            }
+    
+                
             
+            // Store commit info & NUMBER_OF_BRANCHES (additional info will be added in PASS 2)
+                let thisCommit = {};
+    
+                thisCommit.hash = hashInThisRow;
+                thisCommit.parents = parents;
+                thisCommit.notFoundInSearch = notFoundInSearch;
+                thisCommit.message = thisRow;
+                thisCommit.decoration = decoration;
+                
+                
+            // Alt 1 : branchName if in Note
+                thisCommit.branchName = noteInThisRow;  // Name from note
+                //thisCommit.branchName = "";
+                
+            
+            // Alt 2: Override note, if found from decoration
+                thisCommit.unknownBranchName = true;
+                let test = decoration; 
+                localBranchList.forEach( 
+                    (entry) => { 
+                        if (test.includes(entry)) { 
+                            thisCommit.branchName = entry;
+                            thisCommit.unknownBranchName = false;
+                        };
+                    } 
+                )
+                
+                 // Register branchName and next integer number
+                if ( !branchNames.has(thisCommit.branchName) && ( thisCommit.branchName !== "") ){
+                    branchNames.set(thisCommit.branchName, branchNames.size);
+                }
+                
+                thisCommit.unknownBranchName = !branchNames.has(thisCommit.branchName);
+                
+                
+            
+            // Coordinates
+                thisCommit.y = line; 
+                
+                thisCommit.x = x0;              	// Alt 1) Swim-lanes
+                if (MODE == 'git-log-graph') {
+                    thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
+                    
+                    if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
+                        NUMBER_OF_BRANCHES = graphNodeIndex + 1;
+                    }
+                    
+                }else{
+                    NUMBER_OF_BRANCHES = branchNames.size + 1;
+                }
+                
 
             // Store thisCommit
-            commitArray.push( thisCommit);
-            nodeMap.set( hashInThisRow, thisCommit);
-                           
-            line++;
+                commitArray.push( thisCommit);
+                nodeMap.set( hashInThisRow, thisCommit);
+                               
+                line++;
         } // End for
         
       
@@ -473,7 +487,7 @@ function drawGraph( document, graphText, branchHistory, history){
         for(var i = 0; i < commitArray.length; i++) {
             
             // Config variables
-            let DEBUG = false;       // true = show debug info on commit messages
+            let DEBUG = true;       // true = show debug info on commit messages
             let COMPRESS = true;   // true = compressed lanes for unknown (putting them close to each other)
             
             let commit = commitArray[i];
@@ -622,6 +636,7 @@ function drawGraph( document, graphText, branchHistory, history){
                     // Step 2)  Find highest occupied column in range between lowestY and commit
                         
                         let highestCandidateCol = highestX;  // Canditate for occupied column.  Reason to start here is that I don't want a lane to the left of any existing lane
+                        //highestCandidateCol = 0; // TODO can be used as alternative if merge from left and branch to left is implemented (5 and 6 in drawConnection)
                         
                         // Update candidate column until no more unoccupied (or until first unoccupied if COMPRESS = true)
                         for(let row = lowestY; row < commit.y ; row++){
@@ -644,8 +659,8 @@ function drawGraph( document, graphText, branchHistory, history){
                         let freeColumn = highestCandidateCol;
                     
                     // Step 3)  If no children step 2 didn't work.  Find best lane for commit above.  
-                    //if ( (freeColumn == highestX) && (commit.y > 1) )
-                       // freeColumn = getBestLane( commitArray[commit.y - 1] );
+                    if ( (freeColumn == highestX) && (commit.y > 1) )
+                        freeColumn = getBestLane( commitArray[commit.y - 1] );
                         
                     return freeColumn
                     
@@ -826,7 +841,7 @@ function drawGraph( document, graphText, branchHistory, history){
             let hashInThisRow = commit.hash;
   
   
-            // Draw SVG horizontal help-line TODO : 
+            // Draw SVG horizontal help-line  
             draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
                        TOP_OFFSET + y0 * ROW_HEIGHT , 
                        LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
@@ -910,7 +925,8 @@ function drawGraph( document, graphText, branchHistory, history){
                                     lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
                                
                                
-                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
+                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right    
+                  *  ALSO : this should work for any merge from left, and branch to left :             
                                     
                   (5)  "next-commit-merge"           (6) "next-commit-branch"
                         (3) but going high                (2) but going low                                
@@ -1172,10 +1188,10 @@ function drawGraph( document, graphText, branchHistory, history){
                     noteInThisRow = endOfLastNote;
                 
                     
-                    if ( !branchNames.has(noteInThisRow) ){
-                        // New noteInThisRow
-                        branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
-                    }
+                    //if ( !branchNames.has(noteInThisRow) ){
+                        //// New noteInThisRow
+                        //branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                    //}
         
                     return noteInThisRow;
                 }
