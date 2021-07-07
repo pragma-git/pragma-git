@@ -331,7 +331,13 @@ function drawGraph( document, graphText, branchHistory, history){
         var graphContent = '';
         var dateContent = '';
         
+        // Preset some branchnames
         branchNames = new Map();   // Empty list of branch names
+        //branchNames.set('main',0)
+        //branchNames.set('master',1)
+        //branchNames.set('develop',2)
+        //NUMBER_OF_BRANCHES = branchNames.size + 1;
+        
         childMap = new Map();  // List of children for commits
         nodeMap = new Map();  // Map of commit nodes
         commitArray = [];
@@ -345,7 +351,7 @@ function drawGraph( document, graphText, branchHistory, history){
 
     
     //
-    // Pass 1 : Loop each row - collect commit info
+    // Pass 1 : Loop each row - collect commit info (known-branchname, date, parents, children, decoration)
     //
         let line = 0; 
         
@@ -414,6 +420,7 @@ function drawGraph( document, graphText, branchHistory, history){
             thisCommit.notFoundInSearch = notFoundInSearch;
             thisCommit.message = thisRow;
             thisCommit.decoration = decoration;
+            thisCommit.unknownBranchName = !branchNames.has(noteInThisRow);
             
             
             // Coordinates
@@ -609,7 +616,6 @@ function drawGraph( document, graphText, branchHistory, history){
                     let highestOccupiedCol = 0;
                     for(let row = lowestY; row < commit.y ; row++){
                         let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
-                        console.log(c.toString());
                         
                         // Find next occupied column      
                         let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
@@ -754,6 +760,7 @@ function drawGraph( document, graphText, branchHistory, history){
                                 if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
                                     commit.branchName = child.branchName;
                                     commit.x = child.x;
+                                    commit.unknownBranchName = child.unknownBranchName; 
                                 }
                             }
                         }
@@ -830,7 +837,7 @@ function drawGraph( document, graphText, branchHistory, history){
     
         for(var j = 0; j < commitArray.length - 1; j++) { 
             let id = 'img_' + commitArray[j].hash;
-            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].notFoundInSearch,id );
+            drawNode( draw, commitArray[j] , id );
         }
            
     
@@ -994,7 +1001,13 @@ function drawGraph( document, graphText, branchHistory, history){
                 }
     
         };
-        function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
+        function drawNode( draw, commit, id){
+            
+            let x0 = commit.x;
+            let y0 = commit.y;
+            let branchName = commit.branchName;
+            let notFoundInSearch = commit.notFoundInSearch
+            let isUnknownBranchName = commit.unknownBranchName;
             
             // Figure out if known or current branch
             let colorFileName;
@@ -1007,7 +1020,8 @@ function drawGraph( document, graphText, branchHistory, history){
             }
     
             // When branch is known from Notes
-            if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
+            //if ( branchNames.has(branchName) && (branchNames.get(branchName) < NUMBER_OF_KNOWN_BRANCHES)){
+            if ( branchNames.has(branchName) &&  !isUnknownBranchName) {
                 
                 // Get image file name
                 let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
