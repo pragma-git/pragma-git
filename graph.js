@@ -474,7 +474,7 @@ function drawGraph( document, graphText, branchHistory, history){
             
             // Config variables
             let DEBUG = false;       // true = show debug info on commit messages
-            let COMPRESS = true;   // true = compressed lanes 
+            let COMPRESS = true;   // true = compressed lanes for unknown (putting them close to each other)
             
             let commit = commitArray[i];
             
@@ -746,7 +746,8 @@ function drawGraph( document, graphText, branchHistory, history){
                         
                         // Unset columns for all "end of branch segments" (identified above)
                         if (count >= 1){  // is end of segment only if a branch point
-                            commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
+                            if (DEBUG)
+                                commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                             
                              for(var i = 0; i < lastOfSegment.length; i++){              
                                 let lane = lastOfSegment[i].x;      
@@ -774,7 +775,8 @@ function drawGraph( document, graphText, branchHistory, history){
                             let child = nodeMap.get( childrenHashes[i] );
                             if ( child.parents[0] == commit.hash ){ 
                                 // Found the child to copy from -- if multiple children, keep the child most to the left
-                                if ( commit.branchName == "" ){  // Copy only if branchName is unknown 
+                                //if ( commit.branchName == "" ){  // Copy only if branchName is unknown 
+                                if ( commit.unknownBranchName ){  // Copy only if branchName is unknown 
                                     commit.branchName = child.branchName;
                                     commit.x = child.x;
                                     commit.unknownBranchName = child.unknownBranchName; 
