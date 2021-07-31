@@ -282,6 +282,21 @@ function toggleDate( show){
 
 }
 
+// Git
+async function gitCommitMessage(hash){ // TODO: remove 
+    let folder = state.repos[ state.repoNumber].localFolder;
+    let text = '';
+    try{
+        // Emulate 'git show -s --format=%s ' with addition of long-hash at end
+        let commands = [ 'show', '-s', '--format=%B', hash]; // %B multi-line message
+        await simpleGit( folder).raw(  commands, onReadCommitMessage);
+        function onReadCommitMessage(err, result ){text = result; console.log(result); };
+    }catch(err){        
+        console.log(err);
+    }
+    return text;
+}
+
 // Graphics
 async function drawGraph( document, graphText, branchHistory, history){
     // document :       HTML document
@@ -316,13 +331,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         var graphContent = '';
         var dateContent = '';
         
-        // Preset some branchnames
         branchNames = new Map();   // Empty list of branch names
-        //branchNames.set('main',0)
-        //branchNames.set('master',1)
-        //branchNames.set('develop',2)
-        //NUMBER_OF_BRANCHES = branchNames.size + 1;
-        
         childMap = new Map();  // List of children for commits
         nodeMap = new Map();  // Map of commit nodes
         commitArray = [];
@@ -336,7 +345,7 @@ async function drawGraph( document, graphText, branchHistory, history){
 
     
     //
-    // Pass 1 : Loop each row - collect commit info (known-branchname, date, parents, children, decoration)
+    // Pass 1 : Loop each row - collect commit info
     //
         let line = 0; 
         
@@ -362,6 +371,9 @@ async function drawGraph( document, graphText, branchHistory, history){
             if ( branchNames.has(noteInThisRow) && (MODE == 'swim-lanes')){
                 x0 = branchNames.get(noteInThisRow);  // In column coordinates
             }
+             
+            // Add message text 
+            //graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
                      
             // Add date (only print when date is different to previous)
             if (date == previousDate){
@@ -386,17 +398,16 @@ async function drawGraph( document, graphText, branchHistory, history){
              */
              
             // Make new entry for mapping from node to children
-                for (let i = 0; i < parents.length; i++){
-                    if (childMap.has( parents[i] )){
-                        childMap.get( parents[i] ).push( hashInThisRow) ;
-                    }else{
-                        childMap.set( parents[i],  [ hashInThisRow ] ); 
-                    } 
-    
-                }
-                
-    
-                
+            for (let i = 0; i < parents.length; i++){
+                if (childMap.has( parents[i] )){
+                    childMap.get( parents[i] ).push( hashInThisRow) ;
+                }else{
+                    childMap.set( parents[i],  [ hashInThisRow ] ); 
+                } 
+
+            }
+            
+            
             
             // Store commit info & NUMBER_OF_BRANCHES (additional info will be added in PASS 2)
                 let thisCommit = {};
@@ -435,26 +446,26 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
             
             // Coordinates
-                thisCommit.y = line; 
+            thisCommit.y = line; 
+            
+            thisCommit.x = x0;              	// Alt 1) Swim-lanes
+          	if (MODE == 'git-log-graph') {
+            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
                 
-                thisCommit.x = x0;              	// Alt 1) Swim-lanes
-                if (MODE == 'git-log-graph') {
-                    thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
-                    
-                    if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
-                        NUMBER_OF_BRANCHES = graphNodeIndex + 1;
-                    }
-                    
-                }else{
-                    NUMBER_OF_BRANCHES = branchNames.size + 1;
+                if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
+                    NUMBER_OF_BRANCHES = graphNodeIndex + 1;
                 }
                 
+        	}else{
+                NUMBER_OF_BRANCHES = branchNames.size + 1;
+            }
+            
 
             // Store thisCommit
-                commitArray.push( thisCommit);
-                nodeMap.set( hashInThisRow, thisCommit);
-                               
-                line++;
+            commitArray.push( thisCommit);
+            nodeMap.set( hashInThisRow, thisCommit);
+                           
+            line++;
         } // End for
         
       
@@ -488,7 +499,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             // Config variables
             let DEBUG = true;       // true = show debug info on commit messages
-            let COMPRESS = true;   // true = compressed lanes for unknown (putting them close to each other)
+            let COMPRESS = false;   // true = compressed lanes (TODO true is not perfect)
             
             let commit = commitArray[i];
             
@@ -542,13 +553,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                    // Set first-parent (if branch was not explicitly named)
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
                    let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
+                   
+                   isUnknownBranch = commit.unknownBranchName;
                    if ( isOnFirstParentLane(commit) && isUnknownBranch ){
-                       let lane = commit.x;
-                       let nextCommitOnLane =  columnOccupiedStateArray[lane];
-                       columnOccupiedStateArray[lane] = lane;  // Set to same as lane to make  visual debugging easier
-                       
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
-                       columnOccupiedStateArray[0] = nextCommitOnLane;
                    }
                    
                    
@@ -559,9 +567,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                 commit.occupiedColumns = [...columnOccupiedStateArray];  // Store copy of array in each commit
             
                 
-                if (DEBUG) 
+                if (DEBUG) {
                     commit.message = `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
-  
+                }
+                
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
                 }
@@ -595,74 +604,54 @@ async function drawGraph( document, graphText, branchHistory, history){
                        commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
                        
                        Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
+                     
                        The lane must be available from the child that is furthest up, called lowestY down to the commit.
                        
-                       
-                       Step 1) find the child highest up (lowestY), so range to search for free lanes are known
-                       Step 2) find the first occupied lane looking at children in above range
-                               COMPRESS = true : first unoccupied
-                               COMPRESS = false: to the right of the last occupied
-                                
-                       Step 3) if no child existed, highestOccupiedCol == highestX.  The backup, is to look for best lane for the previous commit
-                       
-
+                       Lane 0 is reserved for unknown first-parents
+                     
+                     
                     */
 
                     let lowestY  = commit.y;  // Start search at this commit
-                    let highestX = 0;         // Highest X of the nearest children -- start value for step 2.  If no children this is the value of highestOccupiedCol
 
                     
-                    // Step 1)  Find child that starts furthest up
-                        
-                        let childrenHashes;
-                        if (childMap.has(commit.hash) ){
-                            childrenHashes = childMap.get( commit.hash );                
-                            for(let i = 0; i < childrenHashes.length; i++){
-                                let child = nodeMap.get(childrenHashes[i]);
-        
-                                if (child.y < lowestY){
-                                    lowestY = child.y;
-                                }
-                                if (child.x > highestX){
-                                    highestX = child.x;
-                                }
-                            }
-                        
-                        }else{
-                            // Typically this happens at HEAD of a branch
-                            lowestY = commit.y + 1;  // Next commit
-                        }
-                    
-                    // Step 2)  Find highest occupied column in range between lowestY and commit
-                        
-                        let highestCandidateCol = highestX;  // Canditate for occupied column.  Reason to start here is that I don't want a lane to the left of any existing lane
-                        //highestCandidateCol = 0; // TODO can be used as alternative if merge from left and branch to left is implemented (5 and 6 in drawConnection)
-                        
-                        // Update candidate column until no more unoccupied (or until first unoccupied if COMPRESS = true)
-                        for(let row = lowestY; row < commit.y ; row++){
-                            let c = commitArray[row].occupiedColumns; // array containing : last occupied row (for each column)
-                            
-                            // Find next occupied column, and update candidate column      
-                            let col = highestCandidateCol; // Start value  (I know that array never becomes shorter with higher row)          
-                            while ( col < c.length ){
-                                if ( row < c[col] ){
-                                    highestCandidateCol = col + 1; 
-                                }else{
-                                    // Here is the first non-occupied lane at this row
-                                    if (COMPRESS)
-                                        break ;
-                                }
-                                col++;
+                    // Find child that starts furthest up
+                    let childrenHashes;
+                    if (childMap.has(commit.hash) ){
+                        childrenHashes = childMap.get( commit.hash );                
+                        for(let i = 0; i < childrenHashes.length; i++){
+                            let child = nodeMap.get(childrenHashes[i]);
+    
+                            if (child.y < lowestY){
+                                lowestY = child.y;
                             }
                         }
-                        // Now the free column is known (with one caveat, tested in step 3)
-                        let freeColumn = highestCandidateCol;
                     
-                    // Step 3)  If no children step 2 didn't work.  Find best lane for commit above.  
-                    if ( (freeColumn == highestX) && (commit.y > 1) )
-                        freeColumn = getBestLane( commitArray[commit.y - 1] );
+                    }else{
+                        // Typically this happens at HEAD of a branch
+                        lowestY = commit.y + 1;  // Next commit
+                    }
+                    
+                    // Find highest occupied column in range between lowestY and commit
+                    let highestOccupiedCol = 0;
+                    for(let row = lowestY; row < commit.y ; row++){
+                        let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
+                        console.log(c.toString());
                         
-                    return freeColumn
+                        // Find next occupied column      
+                        let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
+                        while ( col < c.length ){
+                            if ( row < c[col] ){
+                                highestOccupiedCol = col + 1;
+                            }else{
+                                // Here is the first non-occupied lane at this row
+                                if (COMPRESS)
+                                    break  
+                            }
+                            col++;
+                        }
+                    }
+                    return highestOccupiedCol
                     
                 };
                 function isOnFirstParentLane(commit){
@@ -761,13 +750,16 @@ async function drawGraph( document, graphText, branchHistory, history){
                         
                         // Unset columns for all "end of branch segments" (identified above)
                         if (count >= 1){  // is end of segment only if a branch point
-                            if (DEBUG)
-                                commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
+                            commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                             
                              for(var i = 0; i < lastOfSegment.length; i++){              
                                 let lane = lastOfSegment[i].x;      
                                 columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
-
+                                
+                                if (lane == 0) { // Block column until next parent   
+                                    columnOccupiedStateArray[ lane ] =  nodeMap.get( commit.parents[0] ).y;  
+                                }
+                                
                                 console.log( `i = ${commit.y}   END SEGMENT  ${lastOfSegment[i].x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
                             }
                         }
@@ -789,12 +781,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                         for(var i = 0; i < childrenHashes.length; i++){
                             let child = nodeMap.get( childrenHashes[i] );
                             if ( child.parents[0] == commit.hash ){ 
-                                // Found the child to copy from -- if multiple children, keep the child most to the left
-                                //if ( commit.branchName == "" ){  // Copy only if branchName is unknown 
-                                if ( commit.unknownBranchName ){  // Copy only if branchName is unknown 
+                                // Found the child to copy from
+                                if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
                                     commit.branchName = child.branchName;
                                     commit.x = child.x;
-                                    commit.unknownBranchName = child.unknownBranchName; 
+                                    commit.unknownBranchName = child.unknownBranchName;
                                 }
                             }
                         }
@@ -841,7 +832,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             let hashInThisRow = commit.hash;
   
   
-            // Draw SVG horizontal help-line  
+            // Draw SVG horizontal help-line TODO : 
             draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
                        TOP_OFFSET + y0 * ROW_HEIGHT , 
                        LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
@@ -871,7 +862,9 @@ async function drawGraph( document, graphText, branchHistory, history){
     
         for(var j = 0; j < commitArray.length - 1; j++) { 
             let id = 'img_' + commitArray[j].hash;
-            drawNode( draw, commitArray[j] , id );
+            //drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].notFoundInSearch,id );
+            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].unknownBranchName,id );
+            
         }
            
     
@@ -887,22 +880,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         document.getElementById('graphContent').innerHTML = graphContent;    
     
         toggleDate( state.graph.showdate); // Show / hide date column    
-        
-        // Draw circle in correct color
-        let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-        if ( branchNames.has(branchName) ){
 
-            if ( branchNames.get(branchName) < NUMBER_OF_KNOWN_BRANCHES ){
-                
-                // Get image file name
-                let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
-                let colorName = colorImageNameDefinitions[ colorNumber];
-                colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                
-                // Change HTML image
-                document.getElementById('headerBranchCircle').src = colorFileName;
-            }
-        }
     
         function drawConnection( draw, commit, child, R, numberOfChildren){
             // Inputs : column and row for first and second point
@@ -925,8 +903,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                                     lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
                                
                                
-                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right    
-                  *  ALSO : this should work for any merge from left, and branch to left :             
+                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
                                     
                   (5)  "next-commit-merge"           (6) "next-commit-branch"
                         (3) but going high                (2) but going low                                
@@ -1051,13 +1028,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
     
         };
-        function drawNode( draw, commit, id){
-            
-            let x0 = commit.x;
-            let y0 = commit.y;
-            let branchName = commit.branchName;
-            let notFoundInSearch = commit.notFoundInSearch
-            let isUnknownBranchName = commit.unknownBranchName;
+        function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
             
             // Figure out if known or current branch
             let colorFileName;
@@ -1065,20 +1036,23 @@ async function drawGraph( document, graphText, branchHistory, history){
      
             if (notFoundInSearch){
                 colorFileName = unsetNodeImageFile;
+                if (x0 == 0)
+                    colorFileName = 'images/circle_green.png'; // Draw node
+                    
             }else{
                 colorFileName = 'images/circle_green.png'; // Draw node
-            }
     
-            // When branch is known from Notes
-            if ( branchNames.has(branchName) &&  !isUnknownBranchName) {
-                
-                // Get image file name
-                let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
-    
-                let colorName = colorImageNameDefinitions[ colorNumber];
-                colorFileName = `images/circle_colors/circle_${colorName}.png`;
-                tooltipText = branchName;
-    
+                // When branch is known from Notes
+                if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
+                    
+                    // Get image file name
+                    let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+        
+                    let colorName = colorImageNameDefinitions[ colorNumber];
+                    colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                    tooltipText = branchName;
+        
+                }
             }
     
             // Convert from col / row to pixel coordinates
@@ -1188,10 +1162,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                     noteInThisRow = endOfLastNote;
                 
                     
-                    //if ( !branchNames.has(noteInThisRow) ){
-                        //// New noteInThisRow
-                        //branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
-                    //}
+                    if ( !branchNames.has(noteInThisRow) ){
+                        // New noteInThisRow
+                        branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                    }
         
                     return noteInThisRow;
                 }
