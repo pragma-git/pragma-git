@@ -501,6 +501,10 @@ async function drawGraph( document, graphText, branchHistory, history){
             let DEBUG = true;       // true = show debug info on commit messages
             let COMPRESS = false;   // true = compressed lanes (TODO true is not perfect)
             
+            if (MODE == 'git-log-graph') {  // Use switch in graph.html to set compress on / off
+                COMPRESS = true;
+            }
+            
             let commit = commitArray[i];
             
             // Can be used for determining (5) and (6) ? .  Not used so far -- maybe remove ?
@@ -535,7 +539,8 @@ async function drawGraph( document, graphText, branchHistory, history){
 
             
             // On a segment
-            
+
+                       
                 
                 // If unknown branch name -- get branchname and lane from child 
                 nameUnknownBranchFromPriorInSegment(commit);
@@ -552,16 +557,16 @@ async function drawGraph( document, graphText, branchHistory, history){
 
                    // Set first-parent (if branch was not explicitly named)
                    //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
-                   let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
+                   //let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
                    
-                   isUnknownBranch = commit.unknownBranchName;
+                   let isUnknownBranch = commit.unknownBranchName;
                    if ( isOnFirstParentLane(commit) && isUnknownBranch ){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
                    }
                    
                    
                 }
-           
+
             // Wrap up
             
                 commit.occupiedColumns = [...columnOccupiedStateArray];  // Store copy of array in each commit
@@ -883,42 +888,47 @@ async function drawGraph( document, graphText, branchHistory, history){
 
     
         function drawConnection( draw, commit, child, R, numberOfChildren){
-            // Inputs : column and row for first and second point
             
-            /*
+            /* Inputs : 
+                    draw - draw object
+                    commit - X0, Y0 coordiantes
+                    child - X1, Y1 coordinates
+                    R - bend radius in pixels
+                    numberOfChildren - not used
+            
+             
+            
                Different connection types :
                
-                  (1) "going-around"                                            (2) "merge"             (3) "branch"      (4) "straight"
-                                                                                                    
-                               x1                                                    x1                       x1                x1                        
-                            y1 * ------\    rounded corner, radius R             y1  * ---\               y1  *                 *
-                                       |                                                  |                   |                 |
-                                       |                                                  |                   |                 |
-                                       |                                                  |                   |                 |
-                       x0              |                                                  |                   |                 |
-                   y0  *  -------------/    rounded corner, radius R                  y0  *          y0 * ----/                 *
-                                                                                         x0             x0                      x0
-                                       ^                                                            
-                                       |                                            x1 < x0               x1 > x0             x1 == x0
-                                    lineCol                                       lineCol == x0         lineCol == x1       lineCol == x1 == x0    
+                  (1) "going-around"                               (2) "merge"                (3) "branch"      (4) "straight"
+                                                                                       
+                               x1                                       x1                           x1                x1                        
+                            y1 * ------\    rounded corner ,         y1 * ---\                   y1  *                 *
+                                       |    radius R                         |                       |                 |
+                                       |                                     |                       |                 |
+                                       |                                     |                       |                 |
+                       x0              |                                     |                       |                 |
+                   y0  *  -------------/    rounded corner,              y0  *          END y0 * ----/                 *
+                                            radius R                         x0 START          x0                      x0
+                                       ^                                               
+                                       |                               x1 < x0               x1 > x0             x1 == x0
+                                    lineCol                          lineCol == x0         lineCol == x1       lineCol == x1 == x0    
                                
                                
-                  TODO : I can't identify when (5) and (6). See commit 716 in electron-api-demos which becomes unneccessary loop to the right                 
                                     
-                  (5)  "next-commit-merge"           (6) "next-commit-branch"
-                        (3) but going high                (2) but going low                                
+                  (5)  "right-merge"           (6) "left-branch"
+                        (3) but going right               (2) but going left                                
                                                      
                                   x1                   x1
                         /-------- *  y1            y1  * 
                         |                              |
-                    y0  *                              \------- *   y0 
-                       x0                                       x0
-                                                     
+                    y0  *                              \------- * y0 END
+                  START x0                                      x0
+                        lineCol == x0               lineCol == x1                              
                             x1 > x0                   x1 < x0    
-                         (y0 - y1) == 1              (y0 - y1) == 1         
                                                             
                                                                    
-             */
+             **/
             
             // Get row and column coordinates
                 let x0 = commit.x;
@@ -926,40 +936,38 @@ async function drawGraph( document, graphText, branchHistory, history){
                 let x1 = child.x;
                 let y1 = child.y;
             
-            // Get lineColumn
             
-                let lineCol = x0; // Guess case (2)
-                
+            // Get lineColumn
+                let lineCol = x0; 
                 if (x1 > x0)
-                    lineCol = x1;  // Case (3)
+                    lineCol = x1;  
                               
-                // Get new lane, if (2) o (3) is crossing a commit 
+                // Get new lane, if crossing a commit 
                 if ( isCrossingNode( commit, child) )
                     lineCol = getBestLane(commit);
-    
-                    
+         
     
             // Identify connection type
+            
                 let type;
     
                 if (x0 == x1){
                     type = 4;  // Most common
-                }else{        
-                    if ( (lineCol > x0) && (lineCol > x1) )
-                        type = 1;  
-                                
-                    if (lineCol == x0)
-                        type = 2;
-                        
-                    if (lineCol == x1)
-                        type = 3;  
-                        
-                    //if ( (x1 > x0) && ( (y0 - y1) > 1) && ( commitArray[y1].occupiedColumns[x0] == y0))
-                        //type = 5;
-                        
+                }else if ( (lineCol > x0) && (lineCol > x1) ) { // vertical to the right
+                    type = 1;  
+                }else if ( (x1 < x0)  && commit.START) {  // merge
+                    type = 2;
+                }else if ( (x1 > x0) && commit.END) {  // branch
+                    type = 3;
+                }else if ( (x1 > x0)  && commit.START) { // merge right 
+                    type = 5;
+                }else if ( (x1 < x0) && commit.END) { // branch left
+                    type = 6; 
                 }
+                       
             
             // Convert to pixel coordinates (Capital letters)
+            
                 let X0 = LEFT_OFFSET + x0 * COL_WIDTH;
                 let Y0 = TOP_OFFSET + y0 * ROW_HEIGHT
                 
@@ -976,20 +984,21 @@ async function drawGraph( document, graphText, branchHistory, history){
                     draw.use(arcMerge).move( LINECOL, Y1  ); // arc
                 }
                 
-                
                 if (type == 5 ){
                     draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
                     draw.use(arcMerge2).move( X0, Y1  ); // arc
                 }
-    
+
                 
             // Vertical
             
                 switch (type){
                     case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 2: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 3: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 4: draw.line( LINECOL, Y0 - 0, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                    case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 5: draw.line( X0 , Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                    case 6: draw.line( X1 , Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
                 }
                  
                 
@@ -998,7 +1007,13 @@ async function drawGraph( document, graphText, branchHistory, history){
                 if ((type == 1) || (type == 3)){
                     draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
                     draw.use(arcBranch).move( LINECOL, Y0  ); // arc
-                }       
+                }                  
+                
+                if (type == 6 ){
+                    draw.line( X0, Y0, X1 + R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.use(arcBranch2).move( X1 , Y0  );
+                }
+     
                 
                 
             return    
