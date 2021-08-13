@@ -948,19 +948,19 @@ async function drawGraph( document, graphText, branchHistory, history){
                                             radius R                         x0 START          x0                      x0
                                        ^                                               
                                        |                               x1 < x0               x1 > x0             x1 == x0
-                                    lineCol                          lineCol == x0         lineCol == x1       lineCol == x1 == x0    
+                                    lineCol                          lineCol == x0         lineCol == x1           
                                
                                
                                     
                   (5)  "right-merge"           (6) "left-branch"
-                        (3) but going right               (2) but going left                                
+                        (2) but going right               (3) but going left                                
                                                      
                                   x1                   x1
                         /-------- *  y1            y1  * 
                         |                              |
                     y0  *                              \------- * y0 END
                   START x0                                      x0
-                        lineCol == x0               lineCol == x1                              
+                                                 
                             x1 > x0                   x1 < x0    
                                                             
                                                                    
@@ -973,7 +973,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 let y1 = child.y;
             
             
-            // Get lineColumn
+            // Get lineColumn (used for case 1 - 3)
                 let lineCol = x0; 
                 if (x1 > x0)
                     lineCol = x1;  
