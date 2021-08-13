@@ -347,6 +347,25 @@ async function drawGraph( document, graphText, branchHistory, history){
     //
     // Pass 1 : Loop each row - collect commit info
     //
+    
+    /*
+        Get values from graphText (which comes from 'git log graph'), and store commits
+        
+        Commits stored two ways :
+            commitArray[row]
+            nodeMap.set( thisCommit.hash, thisCommit);
+        
+        For each row, the struct is populated :
+            thisCommit.hash                 - commit hash
+            thisCommit.parents              - array of parents
+            thisCommit.notFoundInSearch     - true is the commits reachable from pragma-git ( false if on other branch, or filtered by search)
+            thisCommit.message              - commit message
+            thisCommit.decoration           - commit decoration (branch HEAD, tag, etc)
+            thisCommit.branchName           - derived from 1) Notes, 2) from decoration. Decoration wins if conflict
+            thisCommit.unknownBranchName    - if branch name not determined
+            thisCommit.y                    - row
+     
+     */
         let line = 0; 
         
         
@@ -361,19 +380,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             // Style if commit is not in history (because of search)
             let index = util.findObjectIndex( history, 'hash', hashInThisRow );
             let notFoundInSearch = isNaN( index);  // history shorter than full git log and branchHistory, because of search 
-    
-            // Figure out if known or current branch
-            let colorFileName = unsetNodeImageFile;
-            let tooltipText = 'unknown';
 
-            // When branch is known from Notes
-            let x0 = graphNodeIndex;  // Guessed index from git log graph '*' position
-            if ( branchNames.has(noteInThisRow) && (MODE == 'swim-lanes')){
-                x0 = branchNames.get(noteInThisRow);  // In column coordinates
-            }
-             
-            // Add message text 
-            //graphContent += parseMessage( hashInThisRow, thisRow, decoration, notFoundInSearch, line)
                      
             // Add date (only print when date is different to previous)
             if (date == previousDate){
@@ -419,12 +426,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                 thisCommit.decoration = decoration;
                 
                 
-            // Alt 1 : branchName if in Note
-                thisCommit.branchName = noteInThisRow;  // Name from note
-                //thisCommit.branchName = "";
-                
+            // Alt 1 : branchName in Note
+                thisCommit.branchName = noteInThisRow;  // branchName from note, or ""
+
             
-            // Alt 2: Override note, if found from decoration
+            // Alt 2: Override branchName from decoration
                 thisCommit.unknownBranchName = true;
                 let test = decoration; 
                 localBranchList.forEach( 
@@ -445,20 +451,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                 
             
-            // Coordinates
-            thisCommit.y = line; 
+            // Row number
             
-            thisCommit.x = x0;              	// Alt 1) Swim-lanes
-          	if (MODE == 'git-log-graph') {
-            	thisCommit.x = graphNodeIndex;  // Alt 2) Git-log --graph )
-                
-                if ( graphNodeIndex > NUMBER_OF_BRANCHES ){
-                    NUMBER_OF_BRANCHES = graphNodeIndex + 1;
-                }
-                
-        	}else{
-                NUMBER_OF_BRANCHES = branchNames.size + 1;
-            }
+                thisCommit.y = line; 
+
             
 
             // Store thisCommit
@@ -469,7 +465,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         } // End for
         
       
-         NUMBER_OF_KNOWN_BRANCHES =  NUMBER_OF_BRANCHES - 1;  // These are # with identified branchNames
+         NUMBER_OF_KNOWN_BRANCHES = branchNames.size;
          let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
  
 
@@ -492,8 +488,18 @@ async function drawGraph( document, graphText, branchHistory, history){
               *    afterEndOfSegment      not on segment   (branchPoint)      END when DEBUG==true
                
               First-parents afterEndOfSegment may have an unknown branch name.  Lane 0 is reserved for unknown first-parent branches.
-
         */
+    
+        /*      
+            Add following fields to commit-struct created in PASS 1 :
+                commit.x                        - the lane to display the commit node
+                commit.occupiedColumns          - array, each element represent a lane. Each stores a number which is the row of next commit in that lane.
+                                                  If the number is the same as the array element number, the lane is free 
+                                                  (example: [229, 1, 2, 512], means that lane 1 and 2 are free)
+                commit.START                    - see above drawing. Start of segment. Commit before mergepoint
+                commit.END                      - see above drawing. End of segment. Branchpoint
+         
+         */
          
         for(var i = 0; i < commitArray.length; i++) {
             
@@ -515,7 +521,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
             
             
-            // Start of Segment -- assign branch
+            // Start of Segment -- get lane + assign branch if unknown
             if ( isStartOfSegment(commit)  ){ 
                 commit.START = true;
                 
@@ -525,25 +531,34 @@ async function drawGraph( document, graphText, branchHistory, history){
                 // Assign a branchname if unknown
                 if ( !branchNames.has(commit.branchName)){
                     commit.branchName = commit.hash;  // Name of branch = hash of latest commit
-                    
-                    //NUMBER_OF_BRANCHES = branchNames.size +1; 
-                    //branchNames.set( commit.branchName, NUMBER_OF_BRANCHES);  // Register lane for this branch
-                    
                     branchNames.set( commit.branchName, getBestLane(commit));
+                    NUMBER_OF_BRANCHES = branchNames.size +1; 
                 }
                 
-                commit.x = branchNames.get( commit.branchName);
-
-                console.log( `i = ${i}   NEW SEGMENT ${branchNames.get( commit.branchName)} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
-            }
-
-            
-            // On a segment
-
-                       
+                // Set lane
+                if (MODE == 'swim-lanes') {  
+                    commit.x = branchNames.get( commit.branchName);
+                }   
+                if (MODE == 'git-log-graph') {  
+                    commit.x = getBestLane(commit) ;
+                }
                 
+
+                console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
+
+            }
+            
+
+            // On a segment
+                 
+                // If known branch
+                if (commit.x == undefined){
+                    commit.branchName = "";
+                }
+                  
                 // If unknown branch name -- get branchname and lane from child 
                 nameUnknownBranchFromPriorInSegment(commit);
+
                 
                 // Mark as occupied
                 markLaneAsOccupied(commit);             
@@ -618,8 +633,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                     */
 
                     let lowestY  = commit.y;  // Start search at this commit
-
-                    
+               
                     // Find child that starts furthest up
                     let childrenHashes;
                     if (childMap.has(commit.hash) ){
@@ -634,7 +648,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                     
                     }else{
                         // Typically this happens at HEAD of a branch
-                        lowestY = commit.y + 1;  // Next commit
+                        lowestY = commit.y - 1;  // Next commit
+                        if (lowestY < 0){  // Top of graph
+                            lowestY = 0;
+                        }
                     }
                     
                     // Find highest occupied column in range between lowestY and commit
@@ -788,6 +805,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                             if ( child.parents[0] == commit.hash ){ 
                                 // Found the child to copy from
                                 if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
+                                //if (commit.unknownBranchName  ){
+                                //if (true){
                                     commit.branchName = child.branchName;
                                     commit.x = child.x;
                                     commit.unknownBranchName = child.unknownBranchName;
@@ -868,7 +887,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         for(var j = 0; j < commitArray.length - 1; j++) { 
             let id = 'img_' + commitArray[j].hash;
             //drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].notFoundInSearch,id );
-            drawNode( draw, commitArray[j].x, commitArray[j].y, commitArray[j].branchName, commitArray[j].unknownBranchName,id );
+            drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
             
         }
            
@@ -886,6 +905,23 @@ async function drawGraph( document, graphText, branchHistory, history){
     
         toggleDate( state.graph.showdate); // Show / hide date column    
 
+
+        // Draw circle in correct color
+        let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
+        if ( branchNames.has(branchName) ){
+
+            if ( branchNames.get(branchName) < NUMBER_OF_KNOWN_BRANCHES ){
+                
+                // Get image file name
+                let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
+                let colorName = colorImageNameDefinitions[ colorNumber];
+                colorFileName = `images/circle_colors/circle_${colorName}.png`;
+                
+                // Change HTML image
+                document.getElementById('headerBranchCircle').src = colorFileName;
+            }
+        } 
+ 
     
         function drawConnection( draw, commit, child, R, numberOfChildren){
             
@@ -1043,7 +1079,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
     
         };
-        function drawNode( draw, x0, y0, branchName, notFoundInSearch, id){
+        function drawNode( draw, commit, branchName, notFoundInSearch, id){
+            
+            let x0 = commit.x;
+            let y0 = commit.y;
             
             // Figure out if known or current branch
             let colorFileName;
