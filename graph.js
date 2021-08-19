@@ -453,7 +453,6 @@ async function drawGraph( document, graphText, branchHistory, history){
                     (entry) => { 
                         if (test.includes(entry)) { 
                             thisCommit.branchName = entry;
-                            //thisCommit.unknownBranchName = false;
                         };
                     } 
                 )
@@ -528,8 +527,8 @@ async function drawGraph( document, graphText, branchHistory, history){
         }
         
         // Placement of unknown nodes
-        let COMPRESSUNKNOWN1 = false;    // Unknown node placement.  
-        let COMPRESSUNKNOWN2 = COMPRESS;   // Connection placement. True = find free lane starting from left
+        let COMPRESSUNKNOWN1 = true;        // Unknown node placement -- find first. 
+        let COMPRESSUNKNOWN2 = COMPRESS;   // Connection placement. True = find free lane starting from left.  False = find last free lane (to the right)
                     
         for(var i = 0; i < commitArray.length; i++) {
 
@@ -563,15 +562,6 @@ async function drawGraph( document, graphText, branchHistory, history){
                         branchNames.set( commit.branchName, bestLane );
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
                     }
-                    
-                    // Set lane
-                    if (MODE == 'swim-lanes') {  
-                        commit.x = branchNames.get( commit.branchName);
-                    }   
-                    if (MODE == 'git-log-graph') {  
-                        commit.x = getBestLane(commit, COMPRESS) ;
-                    }
-                    
     
                     console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
     
@@ -580,16 +570,22 @@ async function drawGraph( document, graphText, branchHistory, history){
             //
             // On a segment
             //
-                 
-                // If known branch
-                if (commit.x == undefined){
-                    commit.branchName = "";
-                }
+                     
+                    // Set lane
+                    if (MODE == 'swim-lanes') {  
+                        commit.x = branchNames.get( commit.branchName);
+                    }   
+                    if (MODE == 'git-log-graph') {  
+                        commit.x = getBestLane(commit, COMPRESS) ;
+                    }
+
                   
-                // If unknown branch name -- get branchname and lane from child 
-                nameUnknownBranchFromPriorInSegment(commit);
+                // Get lane if same branch as prior.
+                // Copy branchName from firstChild if branchName is unknown ( child having this as first parent)
+                copyFromPriorInSegment(commit);
                 
-               // Make space for connections between nodes
+                
+               // Reserve space for connections between nodes
                 let hashInThisRow = commit.hash;
                 if ( childMap.has( hashInThisRow ) ){
                     let childHashes = childMap.get(hashInThisRow);
@@ -599,8 +595,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                         let x1 = child.x;
                         let y1 = child.y;
                         
-                        // Get new lane, if crossing a commit 
-                       if ( isCrossingNode( commit, child) ){
+                        // Get new lane, if crossing a commit lane 
+                       if ( isCrossingNodeOrLane( commit, child) ){
                             let lineCol = getBestLane(commit, COMPRESSUNKNOWN2);  // Find first free lane (false = rightmost)
                             console.log('lineCol = ' + lineCol);
                             markConnectionAsOccupied(commit, child, lineCol)
@@ -890,7 +886,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             return    
 
         };
-        function isCrossingNode( commit, child){
+        function isCrossingNodeOrLane( commit, child){
             
             let x0 = commit.x;
             let x1 = child.x;
@@ -1284,7 +1280,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         return (count >= 1);  // True if one or more 
   
     }
-    function nameUnknownBranchFromPriorInSegment(commit){
+    function copyFromPriorInSegment(commit){
         /*
          Copy info from child, if in same segment as child
                     *      child
@@ -1296,11 +1292,10 @@ async function drawGraph( document, graphText, branchHistory, history){
             let childrenHashes = childMap.get( commit.hash );
             for(var i = 0; i < childrenHashes.length; i++){
                 let child = nodeMap.get( childrenHashes[i] );
-                if ( child.parents[0] == commit.hash ){ 
+                if ( child.parents[0] == commit.hash ){ // Copy from first-parent
                     // Found the child to copy from
-                    if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
-                    //if (commit.unknownBranchName  ){
-                    //if (true){
+                    //if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
+                    if ( (commit.branchName == "") || ( commit.branchName == child.branchName) ){ 
                         commit.branchName = child.branchName;
                         commit.x = child.x;
                         commit.unknownBranchName = child.unknownBranchName;
