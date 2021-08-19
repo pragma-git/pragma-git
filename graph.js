@@ -1192,49 +1192,61 @@ async function drawGraph( document, graphText, branchHistory, history){
     }
     function getFreeLane(commit, COMPRESS){
         // Look for lowest row-number in all children
-
+        // That of parent[0] 
+        
         /*
            commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
            
-           Best lane is the next lane  which is not occupied 
+           Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
+         
+           The lane must be available from the child that is furthest up, called lowestY down to the commit.
            
-           Lane 0 is reserved for unknown first-parents.  
-           Lane 0 is also where first row starts
+           Lane 0 is reserved for unknown first-parents
          
          
         */
 
-        let row  = commit.y - 1;  // Start search at this commit
+        let lowestY  = commit.y;  // Start search at this commit
+   
+        // Find child that starts furthest up
+            let childrenHashes;
+            if (childMap.has(commit.hash) ){
+                childrenHashes = childMap.get( commit.hash );                
+                for(let i = 0; i < childrenHashes.length; i++){
+                    let child = nodeMap.get(childrenHashes[i]);
 
-        if (row < 0){  // Top of graph
-            return 0
-        }
-                     
+                    if (child.y < lowestY){
+                        lowestY = child.y;
+                    }
+                }
+            
+            }else{
+                // Typically this happens at HEAD of a branch
+                lowestY = commit.y - 1;  // Next commit
+                if (lowestY < 0){  // Top of graph
+                    lowestY = 0;
+                }
+            }
         
         // Find highest occupied column in range between lowestY and commit
-        let highestOccupiedCol = 1; // Column 0 is reserved for first-parent. Search from next column
-        
-            let c = commitArray[row].occupiedColumns; // array with row for next commit for each lane 
+            let highestOccupiedCol = 1; // Column 0 is reserved for first-parent. Search from next column
             
-            // Find next occupied column      
-            let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
-            while ( col < c.length ){
+            for(let row = lowestY; row < commit.y ; row++){
+                let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
+                console.log(c.toString());
                 
-                // Lane that ends at commit is free to use
-                if ( commit.y == c[col] ){
-                    highestOccupiedCol = col;
-                    break
+                // Find next occupied column      
+                let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
+                while ( col < c.length ){
+                    if ( row < c[col] ){
+                        highestOccupiedCol = col + 1;
+                    }else{
+                        // Here is the first non-occupied lane at this row
+                        if (COMPRESS)
+                            break  
+                    }
+                    col++;
                 }
-                
-                // Occupied if lane stops after row
-                if ( row < c[col] ){
-                    highestOccupiedCol = col + 1;
-                }else{
-                    // Here is the first non-occupied lane at this row
-                    if (COMPRESS)
-                        break  
-                }
-                col++;
             }
             
         return highestOccupiedCol
