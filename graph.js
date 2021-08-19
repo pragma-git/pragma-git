@@ -674,7 +674,6 @@ async function drawGraph( document, graphText, branchHistory, history){
              *    x0, y0 is coordinate of a commit
           
         */
-    
         for(var j = 0; j < commitArray.length - 1; j++) { 
  
             let commit = commitArray[j];
@@ -728,6 +727,69 @@ async function drawGraph( document, graphText, branchHistory, history){
                     document.getElementById('headerBranchCircle').src = colorFileName;
                 }
             } 
+            
+            
+            // Node mouseover events
+            var arrElem = document.getElementsByTagName('image');
+            
+            for (var i = arrElem.length; i-- ;) {
+                
+                
+                arrElem[i].onmouseout = function(e) {
+                    document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+                };
+                
+                
+                arrElem[i].onmouseover = function(e) {
+                    console.log(e);
+                    let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+                    let commit = nodeMap.get(hash);
+                      
+                    console.log( 'commit : ' + commit.message );
+                    
+                    let imageSrc = e.target.href.baseVal;
+                    
+                    // Parents      
+                    let parentHashes = commit.parents;
+                    let ParentHeader = 'Parent';
+                    if (parentHashes.length > 1)
+                        ParentHeader = 'Parents';
+                    
+                    // HTML Commit
+                    let html =``
+                    
+                    html += `<B>Branch </B> : <BR> 
+                         <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
+                            <span style = "left: 30 px; position: relative"> ${commit.branchName} </span>
+                         </div>
+                         <BR><BR>`
+                    
+                    html += `
+                        <B>Commit : </B> <BR>
+                        &nbsp; "${commit.message} "<BR><BR>
+                        &nbsp; hash : ${commit.hash} <BR><BR>`
+                    
+                    // HTML Parents   
+                    html += `<B> ${ParentHeader} : </B> <BR>` 
+                    
+                    for (let i = 0; i < parentHashes.length; i++){
+                        html +=  '&nbsp; ' + '"' + nodeMap.get( parentHashes[i] ).message  + '"<BR>';
+                    }
+                    
+                    html +='<BR>';
+                    for (let i = 0; i < parentHashes.length; i++){
+                        html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
+                    }
+                        
+                    
+                    document.getElementById('displayedMouseOver').innerHTML = html;
+                      
+                    document.getElementById('displayedMouseOver').style.visibility = 'visible';
+                    document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
+                    document.getElementById('displayedMouseOver').style.top = e.clientY;
+                };
+                
+            }
      
         }   
 

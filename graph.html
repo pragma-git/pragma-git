@@ -94,7 +94,6 @@
         }
         
         .colorHeaderText{
-            cursor: pointer;
             font-size: inherit;
             right: -5px
         }
@@ -110,21 +109,33 @@
         }
         
                
-        .rightInsert {
+        .rightInsert, .infoInsert {
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
-            position: fixed;
-            z-index: 20;
             border-color: var(--border-color);
             border-style: dotted;
             border-width: thin;
             padding: 10px;
-            right: 15px;
-            margin-top: 120px;
             opacity: 0.8;
         }
+         
+               
+        .rightInsert {
+            right: 15px;
+            margin-top: 120px;
+            z-index: 20;
+            position: fixed;
+        }      
         
+        .infoInsert {
+            left: 15px;
+            z-index: 30;
+            position: fixed;
+            visibility: collapse;
+        }
+        
+         
         .branchNameEditInsert{
             background-color: var(--body-background);
             width: fit-content;
@@ -151,7 +162,6 @@
 
         .text{
             width: fit-content;
-            cursor: pointer;
             font-size: inherit;
             clear: left;
             height: var(--textRowHeight);
@@ -161,7 +171,6 @@
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
         .courier{ 
             width: auto;
-            cursor: pointer;
             font-size: inherit;
             font-family: monospace;
         }
@@ -179,14 +188,12 @@
         }
         
         .node {
-            left: -20px;
             position: absolute;
             top: 2px;
             left: 0.5px;
-            height: 50%;
+            height: 12px;
             /* width: 100%; */
             z-index: 10;
-            cursor: help;
             width: 12px;
             left: -20;
         }        
@@ -355,6 +362,15 @@
             </div>
         
          </div> 
+         
+         
+
+        
+        
+         <div id="displayedMouseOver"  class="infoInsert" style="width:fit-content;">  
+ 
+         </div>          
+         
   
          
     </body>      
@@ -402,8 +418,6 @@
         }, { passive: false });
   
 
-        
- 
     
     
         //
