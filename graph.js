@@ -557,7 +557,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
                         // Lane for unknown branch should land compressed, instead of to far right
-                        let bestLane = getBestLane(commit, COMPRESSUNKNOWN1); 
+                        let bestLane = getFreeLane(commit, COMPRESSUNKNOWN1); 
                         
                         branchNames.set( commit.branchName, bestLane );
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
@@ -571,13 +571,13 @@ async function drawGraph( document, graphText, branchHistory, history){
             // On a segment
             //
                      
-                    // Set lane
-                    if (MODE == 'swim-lanes') {  
-                        commit.x = branchNames.get( commit.branchName);
-                    }   
-                    if (MODE == 'git-log-graph') {  
-                        commit.x = getBestLane(commit, COMPRESS) ;
-                    }
+                // Set lane
+                if (MODE == 'swim-lanes') {  
+                    commit.x = branchNames.get( commit.branchName);
+                }   
+                if (MODE == 'git-log-graph') {  
+                    commit.x = getFreeLane(commit, COMPRESS) ;
+                }
 
                   
                 // Get lane if same branch as prior.
@@ -597,7 +597,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                         
                         // Get new lane, if crossing a commit lane 
                        if ( isCrossingNodeOrLane( commit, child) ){
-                            let lineCol = getBestLane(commit, COMPRESSUNKNOWN2);  // Find first free lane (false = rightmost)
+                            let lineCol = getFreeLane(commit, COMPRESSUNKNOWN2);  // Find first free lane (false = rightmost)
                             console.log('lineCol = ' + lineCol);
                             markConnectionAsOccupied(commit, child, lineCol)
                         }
@@ -619,9 +619,6 @@ async function drawGraph( document, graphText, branchHistory, history){
                     commit.END = true;
 
                    // Set first-parent (if branch was not explicitly named)
-                   //if ( isFirstParent(commit) && branchNames.has(commit.branchName) && (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES)){
-                   //let isUnknownBranch = (branchNames.get(commit.branchName) > NUMBER_OF_KNOWN_BRANCHES);
-                   
                    let isUnknownBranch = commit.unknownBranchName;
                    if ( isOnFirstParentLane(commit) && isUnknownBranch ){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
@@ -1104,63 +1101,51 @@ async function drawGraph( document, graphText, branchHistory, history){
             console.log(row);
         }
     }
-    function getBestLane(commit, COMPRESS){
+    function getFreeLane(commit, COMPRESS){
         // Look for lowest row-number in all children
-        // That of parent[0] 
-        
+
         /*
            commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
            
-           Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
-         
-           The lane must be available from the child that is furthest up, called lowestY down to the commit.
+           Best lane is the next lane  which is not occupied 
            
-           Lane 0 is reserved for unknown first-parents
+           Lane 0 is reserved for unknown first-parents.  
+           Lane 0 is also where first row starts
          
          
         */
 
-        let lowestY  = commit.y;  // Start search at this commit
-   
-        // Find child that starts furthest up
-            let childrenHashes;
-            if (childMap.has(commit.hash) ){
-                childrenHashes = childMap.get( commit.hash );                
-                for(let i = 0; i < childrenHashes.length; i++){
-                    let child = nodeMap.get(childrenHashes[i]);
+        let row  = commit.y - 1;  // Start search at this commit
 
-                    if (child.y < lowestY){
-                        lowestY = child.y;
-                    }
-                }
-            
-            }else{
-                // Typically this happens at HEAD of a branch
-                lowestY = commit.y - 1;  // Next commit
-                if (lowestY < 0){  // Top of graph
-                    lowestY = 0;
-                }
-            }
+        if (row < 0){  // Top of graph
+            return 0
+        }
+                     
         
         // Find highest occupied column in range between lowestY and commit
-            let highestOccupiedCol = 1; // Column 0 is reserved for first-parent. Search from next column
+        let highestOccupiedCol = 1; // Column 0 is reserved for first-parent. Search from next column
+        
+            let c = commitArray[row].occupiedColumns; // array with row for next commit for each lane 
             
-            for(let row = lowestY; row < commit.y ; row++){
-                let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
-                console.log(c.toString());
+            // Find next occupied column      
+            let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
+            while ( col < c.length ){
                 
-                // Find next occupied column      
-                let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
-                while ( col < c.length ){
-                    if ( row < c[col] ){
-                        highestOccupiedCol = col + 1;
-                    }else{
-                        // Here is the first non-occupied lane at this row
-                        if (COMPRESS)
-                            break  
-                    }
-                    col++;
+                // Lane that ends at commit is free to use
+                if ( commit.y == c[col] ){
+                    highestOccupiedCol = col;
+                    break
                 }
+                
+                // Occupied if lane stops after row
+                if ( row < c[col] ){
+                    highestOccupiedCol = col + 1;
+                }else{
+                    // Here is the first non-occupied lane at this row
+                    if (COMPRESS)
+                        break  
+                }
+                col++;
             }
             
         return highestOccupiedCol
