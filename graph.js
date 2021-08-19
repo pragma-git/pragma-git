@@ -755,32 +755,59 @@ async function drawGraph( document, graphText, branchHistory, history){
                     if (parentHashes.length > 1)
                         ParentHeader = 'Parents';
                     
-                    // HTML Commit
+                    // HTML 
                     let html =``
                     
-                    html += `<B>Branch </B> : <BR> 
-                         <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
-                            <span style = "left: 30 px; position: relative"> ${commit.branchName} </span>
+                    
+                    // HTML Branch
+                    html += `<div><B> Branch </B> = &nbsp; 
+                        <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
+                        <span> ${commit.branchName} </span>
+                         </div>
+                         <BR><BR>` 
+                         
+                    html += '<HR><BR>'               
+                    
+                    
+                    // HTML Commit
+                    html += `<B>Commit </B> : <BR><BR> 
+                         <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                            <span style = "left: 30 px; position: relative"> ${commit.message} </span>
                          </div>
                          <BR><BR>`
                     
-                    html += `
-                        <B>Commit : </B> <BR>
-                        &nbsp; "${commit.message} "<BR><BR>
-                        &nbsp; hash : ${commit.hash} <BR><BR>`
+                    html += ` &nbsp; hash : ${commit.hash} <BR><BR>`
+                    
+                    
+                    html += '<HR><BR>' 
+                    
                     
                     // HTML Parents   
-                    html += `<B> ${ParentHeader} : </B> <BR>` 
+                    html += `<B> ${ParentHeader} : </B> <BR><BR>` 
                     
                     for (let i = 0; i < parentHashes.length; i++){
-                        html +=  '&nbsp; ' + '"' + nodeMap.get( parentHashes[i] ).message  + '"<BR>';
+                        //html +=  '&nbsp; ' + '"' + nodeMap.get( parentHashes[i] ).message  + '"<BR>';
+                        
+                        html += ` <div> &nbsp; 
+                            <img class="node" src="${getColorFileName(nodeMap.get( parentHashes[i] ).branchName)}" style="display:inline; position : unset" > &nbsp;
+                            <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
+                         </div>
+                          <BR>`
                     }
                     
-                    html +='<BR>';
+                    html +='<BR><div>';
+                    
+                    
+                    // HTML Parent Hashes
                     for (let i = 0; i < parentHashes.length; i++){
                         html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
                     }
+                    
+                    
+                    html +='</div>';
                         
+                    
+                    // Display HTML 
                     
                     document.getElementById('displayedMouseOver').innerHTML = html;
                       
