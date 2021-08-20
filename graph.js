@@ -785,10 +785,12 @@ async function drawGraph( document, graphText, branchHistory, history){
                     html += `<B> ${ParentHeader} : </B> <BR><BR>` 
                     
                     for (let i = 0; i < parentHashes.length; i++){
-                        //html +=  '&nbsp; ' + '"' + nodeMap.get( parentHashes[i] ).message  + '"<BR>';
-                        
+
+                         let id = "img_" + parentHashes[i];
+                         let imageSrc = document.getElementById(id).href.baseVal;
+                         
                         html += ` <div> &nbsp; 
-                            <img class="node" src="${getColorFileName(nodeMap.get( parentHashes[i] ).branchName)}" style="display:inline; position : unset" > &nbsp;
+                            <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                             <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
                          </div>
                           <BR>`
