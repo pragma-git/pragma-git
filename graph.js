@@ -481,8 +481,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         
       
          NUMBER_OF_KNOWN_BRANCHES = branchNames.size;
-         let HIGHEST_LANE = NUMBER_OF_KNOWN_BRANCHES;
- 
+         let HIGHEST_LANE = 1;
 
      //
      // PASS 2 :  x-position  +  draw connections
@@ -1134,16 +1133,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         
                     return noteInThisRow;
                 }
-        function isDumbRow(s){
-            // Dumb row is defined as consisting only of '|' connections, without any nodes
-            // This can occur because of git log format, where %N causes an extra line-break - a "dumb" line
-            for(let j = 0 ; j < s.length ; j++){
-                if ( ( s[j] !== '|' ) && ( s[j] !== ' ' ) ){ // Other character than '|' or ' ' => not dumb row
-                    return false
-                }
-            }
-            return true
-        }
+
                
         }
       
