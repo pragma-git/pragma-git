@@ -698,7 +698,7 @@ async function drawGraph( document, graphText, branchHistory, history){
 
     
     // 
-    // Attach data to HTML
+    // Attach graph and text to HTML
     //
         {
             document.getElementById('datesSwimLane').innerHTML = dateContent;      
@@ -727,95 +727,135 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
             } 
             
-            
-            // Node mouseover events
-            var arrElem = document.getElementsByTagName('image');
-            
-            for (var i = arrElem.length; i-- ;) {
+            //
+            // Circle mouse events
+            //
+                var arrElem = document.getElementsByTagName('image');
                 
-                
-                arrElem[i].onmouseout = function(e) {
-                    document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-                };
-                
-                
-                arrElem[i].onmouseover = function(e) {
-                    console.log(e);
-                    let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+                // Size utility function
+                function sizeNodes( hash, size){
+                    let node = draw.node.getElementById( 'img_' + hash);
                     let commit = nodeMap.get(hash);
-                      
-                    console.log( 'commit : ' + commit.message );
                     
-                    let imageSrc = e.target.href.baseVal;
+                    let X0 = LEFT_OFFSET + commit.x * COL_WIDTH;
+                    let Y0 = TOP_OFFSET + commit.y * ROW_HEIGHT
                     
-                    // Parents      
-                    let parentHashes = commit.parents;
-                    let ParentHeader = 'Parent';
-                    if (parentHashes.length > 1)
-                        ParentHeader = 'Parents';
-                    
-                    // HTML 
-                    let html =``
-                    
-                    
-                    // HTML Branch
-                    html += `<div><B> Branch </B> = &nbsp; 
-                        <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
-                        <span> ${commit.branchName} </span>
-                         </div>
-                         <BR><BR>` 
-                         
-                    html += '<HR><BR>'               
-                    
-                    
-                    // HTML Commit
-                    html += `<B>Commit </B> : <BR><BR> 
-                         <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                            <span style = "left: 30 px; position: relative"> ${commit.message} </span>
-                         </div>
-                         <BR><BR>`
-                    
-                    html += ` &nbsp; hash : ${commit.hash} <BR><BR>`
-                    
-                    
-                    html += '<HR><BR>' 
-                    
-                    
-                    // HTML Parents   
-                    html += `<B> ${ParentHeader} : </B> <BR><BR>` 
-                    
-                    for (let i = 0; i < parentHashes.length; i++){
+                    SVG( node )
+                        .size(size,size)
+                        .move( X0 - 0.5 * size , Y0 - 0.5 * size);
+                }
+                
+                // Add mouse events for each circle
+                for (var i = arrElem.length; i-- ;) {
+                
 
-                         let id = "img_" + parentHashes[i];
-                         let imageSrc = document.getElementById(id).href.baseVal;
-                         
-                        html += ` <div> &nbsp; 
-                            <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                            <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
-                         </div>
-                          <BR>`
-                    }
+                    // onmouseout     
+                                   
+                    arrElem[i].onmouseout = function(e) {
+                        document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+                        
+                        // Change node sizes
+                        let hash = e.target.id.substring(4);  // Because element id starts with "img_" followed by hash
+                        sizeNodes( hash, IMG_H)
+                        
+                        // Change parent sizes
+                        let commit = nodeMap.get(hash);
+                        let parentHashes = commit.parents;
+                        for (let i = 0; i < parentHashes.length; i++){
+                            sizeNodes( parentHashes[i], IMG_H);
+                        }
+                    };
                     
-                    html +='<BR><div>';
+                    
+                    // onmouseover
+                    
+                    arrElem[i].onmouseover = function(e) {
+                        console.log(e);
+                        let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+                        let commit = nodeMap.get(hash);
+                          
+                        console.log( 'commit : ' + commit.message );
+                        
+                        let imageSrc = e.target.href.baseVal;
+                        
+                        // Parents      
+                        let parentHashes = commit.parents;
+                        let ParentHeader = 'Parent';
+                        if (parentHashes.length > 1)
+                            ParentHeader = 'Parents';
+                        
+                        // HTML 
+                        let html =``
+                        
+                        
+                        // HTML Branch
+                        html += `<div><B> Branch </B> = &nbsp; 
+                            <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
+                            <span> ${commit.branchName} </span>
+                             </div>
+                             <BR><BR>` 
+                             
+                        html += '<HR><BR>'               
+                        
+                        
+                        // HTML Commit
+                        html += `<B>Commit </B> : <BR><BR> 
+                             <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                                <span style = "left: 30 px; position: relative"> ${commit.message} </span>
+                             </div>
+                             <BR><BR>`
+                        
+                        html += ` &nbsp; hash : ${commit.hash} <BR><BR>`
+                        
+                        
+                        html += '<HR><BR>' 
+                        
+                         // Change node size
+                        sizeNodes( hash, IMG_H + 6);
+                        
+                        
+                        // HTML Parents   
+                        html += `<B> ${ParentHeader} : </B> <BR><BR>` 
+                        
+                        for (let i = 0; i < parentHashes.length; i++){
+    
+                             let id = "img_" + parentHashes[i];
+                             let imageSrc = document.getElementById(id).href.baseVal;
+                             
+                            html += ` <div> &nbsp; 
+                                <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                                <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
+                             </div>
+                              <BR>`
+                              
+                            // Change parent node size  
+                            sizeNodes( parentHashes[i], IMG_H + 6); 
+                        }
+                        
+                        html +='<BR><div>';
+                        
+                        
+                        // HTML Parent Hashes
+                        for (let i = 0; i < parentHashes.length; i++){
+                            html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
+                        }
+                        
+                        
+                        html +='</div>';
+                            
+                        
+                        // Display HTML 
+                        
+                        document.getElementById('displayedMouseOver').innerHTML = html;
+                          
+                        document.getElementById('displayedMouseOver').style.visibility = 'visible';
+                        document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
+                        document.getElementById('displayedMouseOver').style.top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;                
                     
                     
-                    // HTML Parent Hashes
-                    for (let i = 0; i < parentHashes.length; i++){
-                        html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
-                    }
-                    
-                    
-                    html +='</div>';
                         
                     
-                    // Display HTML 
-                    
-                    document.getElementById('displayedMouseOver').innerHTML = html;
-                      
-                    document.getElementById('displayedMouseOver').style.visibility = 'visible';
-                    document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
-                    document.getElementById('displayedMouseOver').style.top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;                
-                };
+                    };
                 
             }
      
