@@ -280,20 +280,18 @@ function toggleDate( show){
 }
 
 // Git
-async function gitCommitMessage(hash){ // TODO: remove 
+async function gitCommitAuthor(hash){ 
     let folder = state.repos[ state.repoNumber].localFolder;
     let text = '';
     try{
-        // Emulate 'git show -s --format=%s ' with addition of long-hash at end
-        let commands = [ 'show', '-s', '--format=%B', hash]; // %B multi-line message
-        await simpleGit( folder).raw(  commands, onReadCommitMessage);
-        function onReadCommitMessage(err, result ){text = result; console.log(result); };
+        let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
+        await simpleGit( folder).raw(  commands, onGitCommitAuthor);
+        function onGitCommitAuthor(err, result ){text = result; console.log(result); };
     }catch(err){        
         console.log(err);
     }
     return text;
 }
-
 // Graphics
 async function drawGraph( document, graphText, branchHistory, history){
     // document :       HTML document
@@ -759,10 +757,13 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                 // onmouseover
                 
-                arrElem[i].onmouseover = function(e) {
+                arrElem[i].onmouseover = async function(e) {
                     console.log(e);
                     let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
                     let commit = nodeMap.get(hash);
+                    
+                    // Get git author
+                    let author = await gitCommitAuthor(hash);
                       
                     console.log( 'commit : ' + commit.message );
                     
@@ -795,7 +796,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                          </div>
                          <BR><BR>`
                     
-                    html += ` &nbsp; hash : ${commit.hash} <BR><BR>`
+                    html += ` &nbsp; author : ${author} <BR><BR>`
+                    html += ` &nbsp; hash   : ${commit.hash} <BR><BR>`
                     
                     
                     html += '<HR><BR>' 
