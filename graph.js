@@ -791,9 +791,9 @@ async function drawGraph( document, graphText, branchHistory, history){
                     
                     // HTML Commit
                     html += `<B>Commit </B> : <BR><BR> 
-                         <div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                         <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                             <span style = "left: 30 px; position: relative"> ${commit.message} </span>
-                         </div>
+                         </div></b>
                          <BR><BR>`
                     
                     html += ` &nbsp; author : ${author} <BR><BR>`
@@ -814,10 +814,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                          let id = "img_" + parentHashes[i];
                          let imageSrc = document.getElementById(id).href.baseVal;
                          
-                        html += ` <div> &nbsp; 
+                        html += ` <b><div> &nbsp; 
                             <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                             <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
-                         </div>
+                         </div></b>
                           <BR>`
                           
                         // Change parent node size  
