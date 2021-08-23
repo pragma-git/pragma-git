@@ -117,7 +117,7 @@ async function injectIntoJs(document){
         document.getElementById('branchName').innerText = branchName;
         
         // Hide "Show hidden branches checkbox" if no hidden branches
-        if ( state.repos[state.repoNumber].hiddenBranches.length == 0){
+        if (( state.repos[state.repoNumber].hiddenBranches == undefined ) || ( state.repos[state.repoNumber].hiddenBranches.length == 0) ){
             document.getElementById('hiddenBranchesDiv').style.contentVisibility = 'hidden' ;
         }
         
