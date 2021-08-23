@@ -75,6 +75,7 @@ async function injectIntoJs(document){
     //  
         document.getElementById('showDate').checked = state.graph.showdate;
         document.getElementById('showAll').checked = state.graph.showall;
+        document.getElementById('showHidden').checked = state.graph.showHiddenBranches;
         document.getElementById('graph_mode_switch').checked = state.graph.swimlanes;
         colorSwitchTexts(); // Set switch-text-colors (see graph.html)
         
@@ -114,7 +115,11 @@ async function injectIntoJs(document){
         let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
-
+        
+        // Hide "Show hidden branches checkbox" if no hidden branches
+        if ( state.repos[state.repoNumber].hiddenBranches.length == 0){
+            document.getElementById('hiddenBranchesDiv').style.contentVisibility = 'hidden' ;
+        }
         
     //
     // Create git-log commands
@@ -223,7 +228,20 @@ function getColorFileName( name){
     }
     return colorFileName
 }
-
+function showBranch( branchName){ // True if branch should be shown (in contrast to hidden)
+    if (state.graph.showHiddenBranches ){
+        return true;
+    }else{
+        return !state.repos[state.repoNumber].hiddenBranches.includes(branchName );
+    }
+    
+}
+function registerBranchName( branchName, position){ // Register branch if hidden branches should be shown
+    
+    if ( showBranch( branchName) ){
+        branchNames.set(branchName, position); // Add to branchNames map
+    }
+}
 // Callbacks
 async function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
@@ -256,7 +274,8 @@ function closeWindow(){
     // Store setting
     state.graph.showdate = document.getElementById('showDate').checked;
     state.graph.showall = document.getElementById('showAll').checked;
-    state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if normal git
+    state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if compressed view
+    state.graph.showHiddenBranches = document.getElementById('showHidden').checked;
     opener.saveSettings();
 
     
@@ -438,15 +457,18 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                 
             // Alt 1 : branchName in Note
-                thisCommit.branchName = noteInThisRow;  // branchName from note, or ""
-
+                // branchName from note, or ""
+                thisCommit.branchName = "";  
+                if ( showBranch(noteInThisRow) ) { 
+                    thisCommit.branchName = noteInThisRow;  // branchName from note, or ""
+                }
             
             // Alt 2: Override branchName from decoration
                 thisCommit.unknownBranchName = true;
                 let test = decoration; 
                 localBranchList.forEach( 
                     (entry) => { 
-                        if (test.includes(entry)) { 
+                        if (test.includes(entry) && showBranch(entry) ) { 
                             thisCommit.branchName = entry;
                         };
                     } 
@@ -454,7 +476,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                  // Register branchName and next integer number
                 if ( !branchNames.has(thisCommit.branchName) && ( thisCommit.branchName !== "") ){
-                    branchNames.set(thisCommit.branchName, branchNames.size);
+                    registerBranchName( thisCommit.branchName, branchNames.size);
                 }
                 
                 thisCommit.unknownBranchName = !branchNames.has(thisCommit.branchName);
@@ -547,8 +569,9 @@ async function drawGraph( document, graphText, branchHistory, history){
                         // Lane for unknown branch should land compressed, instead of to far right
                         let bestLane = getFreeLane(commit, COMPRESSUNKNOWN1); 
                         
-                        branchNames.set( commit.branchName, bestLane );
+                        branchNames.set( commit.branchName, bestLane ); // Add branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
+
                     }
     
                     console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
@@ -752,6 +775,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                     for (let i = 0; i < parentHashes.length; i++){
                         sizeNodes( parentHashes[i], IMG_H);
                     }
+                    console.log(commit);
                 };
                 
                 
@@ -1153,16 +1177,14 @@ async function drawGraph( document, graphText, branchHistory, history){
                     let multipleNotes = noteInThisRow.split('\n');
                     let lastNote = multipleNotes[ multipleNotes.length - 2].split(' ');  // Every second row, then split selected by space
                     let endOfLastNote = lastNote[lastNote.length - 1];
-                    
-                    //noteInThisRow = multipleNotes[ multipleNotes.length - 2].split('')[0]; // Take part before last EOL (some graphics curd gets there)
-                    //noteInThisRow = noteInThisRow.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters;
+
                     
                     noteInThisRow = endOfLastNote;
                 
                     
                     if ( !branchNames.has(noteInThisRow) ){
                         // New noteInThisRow
-                        branchNames.set(noteInThisRow, branchNames.size); // Register branchName and next integer number
+                        registerBranchName( noteInThisRow, branchNames.size);// Register branchName and next integer number
                     }
         
                     return noteInThisRow;
@@ -1631,8 +1653,8 @@ async function loopSelectedRange( myFunction){
         let img_id = `img_${hashString}`;
                             
         // Add branchname to map if not existing
-        if ( !branchNames.has(name) ){
-            branchNames.set(name, branchNames.size);  
+        if ( !branchNames.has(name)  ){
+            registerBranchName( name, branchNames.size); 
         }
        
         // Set image

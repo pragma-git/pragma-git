@@ -109,7 +109,7 @@
         }
         
                
-        .rightInsert, .infoInsert {
+        .rightInsert, .infoInsert, .rightDivider {
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
@@ -126,7 +126,19 @@
             margin-top: 120px;
             z-index: 20;
             position: fixed;
-        }      
+        }     
+        
+        
+               
+        .rightDivider {
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            width: -webkit-fill-available;
+        } 
         
         .infoInsert {
             z-index: 30;
@@ -303,14 +315,22 @@
         <div id="rightInsert" class="rightInsert">
 
             <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; toggleDate(state.graph.showdate);"> 
-            <label for="showDate" style="position: relative;" >Show Date</label>
-            
+            <label for="showDate" style="position: relative;" >Dates</label>
             &nbsp;
-
+            
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
             <br>
             <br>
+            
+            <div id=hiddenBranchesDiv>
+            <input id="showHidden" name="showHidden" type="checkbox" onchange="state.graph.showHiddenBranches = !state.graph.showHiddenBranches; injectIntoJs(document);"> 
+            <label for="showHidden" style="position: relative;" >Show Hidden Branches</label>
+            <br>
+            <br>
+            </div>
+            
+            <div class="rightDivider"></div>
             
             <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
             <div id="colorHeader"> 
