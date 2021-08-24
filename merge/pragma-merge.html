@@ -248,6 +248,14 @@
             }
         );     
         window.addEventListener('resize',  initUI );
+
+        window.addEventListener("keydown", event => {
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){
+                finish('save')
+            }
+        });
+          
+          
     </script>  
 
 
