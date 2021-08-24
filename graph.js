@@ -80,6 +80,12 @@ async function injectIntoJs(document){
         document.getElementById('graph_mode_switch').checked = state.graph.swimlanes;
         colorSwitchTexts(); // Set switch-text-colors (see graph.html)
         
+        // Create empty hiddenBranches list if undefined
+        if ( state.repos[state.repoNumber].hiddenBranches == undefined ){
+            state.repos[state.repoNumber].hiddenBranches = [];
+        }
+        
+        
         if  ( state.graph.swimlanes ){
             MODE = 'swim-lanes';
         }else{
