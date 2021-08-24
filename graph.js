@@ -47,6 +47,9 @@ const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
 
 
+var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
+
+
 // Global for whole app
 var state = global.state; // internal name of global.state
 var localState = global.localState; 
@@ -1098,6 +1101,11 @@ function drawBranchColorHeader( branchNames){
     if ( !branchNames.has(firstBranchNameInBranchNames) ){
         lastSelectedBranchName = firstBranchNameInBranchNames;
     }
+<<<<<<< Updated upstream
+=======
+    
+    
+>>>>>>> Stashed changes
     
     
     const colorFileName = 'images/circle_green.png';
