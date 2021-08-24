@@ -2979,15 +2979,6 @@ async function gitAddCommitAndPush( message){
     }
     
     // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-    //try{   
-        //let message = currentBranch;
-        //await simpleGit( state.repos[state.repoNumber].localFolder )
-            //.raw( [  'notes', '--ref', 'branchname', 'add' , '-m', message ] , onNotes);
-        //function onNotes(err, result) {console.log(result) };
-    //}catch(err){
-        //console.log('Error in gitAddCommitAndPush() -- creating branch-note');   
-        //console.log(err);
-    //}   
     await gitRememberBranch( 'HEAD', currentBranch);
 
     // Push 
@@ -3006,10 +2997,16 @@ async function gitAddCommitAndPush( message){
     await _update()
 }
 async function gitRememberBranch( hash, name){
-    // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
+    
+    // The notes versions can be viewed from command line using :
+    //  git notes --ref branchname show HASH
+    // for instance
+    //  git notes --ref branchname show HEAD
+    
     try{   
+        // Add branch in git notes (git notes --ref=branchname append -m 'name of branch')    
         await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'add' , '-f', '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err) };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
@@ -4258,6 +4255,8 @@ function loadSettings(settingsFile){
             state.graph = setting( state_in.graph, {} );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
+            state.graph.showHiddenBranches = setting( state_in.graph.showall, true );
+            state.graph.swimlanes  = setting( state_in.graph.showall, false );
             
 
     //

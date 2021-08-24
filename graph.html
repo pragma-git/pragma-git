@@ -3,14 +3,31 @@
         <title>Commit graph</title>
         
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="slider_switch.css" /> 
         
         <script src="graph.js"></script>
-    </head>
+        
+        
 
+        <!-- 
+        NOTE: Download svg.js from : https://cdnjs.com/libraries/svg.js
+        
+        Save downloaded file as : "lib/svg.js"
+        
+        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+    
+         -->
+        <script src="lib/svg.js"></script>
+
+
+    </head>
+    
 
     <!-- Styling graph-->
     <style> 
-        
+        :root {
+            --textRowHeight : 25; /* ROW_HEIGHT for text, date, and grid for drawing in graph.js */
+        }
         
         body{
             font-family: Arial;
@@ -28,9 +45,14 @@
             position: relative;
             float: left;
             height: 24;
-            width: 12;
+            /* width: 12; */
             outline: 0.0px dotted orange;
             outline-offset: -0.005px;
+        }
+        
+        .branchHeaderRow{
+            float: none;
+            left: 20px;
         }
         
         pre { /* Move down, to match circle images */
@@ -39,27 +61,41 @@
             font-size: inherit;
             vertical-align: bottom;
             position: relative;
-            top: 4px;
+            /* top: 6px; */
+            width: auto;
+            /* left: 20px; */
         }
 
+
+        #displayedContent{
+            padding-left: 20px;
+            margin-top: 80px;
+        }
+        
+        #datesSwimLane{
+            margin-top: 6px;
+        }
 
         
         #graphContent {
+            position: absolute;
+            left: 350px;
             width: max-content;
             height: auto;
-            margin-top: 80px;
-            padding-left: 10;
+            /* padding-left: 10; */
+            vertical-align: top;
+            margin-top: -6px; /* 0.5 * IMG_H */
         }
-               
+                       
         #colorHeader {
-            width: max-content;
+            /* width: unset; */
             height: auto;
+            clear: both;
         }
         
         .colorHeaderText{
-            width: -webkit-fill-available;
-            cursor: pointer;
             font-size: inherit;
+            right: -5px
         }
  
         #header{
@@ -73,60 +109,81 @@
         }
         
                
-        .rightInsert {
+        .rightInsert, .infoInsert, .rightDivider {
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
-            position: fixed; 
-            z-index: 20;
-            
             border-color: var(--border-color);
             border-style: dotted;
             border-width: thin;
             padding: 10px;
-            
+            opacity: 0.8;
+        }
+         
+               
+        .rightInsert {
             right: 15px;
-            
             margin-top: 120px;
+            z-index: 20;
+            position: fixed;
+        }     
+        
+        
+               
+        .rightDivider {
+            border-color: var(--border-color);
+            border-style: dotted;
+            border-width: thin;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            width: -webkit-fill-available;
+        } 
+        
+        .infoInsert {
+            z-index: 30;
+            position: fixed;
+            visibility: collapse;
+            opacity: 0.9;
+            padding: 15px;
         }
         
+         
         .branchNameEditInsert{
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
-            position: fixed; 
+            position: fixed;
             z-index: 20;
-            
             border-color: var(--border-color);
             border-style: dotted;
             border-width: thin;
             padding: 10px;
-            
             visibility: hidden;
-            
-            
             right: 35px;
             margin-top: 140px;
         }
 
-        
-        .firstcol { clear: both;}
 
         .date{
             width: 90px;
             color: grey;
+            clear: both;
+            top: -12;
+            height: var(--textRowHeight);
         }
 
         .text{
             width: fit-content;
-            cursor: pointer;
             font-size: inherit;
+            clear: left;
+            height: var(--textRowHeight);
+            /* top: -10px; */
         }
         
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
         .courier{ 
             width: auto;
-            cursor: pointer;
             font-size: inherit;
             font-family: monospace;
         }
@@ -145,76 +202,15 @@
         
         .node {
             position: absolute;
-             top: 8px;
-             left: 0.5px;
-             height: 50%;
-             width: 100%;
-             z-index: 10;
-             cursor: help;
+            top: 2px;
+            left: 0.5px;
+            height: 12px;
+            /* width: 100%; */
+            z-index: 10;
+            width: 12px;
+            left: -20;
         }        
-         
-        .bridge {
-            position: absolute;
-             top: 2px;
-             left: -6px;
-             height: 24px;
-             width: 24px;
-             z-index: 1;
-        }  
-        
-        .bridgeleft {
-             left: -150%;
-        } 
-        
-        .bridgeright {
-             left: 50%;
-        }
-               
-        .slash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }    
-               
-        .wideslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }  
-                
-        .backslash { 
-             position: absolute; 
-             top: 12px;
-             left: 5px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        }  
-            
-        .widebackslash { 
-             position: absolute; 
-             top: 12px;
-             left: -7px;
-             height: 27px;
-             width: 27px;
-             z-index: 1;
-        }
-
-        .pipe {
-             position: absolute;
-             top: 12px;
-             left: -1px;
-             height: 27px;
-             width: 15px;
-             z-index: 1;
-        } 
-        
+   
         .node, 
         .noInvert, 
         .pinned-icon 
@@ -237,9 +233,11 @@
         .selected{
             color: green;
             background: var(--graph-selected);
+            /* left: 20px; */
         }
         .text:hover {
             background: var(--graph-hover);
+            left: 0px
         }
         
         
@@ -249,7 +247,8 @@
 
     </style>
              
-    <body class='light'> 
+    <body class='light' style="position: relative;"> 
+
         
         <!-- Dark mode on/off , zoom --> 
         <script>
@@ -264,13 +263,34 @@
             
             window.document.body.style.zoom = global.state.zoom;
         </script>        
+        
+        <script>
+            function colorSwitchTexts(){
+                if ( document.getElementById("graph_mode_switch").checked ){
+                    document.getElementById('lanes').setAttribute('style','color: var(--text)');
+                    document.getElementById('git').setAttribute('style','color: var(--dim-text)');
+                }else{
+                    document.getElementById('lanes').setAttribute('style','color: var(--dim-text)');
+                    document.getElementById('git').setAttribute('style','color: var(--text)');
+                }
+            }
+                
+        </script>
             
         <div id='header'>
             <h2>
                 <span id='repoName'></span>
                 
-                ( <img style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
+                ( <img id="headerBranchCircle" style="height: 12; width: 12" src="images/circle_green.png" class="noInvert"> <u><span id='branchName'></span></u>)
                 
+                <span class="normal-text" style="display: inline;position: absolute; font-size: 11px; right: 120px;">             
+                        <span id="git">compress</span> 
+                        <label class="switch">
+                            <input id="graph_mode_switch" type="checkbox" class="slider round" onclick="state.graph.swimlanes = !state.graph.swimlanes; colorSwitchTexts(); injectIntoJs(document);">
+                            <span class="slider round"></span> 
+                        </label> 
+                        <span id="lanes">lanes</span> 
+                </span>
                 
                 <!-- Search button --> 
                 <img id="find-icon" style='vertical-align:middle;position: absolute; right: 65; ' height="17" width="17"  
@@ -290,20 +310,27 @@
     
             </h2>
         </div>
+        
 
         <div id="rightInsert" class="rightInsert">
 
-            <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; injectIntoJs(document);"> 
-            <label for="showDate" style="position: relative;" >Show Date</label>
-            
+            <input id="showDate" name="showDate" type="checkbox" onchange="state.graph.showdate = !state.graph.showdate; toggleDate(state.graph.showdate);"> 
+            <label for="showDate" style="position: relative;" >Dates</label>
             &nbsp;
-
+            
             <input id="showAll" name="showAll" type="checkbox" onchange="state.graph.showall = !state.graph.showall; injectIntoJs(document);"> 
             <label for="showAll" style="position: relative;" >Show All</label>
-
-      
             <br>
             <br>
+            
+            <div id=hiddenBranchesDiv>
+            <input id="showHidden" name="showHidden" type="checkbox" onchange="state.graph.showHiddenBranches = !state.graph.showHiddenBranches; injectIntoJs(document);"> 
+            <label for="showHidden" style="position: relative;" >Show Hidden Branches</label>
+            <br>
+            <br>
+            </div>
+            
+            <div class="rightDivider"></div>
             
             <!-- Empty color header, fill in with injectIntoJs in graph.js -->  
             <div id="colorHeader"> 
@@ -333,14 +360,38 @@
             <br>
         </div>       
 
-                
+         
+
+
         
-         <div style="width:fit-content;">         
+        
+         <div id="displayedContent" style="width:fit-content;">  
+             
+             <div id="zoombox">
+                 
+                 <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                 <div id="datesSwimLane" style="width:fit-content;">         
+                 </div>      
+                 
+                 <!-- Empty content, fill in with injectIntoJs in graph.js --> 
+                 <div  id="mySvg" style="width:fit-content; height:fit-content">         
+                 </div>             
+                        
                   <!-- Empty content, fill in with injectIntoJs in graph.js --> 
                 <div id="graphContent" class="content"> 
                 </div>
+            </div>
         
          </div> 
+         
+         
+
+        
+        
+         <div id="displayedMouseOver"  class="infoInsert" style="width:fit-content;">  
+ 
+         </div>          
+         
   
          
     </body>      
@@ -371,25 +422,23 @@
                 
                 
                 if (evt.deltaY > 0) {
-                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) - 0.1;
+                    document.getElementById('zoombox').style.zoom = Number( document.getElementById('zoombox').style.zoom ) - 0.1;
                 } else {
-                    document.getElementById('graphContent').style.zoom = Number( document.getElementById('graphContent').style.zoom ) + 0.1;
+                    document.getElementById('zoombox').style.zoom = Number( document.getElementById('zoombox').style.zoom ) + 0.1;
                 }
                 
-                if ( Number( document.getElementById('graphContent').style.zoom ) < 0.5 ){
-                    document.getElementById('graphContent').style.zoom = 0.5;
+                if ( Number( document.getElementById('zoombox').style.zoom ) < 0.5 ){
+                    document.getElementById('zoombox').style.zoom = 0.5;
                 }
                 
-                if ( Number( document.getElementById('graphContent').style.zoom ) > 2 ){
-                    document.getElementById('graphContent').style.zoom = 2;
+                if ( Number( document.getElementById('zoombox').style.zoom ) > 2 ){
+                    document.getElementById('zoombox').style.zoom = 2;
                 }
             }
             return
         }, { passive: false });
   
 
-        
- 
     
     
         //
@@ -637,7 +686,7 @@
         closeWindow(window);
         }
     );
-</script>
+    </script>
 
     
         
