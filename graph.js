@@ -48,6 +48,7 @@ var childMap ;          // Store mapping from parent to child hashes
 var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
 var commitArray;        // Array with same commits as in nodeMap
 var columnOccupiedStateArray; // Array used to mark occupied columns, stores last known occupied row-number of branch segment
+var firstCommitInEachSwimlane = [];  // Index is the swimlane (commit.x)
 
 const BUFFERTCOLS = '  '; // Allows to look to the left of current character
 const BUFFERTROW = '                                                                                                                                                                    ';
@@ -116,9 +117,11 @@ async function injectIntoJs(document){
         document.getElementById('repoName').innerText = repoName;
         document.getElementById('branchName').innerText = branchName;
         
-        // Hide "Show hidden branches checkbox" if no hidden branches
+        // Hide "Show hidden branches checkbox" visible only when hidden branches
         if (( state.repos[state.repoNumber].hiddenBranches == undefined ) || ( state.repos[state.repoNumber].hiddenBranches.length == 0) ){
             document.getElementById('hiddenBranchesDiv').style.contentVisibility = 'hidden' ;
+        }else{
+            document.getElementById('hiddenBranchesDiv').style.contentVisibility = 'visible' ; 
         }
         
     //
@@ -402,6 +405,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         let branchList =  await opener.gitBranchList();
         let localBranchList = branchList.local;
         
+        
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
@@ -434,14 +438,16 @@ async function drawGraph( document, graphText, branchHistory, history){
                             
              */
              
-            // Make new entry for mapping from node to children
-            for (let i = 0; i < parents.length; i++){
-                if (childMap.has( parents[i] )){
-                    childMap.get( parents[i] ).push( hashInThisRow) ;
-                }else{
-                    childMap.set( parents[i],  [ hashInThisRow ] ); 
-                } 
-
+            // Make new entry for mapping from node to children (only if there are parents)
+            if ( parents[0] !== ""){
+                for (let i = 0; i < parents.length; i++){
+                    if (childMap.has( parents[i] )){
+                        childMap.get( parents[i] ).push( hashInThisRow) ;
+                    }else{
+                        childMap.set( parents[i],  [ hashInThisRow ] ); 
+                    } 
+    
+                }
             }
             
             
@@ -481,7 +487,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                 thisCommit.unknownBranchName = !branchNames.has(thisCommit.branchName);
                 
-                
+
             
             // Row number
             
@@ -489,9 +495,11 @@ async function drawGraph( document, graphText, branchHistory, history){
 
             
 
-            // Store thisCommit
-            commitArray.push( thisCommit);
-            nodeMap.set( hashInThisRow, thisCommit);
+            // Store thisCommit (only if a commit row)
+            if ( hashInThisRow !== ""){
+                commitArray.push( thisCommit);
+                nodeMap.set( hashInThisRow, thisCommit);
+            }
                            
             line++;
         } // End for
@@ -499,6 +507,8 @@ async function drawGraph( document, graphText, branchHistory, history){
       
          NUMBER_OF_KNOWN_BRANCHES = branchNames.size;
          let HIGHEST_LANE = 1;
+         
+         nodeMap.delete("");  // Delete empty node
 
      //
      // PASS 2 :  x-position  +  draw connections
@@ -568,6 +578,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                         
                         // Lane for unknown branch should land compressed, instead of to far right
                         let bestLane = getFreeLane(commit, COMPRESSUNKNOWN1); 
+                        
+                        // If a swimlane has not seen its first commit yet
+                        if ( ( MODE == 'swim-lanes' ) && ( bestLane < NUMBER_OF_KNOWN_BRANCHES ) ){ 
+                            //bestLane = branchNames.size;
+                        } 
                         
                         branchNames.set( commit.branchName, bestLane ); // Add branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
@@ -684,7 +699,7 @@ async function drawGraph( document, graphText, branchHistory, history){
              *    x0, y0 is coordinate of a commit
           
         */
-        for(var j = 0; j < commitArray.length - 1; j++) { 
+        for(var j = 0; j < commitArray.length; j++) { 
  
             let commit = commitArray[j];
             let x0 = commit.x;
@@ -1218,6 +1233,10 @@ async function drawGraph( document, graphText, branchHistory, history){
         return html 
     };
     function markLaneAsOccupied(commit){
+        if (nodeMap.get(commit.parents[0]) == undefined){
+            return
+        }
+        
         let lane = commit.x ;
         let until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
         
@@ -1243,18 +1262,19 @@ async function drawGraph( document, graphText, branchHistory, history){
         /*
            commit.occupiedColumns is an array showing how far a lane is occupied downwards (or a number lower than the commit's row, when not occupied)
            
-           Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)
          
-           The lane must be available from the child that is furthest up, called lowestY down to the commit.
-           
-           Lane 0 is reserved for unknown first-parents
+           1) A free lane must be available from the child that is furthest up, called lowestY down to the commit. 
+           2) Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)  
+              An unknown branch can not be placed on the swim-lane of a known branch 
+
+              Lane 0 is reserved for unknown first-parents
          
          
         */
 
         let lowestY  = commit.y;  // Start search at this commit
    
-        // Find child that starts furthest up
+        // 1) Find child that starts furthest up
             let childrenHashes;
             if (childMap.has(commit.hash) ){
                 childrenHashes = childMap.get( commit.hash );                
@@ -1274,12 +1294,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
             }
         
-        // Find highest occupied column in range between lowestY and commit
+        // 2) Find highest occupied column in range between lowestY and commit
             let highestOccupiedCol = 1; // Column 0 is reserved for first-parent. Search from next column
             
             for(let row = lowestY; row < commit.y ; row++){
                 let c = commitArray[row].occupiedColumns; // array with next occupied row number for each column
-                console.log(c.toString());
                 
                 // Find next occupied column      
                 let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
@@ -1292,6 +1311,39 @@ async function drawGraph( document, graphText, branchHistory, history){
                             break  
                     }
                     col++;
+                }
+              
+                                  
+                // Mark occupied if commit is on an active swimlane
+                if ( ( MODE == 'swim-lanes' ) &&  isOnActiveSwimlane(col, commit) ){ 
+                    highestOccupiedCol = highestOccupiedCol + 1;
+                }
+                
+                function isOnActiveSwimlane(lane, commit){
+                    // Looks from commit to end of segment, if on known branchName
+                    
+                    //let commit = { ...inputCommit };
+                    
+                    // Extent of segment
+                    let start = commit.y;
+                    
+                    //let commit = commit;
+                    while ( !isAfterEndOfSegment(commit) && ( commit.y < commitArray.length - 1) ){
+                        commit = nodeMap.get( commit.parents[0]);
+                    }
+                    let end = commit.y - 1;
+                    console.log('start = ' + start + '   End = ' + end);
+                    
+                    // Return true any commit is on active swimlane
+                    let i = start;
+                    while ( i < end){
+                        if ( lane == branchNames.get(commitArray[i].branchName) ){
+                            console.log('commit.y = ' + commit.y );
+                            return true
+                        }
+                        i++;
+                    }
+                    return false
                 }
             }
             
