@@ -890,7 +890,13 @@ async function drawGraph( document, graphText, branchHistory, history){
                       
                     document.getElementById('displayedMouseOver').style.visibility = 'visible';
                     document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
-                    document.getElementById('displayedMouseOver').style.top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;                
+                    
+                    // Make always visible
+                    let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
+                    if (top < 0)
+                        top = e.clientY - 15;
+                    
+                    document.getElementById('displayedMouseOver').style.top = top;                
                 
                 
                     
