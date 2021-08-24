@@ -20,7 +20,7 @@ const colorImageNameDefinitions = [
 'DeepSkyBlue'
 ];
 
-const DEBUG = false;       // true = show debug info on commit messages
+const DEBUG = true;       // true = show debug info on commit messages
 
 var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
 
@@ -56,6 +56,8 @@ const BUFFERTROW = '                                                            
 let NUMBER_OF_KNOWN_BRANCHES = 0;  // This marks the last branch with known branchname in branchNames map
 
 var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
+
+var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
 
 
 // Global for whole app
@@ -780,6 +782,17 @@ async function drawGraph( document, graphText, branchHistory, history){
                     .move( X0 - 0.5 * size , Y0 - 0.5 * size);
             }
             
+            
+            function resetNodeSize(){
+                    // Reset node sizes
+                    for (let i = 0; i < infoNodes.length; i++){
+                        sizeNodes( infoNodes[i], IMG_H)
+                    }
+                    infoNodes = [];
+                    return
+            }
+            
+            
             // Add mouse events for each circle
             for (var i = arrElem.length; i-- ;) {
             
@@ -788,24 +801,17 @@ async function drawGraph( document, graphText, branchHistory, history){
                                
                 arrElem[i].onmouseout = function(e) {
                     document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-                    
-                    // Change node sizes
-                    let hash = e.target.id.substring(4);  // Because element id starts with "img_" followed by hash
-                    sizeNodes( hash, IMG_H)
-                    
-                    // Change parent sizes
-                    let commit = nodeMap.get(hash);
-                    let parentHashes = commit.parents;
-                    for (let i = 0; i < parentHashes.length; i++){
-                        sizeNodes( parentHashes[i], IMG_H);
-                    }
-                    console.log(commit);
+                    resetNodeSize();
+                    return
                 };
                 
                 
                 // onmouseover
                 
                 arrElem[i].onmouseover = async function(e) {
+                    
+                    resetNodeSize(); // Clear resized nodes
+                    
                     console.log(e);
                     let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
                     let commit = nodeMap.get(hash);
@@ -850,8 +856,9 @@ async function drawGraph( document, graphText, branchHistory, history){
                     
                     html += '<HR><BR>' 
                     
-                     // Change node size
+                     // Change commit node size
                     sizeNodes( hash, IMG_H + 6);
+                    infoNodes.push(hash);  // Remember hash of resized node
                     
                     
                     // HTML Parents   
@@ -870,6 +877,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                           
                         // Change parent node size  
                         sizeNodes( parentHashes[i], IMG_H + 6); 
+                        
+                        infoNodes.push(parentHashes[i]); // Remember hash of resized node
                     }
                     
                     html +='<BR><div>';
