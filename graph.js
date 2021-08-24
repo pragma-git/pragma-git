@@ -1394,7 +1394,8 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             // Unset columns for all "end of branch segments" (identified above)
             if (count >= 1){  // is end of segment only if a branch point
-                commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
+                if (DEBUG)
+                    commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                 
                  for(var i = 0; i < lastOfSegment.length; i++){              
                     let lane = lastOfSegment[i].x;      
