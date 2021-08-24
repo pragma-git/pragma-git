@@ -2,71 +2,85 @@
 // INIT
 // ---------
 
+// Constants and variables
 
+    // Note: colorImageNameDefinitions values are echoed to console, when generating colored images with script 'colorize.bash'
+    const colorImageNameDefinitions = [
+    'red',
+    'blue',
+    'orange',
+    'purple',
+    'salmon',
+    'orange4',
+    'tan',
+    'goldenrod1',
+    'olive',
+    'LawnGreen',
+    'PaleTurquoise1',
+    'DeepSkyBlue'
+    ];
+    
+    const DEBUG = true;       // true = show debug info on commit messages
+    
+    var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
+    
+    const UNIQUE_EOL = 'X3.17X';  // Used as EOL in git log to split rows to make it improbable to mix up output with EOL
+    const unsetNodeImageFile = 'images/circle_grey.png';
+    
+    var gui = require("nw.gui"); 
+    var os = require('os');
+    var fs = require('fs');
+    const simpleGit = require('simple-git');  
+    var util = require('./util_module.js'); // Pragma-git common functions
+           
+    const pathsep = require('path').sep;  // Os-dependent path separator
+    
+    var win
+    
+    var sumFound;
+    
+    var graphContent = '';  // This is where output is collected before putting it into graphContent element
+    var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
+    
+    var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
+    var childMap ;          // Store mapping from parent to child hashes
+    
+    var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
+    var commitArray;        // Array with same commits as in nodeMap
+    var columnOccupiedStateArray; // Array used to mark occupied columns, stores last known occupied row-number of branch segment
+    var firstCommitInEachSwimlane = [];  // Index is the swimlane (commit.x)
+    
+    const BUFFERTCOLS = '  '; // Allows to look to the left of current character
+    const BUFFERTROW = '                                                                                                                                                                    ';
+    
+    let NUMBER_OF_KNOWN_BRANCHES = 0;  // This marks the last branch with known branchname in branchNames map
+    
+    var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
+    
+    var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
 
-// Note: colorImageNameDefinitions values are echoed to console, when generating colored images with script 'colorize.bash'
-const colorImageNameDefinitions = [
-'red',
-'blue',
-'orange',
-'purple',
-'salmon',
-'orange4',
-'tan',
-'goldenrod1',
-'olive',
-'LawnGreen',
-'PaleTurquoise1',
-'DeepSkyBlue'
-];
-
-const DEBUG = true;       // true = show debug info on commit messages
-
-var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
-
-const UNIQUE_EOL = 'X3.17X';  // Used as EOL in git log to split rows to make it improbable to mix up output with EOL
-const unsetNodeImageFile = 'images/circle_grey.png';
-
-var gui = require("nw.gui"); 
-var os = require('os');
-var fs = require('fs');
-const simpleGit = require('simple-git');  
-var util = require('./util_module.js'); // Pragma-git common functions
-       
-const pathsep = require('path').sep;  // Os-dependent path separator
-
-var win
-
-var sumFound;
-
-var graphContent = '';  // This is where output is collected before putting it into graphContent element
-var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
-
-var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
-var childMap ;          // Store mapping from parent to child hashes
-
-var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
-var commitArray;        // Array with same commits as in nodeMap
-var columnOccupiedStateArray; // Array used to mark occupied columns, stores last known occupied row-number of branch segment
-var firstCommitInEachSwimlane = [];  // Index is the swimlane (commit.x)
-
-const BUFFERTCOLS = '  '; // Allows to look to the left of current character
-const BUFFERTROW = '                                                                                                                                                                    ';
-
-let NUMBER_OF_KNOWN_BRANCHES = 0;  // This marks the last branch with known branchname in branchNames map
-
-var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
-
-var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
-
+// GUI constants
+        
+    // Node image
+    const IMG_H = 12;
+    const IMG_W = 12;
+        
+    // Grid dimensions
+    const COL_WIDTH = 20; // 20
+    const LEFT_OFFSET = 10;
+    const TOP_OFFSET = 0.5 * IMG_H; 
+    
+    var ROW_HEIGHT;  // Read from CSS in drawGraph
+    const R = 15; // arc radius for branch and merge.  Note : R <= COL_WIDTH & R <= ROW_HEIGHT
+            
 
 // Global for whole app
-var state = global.state; // internal name of global.state
-var localState = global.localState; 
+    var state = global.state; // internal name of global.state
+    var localState = global.localState; 
 
 // Global in this window
-let history = '';
-var graphText;  // Output from git log
+    let history = '';
+    var graphText;  // Output from git log
 
 //
 // Functions
@@ -256,6 +270,7 @@ function registerBranchName( branchName, position){ // Register branch if hidden
         branchNames.set(branchName, position); // Add to branchNames map
     }
 }
+
 // Callbacks
 async function setPinned(hash, isPinned){ // Called from EventListener added in html
     // This function updates main window
@@ -311,6 +326,160 @@ function toggleDate( show){
     document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
 
 }
+function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
+        
+    //
+    // Circle mouse events
+    //
+
+    var arrElem = document.getElementsByTagName('image');
+    
+    // Size utility function
+    function sizeNodes( hash, size){
+        let node = draw.node.getElementById( 'img_' + hash);
+        let commit = nodeMap.get(hash);
+        
+        let X0 = LEFT_OFFSET + commit.x * COL_WIDTH;
+        let Y0 = TOP_OFFSET + commit.y * ROW_HEIGHT
+        
+        SVG( node )
+            .size(size,size)
+            .move( X0 - 0.5 * size , Y0 - 0.5 * size);
+    }
+    
+    
+    function resetNodeSize(){
+            // Reset node sizes
+            for (let i = 0; i < infoNodes.length; i++){
+                sizeNodes( infoNodes[i], IMG_H)
+            }
+            infoNodes = [];
+            return
+    }
+    
+    
+    // Add mouse events for each circle
+    for (var i = arrElem.length; i-- ;) {
+    
+
+        // onmouseout     
+                       
+        arrElem[i].onmouseout = function(e) {
+            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+            resetNodeSize();
+            return
+        };
+        
+        
+        // onmouseover
+        
+        arrElem[i].onmouseover = async function(e) {
+            
+            resetNodeSize(); // Clear resized nodes
+            
+            console.log(e);
+            let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+            let commit = nodeMap.get(hash);
+            
+            // Get git author
+            let author = await gitCommitAuthor(hash);
+              
+            console.log( 'commit : ' + commit.message );
+            
+            let imageSrc = e.target.href.baseVal;
+            
+            // Parents      
+            let parentHashes = commit.parents;
+            let ParentHeader = 'Parent';
+            if (parentHashes.length > 1)
+                ParentHeader = 'Parents';
+            
+            // HTML 
+            let html =``
+            
+            
+            // HTML Branch
+            html += `<div><B> Branch </B> = &nbsp; 
+                <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
+                <span> ${commit.branchName} </span>
+                 </div>
+                 <BR><BR>` 
+                 
+            html += '<HR><BR>'               
+            
+            
+            // HTML Commit
+            html += `<B>Commit </B> : <BR><BR> 
+                 <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                    <span style = "left: 30 px; position: relative"> ${commit.message} </span>
+                 </div></b>
+                 <BR><BR>`
+            
+            html += ` &nbsp; author : ${author} <BR><BR>`
+            html += ` &nbsp; hash   : ${commit.hash} <BR><BR>`
+            
+            
+            html += '<HR><BR>' 
+            
+             // Change commit node size
+            sizeNodes( hash, IMG_H + 6);
+            infoNodes.push(hash);  // Remember hash of resized node
+            
+            
+            // HTML Parents   
+            html += `<B> ${ParentHeader} : </B> <BR><BR>` 
+            
+            for (let i = 0; i < parentHashes.length; i++){
+
+                 let id = "img_" + parentHashes[i];
+                 let imageSrc = document.getElementById(id).href.baseVal;
+                 
+                html += ` <b><div> &nbsp; 
+                    <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                    <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
+                 </div></b>
+                  <BR>`
+                  
+                // Change parent node size  
+                sizeNodes( parentHashes[i], IMG_H + 6); 
+                
+                infoNodes.push(parentHashes[i]); // Remember hash of resized node
+            }
+            
+            html +='<BR><div>';
+            
+            
+            // HTML Parent Hashes
+            for (let i = 0; i < parentHashes.length; i++){
+                html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
+            }
+            
+            
+            html +='</div>';
+                
+            
+            // Display HTML 
+            
+            document.getElementById('displayedMouseOver').innerHTML = html;
+              
+            document.getElementById('displayedMouseOver').style.visibility = 'visible';
+            document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
+            
+            // Make always visible
+            let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
+            if (top < 0)
+                top = e.clientY - 15;
+            
+            document.getElementById('displayedMouseOver').style.top = top;                
+        
+        
+            
+        
+        };
+    
+    }
+}        
+
 
 // Git
 async function gitCommitAuthor(hash){ 
@@ -325,6 +494,7 @@ async function gitCommitAuthor(hash){
     }
     return text;
 }
+
 // Graphics
 async function drawGraph( document, graphText, branchHistory, history){
     // document :       HTML document
@@ -337,24 +507,12 @@ async function drawGraph( document, graphText, branchHistory, history){
     // SETUP
     //  
   
-        // GUI constants
-                
-            // Node image
-            const IMG_H = 12;
-            const IMG_W = 12;
-                
-            // Grid dimensions
-            const COL_WIDTH = 20; // 20
-            const LEFT_OFFSET = 10;
-            const TOP_OFFSET = 0.5 * IMG_H; 
+  
         
             // Get ROW_HEIGHT from graph.html css  
             r = document.querySelector(':root');
-            const ROW_HEIGHT = getComputedStyle(r).getPropertyValue('--textRowHeight'); 
-             
-            // Merge and Branch connectors
-            const R = 15; // arc radius for branch and merge.  Note : R <= COL_WIDTH & R <= ROW_HEIGHT
-            
+            ROW_HEIGHT = getComputedStyle(r).getPropertyValue('--textRowHeight'); 
+ 
     
         // Initiate variables
         
@@ -747,7 +905,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             toggleDate( state.graph.showdate); // Show / hide date column    
     
     
-            // Draw circle in correct color
+            // Draw branch-title circle in correct color
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
             if ( branchNames.has(branchName) ){
     
@@ -762,158 +920,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                     document.getElementById('headerBranchCircle').src = colorFileName;
                 }
             } 
-        
-    //
-    // Circle mouse events
-    //
-        {
-            var arrElem = document.getElementsByTagName('image');
             
-            // Size utility function
-            function sizeNodes( hash, size){
-                let node = draw.node.getElementById( 'img_' + hash);
-                let commit = nodeMap.get(hash);
-                
-                let X0 = LEFT_OFFSET + commit.x * COL_WIDTH;
-                let Y0 = TOP_OFFSET + commit.y * ROW_HEIGHT
-                
-                SVG( node )
-                    .size(size,size)
-                    .move( X0 - 0.5 * size , Y0 - 0.5 * size);
-            }
-            
-            
-            function resetNodeSize(){
-                    // Reset node sizes
-                    for (let i = 0; i < infoNodes.length; i++){
-                        sizeNodes( infoNodes[i], IMG_H)
-                    }
-                    infoNodes = [];
-                    return
-            }
-            
-            
-            // Add mouse events for each circle
-            for (var i = arrElem.length; i-- ;) {
-            
+            // Make MouseOver callbacks for node images  
+            makeMouseOverNodeCallbacks();
 
-                // onmouseout     
-                               
-                arrElem[i].onmouseout = function(e) {
-                    document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-                    resetNodeSize();
-                    return
-                };
-                
-                
-                // onmouseover
-                
-                arrElem[i].onmouseover = async function(e) {
-                    
-                    resetNodeSize(); // Clear resized nodes
-                    
-                    console.log(e);
-                    let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
-                    let commit = nodeMap.get(hash);
-                    
-                    // Get git author
-                    let author = await gitCommitAuthor(hash);
-                      
-                    console.log( 'commit : ' + commit.message );
-                    
-                    let imageSrc = e.target.href.baseVal;
-                    
-                    // Parents      
-                    let parentHashes = commit.parents;
-                    let ParentHeader = 'Parent';
-                    if (parentHashes.length > 1)
-                        ParentHeader = 'Parents';
-                    
-                    // HTML 
-                    let html =``
-                    
-                    
-                    // HTML Branch
-                    html += `<div><B> Branch </B> = &nbsp; 
-                        <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
-                        <span> ${commit.branchName} </span>
-                         </div>
-                         <BR><BR>` 
-                         
-                    html += '<HR><BR>'               
-                    
-                    
-                    // HTML Commit
-                    html += `<B>Commit </B> : <BR><BR> 
-                         <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                            <span style = "left: 30 px; position: relative"> ${commit.message} </span>
-                         </div></b>
-                         <BR><BR>`
-                    
-                    html += ` &nbsp; author : ${author} <BR><BR>`
-                    html += ` &nbsp; hash   : ${commit.hash} <BR><BR>`
-                    
-                    
-                    html += '<HR><BR>' 
-                    
-                     // Change commit node size
-                    sizeNodes( hash, IMG_H + 6);
-                    infoNodes.push(hash);  // Remember hash of resized node
-                    
-                    
-                    // HTML Parents   
-                    html += `<B> ${ParentHeader} : </B> <BR><BR>` 
-                    
-                    for (let i = 0; i < parentHashes.length; i++){
-
-                         let id = "img_" + parentHashes[i];
-                         let imageSrc = document.getElementById(id).href.baseVal;
-                         
-                        html += ` <b><div> &nbsp; 
-                            <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                            <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
-                         </div></b>
-                          <BR>`
-                          
-                        // Change parent node size  
-                        sizeNodes( parentHashes[i], IMG_H + 6); 
-                        
-                        infoNodes.push(parentHashes[i]); // Remember hash of resized node
-                    }
-                    
-                    html +='<BR><div>';
-                    
-                    
-                    // HTML Parent Hashes
-                    for (let i = 0; i < parentHashes.length; i++){
-                        html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
-                    }
-                    
-                    
-                    html +='</div>';
-                        
-                    
-                    // Display HTML 
-                    
-                    document.getElementById('displayedMouseOver').innerHTML = html;
-                      
-                    document.getElementById('displayedMouseOver').style.visibility = 'visible';
-                    document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
-                    
-                    // Make always visible
-                    let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
-                    if (top < 0)
-                        top = e.clientY - 15;
-                    
-                    document.getElementById('displayedMouseOver').style.top = top;                
-                
-                
-                    
-                
-                };
-            
-            }
-        }
     }   
 
         function drawConnection( draw, commit, child, R, numberOfChildren){
@@ -1513,7 +1523,6 @@ async function drawGraph( document, graphText, branchHistory, history){
             }
         }
     }
-                
 
 // Branch name
 function drawBranchColorHeader( branchNames){
