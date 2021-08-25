@@ -1130,6 +1130,16 @@ async function _callback( name, event){
                     // No commited change in detached head -- don't throw dialog
                     console.log('No commits in checked-out detached HEAD : ' + currentBranchObject.name);
                     console.log('Continue to change branch');
+                    
+                    // Checkout branch, leaving detached HEAD
+                    branchClicked( false, 'cycle');  // Same as pressing HEAD
+                    return
+                    
+                    //let event = {};
+                    //event.selectedBranch = localState.pinnedBranch;
+                    //event.branchNumber = localState.pinnedBranchNumber;
+                    //_callback('clickedBranchContextualMenu', event);
+                        
                 }else{
                     console.log('Commits on detached HEAD.  Show dialog');
                     document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
@@ -1205,11 +1215,15 @@ async function _callback( name, event){
                 do { 
                     if (status_data.current === 'HEAD') { 
                         
+                        // Keep branch number. Get that branch from branchList 
+                        if (branchList.detached){  // Detached branch is before all other branches
+                            localState.branchNumber++;
+                        }       
+                        
                         // Make sure branch number within range
                         if (localState.branchNumber >= branchList.local.length){
                             localState.branchNumber = 0;
-                        }
-                        // Keep branch number. Get that branch from branchList         
+                        } 
                         branchName = branchList.local[localState.branchNumber ]; 
                     }else {
                         // Normal branch
@@ -1979,17 +1993,17 @@ async function _update(){
                
     // Pinned commit (show if in history mode)
         try{
-            if (modeName == 'HISTORY'){
+            if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
                 
-                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;'
+                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
                 
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
                 
-                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;'
+                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;';  // ▾
             }
         }catch(err){  
             console.log(err);
