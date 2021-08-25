@@ -266,6 +266,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
         var cachedBranchMenu;  // Keep reference to popup menu, to avoid premature Windows10 garbage collection
         var workaround_store_submenus; // Workaround : Keep references to all submenu-item, to avoid premature Windows10 garbage collection
+        
+        var cachedRepoMenu;  // // Keep reference to popup menu, to avoid premature garbage collection (caused clicked on repo to fail fairly often)
 
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
@@ -1004,13 +1006,13 @@ async function _callback( name, event){
         // Show menu
         //
         if (type == 'menu'){
-            var menu = new gui.Menu();
+            cachedRepoMenu= new gui.Menu();
             
             let currentRepo = state.repos[state.repoNumber].localFolder;
     
-            // Add context menu title-row
-            menu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
-            menu.append(new gui.MenuItem({ type: 'separator' }));
+            // Add context cachedRepoMenu title-row
+            cachedRepoMenu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
+            cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
             
             let repoNames = [];
                     
@@ -1026,7 +1028,7 @@ async function _callback( name, event){
                 repoNames.push(myEvent.selectedRepo);
                     
                 if (state.repoNumber != i ){
-                    menu.append(
+                    cachedRepoMenu.append(
                         new gui.MenuItem(
                             { 
                                 label: myEvent.selectedRepo, 
@@ -1037,7 +1039,7 @@ async function _callback( name, event){
                     console.log(repoNames[i]);
                 }else{
                     
-                     menu.append(
+                     cachedRepoMenu.append(
                         new gui.MenuItem(
                             { 
                                 label: myEvent.selectedRepo, 
@@ -1053,9 +1055,9 @@ async function _callback( name, event){
             }
 
     
-            // Popup as context menu
+            // Popup as context cachedRepoMenu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
-            await menu.popup( Math.trunc(pos.left * state.zoomMain) -10,24);
+            await cachedRepoMenu.popup( Math.trunc(pos.left * state.zoomMain) -10,24);
 
             
             return; // BAIL OUT --  
