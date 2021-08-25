@@ -268,6 +268,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var workaround_store_submenus; // Workaround : Keep references to all submenu-item, to avoid premature Windows10 garbage collection
         
         var cachedRepoMenu;  // // Keep reference to popup menu, to avoid premature garbage collection (caused clicked on repo to fail fairly often)
+        var cachedTagMenu;
 
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
@@ -1387,13 +1388,13 @@ async function _callback( name, event){
     }
     async function tagClicked(){
               
-        // Create an empty context menu
-        var menu = new gui.Menu();
+        // Create an empty context cachedTagMenu
+        cachedTagMenu = new gui.Menu();
 
         
-        // Add context menu to title-row
+        // Add context cachedTagMenu to title-row
 
-        menu.append(
+        cachedTagMenu.append(
             new gui.MenuItem(
                 { 
                     label: 'New tag', 
@@ -1402,7 +1403,7 @@ async function _callback( name, event){
             )        
         )
         
-        menu.append(
+        cachedTagMenu.append(
             new gui.MenuItem( 
                 { 
                     label: 'Checkout tag ', 
@@ -1412,9 +1413,9 @@ async function _callback( name, event){
         )
 
        
-        menu.append(new gui.MenuItem({ type: 'separator' })); 
+        cachedTagMenu.append(new gui.MenuItem({ type: 'separator' })); 
         
-        menu.append(
+        cachedTagMenu.append(
             new gui.MenuItem(
                 { 
                     label: 'Delete tag ', 
@@ -1425,9 +1426,9 @@ async function _callback( name, event){
 
     
 
-        // Popup as context menu
+        // Popup as context cachedTagMenu
         let pos = document.getElementById("top-titlebar-merge-icon").getBoundingClientRect();
-        await menu.popup( Math.trunc(pos.left * state.zoomMain),24);
+        await cachedTagMenu.popup( Math.trunc(pos.left * state.zoomMain),24);
                 
 
     }
