@@ -303,7 +303,7 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        //cacheBranchList();
+        cacheBranchList();
         
         break;
       }
