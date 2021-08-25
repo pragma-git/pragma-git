@@ -1453,6 +1453,8 @@ async function _callback( name, event){
             await simpleGit(folder).checkout( hash, onCheckout);
             function onCheckout(err, result){console.log(result)} 
             
+            localState.historyHash = hash;
+            
         }catch(err){
             console.log('Failed checking out tag = ' + tagName);
             console.log(err);
