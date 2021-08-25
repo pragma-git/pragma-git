@@ -809,7 +809,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             //
             // If after end of segment
             //
-                if ( isAfterEndOfSegment(commit)){ // NOTE: isEndOfSegment performs some actions ( marks lanes as free)
+                if ( isAfterEndOfSegment(commit, true)){ // NOTE: isEndOfSegment performs some actions ( marks lanes as free, because of second argument = true)
                     
                     commit.END = true;
 
@@ -1361,8 +1361,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                     // Extent of segment
                     let start = commit.y;
                     
-                    //let commit = commit;
-                    while ( !isAfterEndOfSegment(commit) && ( commit.y < commitArray.length - 1) ){
+
+                    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
                         commit = nodeMap.get( commit.parents[0]);
                     }
                     let end = commit.y - 1;
@@ -1441,7 +1441,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             return true
         }
     };  
-    function isAfterEndOfSegment(commit){
+    function isAfterEndOfSegment(commit, cleanOccupied){
         /*
          Definition :
              "After end of Segment" is the bottom-most commit, o, from this a branch operation was performed 
@@ -1479,7 +1479,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             }
             
             // Unset columns for all "end of branch segments" (identified above)
-            if (count >= 1){  // is end of segment only if a branch point
+            if ( (count >= 1) && cleanOccupied ){  // is end of segment only if a branch point
                 if (DEBUG)
                     commit.message = 'END -- ' + commit.message;  // DEBUG : Mark that first in segment
                 
