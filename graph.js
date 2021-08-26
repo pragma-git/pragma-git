@@ -472,7 +472,10 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // Set x to the right of lane
             let x = getFreeLane(commit, false);
-            let X0 = LEFT_OFFSET + x * COL_WIDTH;
+            if (commit.x > x )
+                x = commit.x;
+
+            let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
             document.getElementById('displayedMouseOver').style.left = X0 + 20;
             
             // Set y so that info box always on screen
