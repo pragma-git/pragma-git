@@ -1124,30 +1124,49 @@ async function _callback( name, event){
                 //7741225: {current: true, name: "7741225", commit: "7741225", label: "F"}                            <--- currentBranchObject below
                 //master: {current: false, name: "master", commit: "660d091", label: "Merge branch 'temp-branch-1'"}
                 //...
-
+                
                 let currentBranchName = branchSummary.current;
                 
                 // Test if commit-hash is the same as branch-name (meaning no commits have been done after detaching HEAD)
                 let currentBranchObject = branchSummary.branches[currentBranchName];
                 if ( currentBranchObject.name == currentBranchObject.commit){  // Works for checked-out commit. TODO : but not for checked-out tag!
-                    // No commited change in detached head -- don't throw dialog
-                    console.log('No commits in checked-out detached HEAD : ' + currentBranchObject.name);
-                    console.log('Continue to change branch');
-                    
-                    // Checkout branch, leaving detached HEAD
-                    branchClicked( false, 'cycle');  // Same as pressing HEAD
-                    return
-                    
-                    //let event = {};
-                    //event.selectedBranch = localState.pinnedBranch;
-                    //event.branchNumber = localState.pinnedBranchNumber;
-                    //_callback('clickedBranchContextualMenu', event);
+
+                    try{
                         
+                        // TODO : set localState.historyNumber from  state.repos[state.repoNumber].detachedBranch.hash;
+                        
+                        let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
+                        await gitSwitchBranch(branchName);
+                        
+                        
+                        await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
+                        
+                        //var history = await gitHistory();
+                        localState.historyHash = state.repos[state.repoNumber].detachedBranch.hash;
+                        
+                        //localState.historyNumber = util.findObjectIndex(history,'hash', localState.historyHash); 
+                        //console.log('historyNumber = ' + localState.historyNumber );
+                        //localState.historyString = historyMessage(history, localState.historyNumber);
+
+                        
+                        //gitShowHistorical();
+                        
+                    }catch(err){        
+                        console.log(err);
+                        gitCycleToNextBranch();
+                    } 
+  
                 }else{
+                    // Committed change in detached HEAD -- throw dialog
                     console.log('Commits on detached HEAD.  Show dialog');
                     document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
-                    return
                 }
+                
+                // End checking out branch
+                _setMode('UNKNOWN');
+
+                return
+
    
             }catch(err){        
                 console.log(err);
@@ -1222,12 +1241,7 @@ async function _callback( name, event){
                         if (branchList.detached){  // Detached branch is before all other branches
                             localState.branchNumber++;
                         }       
-                        
-                        // Make sure branch number within range
-                        if (localState.branchNumber >= branchList.local.length){
-                            localState.branchNumber = 0;
-                        } 
-                        branchName = branchList.local[localState.branchNumber ]; 
+                         
                     }else {
                         // Normal branch
                         
@@ -1246,13 +1260,7 @@ async function _callback( name, event){
                 // Checkout local branch
                 
                 try{
-                    await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
-                    function onCheckout(err, result){console.log(result)} 
-                                                        
-                    // Update remote info immediately
-                    gitFetch();  
-        
-    
+                    gitSwitchBranch(branchName);
                 }catch(err){        
                     console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
                     console.log(err);
@@ -1455,6 +1463,8 @@ async function _callback( name, event){
             
             localState.historyHash = hash;
             
+            rememberDetachedBranch();
+            
         }catch(err){
             console.log('Failed checking out tag = ' + tagName);
             console.log(err);
@@ -1516,6 +1526,7 @@ async function _callback( name, event){
             // History
             
             try{
+                rememberDetachedBranch();
                 
                 // Checkout this commit (into a detached HEAD)             
                 console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
@@ -2728,6 +2739,65 @@ async function gitShowHistorical(){
     return outputStatus;
     
 }
+
+async function gitSwitchToRepo(repoNumber){
+    
+
+    let myEvent = [];
+    console.log(state.repos[state.repoNumber].localFolder);
+    myEvent.selectedRepo = path.basename( state.repos[state.repoNumber].localFolder );
+    myEvent.selectedRepoNumber = state.repoNumber;
+    myEvent.currentRepo =  state.repos[state.repoNumber].localFolder;
+    
+    state.repoNumber = repoNumber;  
+    
+    _callback('clickedRepoContextualMenu',myEvent);
+
+}
+
+async function gitSwitchBranch(branchName){
+        
+    if (branchName == undefined){
+        gitCycleToNextBranch();
+        return;
+    }
+    
+    try{
+        await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+        function onCheckout(err, result){console.log(result)}                                  
+    }catch (err){
+        gitCycleToNextBranch();
+    }
+    // Update remote info immediately
+    gitFetch();  
+    cacheBranchList();
+}
+async function gitSwitchBranchNumber(branchNumber){
+    
+    if (localState.branchNumber == undefined){
+        localState.branchNumber = 0;
+    }
+        
+    // Get branchname after cycling
+    branchName = cachedBranchList.local[localState.branchNumber];
+    
+    await gitSwitchBranch(branchName)
+}
+async function gitCycleToNextBranch(){
+    
+    if (localState.branchNumber == undefined){
+        localState.branchNumber = 0;
+    }
+    
+    // Cycle branch number
+    localState.branchNumber = localState.branchNumber + 1;
+    if (localState.branchNumber >= cachedBranchList.local.length){
+        localState.branchNumber = 0;
+    }
+                
+    await gitSwitchBranchNumber(localState.branchNumber); 
+}
+
 async function gitSetLocalBranchNumber(){
         
     let branchSummary;
@@ -3316,6 +3386,15 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
         return;         
     }
 }
+
+function rememberDetachedBranch(){
+    state.repos[state.repoNumber].detachedBranch = {};
+    state.repos[state.repoNumber].detachedBranch.hash = localState.historyHash;
+    state.repos[state.repoNumber].detachedBranch.detachedBranchName = cachedBranchList.local[ localState.branchNumber];
+
+    saveSettings(); // Make sure detached branch is saved
+}
+
 
 // Branch-menu functions
 
