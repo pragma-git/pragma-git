@@ -307,6 +307,12 @@ async function _callback( name, event){
         }
         
         cacheBranchList();
+       
+        // Update graph
+        await _update();
+        if (localState.graphWindow){
+            _callback( 'clicked-graph');
+        }
         
         break;
       }
@@ -315,6 +321,8 @@ async function _callback( name, event){
         console.log('Selected repo = ' + event.selectedRepoNumber);
         state.repoNumber = event.selectedRepoNumber;
         gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
+        
+        
         
         // Update remote info immediately
         gitFetch();  
@@ -330,7 +338,15 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchList();
+        await cacheBranchList();
+        
+        
+        // Update graph
+        await _update();
+        if (localState.graphWindow){
+            _callback( 'clicked-graph');
+        }
+            
         
         break;
       }
@@ -367,6 +383,8 @@ async function _callback( name, event){
         localState.historyNumber = -1;
         
         cacheBranchList();
+        
+        gitSwitchBranch(branchName);
         
         break;
       }
@@ -1139,14 +1157,11 @@ async function _callback( name, event){
                         await gitSwitchBranch(branchName);
                         
                         
-                        await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
+                        //await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
                         
                         //var history = await gitHistory();
-                        localState.historyHash = state.repos[state.repoNumber].detachedBranch.hash;
                         
-                        //localState.historyNumber = util.findObjectIndex(history,'hash', localState.historyHash); 
-                        //console.log('historyNumber = ' + localState.historyNumber );
-                        //localState.historyString = historyMessage(history, localState.historyNumber);
+                        ////localState.historyHash = state.repos[state.repoNumber].detachedBranch.hash;
 
                         
                         //gitShowHistorical();
@@ -2752,6 +2767,13 @@ async function gitSwitchToRepo(repoNumber){
     state.repoNumber = repoNumber;  
     
     _callback('clickedRepoContextualMenu',myEvent);
+    
+        
+    // Update graph
+    if (localState.graphWindow){
+        _callback( 'clicked-graph');
+    }
+    
 
 }
 
@@ -2768,9 +2790,17 @@ async function gitSwitchBranch(branchName){
     }catch (err){
         gitCycleToNextBranch();
     }
-    // Update remote info immediately
+    // Update info
     gitFetch();  
     cacheBranchList();
+
+    // Update graph
+    if (localState.graphWindow){
+        await _update();
+        _callback( 'clicked-graph');
+        main_win.focus();
+    }
+    
 }
 async function gitSwitchBranchNumber(branchNumber){
     
@@ -3389,7 +3419,7 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
 
 function rememberDetachedBranch(){
     state.repos[state.repoNumber].detachedBranch = {};
-    state.repos[state.repoNumber].detachedBranch.hash = localState.historyHash;
+    state.repos[state.repoNumber].detachedBranch.hash = localState.historyHash;  // TODO :  Is this necessary ?
     state.repos[state.repoNumber].detachedBranch.detachedBranchName = cachedBranchList.local[ localState.branchNumber];
 
     saveSettings(); // Make sure detached branch is saved
