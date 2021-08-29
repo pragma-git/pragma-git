@@ -308,11 +308,7 @@ async function _callback( name, event){
         
         cacheBranchList();
        
-        // Update graph
-        await _update();
-        if (localState.graphWindow){
-            _callback( 'clicked-graph');
-        }
+        await updateGraphWindow();
         
         break;
       }
@@ -339,15 +335,9 @@ async function _callback( name, event){
         }
         
         await cacheBranchList();
-        
-        
-        // Update graph
-        await _update();
-        if (localState.graphWindow){
-            _callback( 'clicked-graph');
-        }
-            
-        
+
+        await updateGraphWindow();
+       
         break;
       }
       case 'clicked-branch': {
@@ -417,12 +407,9 @@ async function _callback( name, event){
       }
       case 'clicked-pull-button': {
         gitPull();
-       
-        // Update graph
-        await _update();
-        if (localState.graphWindow){
-            _callback( 'clicked-graph');
-        }
+
+        await updateGraphWindow();
+        
         break;
       }
       case 'clicked-merge-button': {
@@ -647,15 +634,10 @@ async function _callback( name, event){
             function onCreateTag(err, result ){console.log(result);console.log(err);};
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
-            
-                          
-            // Update graph
-            await _update();
-            if (localState.graphWindow){
-                _callback( 'clicked-graph');
-            }
-            
-            // Push tag to remote
+        
+            await updateGraphWindow();
+        
+           // Push tag to remote
             try{
                 await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
                 function onPush(err, result) {console.log(result) };
@@ -2788,13 +2770,7 @@ async function gitSwitchToRepo(repoNumber){
     
     _callback('clickedRepoContextualMenu',myEvent);
     
-        
-    // Update graph
-    if (localState.graphWindow){
-        _callback( 'clicked-graph');
-    }
-    
-
+    await updateGraphWindow();
 }
 
 async function gitSwitchBranch(branchName){
@@ -2813,13 +2789,7 @@ async function gitSwitchBranch(branchName){
     // Update info
     gitFetch();  
     cacheBranchList();
-
-    // Update graph
-    if (localState.graphWindow){
-        await _update();
-        _callback( 'clicked-graph');
-        main_win.focus();
-    }
+        await updateGraphWindow();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -3731,7 +3701,14 @@ function closeAllChildWindows( inputWin){
     
     
 }
-
+async function updateGraphWindow(){
+    await _update();
+    if (localState.graphWindow){
+        _callback( 'clicked-graph');
+    }
+    
+    win.focus();
+}
 
 // Dialogs
 async function tag_list_dialog(){
