@@ -81,6 +81,8 @@
 // Global in this window
     let history = '';
     var graphText;  // Output from git log
+    
+    var COMPRESS;
 
 //
 // Functions
@@ -430,6 +432,10 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             html += `<B> ${ParentHeader} : </B> <BR><BR>` 
             
             for (let i = 0; i < parentHashes.length; i++){
+                
+                // First commit has no parent hashes
+                if (parentHashes[i] == "")
+                    continue
 
                  let id = "img_" + parentHashes[i];
                  let imageSrc = document.getElementById(id).href.baseVal;
@@ -463,12 +469,21 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').innerHTML = html;
               
             document.getElementById('displayedMouseOver').style.visibility = 'visible';
-            document.getElementById('displayedMouseOver').style.left = e.clientX + 10;
             
-            // Make always visible
+            // Set x to the right of lane
+            let x = getFreeLane(commit, false);
+            if (commit.x > x )
+                x = commit.x;
+
+            let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
+            document.getElementById('displayedMouseOver').style.left = X0 + 20;
+            
+            // Set y so that info box always on screen
             let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
             if (top < 0)
                 top = e.clientY - 15;
+                
+            console.log('top = ' + top);
             
             document.getElementById('displayedMouseOver').style.top = top;                
         
@@ -710,7 +725,7 @@ async function drawGraph( document, graphText, branchHistory, history){
              
         // Config variables
         
-        let COMPRESS = false;   // Placement of known nodes.  true = compressed lanes  false = swim-lanes
+        COMPRESS = false;   // Placement of known nodes.  true = compressed lanes  false = swim-lanes
         if (MODE == 'git-log-graph') {  // Use switch in graph.html to set compress on / off
             COMPRESS = true;
         }
