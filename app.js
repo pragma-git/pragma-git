@@ -417,6 +417,12 @@ async function _callback( name, event){
       }
       case 'clicked-pull-button': {
         gitPull();
+       
+        // Update graph
+        await _update();
+        if (localState.graphWindow){
+            _callback( 'clicked-graph');
+        }
         break;
       }
       case 'clicked-merge-button': {
@@ -427,7 +433,8 @@ async function _callback( name, event){
         let selectedBranch = event;
         console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
         console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
-        gitMerge( event.currentBranch, event.selectedBranch); 
+        await gitMerge( event.currentBranch, event.selectedBranch); 
+        
         break;
       }
       case 'tagSelected': { // Called from tagList.js
@@ -460,7 +467,13 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-store-button': {
-        storeButtonClicked();
+        await storeButtonClicked();
+          
+        // Update graph
+        await _update();
+        if (localState.graphWindow){
+            _callback( 'clicked-graph');
+        }
         break;
       }
         
@@ -634,6 +647,13 @@ async function _callback( name, event){
             function onCreateTag(err, result ){console.log(result);console.log(err);};
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
+            
+                          
+            // Update graph
+            await _update();
+            if (localState.graphWindow){
+                _callback( 'clicked-graph');
+            }
             
             // Push tag to remote
             try{
@@ -1562,7 +1582,7 @@ async function _callback( name, event){
             
         }else{
             // Store
-            gitAddCommitAndPush( readMessage());
+            await gitAddCommitAndPush( readMessage());
         }
         
 }  
