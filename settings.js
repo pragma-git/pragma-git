@@ -494,8 +494,9 @@ async function closeWindow(){
         console.log('Failed storing git user.email');
     }
 
-    // Return (NOTE: Setting is finalized from app.js, this is different to other windows because Settings window is a'mode' in app.js)
+    // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
+    localState.settings = false;
  
 }
 
@@ -1031,6 +1032,12 @@ async function generateBranchTable(document, table, branchlist) {
             "selectedBranch = '"  + element + "';" + 
             "_callback('hideBranchCheckboxChanged', this );"); 
         cell.appendChild(checkbox);
+        
+        // Disable checkbox, can not hide current branch
+        if ( index === localState.branchNumber){
+            checkbox.setAttribute('disabled', true);
+            document.getElementById(checkbox.id).disabled = true
+        }
         
         
  

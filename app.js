@@ -1923,6 +1923,7 @@ async function _update(){
             let result = await gitLocalFolder();
             folder = result.folderName;
             currentBranch = status_data.current; 
+            gitSetLocalBranchNumber();  // Update localState.branchNumber here
         }catch(err){
             console.log(err);
 
@@ -1960,7 +1961,7 @@ async function _update(){
 
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
-            localState.settings = false;
+
             updateWithNewSettings();
             saveSettings();
                 
@@ -3713,9 +3714,14 @@ function closeAllChildWindows( inputWin){
     
 }
 async function updateGraphWindow(){
+    
     await _update();
     if (localState.graphWindow){
         _callback( 'clicked-graph');
+    }
+    
+    if (localState.settings){
+        settings_win.window.injectIntoSettingsJs(settings_win.window.document)
     }
     
     win.focus();
