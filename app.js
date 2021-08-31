@@ -143,9 +143,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
-        
 
-        var util = require('./util_module.js'); // Pragma-git common functions
+        const util = require('./util_module.js'); // Pragma-git common functions
     
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
@@ -188,6 +187,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     
     // State variables
+    
+        var lastKnown = {};
+        lastKnown.repo;
+        lastKnown.branch;
+    
         var localState = [];
         localState.historyNumber = -1;
         localState.historyLength = 0;  // Number available in history or search 
@@ -1924,6 +1928,13 @@ async function _update(){
 
         }
 
+    }
+    
+    // If updated repo or branch
+    if ( ( lastKnown.repo !== folder )||( lastKnown.branch !== currentBranch ) ){
+        lastKnown.repo = folder;
+        lastKnown.branch = currentBranch;
+        _setMode('UNKNOWN');
     }
     
     

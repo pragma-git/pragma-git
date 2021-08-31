@@ -18,7 +18,7 @@
     "icon": "./images/icon.png"
   },
   "scripts": {
-    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs ."
+    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 ."
   },
   "dependencies": {
     "@toast-ui/editor": "^2.3.1",
