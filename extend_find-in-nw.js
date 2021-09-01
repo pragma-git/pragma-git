@@ -5,6 +5,20 @@
 // Extend to search from any base element (was hard-coded to body in original find-in-nw)
 
 function extendFindInNw( elementToSearch){
+    
+    
+    // This is my own version to be used in pragma-git
+    findInNw.positionSearchBox = function (){
+
+        // Call normal search box
+        findInNw.showSearchBox();
+        
+        // Set position getting editor from variable 'pragmaMergeSearchInEditorId' as defined on mouse click on search icon
+        let leftPos = document.getElementsByClassName(pragmaMergeSearchInEditorId)[0].getBoundingClientRect().x + 40;
+        document.getElementById('find-in-nw-search-box').style.left = leftPos + 'px';
+        document.getElementById('find-in-nw-search-box').style.right = 'auto';
+        document.getElementById('find-in-nw-search-box').style.top = '-6px';
+    }
 
 
     // Different base elements depending on Graph window or Notes (wysiwyg or markdown mode are also different)
@@ -13,6 +27,7 @@ function extendFindInNw( elementToSearch){
         
         // Initial guess - base search element
         let searchElement = document.body; 
+        
         
         // If Notes, overide base search element -- two modes Wysiwyg (button 1) and Markdown (button 0)
         try{
@@ -24,7 +39,16 @@ function extendFindInNw( elementToSearch){
             if (isMd){
                 searchElement = document.getElementsByClassName('te-md-container')[0].getElementsByClassName('te-preview')[0];
             }  
-        }catch(err){}      
+        }catch(err){}    
+        
+        
+        // If Pragma-merge
+        try{
+            searchElement = document.getElementsByClassName( pragmaMergeSearchInEditorId)[0];  // Messaging variable defined in pragma-merge.html
+
+        }catch(err){}            
+        
+          
         
         // Find all elements
         for (let i = 0; i < searchElement.children.length; i++) {
@@ -43,7 +67,7 @@ function extendFindInNw( elementToSearch){
         document.onkeydown = function (pressed) {
           console.log(pressed)
           // Check for `CTRL+F or Command+F`
-          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 70 )
+          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 69 )
           {
             pressed.preventDefault();
             this.showSearchBox();
@@ -116,5 +140,6 @@ function extendFindInNw( elementToSearch){
       
               
       document.getElementById('find-in-nw-search-box').style.zIndex = 1000000;
+
 
 }

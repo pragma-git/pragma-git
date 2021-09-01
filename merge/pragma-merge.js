@@ -263,9 +263,9 @@ function initUI() {
             break;
           }
         } 
-        
+   
         // Apply mode-dependency html
-        document.getElementById('editor2').innerHTML = editorLabel
+        document.getElementById('editor2').innerHTML = editorLabel;
         document.getElementById('right2').innerHTML = rightViewerLabel + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'visible';
@@ -310,8 +310,32 @@ function initUI() {
         
     resize();
     
+    if ( panes == 2){
+        addSearch('editor2', 'CodeMirror-merge-editor');
+        addSearch('right2', 'CodeMirror-merge-right');
+    }
+    if ( panes == 3){
+        addSearch('left3', 'CodeMirror-merge-left ');
+        addSearch('editor3', 'CodeMirror-merge-editor');
+        addSearch('right3', 'CodeMirror-merge-right');
+    }
 
+}
 
+function addSearch(headerId, editorId){
+    
+    let leftPos = document.getElementsByClassName(editorId)[0].getBoundingClientRect().x + 40;
+    let searchIconElementId = headerId + '_search';
+    
+    let headerElement = document.getElementById(headerId);
+        
+    headerElement.innerHTML = headerElement.innerHTML + 
+    `  <!-- Search button --> 
+                <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
+                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBox()" 
+                    onmouseover="document.getElementById('${searchIconElementId}').src='../images/find.png' " 
+                    onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
+                    src="../images/find_black.png" >`;
 }
 
 // Show button states

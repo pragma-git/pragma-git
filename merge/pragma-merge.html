@@ -257,6 +257,16 @@
           
           
     </script>  
+    
+    <!--  Add find  -->    
+    <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="../extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note and pragma-merge
+        
+        var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
+    </script> 
 
 
 </body>    
