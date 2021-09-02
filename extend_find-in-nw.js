@@ -7,8 +7,8 @@
 function extendFindInNw( elementToSearch){
     
     
-    // This is my own version to be used in pragma-git
-    findInNw.positionSearchBox = function (){
+    // Pragma-merge window -- This is my own version to be used in pragma-merge
+    findInNw.positionSearchBoxPragmaMerge = function (){
 
         // Call normal search box
         findInNw.showSearchBox();
@@ -19,7 +19,18 @@ function extendFindInNw( elementToSearch){
         document.getElementById('find-in-nw-search-box').style.right = 'auto';
         document.getElementById('find-in-nw-search-box').style.top = '-6px';
     }
+    //-------------------------------------------------------------      
+       
+    // Graph window -- This is my own version to be used in Graph
+    findInNw.positionSearchBoxGraph = function (){
 
+        // Call normal search box
+        findInNw.showSearchBox();
+        
+        // Set position getting editor from variable 'pragmaMergeSearchInEditorId' as defined on mouse click on search icon
+        document.getElementById('find-in-nw-search-box').style.right = '55px';
+    }   
+    //------------------------------------------------------------- 
 
     // Different base elements depending on Graph window or Notes (wysiwyg or markdown mode are also different)
     findInNw.getElementsToSearch = function () {
