@@ -4397,8 +4397,9 @@ function loadSettings(settingsFile){
             state.graph = setting( state_in.graph, {} );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
-            state.graph.showHiddenBranches = setting( state_in.graph.showall, true );
-            state.graph.swimlanes  = setting( state_in.graph.showall, false );
+            state.graph.showHiddenBranches = setting( state_in.graph.showHiddenBranches, true );
+            state.graph.swimlanes  = setting( state_in.graph.swimlanes, false );
+            state.graph.debug  = setting( state_in.graph.debug, false );  // Note, set by editing settings.json
             
 
     //

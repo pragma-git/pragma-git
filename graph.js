@@ -20,7 +20,6 @@
     'DeepSkyBlue'
     ];
     
-    const DEBUG = true;       // true = show debug info on commit messages
     
     var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
     
@@ -83,6 +82,7 @@
     var graphText;  // Output from git log
     
     var COMPRESS;
+    const DEBUG = state.graph.debug;       // true = show debug info on commit messages
 
 //
 // Functions
