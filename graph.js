@@ -328,6 +328,8 @@ function toggleDate( show){
     document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
 
 }
+
+var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
         
     //
@@ -348,8 +350,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             .size(size,size)
             .move( X0 - 0.5 * size , Y0 - 0.5 * size);
     }
-    
-    
     function resetNodeSize(){
             // Reset node sizes
             for (let i = 0; i < infoNodes.length; i++){
@@ -358,24 +358,36 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             infoNodes = [];
             return
     }
+
+    // Other utility functions
+    function closeInfoBox(){  // Info box closing
+            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+            resetNodeSize();
+    }
+    function hasMouseLeft(){  // Tels if mouse is outside commmit circle
+        return !isMouseOverCommitCircle;  // true if mouse is not over
+    }
     
-    
+    //
     // Add mouse events for each circle
+    //
     for (var i = arrElem.length; i-- ;) {
     
 
         // onmouseout     
                        
-        arrElem[i].onmouseout = function(e) {
-            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-            resetNodeSize();
+        arrElem[i].onmouseleave = function(e) {
+            closeInfoBox();
+            isMouseOverCommitCircle = false;
             return
         };
         
         
-        // onmouseover
+        // onmouseover 
         
-        arrElem[i].onmouseover = async function(e) {
+        arrElem[i].onmouseenter = async function(e) {
+            
+            isMouseOverCommitCircle = true;
             
             resetNodeSize(); // Clear resized nodes
             
@@ -487,7 +499,10 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').style.top = top;                
         
         
-            
+            // Check if mouse left during execution
+            if (hasMouseLeft() ){
+                closeInfoBox();
+            }
         
         };
     
