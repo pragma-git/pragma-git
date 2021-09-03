@@ -74,7 +74,16 @@
         <p>
         Pointing the mouse to a commit circle displays information about the commit, and the parents of that commit.  
         Also, the circles for the commit and its nearest parent are enlarged, giving a visual view of their relationship.
-        </p>
+  
+
+        
+        <figure>
+            <img src="images/Screenshot_commit_info_dark.png" style="zoom:33%;filter: invert( 0% ); ">
+            <figcaption>
+                Commit info box displayed when hovering over a commit.
+            </figcaption>
+        </figure>
+
         
  
     <h4>Colors</h4>   
@@ -84,12 +93,12 @@
         <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_red.png" >
         <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_blue.png" >
         <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_orange.png" >
-        .
+        ...
         </p>  
             
         <p>
         For commits with unknown branches, the graph displays commits on the current branch in green <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_green.png" >
-        , and commits on other branches without color <img style="height: 12; width: 12; vertical-align:middle;" src="../images/circle_black.png">. 
+        , and commits on other branches without color <img style="height: 12; width: 12; filter: invert( 0% );vertical-align:middle;" src="../images/circle_grey.png">. 
         </p>  
         
         <p>  Due to how git works, the current branch can only be deduced correctly if the setting "Merge without fast-forward" is used (recommended).
@@ -162,6 +171,11 @@
     <input id="showHidden" name="showHidden" type="checkbox"> <label for="showHidden">Show Hidden Branches</label>
     , this option is only visible if there exists any branches hidden.  Branches can be hidden from the settings 
     ( click main-window <img src="../images/settings_black.png"  height="17" width="17"> icon, and then Branch tab).  
-    If checkbox is checked, hidden branches are shown with their known branch colors, 
-    otherwise the commits on hidden branches are shown as belonging to an unknown branch.
+    If checkbox is checked, hidden branches are shown with their known branch colors
+    (        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_red.png" >
+        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_blue.png" >
+        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_orange.png" >
+        ...)
+    , 
+    otherwise the commits on hidden branches are shown as belonging to an unknown branch (<img style="height: 12; width: 12; filter: invert( 0% );vertical-align:middle;" src="../images/circle_grey.png">).
     </p>
