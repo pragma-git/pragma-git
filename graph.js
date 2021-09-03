@@ -476,14 +476,13 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 x = commit.x;
 
             let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
-            document.getElementById('displayedMouseOver').style.left = X0 + 20;
+            document.getElementById('displayedMouseOver').style.left = e.clientX + X0 + 20;
             
             // Set y so that info box always on screen
             let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
             if (top < 0)
                 top = e.clientY - 15;
                 
-            console.log('top = ' + top);
             
             document.getElementById('displayedMouseOver').style.top = top;                
         
