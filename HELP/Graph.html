@@ -1,44 +1,142 @@
- <h4>Current branch</h4>       
-    <p>
-    The commit tree shows commits on the current branch in green <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_green.png" >
-    , and commits on other branches without color <img style="height: 12; width: 12; vertical-align:middle;" src="../images/circle_black.png">. 
-    Selection in the graph window are synchronized with the main window.
-    </p>  
-    
-    <p>  Due to how git works, the current branch can only be deduced correctly if the settings "Merge without fast-forward" is used (recommended).
-    </p>  
+ 
+        <link rel="stylesheet" type="text/css" href="../slider_switch.css" /> 
 
-<h4>Text color</h4> 
-    <p>
-    Commit message texts outside the current branch are displayed in <i>italics</i> and a diffent color. 
-    Also, commits not found in the Search box (of the main window) are displayed in <i>italics</i> and a diffent color.
+ 
+<h2 class="instructHeader">Overview</h2>
+       
+        <p>The graph window consists of multiple parts :
+            <ul>
+                <li><b>Header (top) </b> , shows repo and branch name</li>
+                <li><b>Graph view (left) </b> , displays the git-log graph</li>
+                <li><b>Branch display box (right) </b> , gives color coding for nodes, and some display setting checkboxes</li>
+            </ul>
+        </p>
+
+ 
+<!--------------------------------------------------------------------------------------------> 
+<hr>        
+<h2>Header (top)</h2>
+
     
+    
+    <h4>Current repository and branch</h4> 
         <p>
+        The current repository is displayed in the header, together with the branch and a circle showing its display color (within parenthesis).
+        The header for repository "pragma-git" and branch "develop" could look like this : 
+        <span  style="color: var(--header-color)">
+                <span id="repoName">pragma-git</span>
+                
+                ( <img id="headerBranchCircle" style="height: 12; width: 12;filter: invert( 0% );" src="../images/circle_colors/circle_red.png" class="noInvert"> <u><span id="branchName">develop</span></u>)
 
 
-<h4>Navigating</h4> 
-    <p>
-    Moving the mouse pointer over the commit message, a grey shaddow appears, together with a checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">.
-    <p>
+            </span>
+        </p>
 
+ 
+     <h4>Mode switch</h4>      
+      
+        <p>
+             The mode switch "
+             <span class="normal-text" style="display: inline; font-size: 11px;">             
+                                    <span id="git" style="color: var(--text)">compress</span> 
+                                    <label class="switch">
+                                        <input id="graph_mode_switch" type="checkbox" class="slider round" >
+                                        <span class="slider round"></span> 
+                                    </label> 
+                                    <span id="lanes" style="color: var(--dim-text)">lanes</span> 
+                            </span>
+            "
+             determines how branches with unknown names are displayed
+             
+            <br>   
+            <br>   
+            Branches with known names can be displayed two ways :                
+            <ul>
+                <li><b>compress  </b> , where graph takes minimal space </li>
+                <li><b>swim-lane </b> , where each known graph is placed in its own horizontal position</li>
+            </ul>     
+             
+        </p>
 
-<h4>Select commit</h4>     
-    </p>
-    Clicking on the commit makes the text green, and moves history to the selected commit.  The main window is updated to display this commit.  
-    The main window can be used as before, looking for changes, clicking on the modified files to get a list of changes to prior commit, etc.
-    <p>
-   
-<h4>Compare with fixed commit</h4>    
-    </p>
-    Clicking the checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">
-    , makes the checked commit a fixed historical commit (<img src="../images/pinned_enabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">). 
-    </p>
+<!--------------------------------------------------------------------------------------------> 
+<hr>        
+<h2>Graph view (left)</h2>
+
     
+    
+    <h4>Commits</h4> 
+        <p>
+        Commits are shown as circles.
+        </p>
+    
+    
+    <h4>Commit Info</h4> 
+        <p>
+        Pointing the mouse to a commit circle displays information about the commit, and the parents of that commit.  
+        Also, the circles for the commit and its nearest parent are enlarged, giving a visual view of their relationship.
+        </p>
+        
+ 
+    <h4>Colors</h4>   
+          
+        <p>
+        The graph shows commits of known branch-names as color nodes, for instance : 
+        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_red.png" >
+        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_blue.png" >
+        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_orange.png" >
+        .
+        </p>  
+            
+        <p>
+        For commits with unknown branches, the graph displays commits on the current branch in green <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_green.png" >
+        , and commits on other branches without color <img style="height: 12; width: 12; vertical-align:middle;" src="../images/circle_black.png">. 
+        </p>  
+        
+        <p>  Due to how git works, the current branch can only be deduced correctly if the setting "Merge without fast-forward" is used (recommended).
+        </p>  
+ 
+
+    <h4>Commit texts</h4> 
+        <p>
+        Commit message texts outside the current branch are displayed in <i>italics</i> and a diffent color. 
+        Also, commits not found in the Search box (of the main window) are displayed in <i>italics</i> and a diffent color.  
+        </p>
+           
+    
+    <h4>Navigating</h4> 
+        <p>
+        Moving the mouse pointer over the commit message, a grey shaddow appears, together with a checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">.
+        </p>
+    
+    
+    <h4>Select commit</h4>     
+        <p>
+        Clicking on the commit makes the text green, and moves the main window history to the selected commit.  
+        The main window can be used as before, looking for changes, clicking on the modified files to get a list of changes to prior commit, etc.
+        </p>
+       
+    <h4>Checkbox, compare with fixed commit</h4>    
+        <p>
+        Clicking the checkbox <img src="../images/pinned_disabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">
+        , makes the checked commit a fixed historical commit (<img src="../images/pinned_enabled_black.png"  style="height: 17; width: 17; vertical-align:middle;">). 
+        </p>
+        
+        <p>
+        Selecting the text of any other commit (not the checkbox) 
+        moves history to the newly selected commit (both in graph and in main window).
+        The bottom of the main window is updated to display number of modified files between the selected and the fixed (checkboxed) commits. 
+        </p>
+
+<!--------------------------------------------------------------------------------------------> 
+<hr>        
+<h2>Branch display box (right) </h2>
+
     <p>
-    Selecting the text of any other commit (not the checkbox) 
-    moves history to the newly selected commit (both in graph and in main window).
-    The bottom of the main window is updated to display number of modified files between the selected and the fixed (checkboxed) commits. 
-       </p>
+    This box displays the branch names and their color codes. 
+    </p>
+    <p>
+    The following settings modify the graph display :
+    </p>
 
 <h4>Dates</h4>     
     </p>
@@ -48,11 +146,22 @@
     
     <p>
     One date is shown per day, and newer commits are higher up.  Dates are shown in ISO format, with YYYY-MM-DD (YYYY = four digit year, MM = two-digit month, DD = two-digit day)
-    <p>
+    </p>
 
 <h4>All branches</h4>     
-    </p>
+    <p>
     <input id="showDate" name="showAll" type="checkbox"> <label for="showAll">Show All</label>
-    , enables or disables display of all branches.  Showing all branches is often messy, and having this option turned off works most of the time.
+    , enables or disables display of branches that are not direct parents to the current branch.  
+    Showing all branches is messy in complex projects, and having this option turned off works most of the time.
     </p>
     
+
+
+<h4>Show hidden branches</h4>     
+    <p>
+    <input id="showHidden" name="showHidden" type="checkbox"> <label for="showHidden">Show Hidden Branches</label>
+    , this option is only visible if there exists any branches hidden.  Branches can be hidden from the settings 
+    ( click main-window <img src="../images/settings_black.png"  height="17" width="17"> icon, and then Branch tab).  
+    If checkbox is checked, hidden branches are shown with their known branch colors, 
+    otherwise the commits on hidden branches are shown as belonging to an unknown branch.
+    </p>
