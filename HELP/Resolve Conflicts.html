@@ -3,8 +3,8 @@
          that there are differences in overlapping parts of two files.  Both these cases needs a manual choice, which change to keep.
         </p>   
         
-        <h4>This window has a stepwise approach</h4>
-            <p>Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
+        <h4>Each type of conflict is solved in a different section</h4>
+            <p>Resolve the conflicts starting at the top section. You may fold the sections, by clicking on the header.  
             </p>
         
         <h4>Section "1) Select files to keep"</h4>
@@ -12,19 +12,21 @@
             </p>      
            
         <h4>Section "2) Conflicting files"</h4>
-            <p> Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below).
+            <p> Clicking the "Solve conflicting files"-button starts a merge tool (see Requirements, below).
             This button will be enabled when there are no conflicts in step 1).
             </p>
 
         
         <h4>Section "3) Accept changes"</h4>
             <p>This is your last chance to change your mind.  <br>
-            Press "Undo Merge" in case you do not accept. <br>
-            Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)<br><br>
-            NOTE : After this, you should type a description and press the Store-button in the main window
+            <ul>
+                <li>Press "Undo Merge" in case you are not sure the conflict was resolved correctly </li>
+                <li>Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)</li>
+            </ul>
+            NOTE : After this, you should type a commit description and press the Store-button in the main window
             </p>
         
         <h4>Requirements</h4>
-            <p> This window uses the external merge tool, which you define in the settings window.  
+            <p> This window uses either the built in merge tool, or an external merge tool that is defined in the settings window.  
             </p>
     
