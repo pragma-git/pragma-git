@@ -78,7 +78,7 @@ function extendFindInNw( elementToSearch){
         document.onkeydown = function (pressed) {
           console.log(pressed)
           // Check for `CTRL+F or Command+F`
-          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 69 )
+          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 70 )
           {
             pressed.preventDefault();
             this.showSearchBox();
