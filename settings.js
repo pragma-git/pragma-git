@@ -705,6 +705,7 @@ async function injectIntoSettingsJs(document) {
 
 
     // Build repo table
+    document.getElementById("settingsTableBody").innerHTML = ""; 
     await createHtmlTable(document);  
 
 

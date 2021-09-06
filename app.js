@@ -311,8 +311,6 @@ async function _callback( name, event){
         }
         
         cacheBranchList();
-       
-        await updateGraphWindow();
         
         break;
       }
@@ -341,6 +339,7 @@ async function _callback( name, event){
         await cacheBranchList();
 
         await updateGraphWindow();
+        updateSettingsWindow();
        
         break;
       }
@@ -3713,19 +3712,29 @@ function closeAllChildWindows( inputWin){
     
     
 }
+
+
+// Update other windows
 async function updateGraphWindow(){
     
     await _update();
     if (localState.graphWindow){
         _callback( 'clicked-graph');
     }
-    
+
+    win.focus();
+}
+async function updateSettingsWindow(){
+
+    await _update();
+
     if (localState.settings){
         settings_win.window.injectIntoSettingsJs(settings_win.window.document)
     }
     
     win.focus();
 }
+
 
 // Dialogs
 async function tag_list_dialog(){
