@@ -4,3 +4,6 @@
 
 [core]
     askpass = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass
+
+[credential]
+    useHttpPath = true

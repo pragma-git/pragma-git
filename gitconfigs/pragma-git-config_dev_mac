@@ -4,3 +4,6 @@
 
 [core]
     askpass = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-askpass
+
+[credential]
+    useHttpPath = true

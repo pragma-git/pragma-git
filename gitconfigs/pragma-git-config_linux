@@ -4,3 +4,6 @@
 
 [core]
     askpass = /opt/pragma-git/pragma-askpass
+
+[credential]
+    useHttpPath = true
