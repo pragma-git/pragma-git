@@ -44,7 +44,17 @@
 
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
-              
+            
+            
+        <!-- Help button --> 
+        <img id="about-icon" style='vertical-align:middle;position: absolute; right: 10px; ' height="17" width="17"  
+            onclick="let evt = {}; evt.name='Credentials';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('about-icon').src='../images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('about-icon').src='../images/questionmark_black.png' " 
+            src="../images/questionmark_black.png" >
+            
+        
+        <!-- Text field -->       
         <label id="pwdlabel" for="pwd">Access Token / Password</label><br>
         <textarea id="pwd" 
             rows="1" 
@@ -52,6 +62,8 @@
             ></textarea>
         <br>
         <br>
+        
+
 
         
         <button  id="Select-button" onclick="OK_clicked();"> OK  </button>    
@@ -76,11 +88,11 @@
         document.getElementById('pwdlabel').innerText = ARG1;
         
         if ( ARG1.startsWith('Username') ){
-            document.getElementById('pwdlabel').innerHTML = ARG1 + '<br> (or Access Token) <br> ';
+            document.getElementById('pwdlabel').innerHTML= 'Username / Token name <br>';
         }
         
         if ( ARG1.startsWith('Password') ){
-            document.getElementById('pwdlabel').innerHTML = ARG1 + '<br> (or Cancel if Access Token) <br> ';
+            document.getElementById('pwdlabel').innerHTML = 'Password / Access Token <br>';
         }
 
 
