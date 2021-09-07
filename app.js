@@ -1961,6 +1961,8 @@ async function _update(){
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
 
+            localState.settings = false;
+            
             updateWithNewSettings();
             saveSettings();
                 

@@ -447,6 +447,9 @@ function forgetButtonClicked(event){
 }
 async function closeWindow(){
     
+    // Remove from menu
+    opener.deleteWindowMenu('Settings');
+    
     // Read fields into state
     if ( !('tools' in state) ){
         state.tools = {};
@@ -494,9 +497,11 @@ async function closeWindow(){
         console.log('Failed storing git user.email');
     }
 
+    
     // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
-    localState.settings = false;
+    //localState.settings = false;
+    
  
 }
 
@@ -866,7 +871,7 @@ async function generateRepoTable(document, table, data) {
                        
             // Run test
             _callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
-            
+            //testURL(index + 10000, {id: index + 20000, type: 'no_askpass'});
                           
             // Into table cell :  button
             cell = row.insertCell();
