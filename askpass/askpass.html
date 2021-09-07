@@ -74,6 +74,14 @@
         
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`);
         document.getElementById('pwdlabel').innerText = ARG1;
+        
+        if ( ARG1.startsWith('Username') ){
+            document.getElementById('pwdlabel').innerHTML = ARG1 + '<br> (or Access Token) <br> ';
+        }
+        
+        if ( ARG1.startsWith('Password') ){
+            document.getElementById('pwdlabel').innerHTML = ARG1 + '<br> (or Cancel if Access Token) <br> ';
+        }
 
 
         function OK_clicked(){
