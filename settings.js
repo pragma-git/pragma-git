@@ -325,17 +325,12 @@ async function _callback( name, event){
                
             console.log('setButtonClicked');
             console.log(event);
-            //value = event.value;
             
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
         
-            
-            // Make black, to show user that something happened (if green or red before
-            document.getElementById(textareaId).classList.add('grey');
-            
-            
+  
             //  Set remote URL 
             if ( isSetButton ){
                 
@@ -346,17 +341,16 @@ async function _callback( name, event){
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
                     await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){console.log(result);console.log(err)  };
+                    function onSetRemoteUrl(err, result ){
+                        console.log(result);
+                        console.log(err)  
+                    };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
                 }catch(err){
-                    
                     console.log('Repository set URL failed');
                     console.log(err);
-                    document.getElementById(textareaId).classList.add('red');
-                    document.getElementById(textareaId).classList.remove('grey');
-                    document.getElementById(textareaId).classList.remove('green');
                 }           
             }
             
@@ -380,11 +374,18 @@ async function _callback( name, event){
 }
 
 async function testURL(textareaId, event){
+    
+    let outputColor = 'g'
+    
+    document.getElementById(textareaId).classList.add('grey');  // Make grey until known if success or fail
+    
+    let repoId = textareaId - 10000;
+            
     // Test if remote URL works
     try{
         let remoteURL = document.getElementById(textareaId).value;
-        //await simpleGit().listRemote( remoteURL, onListRemote);
-        
+    
+             
             const commands = [ 'ls-remote', remoteURL];
             
             // Two versions, with and without askpass dialog
@@ -393,23 +394,28 @@ async function testURL(textareaId, event){
             }else{
                 await simpleGit().raw(  commands, onListRemote); // default askpass 
             }
-            
-            function onSetRemoteUrl(err, result ){console.log(result) };
-        
-        function onListRemote(err, result ){console.log(result);console.log(err) };
-        document.getElementById(textareaId).classList.add('green');
-        document.getElementById(textareaId).classList.remove('grey');
-        document.getElementById(textareaId).classList.remove('red');
+
+            function onListRemote(err, result ){
+                //console.log(result);
+                outputColor = 'green'
+                if (result == undefined){
+                    outputColor = 'red'
+                }
+            };
+
 
     }catch(err){
         
-        //displayAlert('Failed verifying remote URL', err)
         console.log('Repository test failed');
         console.log(err);
-        document.getElementById(textareaId).classList.add('red');
-        document.getElementById(textareaId).classList.remove('grey');
-        document.getElementById(textareaId).classList.remove('green');
+        outputColor = 'red'
     }
+                
+    // Set color        
+    document.getElementById(textareaId).classList.remove('green');
+    document.getElementById(textareaId).classList.remove('grey');
+    document.getElementById(textareaId).classList.remove('red');
+    document.getElementById(textareaId).classList.add(outputColor);
  }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
@@ -870,8 +876,8 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(button);
                        
             // Run test
-            _callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
-            //testURL(index + 10000, {id: index + 20000, type: 'no_askpass'});
+            //_callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
+            testURL(index + 10000, {id: index + 20000});
                           
             // Into table cell :  button
             cell = row.insertCell();
