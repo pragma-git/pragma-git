@@ -353,7 +353,6 @@ async function _callback( name, event){
                     console.log(err);
                 }           
             }
-            
             testURL(textareaId, event);
 
             break;
@@ -375,28 +374,37 @@ async function _callback( name, event){
 
 async function testURL(textareaId, event){
     
-    let outputColor = 'g'
+    let outputColor = 'red'
     
     document.getElementById(textareaId).classList.add('grey');  // Make grey until known if success or fail
     
     let repoId = textareaId - 10000;
+    let remoteURL
             
     // Test if remote URL works
     try{
-        let remoteURL = document.getElementById(textareaId).value;
+            remoteURL = document.getElementById(textareaId).value;
+        
+            console.log('textareaId = ' + textareaId);
+            console.log('TESTURL ID = ' + repoId);
+            console.log('remoteURL = ' + remoteURL);
     
              
             const commands = [ 'ls-remote', remoteURL];
             
             // Two versions, with and without askpass dialog
             if ( event.type == 'no_askpass'){
+                document.getElementById(textareaId).classList.remove('green');
+                document.getElementById(textareaId).classList.remove('grey');
+                document.getElementById(textareaId).classList.add('red'); 
                 await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
             }else{
                 await simpleGit().raw(  commands, onListRemote); // default askpass 
             }
 
             function onListRemote(err, result ){
-                //console.log(result);
+                console.log('onListRemote');
+                console.log(err);
                 outputColor = 'green'
                 if (result == undefined){
                     outputColor = 'red'
@@ -406,9 +414,10 @@ async function testURL(textareaId, event){
 
     }catch(err){
         
-        console.log('Repository test failed');
-        console.log(err);
         outputColor = 'red'
+        document.getElementById(textareaId).classList.add('red');
+        console.log('Repository test failed ' + remoteURL);
+        console.log(err);
     }
                 
     // Set color        
@@ -818,7 +827,7 @@ async function generateRepoTable(document, table, data) {
             
         // Loop rows in data
         for (let element of data) {
-            console.log('Element = ' + element );
+            //console.log('Element = ' + element );
      
     
             let cell, text, button, textarea, radiobutton
@@ -877,7 +886,7 @@ async function generateRepoTable(document, table, data) {
                        
             // Run test
             //_callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
-            testURL(index + 10000, {id: index + 20000});
+            testURL(index + 10000, {type: 'no_askpass', id: index + 20000});
                           
             // Into table cell :  button
             cell = row.insertCell();
@@ -950,7 +959,7 @@ async function generateBranchTable(document, table, branchlist) {
         
         let hiddenBranch = util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, element);
         
-        console.log('Element = ' + element );
+        //console.log('Element = ' + element );
         let row = table.insertRow();
         
         
