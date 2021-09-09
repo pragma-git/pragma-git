@@ -2358,7 +2358,7 @@ async function _setMode( inputModeName){
         case 'DEFAULT': {
             //if (currentMode ==  'DEFAULT') { return};
             newModeName = 'DEFAULT';
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";
             textOutput.placeholder = "Get started by " + os.EOL 
@@ -2377,7 +2377,7 @@ async function _setMode( inputModeName){
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
             textOutput.readOnly = true;
@@ -2390,7 +2390,7 @@ async function _setMode( inputModeName){
             newModeName = 'CHANGED_FILES';
             textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
             //if (currentMode ==  'CHANGED_FILES') { return};
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";          
             textOutput.readOnly = false;
@@ -2403,7 +2403,7 @@ async function _setMode( inputModeName){
             console.log( readMessage() );
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
             if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = false;  
             textOutput.value = readMessage();    
             textOutput.readOnly = false;
@@ -2428,7 +2428,7 @@ async function _setMode( inputModeName){
         case 'SETTINGS': {
             newModeName = 'SETTINGS';
             if (currentMode ==  'SETTINGS') { return};
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";
             textOutput.placeholder = 
@@ -2443,7 +2443,7 @@ async function _setMode( inputModeName){
         case 'CONFLICT': {
             newModeName = 'CONFLICT';
             if (currentMode ==  'CONFLICT') { return};
-            document.getElementById("store-button").innerHTML="Store";// Set button
+            setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";
             textOutput.placeholder = 
@@ -3714,7 +3714,15 @@ function closeAllChildWindows( inputWin){
     
     
 }
-
+function setButtonText(){  // Store or Commit, depending on setting for autopush
+    // Store-button : Store or Commit depending on setting
+    if (state.autoPushToRemote){
+        document.getElementById('store-button').innerText = 'Store';
+    }else{
+        document.getElementById('store-button').innerText = 'Commit';
+    }
+         
+}
 
 // Update other windows
 async function updateGraphWindow(){
@@ -4603,7 +4611,7 @@ window.onload = function() {
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
 
   win.show();
-  
+
 };
 
 
