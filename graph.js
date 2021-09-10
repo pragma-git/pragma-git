@@ -379,18 +379,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         arrElem[i].onmouseleave = function(e) {
             closeInfoBox();
             isMouseOverCommitCircle = false;
-<<<<<<< Updated upstream
-=======
-=======
-        arrElem[i].onmouseout = function(e) {
-            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-            resetNodeSize();
-            console.log('out');
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
             return
         };
         
@@ -496,25 +484,11 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // Set x to the right of lane
             let x = getFreeLane(commit, false);
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
             if (commit.x > x )
                 x = commit.x;
 
             let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
             document.getElementById('displayedMouseOver').style.left = e.clientX + X0 + 20;
-<<<<<<< Updated upstream
-=======
-=======
-=======
->>>>>>> Stashed changes
-            let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
-            document.getElementById('displayedMouseOver').style.left = X0 + 20;
->>>>>>> Stashed changes
->>>>>>> Stashed changes
             
             // Set y so that info box always on screen
             let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
