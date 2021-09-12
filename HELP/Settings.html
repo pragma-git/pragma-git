@@ -16,14 +16,14 @@
 <hr>   
 <!--------------------------------------------------------------------------------------------> 
 
-<h2 class="instructHeader">Software settings tab</h2>
+<h2 class="instructHeader" id="SoftwareTab">Software settings tab</h2>
 
             <div class="wrapper">
                 <div class="buttonWrapper">
-                      <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button" data-id="foldableDiv1">Repository</button>
-                      <button class="tab-button" data-id="foldableDiv4">Branch</button>
-                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                      <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
             </div>   
 <!--------------------------------------------------------------------------------------------> 
@@ -126,14 +126,14 @@
  
 <!--------------------------------------------------------------------------------------------> 
 
-            <h2 class="instructHeader">Repository tab</h2>
+            <h2 class="instructHeader" id="RepositoryTab">Repository tab</h2>
             
             <div class="wrapper">
                 <div class="buttonWrapper">
-                      <button class="tab-button " style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button active" data-id="foldableDiv1">Repository</button>
-                      <button class="tab-button" data-id="foldableDiv4">Branch</button>
-                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button active" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  
@@ -169,13 +169,13 @@
     
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
         
-        <div class="toolWrapper" > 
+       <div class="toolWrapper" > 
             <div class="buttonWrapper">
                   <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
             </div>
-        </div>
+        </div>  
 
         <p>Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).</p>
         
@@ -194,13 +194,13 @@
         
         
     
-        <div class="toolWrapper" > 
+       <div class="toolWrapper" > 
             <div class="buttonWrapper">
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
-                  <button id="addTab" class="tab-button-small active" data-id="addDiv">Add</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
+                  <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
             </div>
-        </div>
+        </div> 
  
         <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
         a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
@@ -219,15 +219,29 @@
     
     
     
-        <div class="toolWrapper" > 
+       <div class="toolWrapper" > 
             <div class="buttonWrapper">
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add</button>
-                  <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
             </div>
-        </div>
+        </div> 
         
-         <p><b>Using Github </b> :<br>  
+         <p><b>Adding a remote repository</b> :<br>  
+         
+        <!-- Same as in settings.html -->
+        <p>
+             For remote git services, enter remote URL manually for selected repository. <br>
+             Format : <code>https://name:password@address</code> 
+             (for token-based services, exchange name for token-name, and password for token) 
+        </p> 
+         <p>                            
+             The password, and token, may be left out, and instead stored with the git credential manager.<br>
+             Format : <code>https://name@address</code>  .
+             If you have problems, fall back to method above.
+         </p>                        
+
+        <!-- Same as in settings.html -->
         
         <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
         allowing for creation of access tokens, or to create a new repository.
@@ -240,7 +254,7 @@
     <hr>  
 
     <!--------------------------------------------------------------------------------------------> 
-    <h3>Some words about remote repositories</h3>  
+    <h2>Some words about remote repositories</h2>  
     
     It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
     This section describes how to set up user-names and passwords for remote repositories.
@@ -307,16 +321,16 @@
              
 <!--------------------------------------------------------------------------------------------> 
 
-            <h2 class="instructHeader">Branch tab</h2>
+            <h2 class="instructHeader" id="BranchTab">Branch tab</h2>
             
             <div class="wrapper">
                 <div class="buttonWrapper">
-                      <button class="tab-button " style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button " data-id="foldableDiv1">Repository</button>
-                      <button class="tab-button active" data-id="foldableDiv4">Branch</button>
-                      <button class="tab-button " style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button active" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
-            </div>   
+            </div>    
 <!-------------------------------------------------------------------------------------------->  
 
     
@@ -338,14 +352,14 @@
              
 <!--------------------------------------------------------------------------------------------> 
 
-            <h2 class="instructHeader">System Info tab</h2>
+            <h2 id="SystemInfoTab" class="instructHeader">System Info tab</h2>
             
             <div class="wrapper">
                 <div class="buttonWrapper">
-                      <button class="tab-button " style="border-top-left-radius: 10px;" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button " data-id="foldableDiv1">Repository</button>
-                      <button class="tab-button" data-id="foldableDiv4">Branch</button>
-                      <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  
