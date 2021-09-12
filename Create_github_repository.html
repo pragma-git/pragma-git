@@ -3,6 +3,7 @@
         <title>Create Github Repository</title>
         <script src="settings.js"></script>
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="settings.css" />
     </head>
  
 
@@ -16,6 +17,11 @@
             font-size: 11pt;
             background: var(--body-background);
             color: var(--body-text);
+        }
+        
+         
+        #outer-content{
+            margin: 20px;
         }
 
 
@@ -97,7 +103,7 @@
                     Register a Github account
                     </a>)
                 </label>
-                <textarea id="accountName" placeholder="Github account name" oninput="build()"></textarea>  
+                <textarea id="accountName" placeholder="Github account name" oninput="build('repoName')"></textarea>  
             </p>
             
                             
@@ -112,152 +118,160 @@
                     Create an access token
                 </a>)
                 </label>
-                <textarea id="token" placeholder="Paste Github-account access token here" oninput="build()"></textarea>  
+                <textarea id="token" placeholder="Paste Github-account access token here" oninput="build('repoName')"></textarea>  
             </p>
         
- 
-        <hr>  
-
-            <h3>Existing Repository :</h3>  
-                        
-            <p>                        
-                <label for="repoName">Existing Repository Name</label>
-                <textarea id="repoName" placeholder="Github name of existing repository" oninput="build()"></textarea>
-
-            </p>
-            
- 
-            <!-- URL preview -->  
-            <p>
-                <label for="outputUrl">Generated url</label>
-                <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
-            </p>
-             
-                
-            <!-- OK / CANCEL buttons (Use 'Set' button in Settings from OK button click )-->     
-            <p>                        
-                <button id="ok" 
-                    onclick = "
-                    let textarea_id = state.repoNumber + 10000;
-                    opener.document.getElementById(textarea_id).value = build(); 
-                    
-                    let evt=[]; 
-                    evt.innerHTML = 'Set';
-                    evt.id = state.repoNumber + 20000;
-                    opener._callback('setButtonClicked',evt);
-                    
-                    window.close()"
-                >
-                Close, Update Setting
-                </button>   
-                                    
-                <button id="cancel"  onclick="window.close()"> Cancel </button>
-            </p> 
-
-        <br> 
-        <br> 
-        <hr>                
-  
-            
-            <h2>Create Remote Github Repository :</h2>   
-        <hr>  
-            
-            <!-- Add Repository -->   
-            
-            
-            The following two inputs only apply when creating a new repository:        
-            
+            <br>
         
-            <p>
-                <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
-                <label for="privateRepo">Private repository (public if not checked)</label>
-            </p>
-                        
-            <p>                        
-                <label for="newRepoName">Name of New Repository</label>
-                <textarea id="newRepoName" placeholder="Github name of new repository" 
-                    oninput="document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value)"
-                ></textarea>
+        
+            <!-- Tab bar--> 
 
-            </p>
-            
-            
-            <p>                        
-                <label for="repoDescription">Description (only when creating new repository)</label>
-                <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build()"></textarea>               
-            </p>
-            
-            
-            <p>                           
-                <button id="createGithubRepo" onclick="createRepo()">1) Create New Remote Repository</button>                
+            <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                  <button id="Existing" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="existingRepoDiv">
+                      Existing Repo
+                  </button>
+                  
+                  <button id="NewRepo" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="newRepoDiv">
+                      New Repo
+                  </button>
+                </div>
+            </div>
 
+
+
+            <div class="tool-content " id="existingRepoDiv" >  <!--  Existing Repo TAB --> 
                 
-            </p>
+                    <h3>Existing Repository :</h3>  
+                                
+                    <p>                        
+                        <label for="repoName">Existing Repository Name</label>
+                        <textarea id="repoName" placeholder="Github name of existing repository" oninput="build('repoName')"></textarea>
+        
+                    </p>
 
-           
-            
-            <p>                        
-                <div id="newRepoStatus"></div>             
-            </p> 
-                      
-                       
-            <p>
-
-           
-            
-                <button 
-                    id = "ok2" 
-                    onclick = "
-                    let textarea_id = state.repoNumber + 10000;
-                    opener.document.getElementById(textarea_id).value = build(); 
-                    
-                    let evt=[]; 
-                    evt.innerHTML = 'Set';
-                    evt.id = state.repoNumber + 20000;
-                    opener._callback('setButtonClicked',evt);
-                    
-                    window.close()"
-                >
-                2) Close, Update Setting
-                </button>  
-            
                      
-                <button id="cancel2"  onclick="window.close()" style="display: none;"> Cancel </button>
-            </p>
-
-           
+                        
+                    <!-- OK / CANCEL buttons (Use 'Set' button in Settings from OK button click )-->     
+                    <p>                        
+                        <button id="ok" 
+                            onclick = "
+                            let textarea_id = state.repoNumber + 10000;
+                            opener.document.getElementById(textarea_id).value = build('repoName'); 
+                            
+                            let evt=[]; 
+                            evt.innerHTML = 'Set';
+                            evt.id = state.repoNumber + 20000;
+                            opener._callback('setButtonClicked',evt);
+                            
+                            window.close()"
+                        >
+                        Set as Remote
+                        </button>   
+                                            
+                    </p> 
+        
+                <br> 
+                <br>  
+             
+            </div>        
             
+                  
+            <div class="tool-content " id="newRepoDiv" style="hidden">  <!--  New Repo TAB --> 
+                    
+                <h3>Create Remote Github Repository :</h3>   
+   
+                    
+                    <!-- Create Repository -->   
+
+                
+                    <p>
+                        <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
+                        <label for="privateRepo">Private repository (public if not checked)</label>
+                    </p>
+                                
+                    <p>                        
+                        <label for="newRepoName">Name of New Repository</label>
+                        <textarea id="newRepoName" placeholder="Github name of new repository" 
+                            oninput="
+                            document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);
+                            build('newRepoName');
+                            "
+                        ></textarea>
+        
+                    </p>
+                    
+                    
+                    <p>                        
+                        <label for="repoDescription">Description (only when creating new repository)</label>
+                        <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build('newRepoName')"></textarea>               
+                    </p>
+                    
+                    
+                    <p>                           
+                        <button id="createGithubRepo" onclick="createRepo()">1) Create </button>                
+        
+                        
+                    </p>
+        
+                   
+                    
+                    <p>                        
+                        <div id="newRepoStatus"></div>             
+                    </p> 
+                              
+                               
+                    <p>
+        
+                   
+                    
+                        <button 
+                            id = "ok2" 
+                            onclick = "
+                            let textarea_id = state.repoNumber + 10000;
+                            opener.document.getElementById(textarea_id).value = build('newRepoName'); 
+                            
+                            let evt=[]; 
+                            evt.innerHTML = 'Set';
+                            evt.id = state.repoNumber + 20000;
+                            opener._callback('setButtonClicked',evt);
+                            
+                            window.close()"
+                        >
+                        2) Set as Remote
+                        </button>  
+                    
+                    </p>
+        
+                   
+                 
+            </div>       
+            
+            
+                                
+         
+                    <!-- URL preview -->  
+                    <p>
+                        <label for="outputUrl">Generated url</label>
+                        <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
+                    </p>
+               
         </div>
     </div>
-    
-    
-    <script>
-        // Set window size to match content
-        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
-        let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
-        let dy = document.getElementById('body').scrollHeight * global.state.zoom;
-        
-        let hx = window.outerWidth - window.innerWidth;
-        let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(
-            dx + hx * global.state.zoom + 1 * padding + 50 , 
-            dy + hy * global.state.zoom + 2 * padding + 100 / global.state.zoom
-        );
-    </script>
-    
+
     
     <script>
         // Build git url
-        function build(){
+        function build(repoField){
             
             // Read textareas
             let username = document.getElementById('accountName').value;
             let token = document.getElementById('token').value;
-            let repoName = document.getElementById('repoName').value;
+            let repoName = document.getElementById(repoField).value;
             
             // Verify repo name
             repoName = util.branchCharFilter( repoName) ;
-            document.getElementById('repoName').value = repoName;
+            document.getElementById(repoField).value = repoName;
             
             if (token != ''){
                 token = token + '@';
@@ -268,7 +282,7 @@
             
             return url;
         }
-        build();
+        //build(repoField);
     </script>
     
      <script>
@@ -292,17 +306,7 @@
             console.log(headers);
             
             let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
-            //console.log(body);
-            
-            //fetch('https://api.github.com/user/repos', {
-                //method: 'POST',
-                //headers: headers,
-                //body: body
-            //})
-            //.then(checkStatus)  
-            //.catch( err => console.log(err)); 
- 
-            
+
             
             try {
                 
@@ -329,7 +333,6 @@
                     
                     
                     document.getElementById('ok2').style="display: block;" ;
-                    document.getElementById('cancel2').style="display: none;" ;
 
                 } else {
                     document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
@@ -338,7 +341,6 @@
                     
                     
                     document.getElementById('ok2').style="display: none;" ;
-                    document.getElementById('cancel2').style="display: block;" ;
                     
                 }
                 
@@ -346,8 +348,8 @@
                 console.log(error.response.body);
             }
 
+            build('newRepoName');
         }
-        build();
     </script>   
     
     
@@ -384,12 +386,67 @@
                 document.getElementById('token').value = token;
                 document.getElementById('repoName').value = repo;
                 
-                build(); // update html
+                build('repoName'); // update html
                 
             }
         );
-
+        
+         <!--  Tab functionality-->   
+        const toolTabs = document.querySelector(".toolWrapper");
+        const toolTabButton = document.querySelectorAll(".tab-button-small");
+        const toolMyContents = document.querySelectorAll(".tool-content");
+        
+        // Set event listener
+        toolTabs.onclick = e => {
+        
+            const id = e.target.dataset.id;
+            if (id) {
+                toolTabButton.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+                
+                // Hide all
+                toolMyContents.forEach(cnt => {
+                    cnt.style.display='none';
+                    cnt.style.visibility='none';
+                });       
+                
+                // Make id visible    
+                document.getElementById(id).style.display='block';
+                document.getElementById(id).style.visibility='visible';
+                
+                // Update display of generated url in clicked tab
+                if (e.target.id == "Existing"){
+                    build('repoName');
+                }else{
+                    build('newRepoName');
+                }
+                
+            }
+        }
+        
+        // Set first tab as default
+        toolTabButton[0].click()
+                
     </script>
+    
+        
+    
+    <script>
+        // Set window size to match content
+        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
+        let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
+        let dy = document.getElementById('body').scrollHeight * global.state.zoom;
+        
+        let hx = window.outerWidth - window.innerWidth;
+        let hy = window.outerHeight - window.innerHeight;
+        window.resizeTo(
+            dx + hx * global.state.zoom + 1 * padding + 50 , 
+            dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
+        );
+    </script>
+    
  
 </body>
 </html>

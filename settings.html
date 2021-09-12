@@ -271,17 +271,25 @@
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
-
-                <div id="toolHeader">  <!--  TOOL TABS -->    
+ 
+ 
+            <!--  TOOL TABS --> 
+ 
+ 
+                <div id="toolHeader">    
                     <h3>Tools </h3>
                     <div class="toolWrapper" > 
                         <div class="buttonWrapper">
                               <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
-                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add</button>
-                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Github</button>
+                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
                         </div>
                     </div>
-                    <div class="tool-content " id="cloneDiv" >  <!--  Clone TAB -->
+                    
+                    
+                    <!--  Clone TAB -->
+                    
+                    <div class="tool-content " id="cloneDiv" >  
                         Clone a remote repository to this computer :
                         <table class="toolTable">
                             <tbody>
@@ -317,7 +325,11 @@
                         <p><span id="cloneStatus"></span></p>
                     
                     </div>
-                    <div class="tool-content " id="addDiv" >    <!--  Add TAB -->
+                    
+                    
+                     <!--  Add TAB -->
+                    
+                    <div class="tool-content " id="addDiv" >   
                        Add a local repository from this computer :
                         <table class="toolTable">
                             <tbody>
@@ -340,10 +352,28 @@
                                 
                             </tbody>
                         </table>                    
-                    </div>                  
-                    <div class="tool-content " id="gitHubDiv" > <!--  Github TAB -->
-                         <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
-                         1) Setup remote Github URL, or 2) Create Github repository. Uses selected repository
+                    </div>   
+                    
+                    
+                    <!--  Github TAB -->
+                                   
+                    <div class="tool-content " id="gitHubDiv" > 
+                         <p>
+                             For remote git services, enter remote URL manually for selected repository. <br>
+                             Format : <code>https://name:password@address</code> 
+                             (for token-based services, exchange name for token-name, and password for token) 
+                        </p> 
+                         <p>                            
+                             The password, and token, may be left out, and instead stored with the git credential manager.<br>
+                             Format : <code>https://name@address</code>  .
+                             If you have problems, fall back to method above.
+                         </p>                        
+                         
+                         <hr>
+                         <p>
+                             Help to setup or create Github repository : <button onclick="nw.Window.open('Create_github_repository.html', {});">GitHub</button> 
+                         </p>
+                          
                     </div>
                 </div>
             </div>
