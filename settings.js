@@ -540,6 +540,7 @@ async function gitClone( folderName, repoURL){
     try{
         // 1) Clone 
         let options = [];
+        opener.mkdir(folderName);  // Create folder if it does not exist
         await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
         

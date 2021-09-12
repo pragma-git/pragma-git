@@ -3603,7 +3603,7 @@ function waitTime( delay) {
 }
 function mkdir(dir){
     if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
+        fs.mkdirSync(dir, { recursive: true });
     }
 }
 async function addExistingRepo( folder) {
