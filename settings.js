@@ -205,6 +205,11 @@ async function _callback( name, event){
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
                 
+                // Update displayed .gitignore 
+                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
+                document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+
+                
                 // Update cached branch list
                 opener.cacheBranchList();
 
@@ -723,12 +728,9 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('onAllWorkspaces').disabled = true;
     }
     
-
-
     // Build repo table
     document.getElementById("settingsTableBody").innerHTML = ""; 
     await createHtmlTable(document);  
-
 
 
     // Set tab from setting

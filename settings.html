@@ -282,7 +282,8 @@
                         <div class="buttonWrapper">
                               <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                              <button id="gitHubTab" class="tab-button-small" data-id="gitHubDiv">Add remote</button>
+                              <button id="gitignoreTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitIgnoreDiv">git-ignore</button>
                         </div>
                     </div>
                     
@@ -375,6 +376,22 @@
                          </p>
                           
                     </div>
+                                        
+                    
+                    <!--  Add Gitignore TAB -->    
+                    <div class="tool-content " id="gitIgnoreDiv" > 
+                         <p>
+                             <button onclick="nw.Window.open('edit_ignore.html', {});">Edit .gitignore</button> 
+                         </p>
+                         <br>
+                         
+                         <b>.gitignore file : </b> <br><br>
+                         <code id="gitignoreText">test</code>
+                          
+                    </div>
+
+                               
+                    
                 </div>
             </div>
             <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  -->     

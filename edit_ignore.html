@@ -1,9 +1,10 @@
 <html>
     <head>
-        <title>Ignore file editor</title>
+        <title>Git-ignore Editor</title>
         <script src="settings.js"></script>
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
         <link rel="stylesheet" type="text/css" href="settings.css" />
+        <link rel="stylesheet" type="text/css" href="node_modules/css-spinners/dist/round/round.css" />
     </head>
 
     <style>
@@ -62,12 +63,14 @@
         <!-- HTML -->       
         <div id="outer-content" style="width: auto;">        
             <div id="inner-content">
+                
+                
                     
                 <h2 id="header_Settings">.gitignore Editor
             
                 <!-- HELP HERE -->
                 <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
-                    onclick="let evt = {}; evt.name='Github';opener.opener._callback('help',evt);" 
+                    onclick="let evt = {}; evt.name='Git-ignore Editor';opener.opener._callback('help',evt);" 
                     onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                     onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                     src="images/questionmark_black.png" >
@@ -75,16 +78,23 @@
                 
                 <hr>              
     
+                <!--  busy spinner  --> 
+                <div id="spinner" class="spin-round warning" style="left:45%; top:150px; visibility:collapse;"></div>
+                
                 <!--  .ignore file editor  --> 
                 <div>
                     <label for="ignoreFile"> .gitignore file </label>
-                    <textarea id="ignoreFile" placeholder="Github account name" style="height:300px" oninput="updateIgnoreList()"></textarea><br><br>
-                    <button style="float: left" onclick="refreshGitIndex()">Preview</button>  
-                    <button style="float: right; margin-left: 20px" onclick="resetGitIgnore()">Reset</button>  
-                    <button style="float: right; margin-left: 20px" onclick="save()">Save</button>  
+                    <textarea id="ignoreFile" placeholder="Github account name" style="height:300px"></textarea><br><br>
+
+                    <button style="float: left" onclick="refreshGitIndex()">Apply</button>  
+                    <button style="float: right; margin-left: 20px" onclick="resetGitIgnore()">Reset</button>  <br><br>
+                                        
+                    <span>Note : If large number of tracked files, this takes a long time.  Don't press these buttons for preview, just close window to save after edit.</span>
+                    
                     <br>
                 </div>
                 <br><br>
+                
     
                 <!--  Preview of ignore result  -->    
                 <h2 id="header_Settings">Preview</h2>
@@ -108,9 +118,7 @@
     const ignoreFileBackup = settingsDir + pathsep + '.gitignore.pragma-backup';
     
     <!--  On Load event-->        
-    window.addEventListener(
-        'DOMContentLoaded', 
-        async (event) => { 
+    window.addEventListener( 'DOMContentLoaded',  async (event) => { 
             console.log('Create_github_repository.html :DOM fully loaded and parsed');
             
             // Import modules  
@@ -161,7 +169,8 @@
 
 
             // update html
-            await updateIgnoreList(); 
+            //await refreshGitIndex()  // This is very slow if bad .gitignore.  For instance forgetting node_modules/ in .gitignore
+            await displayIgnoreList(); 
             
             
             
@@ -189,12 +198,35 @@
         }
     );
     
+
+    <!--  On Load event-->     
+    window.addEventListener('unload', (event) => {
+        console.log('edit_ignore.html :DOM fully unloaded -- maybe window closed ');
+        save();
+        }
+    );
+    
     <!--  Functions-->   
-    async function resetGitIgnore(){    // Reset .gitignore to state when started editor
+    async function resetGitIgnore(){    // Reset button -- Reset .gitignore to state when started editor
         console.log('RESET gitignore file');
+        
+        
+        // Retore  .ignore file from backup
+        await fs.copyFileSync( ignoreFileBackup, ignoreFileName, fs.constants.COPYFILE_FICLONE, (err) => {
+            if (err) {
+                console.log("Error copying from file : " + ignoreFileBackup + '\n', err);
+            }else {
+                console.log("Success copying from file : " + ignoreFileBackup + '\n', result);
+            }
+        });
+                
         
         // Load .ignore backup 
         document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileBackup);
+        
+
+        await refreshGitIndex();
+        await displayIgnoreList();
 
     }
     async function save(){              // Save .gitignore and remove backup
@@ -221,38 +253,58 @@
             }
         } );
     }
-    async function refreshGitIndex() {  // Reset indexed files and preview
-        
-        // Clean index -- git rm -rf --cached .             
-        await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'rm', '-r', '-f','--cached', '.'], onRm);
-        function onRm(err, result ){                      
+    async function refreshGitIndex() {  // Apply button -- Refresh indexed files and preview
+                
+        // Save .gitignore
+        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value , (err, result) => {
+            
             if (err) {
-                console.log("Error : git rm -rf --cached . \n" , err);
+                console.log("Error writing to file : " + ignoreFileName + '\n', err);
             }else {
-                console.log("Success  : git rm -rf --cached . \n", result);
+                console.log("Success writing to file : " + ignoreFileName + '\n', result);
             }
+        } );
+        
+    
+        // Display .ignore file 
+        document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileName);
+        
+        // Clean index :  git rm -rf --cached .  
+        try{      
+            await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'rm', '-r', '-f','--cached', '.'], onRm);
+            function onRm(err, result ){                      
+                if (err) {
+                    console.log("Error : git rm -rf --cached . \n" , err);
+                }else {
+                    console.log("Success  : git rm -rf --cached . \n", result);
+                }
+            }
+        }catch(err){
+            
         }
         
-        // Add all files to index -- git add . 
-        var path = '.'; // Add all
-        await simpleGit( state.repos[state.repoNumber].localFolder )
-            .add( path, onAdd );   
-        function onAdd(err, result) {
-            if (err) {
-                console.log("Error : git add . \n" , err);
-            }else {
-                console.log("Success  : git add . \n", result);
+        document.getElementById('spinner').style.visibility = 'visible';
+        
+        // Add all files to index :  git add . 
+        try{   
+            await simpleGit( state.repos[state.repoNumber].localFolder ).add( '.', onAdd );   
+            function onAdd(err, result) {
+                if (err) {
+                    document.getElementById('spinner').style.visibility = 'collapse';
+                    console.log("Error : git add . \n" , err);
+                }else {
+                    document.getElementById('spinner').style.visibility = 'collapse';
+                    console.log("Success  : git add . \n", result);
+                }
             }
+        }catch(err){
+            document.getElementById('spinner').style.visibility = 'collapse';
         }
-
-        await updateIgnoreList();
+        
+        await displayIgnoreList();
     }     
-    async function updateIgnoreList(){  // Preview ignored files
-        
-        // Write to ignore file
-        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value );
-        
-        
+    async function displayIgnoreList(){  // Preview ignored files
+
         let status = "";
         
         await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'status', '--porcelain=v1', '--ignored'], onStatus);
@@ -267,9 +319,32 @@
         let html = '';
         for(let row = 0; row < splitted.length; row++) {
             if ( !splitted[row].startsWith('!!') ){
-                modified += splitted[row].substring(0) + '\n';
+                
+                // Differentiate between 'deleted'. and 'deleted from tracking'
+                if ( splitted[row].startsWith('D') ){
+                    // If file does not exist => file is deleted
+                    try {
+                        let fileName = splitted[row].substring(3); 
+                        let filePath = global.state.repos[global.state.repoNumber].localFolder + pathsep + fileName;
+                        if (fs.existsSync(filePath)) {
+                            //file exists, must be deleted from tracking
+                            modified += splitted[row].substring(3) + '(untracked) \n';
+                        }else{
+                            modified += splitted[row].substring(3) + '(deleted) \n';
+                        }
+                    } catch(err) {
+                        console.error(err)
+                    }
+                    
+                }else{
+                    modified += splitted[row].substring(3) + '\n';
+                }
+                
             }
         }
+        
+                        
+ 
         
         html += '<h3> Currently modified files : </h3>';
         html += '<pre>' + modified + '</pre>';
@@ -279,7 +354,7 @@
         let ignored = '';
         for(let row = 0; row < splitted.length; row++) {
             if ( splitted[row].startsWith('!!') ){
-                ignored += splitted[row].substring(0) +  '\n';;
+                ignored += splitted[row].substring(3) +  '\n';;
             }
         }
         
