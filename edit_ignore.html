@@ -177,7 +177,7 @@
             // Set window size to match content
             let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
             let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
-            let dy = document.getElementById('body').scrollHeight * global.state.zoom;
+            let dy = 0.7 *  document.getElementById('body').scrollHeight * global.state.zoom;
             
             // Minimum width
             if (dx < 500)
@@ -190,10 +190,10 @@
             
             let hx = window.outerWidth - window.innerWidth;
             let hy = window.outerHeight - window.innerHeight;
-            window.resizeTo(
-                dx + hx * global.state.zoom + 1 * padding + 50 , 
-                dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
-            );
+            //window.resizeTo(
+                //dx + hx * global.state.zoom + 1 * padding + 50 , 
+                //dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
+            //);
             
         }
     );
@@ -234,24 +234,13 @@
         
         
         // Save, and remove backup if succesful
-        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value , (err, result) => {
+        try{      
+            await fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value);
+            await fs.unlinkSync(ignoreFileBackup);
+        }catch(err){
             
-            if (err) {
-                console.log("Error writing to file : " + ignoreFileName + '\n', err);
-            }else {
-                console.log("Success writing to file : " + ignoreFileName + '\n', result);
-                
-                console.log('REMOVE gitignore backup');
-                fs.unlinkSync(ignoreFileBackup), (err, result) => {
-                    if (err) {
-                        console.log("Error removing file : " + ignoreFileBackup + '\n', err);
-                    }else {
-                        console.log("Success removing  file : " + ignoreFileBackup + '\n', result);
-                        
-                    }
-                }
-            }
-        } );
+        }
+
     }
     async function refreshGitIndex() {  // Apply button -- Refresh indexed files and preview
                 
