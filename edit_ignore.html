@@ -1,0 +1,302 @@
+<html>
+    <head>
+        <title>Ignore file editor</title>
+        <script src="settings.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="settings.css" />
+    </head>
+
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+        
+         
+        #outer-content{
+            margin: 20px;
+        }
+
+
+        textarea{
+            /* width: 400; */
+            line-height: 1;
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        input{
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        
+        input, label {
+            display:block;
+        }
+
+        a{
+            color: var(--link-color);
+        }
+        
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        
+    </style>
+
+    <body id='body' class='light'>     
+        <!-- Dark mode on/off , zoom --> 
+        <script>
+            if (localState.dark){
+                document.body.classList.add('dark');
+            }
+            window.document.body.style.zoom = global.state.zoom;
+        </script>
+    
+        <!-- HTML -->       
+        <div id="outer-content" style="width: auto;">        
+            <div id="inner-content">
+                    
+                <h2 id="header_Settings">.gitignore Editor
+            
+                <!-- HELP HERE -->
+                <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Github';opener.opener._callback('help',evt);" 
+                    onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                    src="images/questionmark_black.png" >
+                </h2>
+                
+                <hr>              
+    
+                <!--  .ignore file editor  --> 
+                <div>
+                    <label for="ignoreFile"> .gitignore file </label>
+                    <textarea id="ignoreFile" placeholder="Github account name" style="height:300px" oninput="updateIgnoreList()"></textarea><br><br>
+                    <button style="float: left" onclick="refreshGitIndex()">Preview</button>  
+                    <button style="float: right; margin-left: 20px" onclick="resetGitIgnore()">Reset</button>  
+                    <button style="float: right; margin-left: 20px" onclick="save()">Save</button>  
+                    <br>
+                </div>
+                <br><br>
+    
+                <!--  Preview of ignore result  -->    
+                <h2 id="header_Settings">Preview</h2>
+                <hr>
+                <div id="ignoredList" placeholder="Paste Github-account access token here" style=" border-width:thin;border-color: red;" >
+                    
+                </div>  
+    
+    
+            </div>
+        </div>
+    
+        <!-- Scripting -->     
+
+    </body>
+
+    <script>
+    // File paths
+    const ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      
+    const settingsDir = require('os').homedir() + pathsep + '.Pragma-git';         
+    const ignoreFileBackup = settingsDir + pathsep + '.gitignore.pragma-backup';
+    
+    <!--  On Load event-->        
+    window.addEventListener(
+        'DOMContentLoaded', 
+        async (event) => { 
+            console.log('Create_github_repository.html :DOM fully loaded and parsed');
+            
+            // Import modules  
+            const os = require('os');
+            const util = require('./util_module.js'); // Pragma-git common functions
+            const simpleGit = require('simple-git');
+            const fs = require('fs');
+            const pathsep = require('path').sep;  // Os-dependent path separator   
+            
+            
+            // Load .ignore file
+            document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileName);
+            
+            
+            // Store backup of .ignore file
+            await fs.copyFileSync(ignoreFileName, ignoreFileBackup, fs.constants.COPYFILE_FICLONE, (err) => {
+                if (err) {
+                    console.log("Error copying to file : " + ignoreFileBackup + '\n', err);
+                }else {
+                    console.log("Success copying to file : " + ignoreFileBackup + '\n', result);
+                }
+            });
+            
+            
+            // Reset staged files (make gitignore handle files that were staged)
+            // Note: 'Changed files window'  selects files that should NOT be commited in the array : localState.unstaged
+            //        That is the mechanism for Main Window Store-operation to add all modified files as default. 
+            //        The files deselected in Changed files window' are thus not staged.
+            await simpleGit( global.state.repos[global.state.repoNumber].localFolder).reset( [ ], onStatus);
+            function onStatus(err, result ){  
+                console.log('Reset staged files')
+                console.log(result);
+                console.log(err);
+            }
+            
+            // NOTE 1:  Question is if I should restore staged files after closing this window?  Now I don't, and rely on above mentioned mechanism
+            
+            // NOTE 2:  The index of tracked files can be updated according to .gitignore, by :
+            // git rm -r --cached .  # Clear index (will show lots of files modified)
+            // git add .   # Update index of tracked files, thus also removing the ones that were previously tracked, but should be untracked by new .gitignore
+            //
+            // Maybe I should have a button to "Reset tracking" ? Or a dialog when saving, if git status --ignored has changed when leaving this window
+            
+            
+            // Case - remove => untracked file added
+            // Case - new rule remove existing => tracked file should be ignored (TODO : Does not show up in ignored files)
+            
+
+
+            // update html
+            await updateIgnoreList(); 
+            
+            
+            
+            // Set window size to match content
+            let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
+            let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
+            let dy = document.getElementById('body').scrollHeight * global.state.zoom;
+            
+            // Minimum width
+            if (dx < 500)
+                dx = 500;
+                
+            
+            // Minimum height
+            if (dy < 600)
+                dy = 600;
+            
+            let hx = window.outerWidth - window.innerWidth;
+            let hy = window.outerHeight - window.innerHeight;
+            window.resizeTo(
+                dx + hx * global.state.zoom + 1 * padding + 50 , 
+                dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
+            );
+            
+        }
+    );
+    
+    <!--  Functions-->   
+    async function resetGitIgnore(){    // Reset .gitignore to state when started editor
+        console.log('RESET gitignore file');
+        
+        // Load .ignore backup 
+        document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileBackup);
+
+    }
+    async function save(){              // Save .gitignore and remove backup
+        console.log('SAVE gitignore file');
+        
+        
+        // Save, and remove backup if succesful
+        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value , (err, result) => {
+            
+            if (err) {
+                console.log("Error writing to file : " + ignoreFileName + '\n', err);
+            }else {
+                console.log("Success writing to file : " + ignoreFileName + '\n', result);
+                
+                console.log('REMOVE gitignore backup');
+                fs.unlinkSync(ignoreFileBackup), (err, result) => {
+                    if (err) {
+                        console.log("Error removing file : " + ignoreFileBackup + '\n', err);
+                    }else {
+                        console.log("Success removing  file : " + ignoreFileBackup + '\n', result);
+                        
+                    }
+                }
+            }
+        } );
+    }
+    async function refreshGitIndex() {  // Reset indexed files and preview
+        
+        // Clean index -- git rm -rf --cached .             
+        await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'rm', '-r', '-f','--cached', '.'], onRm);
+        function onRm(err, result ){                      
+            if (err) {
+                console.log("Error : git rm -rf --cached . \n" , err);
+            }else {
+                console.log("Success  : git rm -rf --cached . \n", result);
+            }
+        }
+        
+        // Add all files to index -- git add . 
+        var path = '.'; // Add all
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .add( path, onAdd );   
+        function onAdd(err, result) {
+            if (err) {
+                console.log("Error : git add . \n" , err);
+            }else {
+                console.log("Success  : git add . \n", result);
+            }
+        }
+
+        await updateIgnoreList();
+    }     
+    async function updateIgnoreList(){  // Preview ignored files
+        
+        // Write to ignore file
+        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value );
+        
+        
+        let status = "";
+        
+        await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'status', '--porcelain=v1', '--ignored'], onStatus);
+        function onStatus(err, result ){  
+            status = result;
+        }
+        
+        let splitted = status.split( '\n');
+        
+        // Find modified files
+        let modified = '';
+        let html = '';
+        for(let row = 0; row < splitted.length; row++) {
+            if ( !splitted[row].startsWith('!!') ){
+                modified += splitted[row].substring(0) + '\n';
+            }
+        }
+        
+        html += '<h3> Currently modified files : </h3>';
+        html += '<pre>' + modified + '</pre>';
+        
+        
+        // Find ignored
+        let ignored = '';
+        for(let row = 0; row < splitted.length; row++) {
+            if ( splitted[row].startsWith('!!') ){
+                ignored += splitted[row].substring(0) +  '\n';;
+            }
+        }
+        
+        html += '<h3> Ignored list : </h3>';
+        html += '<pre>' + ignored + '</pre>';
+                    
+        document.getElementById('ignoredList').innerHTML = html; 
+
+    }
+    
+    // TODO:
+    // - close-window function (call save and then close window)
+    // - remove save button
+    // - help
+    // - add tab in settings.html to call this window
+    // - scroll bar for preview (as in textarea above -- see long example in Dicom2usb repo)
+
+</script>
+    
+</html>
