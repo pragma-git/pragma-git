@@ -1460,6 +1460,58 @@
          inkscape:export-ydpi="96.68"
          inkscape:original-d="m 357.06897,4.2987141 h 14.76764 l 4.06647,5.0060698 h 26.03011 l 0.0808,29.7432121 -47.51333,3e-6 0.21402,-31.2355161 z"
          inkscape:path-effect="#path-effect2056" />
+      <circle
+         id="path1054"
+         style="fill:#000000;stroke:#00ff00;stroke-width:0.264583"
+         cx="13.816413"
+         cy="100.0903"
+         r="0.17068075" />
+    </g>
+    <g
+       id="g1075"
+       transform="translate(2.0502193,57.406141)">
+      <g
+         id="g1083"
+         transform="matrix(0.5,0,0,0.48568858,-12.601659,-3.963603)"
+         inkscape:export-filename="/Users/jan/test.png"
+         inkscape:export-xdpi="46.425755"
+         inkscape:export-ydpi="46.425755">
+        <path
+           transform="translate(-180.90928,36.932677)"
+           sodipodi:type="star"
+           style="opacity:1;fill:#ffcc00;fill-opacity:1;stroke:#000000;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.979472"
+           id="path1056"
+           sodipodi:sides="3"
+           sodipodi:cx="58.921234"
+           sodipodi:cy="-17.455595"
+           sodipodi:r1="67.346756"
+           sodipodi:r2="33.630951"
+           sodipodi:arg1="0.52040474"
+           sodipodi:arg2="1.5285435"
+           inkscape:flatsided="false"
+           inkscape:rounded="0"
+           inkscape:randomized="0"
+           d="M 117.35249,16.031323 60.341814,16.14534 0.70508388,16.4039 29.111681,-33.025804 l 29.594446,-51.776203 28.60408,49.315686 z"
+           inkscape:transform-center-x="-3.0109881"
+           inkscape:transform-center-y="-2.9135881" />
+        <g
+           aria-label="!"
+           transform="matrix(1.0264245,0,0,0.7516668,-168.43483,32.66612)"
+           id="text1060"
+           style="font-size:83.1777px;line-height:1.25;font-family:Calibri, Calibri_MSFontService, sans-serif;-inkscape-font-specification:'Calibri, Calibri_MSFontService, sans-serif, Normal';stroke-width:1.29965">
+          <path
+             d="m 50.315154,-60.967225 c 3.906803,7.215842 -1.055967,43.822624 -1.055967,43.822624 h -6.904398 c 0,0 -5.037733,-36.594705 -1.137196,-43.822624 3.900537,-7.227919 5.190758,-7.215842 9.097561,0 z"
+             style="stroke-width:1.29965"
+             id="path1062"
+             sodipodi:nodetypes="zcczz" />
+        </g>
+        <circle
+           style="fill:#000000;fill-rule:evenodd;stroke-width:0.264583"
+           id="path1066"
+           cx="-121.43754"
+           cy="33.783508"
+           r="6.8340645" />
+      </g>
     </g>
   </g>
 </svg>
