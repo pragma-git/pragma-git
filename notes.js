@@ -1,9 +1,10 @@
 // ---------
 // INIT
 // ---------
-var gui = require("nw.gui"); // TODO : don't know if this will be needed
-var os = require('os');
-var fs = require('fs');
+const gui = require("nw.gui"); // TODO : don't know if this will be needed
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
 
 var util = require('./util_module.js'); // Pragma-git common functions
 
@@ -83,7 +84,11 @@ async function injectIntoNotesJs(document) {
         opener._callback('help',evt); 
     });
     
-       
+    
+    // Title
+    let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
+    document.title = `Notes  —  ${repoName}  `;
+    //document.title = `" ${repoName}"  Notes`;
        
     //
     // Add Search button to toolbar
