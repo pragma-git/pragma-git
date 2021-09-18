@@ -1105,7 +1105,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                     }
                         
                     if ( isCrossingNodeOfWrongBranchVerticalSegment( commit, child, x) ){
-                        commit.message = 'CROSS WARN -- ' + commit.message;
+                        commit.message = `CROSS WARN ( ${child.y} &#10142; ${commit.y} ) -- ${commit.message}`; // &#10142; = arrow
                     }
                 }
 
