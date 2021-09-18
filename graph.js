@@ -1383,7 +1383,12 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
                 
                 function isOnActiveSwimlane(lane, commit){
-                    // Looks from commit to end of segment, if on known branchName
+                    // Looks from commit to end of segment, if on named branchName
+                    
+                    // Bail out if not on named Branch
+                    if (  ! isOnNamedBranch(commit) ){
+                        return false;
+                    }
                     
                     //let commit = { ...inputCommit };
                     
@@ -1413,6 +1418,12 @@ async function drawGraph( document, graphText, branchHistory, history){
         return highestOccupiedCol
         
     };
+    function isOnNamedBranch(commit){
+        if ( branchNames.has( commit.branchName ) ){
+            return ( branchNames.get( commit.branchName ) < NUMBER_OF_KNOWN_BRANCHES );
+        }
+        return false
+    }
     function isOnFirstParentLane(commit){
         
          if ( childMap.has(commit.hash) ){
