@@ -822,7 +822,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                         // Get new lane, if crossing a commit lane 
                        if ( isCrossingNodeOrLane( commit, child) ){
                             let lineCol = getFreeLane(commit, COMPRESSUNKNOWN2);  // Find first free lane (false = rightmost)
-                            console.log('lineCol = ' + lineCol);
+                            //console.log('lineCol = ' + lineCol);
                             markConnectionAsOccupied(commit, child, lineCol)
                         }
 
@@ -867,13 +867,14 @@ async function drawGraph( document, graphText, branchHistory, history){
                         let child = nodeMap.get(childHashes[i]);
                         let x1 = child.x;
                         let y1 = child.y;
-                        
+
                         drawConnection( draw, commit, child, R, numberOfChildren)
                     }
     
                 }
 
                 if (DEBUG) {
+                    
                     commit.message = `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
                 }
                 
@@ -1009,7 +1010,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                                     x0            
                       ^                       
                       |                       
-                   lineCol                    
+                   lineCol        
+
+
+
+                   NOTE :  I think only 2-6 can happen.  Neither 1 nor 7 seems to have any implementation of getting lineCol          
                              
              **/
             
@@ -1027,7 +1032,7 @@ async function drawGraph( document, graphText, branchHistory, history){
 
          
     
-            // Identify connection type
+            // Identify connection type 
             
                 let type;
     
@@ -1047,7 +1052,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }else if ( (x1 < x0)) {  // merge
                     type = 2;
                     lineCol = x0;
-                }else if ( (lineCol < x0) && (lineCol < x1) ) { // vertical to the right
+                }else if ( (lineCol < x0) && (lineCol < x1) ) { // vertical to the left
                     type = 7;  
                 }
 
@@ -1084,11 +1089,28 @@ async function drawGraph( document, graphText, branchHistory, history){
                     case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
                     case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
                     case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 5: draw.line( X0 , Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 6: draw.line( X1 , Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 7: draw.line( X1 , Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
+                    case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 7: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
                 }
-                 
+                
+                if (DEBUG){
+                    // Look for errors with commits that should not be on this vertical line
+                    let X = X0;
+                    let x = x0;
+                    
+                    if ( (type == 3) || (type == 6 ) ){
+                        x = x1;
+                        X = X1;
+                    }
+                        
+                    if ( isCrossingNodeOfWrongBranchVerticalSegment( commit, child, x) ){
+                        commit.message = 'CROSS WARN -- ' + commit.message;
+                    }
+                }
+
+                
+
                 
             // Bottom horizontal
                 
@@ -1101,12 +1123,35 @@ async function drawGraph( document, graphText, branchHistory, history){
                     draw.line( X0, Y0, X1 + R, Y0).stroke({ color: '#888', width: 3}); // horizontal
                     draw.use(arcBranch2).move( X1 , Y0  );
                 }
-     
+                
+                
+            
+           
                 
                 
             return    
 
         };
+        
+        function isCrossingNodeOfWrongBranchVerticalSegment( commit, child, x){
+
+            let thisBranchName = commit.branchName;
+            
+            for (let i = child.y + 1; i < commit.y; i++){
+                
+                // Skip if other lane
+                if ( commitArray[i].x != x) {
+                    continue;
+                }
+                
+                if ( commitArray[i].branchName !== thisBranchName ){
+                    return true
+                }
+            }
+            return false
+        }
+
+     
         function isCrossingNodeOrLane( commit, child){
             
             let x0 = commit.x;
@@ -1315,7 +1360,7 @@ async function drawGraph( document, graphText, branchHistory, history){
     function markConnectionAsOccupied(commit, child, occupiedColumn){
         for ( row = child.y; row < commit.y; row++){
             commitArray[row].occupiedColumns[ occupiedColumn] = commit.y;
-            console.log(row);
+            //console.log(row);
         }
     }
     function getFreeLane(commit, COMPRESS){
@@ -1390,8 +1435,6 @@ async function drawGraph( document, graphText, branchHistory, history){
                         return false;
                     }
                     
-                    //let commit = { ...inputCommit };
-                    
                     // Extent of segment
                     let start = commit.y;
                     
@@ -1400,7 +1443,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                         commit = nodeMap.get( commit.parents[0]);
                     }
                     let end = commit.y - 1;
-                    console.log('start = ' + start + '   End = ' + end);
+                    //console.log('start = ' + start + '   End = ' + end);
                     
                     // Return true any commit is on active swimlane
                     let i = start;
@@ -1420,7 +1463,7 @@ async function drawGraph( document, graphText, branchHistory, history){
     };
     function isOnNamedBranch(commit){
         if ( branchNames.has( commit.branchName ) ){
-            return ( branchNames.get( commit.branchName ) < NUMBER_OF_KNOWN_BRANCHES );
+            return ( branchNames.get( commit.branchName ) < NUMBER_OF_KNOWN_BRANCHES ); // Named branches are below index NUMBER_OF_KNOWN_BRANCHES
         }
         return false
     }
@@ -1563,7 +1606,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             }
         }
     }
-
+        
 // Branch name
 function drawBranchColorHeader( branchNames){
     
