@@ -991,12 +991,15 @@ async function drawGraph( document, graphText, branchHistory, history){
                                   x1                   x1
                         /-------- *  y1            y1  * 
                         |                              |
+                        |                              |
+                        |                              |
+                        |                              |
                     y0  *                              \------- * y0 END
                   START x0                                      x0
                                                  
                             x1 > x0                   x1 < x0    
-                            * 
-                            * 
+                        lineCol == x0              lineCol == x1  
+                            
                                                             
                  (7) "going-around"                           
                                                                
@@ -1014,7 +1017,8 @@ async function drawGraph( document, graphText, branchHistory, history){
 
 
 
-                   NOTE :  I think only 2-6 can happen.  Neither 1 nor 7 seems to have any implementation of getting lineCol          
+                   First 2-6 is identified
+                   If the identified connection crosses a node which is not on correct branch, then 1 is chosen         
                              
              **/
             
@@ -1032,14 +1036,13 @@ async function drawGraph( document, graphText, branchHistory, history){
 
          
     
-            // Identify connection type 
+            // Identify connection type 2-6
             
                 let type;
     
                 if (x0 == x1){
                     type = 4;  // Most common
-                }else if ( (lineCol > x0) && (lineCol > x1) ) { // vertical to the right
-                    type = 1;  
+                    lineCol = x0;
                 }else if ( (x1 > x0) && commit.END) {  // branch
                     type = 3;
                     lineCol = x1;
@@ -1052,10 +1055,23 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }else if ( (x1 < x0)) {  // merge
                     type = 2;
                     lineCol = x0;
-                }else if ( (lineCol < x0) && (lineCol < x1) ) { // vertical to the left
-                    type = 7;  
                 }
-
+                
+    
+            // Identify connection type 1 or 7 ( go around)
+                            
+                if (  ( (y0 - y1) > 1 ) && isCrossingNodeOfWrongBranchVerticalSegment( commit, child, lineCol)  ){ // (y1 - y0) > 1  causes speedup 
+                    lineCol = getFreeLane(commit,false); // false gives right-most free lane. true may give inbetween x1 and x0 (needs an S-shaped line, which I don't have)
+                    
+                    if ( (lineCol > x0) && (lineCol > x1) ) { // vertical to the right
+                        type = 1;
+                    }  
+                    
+                    // Prepared for vertical to left, but this cannot happen because of "false" in a above getFreeLane(commit,false) call.
+                    if ( (lineCol < x0) && (lineCol < x1) ) { // vertical to the left
+                        type = 7;
+                    }
+                }
         
             
             // Convert to pixel coordinates (Capital letters)
@@ -1091,11 +1107,12 @@ async function drawGraph( document, graphText, branchHistory, history){
                     case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke({ color: '#888', width: 3});  break;
                     case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
                     case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 7: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 7: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
                 }
-                
+
+
+            // Debug Vertical :  test for commits crossed on vertical line
                 if (DEBUG){
-                    // Look for errors with commits that should not be on this vertical line
                     let X = X0;
                     let x = x0;
                     
