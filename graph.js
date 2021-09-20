@@ -42,6 +42,7 @@
     var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
     
     var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
+    var mapBranchToNewestCommit;  // map branchName to hash of newest commit
     var childMap ;          // Store mapping from parent to child hashes
     
     var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
@@ -266,7 +267,11 @@ function showBranch( branchName){ // True if branch should be shown (in contrast
     }
     
 }
-function registerBranchName( branchName, position){ // Register branch if hidden branches should be shown
+function registerBranchName( commit, position){ // Register branch if hidden branches should be shown
+    
+    let branchName = commit.branchName;
+
+    mapBranchToNewestCommit.set( branchName, commit.hash);
     
     if ( showBranch( branchName) ){
         branchNames.set(branchName, position); // Add to branchNames map
@@ -553,6 +558,8 @@ async function drawGraph( document, graphText, branchHistory, history){
             branchNames = new Map();   // Empty list of branch names
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
+            mapBranchToNewestCommit = new Map();  // Map of commit hash
+            
             commitArray = [];
             
             columnOccupiedStateArray = [];  
@@ -608,6 +615,8 @@ async function drawGraph( document, graphText, branchHistory, history){
     
             // Disect git-log row into useful parts
             [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] );
+            
+            console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
      
             // Style if commit is not in history (because of search)
             let index = util.findObjectIndex( history, 'hash', hashInThisRow );
@@ -680,7 +689,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                  // Register branchName and next integer number
                 if ( !branchNames.has(thisCommit.branchName) && ( thisCommit.branchName !== "") ){
-                    registerBranchName( thisCommit.branchName, branchNames.size);
+                    registerBranchName( thisCommit, branchNames.size);
                 }
                 
                 thisCommit.unknownBranchName = !branchNames.has(thisCommit.branchName);
@@ -1322,10 +1331,10 @@ async function drawGraph( document, graphText, branchHistory, history){
                     noteInThisRow = endOfLastNote;
                 
                     
-                    if ( !branchNames.has(noteInThisRow) ){
-                        // New noteInThisRow
-                        registerBranchName( noteInThisRow, branchNames.size);// Register branchName and next integer number
-                    }
+                    //if ( !branchNames.has(noteInThisRow) ){
+                        //// New noteInThisRow
+                        //registerBranchName( noteInThisRow, branchNames.size);// Register branchName and next integer number
+                    //}
         
                     return noteInThisRow;
                 }
@@ -1681,11 +1690,21 @@ function drawBranchColorHeader( branchNames){
         let colorFileName = getColorFileName(key);
         let id = `branchHeader_${value}`;
 
+        //html += `
+        //<div id="${id}" class="branchHeaderRow"> 
+            //<img class="node" src="${colorFileName}"> 
+            //<pre>${key}</pre>
+        //</div>`;
+        
+        let href = '#' +  mapBranchToNewestCommit.get(key);
         html += `
-        <div id="${id}" class="branchHeaderRow"> 
+        <div id="${id}" class="branchHeaderRow" "> 
             <img class="node" src="${colorFileName}"> 
-            <pre>${key}</pre>
+            <pre><a href="${href}" > ${key} </a></pre>
         </div>`;
+
+
+ 
 
         
         // Find longest branch name
@@ -1850,10 +1869,10 @@ async function loopSelectedRange( myFunction){
         let id = hashString;
         let img_id = `img_${hashString}`;
                             
-        // Add branchname to map if not existing
-        if ( !branchNames.has(name)  ){
-            registerBranchName( name, branchNames.size); 
-        }
+        //// Add branchname to map if not existing
+        //if ( !branchNames.has(name)  ){
+            //registerBranchName( name, branchNames.size); 
+        //}
        
         // Set image
         let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number

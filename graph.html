@@ -37,6 +37,10 @@
             color: var(--body-text);
             user-select: none; /* inibit automatic selection marking on web page */
         }
+        
+        html{
+            scroll-padding-top: 76px;  /* This makes href stop at bottom header, instead of hidden by header  */
+        }
   
         
         /* Set outline: 0.01px to show */
@@ -69,7 +73,7 @@
 
         #displayedContent{
             padding-left: 20px;
-            margin-top: 80px;
+            margin-top: 74px;
         }
         
         #datesSwimLane{
@@ -181,6 +185,12 @@
             /* top: -10px; */
         }
         
+        a{  /* Wish link text be as normal text */
+            color: var(--bodytext);;
+            text-decoration: none;
+        }
+        
+        
         /* Special: this will be used instead of .text, when running test cases (test!=0) in graph.js */
         .courier{ 
             width: auto;
@@ -222,8 +232,6 @@
         img[src="images/circle_black.png"]  {
             filter: invert( var( --image-invert) );
         }
-
-
 
     </style>
 

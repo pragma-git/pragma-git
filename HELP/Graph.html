@@ -8,9 +8,18 @@
             <ul>
                 <li><b>Header (top) </b> , shows repo and branch name</li>
                 <li><b>Graph view (left) </b> , displays the git-log graph</li>
-                <li><b>Branch display box (right) </b> , gives color coding for nodes, and some display setting checkboxes</li>
+                <li><b>Branch list (right) </b> , gives color coding for nodes, and some display setting checkboxes</li>
             </ul>
         </p>
+   
+
+        
+        <figure>
+            <img src="images/Screenshot_graph_window.png" style="zoom:33%;filter: invert( 0% ); ">
+            <figcaption>
+                Graph window, with its header (top), graph view (left), and branch list (right).
+            </figcaption>
+        </figure>
 
  
 <!--------------------------------------------------------------------------------------------> 
@@ -52,8 +61,8 @@
             <br>   
             Branches with known names can be displayed two ways :                
             <ul>
-                <li><b>compress  </b> , where graph takes minimal space </li>
-                <li><b>swim-lane </b> , where each known graph is placed in its own horizontal position</li>
+                <li><b>compress  </b> , where graph takes minimal space. A branch does not follow a fixed column.</li>
+                <li><b>lanes </b> , (sometimes called swim-lanes) where each known branch is placed in its own horizontal position</li>
             </ul>     
              
         </p>
@@ -78,7 +87,7 @@
 
         
         <figure>
-            <img src="images/Screenshot_commit_info_dark.png" style="zoom:33%;filter: invert( 0% ); ">
+            <img src="images/Screenshot_graph_commit_info_dark.png" style="zoom:33%;filter: invert( 0% ); ">
             <figcaption>
                 Commit info box displayed when hovering over a commit.
             </figcaption>
@@ -138,14 +147,26 @@
 
 <!--------------------------------------------------------------------------------------------> 
 <hr>        
-<h2>Branch display box (right) </h2>
+<h2>Branch list (right) </h2>
 
     <p>
-    This box displays the branch names and their color codes. 
+    This box displays the branch names and their color codes, together with some settings on the graph display. 
     </p>
+   
+
+    
+    <figure>
+        <img src="images/Screenshot_graph_branch_list.png" style="zoom:33%;filter: invert( 0% ); ">
+        <figcaption>
+            Branch list, showing color codes and branch names.  Branch names can be clicked, to scroll to first commit of that branch.
+        </figcaption>
+    </figure>   
+
+
     <p>
     The following settings modify the graph display :
     </p>
+       
 
 <h4>Dates</h4>     
     </p>
@@ -179,3 +200,5 @@
     , 
     otherwise the commits on hidden branches are shown as belonging to an unknown branch (<img style="height: 12; width: 12; filter: invert( 0% );vertical-align:middle;" src="../images/circle_grey.png">).
     </p>
+    
+    <br><br>
