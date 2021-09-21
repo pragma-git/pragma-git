@@ -43,6 +43,7 @@
     
     var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
     var mapBranchToNewestCommit;  // map branchName to hash of newest commit
+    var mapTopCommitToBranchName; // reverse, map first commit on branch to branchName
     var childMap ;          // Store mapping from parent to child hashes
     
     var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
@@ -267,16 +268,6 @@ function showBranch( branchName){ // True if branch should be shown (in contrast
     }
     
 }
-function registerBranchName( commit, position){ // Register branch if hidden branches should be shown
-    
-    let branchName = commit.branchName;
-
-    mapBranchToNewestCommit.set( branchName, commit.hash);
-    
-    if ( showBranch( branchName) ){
-        branchNames.set(branchName, position); // Add to branchNames map
-    }
-}
 
 // Callbacks
 async function setPinned(hash, isPinned){ // Called from EventListener added in html
@@ -416,21 +407,39 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML 
             let html =``
             
+            let branchName = commit.branchName;
+            
+            
+            let parenthesis = '';
+            // Translation of a hidden branch name (hash) to a real branchname
+            if ( mapTopCommitToBranchName.get(commit.branchName) !== undefined ){
+                branchName = mapTopCommitToBranchName.get(commit.branchName); 
+                parenthesis = ' (hidden)';
+            }
+            
+            if ( commit.unknownBranchName ){
+                parenthesis = ' (' + branchName.substring(0,6) + ')';
+                branchName = 'unknown '
+            }
+            
+            
+            
             
             // HTML Branch
-            html += `<div><B> Branch </B> = &nbsp; 
-                <img class="node" src="${imageSrc}" style="display:inline; position : unset" > 
-                <span> ${commit.branchName} </span>
-                 </div>
-                 <BR><BR>` 
+            html += `<h2> 
+                <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                <span> ${branchName}  ${parenthesis} </span>
+                 </h2>` 
                  
-            html += '<HR><BR>'               
+            html += '<HR><BR>'   
+            
+                     
             
             
             // HTML Commit
             html += `<B>Commit </B> : <BR><BR> 
                  <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <span style = "left: 30 px; position: relative"> ${commit.message} </span>
+                    <span style = "left: 30 px; position: relative"> ${commit.message}</span>
                  </div></b>
                  <BR><BR>`
             
@@ -558,7 +567,8 @@ async function drawGraph( document, graphText, branchHistory, history){
             branchNames = new Map();   // Empty list of branch names
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
-            mapBranchToNewestCommit = new Map();  // Map of commit hash
+            mapBranchToNewestCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
+            mapTopCommitToBranchName = new Map(); // Map of hash (of first commit on hidden branch) to branchName
             
             commitArray = [];
             
@@ -589,10 +599,15 @@ async function drawGraph( document, graphText, branchHistory, history){
     //
         /*
             Get values from graphText (which comes from 'git log graph'), and store commits
+            Some values are updated in Pass 2 (parent branchName, lane, hidden and unknown status)
             
             Commits stored two ways :
                 commitArray[row]
                 nodeMap.set( thisCommit.hash, thisCommit);
+                
+            Also maps :
+                mapTopCommitToBranchName - used to map a hash to a branchName.  Used for hidden commits
+                mapBranchToNewestCommit  - reverse, maps branch to hash.  Used to create href from branch-list to top commit
             
             For each row, the struct is populated :
                 thisCommit.hash                 - commit hash
@@ -600,8 +615,9 @@ async function drawGraph( document, graphText, branchHistory, history){
                 thisCommit.notFoundInSearch     - true is the commits reachable from pragma-git ( false if on other branch, or filtered by search)
                 thisCommit.message              - commit message
                 thisCommit.decoration           - commit decoration (branch HEAD, tag, etc)
-                thisCommit.branchName           - derived from 1) Notes, 2) from decoration. Decoration wins if conflict
-                thisCommit.unknownBranchName    - if branch name not determined
+                thisCommit.branchName           - derived from 1) Notes, 2) from decoration. Decoration wins if conflict.  If hidden this ""
+                thisCommit.unknownBranchName    - if branch name not determined     ( pass 2 copies this to all in same branch)
+                thisCommit.hiddenBranchName     - if branch is hidden               ( pass 2 copies this to all in same branch)
                 thisCommit.y                    - row
          
          */
@@ -662,45 +678,61 @@ async function drawGraph( document, graphText, branchHistory, history){
             // Store commit info & NUMBER_OF_BRANCHES (additional info will be added in PASS 2)
                 let thisCommit = {};
     
+                thisCommit.x = 0;
+                thisCommit.y = line;  // Row number
                 thisCommit.hash = hashInThisRow;
                 thisCommit.parents = parents;
                 thisCommit.notFoundInSearch = notFoundInSearch;
                 thisCommit.message = thisRow;
                 thisCommit.decoration = decoration;
+                thisCommit.branchName = "";  // Default (hidden or unknown)
                 
-                
-            // Alt 1 : branchName in Note
-                // branchName from note, or ""
-                thisCommit.branchName = "";  
-                if ( showBranch(noteInThisRow) ) { 
-                    thisCommit.branchName = noteInThisRow;  // branchName from note, or ""
-                }
+            // Determine branchName
             
-            // Alt 2: Override branchName from decoration
-                thisCommit.unknownBranchName = true;
-                let test = decoration; 
-                localBranchList.forEach( 
-                    (entry) => { 
-                        if (test.includes(entry) && showBranch(entry) ) { 
-                            thisCommit.branchName = entry;
-                        };
-                    } 
-                )
-                
-                 // Register branchName and next integer number
-                if ( !branchNames.has(thisCommit.branchName) && ( thisCommit.branchName !== "") ){
-                    registerBranchName( thisCommit, branchNames.size);
-                }
-                
-                thisCommit.unknownBranchName = !branchNames.has(thisCommit.branchName);
-                
+                let branchName = noteInThisRow; // ("" if not stored in note)
+                                
+                // Branch from decoration
+                if (decoration !== ''){
+                    let test = decoration; 
+                    localBranchList.forEach( 
+                        (entry) => { 
+                            if (test.includes(entry) && showBranch(entry) ) {  // TODO : main is found in branch main_window_zoom
+                                branchName = entry;
+                            }else if (test.includes(entry) ){
+                                mapTopCommitToBranchName.set( thisCommit.hash, entry);
+                            }
+                        } 
+                    )      
+                }    
 
+                
+            // Show branch ?
             
-            // Row number
-            
-                thisCommit.y = line; 
+                thisCommit.hiddenBranchName = true;
+                if ( showBranch(branchName) ){
+                    thisCommit.hiddenBranchName = false;
 
+ 
+                     // Register branchName and next integer number
+                    if ( !branchNames.has(branchName) && ( branchName !== "") ){
+                        thisCommit.branchName = branchName; 
+                     
+                         // Register branchName and next integer number
+                        mapBranchToNewestCommit.set( branchName, thisCommit.hash);
+
+                        branchNames.set(branchName, branchNames.size); // Add to branchNames map
+                    }
+                }
+                 
+            // Unknown branch ?
+                thisCommit.unknownBranchName = false; 
+                if (branchName == ''){      
+                    thisCommit.unknownBranchName = true; 
+                }               
             
+            // commit.branchName     
+                thisCommit.branchName = branchName;
+
 
             // Store thisCommit (only if a commit row)
             if ( hashInThisRow !== ""){
@@ -791,8 +823,9 @@ async function drawGraph( document, graphText, branchHistory, history){
                             //bestLane = branchNames.size;
                         } 
                         
-                        branchNames.set( commit.branchName, bestLane ); // Add branch as hash
+                        branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
+                    
 
                     }
     
@@ -852,8 +885,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                     commit.END = true;
 
                    // Set first-parent (if branch was not explicitly named)
-                   let isUnknownBranch = commit.unknownBranchName;
-                   if ( isOnFirstParentLane(commit) && isUnknownBranch ){
+                   let unknownBranchName = commit.unknownBranchName ;
+                   if ( isOnFirstParentLane(commit) && unknownBranchName ){
                        commit.x = 0;  // Put on lane reserved for unknown first-parent
                    }
                    
@@ -921,7 +954,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
             
   
-            // Draw SVG horizontal help-line TODO : 
+            // Draw SVG horizontal help-line 
             draw.line( LEFT_OFFSET + x0 * COL_WIDTH, 
                        TOP_OFFSET + y0 * ROW_HEIGHT , 
                        LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
@@ -1214,8 +1247,11 @@ async function drawGraph( document, graphText, branchHistory, history){
             }else{
                 colorFileName = 'images/circle_green.png'; // Draw node
     
-                // When branch is known from Notes
-                if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
+                //// When branch is known from Notes
+                //if ( branchNames.has(branchName) && (branchNames.get(branchName) <= NUMBER_OF_KNOWN_BRANCHES)){
+                if ( commit.hiddenBranchName ){
+                    colorFileName = unsetNodeImageFile;
+                }else{
                     
                     // Get image file name
                     let colorNumber = branchNames.get(branchName) % colorImageNameDefinitions.length; // start again if too high number
@@ -1329,13 +1365,7 @@ async function drawGraph( document, graphText, branchHistory, history){
 
                     
                     noteInThisRow = endOfLastNote;
-                
-                    
-                    //if ( !branchNames.has(noteInThisRow) ){
-                        //// New noteInThisRow
-                        //registerBranchName( noteInThisRow, branchNames.size);// Register branchName and next integer number
-                    //}
-        
+
                     return noteInThisRow;
                 }
 
@@ -1622,11 +1652,12 @@ async function drawGraph( document, graphText, branchHistory, history){
                 let child = nodeMap.get( childrenHashes[i] );
                 if ( child.parents[0] == commit.hash ){ // Copy from first-parent
                     // Found the child to copy from
-                    //if (commit.branchName == ""){  // Copy only if branchName is unknown (keep info intact for named branches)
-                    if ( (commit.branchName == "") || ( commit.branchName == child.branchName) ){ 
+                    //if ( (commit.branchName == "") || ( commit.branchName == child.branchName) ){ 
+                    if ( commit.hiddenBranchName  ||  commit.unknownBranchName || ( commit.branchName == child.branchName) ){ 
                         commit.branchName = child.branchName;
                         commit.x = child.x;
                         commit.unknownBranchName = child.unknownBranchName;
+                        commit.hiddenBranchName = child.hiddenBranchName;
                     }
                 }
             }
@@ -1868,11 +1899,7 @@ async function loopSelectedRange( myFunction){
         //
         let id = hashString;
         let img_id = `img_${hashString}`;
-                            
-        //// Add branchname to map if not existing
-        //if ( !branchNames.has(name)  ){
-            //registerBranchName( name, branchNames.size); 
-        //}
+
        
         // Set image
         let colorNumber = branchNames.get(name) % colorImageNameDefinitions.length; // start again if too high number
