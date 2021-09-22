@@ -282,6 +282,16 @@
                     document.getElementById('git').setAttribute('style','color: var(--text)');
                 }
             }
+            
+            // Blink element briefly (used to get attention after clicking branch name -- see graph.js drawBranchColorHeader)
+            function blink(f) {
+               setTimeout(function() {
+                  f.style.visibility = 'hidden' ;
+               }, 500);
+               setTimeout(function() {
+                  f.style.visibility =  'visible';
+               }, 800);
+    }
                 
         </script>
             

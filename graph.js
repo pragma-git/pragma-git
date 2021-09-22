@@ -1734,19 +1734,18 @@ function drawBranchColorHeader( branchNames){
         let colorFileName = getColorFileName(key);
         let id = `branchHeader_${value}`;
 
-        //html += `
-        //<div id="${id}" class="branchHeaderRow"> 
-            //<img class="node" src="${colorFileName}"> 
-            //<pre>${key}</pre>
-        //</div>`;
-        
-        let href = '#' +  mapVisibleBranchToTopCommit.get(key);
-        html += `
-        <div id="${id}" class="branchHeaderRow" "> 
-            <img class="node" src="${colorFileName}"> 
-            <pre><a href="${href}" > ${key} </a></pre>
-        </div>`;
 
+        // Link, with javascript to scroll, and then blink element to get attention (blink function defined in graph.html)
+        html += `
+        <div id="${id}" class="branchHeaderRow" 
+            onclick = "
+                var el=document.getElementById( '${mapVisibleBranchToTopCommit.get(key)}' );
+                el.scrollIntoView(true);
+                blink(el)
+        "> 
+            <img class="node" src="${colorFileName}"> 
+            <pre>${key} </pre>
+        </div>`;
 
  
 
