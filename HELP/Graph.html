@@ -17,7 +17,7 @@
         <figure>
             <img src="images/Screenshot_graph_window.png" style="zoom:33%;filter: invert( 0% ); ">
             <figcaption>
-                Graph window, with its header (top), graph view (left), and branch list (right).
+                Graph window, with its header (top), graph view (left), and clickable branch list (right).
             </figcaption>
         </figure>
 
@@ -187,18 +187,25 @@
     
 
 
-<h4>Show hidden branches</h4>     
+<h4>Color hidden branches</h4>     
     <p>
-    <input id="showHidden" name="showHidden" type="checkbox"> <label for="showHidden">Show Hidden Branches</label>
-    , this option is only visible if there exists any branches hidden.  Branches can be hidden from the settings 
-    ( click main-window <img src="../images/settings_black.png"  height="17" width="17"> icon, and then Branch tab).  
-    If checkbox is checked, hidden branches are shown with their known branch colors
+    <input id="showHidden" name="showHidden" type="checkbox"> <label for="showHidden">Color Hidden Branches</label>
+    , this option is only visible if any branches are hidden (*).  
+    
+    </p> 
+    <p>   
+    If checked, hidden branches are shown with branch colors
     (        <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_red.png" >
         <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_blue.png" >
         <img style="height: 12; width: 12; filter: invert( 0% ); vertical-align:middle;" src="../images/circle_colors/circle_orange.png" >
         ...)
     , 
-    otherwise the commits on hidden branches are shown as belonging to an unknown branch (<img style="height: 12; width: 12; filter: invert( 0% );vertical-align:middle;" src="../images/circle_grey.png">).
+    otherwise the commits on hidden branches are shown in same color as unknown branches ( <img style="height: 12; width: 12; filter: invert( 0% );vertical-align:middle;" src="../images/circle_grey.png"> ).
+      </p> 
+    <p>   
+    (*) Branches can be hidden using the settings icon
+    ( click main-window <img src="../images/settings_black.png"  height="17" width="17"> icon, and then Branch tab).  
+    
     </p>
     
     <br><br>

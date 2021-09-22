@@ -437,14 +437,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Commit
-            html += `<B>Commit </B> : <BR><BR> 
+            html += `<B><U>Commit </U></B> : <BR><BR> 
                  <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                     <span style = "left: 30 px; position: relative"> ${commit.message}</span>
                  </div></b>
                  <BR><BR>`
             
-            html += ` &nbsp; author : ${author} <BR><BR>`
-            html += ` &nbsp; hash   : ${commit.hash} <BR><BR>`
+            html += ` &nbsp; <i> ${author} </i><BR><BR>`
+            html += ` &nbsp; ${commit.hash} <BR><BR>`
             
             
             html += '<HR><BR>' 
@@ -455,7 +455,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Parents   
-            html += `<B> ${ParentHeader} : </B> <BR><BR>` 
+            html += `<B><U> ${ParentHeader} : </U></B> <BR><BR>` 
             
             for (let i = 0; i < parentHashes.length; i++){
                 
@@ -483,7 +483,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // HTML Parent Hashes
             for (let i = 0; i < parentHashes.length; i++){
-                html +=  '&nbsp; hash : ' + parentHashes[i]   + '<BR>';
+                html +=  '&nbsp; ' + parentHashes[i]   + '<BR>';
             }
             
             
@@ -1699,11 +1699,16 @@ function drawBranchColorHeader( branchNames){
         <pre> Unknown first-parent branch </pre>
     </div>`;
     
+    let unknownAndHiddenText = 'Unknown branch';
+    if ( ( !state.graph.showHiddenBranches ) && ( document.getElementById('hiddenBranchesDiv').style.contentVisibility == 'visible' ) ){
+        unknownAndHiddenText = 'Hidden / Unknown branch';
+    }
+    
     
     html += `
     <div class="branchHeaderRow"> 
         <img class="node" src="${unsetNodeImageFile}"> 
-        <pre> Unknown branch </pre> 
+        <pre> ${unknownAndHiddenText} </pre> 
     </div>`;
     
     
@@ -1737,7 +1742,7 @@ function drawBranchColorHeader( branchNames){
 
         // Link, with javascript to scroll, and then blink element to get attention (blink function defined in graph.html)
         html += `
-        <div id="${id}" class="branchHeaderRow" 
+        <div id="${id}" class="branchHeaderRow" style="cursor: pointer" 
             onclick = "
                 var el=document.getElementById( '${mapVisibleBranchToTopCommit.get(key)}' );
                 var desc=document.getElementById( 'desc_${mapVisibleBranchToTopCommit.get(key)}' );
