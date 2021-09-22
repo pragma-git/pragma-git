@@ -42,7 +42,7 @@
     var dateContent = '';   // This is where date output is collected for swim-lane version of Graph
     
     var branchNames;        // map  branchname => index 0, 1, 2, ... calculated in drawGraph
-    var mapBranchToNewestCommit;  // map branchName to hash of newest commit
+    var mapVisibleBranchToTopCommit;  // map branchName to hash of newest commit
     var mapTopCommitToBranchName; // reverse, map first commit on branch to branchName
     var childMap ;          // Store mapping from parent to child hashes
     
@@ -411,14 +411,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             let parenthesis = '';
-            // Translation of a hidden branch name (hash) to a real branchname
-            if ( mapTopCommitToBranchName.get(commit.branchName) !== undefined ){
-                branchName = mapTopCommitToBranchName.get(commit.branchName); 
+  
+            if ( commit.hiddenBranchName ){
+                branchName = mapTopCommitToBranchName.get(commit.branchName); // Because branchName is the hash for hidden branches
                 parenthesis = ' (hidden)';
             }
             
             if ( commit.unknownBranchName ){
-                parenthesis = ' (' + branchName.substring(0,6) + ')';
+                parenthesis = ' (' + commit.branchName.substring(0,6) + ')';
                 branchName = 'unknown '
             }
             
@@ -567,7 +567,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             branchNames = new Map();   // Empty list of branch names
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
-            mapBranchToNewestCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
+            mapVisibleBranchToTopCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
             mapTopCommitToBranchName = new Map(); // Map of hash (of first commit on hidden branch) to branchName
             
             commitArray = [];
@@ -607,7 +607,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
             Also maps :
                 mapTopCommitToBranchName - used to map a hash to a branchName.  Used for hidden commits
-                mapBranchToNewestCommit  - reverse, maps branch to hash.  Used to create href from branch-list to top commit
+                mapVisibleBranchToTopCommit  - reverse, maps branch to hash.  Used to create href from branch-list to top commit
             
             For each row, the struct is populated :
                 thisCommit.hash                 - commit hash
@@ -626,6 +626,9 @@ async function drawGraph( document, graphText, branchHistory, history){
         let branchList =  await opener.gitBranchList();
         let localBranchList = branchList.local;
         
+        let sortedLocalBranchList = localBranchList.sort(function(a, b) {
+                return a.length - b.length; // sort by length (shortest first, longest last)
+            });        
         
         for(var row = 0; row < splitted.length; row++) {
     
@@ -687,58 +690,72 @@ async function drawGraph( document, graphText, branchHistory, history){
                 thisCommit.decoration = decoration;
                 thisCommit.branchName = "";  // Default (hidden or unknown)
                 
-            // Determine branchName
+                
+            // Get branchName
             
-                let branchName = noteInThisRow; // ("" if not stored in note)
+                // If stored with committed
+                let branchName = noteInThisRow; // ("" if not stored in a git-note)
                                 
-                // Branch from decoration
+                // Branch from decoration (find longest match to existing branch name)
                 if (decoration !== ''){
-                    let test = decoration; 
-                    localBranchList.forEach( 
+                    sortedLocalBranchList.forEach( 
                         (entry) => { 
-                            if (test.includes(entry) && showBranch(entry) ) {  // TODO : main is found in branch main_window_zoom
+                            if (decoration.includes(entry)  ) {  
                                 branchName = entry;
-                            }else if (test.includes(entry) ){
-                                mapTopCommitToBranchName.set( thisCommit.hash, entry);
                             }
                         } 
                     )      
-                }    
-
+                }  
                 
-            // Show branch ?
-            
-                thisCommit.hiddenBranchName = true;
+                // is topmost commit on a branch
+                let isTopCommit = ( !branchNames.has(branchName) && ( branchName !== "") );   
+                
+            // Visible / hidden branch
                 if ( showBranch(branchName) ){
-                    thisCommit.hiddenBranchName = false;
-
- 
-                     // Register branchName and next integer number
-                    if ( !branchNames.has(branchName) && ( branchName !== "") ){
-                        thisCommit.branchName = branchName; 
-                     
-                         // Register branchName and next integer number
-                        mapBranchToNewestCommit.set( branchName, thisCommit.hash);
-
-                        branchNames.set(branchName, branchNames.size); // Add to branchNames map
-                    }
+                    // Visible branch
+                    
+                    thisCommit.hiddenBranchName = false; 
+                    
+                    // First time seeing branch -- register branchName to next integer number
+                    if (isTopCommit){
+                        mapVisibleBranchToTopCommit.set( branchName, thisCommit.hash);  // BranchName -> top commit  (used to link GUI branch-list href to commit)
+                        
+                        if (showBranch(branchName)){
+                            branchNames.set(branchName, branchNames.size);       // Add to branchNames map, thus obtain an index for this branch in that map
+                        }
+                    }                   
+                }else{
+                    // Hidden branch      
+                    thisCommit.hiddenBranchName = true;
                 }
-                 
+                
+
+            // Top commit -> branchName (both hidden and visible branches)
+                if ( isTopCommit ){ 
+                    mapTopCommitToBranchName.set( thisCommit.hash, branchName); 
+                }
+                
+                   // mapTopCommitToBranchName.set( thisCommit.hash, branchName); 
+
+
             // Unknown branch ?
                 thisCommit.unknownBranchName = false; 
                 if (branchName == ''){      
                     thisCommit.unknownBranchName = true; 
                 }               
             
-            // commit.branchName     
+            
+            // Store 
                 thisCommit.branchName = branchName;
-
+                thisCommit.x = branchNames.get(branchName);
+    
 
             // Store thisCommit (only if a commit row)
-            if ( hashInThisRow !== ""){
-                commitArray.push( thisCommit);
-                nodeMap.set( hashInThisRow, thisCommit);
-            }
+                if ( hashInThisRow !== ""){
+                    commitArray.push( thisCommit);
+                    nodeMap.set( hashInThisRow, thisCommit);
+                }
+            
                            
             line++;
         } // End for
@@ -816,7 +833,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
                         // Lane for unknown branch should land compressed, instead of to far right
-                        let bestLane = getFreeLane(commit, COMPRESSUNKNOWN1); 
+                        let bestLane = getFreeLane(commit, true); 
                         
                         // If a swimlane has not seen its first commit yet
                         if ( ( MODE == 'swim-lanes' ) && ( bestLane < NUMBER_OF_KNOWN_BRANCHES ) ){ 
@@ -917,7 +934,8 @@ async function drawGraph( document, graphText, branchHistory, history){
 
                 if (DEBUG) {
                     
-                    commit.message = `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                    commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
+                        `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
                 }
                 
                 if (commit.x > HIGHEST_LANE){
@@ -1484,12 +1502,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
                 
                 function isOnActiveSwimlane(lane, commit){
-                    // Looks from commit to end of segment, if on named branchName
-                    
-                    // Bail out if not on named Branch
-                    if (  ! isOnNamedBranch(commit) ){
-                        return false;
-                    }
+                    // Looks from commit to end of segment
                     
                     // Extent of segment
                     let start = commit.y;
@@ -1727,7 +1740,7 @@ function drawBranchColorHeader( branchNames){
             //<pre>${key}</pre>
         //</div>`;
         
-        let href = '#' +  mapBranchToNewestCommit.get(key);
+        let href = '#' +  mapVisibleBranchToTopCommit.get(key);
         html += `
         <div id="${id}" class="branchHeaderRow" "> 
             <img class="node" src="${colorFileName}"> 
