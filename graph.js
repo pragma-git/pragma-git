@@ -1410,7 +1410,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         
         
         let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text +  `</pre>` + ' </div>' ; 
-        html += '<pre class="decoration"> &nbsp;' + decoration + '</pre>'
+        html += '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration + '</pre>'
 
         return html 
     };
@@ -1740,8 +1740,10 @@ function drawBranchColorHeader( branchNames){
         <div id="${id}" class="branchHeaderRow" 
             onclick = "
                 var el=document.getElementById( '${mapVisibleBranchToTopCommit.get(key)}' );
+                var desc=document.getElementById( 'desc_${mapVisibleBranchToTopCommit.get(key)}' );
                 el.scrollIntoView(true);
                 blink(el)
+                blink(desc)
         "> 
             <img class="node" src="${colorFileName}"> 
             <pre>${key} </pre>
