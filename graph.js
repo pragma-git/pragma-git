@@ -49,7 +49,6 @@
     var nodeMap;            // Map hash to commit (same object as in commitArray, but can be looked up)
     var commitArray;        // Array with same commits as in nodeMap
     var columnOccupiedStateArray; // Array used to mark occupied columns, stores last known occupied row-number of branch segment
-    var firstCommitInEachSwimlane = [];  // Index is the swimlane (commit.x)
     
     const BUFFERTCOLS = '  '; // Allows to look to the left of current character
     const BUFFERTROW = '                                                                                                                                                                    ';
@@ -835,15 +834,8 @@ async function drawGraph( document, graphText, branchHistory, history){
                         // Lane for unknown branch should land compressed, instead of to far right
                         let bestLane = getFreeLane(commit, true); 
                         
-                        // If a swimlane has not seen its first commit yet
-                        if ( ( MODE == 'swim-lanes' ) && ( bestLane < NUMBER_OF_KNOWN_BRANCHES ) ){ 
-                            //bestLane = branchNames.size;
-                        } 
-                        
                         branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
-                    
-
                     }
     
                     console.log( `i = ${i}   NEW SEGMENT ${commit.x} AT   ${commit.message}  [${columnOccupiedStateArray.toString()}]`);
@@ -1209,7 +1201,6 @@ async function drawGraph( document, graphText, branchHistory, history){
             return    
 
         };
-        
         function isCrossingNodeOfWrongBranchVerticalSegment( commit, child, x){
 
             let thisBranchName = commit.branchName;
@@ -1227,8 +1218,6 @@ async function drawGraph( document, graphText, branchHistory, history){
             }
             return false
         }
-
-     
         function isCrossingNodeOrLane( commit, child){
             
             let x0 = commit.x;
