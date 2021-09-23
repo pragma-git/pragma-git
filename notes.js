@@ -30,22 +30,21 @@ async function injectIntoNotesJs(document) {
     }catch(err){
         
     }
-     
+
     
-    // See notes about how editor is loaded in "notes.html"
-    let options = {
-      el: document.querySelector('#editor'),
-      height: '100%',
-      initialValue: content,
-      previewStyle: 'vertical',
-      usageStatistics: false
-    }
+    options = {
+        el: document.querySelector('#editor'),
+        previewStyle: 'vertical',
+        height: '100%',
+        initialValue: content
+    };
+        
 
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
-
+    
+    const Editor = require('@toast-ui/editor'); /* CommonJS */
     editor =  new Editor( options);
-    
-    
+
     
     //
     // Add search button to toolbar
@@ -54,7 +53,7 @@ async function injectIntoNotesJs(document) {
     const END = 100; //Too high position number, makes sure lands right-most
      
      
-    const toolbar = editor.getUI().getToolbar();
+    //const toolbar = editor.getUI().getToolbar();
  
     //
     // Add help button to toolbar
@@ -64,25 +63,25 @@ async function injectIntoNotesJs(document) {
     button2.setAttribute("id", 'help-icon');
     button2.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/questionmark_hover.png" >';
 
-    toolbar.insertItem(END, {
-        type: 'button',
-        options: {
-          className: 'first',
-          event: 'clickCustomButton2',
-          tooltip: 'Help for Notes window',
-          el: button2,
-          text: '🔍',
-          style: 'float:right'
-        }
-    });
+    //toolbar.insertItem(END, {
+        //type: 'button',
+        //options: {
+          //className: 'first',
+          //event: 'clickCustomButton2',
+          //tooltip: 'Help for Notes window',
+          //el: button2,
+          //text: '🔍',
+          //style: 'float:right'
+        //}
+    //});
     
     
-    editor.eventManager.addEventType('clickCustomButton2');
-    editor.eventManager.listen('clickCustomButton2', function() {
-        let evt = {}; 
-        evt.name='Notes';
-        opener._callback('help',evt); 
-    });
+    //editor.eventManager.addEventType('clickCustomButton2');
+    //editor.eventManager.listen('clickCustomButton2', function() {
+        //let evt = {}; 
+        //evt.name='Notes';
+        //opener._callback('help',evt); 
+    //});
     
     
     // Title
@@ -94,28 +93,28 @@ async function injectIntoNotesJs(document) {
     // Add Search button to toolbar
     //   
         
-    button = document.createElement('button');
-    button.setAttribute("id", 'find-icon');
-    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
+    //button = document.createElement('button');
+    //button.setAttribute("id", 'find-icon');
+    //button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
 
 
-    toolbar.insertItem(END, {
-        type: 'button',
-        options: {
-          className: 'first',
-          event: 'clickCustomButton',
-          tooltip: 'Search in Notes',
-          el: button,
-          text: '🔍',
-          style: 'background-image: url("images/find.png");float:right'
-        }
-    });
+    //toolbar.insertItem(END, {
+        //type: 'button',
+        //options: {
+          //className: 'first',
+          //event: 'clickCustomButton',
+          //tooltip: 'Search in Notes',
+          //el: button,
+          //text: '🔍',
+          //style: 'background-image: url("images/find.png");float:right'
+        //}
+    //});
     
     
-    editor.eventManager.addEventType('clickCustomButton');
-    editor.eventManager.listen('clickCustomButton', function() {
-        findInNw.showSearchBox();
-    });
+    //editor.eventManager.addEventType('clickCustomButton');
+    //editor.eventManager.listen('clickCustomButton', function() {
+        //findInNw.showSearchBox();
+    //});
     
     
 
@@ -148,7 +147,12 @@ function closeWindow(){
     save(); 
     
     // Save settings
-    global.state.notesWindow.editMode = editor.currentMode;
+    if ( editor.isWysiwygMode() ){
+        global.state.notesWindow.editMode = 'wysiwyg';
+    }else{
+        global.state.notesWindow.editMode = 'markdown';
+    }
+    
     opener.saveSettings(); // Save settings to file
     
     // Mark that closed

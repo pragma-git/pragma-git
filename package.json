@@ -21,7 +21,7 @@
     "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 ."
   },
   "dependencies": {
-    "@toast-ui/editor": "^2.3.1",
+    "@toast-ui/editor": "3.0",
     "chokidar": "^3.4.2",
     "codemirror": "^5.57.0",
     "css-spinners": "^1.0.1",
