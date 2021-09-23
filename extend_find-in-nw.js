@@ -42,13 +42,13 @@ function extendFindInNw( elementToSearch){
         
         // If Notes, overide base search element -- two modes Wysiwyg (button 1) and Markdown (button 0)
         try{
-            const isWysiwyg = document.getElementsByClassName('te-switch-button')[1].classList.contains('active');
-            const isMd = document.getElementsByClassName('te-switch-button')[0].classList.contains('active');
+            const isWysiwyg = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].classList.contains('active');
+            const isMd = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].classList.contains('active');
             if (isWysiwyg){
-                searchElement = document.getElementsByClassName('te-ww-container')[0].getElementsByClassName('te-editor')[0];
+                searchElement = document.getElementsByClassName('toastui-editor-contents')[1];
             }
             if (isMd){
-                searchElement = document.getElementsByClassName('te-md-container')[0].getElementsByClassName('te-preview')[0];
+                searchElement = document.getElementsByClassName('toastui-editor-md-preview')[0];
             }  
         }catch(err){}    
         

@@ -71,6 +71,11 @@
         zoom: 0.85;
         height:auto;
     }
+    
+    .toastui-editor-toolbar-item-wrapper{
+        margin: 0px;
+        color: var(--header-color);
+    }
 
     
     
@@ -150,19 +155,19 @@
             console.log('notes.html :DOM fully loaded and parsed');
             injectIntoNotesJs(document);
             
-            //// Events for switch between Markdown and MouseOver
-            //document.getElementsByClassName('te-switch-button')[0].addEventListener('mouseover', (event) => {
-                //console.log('notes.html : Mouse over');
-                //findInNw.clearTokens();   // Clear all <mark> inserted in html 
-                //findInNw.hideSearchBox(); // Hide search
-                //}
-            //);
-            //document.getElementsByClassName('te-switch-button')[1].addEventListener('mouseover', (event) => {
-                //console.log('notes.html : Mouse over');
-                //findInNw.clearTokens();  // Clear all <mark> inserted in html 
-                //findInNw.hideSearchBox();// Hide search
-                //}
-            //);
+            // Events for switch between Markdown and MouseOver
+            document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over');
+                findInNw.clearTokens();   // Clear all <mark> inserted in html 
+                findInNw.hideSearchBox(); // Hide search
+                }
+            );
+            document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over');
+                findInNw.clearTokens();  // Clear all <mark> inserted in html 
+                findInNw.hideSearchBox();// Hide search
+                }
+            );
             
             
         });

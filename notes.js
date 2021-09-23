@@ -38,85 +38,67 @@ async function injectIntoNotesJs(document) {
         height: '100%',
         initialValue: content
     };
-        
-
-    options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
     
-    const Editor = require('@toast-ui/editor'); /* CommonJS */
-    editor =  new Editor( options);
-
-    
-    //
-    // Add search button to toolbar
-    //
-
-    const END = 100; //Too high position number, makes sure lands right-most
-     
-     
-    //const toolbar = editor.getUI().getToolbar();
  
-    //
+    // Add search button to toolbar
+    button1 = document.createElement('button');
+    button1.setAttribute("id", 'find-icon');
+    button1.innerHTML = '<img style="height="20" width="20"  src="images/find.png" >';
+    button1struct = {  
+            name: 'find',
+            tooltip: 'Find in Notes window',
+            event: 'clickCustomButton1',
+            el: button1
+        };
+        
+ 
     // Add help button to toolbar
-    //
-    
     button2 = document.createElement('button');
     button2.setAttribute("id", 'help-icon');
-    button2.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/questionmark_hover.png" >';
+    button2.innerHTML = '<img style="height="20" width="20"  src="images/questionmark_hover.png" >';
+    button2struct = {  
+            name: 'help',
+            tooltip: 'Help for Notes window',
+            event: 'clickCustomButton2',
+            el: button2
+        };
+    
+    // Add buttons to editor options
+    options.toolbarItems = [
+        [ button1struct ],
+        ['heading', 'bold', 'italic', 'strike'],
+        ['hr', 'quote'],
+        ['ul', 'ol', 'task', 'indent', 'outdent'],
+        ['table', 'image', 'link'],
+        ['code', 'codeblock'],
+        ['scrollSync', button2struct ],
+    ];
+        
+        
+    // Initiate Editor
+    options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
+    
+    const Editor = require('@toast-ui/editor'); 
+    editor =  new Editor( options);
 
-    //toolbar.insertItem(END, {
-        //type: 'button',
-        //options: {
-          //className: 'first',
-          //event: 'clickCustomButton2',
-          //tooltip: 'Help for Notes window',
-          //el: button2,
-          //text: '🔍',
-          //style: 'float:right'
-        //}
-    //});
-    
-    
-    //editor.eventManager.addEventType('clickCustomButton2');
-    //editor.eventManager.listen('clickCustomButton2', function() {
-        //let evt = {}; 
-        //evt.name='Notes';
-        //opener._callback('help',evt); 
-    //});
+
+    // Event listeners
+    button1.addEventListener('click', () => {
+        findInNw.showSearchBox();
+    });
+ 
+
+    button2.addEventListener('click', () => {
+        let evt = {}; 
+        evt.name='Notes';
+        opener._callback('help',evt); 
+    });       
     
     
     // Title
     let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
-    //document.title = `" ${repoName}"  Notes`;
-       
-    //
-    // Add Search button to toolbar
-    //   
-        
-    //button = document.createElement('button');
-    //button.setAttribute("id", 'find-icon');
-    //button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
 
-
-    //toolbar.insertItem(END, {
-        //type: 'button',
-        //options: {
-          //className: 'first',
-          //event: 'clickCustomButton',
-          //tooltip: 'Search in Notes',
-          //el: button,
-          //text: '🔍',
-          //style: 'background-image: url("images/find.png");float:right'
-        //}
-    //});
-    
-    
-    //editor.eventManager.addEventType('clickCustomButton');
-    //editor.eventManager.listen('clickCustomButton', function() {
-        //findInNw.showSearchBox();
-    //});
-    
-    
 
 };
 function save(){
