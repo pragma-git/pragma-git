@@ -53,6 +53,10 @@
 -  # If install files becomes very large -- then the problem is that  ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches is included in install.
    # Solution: softlink ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches -> 
    ln -s  /Users/jan/Downloads/caches-nwjs-builder-phoenix ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
+   
+   
+-  # Not allowed to run rcedit.exe 
+   # On Mac, go to "System Settings/Security nd Privacy/General" and click "Allow" button.  (Then restart build)
 
 ////
 
@@ -183,10 +187,17 @@
     DIR=$(ls -1 ../dist/|grep  'mac-x64')
     echo "$DIR.dmg" 
     
+    # About dialog -- edit plist
+    plist=../dist/temp-macos/Pragma-git.app/Contents/Info.plist
+    
+    CFBundleVersion=$(git rev-parse --short HEAD)  # Hash as build version (version n.n.n is taken from package.json)
+    plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist
+
+    
     # Work in destination folder (dist/mac) 
     mkdir ../dist/mac
     cd ../dist/mac
-    
+
      
     # Make .dmg in ../dist/temp-macos
     test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
