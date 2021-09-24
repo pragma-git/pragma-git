@@ -63,7 +63,7 @@ async function injectIntoNotesJs(document) {
             el: button2
         };
     
-    // Add buttons to editor options
+    // Add buttons to editor options (omit 'scrollSync' function)
     options.toolbarItems = [
         [ button1struct ],
         ['heading', 'bold', 'italic', 'strike'],
@@ -71,7 +71,7 @@ async function injectIntoNotesJs(document) {
         ['ul', 'ol', 'task', 'indent', 'outdent'],
         ['table', 'image', 'link'],
         ['code', 'codeblock'],
-        ['scrollSync', button2struct ],
+        [button2struct ],
     ];
         
         
