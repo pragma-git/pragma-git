@@ -42,13 +42,15 @@ function extendFindInNw( elementToSearch){
         
         // If Notes, overide base search element -- two modes Wysiwyg (button 1) and Markdown (button 0)
         try{
-            const isWysiwyg = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].classList.contains('active');
-            const isMd = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].classList.contains('active');
+            const isWysiwyg = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].classList.contains('active');
+            const isMd = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].classList.contains('active');
             if (isWysiwyg){
+                console.log('isWysiwyg');
                 searchElement = document.getElementsByClassName('toastui-editor-contents')[1];
             }
             if (isMd){
-                searchElement = document.getElementsByClassName('toastui-editor-md-preview')[0];
+                console.log('isMd');
+                searchElement = document.getElementsByClassName('toastui-editor-contents')[0];
             }  
         }catch(err){}    
         
@@ -68,7 +70,7 @@ function extendFindInNw( elementToSearch){
                 elements.push(child);
             }
         }
-    
+        console.log(elements);    
         return elements;
     };  
     //-------------------------------------------------------------    
@@ -124,6 +126,9 @@ function extendFindInNw( elementToSearch){
     findInNw.search = function (text) {
         this.clearTokens();
         const elements = this.getElementsToSearch();
+        
+        console.log(elements);
+        
         
         elements.forEach(function (element) {
         if (element.id !== 'find-in-nw-search-box') {

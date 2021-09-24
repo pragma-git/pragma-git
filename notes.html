@@ -185,13 +185,13 @@
             
             // Events for switch between Markdown and MouseOver
             document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].addEventListener('mouseover', (event) => {
-                console.log('notes.html : Mouse over');
+                console.log('notes.html : Mouse over MD');
                 findInNw.clearTokens();   // Clear all <mark> inserted in html 
                 findInNw.hideSearchBox(); // Hide search
                 }
             );
             document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].addEventListener('mouseover', (event) => {
-                console.log('notes.html : Mouse over');
+                console.log('notes.html : Mouse over WYSIWYG');
                 findInNw.clearTokens();  // Clear all <mark> inserted in html 
                 findInNw.hideSearchBox();// Hide search
                 }
