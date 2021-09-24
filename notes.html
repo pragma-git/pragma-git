@@ -136,17 +136,45 @@
         window.document.body.style.zoom = global.state.zoom;
     </script>
 
-
-
-<div class="outer-content">
-        <div id="editor"></div>
-</div>    
+    <!--
+         From https://nhn.github.io/tui.editor/latest/
+    -->
+    <div class="outer-content">
+            <div id="editor"></div>
+    </div>    
+    
+        <!-- 
+        NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
+        
+        Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+        from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+        was the solution.
+        
+        Save downloaded file as : "lib/toastui-editor-all.js"
+        
+        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+        
+        -->
+    
+        <!-- DOWNLOAD latest toastui-editor-all.js  like this :
+        cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
+        wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
+         -->
+            
+        <script src="lib/toastui-editor-all.js"></script>
+    
+    
+    
+    <!--
+        <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
+    -->
+   
 
 
  
     <!--  Onload, call javascript file  --> 
     <script>
-        //const Editor = toastui.Editor;
+        const Editor = toastui.Editor;
         //const Editor = require('@toast-ui/editor'); /* CommonJS */
         
         window.addEventListener('DOMContentLoaded', (event) => {

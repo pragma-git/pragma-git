@@ -78,7 +78,7 @@ async function injectIntoNotesJs(document) {
     // Initiate Editor
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
     
-    const Editor = require('@toast-ui/editor'); 
+    //const Editor = require('@toast-ui/editor'); 
     editor =  new Editor( options);
 
 
