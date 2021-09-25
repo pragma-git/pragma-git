@@ -149,6 +149,16 @@
         visibility: hidden !important;
     }
     
+    .task-list-item::before {
+        background-image: url( 'images/unchecked.svg') !important;
+        -webkit-filter: var(--notes-checkbox-filter) !important;;
+
+    }
+    .task-list-item.checked::before {
+        background-image: url( 'images/checked.svg') !important;
+
+    }
+    
     
      /* search field */   
     .find-in-nw-current, .find-in-nw-count, .find-in-nw-of{
