@@ -54,19 +54,16 @@
     .CodeMirror, 
     .te-md-container, 
     .tui-md-table.tui-md-marked-text,
-    .tui-md-heading1,
-    .tui-md-heading2, 
-    .tui-md-heading3,
-    .tui-md-heading4,
-    .tui-md-heading5,
-    .tui-md-heading6,
     .tui-md-list-item,
     .toastui-editor-ww-container
     {
         background: var(--body-background);
         color: var(--body-text);
     }
-    
+ 
+ 
+ 
+  
     .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
         zoom: 0.85;
         height:auto;
@@ -77,8 +74,7 @@
         color: var(--header-color);
     }
 
-    
-    
+
     /* modify toast-ui  code */ 
     .toastui-editor-contents pre,
     .toastui-editor-contents code,
@@ -100,14 +96,47 @@
         background-color: rgba(255, 245, 131, 0.15);
     }
     
-    .tui-md-heading    
+    .toastui-editor-md-heading1,
+    .toastui-editor-md-heading2, 
+    .toastui-editor-md-heading3,
+    .toastui-editor-md-heading4,
+    .toastui-editor-md-heading5,
+    .toastui-editor-md-heading6
     {
+        background: var(--body-background);
         color: var(--header-color);
+    }
+
+    
+    .toastui-editor-md-code-block
+    {
+        color: var(--notes-code-text);
+    }
+    
+    .toastui-editor-ww-code-block:after:{
+        display:none;
     }
 
     .outer-content {
         width: 100%;
         height: 100%;
+    }
+    
+    .toastui-editor-md-code-block-line-background{
+        background: var(--code-background);
+    }
+    
+    .toastui-editor-md-code{
+        padding: 0;
+        color: var(--notes-code-text);
+    }
+    
+    .toastui-editor-md-code{
+        color: var(--notes-code-text);
+    }
+    
+    .ProseMirror{
+        color: var(--body-text);
     }
     
     .code-block-header {
