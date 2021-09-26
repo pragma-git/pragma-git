@@ -22,7 +22,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -38,7 +38,7 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1916"
+     inkscape:window-width="2141"
      inkscape:window-height="1117"
      id="namedview845"
      showgrid="false"
@@ -46,7 +46,7 @@
      inkscape:cx="9"
      inkscape:cy="9"
      inkscape:window-x="634"
-     inkscape:window-y="311"
+     inkscape:window-y="255"
      inkscape:window-maximized="0"
      inkscape:current-layer="g841" />
   <g
@@ -56,25 +56,26 @@
     <g
        fill="#4B96E6"
        id="g839"
-       style="stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke:#000000;fill:none">
+       style="fill:none;stroke:#000000;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none"
+       transform="matrix(0.8,0,0,0.8,1.8,1.8)">
       <g
          id="g837"
-         style="stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke:#000000;fill:none">
+         style="fill:none;stroke:#000000;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none">
         <g
            id="g835"
-           style="stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke:#000000;fill:none">
+           style="fill:none;stroke:#000000;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none">
           <path
              d="m 16,0 c 1.105,0 2,0.895 2,2 v 14 c 0,1.105 -0.895,2 -2,2 H 2 C 0.895,18 0,17.105 0,16 V 2 C 0,0.895 0.895,0 2,0 Z"
              id="path833"
-             style="fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
+             style="fill:none;stroke:#000000;stroke-width:1.875;stroke-miterlimit:4;stroke-dasharray:none"
              sodipodi:nodetypes="sssssssss" />
         </g>
       </g>
     </g>
     <path
        sodipodi:nodetypes="ccc"
-       style="fill:none;stroke:#000000;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 4.1311618,9.719546 3.320388,3.313492 6.2038822,-8.02804"
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 5.1049294,9.5756368 7.7612398,12.22643 12.724346,5.8039984"
        id="path1412" />
   </g>
 </svg>

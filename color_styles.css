@@ -66,7 +66,7 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
-    --notes-checkbox-filter: invert() brightness(0.8);
+    --notes-checkbox-filter: invert() brightness(0.75);
     
     /* Merge */
     --merge-color: black;
