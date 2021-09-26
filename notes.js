@@ -42,8 +42,9 @@ async function injectIntoNotesJs(document) {
  
     // Add search button to toolbar
     button1 = document.createElement('button');
+    button1.style = "background-color: transparent;";
     button1.setAttribute("id", 'find-icon');
-    button1.innerHTML = '<img style="height="20" width="20"  src="images/find.png" >';
+    button1.innerHTML = '<img  height="20" width="20"  src="images/find.png" >';
     button1struct = {  
             name: 'find',
             tooltip: 'Find in Notes window',
@@ -54,6 +55,7 @@ async function injectIntoNotesJs(document) {
  
     // Add help button to toolbar
     button2 = document.createElement('button');
+    button2.style = "background-color: transparent;";
     button2.setAttribute("id", 'help-icon');
     button2.innerHTML = '<img style="height="20" width="20"  src="images/questionmark_hover.png" >';
     button2struct = {  
