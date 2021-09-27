@@ -39,6 +39,10 @@ async function injectIntoNotesJs(document) {
         initialValue: content
     };
     
+    
+    // Disable Google Analytics
+    usageStatistics: false;
+    
  
     // Add search button to toolbar
     button1 = document.createElement('button');
