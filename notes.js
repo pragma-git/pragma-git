@@ -42,12 +42,11 @@ async function injectIntoNotesJs(document) {
  
     // Add search button to toolbar
     button1 = document.createElement('button');
-    button1.style = "background-color: transparent;";
+    button1.style = "background-color: transparent; position: absolute; right: 60px";
     button1.setAttribute("id", 'find-icon');
     button1.innerHTML = '<img  height="20" width="20"  src="images/find.png" >';
     button1struct = {  
             name: 'find',
-            tooltip: 'Find in Notes window',
             event: 'clickCustomButton1',
             el: button1
         };
@@ -55,25 +54,23 @@ async function injectIntoNotesJs(document) {
  
     // Add help button to toolbar
     button2 = document.createElement('button');
-    button2.style = "background-color: transparent;";
+    button2.style = "background-color: transparent; position: absolute; right: 20px";
     button2.setAttribute("id", 'help-icon');
-    button2.innerHTML = '<img style="height="20" width="20"  src="images/questionmark_hover.png" >';
+    button2.innerHTML = '<img height="20" width="20"  src="images/questionmark_hover.png" >';
     button2struct = {  
             name: 'help',
-            tooltip: 'Help for Notes window',
             event: 'clickCustomButton2',
             el: button2
         };
     
     // Add buttons to editor options (omit 'scrollSync' function)
     options.toolbarItems = [
-        [ button1struct ],
         ['heading', 'bold', 'italic', 'strike'],
         ['hr', 'quote'],
         ['ul', 'ol', 'task', 'indent', 'outdent'],
         ['table', 'image', 'link'],
         ['code', 'codeblock'],
-        [button2struct ],
+        [ button1struct, button2struct ],
     ];
         
         
