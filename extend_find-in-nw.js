@@ -203,7 +203,7 @@ function extendFindInNw( elementToSearch){
                   
         // Special for Notes window
         try{       
-            console.log('Hide search box for isWysiwyg, make read only');
+            console.log('Hide search box for isWysiwyg, make read write');
             // Make WYSIWYG non-editable (otherwise toast-ui 3.0 updates DOM and removes visual search result)
            document.getElementsByClassName('ProseMirror')[1].contentEditable = true; 
            editor.wwEditor.view.editable = true; 
