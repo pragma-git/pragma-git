@@ -28,6 +28,7 @@
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
     --notes-code-text: var(--code-text);
+    --notes-checkbox-filter: none;
     
     /* Main */
     --main-background: var(--body-background); 
@@ -65,6 +66,7 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
+    --notes-checkbox-filter: invert() brightness(0.75);
     
     /* Merge */
     --merge-color: black;

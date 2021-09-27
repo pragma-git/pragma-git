@@ -11,7 +11,6 @@
     
       <!-- Editor's Dependecy Style -->
 
-        <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css" />
         <link rel="stylesheet" href="node_modules/@toast-ui/editor/dist/toastui-editor.css" />
         
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
@@ -31,10 +30,10 @@
     }  
     
     
-    .tui-editor-contents h1, 
-    .tui-editor-contents h2,  
-    .tui-editor-contents h3, 
-    .tui-editor-contents  h4
+    .toastui-editor-contents h1, 
+    .toastui-editor-contents h2,  
+    .toastui-editor-contents h3, 
+    .toastui-editor-contents  h4
     {
         background: var(--body-background);
         color: var(--header-color);
@@ -43,37 +42,46 @@
     /* modify toast-ui  general */ 
     span, 
     .te-editor, 
-    .tui-editor-contents h5,  
-    .tui-editor-contents h6,   
-    .tui-editor-contents ul,  
-    .tui-editor-contents ol,  
-    .tui-editor-contents li, 
-    .tui-editor-contents h6, 
-    .tui-editor-contents p,  
-    .tui-editor-contents table,  
-    .tui-editor-contents dir, 
+    .toastui-editor-contents h5,  
+    .toastui-editor-contents h6,   
+    .toastui-editor-contents ul,  
+    .toastui-editor-contents ol,  
+    .toastui-editor-contents li, 
+    .toastui-editor-contents h6, 
+    .toastui-editor-contents p,  
+    .toastui-editor-contents table,  
+    .toastui-editor-contents dir, 
     .CodeMirror, 
     .te-md-container, 
     .tui-md-table.tui-md-marked-text,
-    .tui-md-heading1,
-    .tui-md-heading2, 
-    .tui-md-heading3,
-    .tui-md-heading4,
-    .tui-md-heading5,
-    .tui-md-heading6,
-    .tui-md-list-item
+    .tui-md-list-item,
+    .toastui-editor-ww-container
     {
         background: var(--body-background);
         color: var(--body-text);
     }
+ 
+ 
+ 
+  
+    .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
+        zoom: 0.85;
+        height:auto;
+    }
     
+    .toastui-editor-toolbar-item-wrapper{
+        margin: 0px;
+        color: var(--header-color);
+    }
+
+
     /* modify toast-ui  code */ 
-    .tui-editor-contents pre,
-    .tui-editor-contents code,
+    .toastui-editor-contents pre,
+    .toastui-editor-contents code,
     .tui-md-code,
     .tui-md-code-block,
     .tui-md-code.tui-md-marked-text,
-    .tui-md-code-block.CodeMirror-linebackground 
+    .tui-md-code-block.CodeMirror-linebackground
     {
         background-color: var(--code-background);
         color: var(--notes-code-text);
@@ -81,16 +89,32 @@
     
     /* markdown */
     .tui-md-code,
-    .tui-editor-contents .te-preview-highlight::after,
-    .tui-editor-contents th.te-preview-highlight,
-    .tui-editor-contents td.te-preview-highlight
+    .toastui-editor-contents .te-preview-highlight::after,
+    .toastui-editor-contents th.te-preview-highlight,
+    .toastui-editor-contents td.te-preview-highlight
      {
         background-color: rgba(255, 245, 131, 0.15);
     }
     
-    .tui-md-heading    
+    .toastui-editor-md-heading1,
+    .toastui-editor-md-heading2, 
+    .toastui-editor-md-heading3,
+    .toastui-editor-md-heading4,
+    .toastui-editor-md-heading5,
+    .toastui-editor-md-heading6
     {
+        background: var(--body-background);
         color: var(--header-color);
+    }
+
+    
+    .toastui-editor-md-code-block
+    {
+        color: var(--notes-code-text);
+    }
+    
+    .toastui-editor-ww-code-block:after:{
+        display:none;
     }
 
     .outer-content {
@@ -98,15 +122,71 @@
         height: 100%;
     }
     
-    .code-block-header {
-        visibility: hidden; /* Hide pop-up code block editor buttons -- equally good to edit without pop-up */
+    .toastui-editor-md-code-block-line-background{
+        background: var(--code-background);
     }
+    
+    .toastui-editor-md-code{
+        padding: 0;
+        color: var(--notes-code-text);
+    }
+    
+    .toastui-editor-md-code{
+        color: var(--notes-code-text);
+    }
+
+    
+    .ProseMirror{
+        color: var(--body-text);
+    }
+
+    .task-list-item.checked::before {
+        background-image: none 
+    }
+    
+     /* hide button for language in code-block */ 
+    .toastui-editor-ww-code-block:after{
+        visibility: hidden !important;
+    }
+    
+    .task-list-item::before {
+        background-image: url( 'images/unchecked.svg') !important;
+        -webkit-filter: var(--notes-checkbox-filter) !important;;
+
+    }
+    .task-list-item.checked::before {
+        background-image: url( 'images/checked.svg') !important;
+
+    }
+
+     /* popup dialogs */       
+    #toastuiLinkTextInput, #toastuiLinkUrlInput, 
+    #toastui-editor-file-name, #toastuiImageUrlInput, #toastuiAltTextInput{
+        color: var(--text);
+    }
+    .toastui-editor-popup-add-image .toastui-editor-file-name.has-file{
+        color: var(--text);
+    }
+    
+    
+     /* Hide tooltip border (hack, I suspect tooltip is solid background overwritten by unknown text css) */   
+    .toastui-editor-tooltip .toastui-editor-tooltip .arrow{
+        background-color: var(--body-background);
+        color: var(--body-background);
+    }
+
+
     
      /* search field */   
     .find-in-nw-current, .find-in-nw-count, .find-in-nw-of{
         background: none;
         color: black;
         font-size: none;
+    }
+    
+    
+    a{
+        cursor: pointer;  /* because Toast UI have an edit-cursor, and I have overriden the edit function */ 
     }
  
  </style>
@@ -124,44 +204,46 @@
         window.document.body.style.zoom = global.state.zoom;
     </script>
 
-
-<!--
-     From https://nhn.github.io/tui.editor/latest/
--->
-<div class="outer-content">
-        <div id="editor"></div>
-</div>    
-
-    <!-- 
-    NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
-    
-    Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
-    from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
-    was the solution.
-    
-    Save downloaded file as : "lib/toastui-editor-all.js"
-    
-    Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
-    
+    <!--
+         From https://nhn.github.io/tui.editor/latest/
     -->
-
-    <!-- DOWNLOAD latest toastui-editor-all.js  like this :
-    cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
-    wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
-     -->
+    <div class="outer-content">
+            <div id="editor"></div>
+    </div>    
+    
+        <!-- 
+        NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
         
-    <script src="lib/toastui-editor-all.js"></script>
+        Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+        from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+        was the solution.
+        
+        Save downloaded file as : "lib/toastui-editor-all.js"
+        
+        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
+        
+        -->
+    
+        <!-- DOWNLOAD latest toastui-editor-all.js  like this :
+        cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
+        wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
+         -->
+            
+        <script src="lib/toastui-editor-all.js"></script>
+    
+    
+    
+    <!--
+        <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
+    -->
+   
 
-
-
-<!--
-    <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
--->
 
  
     <!--  Onload, call javascript file  --> 
     <script>
         const Editor = toastui.Editor;
+        //const Editor = require('@toast-ui/editor'); /* CommonJS */
         
         window.addEventListener('DOMContentLoaded', (event) => {
             
@@ -170,19 +252,29 @@
             injectIntoNotesJs(document);
             
             // Events for switch between Markdown and MouseOver
-            document.getElementsByClassName('te-switch-button')[0].addEventListener('mouseover', (event) => {
-                console.log('notes.html : Mouse over');
+            document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[0].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over MD');
                 findInNw.clearTokens();   // Clear all <mark> inserted in html 
                 findInNw.hideSearchBox(); // Hide search
                 }
             );
-            document.getElementsByClassName('te-switch-button')[1].addEventListener('mouseover', (event) => {
-                console.log('notes.html : Mouse over');
+            document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].addEventListener('mouseover', (event) => {
+                console.log('notes.html : Mouse over WYSIWYG');
                 findInNw.clearTokens();  // Clear all <mark> inserted in html 
                 findInNw.hideSearchBox();// Hide search
                 }
             );
-            
+    
+            // Override click-link event - open in browser window
+            document.onclick = function (e) {
+                e = e ||  window.event;
+                var element = e.target || e.srcElement;
+
+                if (element.tagName == 'A') {
+                    require('nw.gui').Shell.openExternal( element.href );return false;
+                    return false; // prevent default action and stop event propagation
+                }
+            };            
             
         });
         

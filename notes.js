@@ -30,94 +30,78 @@ async function injectIntoNotesJs(document) {
     }catch(err){
         
     }
-     
-    
-    // See notes about how editor is loaded in "notes.html"
-    let options = {
-      el: document.querySelector('#editor'),
-      height: '100%',
-      initialValue: content,
-      previewStyle: 'vertical',
-      usageStatistics: false
-    }
 
-    options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
-
-    editor =  new Editor( options);
+    
+    options = {
+        el: document.querySelector('#editor'),
+        previewStyle: 'vertical',
+        height: '100%',
+        initialValue: content
+    };
     
     
+    // Disable Google Analytics
+    usageStatistics: false;
     
-    //
-    // Add search button to toolbar
-    //
-
-    const END = 100; //Too high position number, makes sure lands right-most
-     
-     
-    const toolbar = editor.getUI().getToolbar();
  
-    //
+    // Add search button to toolbar
+    button1 = document.createElement('button');
+    button1.style = "background-color: transparent; position: absolute; right: 60px";
+    button1.setAttribute("id", 'find-icon');
+    button1.innerHTML = '<img  height="20" width="20"  src="images/find.png" >';
+    button1struct = {  
+            name: 'find',
+            event: 'clickCustomButton1',
+            el: button1
+        };
+        
+ 
     // Add help button to toolbar
-    //
-    
     button2 = document.createElement('button');
+    button2.style = "background-color: transparent; position: absolute; right: 20px";
     button2.setAttribute("id", 'help-icon');
-    button2.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/questionmark_hover.png" >';
+    button2.innerHTML = '<img height="20" width="20"  src="images/questionmark_hover.png" >';
+    button2struct = {  
+            name: 'help',
+            event: 'clickCustomButton2',
+            el: button2
+        };
+    
+    // Add buttons to editor options (omit 'scrollSync' function)
+    options.toolbarItems = [
+        ['heading', 'bold', 'italic', 'strike'],
+        ['hr', 'quote'],
+        ['ul', 'ol', 'task', 'indent', 'outdent'],
+        ['table', 'image', 'link'],
+        ['code', 'codeblock'],
+        [ button1struct, button2struct ],
+    ];
+        
+        
+    // Initiate Editor
+    options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
+    
+    //const Editor = require('@toast-ui/editor'); 
+    editor =  new Editor( options);
 
-    toolbar.insertItem(END, {
-        type: 'button',
-        options: {
-          className: 'first',
-          event: 'clickCustomButton2',
-          tooltip: 'Help for Notes window',
-          el: button2,
-          text: '🔍',
-          style: 'float:right'
-        }
+
+    // Event listeners
+    button1.addEventListener('click', () => {
+        findInNw.showSearchBox();
     });
-    
-    
-    editor.eventManager.addEventType('clickCustomButton2');
-    editor.eventManager.listen('clickCustomButton2', function() {
+ 
+
+    button2.addEventListener('click', () => {
         let evt = {}; 
         evt.name='Notes';
         opener._callback('help',evt); 
-    });
+    });       
     
     
     // Title
     let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
-    //document.title = `" ${repoName}"  Notes`;
-       
-    //
-    // Add Search button to toolbar
-    //   
-        
-    button = document.createElement('button');
-    button.setAttribute("id", 'find-icon');
-    button.innerHTML = '<img style="vertical-align:middle;float: right" height="17" width="17"  src="images/find.png" >';
 
-
-    toolbar.insertItem(END, {
-        type: 'button',
-        options: {
-          className: 'first',
-          event: 'clickCustomButton',
-          tooltip: 'Search in Notes',
-          el: button,
-          text: '🔍',
-          style: 'background-image: url("images/find.png");float:right'
-        }
-    });
-    
-    
-    editor.eventManager.addEventType('clickCustomButton');
-    editor.eventManager.listen('clickCustomButton', function() {
-        findInNw.showSearchBox();
-    });
-    
-    
 
 };
 function save(){
@@ -148,7 +132,12 @@ function closeWindow(){
     save(); 
     
     // Save settings
-    global.state.notesWindow.editMode = editor.currentMode;
+    if ( editor.isWysiwygMode() ){
+        global.state.notesWindow.editMode = 'wysiwyg';
+    }else{
+        global.state.notesWindow.editMode = 'markdown';
+    }
+    
     opener.saveSettings(); // Save settings to file
     
     // Mark that closed
