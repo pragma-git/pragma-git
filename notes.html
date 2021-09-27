@@ -169,6 +169,14 @@
     }
     
     
+     /* Hide tooltip border (hack, I suspect tooltip is solid background overwritten by unknown text css) */   
+    .toastui-editor-tooltip .toastui-editor-tooltip .arrow{
+        background-color: var(--body-background);
+        color: var(--body-background);
+    }
+
+
+    
      /* search field */   
     .find-in-nw-current, .find-in-nw-count, .find-in-nw-of{
         background: none;
