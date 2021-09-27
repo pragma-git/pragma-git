@@ -387,6 +387,7 @@ async function _callback( name, event){
             return
         }
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
+        fileName = path.basename( state.repos[state.repoNumber].localFolder );
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
