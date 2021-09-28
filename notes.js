@@ -76,7 +76,21 @@ async function injectIntoNotesJs(document) {
         ['code', 'codeblock'],
         [ button1struct, button2struct ],
     ];
-        
+    
+    
+    
+    // Custom new-line renderer  (https://github.com/nhn/tui.editor/blob/master/docs/en/custom-html-renderer.md)
+    customHTMLRenderer = {
+        linebreak(node, context) {
+            return {
+                type: 'html',
+                content: '\n<br>\n'
+            };
+        }
+    }
+    
+    options.customHTMLRenderer = customHTMLRenderer;
+  
         
     // Initiate Editor
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
@@ -101,6 +115,20 @@ async function injectIntoNotesJs(document) {
     // Title
     let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
+    
+    
+    // Keybinding NEW-LINE
+    document.onkeydown = function (pressed) {
+          console.log(pressed)
+          // Check for Soft Enter (SHIFT-ENTER)
+          if ( pressed.shiftKey && pressed.keyCode === 13 )
+          {
+            //pressed.preventDefault();
+            console.log('SHIFT ENTER from notes.js');
+            editor.insertText('\n');  // The new line entered in editor, will be rendered by customHTMLRenderer (above)
+            return false;
+          } 
+    }
 
 
 };
