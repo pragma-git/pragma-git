@@ -79,18 +79,42 @@ async function injectIntoNotesJs(document) {
     ];
     
     
+ // Plugin
+    function myPlugin() {
+    // See : https://github.com/nhn/tui.editor/blob/master/docs/en/plugin.md    Description
+    //       https://nhn.github.io/tui.editor/latest/                           API/Examples
+    //
+    // Run from debugger : editor.exec('jan', 'hej' )
+ 
+        const wysiwygCommands = {
+            backspace: backspaceFunction
+        }
+        return { wysiwygCommands }
+    }
     
-    // Custom new-line renderer  (https://github.com/nhn/tui.editor/blob/master/docs/en/custom-html-renderer.md)
-    //customHTMLRenderer = {
-        //linebreak(node, context) {
-            //return {
-                //type: 'html',
-                //content: '\n<br>\n'
-            //};
-        //}
-    //}
+    function backspaceFunction(payload, state, dispatch){
+              
+        let from = state.selection.ranges[0].$from.pos;
+        let to = state.selection.ranges[0].$to.pos;
+        
+        if ( from !== to){  // A range is selected
+            false;  // No change in editor content
+        }
+        
+        // A cursor without a range
+        editor.replaceSelection('', from - 1, from);
+        
+        // TODO: - end of element, jump to previous element : 
+        if (state.selection.ranges[0].$from.parentOffset){
+            
+        }
+        
+        
+        return true; // Change in editor content
+    }
+
     
-    //options.customHTMLRenderer = customHTMLRenderer;
+    options.plugins = [myPlugin];
   
         
     // Initiate Editor
@@ -118,7 +142,7 @@ async function injectIntoNotesJs(document) {
     document.title = `Notes  —  ${repoName}  `;
     
     
-    // Keybinding NEW-LINE
+    // Keybinding NEW-LINE and WYSIWYG ≈
     document.onkeydown = function (pressed) {
           console.log(pressed)
           // Check for Soft Enter (SHIFT-ENTER)
@@ -129,7 +153,56 @@ async function injectIntoNotesJs(document) {
             editor.insertText('\n');  // The new line entered in editor, will be rendered by customHTMLRenderer (above)
             return false;
           } 
+          // Check for Backspace
+          if ( pressed.keyCode === 8 )
+          {
+            //pressed.preventDefault();
+            console.log('Backspace from notes.js');
+            editor.exec('backspace');  // My plugin for backspace
+            return false;
+          } 
     }
+    
+    
+    //// Add new BACKSPACE COMMAND
+    //// (base on : https://github.com/nhn/tui.editor/issues/844)
+    //const CommandManager = editor.commandManager;
+    //const cusCommand = CommandManager.addCommand('markdown', {
+      //name: 'customCommand',
+      //exec: (mde, data) => {
+        //// do some stuff
+        //const cm = mde.getEditor();
+        //const doc = cm.getDoc();
+        //const range = mde.getCurrentRange();
+    
+        //const from = {
+          //line: range.from.line,
+          //ch: range.from.ch,
+        //};
+    
+        //const to = {
+          //line: range.to.line,
+          //ch: range.to.ch,
+        //};
+    
+        //let { text, url } = data;
+        //const replaceText = `<a href="${url}" class="attachment" target="_blank">${text}</a>`;
+    
+        //doc.replaceRange(replaceText, from, to, '+customCommand');
+      //},
+    //});
+    
+        
+    //editor.addCommand(cusCommand);
+    
+    //editor.exec('customCommand', {
+      //url: 'https://wwww.dn.se',
+      //text: 'TEST',
+    //});
+
+  
+  
+
 
 
 };
