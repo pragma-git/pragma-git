@@ -5,6 +5,7 @@ const gui = require("nw.gui"); // TODO : don't know if this will be needed
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const simpleGit = require()
 
 var util = require('./util_module.js'); // Pragma-git common functions
 
@@ -80,16 +81,16 @@ async function injectIntoNotesJs(document) {
     
     
     // Custom new-line renderer  (https://github.com/nhn/tui.editor/blob/master/docs/en/custom-html-renderer.md)
-    customHTMLRenderer = {
-        linebreak(node, context) {
-            return {
-                type: 'html',
-                content: '\n<br>\n'
-            };
-        }
-    }
+    //customHTMLRenderer = {
+        //linebreak(node, context) {
+            //return {
+                //type: 'html',
+                //content: '\n<br>\n'
+            //};
+        //}
+    //}
     
-    options.customHTMLRenderer = customHTMLRenderer;
+    //options.customHTMLRenderer = customHTMLRenderer;
   
         
     // Initiate Editor
@@ -151,7 +152,7 @@ function save(){
 
 }
 
-function closeWindow(){
+async function closeWindow(){
     
     // Clear tokens (if find is still open)
     findInNw.clearTokens();   // Clear all <mark> inserted in html 
@@ -168,6 +169,9 @@ function closeWindow(){
     
     opener.saveSettings(); // Save settings to file
     
+    // Commmit .Pragma-git settings dir
+    await opener.commitSettingsDir();
+    
     // Mark that closed
     global.localState.notesWindow.open = false;
     
@@ -176,3 +180,4 @@ function closeWindow(){
 
     console.log('clicked close window');
 }
+

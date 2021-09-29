@@ -285,7 +285,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 
 // Main functions
-async function _callback( name, event){
+async function _callback( name, event){ 
     console.log('_callback = ' + name);
     console.log(event);
     switch(name) {
@@ -440,7 +440,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-close-button': {
-        closeWindow();
+        await closeWindow();
         break;
       }
       case 'clicked-minimize-button': {
@@ -1345,42 +1345,7 @@ async function _callback( name, event){
         // Show that window is open
         localState.aboutWindow = true;
         
-    }
-    function closeWindow(a){
-        console.log('Close argument = ' + a);  
-        
-        
-        // Remove signaling file
-        util.rm(MAINSIGNALFILE);
-
-        
-        // Fold search fields
-        if (document.getElementById('output_row').style.visibility == 'visible' ){
-            _callback('clicked-find');
-        }
-        
-        // Store window position
-        state.position = {}; // New level
-        state.position.x = gui.Window.get().x;
-        state.position.y  = gui.Window.get().y;
-        state.position.height = gui.Window.get().height;
-        state.position.width = gui.Window.get().width;
-        
-        saveSettings();
-        gui.App.closeAllWindows();
-          
-        // Hide the window to give user the feeling of closing immediately
-        this.hide();
-
-    
-        // If the new window is still open then close it.
-        if (win !== null) {
-          win.close(true)
-        }
-    
-        // After closing the new window, close the main window.
-        this.close(true);
-    }   
+    }  
     async function mergeClicked(){
 
         let branchList = cachedBranchList;
@@ -3429,6 +3394,54 @@ function rememberDetachedBranch(){
     saveSettings(); // Make sure detached branch is saved
 }
 
+async function commitSettingsDir(){  // Settings dir local incremental backup is done in a git repository 
+
+    // Message (format: 2021-09-29@09:24 )
+    var currentdate = new Date();
+    var message = currentdate.getFullYear() 
+    + "-" + currentdate.getMonth().toString().padStart(2, "0") 
+    + "-" + currentdate.getDay().toString().padStart(2, "0") 
+    + "@" + currentdate.getHours().toString().padStart(2, "0") 
+    + ":" + currentdate.getMinutes().toString().padStart(2, "0");
+ 
+ 
+    // Copy .gitignore to settings Dir
+    const gitignore = settingsDir + pathsep + '.gitignore';
+    const gitignoreTemplate = 'template-gitignore-settings-dir';
+    if (!fs.existsSync(gitignore)){
+        fs.copyFile(gitignoreTemplate, gitignore, (err) => {
+            if (err) throw err;
+            console.log('gitignoreTemplate was copied SETTINGSDIR/.gitignore');
+        });
+    }
+ 
+    // Initialize (safe is it is already a repository)
+    await simpleGit(settingsDir).init( onInit );
+    function onInit(err, initResult) { }
+
+ 
+    // Add all
+    var path = '.'; 
+    await simpleGit( settingsDir )
+        .add( path, onAdd );   
+    function onAdd(err, result) {console.log(result) }
+
+    
+    // Commit 
+    try{
+        await simpleGit( settingsDir )
+        .commit( message, onCommit);    
+        function onCommit(err, result) {console.log(result) };
+    }catch(err){
+        console.log('Error in gitAddCommitAndPush()');
+        console.log(err);
+        
+        if ( err.toString().includes('empty ident name') ){
+            displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
+        }
+    }
+}
+    
 
 // Branch-menu functions
 
@@ -4614,6 +4627,47 @@ window.onload = function() {
   win.show();
 
 };
+async function closeWindow(a){
+    console.log('Close argument = ' + a);  
+    
+    // Commit settings
+    try{
+        await commitSettingsDir();    
+    }catch (err){
+        
+    }
+    
+    // Remove signaling file
+    util.rm(MAINSIGNALFILE);
 
+    
+    // Fold search fields
+    if (document.getElementById('output_row').style.visibility == 'visible' ){
+        _callback('clicked-find');
+    }
+    
+    // Store window position
+    state.position = {}; // New level
+    state.position.x = gui.Window.get().x;
+    state.position.y  = gui.Window.get().y;
+    state.position.height = gui.Window.get().height;
+    state.position.width = gui.Window.get().width;
+    
+    saveSettings();
+    gui.App.closeAllWindows();
+      
+    // Hide the window to give user the feeling of closing immediately
+    this.hide();
+
+
+
+    // If the new window is still open then close it.
+    if (win !== null) {
+      win.close(true)
+    }
+
+    // After closing the new window, close the main window.
+    this.close(true);
+} 
 
 
