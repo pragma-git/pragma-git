@@ -115,7 +115,7 @@ async function injectIntoNotesJs(document) {
           {
             //pressed.preventDefault();
             console.log('SHIFT ENTER from notes.js');
-            editor.insertText('\n'); 
+            editor.insertText('\n '); 
             return false;
           } 
           // Check for Backspace
