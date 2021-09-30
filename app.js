@@ -3401,8 +3401,8 @@ async function commitSettingsDir(){  // Settings dir local incremental backup is
     // Message (format: 2021-09-29@09:24 )
     var currentdate = new Date();
     var message = currentdate.getFullYear() 
-    + "-" + currentdate.getMonth().toString().padStart(2, "0") 
-    + "-" + currentdate.getDay().toString().padStart(2, "0") 
+    + "-" + (currentdate.getMonth() + 1).toString().padStart(2, "0") 
+    + "-" + currentdate.getDate().toString().padStart(2, "0") 
     + "@" + currentdate.getHours().toString().padStart(2, "0") 
     + ":" + currentdate.getMinutes().toString().padStart(2, "0");
  
