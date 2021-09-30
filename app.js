@@ -122,6 +122,9 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * 
  * 
  */
+
+// Url to read latest release
+const RELEASE_URL = 'https://api.github.com/repos/pragma-git/pragma-git/releases';
  
 // Store default path 
 var defaultPath = process.env.PATH;
@@ -276,8 +279,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
-    
-    
+
     
     
 // ---------
@@ -3737,6 +3739,18 @@ function setButtonText(){  // Store or Commit, depending on setting for autopush
     }
          
 }
+async function getLatestRelease( url ){     
+
+    let outData; 
+    
+    await fetch(url)
+    .then(response => response.json())
+    .then(data => { 
+        outData = data[0];
+    });
+    return outData; // outData.tag_name is latest release
+}   
+         
 
 // Update other windows
 async function updateGraphWindow(){
@@ -4591,7 +4605,7 @@ window.onresize = function() {
   //win.reload();
   updateContentStyle();
 };
-window.onload = function() {
+window.onload = async function() {
   var win = nw.Window.get();
   main_win = win;
 
@@ -4625,6 +4639,10 @@ window.onload = function() {
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
 
   win.show();
+  
+  // Set global
+    let releaseData = await getLatestRelease( RELEASE_URL );
+    global.LATEST_RELEASE = await releaseData.tag_name;
 
 };
 async function closeWindow(a){

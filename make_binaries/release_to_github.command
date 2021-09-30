@@ -31,7 +31,7 @@ Download the *one* installer that matches your system from the "__*assets*__" li
 ---
 
 
-TOKEN_FILE="../mytoken.txt"
+TOKEN_FILE="../../mytoken.txt"  // NOTE: Token requires scopes: repos, write:packages, admin:org, and maybe user
 REPO=pragma-git/pragma-git
 
 #
