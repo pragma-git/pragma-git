@@ -5,7 +5,6 @@ const gui = require("nw.gui"); // TODO : don't know if this will be needed
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const simpleGit = require()
 
 var util = require('./util_module.js'); // Pragma-git common functions
 
@@ -77,43 +76,9 @@ async function injectIntoNotesJs(document) {
         ['code', 'codeblock'],
         [ button1struct, button2struct ],
     ];
-    
-    
- // Plugin
-    function myPlugin() {
-    // See : https://github.com/nhn/tui.editor/blob/master/docs/en/plugin.md    Description
-    //       https://nhn.github.io/tui.editor/latest/                           API/Examples
-    //
-    // Run from debugger : editor.exec('jan', 'hej' )
- 
-        const wysiwygCommands = {
-            backspace: backspaceFunction
-        }
-        return { wysiwygCommands }
-    }
-    
-    function backspaceFunction(payload, state, dispatch){
-              
-        let from = state.selection.ranges[0].$from.pos;
-        let to = state.selection.ranges[0].$to.pos;
-        
-        if ( from !== to){  // A range is selected
-            false;  // No change in editor content
-        }
-        
-        // A cursor without a range
-        editor.replaceSelection('', from - 1, from);
-        
-        // TODO: - end of element, jump to previous element : 
-        if (state.selection.ranges[0].$from.parentOffset){
-            
-        }
-        
-        
-        return true; // Change in editor content
-    }
 
-    
+
+    // Add plugin 
     options.plugins = [myPlugin];
   
         
@@ -154,58 +119,34 @@ async function injectIntoNotesJs(document) {
             return false;
           } 
           // Check for Backspace
-          if ( pressed.keyCode === 8 )
+          if ( (editor.getCurrentModeEditor().editorType == 'wysiwyg') && (pressed.keyCode === 8  ) )
           {
-            //pressed.preventDefault();
+            pressed.preventDefault();
             console.log('Backspace from notes.js');
             editor.exec('backspace');  // My plugin for backspace
             return false;
           } 
     }
-    
-    
-    //// Add new BACKSPACE COMMAND
-    //// (base on : https://github.com/nhn/tui.editor/issues/844)
-    //const CommandManager = editor.commandManager;
-    //const cusCommand = CommandManager.addCommand('markdown', {
-      //name: 'customCommand',
-      //exec: (mde, data) => {
-        //// do some stuff
-        //const cm = mde.getEditor();
-        //const doc = cm.getDoc();
-        //const range = mde.getCurrentRange();
-    
-        //const from = {
-          //line: range.from.line,
-          //ch: range.from.ch,
-        //};
-    
-        //const to = {
-          //line: range.to.line,
-          //ch: range.to.ch,
-        //};
-    
-        //let { text, url } = data;
-        //const replaceText = `<a href="${url}" class="attachment" target="_blank">${text}</a>`;
-    
-        //doc.replaceRange(replaceText, from, to, '+customCommand');
-      //},
-    //});
-    
-        
-    //editor.addCommand(cusCommand);
-    
-    //editor.exec('customCommand', {
-      //url: 'https://wwww.dn.se',
-      //text: 'TEST',
-    //});
-
-  
-  
-
 
 
 };
+    function myPlugin() { // Plugin for backspace in wysiwyg editor
+    // See : https://github.com/nhn/tui.editor/blob/master/docs/en/plugin.md    Description
+    //       https://nhn.github.io/tui.editor/latest/                           API/Examples
+    //
+    // Run from debugger in wysiwyg mode : editor.exec('backspace')
+        const wysiwygCommands = {
+            backspace: backspaceFunction
+        }
+        return { wysiwygCommands }
+    }
+        function backspaceFunction(payload, state, dispatch){       
+            let from = state.selection.ranges[0].$from.pos;
+            let to = state.selection.ranges[0].$to.pos;
+            editor.replaceSelection('', from - 1, from);
+            return true; // Change in editor content
+        }
+
 function save(){
     
     // Bail out if find-in-nw has marked stuff
@@ -224,7 +165,6 @@ function save(){
     }    
 
 }
-
 async function closeWindow(){
     
     // Clear tokens (if find is still open)
