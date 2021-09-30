@@ -115,7 +115,7 @@ async function injectIntoNotesJs(document) {
           {
             //pressed.preventDefault();
             console.log('SHIFT ENTER from notes.js');
-            editor.insertText('\n');  // The new line entered in editor, will be rendered by customHTMLRenderer (above)
+            editor.insertText('\n'); 
             return false;
           } 
           // Check for Backspace
@@ -123,7 +123,7 @@ async function injectIntoNotesJs(document) {
           {
             pressed.preventDefault();
             console.log('Backspace from notes.js');
-            editor.exec('backspace');  // My plugin for backspace
+            editor.exec('backspace');  // My plugin-function for backspace
             return false;
           } 
     }
@@ -140,11 +140,29 @@ async function injectIntoNotesJs(document) {
         }
         return { wysiwygCommands }
     }
-        function backspaceFunction(payload, state, dispatch){       
+        function backspaceFunction(payload, state, dispatch){ 
+             
             let from = state.selection.ranges[0].$from.pos;
             let to = state.selection.ranges[0].$to.pos;
-            editor.replaceSelection('', from - 1, from);
-            return true; // Change in editor content
+            
+            if (state.selection.ranges[0].$from.parentOffset > 1){ // Within same element
+                editor.replaceSelection('', from - 1, from);
+                return true; // Change in editor content
+            }
+                        
+            if (state.selection.ranges[0].$from.parentOffset <=1){ // End of element
+                // If I don't change element, the backspace will delete whole element before
+                // (for instance, seen in list-elements where shift-Enter has created a new line within list-element
+                let parentElement = state.selection.ranges[0].$from.depth * 3 - 1
+                let priorNodePos = state.selection.ranges[0].$from.path[ parentElement ]; 
+                let delta = from - priorNodePos;
+                
+                editor.replaceSelection('', from - 1 - delta, from);
+                return true
+            }
+            
+            return false
+
         }
 
 function save(){
