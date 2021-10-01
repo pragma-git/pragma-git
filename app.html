@@ -404,11 +404,12 @@
                 onclick="if (localState.pinnedCommit !== ''){
                             document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
                             _callback('clicked-pinned-hash');
+                        }else{
+                            // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
+                            navigator.clipboard.writeText(localState.historyHash);
                         }"
                         
-                onmouseover="if (localState.pinnedCommit !== ''){ 
-                                document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa'); 
-                            }" 
+                onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');" 
                             
                 onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
             </div>
