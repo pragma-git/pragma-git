@@ -8,7 +8,7 @@
     --body-text: var(--text);
     --input-background: #FFFFFF;
     --input-placeholder: #777777;
-    --image-invert: 0%;               /* invert black-transparent images to white  */
+    --image-invert: 0%;               /* do not invert black-transparent images to white  */
     --header-color: #2F5496;
     
     /* Graph */
@@ -16,6 +16,7 @@
     --graph-selected: #CCCCCC;
     --graph-decoration-color: DarkBlue;
     --border-color: var(--text);
+    --stash-icon-filter: invert( 80% ); 
     
     /* Settings */
     --green-text: green;
@@ -52,6 +53,7 @@
     --graph-selected: #CCCCCC;         /* (lighter grey) */
     --graph-decoration-color: #d6b51d; /* (mustard yellow) */
     --border-color: var(--text);
+    --stash-icon-filter: invert( 20% ); 
     
     /* Settings */
     --input-background: #505050;      /* in html windows (slightly less dark grey) */

@@ -229,8 +229,21 @@
         }
         
        
-        img[src="images/circle_black.png"]  {
+        img[src="images/circle_black.png"]
+        {
             filter: invert( var( --image-invert) );
+        }
+        
+        .stashImg{
+            position: relative;
+            top: -3px;
+        }
+        
+        img[src="images/stash_pop.png"],
+        img[src="images/stash_pop_black.png"],
+        img[src="images/stash_pop_hover.png"] 
+        {
+            filter: var(--stash-icon-filter);
         }
 
     </style>

@@ -323,6 +323,11 @@ function toggleDate( show){
     document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
 
 }
+function updateImageUrl(image_id, new_image_url) {
+  var image = document.getElementById(image_id);
+  if (image)
+    image.src = new_image_url;
+}
 
 var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
@@ -814,6 +819,14 @@ async function drawGraph( document, graphText, branchHistory, history){
             commit.START = false;
             commit.END = false;
             
+            
+            // Figure out stashes on this commit (most often zero or one, but can be multiple)
+            let stashArray = [];
+            if ( global.stashMap.has(commit.hash) ){
+                stashArray = global.stashMap.get(commit.hash);
+             }
+                
+            
             if (DEBUG) {
                 let stashes = ' [ 0 stashes ] ';
                 if ( global.stashMap.has(commit.hash) ){
@@ -942,7 +955,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
                    
                 // Add message text 
-                graphContent += parseMessage( commit.hash, commit.message, commit.decoration, commit.notFoundInSearch)
+                graphContent += parseMessage( commit.hash, commit.message, commit.decoration, commit.notFoundInSearch, stashArray)
   
         } // End PASS 2
  
@@ -1395,7 +1408,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         const PIN_IMG2 = ' src="' + PINNED_DISABLED_IMAGE + '"> ';
         return PIN_IMG1 + ` onclick="setPinned('` + hash + `')" ` + PIN_IMG2;
     }        
-    function parseMessage( hash, text, decoration, notFoundInSearch){
+    function parseMessage( hash, text, decoration, notFoundInSearch, stashArray){
                 
         let cl = 'text';
         
@@ -1404,9 +1417,20 @@ async function drawGraph( document, graphText, branchHistory, history){
             styling = ' notInSearch';
         }
         
+        let stashHtml = '';
+        if (stashArray.length > 0) {
+            for (let i = 0; i < stashArray.length; i++){
+                stashHtml += `<img id='stash_${hash}_${i}' class="stashImg" height="17" width="auto" style="padding-left: 8px"
+                        onclick="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop.png')"
+                        onmouseover="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop_hover.png');" 
+                        onmouseout="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop.png')"
+                        src="images/stash_pop.png">`;
+            }
+        }
         
-        let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text +  `</pre>` + ' </div>' ; 
-        html += '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration + '</pre>'
+        
+        let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text + `</pre>` + ' </div>' ; 
+        html += '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration  + stashHtml + '</pre>'
 
         return html 
     };
