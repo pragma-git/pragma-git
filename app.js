@@ -314,7 +314,7 @@ async function _callback( name, event){
         
         cacheBranchList();
             
-        gitStashMap(state.repos[state.repoNumber].localFolder);
+        await gitStashMap(state.repos[state.repoNumber].localFolder);
         
         break;
       }
@@ -341,6 +341,8 @@ async function _callback( name, event){
         }
         
         await cacheBranchList();
+        
+        await gitStashMap(state.repos[state.repoNumber].localFolder);
 
         await updateGraphWindow();
         updateSettingsWindow();
@@ -3152,8 +3154,8 @@ async function gitStashMap( folder ){
             (err, res) => { rawOutput = res; global.res = res} 
         );
     }catch(err){
-        console.log('ERROR in gitStashMap');
-        console.log(err);
+        console.error('ERROR in gitStashMap');
+        console.error(err);
     }
   
 
@@ -4721,9 +4723,7 @@ window.onload = async function() {
   // Set global
     let releaseData = await getLatestRelease( RELEASE_URL );
     global.LATEST_RELEASE = await releaseData.tag_name;
-  
-  // TEST :   
-    gitStashMap( state.repos[state.repoNumber].localFolder );
+    await gitStashMap( state.repos[state.repoNumber].localFolder );
 
 };
 async function closeWindow(a){
