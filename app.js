@@ -313,6 +313,8 @@ async function _callback( name, event){
         }
         
         cacheBranchList();
+            
+        gitStashMap(state.repos[state.repoNumber].localFolder);
         
         break;
       }
@@ -2738,7 +2740,7 @@ async function gitShowHistorical(){
     
 }
 
-async function gitSwitchToRepo(repoNumber){
+async function gitSwitchToRepo(repoNumber){ // TODO : Does not seem to be used
     
 
     let myEvent = [];
@@ -2750,6 +2752,7 @@ async function gitSwitchToRepo(repoNumber){
     state.repoNumber = repoNumber;  
     
     _callback('clickedRepoContextualMenu',myEvent);
+
     
     await updateGraphWindow();
 }
@@ -3135,6 +3138,81 @@ async function gitStashPop(){
     setStatusBar( 'Retrieving stashed files');
     await waitTime( 1000);        
 }
+async function gitStashMap( folder ){
+    
+    const UNIQUE_EOL = 'X3.17X';  // Used as EOL in git log to split rows to make it improbable to mix up output with EOL
+    
+    var stashMap = new Map();  // Map  commit-hash -> { stash: "stash@{1}", message:  "WIP on develop: 52a9cf2 Copy hash, when clicking hash in main window" }.  52a9cf2 same as short commit-hash
+    
+    let rawOutput;
+    try{
+        //await simpleGit(folder).stash(['list', '--format="P=%H REF=%gd S=%s' + UNIQUE_EOL + '"'], (err, res) => { rawOutput = res; } );
+        await simpleGit(folder).raw(
+            [ 'log', '--walk-reflogs', '--no-abbrev-commit', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + '', 'refs/stash'], 
+            (err, res) => { rawOutput = res; global.res = res} 
+        );
+    }catch(err){
+        console.log('ERROR in gitStashMap');
+        console.log(err);
+    }
+  
+
+    let splitted = rawOutput.split( UNIQUE_EOL + '\n');
+    
+    console.log(splitted);
+    
+    for(var row = 0; row < splitted.length; row++) {
+        
+        text = splitted[row] ;
+        
+        let startOfMessage = text.lastIndexOf('S=');  // From git stash list --format="H=%H REF=%gd S=%s"
+        let messageInThisRow = text.substring(startOfMessage + 2) ; // Skip S=  
+        
+        let startOfRef = text.lastIndexOf('REF=');  
+        let refinThisRow = text.substring(startOfRef + 4, startOfMessage - 1); 
+        
+        // Multiple parent hashes, the first one is the commit that stash came from
+        let startOfHash = text.lastIndexOf('H=');  
+        let hashesInThisRow = text.substring(startOfHash + 2, startOfRef - 1); 
+        
+        // Split of the first hash
+        let hashOfStashCommitParent = hashesInThisRow.split( ' ');
+        let hashInThisRow = hashOfStashCommitParent[0];
+        
+        // For verification, read short hash and test if same as commit-hash
+        let startOfHashPartOfMessage = messageInThisRow.lastIndexOf(':');
+        let hashPartOfMessage = messageInThisRow.substring(startOfHashPartOfMessage + 2, startOfHashPartOfMessage + 2 + 7) ; // Skip ': ' and keep next 7 characters 
+        let warn = false;
+        if ( !hashInThisRow.includes(hashPartOfMessage) ){
+            warn = true;
+            console.warn("WARNING - gitStashMap -- could not verify stash's parent commit from log message");
+            // Test if reason is that hash is not in message
+            if ( hashInThisRow.substring(0,7) !== hashPartOfMessage){
+                console.warn("        - reason : hash was not included in message from git log");
+            }
+            console.warn('        - ' + text);
+            console.warn(" ");
+        }
+        
+        
+        let valueStruct = { stash : refinThisRow, message : messageInThisRow, warning : warn};
+        
+        // Add to array for this key, if same hash as previously
+        if ( stashMap.has(hashInThisRow) ){
+            let array = stashMap.get(hashInThisRow);
+            array.push(valueStruct);
+            stashMap.set( hashInThisRow, array);
+        }else{
+            let array = [ valueStruct ]
+            stashMap.set( hashInThisRow, array);
+        }
+
+    }
+    // Store globaly, so that graph window can use
+    global.stashMap = stashMap;
+    
+    return stashMap;
+}     
 
 async function gitPush(){
     
@@ -4643,6 +4721,9 @@ window.onload = async function() {
   // Set global
     let releaseData = await getLatestRelease( RELEASE_URL );
     global.LATEST_RELEASE = await releaseData.tag_name;
+  
+  // TEST :   
+    gitStashMap( state.repos[state.repoNumber].localFolder );
 
 };
 async function closeWindow(a){

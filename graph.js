@@ -814,8 +814,15 @@ async function drawGraph( document, graphText, branchHistory, history){
             commit.START = false;
             commit.END = false;
             
-            if (DEBUG) 
-                commit.message = i + ' -- ' + commit.message;  // DEBUG : Show number
+            if (DEBUG) {
+                let stashes = ' [ 0 stashes ] ';
+                if ( global.stashMap.has(commit.hash) ){
+                    let length = global.stashMap.get(commit.hash).length;
+                    stashes = ' [' + length + ' stashes] ';
+                }
+                    
+                commit.message =  i + '. ' + stashes + ' -- ' + commit.message;  // DEBUG : Show number and stashes
+            }
             
             //
             // Start of Segment -- get lane + assign branch if unknown
@@ -924,11 +931,11 @@ async function drawGraph( document, graphText, branchHistory, history){
     
                 }
 
-                if (DEBUG) {
+                //if (DEBUG) {
                     
-                    commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
-                        `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
-                }
+                    //commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
+                        //`${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                //}
                 
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
