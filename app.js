@@ -314,6 +314,7 @@ async function _callback( name, event){
         
         cacheBranchList();
             
+        await updateGraphWindow();
         await gitStashMap(state.repos[state.repoNumber].localFolder);
         
         break;
@@ -3154,8 +3155,11 @@ async function gitStashMap( folder ){
             (err, res) => { rawOutput = res; global.res = res} 
         );
     }catch(err){
-        console.error('ERROR in gitStashMap');
-        console.error(err);
+        console.log('ERROR in gitStashMap');
+        console.log('      Repo = '  + folder);
+        console.log(err);
+        global.stashMap = stashMap;
+        return
     }
   
 
@@ -3212,8 +3216,7 @@ async function gitStashMap( folder ){
     }
     // Store globaly, so that graph window can use
     global.stashMap = stashMap;
-    
-    return stashMap;
+
 }     
 
 async function gitPush(){
