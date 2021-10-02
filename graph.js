@@ -2,7 +2,7 @@
 // INIT
 // ---------
 
-// Constants and variables
+// Constants and variables 
 
     // Note: colorImageNameDefinitions values are echoed to console, when generating colored images with script 'colorize.bash'
     const colorImageNameDefinitions = [
@@ -1433,13 +1433,16 @@ async function drawGraph( document, graphText, branchHistory, history){
                         "
                         onmouseover="updateImageUrl( '${imgId}', 'images/stash_pop_hover.png');" 
                         onmouseout="updateImageUrl( '${imgId}', 'images/stash_pop.png')"
-                        src="images/stash_pop.png">`;
+                        src="images/stash_pop.png">`
+                
+                stashHtml += stashArray[i].stashNumber;
             }
         }
         
         
-        let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text + `</pre>` + ' </div>' ; 
-        html += '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration  + stashHtml + '</pre>'
+        let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text + `</pre>` + ' </div>' ;
+        html +=  '<pre  class="stash"> &nbsp;' + stashHtml  + '</pre>'
+        html +=  '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration  + '</pre>'
 
         return html 
     };

@@ -31,7 +31,7 @@ d.appendChild( o );
 document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * 
  * 
- * */
+ * */ 
 
 
 /* TESTS
@@ -3122,8 +3122,10 @@ async function gitStash(){
     }
  
     setStatusBar( 'Stashing files');
-    await waitTime( 1000);
-    await updateGraphWindow()   
+    await waitTime( 1000);    
+    
+    await gitStashMap(state.repos[state.repoNumber].localFolder);
+    await updateGraphWindow();
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -3219,8 +3221,13 @@ async function gitStashMap( folder ){
             console.warn(" ");
         }
         
+        // Read stash number from REF
         
-        let valueStruct = { stash : refinThisRow, message : messageInThisRow, warning : warn};
+        let stashNumber = refinThisRow.substring( refinThisRow.lastIndexOf('{') + 1,  refinThisRow.lastIndexOf('}')  ) 
+    
+        
+        
+        let valueStruct = { stash : refinThisRow, message : messageInThisRow, stashNumber : stashNumber, warning : warn};
         
         // Add to array for this key, if same hash as previously
         if ( stashMap.has(hashInThisRow) ){
