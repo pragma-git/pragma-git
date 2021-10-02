@@ -1420,10 +1420,13 @@ async function drawGraph( document, graphText, branchHistory, history){
         let stashHtml = '';
         if (stashArray.length > 0) {
             for (let i = 0; i < stashArray.length; i++){
-                stashHtml += `<img id='stash_${hash}_${i}' class="stashImg" height="17" width="auto" style="padding-left: 8px"
-                        onclick="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop.png')"
-                        onmouseover="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop_hover.png');" 
-                        onmouseout="updateImageUrl('stash_${hash}_${i}', 'images/stash_pop.png')"
+                
+                let imgId = `stash_${hash}_${i}`;
+                let stashRef = stashArray[i].stash;
+                stashHtml += `<img id='${imgId}' class="stashImg" height="17" width="auto" style="padding-left: 8px"
+                        onclick="updateImageUrl( '${imgId}', 'images/stash_pop.png'); opener.gitStashPop( '${stashRef}' );"
+                        onmouseover="updateImageUrl( '${imgId}', 'images/stash_pop_hover.png');" 
+                        onmouseout="updateImageUrl( '${imgId}', 'images/stash_pop.png')"
                         src="images/stash_pop.png">`;
             }
         }

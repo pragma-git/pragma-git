@@ -704,6 +704,8 @@ async function injectIntoSettingsJs(document) {
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
     document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
+    document.getElementById('StashPop').checked = state.StashPop;
+    
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;

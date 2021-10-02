@@ -3124,18 +3124,32 @@ async function gitStash(){
     setStatusBar( 'Stashing files');
     await waitTime( 1000);      
 }
-async function gitStashPop(){
-    // Stash pop
-    try{
-        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['pop'], onStashPop);
-        function onStashPop(err, result) {console.log(result);console.log(err) };
+async function gitStashPop( stashRef){
+    // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
+    // Else, a specific stash through commands : ´stash pop stashRef´ or ´stash apply stashRef´ 
+
     
+    // pop / apply from settings
+    let options = ['apply'];
+    if (state.StashPop){    
+        options = ['pop'];
+    }
+     
+    // Use stashRef if available
+    if( stashRef !== undefined) {
+        options.push( stashRef);
+    }
+    
+    // Stash 
+    try{
+        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( options, onStashPop);
+        function onStashPop(err, result) {console.log(result);console.log(err) };
     }catch(err){
         // TODO : gitStashPop -- Possibility for this error : error: could not restore untracked files from stash
         // Solution https://gist.github.com/demagu/729c0a3605a4bd2e4c3d
         //
-        console.log('Error in gitStashPop()');
-        console.log(err);
+        console.error('Error in gitStashPop()');
+        console.error(err);
     }
  
     setStatusBar( 'Retrieving stashed files');
@@ -4492,6 +4506,9 @@ function loadSettings(settingsFile){
             state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
             state.NoFF_merge = setting( state_in.NoFF_merge, true);
             state.FirstParent = setting( state_in.FirstParent, true);
+            state.StashPop = setting( state_in.StashPop, true);
+            
+            
             
         // External tools (three levels -- state.tools.difftool )
             console.log('- setting external tools ');

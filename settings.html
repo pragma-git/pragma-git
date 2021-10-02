@@ -121,6 +121,25 @@
         .grey{
             color: var(--grey-text);
         }
+        
+        
+    
+     /* Settings : images */  
+                  
+        img[src="images/stash_pop.png"],
+        img[src="images/stash_pop_black.png"],
+        img[src="images/stash_pop_hover.png"] 
+        {
+            filter: var(--stash-icon-filter);
+        }
+        
+               
+        .stashImg{
+            position: relative;
+            top: 2px;
+        }
+
+        
     </style> 
 
 
@@ -210,21 +229,53 @@
                             </td>
                         </tr>
                     </table>  
+                    
+                    
+                    <!--  
+                        How to implement a new setting
+                        ------------------------------
+                    
+                        - Make a checkbox (or other setting) in this file by copying and edited the code for a checkbox
+                        
+                        - ´app.js/loadSettings´ : 
+                           add loading, and default value for the new setting
+                            
+                        - ´settings.js/injectIntoSettingsJs´ :
+                           set checkbox value for settings dialog
+                            
+                        - Of course : implement the feature where the setting is taken into considerations (app.js, or elsewhere)
+                        
+                        
+                        Optionally :
+                        - If not a checkbox (which automatically updates state variable if you use ´_callback('checkboxChanged',this)´ ), you may need to update state adding a callback in ´settings.js/_callback´
+                        - If a direct response on a new setting is wanted, add that into  ´app.js/updateWithNewSettings()´ or in  ´settings.js/_callback´
+                        - If something is changed other place than in settings.html dialog, ´app.js/saveSettings´ can be needed to catch and update
+
+                    -->
+                    
                                 
                     <!--  Force commit before branch change -->
                     <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="forceCommitBeforeBranchChange"> Branch change only if all files are stored</label><br>
+                    <label for="forceCommitBeforeBranchChange"> Branch change not allowed when there are uncommited files</label><br>
                     
                      <!--  Auto-push to remote -->
                     <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="autoPushToRemote"> Auto-push to remote, when Store clicked</label><br>
+                    <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
                     
                     <!--  --no-ff merge (gitflow recommends this) -->
                     <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="NoFF_merge"> Merge without fast-forward (merges becomes straight-forward to understand) </label><br>
+                    <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
+                    
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br><br>
+                    <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br>
+                    
+                    <!--  -- remove stash when pressing  () -->
+                    <input type="checkbox" id="StashPop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="StashPop"> 
+                         Click <img id="StashPop" class="stashImg" height="17" width="auto" src="images/stash_pop.png">
+                         to both apply and remove stash (<code>git stash pop</code>). Deselect to keep stash ( <code>git stash apply</code>)
+                    </label><br><br>
                 
                  
                   
