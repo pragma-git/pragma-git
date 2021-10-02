@@ -3122,7 +3122,8 @@ async function gitStash(){
     }
  
     setStatusBar( 'Stashing files');
-    await waitTime( 1000);      
+    await waitTime( 1000);
+    await updateGraphWindow()   
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -3153,7 +3154,11 @@ async function gitStashPop( stashRef){
     }
  
     setStatusBar( 'Retrieving stashed files');
-    await waitTime( 1000);        
+    await waitTime( 1000);   
+    
+    await gitStashMap(state.repos[state.repoNumber].localFolder);
+    await updateGraph();
+         
 }
 async function gitStashMap( folder ){
     
