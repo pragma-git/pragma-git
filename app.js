@@ -3157,7 +3157,7 @@ async function gitStashPop( stashRef){
     await waitTime( 1000);   
     
     await gitStashMap(state.repos[state.repoNumber].localFolder);
-    await updateGraph();
+    await updateGraphWindow();
          
 }
 async function gitStashMap( folder ){
