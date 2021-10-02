@@ -499,7 +499,7 @@
     </div><!-- content --> 
 
     <!-- Dialogs  -->   
-    <dialog id="alertDialog" style="width:50%;background-color:#C00;border:1px dotted black;">              <!--  General alert dialog  --> 
+    <dialog id="alertDialog"  class="error">               <!--  General alert dialog  --> 
         <p> 
             <div id='alertTitle'></div><br>  
             <div id='alertMessage'></div>  
@@ -509,7 +509,7 @@
             OK
         </button>  
     </dialog>  
-    <dialog id="deleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">       <!--  Warning dialog for delete branch  -->  
+    <dialog id="deleteBranchDialog"  class="error">         <!--  Warning dialog for delete branch  -->  
         <p>This will delete your local branch.<br>  
             Do your really want to remove the branch? 
         </p>  
@@ -522,7 +522,7 @@
             Cancel
         </button>  
     </dialog>  
-    <dialog id="forceDeleteBranchDialog" style="width:50%;background-color:#C00;border:1px dotted black;">      <!--  Warning dialog for force-delete branch  --> 
+    <dialog id="forceDeleteBranchDialog"  class="error">        <!--  Warning dialog for force-delete branch  --> 
         <p>The branch was not fully merged.  This means that there is work that will get lost when you delete the branch.  <br>
             Delete the branch and lose non-merged work? 
         </p>  
@@ -535,7 +535,7 @@
             Cancel
         </button>  
     </dialog>   
-    <dialog id="doYouWantToInitializeRepoDialog" style="background-color:yellow;border:1px dotted black;">  <!-- Folder is not a repo --> 
+    <dialog id="doYouWantToInitializeRepoDialog" class="warning">  <!-- Folder is not a repo --> 
         <b>WARNING -- the selected folder is not a repository.</b><br>
             Do you want to initialize this folder as a git repository ? <br>
             <br>

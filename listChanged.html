@@ -184,7 +184,7 @@
          
 <!--  Warning dialog for restore all  --> 
 
-<dialog id="restoreAllDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+<dialog id="restoreAllDialog"  class="error">   
     <p>This will remove changes to all files, and restore them to their stored state.  Do your really want to discard the changes? </p>  
     <button id="yes" 
         onclick="document.getElementById('restoreAllDialog').close();_callback('applyRestoreAllButton',' ');">
@@ -201,7 +201,7 @@
  
 <!--  Warning dialog for restore  --> 
 
-<dialog id="restoreDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+<dialog id="restoreDialog"  class="error">   
     <p>This will remove all changes, and restore the file to its stored state.  Do your really want to discard the changes? </p>  
     <button id="yes" 
         onclick="document.getElementById('restoreDialog').close();_callback('discardLink',selectedFile);">
@@ -215,7 +215,7 @@
 
 <!--  Warning dialog for delete  --> 
 
-<dialog id="deleteDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+<dialog id="deleteDialog"  class="error">    
     <p>This will delete the file on disk.  Do your really want to delete ? </p>  
     <button id="yes" 
         onclick="document.getElementById('deleteDialog').close();_callback('deleteLink',selectedFile);">

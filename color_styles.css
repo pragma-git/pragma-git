@@ -10,6 +10,8 @@
     --input-placeholder: #777777;
     --image-invert: 0%;               /* do not invert black-transparent images to white  */
     --header-color: #2F5496;
+    --warn-color: #d6b51d;          /* for instance border of dialogs */
+    --err-color: #C0401A;           /* for instance border of dialogs */
     
     /* Graph */
     --graph-hover: #BBBBBB;
@@ -47,6 +49,8 @@
     --link-color: #f3da67;            /* in html windows */
     --image-invert: 80%;               /* invert black-transparent images to white */
     --header-color: #d6b51d;
+    --warn-color: #d6b51d;          /* for instance border of dialogs */
+    --err-color: #C0401A;           /* for instance border of dialogs */
     
     /* Graph */
     --graph-hover: #999999;            /* (darker grey) */
@@ -177,6 +181,23 @@
         
         figcaption {
             margin-top: 20px;
+        }
+        
+        dialog{
+            color:  var(--body-text);
+            background-color: var(--body-background);
+            font-size: 14px;
+            border: none;
+            border: 5px solid;
+            -webkit-border-radius: 6px;
+        }
+        
+        dialog.error{
+            border-color: var(--err-color);
+        }
+        
+        dialog.warning{
+            border-color: var(--warn-color);
         }
 
 
