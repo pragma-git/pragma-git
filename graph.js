@@ -1423,25 +1423,30 @@ async function drawGraph( document, graphText, branchHistory, history){
                 
                 let imgId = `stash_${hash}_${i}`;
                 let stashRef = stashArray[i].stash;
-                stashHtml += `<img id='${imgId}' class="stashImg" height="17" width="auto" style="padding-left: 8px"
+                let stashNumberId = stashRef;
+                
+                let imageHTML = `<img id='${imgId}' class="stashImg" height="17" width="auto" 
                         onclick="
                             updateImageUrl( '${imgId}', 'images/stash_pop.png'); 
                             opener.gitStashPop( '${stashRef}' );
                             if (global.state.StashPop){ // Directly remove icon
                                 document.getElementById( '${imgId}').style.visibility = 'hidden';
+                                document.getElementById( '${stashNumberId}').style.visibility = 'hidden';
                             } 
                         "
                         onmouseover="updateImageUrl( '${imgId}', 'images/stash_pop_hover.png');" 
                         onmouseout="updateImageUrl( '${imgId}', 'images/stash_pop.png')"
                         src="images/stash_pop.png">`
                 
-                stashHtml += stashArray[i].stashNumber;
+                //stashHtml += stashArray[i].stashNumber;
+                stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber"> &nbsp;` + imageHTML + stashArray[i].stashNumber + '</pre>'
             }
         }
         
         
         let html = '<div class="' + cl + styling + '" id="' + hash + '" >' + `<pre>` + drawPinnedImage(hash) +  text + `</pre>` + ' </div>' ;
-        html +=  '<pre  class="stash"> &nbsp;' + stashHtml  + '</pre>'
+        //html +=  '<pre  class="stash"> &nbsp;' + stashHtml  + '</pre>'
+        html += stashHtml;
         html +=  '<pre id="desc_' +  hash + '" class="decoration"> &nbsp;' + decoration  + '</pre>'
 
         return html 
