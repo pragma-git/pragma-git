@@ -298,7 +298,8 @@ async function _callback( name, event){
             
             // Resolve with external merge tool
             //writeMessage( 'Resolving conflicts');
-            await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            //await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            await simpleGit( folder).reset(['--merge'], onUndoMerge );
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
