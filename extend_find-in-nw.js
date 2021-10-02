@@ -51,15 +51,20 @@ function extendFindInNw( elementToSearch){
             if (isMd){
                 console.log('isMd');
                 searchElement = document.getElementsByClassName('toastui-editor-contents')[0];
+
             }  
         }catch(err){
-            // Not a Notes window
+            // Not a Notes window 
         }    
         
         
         // If Pragma-merge
         try{
             searchElement = document.getElementsByClassName( pragmaMergeSearchInEditorId)[0];  // Messaging variable defined in pragma-merge.html
+            
+            if (searchElement == undefined){
+                searchElement = document.getElementsByClassName('CodeMirror-merge-editor')[0];  // The merge pane
+            }
 
         }catch(err){
             // Not a Pragma-merge window
@@ -87,6 +92,18 @@ function extendFindInNw( elementToSearch){
           if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 70 )
           {
             pressed.preventDefault();
+            
+            // Special for Pragma-merge (default ctrl-F should bind to merge pane )
+            if ( document.getElementsByClassName('CodeMirror-merge-editor')[0] !== undefined ){
+                let leftPos = document.getElementsByClassName('CodeMirror-merge-editor')[0].getBoundingClientRect().x;
+                document.getElementById('find-in-nw-search-box').style.left = (leftPos + 40 ).toFixed() +'px';
+                document.getElementById('find-in-nw-search-box').style.right = 'auto';
+                document.getElementById('find-in-nw-search-box').style.top = '-6px';
+                pragmaMergeSearchInEditorId = 'searchElement'; findInNw.positionSearchBoxPragmaMerge()
+                return
+            }
+
+            // Normal
             this.showSearchBox();
             return false;
           // Check for `ESCAPE`
