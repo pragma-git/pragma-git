@@ -89,7 +89,6 @@ async function _callback( name, event, event2){
     
     console.log('_callback = ' + name);
     switch(name) {
-       
         case 'applySelectedFilesButton': {
             console.log('applySelectedFilesButton');
             console.log(event);
@@ -109,6 +108,18 @@ async function _callback( name, event, event2){
                  await simpleGit( state.repos[state.repoNumber].localFolder )
                 .raw( [  'reset', '--', file ] , onReset); 
             }
+            function onReset(err, result) {console.log(result) ;console.log(err);}
+
+            closeWindow();
+            break;
+        }         
+        case 'applyRestoreAllButton': {
+            console.log('applyRestoreAllButton');
+            console.log(event);
+            
+            await simpleGit( state.repos[state.repoNumber].localFolder )
+                .raw( [  'reset', '--hard' ] , onReset); 
+
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
             closeWindow();

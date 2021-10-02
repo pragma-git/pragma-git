@@ -111,6 +111,13 @@
           overflow: hidden;
           transition: max-height 0.2s ease-out;
         }
+        
+        
+                       
+        img[src="images/warning.png"] 
+        {
+            filter: invert( 0% );
+        }
     </style>
     
        
@@ -155,14 +162,40 @@
         
                  
          <div id="applyButtonDiv">       
-         <br>
-         <button id="applySelectedFilesButton" 
+            <br>
+            
+            <button id="applySelectedFilesButton" 
                 onclick="_callback('applySelectedFilesButton',this)" 
                 style="vertical-align: middle;">
                 Update Selection
             </button> 
-         <br>
+                    
+            <div style="float: right; margin-right: 10px">
+                <button  onclick="document.getElementById('restoreAllDialog').showModal();"> 
+                    Restore all 
+                    <img height="12" width="12"  src="images/warning.png"> 
+                </button>
+            </div>
+            <br>
          </div>
+         
+         
+         
+         
+<!--  Warning dialog for restore all  --> 
+
+<dialog id="restoreAllDialog" style="width:50%;background-color:#C00;border:1px dotted black;">  
+    <p>This will remove changes to all files, and restore them to their stored state.  Do your really want to discard the changes? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('restoreAllDialog').close();_callback('applyRestoreAllButton',' ');">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('restoreAllDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+ 
 
 
  
