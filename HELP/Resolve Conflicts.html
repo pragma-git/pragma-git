@@ -1,30 +1,51 @@
        
-        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted or modified in one place, or
-         that there are differences in overlapping parts of two files.  Both these cases needs a manual choice, which change to keep.
+        <p>You are in this window because there are file conflicts, most likely caused by a 
+        Merge <img src="../images/merge_black.png"  height="17" width="17"> or 
+        Stash-pop <img src="../images/stash_pop_black.png"  height="17" width="auto">  operation.
+         The reason is that a file has been deleted or modified in one place, or
+         that there are differences in overlapping parts of a file.  These cases needs a manual intervention, to decide which change to keep.
         </p>   
+        
+        <h2>If you want to undo what caused the conflict</h2>
+        <p>
+        
+        Press <button>Undo Merge</button> in case you wish to undo the Merge or Stash-pop operation <br>
+        (or the Stash pop, which has caused the conflict because a merge is part of that operation)
+        </p>
+        <br>
+        
+        <h2>If you want to solve the conflict</h2>
         
         <h4>Each type of conflict is solved in a different section</h4>
             <p>Resolve the conflicts starting at the top section. You may fold the sections, by clicking on the header.  
             </p>
         
         <h4>Section "1) Select files to keep"</h4>
-            <p> The files listed here were in a state where it could not be determined if they should be kept, or deleted.  Check files you wish to keep.
+            <p> The files listed here were in a state where it could not be determined if they should be kept, or deleted.  
+            Check files you wish to keep, and click the button :
             </p>      
+            <button>Keep checked files (delete others)</button>
            
         <h4>Section "2) Conflicting files"</h4>
-            <p> Clicking the "Solve conflicting files"-button starts a merge tool (see Requirements, below).
+            <p> Clicking the <button>Solve conflicting files</button> button starts a merge tool (see Requirements, below).
             This button will be enabled when there are no conflicts in step 1).
             </p>
+            
+            
 
         
         <h4>Section "3) Accept changes"</h4>
             <p>This is your last chance to change your mind.  <br>
             <ul>
-                <li>Press "Undo Merge" in case you are not sure the conflict was resolved correctly </li>
-                <li>Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)</li>
+                <li>Press <button>Undo Merge</button> in case you are not sure the conflict was resolved correctly </li>
+                <li style="padding-top:4px">Press <button>Click to Accept</button> to finish.  (This will also remove some backup-files created when working with the conflicts)</li>
             </ul>
             NOTE : After this, you should type a commit description and press the Store-button in the main window
             </p>
+            
+            
+            
+            
         
         <h4>Requirements</h4>
             <p> This window uses either the built in merge tool, or an external merge tool that is defined in the settings window.  
