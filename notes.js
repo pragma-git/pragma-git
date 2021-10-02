@@ -115,7 +115,8 @@ async function injectIntoNotesJs(document) {
           {
             //pressed.preventDefault();
             console.log('SHIFT ENTER from notes.js');
-            editor.insertText('\n '); 
+            //editor.insertText('\n '); // The space is important. If row starts without space, then a whole list-element is removed
+            editor.exec('shiftEnter');  // My plugin-function for backspace
             return false;
           } 
           // Check for Backspace
@@ -136,30 +137,45 @@ async function injectIntoNotesJs(document) {
     //
     // Run from debugger in wysiwyg mode : editor.exec('backspace')
         const wysiwygCommands = {
-            backspace: backspaceFunction
+            backspace: backspaceFunction,
+            shiftEnter: shiftEnterFunction
         }
         return { wysiwygCommands }
     }
+    
         function backspaceFunction(payload, state, dispatch){ 
              
             let from = state.selection.ranges[0].$from.pos;
             let to = state.selection.ranges[0].$to.pos;
             
-            if (state.selection.ranges[0].$from.parentOffset > 1){ // Within same element
-                editor.replaceSelection('', from - 1, from);
+            if (state.selection.ranges[0].$from.parentOffset >= 1){ // Within same element
+                editor.replaceSelection('', to - 1, from);
                 return true; // Change in editor content
             }
                         
-            if (state.selection.ranges[0].$from.parentOffset <=1){ // End of element
+            if (state.selection.ranges[0].$from.parentOffset <1){ // End of element
                 // If I don't change element, the backspace will delete whole element before
                 // (for instance, seen in list-elements where shift-Enter has created a new line within list-element
                 let parentElement = state.selection.ranges[0].$from.depth * 3 - 1
                 let priorNodePos = state.selection.ranges[0].$from.path[ parentElement ]; 
                 let delta = from - priorNodePos;
+ 
                 
-                editor.replaceSelection('', from - 1 - delta, from);
+                editor.replaceSelection('', from  - delta - 1, from );
                 return true
             }
+            
+            return false
+
+        }
+         function shiftEnterFunction(payload, state, dispatch){ 
+let ENTER =`
+<br>`;            
+            let from = state.selection.ranges[0].$from.pos;
+            let to = state.selection.ranges[0].$to.pos;
+            
+            // This is where I should put shift-Enter into last element
+            mdEditor.replaceSelection(ENTER, from, from);
             
             return false
 
