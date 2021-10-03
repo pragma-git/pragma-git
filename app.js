@@ -3261,6 +3261,8 @@ async function gitPush(){
 
     // Push
     setStatusBar( 'Pushing files  (to remote ' + remoteBranch + ')');
+    
+    let attempt = '';
     try{
         // Bail out if remote not configured 
         let c = configItems.all['remote.origin.url'];
@@ -3281,18 +3283,30 @@ async function gitPush(){
             // 'mirror' incompatible with refspace ('origin') and '--tags'
             await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
         }else{
-            // Push commits and tags, and set upstream
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
             
-            // Push branchname notes (git push origin refs/notes/branchname)
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);
+            // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
+            try{
+                await push();
+            }catch(err){
+                // Try again
+                attempt = ' - second attempt';
+                setTimeout( await push, 2000);
+            }
             
+            async function push(){
+                 // Push commits and tags, and set upstream
+                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
+                
+                // Push branchname notes (git push origin refs/notes/branchname)
+                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
+            }
+
         }
         function onPush(err, result) {console.log(result) };  
         
 
     }catch(err){
-        displayAlert('Push Error', err);
+        displayAlert('Push Error' + attempt , err);
     }
     
     await waitTime( 1000);  
