@@ -6,6 +6,7 @@
 
 # 1) Tag to use for this Release
 TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
+echo "TAG = $TAG"
 
 # 2) Release Title
 RELEASE_TITLE='Major rewrite, including new Graph'
@@ -40,7 +41,7 @@ Download the *one* installer that matches your system from the "__*assets*__" li
 ---
 
 
-TOKEN_FILE="../../mytoken.txt"  // NOTE: Token requires scopes: repos, write:packages, admin:org, and maybe user
+TOKEN_FILE="../../mytoken.txt"  #NOTE: Token requires scopes: repos, write:packages, admin:org, and maybe user
 REPO=pragma-git/pragma-git
 
 #
@@ -48,10 +49,12 @@ REPO=pragma-git/pragma-git
 #
 
     # Login
+    echo 'LOG IN TO GITHUB'
     gh auth login --with-token < "$TOKEN_FILE"
     #gh auth login --web
     
     # Create Release
+    echo 'CREATE RELEASE'
     gh release create \
       $TAG \
       --repo "$REPO" \
@@ -60,12 +63,18 @@ REPO=pragma-git/pragma-git
       --title "$RELEASE_TITLE"
       
     # Upload binaries  
+    echo 'UPLOAD BINARIES'
     cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 
+    echo 'UPLOAD MAC'
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
+    echo 'UPLOAD WIN32'
     gh release upload  $TAG  --repo "$REPO"  "$(ls win32/Pragma-git*.exe)" 
+    echo 'UPLOAD WIN64'
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
+    echo 'UPLOAD LINUX DEB'
     gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.deb)" 
+    echo 'UPLOAD LINUX RPM'
     gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.rpm)" 
 
 #
