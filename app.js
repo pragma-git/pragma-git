@@ -3287,10 +3287,16 @@ async function gitPush(){
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
             try{
                 await push();
+                console.log('success push - first attempt');
             }catch(err){
                 // Try again
-                attempt = ' - second attempt';
-                setTimeout( await push, 2000);
+                attempt = ' - on second attempt';
+                console.warn('First push attempt failed, with error : ');
+                console.warn(err);
+                console.warn('wait for push 2');
+                console.warn(' ');
+                setTimeout( await push, 3000);
+                console.log('success push - second attempt');
             }
             
             async function push(){
