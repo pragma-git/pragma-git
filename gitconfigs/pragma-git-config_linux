@@ -1,3 +1,9 @@
 [mergetool "pragma-git"]
     cmd = /opt/pragma-git/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    
+
+[core]
+    askpass = /opt/pragma-git/pragma-askpass
+
+[credential]
+    useHttpPath = true

@@ -2,43 +2,63 @@
 
 # Some good input from https://github.com/Aluxian/nwjs-starter
 
+<< ////
+
 #
 # REQUIREMENTS
 #
 
 # Install nwjs-pheonix-builder
-# 1) cd ~/Documents/Projects/Pragma-git/Pragma-git >
-# 2) npm install nwjs-builder-phoenix --save-dev
-# 3) cd node_modules/nwjs-builder-phoenix; npm install
+
+ 1) cd ~/Documents/Projects/Pragma-git/pragma-git >
+ 2) npm install nwjs-builder-phoenix --save-dev
+ 3) cd node_modules/nwjs-builder-phoenix; npm install
 
 
 # Prerequisits nwjs-phoenix-builder
 
-# 4) brew cask install wine-stable --no-quarantine
-# 5) download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  
-#    Flytta till /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/rcedit-x64.exe
-#    Högerklicka Öppna efter nedladdning för att tillåta.
-#
-# 6) rm ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe  \
-#    ln -s /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/node_modules/rcedit/bin/rcedit.exe
+ 4) brew cask install wine-stable --no-quarantine
+ 5) # download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  
+    # Flytta till /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe
+    chmod a+x /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe
+    # Högerklicka Öppna efter nedladdning för att tillåta.
+
+ 6) rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe  \
+    ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
 
 
 # To create installers
 
-# 7) brew install makensis # For making windows installer
-# 8) brew install create-dmg # For creating mac installer
-# 9) sudo gem install fpm # For linux .deb creation
-#    run later version : /usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin/fpm  instead of  fpm
-# 10) brew install gnu-tar # (tar for macos, for fpm)
-# 11) brew install rpm
+ 7) brew install makensis # For making windows installer
+ 8) brew install create-dmg # For creating mac installer
+ 9) sudo gem install fpm # For linux .deb creation
+    run later version : /usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin/fpm  instead of  fpm
+ 10) brew install gnu-tar # (tar for macos, for fpm)
+ 11) brew install rpm
+
+
+# Fix for development on 64-bit Macs
+ 
+  12) # wine64 should be called from wine command (wine fails on 64-bit systems)
+      rm /usr/local/bin/wine \
+      ln -s /usr/local/bin/wine64 /usr/local/bin/wine
 
 
 #
 # TROUBLE-SHOOTING
 #
 
-# - no windows icons.   5) or 6) above 
+-  # no windows icons.   5) or 6) above 
 
+-  # If install files becomes very large -- then the problem is that  ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches is included in install.
+   # Solution: softlink ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches -> 
+   ln -s  /Users/jan/Downloads/caches-nwjs-builder-phoenix ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
+   
+   
+-  # Not allowed to run rcedit.exe 
+   # On Mac, go to "System Settings/Security nd Privacy/General" and click "Allow" button.  (Then restart build)
+
+////
 
     COLOR=5
     tput setaf $COLOR; tput setaf $COLOR; echo ' '
@@ -64,7 +84,7 @@
     echo '============================'
     tput sgr0
     
-	cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/
+	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/
     npm install
 
     tput setaf $COLOR; echo ' '
@@ -73,9 +93,33 @@
     echo '=================================='
     tput sgr0
     
-	cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/merge
+	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/merge
     npm install
+    
 
+    tput setaf $COLOR; echo ' '
+    echo '=================================='
+    echo 'INSTALLING FROM askpass/package.json'
+    echo '=================================='
+    tput sgr0
+    
+	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/askpass
+    npm install
+    
+    
+     
+
+    tput setaf $COLOR; echo ' '
+    echo '=================================='
+    echo 'FIX rcedit-x64'
+    echo '=================================='
+    tput sgr0
+    
+    rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe 
+    ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
+
+    echo 'done'
+    
 #
 # Clean folders
 #
@@ -106,16 +150,16 @@
     echo '=========================='
     tput sgr0
     
-    cd /Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries
+    cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries
 
 
     # Build All platforms
-    ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/.bin/build \
+    ~/Documents/Projects/Pragma-git/pragma-git/node_modules/.bin/build \
     --tasks win-x86,win-x64,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
     --name Pragma-git  \
     --concurrent true  \
-    ~/Documents/Projects/Pragma-git/Pragma-git
+    ~/Documents/Projects/Pragma-git/pragma-git
 
     #Options :
     # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
@@ -143,10 +187,17 @@
     DIR=$(ls -1 ../dist/|grep  'mac-x64')
     echo "$DIR.dmg" 
     
+    # About dialog -- edit plist
+    plist=../dist/temp-macos/Pragma-git.app/Contents/Info.plist
+    
+    CFBundleVersion=$(git rev-parse --short HEAD)  # Hash as build version (version n.n.n is taken from package.json)
+    plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist
+
+    
     # Work in destination folder (dist/mac) 
     mkdir ../dist/mac
     cd ../dist/mac
-    
+
      
     # Make .dmg in ../dist/temp-macos
     test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
@@ -243,8 +294,8 @@
     --deb-no-default-config-files \
     --chdir "$DIR" \
     --package "linux64/$DIR.deb" \
-    --after-install '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postinst' \
-    --after-remove '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postrm' \
+    --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
+    --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git
     
     # Remove installation : sudo dpkg --remove pragma-git
@@ -286,8 +337,8 @@
     --depends libXScrnSaver \
     --depends libatomic \
     --rpm-os linux \
-    --after-install '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postinst' \
-    --after-remove '/Users/jan/Documents/Projects/Pragma-git/Pragma-git/make_binaries/assets-linux/postrm' \
+    --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
+    --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git
     
     # For a fresh centos 7 install, do  : sudo yum erase libXScrnSaver libatomic pragma-git

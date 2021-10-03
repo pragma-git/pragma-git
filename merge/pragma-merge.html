@@ -34,6 +34,7 @@
     
  
  <!-- Ctrl-F search-->
+<!--
 <link rel="stylesheet" href="node_modules/codemirror/lib/docs.css">   
     
     
@@ -46,6 +47,7 @@
 <script src="node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
 <script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
 <script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
+-->
     
 
     <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
@@ -57,21 +59,17 @@
             width: 100%;
             height: 100%;
             background: var(--body-background);
+            color: var( --body-text);
+            overflow: hidden;
         }  
 
 
         .outer-content {
             width: 100%;
             height: auto;
+            margin-right: 10px;
+            border:none;
         }
-        
-        .enabled{
-            background: lightgreen;
-        }
-        .disabled{
-            background: white;
-        }
-        
      
      </style>
         
@@ -80,6 +78,11 @@
     <style>   
         .CodeMirror { 
             line-height: 1.4; 
+        }
+        
+        #view{
+            padding-right: 18px;
+            padding-left: 12px;
         }
 
         span.clicky {
@@ -95,13 +98,27 @@
           margin-right: 2px;
         }
         
-        #up, #down{
+                
+        .enabled{
+            background: lightgreen;
+        }
+        .disabled{
+            background: white;
+        }
+        
+        
+        span.checkbox {   
+          float: left;
+          display: block;
+        }
+        
+        #up, #down, #align, #hide-unchanged{
           color: var( --body-text);
           border-color: var( --body-text);
         }
         
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
-            height: calc(100vh - 86px);
+            height: calc(100vh / 0.5 - 86px ); 
         }
         
         .CodeMirror-merge-editor{
@@ -147,6 +164,7 @@
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>
 
 
@@ -173,10 +191,15 @@
     
     <p style="margin-right: 10 px;"> 
         <div>
-        <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
-        <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
-        <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
-        <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
+            <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
+            <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
+
+    
+            <span class=checkbox>
+            <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
+            <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+            </span>
+            
         </div>
         
         
@@ -221,8 +244,27 @@
             console.log('merge.html :DOM fully unloaded -- maybe window closed ');
             finish('unloadWindow');
             }
-        );
+        );     
+        window.addEventListener('resize',  initUI );
+
+        window.addEventListener("keydown", event => {
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){
+                finish('save')
+            }
+        });
+          
+          
     </script>  
+    
+    <!--  Add find  -->    
+    <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="../extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note and pragma-merge
+        
+        var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
+    </script> 
 
 
 </body>    

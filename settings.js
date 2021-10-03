@@ -62,17 +62,20 @@ async function _callback( name, event){
             
             console.log(state.repos[ state.repoNumber].hiddenBranches);
             
+            // Update cached branch list
+            opener.cacheBranchList();
+                
             break;
         }
         case 'folderSelectButton' : {
             //This calls the hidden folder dialog input-element in settings.html
-            document.getElementById("cloneFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
-            document.getElementById("cloneFolderInputButton").click();
+            document.getElementById("selectFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
+            document.getElementById("selectFolderInputButton").click();
             
             break;   
         }    
         case 'folderSelectButtonPressed' : {
-            //This should be called when hidden input-element is changed (see id="cloneFolderInputButton", in settings.html)
+            //This should be called when hidden input-element is changed (see id="selectFolderInputButton", in settings.html)
             console.log('Selected folder = ');
             console.log(event.value);
             console.log(event);
@@ -80,7 +83,8 @@ async function _callback( name, event){
             let localFolder = event.value;
             
             // I know that the last row has index same as length of number of repos
-            document.getElementById(state.repos.length).value = localFolder;
+            document.getElementById('cloneFolder').value = localFolder;
+            document.getElementById('addFolder').value = localFolder;
         
             break;
         }   
@@ -90,16 +94,87 @@ async function _callback( name, event){
             // I know that the last row has index same as length of number of repos
             id = state.repos.length;
             
-            let folder = document.getElementById(id).value;  // ID 3
-            let URL = document.getElementById( id + 10000).value; // ID 10003
+            let folder = document.getElementById('cloneFolder').value;  
+            let URL = document.getElementById('urlToClone').value; 
             
-            await gitClone( folder, URL);
+            document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
+            const dummy = await gitClone( folder, URL);
+            document.getElementById('cloneStatus').innerHTML = '';
             
+            // Replace table 
+            document.getElementById("settingsTableBody").innerHTML = ""; 
+            createHtmlTable(document);
+
+        
+            break;
+        }  
+        case 'addRepoButtonPressed' : {
+            // If folder is a repo -> add
+            // If not a repo show dialog doYouWantToInitializeRepoDialog
+            // which calls _callback('initializeRepoOK')
+            
+            console.log('addRepoButtonPressed');
+
+            let folder = document.getElementById('addFolder').value;  
+            
+            // Dialog if repo does not exist
+            try{
+                var isRepo;
+                await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                
+                console.log('dropFolder CHECK IF REPO = ' + isRepo);
+                
+                // If not a repo
+                if (!isRepo){
+                    // Ask permisson to init repo
+                    localState.droppedRepoFolder = folder;
+                    document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                    return
+                } else {
+                    await opener.addExistingRepo( folder); 
+                    // Replace table 
+                    document.getElementById("settingsTableBody").innerHTML = ""; 
+                    createHtmlTable(document);
+                }
+            }catch(error){
+                console.log(error);
+            }
+            
+            // Update cached branch list
+            opener.cacheBranchList();
 
         
             break;
         }
+        case 'initializeRepoOK' : {
+            
+            await opener._callback('initializeRepoOK');
+            
+            let folder = document.getElementById('addFolder').value; 
+ 
+            // add repo to program
+            try {
+                await opener.addExistingRepo( folder); 
+                // Replace table 
+                document.getElementById("settingsTableBody").innerHTML = ""; 
+                createHtmlTable(document);
+            }catch(error){
+                console.log(error);
+            }
+    
+            // Update immediately
+            await opener._setMode('UNKNOWN');
+            await opener._update();
+              
+            break;  
+          }
         case 'repoRadiobuttonChanged': {
+            // Callback called the following alternative ways:
+            // 1) User clicks radiobutton in settings window_menu_handles_mapping
+            // 2) User selects repository in main window, which initiates this callback
+            
+            
             console.log('repoRadiobuttonChanged');
             console.log(event);
             value = event.checked;
@@ -119,17 +194,24 @@ async function _callback( name, event){
                 
                 
                 generateBranchTable( document, table, branchList); // generate the table first
-                
-                // Match size if unfolded (otherwise, mixup for icons '-' instead of '+'
-                if ( document.getElementById("repoSettings").classList.contains('active') ){
-                    increaseDivSize('foldableDiv1');
-                }
-                
-    
-                
-                // Show current repo
-                document.getElementById("currentRepo").innerHTML = myLocalFolder;
 
+                
+                    
+                // Update repo name
+                let folderObject =  await opener.gitLocalFolder() ;
+                document.getElementById('shortCurrentRepo').innerText = folderObject.folderName;
+                document.getElementById('currentRepo').innerText = folderObject.folderPath;
+
+                // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
+                document.getElementById(id).checked=true
+                
+                // Update displayed .gitignore 
+                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
+                document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+
+                
+                // Update cached branch list
+                opener.cacheBranchList();
 
                 
             }catch(err){
@@ -140,17 +222,7 @@ async function _callback( name, event){
         }        
         case 'newBranchNameKeyUp': {
 
-            let string = document.getElementById("branchNameTextarea").value;
-            // Remove ^~?:*[\ 
-            string = string.replace( /[\^\~\?\:\*\[]/g, ''); //   (Test:   'abc:^~?*\[:d'.replace( /[\^\~\?\:\*\[\\]/g, '')   // should give abcd )
-            // Remove more
-            string = string.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
-            string = string.replace( ' ', ''); // Removing space
-            string = string.replace( '..', '.'); // Removing consecutive dots@{
-            string = string.replace( '@{', '@'); // Stop sequence @{
-            
-            
-            document.getElementById("branchNameTextarea").value = string;
+            document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)
             break;   
         }           
         case 'addBranchButtonPressed': {
@@ -178,7 +250,9 @@ async function _callback( name, event){
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
             
-            increaseDivSize('foldableDiv1');
+            
+            // Update cached branch list
+            opener.cacheBranchList();
             
             break;
         }
@@ -200,7 +274,6 @@ async function _callback( name, event){
                     document.getElementById('forceDeleteBranchDialog').showModal(); // Ask if force delete
                 }else{                      
                     displayAlert('Failed deleting branch', err);  
-                    increaseDivSize('foldableDiv1');     
                     console.log('Error deleting local branch');
                     console.log(err);
                 }
@@ -213,9 +286,10 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
 
+            // Update cached branch list
+            opener.cacheBranchList();
 
             break;
         }
@@ -233,7 +307,6 @@ async function _callback( name, event){
             }catch(err){ 
                 
                 displayAlert('Failed deleting branch', err);  
-                increaseDivSize('foldableDiv1');     
                 console.log('Error deleting local branch');
                 console.log(err);
                 return
@@ -245,7 +318,6 @@ async function _callback( name, event){
             
             document.getElementById("branchesTableBody").innerHTML = ""; 
             generateBranchTable( document, table, branchList); // generate the new branch table 
-            increaseDivSize('foldableDiv1');
             
             break;
         }
@@ -258,17 +330,12 @@ async function _callback( name, event){
                
             console.log('setButtonClicked');
             console.log(event);
-            value = event.value;
             
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
         
-            
-            // Make black, to show user that something happened (if green or red before
-            document.getElementById(textareaId).classList.add('grey');
-            
-            
+  
             //  Set remote URL 
             if ( isSetButton ){
                 
@@ -279,45 +346,28 @@ async function _callback( name, event){
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
                     await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){console.log(result);console.log(err)  };
+                    function onSetRemoteUrl(err, result ){
+                        console.log(result);
+                        console.log(err)  
+                    };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
                 }catch(err){
-                    
                     console.log('Repository set URL failed');
                     console.log(err);
-                    document.getElementById(textareaId).classList.add('red');
-                    document.getElementById(textareaId).classList.remove('grey');
-                    document.getElementById(textareaId).classList.remove('green');
                 }           
             }
+            testURL(textareaId, event);
 
-            // Test if remote URL works
-            try{
-                let remoteURL = document.getElementById(textareaId).value;
-                //await simpleGit().listRemote( remoteURL, onListRemote);
-                
-                    const commands = [ 'ls-remote', remoteURL];
-                    await simpleGit().raw(  commands, onListRemote);
-                    function onSetRemoteUrl(err, result ){console.log(result) };
-                
-                function onListRemote(err, result ){console.log(result) };
-                document.getElementById(textareaId).classList.add('green');
-                document.getElementById(textareaId).classList.remove('grey');
-                document.getElementById(textareaId).classList.remove('red');
-    
-            }catch(err){
-                
-                //displayAlert('Failed verifying remote URL', err)
-                console.log('Repository test failed');
-                console.log(err);
-                document.getElementById(textareaId).classList.add('red');
-                document.getElementById(textareaId).classList.remove('grey');
-                document.getElementById(textareaId).classList.remove('green');
-            }
-
+            break;
+        }
+        case 'makeUrlButtonClicked': {
+            // For :
+            // - Build a url
             
+            nw.Window.open('Create_github_repository.html', {});
+
             break;
         }
 
@@ -326,6 +376,61 @@ async function _callback( name, event){
 
 
 }
+
+async function testURL(textareaId, event){
+    
+    let outputColor = 'red'
+    
+    document.getElementById(textareaId).classList.add('grey');  // Make grey until known if success or fail
+    
+    let repoId = textareaId - 10000;
+    let remoteURL
+            
+    // Test if remote URL works
+    try{
+            remoteURL = document.getElementById(textareaId).value;
+        
+            console.log('textareaId = ' + textareaId);
+            console.log('TESTURL ID = ' + repoId);
+            console.log('remoteURL = ' + remoteURL);
+    
+             
+            const commands = [ 'ls-remote', remoteURL];
+            
+            // Two versions, with and without askpass dialog
+            if ( event.type == 'no_askpass'){
+                document.getElementById(textareaId).classList.remove('green');
+                document.getElementById(textareaId).classList.remove('grey');
+                document.getElementById(textareaId).classList.add('red'); 
+                await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
+            }else{
+                await simpleGit().raw(  commands, onListRemote); // default askpass 
+            }
+
+            function onListRemote(err, result ){
+                console.log('onListRemote');
+                console.log(err);
+                outputColor = 'green'
+                if (result == undefined){
+                    outputColor = 'red'
+                }
+            };
+
+
+    }catch(err){
+        
+        outputColor = 'red'
+        document.getElementById(textareaId).classList.add('red');
+        console.log('Repository test failed ' + remoteURL);
+        console.log(err);
+    }
+                
+    // Set color        
+    document.getElementById(textareaId).classList.remove('green');
+    document.getElementById(textareaId).classList.remove('grey');
+    document.getElementById(textareaId).classList.remove('red');
+    document.getElementById(textareaId).classList.add(outputColor);
+ }
 function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
@@ -362,6 +467,9 @@ function forgetButtonClicked(event){
 }
 async function closeWindow(){
     
+    // Remove from menu
+    opener.deleteWindowMenu('Settings');
+    
     // Read fields into state
     if ( !('tools' in state) ){
         state.tools = {};
@@ -373,12 +481,24 @@ async function closeWindow(){
     // Read collapsible into state
     state.settingsWindow = {}; 
     state.settingsWindow.unfolded = {};
-    for (i = 0; i < coll.length; i++) {
-        state.settingsWindow.unfolded[coll[i].id] = ( coll[i].classList[1] == 'active');
+    for (i = 0; i < tabButton.length; i++) {
+        state.settingsWindow.unfolded[tabButton[i].id] = ( tabButton[i].classList[1] == 'active');
+    }
+    
+    // Read tab into state
+    state.settingsWindow.selectedTab = 0;  // First tab default
+    for (i = 0; i < tabButton.length; i++) {
+        if ( tabButton[i].classList[1] == 'active'){
+            state.settingsWindow.selectedTab = i;
+        }
     }
     
     // Read Dark mode 
     state.darkmode = document.querySelectorAll("input[name=darkmode]:checked")[0].value;
+    
+    // Read zoom
+    state.zoom =  document.getElementById('zoom').value;
+    state.zoomMain = document.getElementById('zoomMain').value;
     
     // Set Git author name and email (stored in git, not in settings)
     try{
@@ -396,11 +516,13 @@ async function closeWindow(){
     }catch(err){
         console.log('Failed storing git user.email');
     }
+
     
-     
-    // Return
+    // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
+    //localState.settings = false;
     
+ 
 }
 
 // Git
@@ -417,34 +539,17 @@ async function gitClone( folderName, repoURL){
     let topFolder = folderName + pathsep + repoName;
     topFolder = topFolder.replace(/[\\\/]$/, '')
 
-    //// Clone
-    //try{
-        //await simpleGit( folderName).clone(  repoURL, onClone);
-        //function onClone(error, result ){console.log(result);console.log(error) }; 
-    //}catch(err){ 
-        //console.log(err);
-        
-        //displayAlert('Failed cloning', err)
-        //return
-    //}
 
-    // Clone all branches
-    //    ( this is done by making a bare repo in topFolder/.git : 
-    //      and then undoing the bare repo : git config --unset core.bare)
-    
-    
+    // Clone
+
     try{
-        // 1) Clone bare repo
-        let options = ['--mirror']
-        let bareFolderName = topFolder + pathsep + '.git'; // Make a bare repository 
-        await simpleGit( folderName).clone(  repoURL, bareFolderName,options, onClone);
+        // 1) Clone 
+        let options = [];
+        opener.mkdir(folderName);  // Create folder if it does not exist
+        await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
         
-        // 2) Make a real repo 
-        await simpleGit( topFolder ).raw( [  'config', '--unset' , 'core.bare'] , onConfig);
-        function onConfig(err, result) {console.log(result); console.log(err) };
-        
-        // 3) Checkout default branch
+        // 2) Checkout default branch
         await simpleGit(topFolder).checkout( onCheckout);
         function onCheckout(err, result){console.log(result)};
         
@@ -508,10 +613,7 @@ async function gitClone( folderName, repoURL){
     document.getElementById("branchesTableBody").innerHTML = ""; 
     generateBranchTable( document, table, branchList); // generate the new branch table 
     
-    increaseDivSize('foldableDiv1');
-            
-
-        
+  
 
 } 
 async function gitBranchList( folderName){
@@ -561,6 +663,7 @@ return configList
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
+
  
     // For systems that have multiple workspaces (virtual screens)
     if ( win.canSetVisibleOnAllWorkspaces() ){
@@ -585,6 +688,7 @@ async function injectIntoSettingsJs(document) {
     // Write system information to divs
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
+    document.getElementById('latestVersion').innerText = global.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
     
@@ -600,6 +704,8 @@ async function injectIntoSettingsJs(document) {
     document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
     document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
+    document.getElementById('StashPop').checked = state.StashPop;
+    
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
@@ -616,46 +722,62 @@ async function injectIntoSettingsJs(document) {
         console.log(err);
     }
     
-    
-    
+    // Set Zoom
+    document.getElementById('zoom').value = state.zoom;
+    document.getElementById('zoomMain').value = state.zoomMain;
     
     // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
     if ( ! win.canSetVisibleOnAllWorkspaces() ){
         document.getElementById('onAllWorkspaces').disabled = true;
     }
     
-
-
     // Build repo table
+    document.getElementById("settingsTableBody").innerHTML = ""; 
     await createHtmlTable(document);  
 
-    // Fold / unfold as last time
-    for (entry of Object.entries( state.settingsWindow.unfolded) ) {
-        console.log( entry);
-        let id = entry[0];
-        let unfolded = entry[1];
-        if (unfolded == true){
-            console.log('injectIntoSettingsJs -- unfolding :' + id);
-            quickUnfold( document.getElementById(id)); 
-        }
+
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
+
+    document.getElementById('cloneTab').click(); 
+    
+    
+    // Warn if no repos
+
+    if (state.repos.length == 0){
+        
+        // Warn if no repos
+        displayAlert(
+            "No repositories", 
+            
+            `<p>
+                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
+                <ol>
+                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
+            
+                    </li>
+                    or
+                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
+        
+            
+                    </li>
+        
+                </ol>
+                
+                
+                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
+            </p>
+            
+            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
+            </p>
+            `
+        );
+        
+        // Set tab from setting
+        let tab = 1; // Repository tab
+        tabButton[ tab ].click();
     }
 
-
-    //
-    // Internal function
-    //
-    async function quickUnfold(foldableButton){
-        let content = foldableButton.nextElementSibling;
-        console.log(content);
-        
-        // Quick unfold
-        content.classList.add('quickUnfold'); 
-        foldableButton.click();
-    
-        // Set transition time back after giving time  for redraw
-        setTimeout(() => {  console.log("Wait, and turn off quick transitions!"); content.classList.remove('quickUnfold');}, 1000);
-    
-    };
 
 
 };
@@ -666,10 +788,13 @@ async function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
+    
+            
+    // branch table is generated inside generateRepoTable
+
+    
 
     // Repo table           
-        //document.getElementById("header_Forget").style.visibility = "visible"; 
-        document.getElementById("emptyTable_iFrame").style.height ="0px";
         
         let table = document.getElementById("settingsTableBody");
         console.log('Settings - data repos:');
@@ -691,17 +816,7 @@ async function createHtmlTable(document){
         
         await generateRepoTable( document, table, state.repos); // generate the table first
 
-        
-    // Current branch table 
-        document.getElementById("emptyBranchTable_iFrame").style.height ="0px";
-        
-    // branch table is generated inside generateRepoTable
 
-    if (state.repos.length == 0){
-        // Show what is needed for empty folder   
-        document.getElementById('hide').style.display = "none";
-        document.getElementById("emptyTable_iFrame").style.height ="auto"; 
-    }
 
 }
 async function generateRepoTable(document, table, data) {
@@ -718,7 +833,7 @@ async function generateRepoTable(document, table, data) {
             
         // Loop rows in data
         for (let element of data) {
-            console.log('Element = ' + element );
+            //console.log('Element = ' + element );
      
     
             let cell, text, button, textarea, radiobutton
@@ -772,12 +887,12 @@ async function generateRepoTable(document, table, data) {
             button = document.createElement('button');
             button.setAttribute("id", index + 20000);
             button.innerHTML = 'Set';
-            button.setAttribute("onclick", "_callback('setButtonClicked',this)");
+            button.setAttribute("onclick", "_callback('setButtonClicked',this)"); // this.type='submit'; 
             cell.appendChild(button);
-            
+                       
             // Run test
-            button.click();
-            
+            //_callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
+            testURL(index + 10000, {type: 'no_askpass', id: index + 20000});
                           
             // Into table cell :  button
             cell = row.insertCell();
@@ -824,93 +939,7 @@ async function generateRepoTable(document, table, data) {
             index ++;
         }
     } // if any repos
-    
-    //
-    // Add input for cloning
-    //
-
-        let cell, text, button, textarea, radiobutton
-        let row = table.insertRow();
-        
-        // Inner table
-        let innerCell;
-        let innerTable = document.createElement("table");
-        innerTable.setAttribute("id", 'cloneTable');
-        
-        let innerTableRow = innerTable.insertRow();
-        innerTableRow.setAttribute("class", 'cloneTableRow');
-        
-        // Into first cell : put a small table inside first cell
-        cell = row.insertCell();
-        
-      
-            
-        
-            // Into table cell :  Folder dialog
-
-            innerCell = innerTableRow.insertCell();
-            innerCell.setAttribute("class", 'action');
-            
-            button = document.createElement('button');
-            button.setAttribute("id", "folderSelectButton");  // ID
-            button.innerHTML = 'Folder';
-            button.style.verticalAlign = "middle";
-            
-            button.setAttribute('onclick', '_callback("folderSelectButton",this)' ); 
-            
-            innerCell.appendChild(button);  
  
-             //  Into table cell :  Local folder
-            innerCell = innerTableRow.insertCell();
-            innerCell.setAttribute("class", 'cloneLocalFolder');
-            
-            textarea = document.createElement('textarea');
-            textarea.setAttribute("id", index);  // ID  
-            
-            innerCell.appendChild(textarea);
-               
-        cell.appendChild(innerTable); 
-
-
-         //  Into table cell :  Remote URL textarea + button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'remoteURL');
-        
-        textarea = document.createElement('textarea');
-        textarea.setAttribute("id", index + 10000);  // ID
-        cell.appendChild(textarea);
-        
-            // Test-button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'setURL');
-        button = document.createElement('button');
-        button.setAttribute("id", index + 20000);  // ID
-        button.innerHTML = 'Test';
-        button.setAttribute("onclick", "_callback('setButtonClicked',this)");
-        cell.appendChild(button);
- 
-        // Into table cell :  button
-        cell = row.insertCell();
-        cell.setAttribute("class", 'repoAction');
-        
-        button = document.createElement('button');
-        button.setAttribute("id", "cloneButton");  // ID
-        button.innerHTML = 'Clone';
-        button.setAttribute('onclick','_callback("cloneButtonPressed",this)'); 
-        cell.appendChild(button);       
-                      
-        //// Into table cell :  button
-        //cell = row.insertCell();
-        //cell.setAttribute("class", 'repoAction');
-        
-        //button = document.createElement('button');
-        //button.setAttribute("id", index);
-        //button.innerHTML = 'Forget';
-        //button.onclick = forgetButtonClicked;
-
-        //cell.appendChild(button);
-           
-  //<input id="folder-open-dialog" type="file" nwdirectory nwworkingdir="" nwdirectorydesc="Please select a folder" role="hidden" />  
     
     
     // Draw branch by simulating click
@@ -936,18 +965,13 @@ async function generateBranchTable(document, table, branchlist) {
         
         let hiddenBranch = util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, element);
         
-        console.log('Element = ' + element );
+        //console.log('Element = ' + element );
         let row = table.insertRow();
-
-         // Into table cell :   Branch name text
-        cell = row.insertCell();
-        cell.setAttribute("class", 'branchName');
-        text = document.createTextNode( element);
-        cell.appendChild(text);
         
         
         // Into table cell :  checkbox for hidden branch
         cell = row.insertCell();
+        cell.setAttribute("class", 'hiddenBranch');
         checkbox = document.createElement('input');
         checkbox.type = "checkbox";
         checkbox.checked = hiddenBranch;
@@ -957,8 +981,21 @@ async function generateBranchTable(document, table, branchlist) {
             "_callback('hideBranchCheckboxChanged', this );"); 
         cell.appendChild(checkbox);
         
+        // Disable checkbox, can not hide current branch
+        if ( index === localState.branchNumber){
+            checkbox.setAttribute('disabled', true);
+            document.getElementById(checkbox.id).disabled = true
+        }
+        
         
  
+         // Into table cell :   Branch name text
+        cell = row.insertCell();
+        cell.setAttribute("class", 'branchName');
+        text = document.createTextNode( element);
+        cell.appendChild(text);
+
+
         // Into table cell :  button to delete branch
         cell = row.insertCell();
         cell.setAttribute("class", 'branchAction');
@@ -981,6 +1018,10 @@ async function generateBranchTable(document, table, branchlist) {
     //
     let row = table.insertRow();
     
+    
+    // Empty (no checkbox on this row)
+    cell = row.insertCell();
+    cell.setAttribute("class", 'hiddenBranch');
      
     // Into table cell :   Branch name textarea
     cell = row.insertCell();
@@ -991,6 +1032,7 @@ async function generateBranchTable(document, table, branchlist) {
     textarea.setAttribute( "onkeyup", "_callback('newBranchNameKeyUp', this);");  
     textarea.innerHTML = "";
     //textarea.onclick = forgetButtonClicked;
+    textarea.placeholder="Name of new branch" 
     
     cell.appendChild(textarea);
     
@@ -1008,10 +1050,6 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
-function  increaseDivSize(id){
-    let content = document.getElementById(id);
-     content.style.maxHeight = content.scrollHeight + "px";
-};
 
 function displayAlert(title, message){
     // Writes into alertDialog in settins.html

@@ -3,7 +3,6 @@
     <head>
       <title>About</title>
       
-      <link rel="stylesheet" type="text/css" href="HELP/help.css" />
       <link rel="stylesheet" type="text/css" href="color_styles.css" />
       
     </head>
@@ -103,11 +102,12 @@
 
 <body class='light'> 
     
-    <!-- Dark mode on/off --> 
+    <!-- Dark mode on/off , zoom --> 
     <script>
         if (global.localState.dark){
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>  
     
       
@@ -178,14 +178,6 @@
     </div>
 </div>
 
-        
-    <!--  Add find  -->    
-    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
-    <script src="extend_find-in-nw.js"></script>
-    <script>
-        findInNw.initialize();
-        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
-    </script> 
   
 </body>
 </html>

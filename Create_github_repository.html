@@ -1,0 +1,452 @@
+<html>
+    <head>
+        <title>Create Github Repository</title>
+        <script src="settings.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="settings.css" />
+    </head>
+ 
+
+      
+      
+ <!-- settings window  -->        
+    
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+        
+         
+        #outer-content{
+            margin: 20px;
+        }
+
+
+        textarea{
+            width: 400;
+            line-height: 1;
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+            margin-right:20px;
+        }
+        input{
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        
+        input, label {
+            display:block;
+        }
+
+        a{
+            color: var(--link-color);
+        }
+        
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        
+    </style>
+    
+     
+ 
+    
+
+<body id='body' class='light'>     
+    <!-- Dark mode on/off , zoom --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
+     
+    <div id="outer-content" style="width: fit-content;">
+            
+        <div id="inner-content">
+                
+            <h2 id="header_Settings">Github Remote Repository 
+        
+<!-- HELP HERE -->
+            <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
+                onclick="let evt = {}; evt.name='Github';opener.opener._callback('help',evt);" 
+                onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                src="images/questionmark_black.png" >
+
+                
+            </h2>
+        
+        
+        <hr>              
+
+
+            <h3>Account:</h3>  
+            
+            <!--  Add username / account name  --> 
+            <p>
+                <label for="accountName">
+                    Github username (
+                    <a href="#" 
+                        onclick="nw.Window.open(
+                            'https://github.com/join', 
+                            { width: 768,height: 768, frame: true}
+                        )">
+                    Register a Github account
+                    </a>)
+                </label>
+                <textarea id="accountName" placeholder="Github account name" oninput="build('repoName')"></textarea>  
+            </p>
+            
+                            
+            <!-- Add Access Token --> 
+            <p>                        
+                <label for="token">Access Token or username:token (
+                    <a href="#" 
+                        onclick="nw.Window.open(
+                            'https://github.com/settings/tokens', 
+                            { width: 768,height: 768, frame: true}
+                        );">
+                    Create an access token
+                </a>)
+                </label>
+                <textarea id="token" placeholder="Paste Github-account access token here" oninput="build('repoName')"></textarea>  
+            </p>
+        
+            <br>
+        
+        
+            <!-- Tab bar--> 
+
+            <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                  <button id="Existing" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="existingRepoDiv">
+                      Existing Repo
+                  </button>
+                  
+                  <button id="NewRepo" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="newRepoDiv">
+                      New Repo
+                  </button>
+                </div>
+            </div>
+
+
+
+            <div class="tool-content " id="existingRepoDiv" >  <!--  Existing Repo TAB --> 
+                
+                    <h3>Existing Repository :</h3>  
+                                
+                    <p>                        
+                        <label for="repoName">Existing Repository Name</label>
+                        <textarea id="repoName" placeholder="Github name of existing repository" oninput="build('repoName')"></textarea>
+        
+                    </p>
+
+                     
+                        
+                    <!-- OK / CANCEL buttons (Use 'Set' button in Settings from OK button click )-->     
+                    <p>                        
+                        <button id="ok" 
+                            onclick = "
+                            let textarea_id = state.repoNumber + 10000;
+                            opener.document.getElementById(textarea_id).value = build('repoName'); 
+                            
+                            let evt=[]; 
+                            evt.innerHTML = 'Set';
+                            evt.id = state.repoNumber + 20000;
+                            opener._callback('setButtonClicked',evt);
+                            
+                            window.close()"
+                        >
+                        Set as Remote
+                        </button>   
+                                            
+                    </p> 
+        
+                <br> 
+                <br>  
+             
+            </div>        
+            
+                  
+            <div class="tool-content " id="newRepoDiv" style="hidden">  <!--  New Repo TAB --> 
+                    
+                <h3>Create Remote Github Repository :</h3>   
+   
+                    
+                    <!-- Create Repository -->   
+
+                
+                    <p>
+                        <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
+                        <label for="privateRepo">Private repository (public if not checked)</label>
+                    </p>
+                                
+                    <p>                        
+                        <label for="newRepoName">Name of New Repository</label>
+                        <textarea id="newRepoName" placeholder="Github name of new repository" 
+                            oninput="
+                            document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);
+                            build('newRepoName');
+                            "
+                        ></textarea>
+        
+                    </p>
+                    
+                    
+                    <p>                        
+                        <label for="repoDescription">Description (only when creating new repository)</label>
+                        <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build('newRepoName')"></textarea>               
+                    </p>
+                    
+                    
+                    <p>                           
+                        <button id="createGithubRepo" onclick="createRepo()">1) Create </button>                
+        
+                        
+                    </p>
+        
+                   
+                    
+                    <p>                        
+                        <div id="newRepoStatus"></div>             
+                    </p> 
+                              
+                               
+                    <p>
+        
+                   
+                    
+                        <button 
+                            id = "ok2" 
+                            onclick = "
+                            let textarea_id = state.repoNumber + 10000;
+                            opener.document.getElementById(textarea_id).value = build('newRepoName'); 
+                            
+                            let evt=[]; 
+                            evt.innerHTML = 'Set';
+                            evt.id = state.repoNumber + 20000;
+                            opener._callback('setButtonClicked',evt);
+                            
+                            window.close()"
+                        >
+                        2) Set as Remote
+                        </button>  
+                    
+                    </p>
+        
+                   
+                 
+            </div>       
+            
+            
+                                
+         
+                    <!-- URL preview -->  
+                    <p>
+                        <label for="outputUrl">Generated url</label>
+                        <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
+                    </p>
+               
+        </div>
+    </div>
+
+    
+    <script>
+        // Build git url
+        function build(repoField){
+            
+            // Read textareas
+            let username = document.getElementById('accountName').value;
+            let token = document.getElementById('token').value;
+            let repoName = document.getElementById(repoField).value;
+            
+            // Verify repo name
+            repoName = util.branchCharFilter( repoName) ;
+            document.getElementById(repoField).value = repoName;
+            
+            if (token != ''){
+                token = token + '@';
+            }
+            let url = 'https://' + token + 'github.com/' + username + '/' + repoName + '.git';
+            
+            document.getElementById('outputUrl').textContent = url;
+            
+            return url;
+        }
+        //build(repoField);
+    </script>
+    
+     <script>
+        // Create Repo
+        async function createRepo(){
+                  
+            let NEW_REPO = document.getElementById('newRepoName').value;
+            let TOKEN = document.getElementById('token').value;
+            let DESCRIPTION = document.getElementById('repoDescription').value;
+            let PRIVATE = document.getElementById('privateRepo').checked;
+            
+            //let JSON={
+                //'name' :  'aaa',
+                //'private' : 'true',
+                //'description' : 'Created with Pragma-git'
+                //}; 
+                
+            let headers = { 
+                'Authorization' : `token ${TOKEN}`
+            }
+            console.log(headers);
+            
+            let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
+
+            
+            try {
+                
+                const res = await fetch('https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: headers,
+                    body: body
+                })
+                
+                const json = await res.json();
+                const message = json.message;
+                const ok = res.ok;
+            
+                console.log(ok)
+                console.log(res.status)
+                console.log(json.message);
+                
+                if (ok){
+                    // Update repo textarea
+                    document.getElementById('repoName').value = document.getElementById('newRepoName').value;
+                    document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
+                    document.getElementById('newRepoStatus').classList.add('green');
+                    document.getElementById('newRepoStatus').classList.remove('red');
+                    
+                    
+                    document.getElementById('ok2').style="display: block;" ;
+
+                } else {
+                    document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
+                    document.getElementById('newRepoStatus').classList.add('red');
+                    document.getElementById('newRepoStatus').classList.remove('green');
+                    
+                    
+                    document.getElementById('ok2').style="display: none;" ;
+                    
+                }
+                
+            } catch (error) {
+                console.log(error.response.body);
+            }
+
+            build('newRepoName');
+        }
+    </script>   
+    
+    
+    
+    <script>
+        window.addEventListener(
+            'DOMContentLoaded', 
+            (event) => {
+                console.log('Create_github_repository.html :DOM fully loaded and parsed');
+                
+                // Import modules
+                const util = require('./util_module.js'); // Pragma-git common functions
+                const fetch = require('node-fetch');
+                
+                // Parse existing url
+                
+                let textarea = opener.document.getElementById(state.repoNumber + 10000).value;
+                let strings = textarea.split('/');
+                
+                // "https://JanAxelssonTest:13241121251413142@github.com/JanAxelssonTest/test3.git" 
+                // ->  ["https:", "", "JanAxelssonTest@github.com", "JanAxelssonTest", "test3.git"]
+                let account = strings[3];
+                
+                let repoSplit = strings[4].split('.'); // Split repo at '.'
+                let repo = repoSplit.slice(0, repoSplit.length - 1).join(".") ; // repo.git -> repo (split off last '.')
+                
+                let token = strings[2].split('@')[0]; // token@github.com -> token  (or 'github.com' if no '@')
+                
+                if ( token == 'github.com'){
+                    token = '';
+                }
+                
+                document.getElementById('accountName').value = account;
+                document.getElementById('token').value = token;
+                document.getElementById('repoName').value = repo;
+                
+                build('repoName'); // update html
+                
+            }
+        );
+        
+         <!--  Tab functionality-->   
+        const toolTabs = document.querySelector(".toolWrapper");
+        const toolTabButton = document.querySelectorAll(".tab-button-small");
+        const toolMyContents = document.querySelectorAll(".tool-content");
+        
+        // Set event listener
+        toolTabs.onclick = e => {
+        
+            const id = e.target.dataset.id;
+            if (id) {
+                toolTabButton.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+                
+                // Hide all
+                toolMyContents.forEach(cnt => {
+                    cnt.style.display='none';
+                    cnt.style.visibility='none';
+                });       
+                
+                // Make id visible    
+                document.getElementById(id).style.display='block';
+                document.getElementById(id).style.visibility='visible';
+                
+                // Update display of generated url in clicked tab
+                if (e.target.id == "Existing"){
+                    build('repoName');
+                }else{
+                    build('newRepoName');
+                }
+                
+            }
+        }
+        
+        // Set first tab as default
+        toolTabButton[0].click()
+                
+    </script>
+    
+        
+    
+    <script>
+        // Set window size to match content
+        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
+        let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
+        let dy = document.getElementById('body').scrollHeight * global.state.zoom;
+        
+        let hx = window.outerWidth - window.innerWidth;
+        let hy = window.outerHeight - window.innerHeight;
+        window.resizeTo(
+            dx + hx * global.state.zoom + 1 * padding + 50 , 
+            dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
+        );
+    </script>
+    
+ 
+</body>
+</html>

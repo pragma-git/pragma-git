@@ -186,7 +186,7 @@
             <table id="outer_table">
                 <tr>
                     <!-- History arrows  --> 
-                    <td>
+                    <td id='left-column'>
                         <table id="arrow_table">  
                         <tr height="auto">
                             <td> 
@@ -402,13 +402,14 @@
             <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
             <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
                 onclick="if (localState.pinnedCommit !== ''){
-                            document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                            document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
                             _callback('clicked-pinned-hash');
+                        }else{
+                            // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
+                            navigator.clipboard.writeText(localState.historyHash);
                         }"
                         
-                onmouseover="if (localState.pinnedCommit !== ''){ 
-                                .getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa'); 
-                            }" 
+                onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');" 
                             
                 onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
             </div>
@@ -464,7 +465,7 @@
 
     <!--  General alert dialog  --> 
 
-    <dialog id="alertDialog" style="background-color:#C00;border:1px dotted black;">  
+    <dialog id="alertDialog"  style="max-height: 90%" class="warning">  
         <p> 
             <div id='alertTitle'></div><br>  
             <div id='alertMessage'></div>  
@@ -479,7 +480,7 @@
 
     <!-- Tag creation -->   
   
-    <dialog id="tagNameInputDialog" style="background-color:yellow;border:1px dotted black;">  
+    <dialog id="tagNameInputDialog" style="max-height: 90%" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="tagNameTextarea" 
@@ -505,7 +506,7 @@
 
     <!-- Branch creation -->   
   
-    <dialog id="branchNameInputDialog" style="background-color:yellow;border:1px dotted black; max-height: 90%">  
+    <dialog id="branchNameInputDialog" style="max-height: 90%" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="branchNameTextarea" 
@@ -546,7 +547,7 @@
 
     <!-- Git not installed alert -->   
   
-    <dialog id="gitNotInstalledAlert" style="background-color:#C00;border:1px dotted black;">  
+    <dialog id="gitNotInstalledAlert"  style="max-height: 90%" class="error">  
         <b>ERROR -- Cannot find "git" !</b><br>
             Please make sure "git" is installed. <br>
             See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
@@ -563,7 +564,7 @@
 
     <!-- Detached head dialog -->   
   
-    <dialog id="detachedHeadDialog" style="background-color:#C00;border:1px dotted black;">  
+    <dialog id="detachedHeadDialog"  style="max-height: 90%" class="error">  
         <b>WARNING -- detached HEAD !</b><br>
             You've created work in an old revision. <br>
             1) Keep work : a temporary branch will be created<br>
@@ -587,7 +588,7 @@
 
     <!-- Dropped file is not a repo -->   
   
-    <dialog id="doYouWantToInitializeRepoDialog" style="background-color:yellow;border:1px dotted black;">  
+    <dialog id="doYouWantToInitializeRepoDialog"   style="max-height: 90%" class="warning">  
         <b>WARNING -- the dropped folder is not a repository.</b><br>
             Do you want to initialize this folder as a git repository ? <br>
             <br>
@@ -635,4 +636,6 @@
         
         });
     </script>
+
+                
 </html>

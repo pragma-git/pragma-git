@@ -53,6 +53,30 @@ TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
       -H "Accept: application/vnd.github.nebula-preview+json" \
       -d "$JSON"  \
       https://api.github.com/user/repos 
+      
+      
+    # Play with this one:     
+      
+    NEW_REPO='Test11111110'     
+    F1="\"name\" : \"$NEW_REPO\""
+    F2='"private" : true'
+    F3='"description" : "Created with Pragma-git"'
+    JSON="{$F1,$F2,$F3}"
+    
+    TOKEN='ec584fc8e3eabcd724d1014bcd843db052604420' 
+    USER='JanAxelsson'
+    
+    curl -i \
+      --header "Authorization: token $TOKEN" \
+      --data "$JSON"  \
+      https://api.github.com/user/repos     
+     
+     
+     
+    curl -i \
+      --header "Authorization: token 7010c51759b1249bb7f4a39d095d0c7780582669" \
+      --data '{"name" : "J4","private" : true,"description" : "Created with Pragma-git"}'  \
+      https://api.github.com/user/repos       
      
 #
 # CONNECT local to remote
@@ -85,14 +109,21 @@ TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
     curl -i \
       -X 'DELETE' \
       -H "Authorization: token $TOKEN" \
-      -H "Accept: application/vnd.github.nebula-preview+json" \
       "https://api.github.com/repos/$USER/$DELETE_REPO"
 
 
 
 #
-# INSTALL NW
+# GITHUB links
 #
-
+    # Create new account
+    https://github.com/join?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F&source=header-home
+    
+    # Sign in
+    https://github.com/login?return_to=%2Fjoin%3Fref_cta%3DSign%2Bup%26ref_loc%3Dheader%2Blogged%2Bout%26ref_page%3D%252F%26source%3Dheader-home
+    
+    # Create access token
+    https://github.com/settings/tokens
+    
 
 

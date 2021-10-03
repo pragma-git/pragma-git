@@ -1,0 +1,201 @@
+<style>        
+            
+        td, th{
+            border: thin;
+            border-style: solid;
+            padding: 12px;
+
+        }
+        table {
+            border-collapse: collapse;
+        }
+            
+        li {
+            margin-bottom: 8px;
+        }
+    
+    
+    
+    
+    img{
+        filter: invert( 0% );
+    }
+
+    img[src="../images/find_hover.png"] 
+    {
+        filter: invert( var(--image-invert) );
+    }
+</style>        
+     
+ 
+<h2>The Pragma-git ignore editor</h2>
+
+    <p>
+    Creating properly working git-ignore rules is sometimes hard. Therefore Pragma-git has an editor, with a preview window, so that you can see what happens.
+    </p>
+    
+    
+    <p>
+        
+        <ul>
+            <li><b>Git editor field </b>, is where you edit the rules (see table below) </li>
+            
+            <li><button>Preview</button>, updates the preview field </li>
+            
+            <li><button>Reset</button>, restore rules to what they were when editor was opened </li>
+            
+            <li><button > Retrack <img height="12" width="12"  src="../images/warning.png"></button>, 
+                force ignore rules also for files already in the repository <br>
+                (see warning text, and <a href='#alreadyTrackeFileHelp'>Already tracked files</a> below) </li>
+            
+            <li>
+                Warning box : 
+                <div style="border: thin;border-style: dashed;padding: 6px;">
+                    <img height="15" width="15" src="../images/warning.png"> Ignore rules do ...
+                </div>
+                warns about the consequences pressing Retrack button
+            </li>
+            
+            <li><b>Git preview field </b> showing modified files, and a list of ignored files</li>
+        </ul>
+
+    </p>
+    
+
+
+<!-------------------------------------------------------------------------------------------->     
+<hr>  
+  
+<h2 class="instructHeader">Ignore files in Git</h2>
+    
+    <p>
+    Git can be configured to ignore files in your repository-folder from being included into the repository.
+    It is good practice to ignore some files and directories.  Examples of such files are:
+        <ul>
+            <li><b>Dependencies </b>, libraries etc (for instance node_modules in node.js)</li>
+            <li><b>Generated files </b>, for instance compiled code and other output generated at build time (jar files, class files, exe files, /bin folder, ...)</li>
+            <li><b>Log files </b>, and other files generated at run time</li>
+            <li><b>System files </b>, for instance .DS_Store, </li>
+            <li><b>Login credentials </b>, for instance passwords, access keys, ... </li>
+        </ul>
+    
+     that are eithgenerated when running or compiling your software (log files, compiled files, etc).
+    </p>
+          
+ 
+<!--------------------------------------------------------------------------------------------> 
+<hr>      
+ 
+<h2>Ignore files</h2>
+
+    <p>
+    Git knows when a new file is created in the file system.  
+    These steps are followed to decide if this file should be listed as changed, and therefore a candidate to be added to the repository :
+        <ol>
+            <li><b>If the file is tracked </b> (has been added to the repository previously), then the file is added to git for inclusion in next commit</li>
+            <li><b>If the file is not tracked </b>  (is not already in the repository), then git decides depending on the rules in the file <code>.gitignore</code> </li>
+        </ol>
+    </p>
+    
+ 
+<!--------------------------------------------------------------------------------------------> 
+<hr>  
+ 
+<h2>Format of .ignore rules</h2>
+    
+    <p>
+    The complete documentation of the can be found here <a href="https://git-scm.com/docs/gitignore">https://git-scm.com/docs/gitignore</a> 
+    </p>
+    
+    
+    <p>
+    A summary of the format for rules in <code>.gitignore</code> are:
+    </p>
+    
+    
+    <table>
+        <th>example</th><th>what is ignored</th>
+        
+        <tr>
+            <td><code>.DS_Store</code></td>
+            <td>Ignore exact file name <code>.DS_Store</code></td>
+        </tr>
+        
+        <tr>
+            <td><code>node_modules/</code></td>
+            <td>Ignore directory <code>node_modules</code> and everything below (because the <code>/</code>)</td>
+        </tr>
+        
+        
+        <tr>
+            <td><code># This is a comment</code></td>
+            <td>A comment. Comments must be on a separate line, with the first character <code>#</code>)</td>
+        </tr>
+        
+        
+        <tr>
+            <td><code>*.txt</code></td>
+            <td>Ignore all files ending with <code>.txt</code><br>
+                <code>*</code> is a wildcard matching zero or more characters
+            </td>
+        </tr>
+        
+        
+        <tr>
+            <td><code>!README.txt</code></td>
+            <td><code>!</code> means <b>not</b><br>
+            So, <code>README.txt</code> will not be ignored</td>
+        </tr>
+    
+    </table>
+    
+    <br>
+    
+ 
+<!--------------------------------------------------------------------------------------------> 
+<hr>  
+ 
+<h2 id="alreadyTrackeFileHelp">Already tracked files </h2>
+    
+    <p>
+    The following statement (from above) explains why the git (and the preview) may not behave as expected :
+    <blockquote>
+    "<b>If the file is tracked </b> (has been added to the repository previously), then the file is added to git for inclusion in next commit"
+    </blockquote>
+    </p>
+    
+    
+    <p>
+    If you wish all your files to follow the rules, then you need to re-track the files.  This means, to remove the files from the repository,
+    and then add them according to the <code>.gitignore</code> rules. This is done by the button  <button > Retrack <img height="12" width="12"  src="../images/warning.png"></button>. 
+    </p>
+    
+    
+    <p>
+    There are a few consequenses to be aware of:
+         <ul>
+            <li><b>Some files were untracked</b>, and will now be listed as deleted before you store.  
+                This is correct behavior, and if that is intended, allow this.
+                It is indicated in the preview list, by the text <code>(untracked)</code>
+            </li>
+            <li><b>Ignored files</b> will be on your computer, but will not be pushed to the remote folder. Neither will they be pulled from the remote repository. 
+                Be aware, and proceed if you indeed want to remove the files from the repository
+            </li>
+            <li><b>May take some time</b>, if a folder with a large number of files is removed from the ignore editor. 
+            This is indicated by a spinning progress indicator. Be patient, because this operation will continue also if you close the window.
+            Normally, if you don't remove a folder with thousands of files in the .gitignore editor, the operation is fast.
+            </li>
+            <li><b>Reset</b>, resets the <code>.gitignore</code> file, which can be previewed.  It cannot undo a Retrack.
+            </li>
+        </ul>
+           
+    </p>
+    
+  <b>Retrack</b>, is considered safe, and is simply the two git commands: <br>
+                <code>git rm -rf --cached .</code><br>
+                <code>git add .</code>
+
+    
+    <br>
+    
+    <br>

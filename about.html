@@ -2,7 +2,6 @@
     <head>
       <title>About</title>
       
-        <link rel="stylesheet" type="text/css" href="HELP/help.css" />
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
     </head>
     
@@ -12,6 +11,7 @@
             font-size: 12pt;
             background-color: var(--body-background);
             color: var(--body-text);
+            margin: 20px;
         }
         
         h4{
@@ -107,11 +107,12 @@
     
 <body class='light'> 
     
-    <!-- Dark mode on/off --> 
+    <!-- Dark mode on/off , zoom--> 
     <script>
         if (global.localState.dark){
             document.body.classList.add('dark');
         }
+        window.document.body.style.zoom = global.state.zoom;
     </script>    
     
       
@@ -123,7 +124,14 @@
         <p style="text-align:right;">Pragma-git  <span id='version'></span>
          </p>                              
             
-        <h2>About Pragma-git</h2>
+        <h2>About Pragma-git
+                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('about-icon').src='images/find.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/find_hover.png' " 
+                src="images/find_hover.png" >
+        
+        </h2>
         
     
         <hr>
@@ -173,9 +181,9 @@
              <p>For git first-timers, the workflow would simply be: 
              <ul>
                 <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the "Store" button to store a snapshot of your files</li>
+                <li>When finished with some task: write a description in the text area, and press the <button>Store</button> button to store a snapshot of your files</li>
                 <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the "Store" button</li>
+                <li>When finished with some task: write a description in the text area, and press the  <button>Store</button> button</li>
                 <li>...</li>
              </ul>  
             </p>    
@@ -228,7 +236,7 @@
                 <dd> <img src="images/more_black.png"  height="17" width="17"> Shows a graphical view of the commit history   </dd>
                     <dd>&nbsp;</dd>
                     
-                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
+                <dd>  <button>Store</button> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
                     
                     
@@ -253,7 +261,7 @@
                     <dd>&nbsp;</dd>   
                     
                     
-                <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
+                <dd>  <button>Checkout</button> Check out an older revison (shown when browsing history)</dd>
                     <dd>&nbsp;</dd>
                 </dd>
               
@@ -327,19 +335,28 @@
                                        
                     <tr>
                         <td>Add, Commit</td>
-                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above</td>
+                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above. 
+                        The <button>Commit</button> button in Pragma-git does this.
+                        This mode, not auto-pushing, is configured in the settings menu of Pragma-git.
+                        </td>
                     </tr>
                     
                     <tr>
                         <td>Add, Commit, Push </td>
-                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. The "Store"-button in Pragma-git does this.</td>
+                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. 
+                        The  <button>Store</button> button in Pragma-git does this.
+                        See "Store" below
+                        </td>
                     </tr>
                     
                     <tr>
                         <td>Store</td>
-                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.
-                        "Stored", refers to commited in "git language".  "Non-stored", "non-commited" and similar phrasing means that there are changed files
-                        that should be stored (commited)</td>
+                        <td>The "Pragma-git" way to (with one click) store a snapshot of the files at this time-point in a repository, <i>and</i> 
+                        to send a copy to the remote repository.
+                        
+                        This mode, auto-pushing, is default in Pragma-git, and is configured in the settings menu of Pragma-git.
+                        
+                        </td>
                     </tr>
  
                      
@@ -377,7 +394,7 @@
                     <tr>
                         <td>Push</td>
                         <td>Send a copy of your snapshots to the remote repository.  
-                        In Pragma-git, the default is to do a "push" when pressing the "Store" button.  
+                        In Pragma-git, the default is to do a "push" when pressing the  <button>Store</button> button.  
                         This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
                         In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
                     </tr>    
@@ -456,8 +473,8 @@
             </p>
                     
             <p>
-                To store a revision of the changed files, you click in the text field, and type a descriptive text. The Store button  
-                <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active when you start typing.  Press this button to store your revision.
+                To store a revision of the changed files, you click in the text field, and type a descriptive text. The  <button>Store</button> button  
+                becomes active when you start typing.  Press this button to store your revision.
             </p> 
         <hr>  
             
@@ -535,10 +552,8 @@
             Also, a graphical representation can be viewed by clicking the icon  <img style='vertical-align:middle;' src="images/more_black.png"  height="17" width="17">
             </p>
             
-            <p>When you view an old commit, the "Store-button" 
-            <img style='vertical-align:middle;' src="images/store-button.png"  height="20"> 
-            is changed into a "Checkout" button
-            <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20">. 
+            <p>When you view an old commit, the <button>Store</button> button
+            is changed into a  <button>Checkout</button> button
              
             Pressing "Checkout" sets the files in the project to the same state as it was once, when Stored. This is useful if you wish to test your work as it was at this time point.
             If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
@@ -583,14 +598,21 @@
         <hr> 
                       
  <!-------------------------------------------------------------------------------------------->   
-    <div id='SEARCH_TEXT'></div>
- 
-    <script> <!-- script instead of iframe, otherwise find in html doesn't see this section--->
-        let text = require('fs').readFileSync('about_search.html');
-        document.getElementById("SEARCH_TEXT").innerHTML= text; // Set text in window
-    </script>  
 
-          
+        <iframe id="Iframe" src='about_search.html' style="border-width: 0px">
+        </iframe>
+    
+        <script>
+            var frame = document.getElementById("Iframe");
+              
+            // Adjusting the iframe onload 
+            frame.onload = function()
+            {
+              // set the height of the iframe as its content (with a few pixels margin to stop iframe scrolling to occur)
+                frame.style.height =  frame.contentWindow.document.body.scrollHeight + 6 + 'px';                  
+            }
+        </script>
+ 
           <hr>
  <!-------------------------------------------------------------------------------------------->             
 
@@ -697,6 +719,16 @@
     findInNw.initialize();
     extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
 </script> 
+
+    
+<!-- Event listeners--> 
+<script>
+
+    window.addEventListener('unload', (event) => {
+        opener.deleteWindowMenu('About');
+        }
+    );
+</script>
   
 </body>
 </html>

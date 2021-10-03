@@ -1,6 +1,10 @@
 #!/bin/bash
+#
+# export TOKEN=......
+#
+# then run this script
 USER='JanAxelssonTest'
-TOKEN=01e0b46efb5c37ceba6e72e7433a7e0863e016c7
+
 #
 # second          C - D - E - Emod
 #                /

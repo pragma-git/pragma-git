@@ -2,14 +2,22 @@
             img{
                 filter: invert( 0% );
             }
+
+            img[src="../images/find_hover.png"] 
+            {
+                filter: invert( var(--image-invert) );
+            }
         </style>        
+        
+        
+        <h2>Modified files</h2>    
         
         
         <!--  1) INSTRUCTIONS CHANGED FILES (disabled in listChanged.js, if history-list --> 
         <div id="instructionsHEAD">
             
             <p>
-            <b>Changed files history</b>:<br>
+            <h4>Changed files</h4>
             This window shows files that have changed since the last stored revision.
             </p>
                 
@@ -24,35 +32,46 @@
   
                   
                 
-            <p><b>Check-boxes </b>:<br>
-            Pragma-git assumes that you wish to store all files you are working with.  
-            This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
-            </p>
-            
-            <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
+            <h4>Check-boxes</h4>
+                <p>Pragma-git assumes that you wish to store all files you are working with.  
+                This saves one step that most other git clients put on the user -- to explicitly choose that you want to add files.
+                </p>
+                
+                <p>If you wish to skip files from next storage, deselect their check boxes, and press "Update Selection" button</p>
+                      
+                <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+                
+            <h4>File operations</h4>     
                   
-            <p>Following the next Store operation, the skip list is cleared, and again the assumption is that you wish to store all files</p>
+                <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
+                <p><a>(diff)</a> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
+                <p><a>(restore)</a> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                <p><a>(delete)</a> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                
             
-            <p><b>Other file operations </b>: </p>     
-              
-            <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
-            <p><b>(diff)</b> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
-            <p><b>(restore)</b> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
-            <p><b>(delete)</b> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                <p>Not all options are available for every type of change.  
+                For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
+                Therefore the "diff" linke will not be visible.
+                The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
+                
+            <h4>Restore all</h4> 
             
-            
-            <p>Not all options are available for every type of change.  
-            For instance, if a file is new there is no old file to compare with; and if a file is deleted there is no new file to compare with the old. 
-            Therefore the "diff" linke will not be visible.
-            The same logic goes with "restore", which can only be done if the file has been stored before; and with "delete" which can't be done on an already deleted file</p>
-    
+                <p><button> Restore all <img height="12" width="12"  src="../images/warning.png">  </button></p>
+                
+                <p>This button restores all  tracked files to its state at last commit (equivalent to pressing <a>(restore)</a> link for each file).
+                Note that added files can not be restored, because they have not existed before, and are thus left.
+                </p>
         </div>
     
-    
+ 
+        
+        <h2>Viewing history</h2>    
+           
         <!--  2) INSTRUCTIONS HISTORY FILES (disabled in listChanged.js, if file-list for HEAD -->        
         <div id="instructionsHistory">
             <p>
-            <b>Changed files history</b>:<br>
+            <h4>Changed files -- comparing history</h4>
+            
             This window shows files that have changed between this revision, and previous revision.
             </p>
             
@@ -65,8 +84,12 @@
               <dt></dt>
             </dl>
   
-              
-            <p><b>(diff)</b> opens the diff viewer, and shows how the file changed between this and previous revision.  
+  
+            <h4>File operations</h4> 
+            
+            When comparing historical commits, only the file comparison operation is available :
+                        
+            <p><a>(diff)</a> opens the diff viewer, and shows how the file changed between this and previous revision.  
             Uses the built-in diff viewer, or an external viewer defined in settings</p>
     
     

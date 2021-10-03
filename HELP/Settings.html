@@ -1,131 +1,38 @@
+<link rel="stylesheet" type="text/css" href="../settings.css" />
+<link rel="stylesheet" type="text/css" href="../color_styles.css" />
 
-
- <!-------------------------------------------------------------------------------------------->   
-        
-<h2 class="instructHeader">Section : "Repository Settings"</h2>
-<hr>    
- <!-------------------------------------------------------------------------------------------->  
-
-    <p>The repository settings have two parts : 
-        <dl>
-            <dd><b>A : Repository table </b> , where you may select one of the repositories you have defined </dd>
-            <dd><b>B : "Branches in selected repository" table</b> , which shows the branches that exist in the selected repository  </dd>
-        </dl>     
+ 
+<h2 class="instructHeader">Overview</h2>
+   
+    <p>The settings are displayed in the following four tabs :
+        <ul>
+            <li><b>Software  </b> , where software and git settings are handled</li>
+            <li><b>Repository </b> , where repositories are handled</li>
+            <li><b>Branch </b> , where branches of repository selected in "Repository tab" are handled</li>
+            <li><b>System info </b> , which display information relevant to support, and the system path as seen by Pragma-git </li>
+        </ul>     
     </p>
-    
-    <hr>                
-    <!-------------------------------------------------------------------------------------------->     
 
-    <h3>A - part I : The "Repository table"  &mdash;  top rows</h3> 
-    
-        <p>All rows, except the last row, shows the settings for the repositories you have defined so far. </p>
-        
-        <p><b>The first column</b> "Local folder" shows the path to your active repositories, on your local pc.  The radio-button, can be used to select one 
-        row, and the second table below shows the branches in that selected repository</p>
-        
-        
-        <p><b>The second column</b> "Remote repository" shows the address to a connected remote repository.  If this is not defined, then you work with a local repository (
-        which is fine as long as you have a backup plan)</p>
-        
-        <p><b>The third column</b> has the "Set" button, which is used to test that the remote repository can be connected to, and at the same time storing the address</p>
-
-        <p><b>The forth column</b> has the "Forget" button, which is used remove the selected row from the list 
-        (it can always be added again, just as you did the first time by dropping the folder on the main window)</p>
-
-    <hr>    
-
-    <!--------------------------------------------------------------------------------------------> 
-    <h3>A - part II : The "Repository table", cloning  &mdash;  last row</h3>  
-    
-        Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).
-        
-         <p><b>Setting up clone </b> is very similar to adding the remote repository, above.<br> 
-        The cloning is set up in the last row of the "Repository table", and you define a local folder and the repository address from which you wish to copy. 
-        
-        </p>
-        
-        <ol>
-        <li><b>The "Folder" button </b> is used to select the folder, into which the cloned repository is copied.  
-        <li><b>The  text field in the "Remote repository" column </b> is used to define the remote repository address (url)   
-        <li><b>The  "Test" button </b> is used to verify that you can connect to the defined remote repository  
-        <li><b>The  "Clone" button </b> makes a copy of the remote repository in the selected folder, and connects your local copy to the remote repository
-        </ol>    
-        
-    <hr>  
-
-    <!--------------------------------------------------------------------------------------------> 
-    <h3>Some words about remote repositories</h3>  
-    
-    It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
-    This section describes how to set up user-names and passwords for remote repositories.
-
-        
-     <h4>Creating an account </h4> 
-         
-         
-         <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
-            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
-         </p>
-         
-        <p> Get an account, go to the web interface, and create a new repository.  
-            You will get a link on the format 
-            <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
-            which you need to copy.    
-        </p>
-        
-        
-     <h4>Using your link (address / url) </h4> 
-         
-                                        
-         <p>Paste the link to your repository into the text-field under "Remote repository". 
-            Modify by adding <code>user:password</code>, and an <code>@</code>-sign added : <br>
-            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>.<br>
-            In the pasted link,  <br>
-            <code style = "margin-left: 15px">USER</code> , <code>PASSWORD</code> , <code>USERNAME</code> , <code>REPOSITORY_NAME</code> <br>
-            are exchanged with their proper values.  For instance :<br>
-            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
-         </p>  
-         
-                                
-         <p>The repository is set (and tested) by pressing the  <img style='vertical-align:middle;' src="../images/seturl-button.png"  height="24" > button.
-            If the text becomes green, the remote repository is correctly defined.  If the text is red, check carefully for typing errors, and press the 
-            "Set" button again.
-         </p>     
-                                 
-         <p>Adjust your remote repository text until the "Set" button creates a green text, then it should work.
-         </p>   
-                                 
-         <p>If git is using a credential manager, you can now remove the password (and ':' character) and test if it now works without storing the password in the link.
-         Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
-         </p>         
-         
-    <hr>           
-    <!--------------------------------------------------------------------------------------------> 
-
-    <h3>B : The "Branches in selected repository"</h3>  
-    
-        <p>The branches for a selected repository (in the repository table) are listed in all but the last row.  </p>
-        
-        <p>A branch may be deleted, obviously something you only do if you are done working on that branch.  This could mean 
-        either that 1) you have merged your work to another branch, or 2) that your work led to a dead-end and you wish to discard it.  
-        Press the "Delete" button, and confirm in the dialog poping up if you wish to delete this branch, or cancel. </p>
-        
-        <p>In the last row, you can add a new branch, by typing its name, and pressing the "Add branch" button.  
-        The branch name cannot contain all characters, so the text field stops you from typing forbidden characters </p>
-        
-    
-    <hr>               
+<hr>   
 <!--------------------------------------------------------------------------------------------> 
 
-<h2 class="instructHeader">Section "Software Settings"</h2> 
-<hr>                                 
+<h2 class="instructHeader" id="SoftwareTab">Software settings tab</h2>
+
+            <div class="wrapper">
+                <div class="buttonWrapper">
+                      <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                </div>
+            </div>   
 <!--------------------------------------------------------------------------------------------> 
-    <p>These are the software settings : 
+    <p>The software settings are grouped as follow : 
         <dl>
-            <dt><b>Visual</b></dt>
+            <dt><h4>Visual</h4></dt>
                 <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
                     <ul>
-                        <li>System setting : follow the light/dark theme set in the system</li>
+                        <li>System setting : follow the system-defined light/dark theme</li>
                         <li>Light mode :  light theme</li>
                         <li>Dark mode :  dark theme</li>
                     </ul>
@@ -134,10 +41,22 @@
                 <br>
                 <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
                 <br>
+                <dd><b>- Windows scaling </b> 
+                <br>
+                <dd>
+                    <!--  Zoom -->
+                    
+                    <b>- <input id="zoomMain" type="text" size="3" value="1.0"/> Scale-factor for main window</b> , 
+                    changes main-window scaling (useful for high definition screens)
+                    <br> 
+                    <b>- <input id="zoom" type="text" size="3" value="0.75"/> Scale-factor for other windows</b> , 
+                    for instance a setting of 0.75 means the size is 75% of default size
+                    </dt>
+                </dd>
                 <br>
                 
                 
-            <dt><b>Git Settings</b></dt> 
+            <dt><h4>Git Settings</h4></dt> 
                 <br>
                                          
                 <dd><b>- Author's name </b> : 
@@ -175,7 +94,8 @@
                 <br>
                 
                 
-            <dt><b>Git tools</b></dt>
+            <dt><h4>Git tools</h4></dt>
+                <dd>
                 <p> Pragma-git has a built-in diff and merge tool.  
                 If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
                  If you have your favorite Diff and Merge tool it may be used instead. 
@@ -185,6 +105,7 @@
                 Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
                 The settings for external tools are :
                  <br>
+                 </dd>
                 
                 <br>
                 <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
@@ -199,7 +120,250 @@
                 <br>
          </dl>     
     </p>
+       
+    
+    <hr>  
+ 
+<!--------------------------------------------------------------------------------------------> 
 
+            <h2 class="instructHeader" id="RepositoryTab">Repository tab</h2>
+            
+            <div class="wrapper">
+                <div class="buttonWrapper">
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button active" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                </div>
+            </div>   
+<!-------------------------------------------------------------------------------------------->  
+
+    <p>The repository settings have two parts : 
+        <ul>
+            <li><b>Repository table </b> , where you may select one of the repositories you have defined </li>
+            <li><b>Tools</b> , a set of tabs with tools acting on repositories  </li>
+        </ul>     
+    </p>
+                 
+    <!-------------------------------------------------------------------------------------------->     
+
+    <h3>The "Repository table"</h3> 
+    
+        <p>The rows shows the settings for the repositories you have defined so far. </p>
+        
+        <p><b>The first column</b> "Local folder" shows the path to your active repositories, on your local pc.  The radio-button, can be used to select one 
+        row, and the second table below shows the branches in that selected repository</p>
+        
+        
+        <p><b>The second column</b> "Remote repository" shows the address to a connected remote repository.  If this is not defined, then you work with a local repository (
+        which is fine as long as you have a backup plan)</p>
+        
+        <p><b>The third column</b> has the <button>Set</button> button, which is used to test that the remote repository can be connected to, and at the same time storing the address</p>
+
+        <p><b>The forth column</b> has the <button>Forget</button> button, which is used remove the selected row from the list 
+        (it can always be added again, just as you did the first time by dropping the folder on the main window)</p>
+   
+
+    <!--------------------------------------------------------------------------------------------> 
+    <h3>The "Tools tabs"</h3>  
+    
+        <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
+        
+       <div class="toolWrapper" > 
+            <div class="buttonWrapper">
+                  <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+            </div>
+        </div>  
+
+        <p>Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).</p>
+        
+         <p><b>Cloning a remote repository</b> :<br> 
+        
+        </p>
+        
+        <ol>  
+        <li><b>The first text field </b> is used to define the remote repository address (url)   
+        <li><button>Test URL</button> button  is used to verify that you can connect to the defined remote repository  
+        <li><button>Get Folder</button> button  is used to select the folder, into which the cloned repository is copied.
+        <li><b>The second text field </b> displays the selected folder path   
+        <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+        </ol>    
+               
+        
+        
+    
+       <div class="toolWrapper" > 
+            <div class="buttonWrapper">
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+            </div>
+        </div> 
+ 
+        <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
+        a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
+        
+         <p><b>Adding a local folder </b> :<br>  
+        
+        </p>
+        
+        <ol>
+        <li><button>Get Folder</button> button is used to select the folder, into which the cloned repository is copied.  
+        <li><b>The text field </b> displays the selected folder path     
+        <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
+        </ol>    
+               
+    
+    
+    
+    
+       <div class="toolWrapper" > 
+            <div class="buttonWrapper">
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+            </div>
+        </div> 
+        
+         <p><b>Adding a remote repository</b> :<br>  
+         
+        <!-- Same as in settings.html -->
+        <p>
+             For remote git services, enter remote URL manually for selected repository. <br>
+             Format : <code>https://name:password@address</code> 
+             (for token-based services, exchange name for token-name, and password for token) 
+        </p> 
+         <p>                            
+             The password, and token, may be left out, and instead stored with the git credential manager.<br>
+             Format : <code>https://name@address</code>  .
+             If you have problems, fall back to method above.
+         </p>                        
+
+        <!-- Same as in settings.html -->
+        
+        <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
+        allowing for creation of access tokens, or to create a new repository.
+        </p>
+    
+        <p><button>Github</button> button launches a Github dialog.  It has a separate help function
+        </p>
+        
+
+    <hr>  
+
+    <!--------------------------------------------------------------------------------------------> 
+    <h2>Some words about remote repositories</h2>  
+    
+    It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
+    This section describes how to set up user-names and passwords for remote repositories.
+
+        
+     <h4>(I) Creating an account </h4> 
+         
+         
+         <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
+            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+         </p>
+         
+        <p> Get an account, go to the web interface, and create a new repository.  
+            You will get a link on the format 
+            <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
+            which you need to copy.    
+        </p>
+        
+        
+     <h4>(II) Authentication </h4> 
+     
+        <p>
+            Login to a repository may require some kind of authentication. Some alternatives are : 
+            <ol>
+                <li>Access token (Github has moved towards this -- see  
+                <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
+                <li>Old fashioned user-name and password
+            </ol>
+        
+        </p>
+         
+         
+ 
+     <h4>(III) Using your link (address / url) </h4> 
+                                            
+         <p>Paste the link to your repository into the text-field under "Remote repository". 
+         </p>  
+         
+         
+         <p>
+            <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
+            <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+            For instance :<br>
+            <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
+         </p>  
+         
+         <p>
+            <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
+            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
+            For instance :<br>
+            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
+         </p>  
+
+                    
+         <p>The repository is set (and tested) by pressing the  <button>Set</button> button.
+            If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
+         </p>   
+                                 
+         <p>If git is using a credential manager, you can now remove the <code>:password</code> (note the <code>:</code>code>) and test if it now works without storing the password in the link.
+         Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
+         </p>         
+         
+    <hr>           
+             
+<!--------------------------------------------------------------------------------------------> 
+
+            <h2 class="instructHeader" id="BranchTab">Branch tab</h2>
+            
+            <div class="wrapper">
+                <div class="buttonWrapper">
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button active" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                </div>
+            </div>    
+<!-------------------------------------------------------------------------------------------->  
+
+    
+        <p>The branches for a selected repository (in the repository table) are listed in all but the last row.  </p>
+        
+        <p>Hide checkbox, allows a branch to be hidden from branch selection in the main window. 
+        The point of that is to reduce clutter, if you have a lot of branches but don't want to delete them. 
+        </p>
+        
+        <p>A branch may be deleted, obviously something you only do if you are done working on that branch.  This could mean 
+        either that 1) you have merged your work to another branch, or 2) that your work led to a dead-end and you wish to discard it.  
+        Press the <button>Delete</button> button, and confirm in the dialog poping up if you wish to delete this branch, or cancel. </p>
+        
+        <p>In the last row, you can add a new branch, by typing its name, and pressing the <button>Add branch</button>  button.  
+        The branch name cannot contain all characters, so the text field stops you from typing forbidden characters </p>
+        
+    
+    <hr>               
+             
+<!--------------------------------------------------------------------------------------------> 
+
+            <h2 id="SystemInfoTab" class="instructHeader">System Info tab</h2>
+            
+            <div class="wrapper">
+                <div class="buttonWrapper">
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                </div>
+            </div>   
+<!-------------------------------------------------------------------------------------------->  
+    <p>This shows information that can be used for problem solving </pp>
     <br>
 
     <br>

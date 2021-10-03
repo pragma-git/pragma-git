@@ -68,6 +68,10 @@ var options = optionsTemplate;
 var dv = {}; // initUI sets this CodeMirror.MergeView instance 
 dv.panes = panes; // Initial value
 
+        
+// Define help icon
+const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
+
 //-----------
 // FUNCTIONS
 //-----------
@@ -94,6 +98,7 @@ function injectIntoJs(document) {
     }   
 
     initUI();
+
 };
 
 function loadFile(filePath)  { 
@@ -121,24 +126,18 @@ function mergeViewHeight(mergeView) {
     if (!editor) return 0;
     return editor.getScrollInfo().height;
   }
-  return Math.max(editorHeight(mergeView.leftOriginal()),
+  return global.state.zoom * Math.max(editorHeight(mergeView.leftOriginal()),
                   editorHeight(mergeView.editor()),
                   editorHeight(mergeView.rightOriginal()));
 }
-function resize(mergeView) {
-  var height = mergeViewHeight(mergeView);
-  for(;;) {
-    if (mergeView.leftOriginal())
-      mergeView.leftOriginal().setSize(null, height);
-    mergeView.editor().setSize(null, height);
-    if (mergeView.rightOriginal())
-      mergeView.rightOriginal().setSize(null, height);
+function resize() {
+    
+    let elements = document.getElementsByClassName('CodeMirror');
+    for (i = 0;  i< elements.length; i++){
+        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
+    }
+    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
 
-    var newHeight = mergeViewHeight(mergeView);
-    if (newHeight >= height) break;
-    else height = newHeight;
-  }
-  mergeView.wrap.style.height = height + "px";
 }
 
 // Redraw 
@@ -199,13 +198,13 @@ function initUI() {
         // html
         document.getElementById('left3').innerHTML = 'this ';
         document.getElementById('editor3').innerHTML = 'merge here ';
-        document.getElementById('right3').innerHTML = 'other';
+        document.getElementById('right3').innerHTML = 'other' + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'collapse';
         document.getElementById('Headers3').style.visibility = 'visible';
         
-        disable('two-way');
-        enable('three-way');
+        disable2('two-way');
+        enable2('three-way');
       }  
       
       if ( panes == 2){
@@ -264,17 +263,17 @@ function initUI() {
             break;
           }
         } 
-        
+   
         // Apply mode-dependency html
         document.getElementById('editor2').innerHTML = editorLabel;
-        document.getElementById('right2').innerHTML = rightViewerLabel;
+        document.getElementById('right2').innerHTML = rightViewerLabel + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'visible';
         document.getElementById('Headers3').style.visibility = 'collapse';
           
            
-        enable('two-way');
-        disable('three-way');
+        enable2('two-way');
+        disable2('three-way');
       }
 
 
@@ -304,16 +303,54 @@ function initUI() {
     }else{
         disable('hide-unchanged'); 
     }
+    
+    //
+    // Set size
+    //
+        
+    resize();
+    
+    if ( panes == 2){
+        addSearch('editor2', 'CodeMirror-merge-editor');
+        addSearch('right2', 'CodeMirror-merge-right');
+    }
+    if ( panes == 3){
+        addSearch('left3', 'CodeMirror-merge-left ');
+        addSearch('editor3', 'CodeMirror-merge-editor');
+        addSearch('right3', 'CodeMirror-merge-right');
+    }
 
+}
 
+function addSearch(headerId, editorId){
+    
+    let leftPos = document.getElementsByClassName(editorId)[0].getBoundingClientRect().x + 40;
+    let searchIconElementId = headerId + '_search';
+    
+    let headerElement = document.getElementById(headerId);
+        
+    headerElement.innerHTML = headerElement.innerHTML + 
+    `  <!-- Search button --> 
+                <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
+                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBoxPragmaMerge()" 
+                    onmouseover="document.getElementById('${searchIconElementId}').src='../images/find.png' " 
+                    onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
+                    src="../images/find_black.png" >`;
 }
 
 // Show button states
 function enable(id){
+    document.getElementById(id).checked = true;
+}
+function disable(id){
+    document.getElementById(id).checked = false;
+}
+
+function enable2(id){
     document.getElementById(id).classList.remove('disabled');
     document.getElementById(id).classList.add('enabled');
 }
-function disable(id){
+function disable2(id){
     document.getElementById(id).classList.remove('enabled');
     document.getElementById(id).classList.add('disabled');
 }
@@ -418,9 +455,12 @@ function closeWindowNicely(exitCode){
     }
     
     // Store gui mode settings
-    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').classList.contains('enabled');
-    global.state.pragmaMerge.align = document.getElementById('align').classList.contains('enabled');
-            
+    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
+    global.state.pragmaMerge.align = document.getElementById('align').checked;
+    
+    
+    // Remove from menu
+    opener.deleteWindowMenu('Pragma-merge');
 
     win.close();
 }
