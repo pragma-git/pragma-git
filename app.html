@@ -475,7 +475,46 @@
             OK
         </button>  
     </dialog>  
+ 
+ 
+ 
+    <!--Download new version -->   
+  
+    <dialog id="newVersionDetectedInputDialog" style="max-height: 90%" class="warning">  
+        <b>A new release is available</b> 
+        
+        
+        <p>
+            Your current version is <code id='currentVersion'> </code>. Download and run installer for the new <code id='newVersion'> </code> version!  
+        </p>
+
+  
+        <button  id="downloadButton"
+            onclick="_callback('downloadRelease', 'Download' );">
+            Download
+        </button>   
                 
+        <button id="waitButton"
+            onclick="_callback('downloadRelease', 'Wait' );">
+            Ignore now
+        </button> 
+         
+        <label for="ignoreThisVersion" style="float: right;">
+            <input type="checkbox" id="ignoreThisVersion"  style="vertical-align: middle;"
+            onchange = "
+                if ( this.checked){
+                    document.getElementById('waitButton').innerText = 'Skip this version';
+                }else{
+                    document.getElementById('waitButton').innerText = 'Ignore now';
+                }
+            "
+            /> 
+            
+            Skip version <code id='newVersion2'> </code> 
+        </label>
+
+    </dialog>             
+               
 
 
     <!-- Tag creation -->   

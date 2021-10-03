@@ -143,6 +143,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const os = require('os');
         const fs = require('fs');
         const path = require('path');
+        const downloadsFolder = require('downloads-folder');
         
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
@@ -177,6 +178,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
         
+        let downloadsDir = downloadsFolder();
+        
         // Pragma-merge : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
         
@@ -187,6 +190,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const ASKPASSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running'; 
         const EXITASKPASSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
+        
         
     
     // State variables
@@ -222,6 +226,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
+        console.error(global.state.ignoredVersion);
         global.localState = localState; 
 
     // Collect settings
@@ -668,8 +673,7 @@ async function _callback( name, event){
         } 
         break;
 
-      }
-    
+      }    
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
         
@@ -735,7 +739,62 @@ async function _callback( name, event){
           
         break;  
       }
-
+      case 'downloadRelease' : {
+          
+        // Download
+        if (event == 'Download'){
+            
+            
+            
+            // Prepare for direct download
+                let url;
+                let fileName;
+                switch (process.platform ){
+                    case 'darwin' :
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${global.LATEST_RELEASE}/Pragma-git-${global.LATEST_RELEASE}-mac-x64.dmg`;
+                        fileName = `Pragma-git-${global.LATEST_RELEASE}-mac-x64.dmg`;
+                        downloadUsingAnchorElement(url, fileName);
+                    
+                    break;
+                    case 'win32' :
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${global.LATEST_RELEASE}/Pragma-git-${global.LATEST_RELEASE}-win-x64.exe`;
+                        fileName = `Pragma-git-${global.LATEST_RELEASE}-win-x64.exe`;
+                        downloadUsingAnchorElement(url, fileName);
+                        
+                    break;
+                    case 'linux' :
+                        // Open home page instead of direct download (allows to choose DEB or RPM)
+                        require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/releases/latest' );
+                    
+                    break;
+                    
+                    // Internal function ( https://itnext.io/how-to-download-files-with-javascript-d5a69b749896 )
+                    function downloadUsingAnchorElement(url, fileName) {
+                        const anchor = document.createElement("a");
+                        anchor.href = url;
+                        anchor.download = fileName;
+                        
+                        document.body.appendChild(anchor);
+                        anchor.click();
+                        document.body.removeChild(anchor);
+                    }
+            
+                }
+                
+ 
+            break;
+        } // End Download pressed
+        
+        // Skip this Release
+        if (event == 'Wait' ){
+            if ( document.getElementById('ignoreThisVersion').checked ){
+                global.state.ignoredVersion = global.LATEST_RELEASE;
+            }
+        }
+        
+        document.getElementById('newVersionDetectedInputDialog').close();
+        break;  
+      }
       // Bottom title-bar
       case 'clicked-folder': {
         folderClicked();
@@ -3878,7 +3937,7 @@ async function getLatestRelease( url ){
         outData = data[0];
     });
     return outData; // outData.tag_name is latest release
-}   
+} 
          
 
 // Update other windows
@@ -3951,7 +4010,18 @@ function displayAlert(title, message){
     // Show message
     document.getElementById('alertDialog').showModal();
 }
-
+function downloadNewVersionDialog(){
+    
+    
+    document.getElementById('currentVersion').innerText = localState.currentVersion;
+    document.getElementById('newVersion').innerText = global.LATEST_RELEASE;
+    document.getElementById('newVersion2').innerText = global.LATEST_RELEASE;
+    
+    // Show only if you have not previously selected to skip this version
+    if ( global.LATEST_RELEASE !== state.ignoredVersion ){
+        document.getElementById('newVersionDetectedInputDialog').showModal();
+    }
+}
 
 // MacOS Menu
 function initializeWindowMenu(){
@@ -4474,7 +4544,7 @@ function loadSettings(settingsFile){
     // Use internal function "setting" to :
     // 3) If some struct keys are missing in state_in, create them
     // 4) Build a new state struct -- setting default value for each undefined parameter (otherwise, keep parameter value from state_in)
-    
+console.error('loadSettings ENTERED')
 
     try{
         // 1) Read json
@@ -4521,6 +4591,11 @@ function loadSettings(settingsFile){
             console.log('- setting repos');
             state.repoNumber = setting( state_in.repoNumber, -1);
             state.repos = setting( state_in.repos, [] );
+            
+            
+        // Update
+            state.ignoredVersion = setting( state_in.ignoredVersion, '0.0.0');
+            
         
         // Visual
             console.log('- setting visual settings');
@@ -4767,14 +4842,28 @@ window.onload = async function() {
   
   initializeWindowMenu();
   
+  
   // Write signal file that pragma-git is running
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
 
   win.show();
   
-  // Set global
-    let releaseData = await getLatestRelease( RELEASE_URL );
-    global.LATEST_RELEASE = await releaseData.tag_name;
+  // New Release available
+    let releaseData = 'could not determine';
+    try{
+        let releaseData = await getLatestRelease( RELEASE_URL );
+        global.LATEST_RELEASE = await releaseData.tag_name;
+        
+        localState.currentVersion = await require('./package.json').version;
+        if ( global.LATEST_RELEASE > localState.currentVersion){
+           downloadNewVersionDialog(); // Ask about downloading if new version released
+        }
+    }catch(err){
+        console.error('Could not check Github for latest release');
+    } 
+       
+   
+  // Map of stashes    
     await gitStashMap( state.repos[state.repoNumber].localFolder );
 
 };
