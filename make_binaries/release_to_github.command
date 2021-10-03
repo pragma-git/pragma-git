@@ -2,17 +2,26 @@
 
 # FIRST : Run make_binaries on checked out tag
 
-# SECOND : Modify  1) - 3) :
+# SECOND : Modify  2) - 3) :
 
 # 1) Tag to use for this Release
-TAG=0.8.1
+TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 
 # 2) Release Title
-RELEASE_TITLE='Dark mode and search release'
+RELEASE_TITLE='Major rewrite, including new Graph'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-Dark mode introduced
+Second release on pragma-git account on github
+
+Major rewrite and minor bug fixes.  Rewrite includes:
+- new Graph
+- new Settings layout
+  - gitignore editor
+  - github helper
+- Notes migrated to toastUI 3.0
+- Search in all windows
+- Help in all windows
 
 ___
 The aim with Pragma-git is to be
