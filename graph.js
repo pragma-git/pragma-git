@@ -822,15 +822,15 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             // Figure out stashes on this commit (most often zero or one, but can be multiple)
             let stashArray = [];
-            if ( global.stashMap.has(commit.hash) ){
-                stashArray = global.stashMap.get(commit.hash);
+            if ( localState.stashMap.has(commit.hash) ){
+                stashArray = localState.stashMap.get(commit.hash);
              }
                 
             
             if (DEBUG) {
                 let stashes = ' [ 0 stashes ] ';
-                if ( global.stashMap.has(commit.hash) ){
-                    let length = global.stashMap.get(commit.hash).length;
+                if ( localState.stashMap.has(commit.hash) ){
+                    let length = localState.stashMap.get(commit.hash).length;
                     stashes = ' [' + length + ' stashes] ';
                 }
                     

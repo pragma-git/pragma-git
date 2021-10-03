@@ -688,7 +688,7 @@ async function injectIntoSettingsJs(document) {
     // Write system information to divs
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
-    document.getElementById('latestVersion').innerText = global.LATEST_RELEASE;
+    document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
     

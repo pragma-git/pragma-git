@@ -226,7 +226,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
     // Expose these to all windows 
         global.state = loadSettings(settingsFile); // json settings
-        console.error(global.state.ignoredVersion);
         global.localState = localState; 
 
     // Collect settings
@@ -751,14 +750,14 @@ async function _callback( name, event){
                 let fileName;
                 switch (process.platform ){
                     case 'darwin' :
-                        url = `https://github.com/pragma-git/pragma-git/releases/download/${global.LATEST_RELEASE}/Pragma-git-${global.LATEST_RELEASE}-mac-x64.dmg`;
-                        fileName = `Pragma-git-${global.LATEST_RELEASE}-mac-x64.dmg`;
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
+                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
                         downloadUsingAnchorElement(url, fileName);
                     
                     break;
                     case 'win32' :
-                        url = `https://github.com/pragma-git/pragma-git/releases/download/${global.LATEST_RELEASE}/Pragma-git-${global.LATEST_RELEASE}-win-x64.exe`;
-                        fileName = `Pragma-git-${global.LATEST_RELEASE}-win-x64.exe`;
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
+                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
                         downloadUsingAnchorElement(url, fileName);
                         
                     break;
@@ -788,7 +787,7 @@ async function _callback( name, event){
         // Skip this Release
         if (event == 'Wait' ){
             if ( document.getElementById('ignoreThisVersion').checked ){
-                global.state.ignoredVersion = global.LATEST_RELEASE;
+                global.state.ignoredVersion = localState.LATEST_RELEASE;
             }
         }
         
@@ -2292,8 +2291,6 @@ async function _setMode( inputModeName){
         await simpleGit(state.repos[state.repoNumber].localFolder).log( ['-1'],onCurrentMessage);
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
-            console.log(result);
-            console.log(err); 
             HEAD_title = result.latest.message;
             } 
             
@@ -2331,10 +2328,10 @@ async function _setMode( inputModeName){
                 }
 
                 // Log sources to determine mode
-                console.log(status_data);  
-                console.log(messageLength);
-                console.log(numberOfRepos);
-                console.log(historyNumberPointer);
+                //console.log(status_data);  
+                //console.log(messageLength);
+                //console.log(numberOfRepos);
+                //console.log(historyNumberPointer);
                 
                 // Clean values that destroy working-out mode
                 if (currentMode == 'HISTORY'){
@@ -2642,7 +2639,9 @@ async function gitDefineBuiltInMergeTool(){
         console.log('Failed setting internal merge tool');
         console.log(err);
     }  
-    function onConfig(err, result) {console.log(result); console.log(err); };
+    function onConfig(err, result) { 
+        //console.log(result); console.log(err); 
+    };
 
     
 }
@@ -2869,7 +2868,7 @@ async function gitSetLocalBranchNumber(){
     let branchSummary;
     try{
         await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
-        function onLog(err, result){console.log(result);console.log(err);branchSummary=result;}  
+        function onLog(err, result){branchSummary=result;}  
         // branchSummary.current :  the checked-out branch name 
         // branchSummary.all     :  an array of all branch names
         localState.branchNumber = branchSummary.all.findIndex( (s) => { return (s === branchSummary.current) } ); // Search using javascript String.findIndex function (compare with current branchName) 
@@ -3238,14 +3237,13 @@ async function gitStashMap( folder ){
         console.log('ERROR in gitStashMap');
         console.log('      Repo = '  + folder);
         console.log(err);
-        global.stashMap = stashMap;
+        localState.stashMap = stashMap;
         return
     }
   
 
     let splitted = rawOutput.split( UNIQUE_EOL + '\n');
-    
-    console.log(splitted);
+
     
     for(var row = 0; row < splitted.length; row++) {
         
@@ -3300,7 +3298,7 @@ async function gitStashMap( folder ){
 
     }
     // Store globaly, so that graph window can use
-    global.stashMap = stashMap;
+    localState.stashMap = stashMap;
 
 }     
 
@@ -3389,42 +3387,10 @@ function gitFetch(){ // Fetch and ls-remote
 
         // Fetch
         simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
-        function onFetch(err, result) {console.log(result) };
-        
-        // TODO : remove if I found no problems with this comment-out
-        //// List remote branches
-        //simpleGit(state.repos[state.repoNumber].localFolder).listRemote( ['--heads'], onListRemote);    
-        
-        //async function onListRemote(err, result ){ 
-              
-            //let b = await gitBranchList();
-            //console.log(b);
-            //console.log(result); 
-            //console.log(err); 
-          
-            //// Parse remote branch names
-            //let splitted = result.split("\n");
-            //console.log(splitted)
+        function onFetch(err, result) {
+            //console.log(result) 
+        };
 
-            //let remoteShortBranchNames = []; // Branch names existing on remote ( format: master)
-            
-            //for(var row = 0; row < (splitted.length - 1); row++) {
-                //let index = splitted[row].lastIndexOf('/'); // Format such as 'refs/heads/master'
-                //let remoteBranchName = splitted[row].substring(index + 1); // Extract last part ('master' in example)
-                //remoteShortBranchNames[row] = remoteBranchName; 
-                
-                //// New version
-                //let parts = splitted[row].split('/');
-                //remoteBranchName = '';
-                //for ( i = 2; i < parts.length - 1; i++ ){
-                    //remoteBranchName += parts[i] + '/';
-                //}
-                //remoteBranchName += parts[parts.length - 1];
-                //remoteShortBranchNames[row] = remoteBranchName; 
-
-            //}
-        
-        //}
 
     }catch(err){
         console.log('Error in gitFetch()');
@@ -3442,7 +3408,9 @@ function gitFetch(){ // Fetch and ls-remote
 
         // Fetch
         simpleGit( state.repos[state.repoNumber].localFolder ).fetch( 'origin', 'refs/notes/*:refs/notes/*', onFetch);
-        function onFetch(err, result) {console.log(result) };        
+        function onFetch(err, result) {
+            //console.log(result) 
+        };        
         
         
     }catch(err){
@@ -3471,7 +3439,9 @@ async function gitPull(){
 
         try{
             await simpleGit( state.repos[state.repoNumber].localFolder ).pull( onPull);
-            function onPull(err, result) {console.log(result) };
+            function onPull(err, result) {
+                //console.log(result) 
+            };
             
             //await writeTimedMessage( 'Pulled files from remote' + os.EOL + error, true, WAIT_TIME);
             
@@ -4014,11 +3984,11 @@ function downloadNewVersionDialog(){
     
     
     document.getElementById('currentVersion').innerText = localState.currentVersion;
-    document.getElementById('newVersion').innerText = global.LATEST_RELEASE;
-    document.getElementById('newVersion2').innerText = global.LATEST_RELEASE;
+    document.getElementById('newVersion').innerText = localState.LATEST_RELEASE;
+    document.getElementById('newVersion2').innerText = localState.LATEST_RELEASE;
     
     // Show only if you have not previously selected to skip this version
-    if ( global.LATEST_RELEASE !== state.ignoredVersion ){
+    if ( localState.LATEST_RELEASE !== state.ignoredVersion ){
         document.getElementById('newVersionDetectedInputDialog').showModal();
     }
 }
@@ -4312,11 +4282,6 @@ function updateContentStyle() {
     contentStyle += "height: " + content_height  + "px; ";
     document.getElementById('content').setAttribute("style", contentStyle);;
 
-    console.log('-----------');
-    console.log(top);
-    console.log(content_height);
-    console.log('-----------');
-
 }
 
 
@@ -4544,7 +4509,6 @@ function loadSettings(settingsFile){
     // Use internal function "setting" to :
     // 3) If some struct keys are missing in state_in, create them
     // 4) Build a new state struct -- setting default value for each undefined parameter (otherwise, keep parameter value from state_in)
-console.error('loadSettings ENTERED')
 
     try{
         // 1) Read json
@@ -4568,10 +4532,10 @@ console.error('loadSettings ENTERED')
         // Internal function (returns defaultValue if input undefined)
         function setting( input, defaultValue){
             if (input == undefined){
-                console.log(defaultValue);
+                console.warn('Undefined, set defaultValue = ');
+                console.warn(defaultValue);
                 return defaultValue
             }
-            console.log(input);
             return input;
         }
         
@@ -4718,7 +4682,9 @@ console.error('loadSettings ENTERED')
     cacheBranchList();
     
     console.log('END LOAD SETTINGS');
+    console.log('localState:');
     console.log(localState);
+    console.log('state:');
     console.log(state);
     
     return state;
@@ -4817,7 +4783,7 @@ window.onload = async function() {
   main_win = win;
 
   
-  console.log('PATH 1 = ' + process.env.PATH);
+  console.log('PATH= ' + process.env.PATH);
   defaultPath = process.env.PATH;
 
 
@@ -4852,10 +4818,10 @@ window.onload = async function() {
     let releaseData = 'could not determine';
     try{
         let releaseData = await getLatestRelease( RELEASE_URL );
-        global.LATEST_RELEASE = await releaseData.tag_name;
+        localState.LATEST_RELEASE = await releaseData.tag_name;
         
         localState.currentVersion = await require('./package.json').version;
-        if ( global.LATEST_RELEASE > localState.currentVersion){
+        if ( localState.LATEST_RELEASE > localState.currentVersion){
            downloadNewVersionDialog(); // Ask about downloading if new version released
         }
     }catch(err){
