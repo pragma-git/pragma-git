@@ -67,7 +67,7 @@
         .outer-content {
             width: 100%;
             height: auto;
-            padding-right: 10px;
+            margin-right: 10px;
             border:none;
         }
      
@@ -81,8 +81,8 @@
         }
         
         #view{
-            padding-right: 8px;
-            padding-left: 2px;
+            padding-right: 18px;
+            padding-left: 12px;
         }
 
         span.clicky {
@@ -193,11 +193,7 @@
         <div>
             <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
             <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
-    
-    <!--
-            <span id='align'      class=clicky onclick="connect = connect ? null : 'align'; initUI()">align</span> 
-            <span id='hide-unchanged' class=clicky onclick="collapse = !collapse; initUI()">hide unchanged</span> 
-    -->
+
     
             <span class=checkbox>
             <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
