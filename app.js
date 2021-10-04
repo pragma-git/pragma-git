@@ -559,241 +559,6 @@ async function _callback( name, event){
         break;
       }
 
-      // Dialogs
-      case 'newBranchNameKeyUp': {
-        let string = document.getElementById("branchNameTextarea").value ;
-        document.getElementById("branchNameTextarea").value = util.branchCharFilter( string) ;
-
-        break;
-      }
-      case 'newTagNameKeyUp': {
-        let string = document.getElementById("tagNameTextarea").value ;
-        document.getElementById("tagNameTextarea").value = util.branchCharFilter( string) ;
-
-        break;
-      }
-      case 'addBranchButtonPressed': {
-
-        console.log('addBranchButtonPressed');
-        console.log(event);
-
-        let newBranchName = document.getElementById('branchNameTextarea').value;
-        let gitflowPrefix = document.getElementById('gitflow').value + '/' ;
-        
-        if ( gitflowPrefix === 'none/'){
-            gitflowPrefix = '';
-        }
-        
-        if ( gitflowPrefix.length > 1){
-            newBranchName = gitflowPrefix + newBranchName;
-        }
-        
-
-        
-        // Create and checkout new branch
-        try{
-            let folder = state.repos[ state.repoNumber].localFolder;
-            let commit = 'HEAD';  // First guess
-            
-            // If history, change commmit
-            if (localState.historyNumber > -1){
-                commit = localState.historyHash;
-            }
-            
-            // Create new branch
-            let commands = [ 'checkout', '-b', newBranchName, commit];
-            await simpleGit( folder).raw(  commands, onCreateBranch);
-            function onCreateBranch(err, result ){console.log(result);};
-            
-            setStatusBar( 'Creating branch "' + newBranchName);
-            await waitTime( 1000);  
-                      
-            setStatusBar( 'Moved into "' + newBranchName);
-            waitTime( WAIT_TIME);  
-
-            
-        }catch(err){       
-            displayAlert('Failed creating branch', err); 
-            console.log('Failed creating branch ');
-            console.log(err);
-        } 
-        
-        
-        cacheBranchList();
-
-        _setMode('UNKNOWN');
-        
-
-        break;
-      }
-      case 'clicked-tag-button': {
-        // Make dropdown menu with options 1) Create tag, 2) Checkout tag
-        tagClicked();
-        break;
-      }
-      case 'addTagButtonPressed' : {
-        let newTagName = document.getElementById('tagNameTextarea').value;
-      
-        // Create new Tag
-        try{
-            let folder = state.repos[ state.repoNumber].localFolder;            
-            let commit = 'HEAD';  // First guess
-            
-            // If history, change commmit
-            if (localState.historyNumber > -1){
-                commit = localState.historyHash;
-            }
-  
-            // Create new Tag
-            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
-            function onCreateTag(err, result ){console.log(result);console.log(err);};
-            setStatusBar( 'Creating Tag "' + newTagName);
-            waitTime( WAIT_TIME);  
-        
-            await updateGraphWindow();
-        
-           // Push tag to remote
-            try{
-                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
-                function onPush(err, result) {console.log(result) };
-            }catch (err){
-                console.log('Failed pushing tag -- probably no remote repository' );
-            }
-            
-            setStatusBar( 'Creating Tag "' + newTagName);
-            waitTime( WAIT_TIME);  
-            
-
-            
-        }catch(err){       
-            displayAlert('Failed creating tag', err); 
-            console.log('Failed creating tag ');
-            console.log(err);
-        } 
-        break;
-
-      }    
-      case 'detachedHeadDialog': {
-        console.log('detachedHeadDialog -- returned ' + event);
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move out of "detached Head" (losing track of it)
-                branchClicked(false);
-                
-                cacheBranchList();
-                
-                break;
-            }    
-            case  'Cancel' : {
-                break;
-            }          
-            
-        }
-        break; 
-      } // end case 'detachedHeadDialog'  
-      case 'initializeRepoOK' : {
-          
-        setStatusBar( 'Initializing git');
-        
-        // Read cached folder (cached in dropFile, when asking if initializing git )
-        folder = localState.droppedRepoFolder;
-        localState.droppedRepoFolder='';  // Clear
-        
-        await simpleGit(folder).init( onInit );
-        function onInit(err, initResult) { }
-        
-        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-        
-        await waitTime( 1000);
-        
-        //await gitAddCommitAndPush( 'First commit');
-
-        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-        
-        // Initial commit
-        setStatusBar( 'Initial commit');
-        let outputData;
-        await simpleGit( folder )
-            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
-            
-        function onCommit(err, result) {console.log(result); outputData = result };
-        
-        await waitTime( 1000);
-        console.log(outputData);
-        
-        
-        // add repo to program
-        try {
-            await addExistingRepo( folder); 
-        }catch(error){
-            console.log(error);
-        }
-
-        // Update immediately
-        await _setMode('UNKNOWN');
-        await _update();
-          
-        break;  
-      }
-      case 'downloadRelease' : {
-          
-        // Download
-        if (event == 'Download'){
-            
-            
-            
-            // Prepare for direct download
-                let url;
-                let fileName;
-                switch (process.platform ){
-                    case 'darwin' :
-                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
-                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
-                        downloadUsingAnchorElement(url, fileName);
-                    
-                    break;
-                    case 'win32' :
-                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
-                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
-                        downloadUsingAnchorElement(url, fileName);
-                        
-                    break;
-                    case 'linux' :
-                        // Open home page instead of direct download (allows to choose DEB or RPM)
-                        require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/releases/latest' );
-                    
-                    break;
-                    
-                    // Internal function ( https://itnext.io/how-to-download-files-with-javascript-d5a69b749896 )
-                    function downloadUsingAnchorElement(url, fileName) {
-                        const anchor = document.createElement("a");
-                        anchor.href = url;
-                        anchor.download = fileName;
-                        
-                        document.body.appendChild(anchor);
-                        anchor.click();
-                        document.body.removeChild(anchor);
-                    }
-            
-                }
-                
- 
-            break;
-        } // End Download pressed
-        
-        // Skip this Release
-        if (event == 'Wait' ){
-            if ( document.getElementById('ignoreThisVersion').checked ){
-                global.state.ignoredVersion = localState.LATEST_RELEASE;
-            }
-        }
-        
-        document.getElementById('newVersionDetectedInputDialog').close();
-        break;  
-      }
       // Bottom title-bar
       case 'clicked-folder': {
         folderClicked();
@@ -1001,6 +766,275 @@ async function _callback( name, event){
       case 'clicked-settings': {
         showSettings();
         break;
+      }
+
+      // Dialogs
+      case 'newBranchNameKeyUp': {
+        let string = document.getElementById("branchNameTextarea").value ;
+        document.getElementById("branchNameTextarea").value = util.branchCharFilter( string) ;
+
+        break;
+      }
+      case 'newTagNameKeyUp': {
+        let string = document.getElementById("tagNameTextarea").value ;
+        document.getElementById("tagNameTextarea").value = util.branchCharFilter( string) ;
+
+        break;
+      }
+      case 'addBranchButtonPressed': {
+
+        console.log('addBranchButtonPressed');
+        console.log(event);
+
+        let newBranchName = document.getElementById('branchNameTextarea').value;
+        let gitflowPrefix = document.getElementById('gitflow').value + '/' ;
+        
+        if ( gitflowPrefix === 'none/'){
+            gitflowPrefix = '';
+        }
+        
+        if ( gitflowPrefix.length > 1){
+            newBranchName = gitflowPrefix + newBranchName;
+        }
+        
+
+        
+        // Create and checkout new branch
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;
+            let commit = 'HEAD';  // First guess
+            
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+            
+            // Create new branch
+            let commands = [ 'checkout', '-b', newBranchName, commit];
+            await simpleGit( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){console.log(result);};
+            
+            setStatusBar( 'Creating branch "' + newBranchName);
+            await waitTime( 1000);  
+                      
+            setStatusBar( 'Moved into "' + newBranchName);
+            waitTime( WAIT_TIME);  
+
+            
+        }catch(err){       
+            displayAlert('Failed creating branch', err); 
+            console.log('Failed creating branch ');
+            console.log(err);
+        } 
+        
+        
+        cacheBranchList();
+
+        _setMode('UNKNOWN');
+        
+
+        break;
+      }
+      case 'clicked-tag-button': {
+        // Make dropdown menu with options 1) Create tag, 2) Checkout tag
+        tagClicked();
+        break;
+      }
+      case 'addTagButtonPressed' : {
+        let newTagName = document.getElementById('tagNameTextarea').value;
+      
+        // Create new Tag
+        try{
+            let folder = state.repos[ state.repoNumber].localFolder;            
+            let commit = 'HEAD';  // First guess
+            
+            // If history, change commmit
+            if (localState.historyNumber > -1){
+                commit = localState.historyHash;
+            }
+  
+            // Create new Tag
+            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
+            function onCreateTag(err, result ){console.log(result);console.log(err);};
+            setStatusBar( 'Creating Tag "' + newTagName);
+            waitTime( WAIT_TIME);  
+        
+            await updateGraphWindow();
+        
+           // Push tag to remote
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+                function onPush(err, result) {console.log(result) };
+            }catch (err){
+                console.log('Failed pushing tag -- probably no remote repository' );
+            }
+            
+            setStatusBar( 'Creating Tag "' + newTagName);
+            waitTime( WAIT_TIME);  
+            
+
+            
+        }catch(err){       
+            displayAlert('Failed creating tag', err); 
+            console.log('Failed creating tag ');
+            console.log(err);
+        } 
+        break;
+
+      }    
+      case 'detachedHeadDialog': {
+        console.log('detachedHeadDialog -- returned ' + event);
+        
+        switch (event) {
+            case  'Delete' : {
+                // Move out of "detached Head" (losing track of it)
+                branchClicked(false);
+                
+                cacheBranchList();
+                
+                break;
+            }    
+            case  'Cancel' : {
+                break;
+            }          
+            
+        }
+        break; 
+      } // end case 'detachedHeadDialog'  
+      case 'initializeRepoOK' : {
+          
+        setStatusBar( 'Initializing git');
+        
+        // Read cached folder (cached in dropFile, when asking if initializing git )
+        folder = localState.droppedRepoFolder;
+        localState.droppedRepoFolder='';  // Clear
+        
+        await simpleGit(folder).init( onInit );
+        function onInit(err, initResult) { }
+        
+        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
+        
+        await waitTime( 1000);
+        
+        //await gitAddCommitAndPush( 'First commit');
+
+        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
+        
+        // Initial commit
+        setStatusBar( 'Initial commit');
+        let outputData;
+        await simpleGit( folder )
+            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
+            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+            
+        function onCommit(err, result) {console.log(result); outputData = result };
+        
+        await waitTime( 1000);
+        console.log(outputData);
+        
+        
+        // add repo to program
+        try {
+            await addExistingRepo( folder); 
+        }catch(error){
+            console.log(error);
+        }
+
+        // Update immediately
+        await _setMode('UNKNOWN');
+        await _update();
+          
+        break;  
+      }
+      case 'downloadRelease' : {
+          
+        // Download
+        if (event == 'Download'){
+            
+            
+            
+            // Prepare for direct download
+                let url;
+                let fileName;
+                switch (process.platform ){
+                    
+                    case 'darwin' :
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
+                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
+                        
+                        downloadUsingAnchorElement(url, fileName);
+                        gui.Shell.openItem( path.resolve( downloadsDir ));
+                        document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
+
+                        // Open progress info dialog
+                        displayAlert('Download has started', 
+                        `You may get a system dialog asking to accept file name.  <br>
+                         The <a onclick="gui.Shell.openItem( path.resolve( downloadsDir ));" style="cursor: pointer;"> download folder </a> 
+                         has been opened. Double-click to install file when download is finished.
+                        `);
+                    break;
+                    
+                    case 'win32' :
+                        url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
+                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
+                        
+                        downloadUsingAnchorElement(url, fileName);
+                        gui.Shell.openItem( path.resolve( downloadsDir )); // path.resolve is to allow unc paths for Windows.  No harm for other os
+                        document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
+
+                        // Open progress info dialog
+                        displayAlert('Download has started', 
+                        `You may get a system dialog asking to accept file name.  <br>
+                         The <a onclick="gui.Shell.openItem( path.resolve( downloadsDir ));" style="cursor: pointer;"> download folder </a> 
+                         has been opened. Double-click to install file when download is finished.
+                        `);
+                    break;
+                    
+                    case 'linux' :
+                        // Open home page instead of direct download (allows to choose DEB or RPM)
+                        require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/releases/latest' );
+                        gui.Shell.openItem( path.resolve( downloadsDir ));
+                        document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
+                        
+                        // Open progress info dialog
+                        displayAlert(`You should have been directed to the download page`, 
+                        
+                        `Download .deb or .rpm package, and follow instructions on : 
+                        <a href="https://pragma-git.github.io#installation" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"  style="cursor: pointer;">
+                            https://pragma-git.github.io#installation
+                        </a>
+                         
+                        `);
+                    break;
+                    
+                    // Internal function ( https://itnext.io/how-to-download-files-with-javascript-d5a69b749896 )
+                    
+                    function downloadUsingAnchorElement(url, fileName) {
+                        const anchor = document.createElement("a");
+                        anchor.href = url;
+                        anchor.download = fileName;
+                        
+                        document.body.appendChild(anchor);
+                        anchor.click();
+                        document.body.removeChild(anchor);
+                    }
+            
+                }
+                
+ 
+            break;
+        } // End Download pressed
+        
+        // Skip this Release
+        if (event == 'Wait' ){
+            if ( document.getElementById('ignoreThisVersion').checked ){
+                global.state.ignoredVersion = localState.LATEST_RELEASE;
+            }
+        }
+        
+        document.getElementById('newVersionDetectedInputDialog').close();
+        break;  
       }
 
       // Help

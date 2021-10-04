@@ -13,7 +13,7 @@ RELEASE_TITLE='Major rewrite, including new Graph'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-Second release on pragma-git account on github
+### Second release of pragma-git 
 
 Major rewrite and minor bug fixes.  Rewrite includes:
 - new Graph
@@ -25,6 +25,7 @@ Major rewrite and minor bug fixes.  Rewrite includes:
 - Help in all windows
 
 ___
+### About Pragma-git
 The aim with Pragma-git is to be
 - ”pragmatic” — aiming to be the opposite to how many beginners perceive git
 - easy to start — and something to grow in for daily programming tasks
@@ -32,13 +33,20 @@ The aim with Pragma-git is to be
 
 Read more on the home page : https://pragma-git.github.io
 
-Download the *one* installer that matches your system from the "__*assets*__" link: 
+### Quick Install
+
+Download the *one* installer that matches your system from the "__*assets*__" link below: 
 - __win-x64.exe__ (Windows 64 bit) 
 - __mac-x64.dmg__ (Mac 64 bit)
 - __linux-x64.deb__ (Linux 64 bit for Ubuntu, Linux Mint, Debian, ...)
 - __linux-x64.rpm__ (Linux 64 bit RedHat, Fedora, CentOS, openSUSE, ...)
 - __win-x86__ (Windows 32 bit)
+
+[Install instructions](https://pragma-git.github.io#installation)
 ---
+
+# NOTE : If header name in https://pragma-git.github.io is changed, its element id will be changed.  
+# Modify link above from "installation" to new id (the id can be found by from html-source of https://pragma-git.github.io).
 
 
 TOKEN_FILE="../../mytoken.txt"  #NOTE: Token requires scopes: repos, write:packages, admin:org, and maybe user
