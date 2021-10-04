@@ -159,7 +159,6 @@ async function injectIntoNotesJs(document) {
                 let parentElement = state.selection.ranges[0].$from.depth * 3 - 1
                 let priorNodePos = state.selection.ranges[0].$from.path[ parentElement ]; 
                 let delta = from - priorNodePos;
- 
                 
                 editor.replaceSelection('', from  - delta - 1, from );
                 return true
@@ -169,13 +168,13 @@ async function injectIntoNotesJs(document) {
 
         }
          function shiftEnterFunction(payload, state, dispatch){ 
-let ENTER =`
-<br>`;            
+let ENTER =` 
+`;            
             let from = state.selection.ranges[0].$from.pos;
             let to = state.selection.ranges[0].$to.pos;
             
             // This is where I should put shift-Enter into last element
-            mdEditor.replaceSelection(ENTER, from, from);
+            editor.replaceSelection(ENTER, from , from );
             
             return false
 
