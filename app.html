@@ -467,12 +467,13 @@
 
     <dialog id="alertDialog"  style="max-height: 90%" class="warning">  
         <b><div id='alertTitle'></div></b><br> 
-        <div id='alertMessage'></div>  <br> 
-         
-        <button id="no"
+        <div >
+        <span id='alertMessage'></span>
+        <button id="no", style="float:right"
             onclick="document.getElementById('alertDialog').close();selectedBranch='';">
             OK
         </button>  
+        </div> 
     </dialog>  
  
  

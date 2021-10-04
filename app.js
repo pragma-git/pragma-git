@@ -143,7 +143,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const os = require('os');
         const fs = require('fs');
         const path = require('path');
-        const downloadsFolder = require('downloads-folder');
+        const downloadsFolder = require('downloads-folder'); // Test -- I wasn't allowed to run at NUS due to McAffee end point securityv
         
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const simpleGit = require('simple-git');  // npm install simple-git
@@ -177,8 +177,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
-        
-        let downloadsDir = downloadsFolder();
+    
         
         // Pragma-merge : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
@@ -964,14 +963,14 @@ async function _callback( name, event){
                         fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
                         
                         downloadUsingAnchorElement(url, fileName);
-                        gui.Shell.openItem( path.resolve( downloadsDir ));
+                        gui.Shell.openItem( path.resolve( getDownloadsDir() ));
                         document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
-
+                                          
                         // Open progress info dialog
-                        displayAlert('Download has started', 
-                        `You may get a system dialog asking to accept file name.  <br>
-                         The <a onclick="gui.Shell.openItem( path.resolve( downloadsDir ));" style="cursor: pointer;"> download folder </a> 
-                         has been opened. Double-click to install file when download is finished.
+                        displayAlert(`Download has started (<a onclick="gui.Shell.openItem( path.resolve( getDownloadsDir() ));" style="cursor: pointer;"> download folder </a>)` , 
+                        `You may get a system dialog asking to accept file name.  When download is finished : <br>
+                         1) Close Pragma-git, <br>
+                         2) Double-click downloaded file.
                         `);
                     break;
                     
@@ -980,32 +979,33 @@ async function _callback( name, event){
                         fileName = `Pragma-git-${localState.LATEST_RELEASE}-win-x64.exe`;
                         
                         downloadUsingAnchorElement(url, fileName);
-                        gui.Shell.openItem( path.resolve( downloadsDir )); // path.resolve is to allow unc paths for Windows.  No harm for other os
                         document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
+                        gui.Shell.openItem( path.resolve( getDownloadsDir() )); // path.resolve is to allow unc paths for Windows.  No harm for other os
 
                         // Open progress info dialog
-                        displayAlert('Download has started', 
-                        `You may get a system dialog asking to accept file name.  <br>
-                         The <a onclick="gui.Shell.openItem( path.resolve( downloadsDir ));" style="cursor: pointer;"> download folder </a> 
-                         has been opened. Double-click to install file when download is finished.
+                        displayAlert(`Download has started (<a onclick="gui.Shell.openItem( path.resolve( getDownloadsDir() ));" style="cursor: pointer;"> download folder </a>)` , 
+                        `You may get a system dialog asking to accept file name.  When download is finished : <br>
+                         1) Close Pragma-git, <br>
+                         2) Double-click downloaded file.
                         `);
                     break;
                     
                     case 'linux' :
                         // Open home page instead of direct download (allows to choose DEB or RPM)
                         require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/releases/latest' );
-                        gui.Shell.openItem( path.resolve( downloadsDir ));
+                        gui.Shell.openItem( path.resolve( getDownloadsDir() ));
                         document.getElementById('newVersionDetectedInputDialog').close();  // Close first dialog
                         
                         // Open progress info dialog
                         displayAlert(`You should have been directed to the download page`, 
                         
-                        `Download .deb or .rpm package, and follow instructions on : 
-                        <a href="https://pragma-git.github.io#installation" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"  style="cursor: pointer;">
+                        `1) Download .deb or .rpm package<br>
+                         2) Follow instructions on : <br>
+                            &nbsp;&nbsp;&nbsp; <a href="https://pragma-git.github.io#installation" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"  style="cursor: pointer;">
                             https://pragma-git.github.io#installation
                         </a>
                          
-                        `);
+                        `)
                     break;
                     
                     // Internal function ( https://itnext.io/how-to-download-files-with-javascript-d5a69b749896 )
@@ -3942,7 +3942,34 @@ async function getLatestRelease( url ){
     });
     return outData; // outData.tag_name is latest release
 } 
-         
+function getDownloadsDir(){
+    
+    try{
+        return downloadsFolder();  // This wasn't allowed on Windows with McAffee end point security, due to calling Windows registry
+        
+    }catch(err){
+        // Multiple options
+        
+        // 1) Guess for Windows
+        if ( ( process.platform == 'win32' ) && fs.existsSync( path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' )) ){
+           let downloadsFolder = path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' );
+           console.warn('getDownloadsDir - GUESSED DOWNLOADS FOLDER = ' + downloadsFolder);
+           return downloadsFolder;
+        }
+
+        // TODO : Fallback: Use saved downloadsDir if folder exists, othrewise ask for download folder
+        if ( fs.existsSync( state.downloadsDir ) ){
+            // Saved downloadsDir exists
+            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, SAVED DOWNLOADS FOLDER');
+            return state.downloadsDir;
+        }else{
+            // Ask for downloads folder
+            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, ASK FOR DOWNLOADS FOLDER');
+            return 
+        }
+    }
+    
+}
 
 // Update other windows
 async function updateGraphWindow(){
