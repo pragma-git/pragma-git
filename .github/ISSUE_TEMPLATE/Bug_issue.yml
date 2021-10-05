@@ -26,7 +26,7 @@ body:
       value: "A bug happened!"
     validations:
       required: true
-  - type: System info
+  - type: textarea
     id: system_info
     attributes:
       label: system info
