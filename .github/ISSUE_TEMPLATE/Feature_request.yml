@@ -1,9 +1,9 @@
 name: Issue Request
 description: File a bug report
-title: "[Bug]: "
+title: "[enhancement]: "
 labels: ["enhancement"]
 assignees:
-  - octocat
+  - jan
 body:
   - type: markdown
     attributes:
