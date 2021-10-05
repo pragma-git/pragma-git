@@ -481,16 +481,24 @@
     <!--Download new version -->   
   
     <dialog id="newVersionDetectedInputDialog" style="max-height: 90%" class="warning">  
-        <b>A new release is available</b> 
         
+        <b>A new release is available</b> 
+    
+         
+        <a href='https://github.com/pragma-git/pragma-git/releases/latest' 
+            onclick="require('nw.gui').Shell.openExternal( this.href );return false;"  
+            style="float:right; cursor: pointer;"> 
+            (release notes) 
+        </a>
+
         
         <p>
-            Your current version is <code id='currentVersion'> </code>. Download and run installer for the new <code id='newVersion'> </code> version!  
+            Your current version is <code id='currentVersion'> </code>. Download and installer for the new <code id='newVersion'> </code> version!  
         </p>
 
   
-        <button  id="downloadButton"
-            onclick="_callback('downloadRelease', 'Download' );">
+        <button  id="downloadButton"  
+            onclick="_callback('downloadRelease', 'Download' );" tabindex="0">
             Download
         </button>   
                 

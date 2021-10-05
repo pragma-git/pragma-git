@@ -153,6 +153,7 @@
         }
         a{
             color: var(--link-color);
+            outline: none !important;  /* Dialogs have a problem showing blue outline when selected (tab between dialog elements) */
         }
         
         iframe{
@@ -190,6 +191,11 @@
             border: none;
             border: 5px solid;
             -webkit-border-radius: 6px;
+        }
+        
+        dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.5);/* make the backdrop a semi-transparent black */
+            backdrop-filter: blur(1px);
         }
         
         dialog.error{
