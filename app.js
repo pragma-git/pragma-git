@@ -3268,9 +3268,9 @@ async function gitStashMap( folder ){
             (err, res) => { rawOutput = res; global.res = res} 
         );
     }catch(err){
-        console.log('ERROR in gitStashMap');
-        console.log('      Repo = '  + folder);
-        console.log(err);
+        console.error('ERROR in gitStashMap');
+        console.error('      Repo = '  + folder);
+        console.error(err);
         localState.stashMap = stashMap;
         return
     }
@@ -3298,7 +3298,7 @@ async function gitStashMap( folder ){
         let hashInThisRow = hashOfStashCommitParent[0];
         
         // For verification, read short hash and test if same as commit-hash
-        let startOfHashPartOfMessage = messageInThisRow.lastIndexOf(':');
+        let startOfHashPartOfMessage = messageInThisRow.indexOf(':');  // Find first ':'
         let hashPartOfMessage = messageInThisRow.substring(startOfHashPartOfMessage + 2, startOfHashPartOfMessage + 2 + 7) ; // Skip ': ' and keep next 7 characters 
         let warn = false;
         if ( !hashInThisRow.includes(hashPartOfMessage) ){
@@ -4604,7 +4604,6 @@ function loadSettings(settingsFile){
                             
             state_in.tools = setting( state_in.tools, {} ); 
             state_in.settingsWindow = setting( state_in.settingsWindow, {} ); 
-            state_in.settingsWindow.unfolded = setting( state_in.settingsWindow.unfolded, {} ); 
             state_in.notesWindow = setting( state_in.notesWindow, {} ); 
             state_in.pragmaMerge = setting( state_in.pragmaMerge, {} ); 
             state_in.graph = setting( state_in.graph, {} ); 
