@@ -4865,9 +4865,7 @@ window.onload = async function() {
   setTimeout(gitIsInstalled, 2000);
   
   win.setAlwaysOnTop( state.alwaysOnTop );
-  
-  initializeWindowMenu();
-  
+
   
   // Write signal file that pragma-git is running
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
@@ -4891,6 +4889,10 @@ window.onload = async function() {
    
   // Map of stashes    
     await gitStashMap( state.repos[state.repoNumber].localFolder );
+    
+    
+  // Mac Menu  
+  initializeWindowMenu();
 
 };
 async function closeWindow(a){
