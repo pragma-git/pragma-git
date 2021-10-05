@@ -29,11 +29,7 @@ body:
     id: To_reproduce
     attributes:
       label: To reproduce
-      description: Steps to reproduce the behavior ( 
-        1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
-        4. See error '....')
+      description: Steps to reproduce the behavior ( 1. Go to ...  2. Click on ...  3. Scroll down to ...  4. See error ... )
       placeholder: Tell us how to reproduce
     validations:
       required: true    
