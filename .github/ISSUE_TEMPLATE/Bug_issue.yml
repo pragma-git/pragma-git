@@ -29,7 +29,7 @@ body:
     id: To_reproduce
     attributes:
       label: To reproduce
-      description: Steps to reproduce the behavior ( |
+      description: Steps to reproduce the behavior ( 
         1. Go to '...'
         2. Click on '....'
         3. Scroll down to '....'
@@ -38,7 +38,7 @@ body:
     validations:
       required: true    
   - type: input
-    id: repository
+    id: repo
     attributes:
       label: Repository
       description: A repository which shows the desribed issue
