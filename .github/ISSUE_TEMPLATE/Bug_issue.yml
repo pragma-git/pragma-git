@@ -29,14 +29,22 @@ body:
     id: To_reproduce
     attributes:
       label: To reproduce
-      description: Steps to reproduce the behavior
-      placeholder: |
-        1 . Go to '...'
+      description: Steps to reproduce the behavior ( |
+        1. Go to '...'
         2. Click on '....'
         3. Scroll down to '....'
-        4. See error
+        4. See error '....')
+      placeholder: Tell us how to reproduce
     validations:
-      required: true     
+      required: true    
+  - type: textarea
+    id: repository
+    attributes:
+      label: Repository
+      description: A repository which shows the desribed issue
+      placeholder: An open repository
+    validations:
+      required: false    
   - type: textarea
     id: Expected_behavior
     attributes:
