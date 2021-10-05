@@ -226,14 +226,15 @@ async function closeWindow(){
     
     opener.saveSettings(); // Save settings to file
     
+    
+    // Remove from menu
+    opener.deleteWindowMenu('Notes');
+    
     // Commmit .Pragma-git settings dir
     await opener.commitSettingsDir();
     
     // Mark that closed
     global.localState.notesWindow.open = false;
-    
-    // Remove from menu
-    opener.deleteWindowMenu('Notes');
 
     console.log('clicked close window');
 }
