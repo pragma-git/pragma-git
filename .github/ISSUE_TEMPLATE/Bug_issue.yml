@@ -37,12 +37,12 @@ body:
       placeholder: Tell us how to reproduce
     validations:
       required: true    
-  - type: textarea
+  - type: input
     id: repository
     attributes:
       label: Repository
       description: A repository which shows the desribed issue
-      placeholder: An open repository
+      placeholder: URL
     validations:
       required: false    
   - type: textarea
