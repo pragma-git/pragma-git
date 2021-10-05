@@ -18,7 +18,7 @@ body:
     validations:
       required: false
   - type: textarea
-    id: Describe the bug
+    id: Describe_the_bug
     attributes:
       label: What happened?
       description: A clear and concise description of what the bug is.
@@ -27,7 +27,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: To reproduce
+    id: To_reproduce
     attributes:
       label: To reproduce
       description: Steps to reproduce the behavior
@@ -40,7 +40,7 @@ body:
     validations:
       required: true     
   - type: textarea
-    id: Expected behavior
+    id: Expected_behavior
     attributes:
       label: Expected behavior
       description: A clear and concise description of what you expected to happen.
@@ -49,7 +49,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: System Info and Screen shots
+    id: System_Info_and_Screen_shots
     attributes:
       label: System Info and Screen shots
       description: Paste info from Pragma-git/Settings/System Info. Attach screen shots and other files describing the issue
