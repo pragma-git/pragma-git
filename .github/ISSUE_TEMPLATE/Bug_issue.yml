@@ -18,17 +18,42 @@ body:
     validations:
       required: false
   - type: textarea
-    id: what-happened
+    id: Describe the bug
     attributes:
       label: What happened?
-      description: Also tell us, what did you expect to happen?
+      description: A clear and concise description of what the bug is.
       placeholder: Tell us what you see!
       value: "A bug happened!"
     validations:
       required: true
   - type: textarea
-    id: system_info
+    id: To reproduce
     attributes:
-      label: system info
-      description: Please copy and paste the text from the Pragma-git main window / Settings / System info tab
-      render: text
+      label: To reproduce
+      description: Steps to reproduce the behavior:
+      placeholder: |
+        1 . Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+      value: "To reproduce"
+    validations:
+      required: true     
+  - type: textarea
+    id: Expected behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: Tell us what you expected!
+      value: "The expected behavior"
+    validations:
+      required: true
+  - type: textarea
+    id: System Info and Screen shots
+    attributes:
+      label: System Info and Screen shots
+      description: Paste info from Pragma-git/Settings/System Info. Attach screen shots and other files describing the issue
+      placeholder: System info goes here
+      value: "System info"
+    validations:
+      required: true   
