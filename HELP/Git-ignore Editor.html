@@ -42,7 +42,7 @@
             
             <li><button>Preview</button>, updates the preview field </li>
             
-            <li><button>Reset</button>, restore rules to what they were when editor was opened </li>
+            <li><button>Reset</button>, restore ignore-rules and tracked files to their state before editor was opened </li>
             
             <li><button > Retrack <img height="12" width="12"  src="../images/warning.png"></button>, 
                 force ignore rules also for files already in the repository <br>
@@ -166,26 +166,26 @@
     
     
     <p>
-    If you wish all your files to follow the rules, then you need to re-track the files.  This means, to remove the files from the repository,
-    and then add them according to the <code>.gitignore</code> rules. This is done by the button  <button > Retrack <img height="12" width="12"  src="../images/warning.png"></button>. 
+    If you wish all your files to follow the rules, then you need to re-track the files.  This means, to remove all files from being tracked by the repository,
+    and then add them back according to the <code>.gitignore</code> rules. This is performed by the button  <button > Retrack <img height="12" width="12"  src="../images/warning.png"></button>. 
     </p>
     
     
     <p>
     There are a few consequenses to be aware of:
          <ul>
-            <li><b>Some files were untracked</b>, and will now be listed as deleted before you store.  
-                This is correct behavior, and if that is intended, allow this.
+            <li><b>Some files were untracked</b>, and will now be listed as deleted from the repository.  
+                This is correct behavior (files remain on disk), and if that is intended, allow this.
                 It is indicated in the preview list, by the text <code>(untracked)</code>
             </li>
-            <li><b>Ignored files</b> will be on your computer, but will not be pushed to the remote folder. Neither will they be pulled from the remote repository. 
+            <li><b>Ignored files</b> remains on your computer, but will not be pushed to the remote folder. Neither will they be pulled from the remote repository. 
                 Be aware, and proceed if you indeed want to remove the files from the repository
             </li>
-            <li><b>May take some time</b>, if a folder with a large number of files is removed from the ignore editor. 
+            <li><b>Retrack may take some time</b>, if a previously tracked folder containing a large number of files have been removed by new ignore rules. 
             This is indicated by a spinning progress indicator. Be patient, because this operation will continue also if you close the window.
-            Normally, if you don't remove a folder with thousands of files in the .gitignore editor, the operation is fast.
+            Normally, if you don't remove a folder with thousands of files in the .gitignore, the operation is fast.
             </li>
-            <li><b>Reset</b>, resets the <code>.gitignore</code> file, which can be previewed.  It cannot undo a Retrack.
+            <li><b>Reset</b>, restores the <code>.gitignore</code> file.  It will also undo a Retrack operation.
             </li>
         </ul>
            
