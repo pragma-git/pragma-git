@@ -46,9 +46,9 @@ async function injectIntoNotesJs(document) {
  
     // Add search button to toolbar
     button1 = document.createElement('button');
-    button1.style = "background-color: transparent; position: absolute; right: 60px";
+    button1.style = "background-color: transparent; top: -2px; position: absolute; right: 60px";
     button1.setAttribute("id", 'find-icon');
-    button1.innerHTML = '<img  height="20" width="20"  src="images/find.png" >';
+    button1.innerHTML = '<img  height="17" width="17"  src="images/find.png" >';
     button1struct = {  
             name: 'find',
             event: 'clickCustomButton1',
@@ -58,9 +58,9 @@ async function injectIntoNotesJs(document) {
  
     // Add help button to toolbar
     button2 = document.createElement('button');
-    button2.style = "background-color: transparent; position: absolute; right: 20px";
+    button2.style = "background-color: transparent; top: -2px; position: absolute; right: 20px";
     button2.setAttribute("id", 'help-icon');
-    button2.innerHTML = '<img height="20" width="20"  src="images/questionmark_hover.png" >';
+    button2.innerHTML = '<img height="17" width="17"  src="images/questionmark_hover.png" >';
     button2struct = {  
             name: 'help',
             event: 'clickCustomButton2',

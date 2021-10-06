@@ -61,18 +61,23 @@
         color: var(--body-text);
     }
  
- 
- 
-  
-    .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
-        zoom: 0.85;
-        height:auto;
-    }
-    
+
     .toastui-editor-toolbar-item-wrapper{
         margin: 0px;
         color: var(--header-color);
     }
+    
+    
+    /* Smaller icons and toolbar height */ 
+    .toastui-editor-toolbar-icons{
+        zoom: 0.8;
+    }   
+    
+    .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
+        zoom: 1;
+        height:38px;
+    }
+
 
 
     /* modify toast-ui  code */ 
@@ -189,6 +194,9 @@
     a{
         cursor: pointer;  /* because Toast UI have an edit-cursor, and I have overriden the edit function */ 
     }
+
+    
+    
  
  </style>
 
@@ -230,9 +238,12 @@
         wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
          -->
             
+
         <script src="lib/toastui-editor-all.js"></script>
-    
-    
+
+<!--
+        <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+-->
     
     <!--
         <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
@@ -295,6 +306,7 @@
         findInNw.initialize();
         extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
+     
 
 
   </body>
