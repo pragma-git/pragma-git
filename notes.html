@@ -203,8 +203,9 @@
  
  </style>
 
-
   </head>
+  
+  
   
   <body class='light'>
     <!-- Dark mode on/off, zoom --> 
@@ -223,42 +224,28 @@
             <div id="editor"></div>
     </div>    
     
-        <!-- 
-        NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
-        
-        Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
-        from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
-        was the solution.
-        
-        Save downloaded file as : "lib/toastui-editor-all.js"
-        
-        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
-        
-        -->
     
-        <!-- DOWNLOAD latest toastui-editor-all.js  like this :
-        cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
-        wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
-         -->
-            
-
-        <script src="lib/toastui-editor-all.js"></script>
-
-<!--
-        <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
--->
+    <!-- 
+    NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
     
-    <!--
-        <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
-    -->
-   
+    Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+    from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+    was the solution.
+    
+    DOWNLOAD latest toastui-editor-all.js  like this :
+    --------------------------------------------------
+    cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
+    wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
+     -->
+        
+        
 
+    <script src="lib/toastui-editor-all.js"></script>
 
  
     <!--  Onload, call javascript file  --> 
     <script>
         const Editor = toastui.Editor;
-        //const Editor = require('@toast-ui/editor'); /* CommonJS */
         
         window.addEventListener('DOMContentLoaded', (event) => {
             
@@ -301,6 +288,7 @@
         );
 
     </script> 
+    
         
     <!--  Add find  -->    
     <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
@@ -310,7 +298,6 @@
         extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
      
-
 
   </body>
 </html>
