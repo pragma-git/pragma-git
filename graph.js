@@ -84,6 +84,8 @@
     
     var COMPRESS;
     const DEBUG = state.graph.debug;       // true = show debug info on commit messages
+    
+    let firstRun = true;
 
 //
 // Functions
@@ -179,12 +181,44 @@ async function injectIntoJs(document){
         
         // Draw full graph, and label current branch
         let branchHistory = await readBranchHistory();
-        await drawGraph( document, graphText, branchHistory, history);
+        
+        
+        //
+        // Speed up by drawing 
+        //
         
             
+            draw = SVG();  // Canvas -- global variable
+            
+            let splitted;
+            const N = 5;  // Number of lines in first pass
+            
+            // Short part for pass 1, and all for pass 2
+            shortSplitted = graphText.split( UNIQUE_EOL + '\n').slice(0, N);  // Lines first pass
+            allSplitted  = graphText.split( UNIQUE_EOL + '\n');
+            
+            if (firstRun){ // Speed up on when window is opened first time
+                if (N > allSplitted.length){
+                    
+                    // Fewer lines than pass 1 => do everything in one pass
+                    await drawGraph( document, allSplitted, branchHistory, history);
+                    
+                }else{
+                    
+                    // first pass (top N commits)
+                    await drawGraph( document, shortSplitted, branchHistory, history);
+                    
+                    // second pass (all)
+                    await drawGraph( document, allSplitted, branchHistory, history);               
+                }
+            }else{
+                // If not second run -- draw everything in one pass (otherwise changing checkboxes and moves will make it jump)
+                await drawGraph( document, allSplitted, branchHistory, history);
+            }
+            
+        // ColorHeader
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
         await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
-        
         
         // Populate branch-name edit menu
         await populateDropboxBranchSelection();
@@ -220,6 +254,9 @@ async function injectIntoJs(document){
         }catch(err){  
         }
 
+
+    // Finish
+    firstRun = false;
 
 }
 
@@ -543,9 +580,9 @@ async function gitCommitAuthor(hash){
 }
 
 // Graphics
-async function drawGraph( document, graphText, branchHistory, history){
+async function drawGraph( document, splitted, branchHistory, history){
     // document :       HTML document
-    // graphText :      output from  raw git log graph
+    // splitted :      output from  raw git log graph, as array (one row per array item)
     // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
     // history :        the history after search, used to set different color for  commits found/not found in Search
           
@@ -578,14 +615,12 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             columnOccupiedStateArray = [];  
      
-            let splitted = graphText.split( UNIQUE_EOL + '\n');
             
             let previousDate = 'dummy'
     
     
         // Initiate drawing
      
-            draw = SVG();  // Global variable
             
             // Define arcs used for branch and merge curves
             const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`)
@@ -766,7 +801,9 @@ async function drawGraph( document, graphText, branchHistory, history){
         
       
          NUMBER_OF_KNOWN_BRANCHES = branchNames.size;
-         let HIGHEST_LANE = 1;
+         //let HIGHEST_LANE = 1;
+         let HIGHEST_LANE = 9;
+
          
          nodeMap.delete("");  // Delete empty node
 
