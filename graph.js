@@ -58,6 +58,9 @@
     var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
     
     var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
+    
+    const FIRSTPASSLENGTH = 100; // Number of git-log rows for first pass drawing
+    const INFINITY = 100000000;  // Used in first pass of drawing when position of parent node is not known (because of truncated git-log) 
 
 // GUI constants
         
@@ -190,22 +193,21 @@ async function injectIntoJs(document){
             
             draw = SVG();  // Canvas -- global variable
             
-            let splitted;
-            const N = 5;  // Number of lines in first pass
+            let splitted;  // Git-log row array
             
             // Short part for pass 1, and all for pass 2
-            shortSplitted = graphText.split( UNIQUE_EOL + '\n').slice(0, N);  // Lines first pass
+            shortSplitted = graphText.split( UNIQUE_EOL + '\n').slice(0, FIRSTPASSLENGTH);  // Lines first pass
             allSplitted  = graphText.split( UNIQUE_EOL + '\n');
             
             if (firstRun){ // Speed up on when window is opened first time
-                if (N > allSplitted.length){
+                if ( FIRSTPASSLENGTH > allSplitted.length ){
                     
                     // Fewer lines than pass 1 => do everything in one pass
                     await drawGraph( document, allSplitted, branchHistory, history);
                     
                 }else{
                     
-                    // first pass (top N commits)
+                    // first pass (top commits)
                     await drawGraph( document, shortSplitted, branchHistory, history);
                     
                     // second pass (all)
@@ -1489,12 +1491,15 @@ async function drawGraph( document, splitted, branchHistory, history){
         return html 
     };
     function markLaneAsOccupied(commit){
-        if (nodeMap.get(commit.parents[0]) == undefined){
-            return
-        }
+
         
         let lane = commit.x ;
-        let until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        let until;
+        if (nodeMap.get(commit.parents[0]) == undefined){
+            until = INFINITY; // Set as occupied always
+        }else{
+            until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        }
         
         // Fill up if array too short
         while (lane > columnOccupiedStateArray.length){
