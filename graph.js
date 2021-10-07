@@ -1496,14 +1496,31 @@ async function drawGraph( document, splitted, branchHistory, history){
     };
     function markLaneAsOccupied(commit){
 
+
+        //if (nodeMap.get(commit.parents[0]) == undefined){
+            //return
+        //}
+        
+        if ( commit.parents[0] == undefined){
+            return
+        }
+        
+        let until;
+        
+        if (nodeMap.has(commit.parents[0])){
+            until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        }else{
+            until = INFINITY; // Set as occupied always
+        }
+
         
         let lane = commit.x ;
-        let until;
-        if (nodeMap.get(commit.parents[0]) == undefined){
-            until = INFINITY; // Set as occupied always
-        }else{
-            until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
-        }
+        ////let until;
+        //if (nodeMap.get(commit.parents[0]) == undefined){
+            //until = INFINITY; // Set as occupied always
+        //}else{
+            //until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        //}
         
         // Fill up if array too short
         while (lane > columnOccupiedStateArray.length){
@@ -1584,7 +1601,12 @@ async function drawGraph( document, splitted, branchHistory, history){
                     highestOccupiedCol = highestOccupiedCol + 1;
                 }
                 
-                function isOnActiveSwimlane(lane, commit){
+            }
+            
+        return highestOccupiedCol
+        
+    };
+                    function isOnActiveSwimlane(lane, commit){
                     // Looks from commit to end of segment
                     
                     // Extent of segment
@@ -1608,11 +1630,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                     }
                     return false
                 }
-            }
-            
-        return highestOccupiedCol
-        
-    };
+
     function isOnNamedBranch(commit){
         if ( branchNames.has( commit.branchName ) ){
             return ( branchNames.get( commit.branchName ) < NUMBER_OF_KNOWN_BRANCHES ); // Named branches are below index NUMBER_OF_KNOWN_BRANCHES
