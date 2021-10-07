@@ -61,7 +61,7 @@
     
     var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
     
-    const FIRSTPASSLENGTH = 80; // Number of git-log rows for first pass drawing
+    const FIRSTPASSLENGTH = 70; // Number of git-log rows for first pass drawing
     const INFINITY = 100000000;  // Used in first pass of drawing when position of parent node is not known (because of truncated git-log) 
 
 // GUI constants
@@ -213,8 +213,12 @@ async function injectIntoJs(document){
                 }else{
                     
                     // first pass (top commits)
-                    await drawGraph( document, shortSplitted, branchHistory, history);
-                    await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+                    try{
+                        await drawGraph( document, shortSplitted, branchHistory, history);
+                        await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+                    }catch(err){
+                        
+                    }
                     
                     // second pass (all)
                     await drawGraph( document, allSplitted, branchHistory, history);               
