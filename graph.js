@@ -20,6 +20,8 @@
     'DeepSkyBlue'
     ];
     
+    let STROKE = { color: '#888', width: 3};  // Line color
+
     
     var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
     
@@ -205,6 +207,7 @@ async function injectIntoJs(document){
                 if ( FIRSTPASSLENGTH > allSplitted.length ){
                     
                     // Fewer lines than pass 1 => do everything in one pass
+                    
                     await drawGraph( document, allSplitted, branchHistory, history);
                     
                 }else{
@@ -227,6 +230,10 @@ async function injectIntoJs(document){
         
         // Populate branch-name edit menu
         await populateDropboxBranchSelection();
+        
+        
+        //Make MouseOver callbacks for node circles  
+        makeMouseOverNodeCallbacks();
  
     
     //
@@ -390,7 +397,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         
         SVG( node )
             .size(size,size)
-            .move( X0 - 0.5 * size , Y0 - 0.5 * size);
+            .move( X0 - 0.5 * size , Y0 - 0.5 * size)
     }
     function resetNodeSize(){
             // Reset node sizes
@@ -413,7 +420,8 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
     //
     // Add mouse events for each circle
     //
-    for (var i = arrElem.length; i-- ;) {
+    //for (var i = arrElem.length; i-- ;) {
+    for (var i = 0; i < arrElem.length ; i++ ) {
     
 
         // onmouseout     
@@ -630,7 +638,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Define arcs used for branch and merge curves
             const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`)
                 .fill('none')
-                .stroke({ color: '#888', width: 3  });
+                .stroke(STROKE);
             const arcBranch = draw.defs().use(arc).move(-R,-R);
             const arcBranch2  = draw.defs().use(arc).flip('x').move(-R,-R);
             
@@ -1065,8 +1073,6 @@ async function drawGraph( document, splitted, branchHistory, history){
                 }
             } 
             
-            // Make MouseOver callbacks for node images  
-            makeMouseOverNodeCallbacks();
 
     }   
 
@@ -1202,12 +1208,12 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Top horizontal
                 
                 if ((type == 1) || (type == 2)){
-                    draw.line( X1, Y1, LINECOL - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X1, Y1, LINECOL - R, Y1).stroke(STROKE); // horizontal
                     draw.use(arcMerge).move( LINECOL, Y1  ); // arc
                 }
                 
                 if (type == 5 ){
-                    draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X1, Y1, X0 + R, Y1).stroke(STROKE); // horizontal
                     draw.use(arcMerge2).move( X0, Y1  ); // arc
                 }
 
@@ -1215,13 +1221,13 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Vertical
             
                 switch (type){
-                    case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 7: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke( STROKE);  break;
+                    case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke(STROKE);  break;
+                    case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke(STROKE);  break;
+                    case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke(STROKE);  break;
+                    case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke(STROKE);  break;
+                    case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke(STROKE);  break;
+                    case 7: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke(STROKE);  break;
                 }
 
 
@@ -1246,12 +1252,12 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Bottom horizontal
                 
                 if ((type == 1) || (type == 3)){
-                    draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X0, Y0, LINECOL - R, Y0).stroke(STROKE); // horizontal
                     draw.use(arcBranch).move( LINECOL, Y0  ); // arc
                 }                  
                 
                 if (type == 6 ){
-                    draw.line( X0, Y0, X1 + R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X0, Y0, X1 + R, Y0).stroke(STROKE); // horizontal
                     draw.use(arcBranch2).move( X1 , Y0  );
                 }
                 
