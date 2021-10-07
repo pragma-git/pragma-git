@@ -144,7 +144,6 @@
         
         img{
             filter: invert( var(--image-invert) );
-            top: 100;
         }
 
         
