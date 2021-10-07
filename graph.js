@@ -59,7 +59,7 @@
     
     var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
     
-    const FIRSTPASSLENGTH = 100; // Number of git-log rows for first pass drawing
+    const FIRSTPASSLENGTH = 80; // Number of git-log rows for first pass drawing
     const INFINITY = 100000000;  // Used in first pass of drawing when position of parent node is not known (because of truncated git-log) 
 
 // GUI constants
@@ -199,6 +199,8 @@ async function injectIntoJs(document){
             shortSplitted = graphText.split( UNIQUE_EOL + '\n').slice(0, FIRSTPASSLENGTH);  // Lines first pass
             allSplitted  = graphText.split( UNIQUE_EOL + '\n');
             
+            
+            
             if (firstRun){ // Speed up on when window is opened first time
                 if ( FIRSTPASSLENGTH > allSplitted.length ){
                     
@@ -209,6 +211,7 @@ async function injectIntoJs(document){
                     
                     // first pass (top commits)
                     await drawGraph( document, shortSplitted, branchHistory, history);
+                    await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
                     
                     // second pass (all)
                     await drawGraph( document, allSplitted, branchHistory, history);               
@@ -1039,7 +1042,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             document.getElementById('datesSwimLane').innerHTML = dateContent;      
         
             document.getElementById('mySvg').innerHTML = ''; // Clear
-            draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (HIGHEST_LANE + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+            await draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (HIGHEST_LANE + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
         
             document.getElementById('graphContent').innerHTML = graphContent;    
         
