@@ -1508,9 +1508,13 @@ async function drawGraph( document, splitted, branchHistory, history){
         let until;
         
         if (nodeMap.has(commit.parents[0])){
-            until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+            until = nodeMap.get(commit.parents[0]).y;  
         }else{
-            until = INFINITY; // Set as occupied always
+            until = INFINITY; // Set as occupied 
+        }
+        
+        if ( until == undefined ){ // 
+            until = INFINITY;
         }
 
         
