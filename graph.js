@@ -377,65 +377,18 @@ function updateImageUrl(image_id, new_image_url) {
   if (image)
     image.src = new_image_url;
 }
-
-var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+ 
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
-        
-    //
-    // Circle mouse events
-    //
 
+    // Add mouse events for each circle ( mouse out event is created when overlay image is done)
     var arrElem = document.getElementsByTagName('image');
-    
-    // Size utility function
-    function sizeNodes( hash, size){
-        let node = draw.node.getElementById( 'img_' + hash);
-        let commit = nodeMap.get(hash);
-        
-        let X0 = LEFT_OFFSET + commit.x * COL_WIDTH;
-        let Y0 = TOP_OFFSET + commit.y * ROW_HEIGHT
-        
-        SVG( node )
-            .size(size,size)
-            .move( X0 - 0.5 * size , Y0 - 0.5 * size)
-    }
-    function resetNodeSize(){
-            // Reset node sizes
-            for (let i = 0; i < infoNodes.length; i++){
-                sizeNodes( infoNodes[i], IMG_H)
-            }
-            infoNodes = [];
-            return
-    }
-
-    // Other utility functions
-    function closeInfoBox(){  // Info box closing
-            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-            resetNodeSize();
-    }
-    function hasMouseLeft(){  // Tels if mouse is outside commmit circle
-        return !isMouseOverCommitCircle;  // true if mouse is not over
-    }
-    
-    //
-    // Add mouse events for each circle
-    //
-    //for (var i = arrElem.length; i-- ;) {
     for (var i = 0; i < arrElem.length ; i++ ) {
-    
-
-        // onmouseout     
-                       
-        arrElem[i].onmouseleave = function(e) {
-            closeInfoBox();
-            isMouseOverCommitCircle = false;
-            return
-        };
-        
-        
-        // onmouseover 
-        
-        arrElem[i].onmouseenter = async function(e) {
+        arrElem[i].onmouseenter = mouseOverNodeCallback;
+    }
+}       
+    async function mouseOverNodeCallback(e) {
+            
+            console.warn('mouseenter  x = ' + e.clientX + '  y = ' + e.clientY);
             
             isMouseOverCommitCircle = true;
             
@@ -562,20 +515,62 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
             if (top < 0)
                 top = e.clientY - 15;
-                
+
+            document.getElementById('displayedMouseOver').style.top = top;
+        }; 
+
+    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+    function mouseLeavingNodeCallback(){
+        closeInfoBox();
+        isMouseOverCommitCircle = false;
+        return
+    };
+    // utility functions
+    function sizeNodes( hash, size){    // Make large node overlay image
+        let node = draw.node.getElementById( 'img_' + hash);
+        let commit = nodeMap.get(hash);
+        
+        let X0 = commit.x * COL_WIDTH - (0.5 * size) + 1.5;
+        let Y0 = commit.y * ROW_HEIGHT - (0.5 * size) - 2;
+        
+        //SVG( node )
+            //.size(size,size)
+            //.move( X0 - 0.5 * size , Y0 - 0.5 * size);
             
-            document.getElementById('displayedMouseOver').style.top = top;                
+        // mySvg left top corner
         
+            
+        // Instead position node ontop
+        img = document.createElement('img'); 
+        img.style.left = X0 + document.getElementById('mySvg').getBoundingClientRect().left + document.body.scrollLeft; 
+        img.style.top = Y0 + document.getElementById('mySvg').getBoundingClientRect().top + document.body.scrollTop; 
+        img.style.width = size; 
+        img.style.height = size; 
+        img.setAttribute('pointer-events', 'none')
+        img.setAttribute('z-index', 5000)
+        img.style.position='absolute'; 
+        img.src = node.href.baseVal; 
+        img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
+        img.id='selectedImage_' + hash;
+        document.body.appendChild(img);
         
-            // Check if mouse left during execution
-            if (hasMouseLeft() ){
-                closeInfoBox();
-            }
-        
-        };
-    
+        console.warn('sizeNodes    x = ' + img.style.left + '  y = ' + img.style.top);
     }
-}        
+    function resetNodeSize(){           // Reset node overlay image
+            // Reset node sizes
+            for (let i = 0; i < infoNodes.length; i++){
+                //sizeNodes( infoNodes[i], IMG_H)
+                let hash = infoNodes[i];
+                let id='selectedImage_' + hash;
+                document.getElementById(id).remove();
+            }
+            infoNodes = [];
+            return
+    }
+    function closeInfoBox(){            // Info box closing
+            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+            resetNodeSize();
+    }
 
 
 // Git

@@ -234,11 +234,20 @@
         {
             filter: invert( 0% );
         }
+
         
-       
+        /* Have so many color images so I prefer to set filter only on the other ones */
+        img{
+            filter: unset;
+            top: unset;
+        }
+
+                        
+        img[src="images/find_black.png"],
+        img[src="images/questionmark_black.png"],
         img[src="images/circle_black.png"]
         {
-            filter: invert( var( --image-invert) );
+            filter: invert( var(--image-invert) );
         }
         
         .stashImg{
