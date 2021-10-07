@@ -1614,30 +1614,30 @@ async function drawGraph( document, splitted, branchHistory, history){
         return highestOccupiedCol
         
     };
-                    function isOnActiveSwimlane(lane, commit){
-                    // Looks from commit to end of segment
-                    
-                    // Extent of segment
-                    let start = commit.y;
-                    
+    function isOnActiveSwimlane(lane, commit){
+    // Looks from commit to end of segment
+    
+    // Extent of segment
+    let start = commit.y;
+    
 
-                    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
-                        commit = nodeMap.get( commit.parents[0]);
-                    }
-                    let end = commit.y - 1;
-                    //console.log('start = ' + start + '   End = ' + end);
-                    
-                    // Return true any commit is on active swimlane
-                    let i = start;
-                    while ( i < end){
-                        if ( lane == branchNames.get(commitArray[i].branchName) ){
-                            console.log('commit.y = ' + commit.y );
-                            return true
-                        }
-                        i++;
-                    }
-                    return false
-                }
+    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
+        commit = nodeMap.get( commit.parents[0]);
+    }
+    let end = commit.y - 1;
+    //console.log('start = ' + start + '   End = ' + end);
+    
+    // Return true any commit is on active swimlane
+    let i = start;
+    while ( i < end){
+        if ( lane == branchNames.get(commitArray[i].branchName) ){
+            console.log('commit.y = ' + commit.y );
+            return true
+        }
+        i++;
+    }
+    return false
+}
 
     function isOnNamedBranch(commit){
         if ( branchNames.has( commit.branchName ) ){
