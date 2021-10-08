@@ -392,8 +392,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
 }       
     async function mouseOverNodeCallback(e) {
             
-            console.warn('mouseenter  x = ' + e.clientX + '  y = ' + e.clientY);
-            
             isMouseOverCommitCircle = true;
             
             resetNodeSize(); // Clear resized nodes
@@ -557,8 +555,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
         img.id='selectedImage_' + hash;
         document.body.appendChild(img);
-        
-        console.warn('sizeNodes    x = ' + img.style.left + '  y = ' + img.style.top);
     }
     function resetNodeSize(){           // Reset node overlay image
             // Reset node sizes
