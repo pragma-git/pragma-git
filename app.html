@@ -465,7 +465,7 @@
 
     <!--  General alert dialog  --> 
 
-    <dialog id="alertDialog"  style="max-height: 90%" class="warning">  
+    <dialog id="alertDialog"  class="warning">  
         <b><div id='alertTitle'></div></b><br> 
         <div >
         <span id='alertMessage'></span>
@@ -480,7 +480,7 @@
  
     <!--Download new version -->   
   
-    <dialog id="newVersionDetectedInputDialog" style="max-height: 90%" class="warning">  
+    <dialog id="newVersionDetectedInputDialog" style="max-height: " class="warning">  
         
         <b>A new release is available</b> 
     
@@ -495,6 +495,7 @@
         <p>
             Your current version is <code id='currentVersion'> </code>. Download and installer for the new <code id='newVersion'> </code> version!  
         </p>
+
 
   
         <button  id="downloadButton"  
@@ -527,7 +528,7 @@
 
     <!-- Tag creation -->   
   
-    <dialog id="tagNameInputDialog" style="max-height: 90%" class="warning">  
+    <dialog id="tagNameInputDialog" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="tagNameTextarea" 
@@ -553,7 +554,7 @@
 
     <!-- Branch creation -->   
   
-    <dialog id="branchNameInputDialog" style="max-height: 90%" class="warning">  
+    <dialog id="branchNameInputDialog" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="branchNameTextarea" 
@@ -594,7 +595,7 @@
 
     <!-- Git not installed alert -->   
   
-    <dialog id="gitNotInstalledAlert"  style="max-height: 90%" class="error">  
+    <dialog id="gitNotInstalledAlert"  class="error">  
         <b>ERROR -- Cannot find "git" !</b><br>
             Please make sure "git" is installed. <br>
             See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
@@ -611,7 +612,7 @@
 
     <!-- Detached head dialog -->   
   
-    <dialog id="detachedHeadDialog"  style="max-height: 90%" class="error">  
+    <dialog id="detachedHeadDialog"  class="error">  
         <b>WARNING -- detached HEAD !</b><br>
             You've created work in an old revision. <br>
             1) Keep work : a temporary branch will be created<br>
@@ -635,7 +636,7 @@
 
     <!-- Dropped file is not a repo -->   
   
-    <dialog id="doYouWantToInitializeRepoDialog"   style="max-height: 90%" class="warning">  
+    <dialog id="doYouWantToInitializeRepoDialog"   class="warning">  
         <b>WARNING -- the dropped folder is not a repository.</b><br>
             Do you want to initialize this folder as a git repository ? <br>
             <br>
