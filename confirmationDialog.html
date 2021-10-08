@@ -2,28 +2,44 @@
     <head>
       <title>Dialog</title>
 
-    <link rel="stylesheet" type="text/css" href="dialog.css" />
+        <link rel="stylesheet" type="text/css" href="dialogs.css" />
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
     </head>
 
-<body>   
+    
+<body class='light dialog' style="position: relative;">
     
 
+    <div id="outer-content">       
+        <!-- Dark mode on/off--> 
+        <script>
+            if (global.localState.dark){
+                document.body.classList.remove('light');
+                document.body.classList.add('dark');
+            }
 
-<table>    
-</tr>
+        </script>
+    
+        
+        <div id="inner-content">
+     
+            <div id='titleDiv'>
+                <b><div id='title'>test-title</div></b>
+            </div> 
+             
+            <div id='messageDiv'>
+                <div id='messageText'>test message</div>
+                
+            </div> 
+ 
+            <div id="buttonDiv">       
+                <button class="OK-button" onclick="window.close();"> OK  </button> 
+            </div>  
+        
+        </div> 
+    </div> 
 
-    <tr>
-        <td id="message">What do you want to do?</td>
-    </tr>
-    <tr>
-        <td><br></td>
-    </tr>
-    <tr> 
-        <td><br></td>
-        <td><button class="Cancel-button" id="Cancel-button" onclick="storeButtonClicked()" >Cancel</button></td>
-        <td><button class="OK-button"  id="OK-button" onclick="storeButtonClicked()" >OK</button></td>
-    </tr>  
-</table>
 
   
 </body>

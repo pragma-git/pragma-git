@@ -289,6 +289,79 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // FUNCTIONS 
 // ---------
 
+function showInfoDialogInOwnWindow( title, message, type){
+    /**
+     * title   --message title 
+     * message -- message text 
+     * type is the class applied -- 'warning' (yellow border) or 'error' (red border)
+     * 
+     * The dialog opens and is placed center top with main window.
+     * Dialog grows up to certain height, after which the message gets a scroll bar
+     * OK button does nothing more than closing the dialog
+     * 
+     * Multiline messages have /n end of lines, which are converted to <br>
+     */
+    
+        // TODO         modes: warning, error 
+        
+        let messageHtmlFormat = '<code>' + message.replaceAll('/n', '<br>') + '</code>';
+        
+        console.log('win.cWindow.left = ' + win.cWindow.left);
+        console.log('win.cWindow.top = ' + win.cWindow.top);
+    
+        console.log(gui.Window.get());
+    
+        // Open new window -- and create closed-callback
+        gui.Window.open(
+            'confirmationDialog.html#/new_page', 
+            {   id: 'aboutWindowId',
+                position: 'center',
+                frame: false,
+                show: false
+            },
+            function(cWindows){ 
+                
+                cWindows.on('loaded', 
+                    function(){
+                        
+                        // Set Class
+                        cWindows.window.document.body.classList.add(type)
+                         
+                        // Set HTML
+                        cWindows.window.document.getElementById('title').innerHTML = title;
+                        cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;
+                                               
+                        // Set initial dialog dimensions 
+                        let dialogHeight = cWindows.window.document.body.offsetHeight;
+                        const dialogWidth = 600;
+                        
+                        // Position centered in x, aligned near top
+                        let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
+                        const offsetY = 28;  // slightly below main window
+                        cWindows.moveTo( pMidx - 0.5 * dialogWidth, gui.Window.get().y + offsetY);
+                        
+                        // So far the messageDiv increase in size with text        
+                        // Lets now correct, so if the size is too large, we fix messageDiv and window height
+                        if (dialogHeight > 250){
+                            dialogHeight = 250;
+                            
+                            let messageDivHeight = '144px';
+                            cWindows.window.document.getElementById('messageDiv').style.height = messageDivHeight;
+                        }
+  
+                        // Set window size and show
+                        cWindows.resizeTo( dialogWidth, dialogHeight)
+                        cWindows.show();     
+                    }
+                );
+
+            }
+        );
+        
+
+}
+
+
 // Main functions
 async function _callback( name, event){ 
     console.log('_callback = ' + name);

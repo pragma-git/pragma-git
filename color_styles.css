@@ -6,7 +6,7 @@
     --body-background: #FFFFFF;       /* in html windows  */
     --link-color: blue;            /* in html windows */
     --body-text: var(--text);
-    --input-background: #FFFFFF;
+    --input-background: #EEEEEE;
     --input-placeholder: #777777;
     --image-invert: 0%;               /* do not invert black-transparent images to white  */
     --header-color: #2F5496;
@@ -184,7 +184,8 @@
             margin-top: 20px;
         }
         
-        dialog{
+        dialog, 
+	   .dialog{
             color:  var(--body-text);
             background-color: var(--body-background);
             font-size: 14px;
@@ -198,11 +199,13 @@
             backdrop-filter: blur(1px);
         }
         
-        dialog.error{
+        dialog.error, 
+        .error{
             border-color: var(--err-color);
         }
         
-        dialog.warning{
+        dialog.warning, 
+        .warning{
             border-color: var(--warn-color);
         }
 
