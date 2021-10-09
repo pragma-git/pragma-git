@@ -466,10 +466,7 @@ function forgetButtonClicked(event){
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
 async function closeWindow(){
-    
-    // Remove from menu
-    opener.deleteWindowMenu('Settings');
-    
+
     // Read fields into state
     if ( !('tools' in state) ){
         state.tools = {};
