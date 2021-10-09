@@ -4099,7 +4099,7 @@ function displayLongAlert(title, message){
                             // So far the messageDiv increase in size with text        
                             // Lets now correct, so if the size is too large, we fix messageDiv and window height
                             if (dialogHeight > 250){
-                                dialogHeight = 250;
+                                dialogHeight = 260;
                                 
                                 let messageDivHeight = '144px';
                                 cWindows.window.document.getElementById('messageDiv').style.height = messageDivHeight;
