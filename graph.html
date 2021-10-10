@@ -7,6 +7,7 @@
         
         <script src="graph.js"></script>
         
+        <link rel="prefetch" href="images/stash_pop.png" />   <!--  preload image -->
         
 
         <!-- 
@@ -35,7 +36,8 @@
             width: -webkit-fill-available;
             background: var(--body-background);
             color: var(--body-text);
-            user-select: none; /* inibit automatic selection marking on web page */
+            /* user-select: none; /* inibit automatic selection marking on web page */
+            
         }
         
         html{
@@ -232,11 +234,20 @@
         {
             filter: invert( 0% );
         }
+
         
-       
+        /* Have so many color images so I prefer to set filter only on the other ones */
+        img{
+            filter: unset;
+            top: unset;
+        }
+
+                        
+        img[src="images/find_black.png"],
+        img[src="images/questionmark_black.png"],
         img[src="images/circle_black.png"]
         {
-            filter: invert( var( --image-invert) );
+            filter: invert( var(--image-invert) );
         }
         
         .stashImg{
