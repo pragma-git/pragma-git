@@ -213,6 +213,8 @@
     </button>  
 </dialog>  
 
+
+
 <!--  Warning dialog for delete  --> 
 
 <dialog id="deleteDialog"  class="error">    
@@ -223,6 +225,27 @@
     </button>   
     <button id="no"
         onclick="document.getElementById('deleteDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+
+
+<!--  Warning dialog for ignore  --> 
+
+<dialog id="ignoreDialog"  class="error">    
+    <p>This will ignore the new file so it will not be tracked by git.  This can be un-done in Settings/Repository/git-ignore tab. </p> 
+      
+    <p>If the git-ignore editor is open, it will be closed and your edits saved.  </p>   
+    
+    <p>Do your really want to delete ? </p>  
+    
+    <button id="yes" 
+        onclick="document.getElementById('ignoreDialog').close();_callback('ignoreLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('ignoreDialog').close();selectedFile='';">
         No
     </button>  
 </dialog>  

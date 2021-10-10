@@ -329,6 +329,67 @@ async function _callback( name, event, event2){
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
+        case 'ignoreLink': {
+            console.log('ignoreLink');
+            console.log(event);
+            
+            // File paths
+            const ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      
+            const settingsDir = os.homedir() + pathsep + '.Pragma-git';        
+            
+            file = event;   
+            
+            // Close Git-gitignore Editor
+                gui.Window.getAll( 
+        
+                    function allWindowsCallback( windows) {
+                        for (let i = 0; i < windows.length; i++) {
+                            let win_handle =  windows[i];
+                            console.log(win_handle.window.document.title);
+                            if ( win_handle.window.document.title == 'Git-ignore Editor' ){
+                                win_handle.close();
+                            }
+                        }    
+                    }
+                ); 
+            
+            
+            // Append to file
+                try{
+                     
+                    // Unstage (may not be needed, but no harm)
+                     await simpleGit( state.repos[state.repoNumber].localFolder )
+                        .raw( [  'reset', '--', file ] ); 
+                        
+                    // Append to .gitignore                  
+                    fs.appendFile(ignoreFileName, '\n' + file, function (err) {
+                        if (err) throw err;
+                        console.log('Added "' + file +'" to gitignore = ' + ignoreFileName);
+                    });
+      
+                }catch(err){
+                    console.log('ignoreLink -- caught error ');
+                    console.log(err);
+                }
+                
+    
+            // Git Status
+                try{
+                    if (localState.mode == 'HISTORY'){
+                        status_data = await opener.gitShowHistorical();  
+                    }else{
+                        status_data = await opener.gitStatus();
+                    }
+                }catch(err){
+                    console.log("ignoreLink -- Error " );
+                    console.log(err);
+                    return
+                }
+
+            // Finish
+                origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            break;
+        }           
         case 'radioButtonChanged' : {
             // TODO : stage or unstage depending on what happened
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
@@ -543,7 +604,18 @@ function createFileTable(status_data) {
                         "document.getElementById('restoreDialog').showModal();" );  // Opens dialog from html-page
                     discardLink.textContent=" (restore)";
                     cell.appendChild(discardLink);         
-                }   
+                }        
+                
+                // Make ignore link (only if added) 
+                if ( typeOfChanged == 'added'){  
+                    var ignoreLink = document.createElement('span');
+                    ignoreLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    ignoreLink.setAttribute('onclick',
+                        "selectedFile = '"  + file + "';" + 
+                        "document.getElementById('ignoreDialog').showModal();" );  // Opens dialog from html-page
+                    ignoreLink.textContent=" (ignore)";
+                    cell.appendChild(ignoreLink);         
+                }    
                 
                 // Make delete link (only if modified or added) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'added'){  
@@ -554,7 +626,7 @@ function createFileTable(status_data) {
                         "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
                     discardLink.textContent=" (delete)";
                     cell.appendChild(discardLink);         
-                }                     
+                }                    
             }
             // Internal functions
 
