@@ -139,7 +139,7 @@ async function injectIntoJs(document){
         console.log(history);
     
         // Commit log output format
-        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
 
         
     //
@@ -164,11 +164,11 @@ async function injectIntoJs(document){
     //
            
         // Normal log command    
-        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];       
+        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty',   messageFormat];       
          
         // Show all log command 
         if (state.graph.showall){
-            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];
+            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty',  messageFormat];
         }
         
 
@@ -446,14 +446,29 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Commit
+            let mBody = '';
+            if (commit.messageBody.length > 0)
+                mBody += '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
+                    commit.messageBody.replaceAll('\n', '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + 
+                    '<br>';
+            
+            
             html += `<B><U>Commit </U></B> : <BR><BR> 
-                 <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <span style = "left: 30 px; position: relative"> ${commit.message}</span>
-                 </div></b>
-                 <BR><BR>`
+                 <div> &nbsp; 
+                    <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                    <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+                 </div>
+                 <BR>`
+                 
+            
+            // HTML Commit message body (if multiple lines in message)
+            html += `<span> ${mBody}</span><BR>`
+            
             
             html += ` &nbsp; <i> ${author} </i><BR><BR>`
             html += ` &nbsp; ${commit.hash} <BR><BR>`
+            
+            
             
             
             html += '<HR><BR>' 
@@ -680,7 +695,7 @@ async function drawGraph( document, splitted, branchHistory, history){
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
-            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] );
+            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
      
@@ -736,6 +751,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.message = thisRow;
                 thisCommit.decoration = decoration;
                 thisCommit.branchName = "";  // Default (hidden or unknown)
+                thisCommit.messageBody = messageBody;
                 
                 
             // Get branchName
@@ -1361,8 +1377,12 @@ async function drawGraph( document, splitted, branchHistory, history){
                 }
                 
                 // Parents : Separate log row from parents(at end now when Notes removed)
+                let startOfMessageBody = gitLogRow.lastIndexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
+                let messageBodyInThisRow = gitLogRow.substring(startOfMessageBody + 2, startOfNote - 1); // Skip B=
+                
+                // Parents : Separate log row from parents(at end now when Notes removed)
                 let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
-                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
+                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfMessageBody - 1); // Skip H=
                 
                 // Hash : Separate log row from long hash (at end now when Parents removed)
                 let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
@@ -1381,12 +1401,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 // Message : Separate log row from message (at end now when date removed)
                 let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
                 let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
-                
-                // Position of '*' node
-                let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
-                let goodGraphPart = graphPartOfText.split('\n');
-                let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
-                graphNodeIndex = 0.5 * graphNodeIndex;  // Every second column is unused
+
                                 
                 if (startOfDate == -1){
                     date = ''; // When no date found (set blank date)
@@ -1405,7 +1420,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 let parents = parentInThisRow.split(' ');
         
                 
-                return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] 
+                return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBodyInThisRow] 
           
             // Internal functions
                 function getLastBranchInNote( noteInThisRow){
