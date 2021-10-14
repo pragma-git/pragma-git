@@ -3162,7 +3162,8 @@ async function gitAddCommitAndPush( message){
         console.log(err);
         
         if ( err.toString().includes('empty ident name') ){
-            displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
+            await showUserDialog();
+            return
         }
     }
     
@@ -3580,6 +3581,23 @@ async function gitIsFirstCommitOldest( oldCommit, newCommit){
     }
 }
 
+async function gitConfigList( localFolder ){
+let configList;
+
+try{
+    await simpleGit(localFolder).listConfig(onConfigList);
+    function onConfigList(err, result ){console.log(result); configList = result.all};
+    console.log(configList);
+    
+}catch(err){        
+    console.log('Error determining remote URL, in gitConfigList');
+    console.log(err);
+}
+return configList
+}
+
+
+
 function rememberDetachedBranch(){
     state.repos[state.repoNumber].detachedBranch = {};
     state.repos[state.repoNumber].detachedBranch.hash = localState.historyHash;  // TODO :  Is this necessary ?
@@ -3631,7 +3649,7 @@ async function commitSettingsDir(){  // Settings dir local incremental backup is
         console.log(err);
         
         if ( err.toString().includes('empty ident name') ){
-            displayAlert('Settings error - you cannot commit!', "Please add Author's name in Settings ( under Software settings)" );
+            await showUserDialog();
         }
     }
 }
@@ -4043,12 +4061,15 @@ function displayAlert(title, message){
 }
 function displayLongAlert(title, message){
     // A simple wrapper to make a long alert with same paramters as for the short displayAlert
-    showInfoDialogInOwnWindow(title, message, 'warning');
+    let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
+    showDialogInOwnWindow(title, message, buttonHtml, 260, 'warning');
 }
-    function showInfoDialogInOwnWindow( title, message, type){  // External alert dialog
+    function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
          * title   --message title 
          * message -- message text 
+         * buttonsHtml -- html for buttons
+         * maxHeight -- max dialog window height ( 260,  'auto')
          * type is the class applied -- 'warning' (yellow border) or 'error' (red border)
          * 
          * The dialog opens and is placed center top with main window.
@@ -4069,7 +4090,7 @@ function displayLongAlert(title, message){
         
             // Open new window -- and create closed-callback
             gui.Window.open(
-                'confirmationDialog.html#/new_page', 
+                'externalDialog.html#/new_page', 
                 {   id: 'aboutWindowId',
                     position: 'center',
                     frame: false,
@@ -4086,6 +4107,7 @@ function displayLongAlert(title, message){
                             // Set HTML
                             cWindows.window.document.getElementById('title').innerHTML = title;
                             cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;
+                            cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
                                                    
                             // Set initial dialog dimensions 
                             let dialogHeight = cWindows.window.document.body.offsetHeight;
@@ -4098,11 +4120,13 @@ function displayLongAlert(title, message){
                             
                             // So far the messageDiv increase in size with text        
                             // Lets now correct, so if the size is too large, we fix messageDiv and window height
-                            if (dialogHeight > 250){
-                                dialogHeight = 260;
+                            if ( (maxHeight !== 'auto')&&(dialogHeight > maxHeight) ){
+                                dialogHeight = maxHeight + 10;
                                 
-                                let messageDivHeight = '144px';
+                                let messageDivHeight = '144px';  // TODO : make dynamic (now matches maxHeight = 260)
                                 cWindows.window.document.getElementById('messageDiv').style.height = messageDivHeight;
+                                
+                                cWindows.window.document.getElementById('messageDiv').style.overflow = 'auto'
                             }
       
                             // Set window size and show
@@ -4116,6 +4140,81 @@ function displayLongAlert(title, message){
             
     
     }
+    async function showUserDialog(){
+        
+        // Get values according to git-config
+        let authorName = '';
+        let authorEmail = '';
+        let configList;
+        
+        try{
+            configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
+            console.log(configList);
+            authorName = configList['user.name'];
+        }catch(err){
+            console.log(err);
+        }
+        
+        try{
+            console.log(configList);
+            authorEmail = configList['user.email'];
+        }catch(err){
+            console.log(err);
+        }
+        
+        
+        const title = 'Missing Author information';
+        
+        let message = `    
+                    <table>            
+                      <tr style="border: none;">
+                            <td>
+                                <label for="authorName"> Author's name (required):</label> <br>
+                                <input id="authorName" type="text" size="80" value="${authorName}"/>
+                            </td>
+                      </tr>
+                      <tr>
+                            <td>                
+                                <label for="authorEmail"> Author's email :</label> <br>
+                                <input id="authorEmail" type="text" size="80" value="${authorEmail}"/>
+                            </td>
+                        </tr>
+                    </table>   
+            `; 
+        
+        const buttonHtml = `
+            <button  id="okButton"
+                onclick=" 
+                opener.setAuthorInfo( document.getElementById('authorName').value, document.getElementById('authorEmail').value );
+                window.close();">
+                OK
+            </button> 
+                      
+            <button id="cancelButton"
+                onclick="window.close();">
+                Cancel
+            </button>  `;
+        
+        showDialogInOwnWindow(title, message, buttonHtml, 'auto', 'warning');        
+    }
+        function setAuthorInfo( authorName, authorEmail){
+            try{
+                commands = [ 'config', '--global', 'user.name', authorName];
+                 simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+                function onConfig(err, result ){ console.log(result); console.log(err);  }
+            }catch(err){
+                console.log('Failed storing git user.name');
+            }
+            
+            try{  
+                commands = [ 'config', '--global', 'user.email', authorEmail];
+                 simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+                function onConfig(err, result ){ console.log(result); console.log(err);  }
+            }catch(err){
+                console.log('Failed storing git user.email');
+            }
+        }
+    
 
 function downloadNewVersionDialog(){
     

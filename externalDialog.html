@@ -28,6 +28,13 @@
                 border: none;
                 border: 5px solid;
                 height: max-content;
+                font-family: Arial;
+                font-size: 11pt;
+            }
+            
+            label {
+                font-family: Arial;
+                font-size: 9pt;   
             }
             
                     
@@ -62,7 +69,7 @@
                 margin-top: 10px;
             }
             #messageText{
-                background-color: var(--input-background);
+                overflow: hidden;
             }
             
             #buttonDiv{
@@ -72,7 +79,14 @@
                 right: 20px;
             }
             
-            div#inner-content {overflow: auto;/* width: 90%; *//* width: 90%; *//* height: -webkit-fill-available; */margin-left: 10px;margin-right: 10px;}
+            div#inner-content {
+                overflow: hidden;
+                /* width: 90%; *//* width: 90%; */
+                /* height: -webkit-fill-available; */
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+                
             
             
             .OK-button{
@@ -111,7 +125,9 @@
             </div> 
  
             <div id="buttonDiv">       
+<!--
                 <button class="OK-button" onclick="window.close();"> OK  </button> 
+-->
             </div>  
         
         </div> 
