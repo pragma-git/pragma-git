@@ -4140,7 +4140,9 @@ function displayLongAlert(title, message){
             
     
     }
-    async function showUserDialog(){
+    async function showUserDialog(test){
+        
+        // test -- if true, bail out if author name is known 
         
         // Get values according to git-config
         let authorName = '';
@@ -4160,6 +4162,10 @@ function displayLongAlert(title, message){
             authorEmail = configList['user.email'];
         }catch(err){
             console.log(err);
+        }
+        
+        if ( test && ( authorName !== '' ) ){
+            return // Bail out if test is asked for and authorname is known
         }
         
         
@@ -5069,6 +5075,9 @@ window.onload = async function() {
     
   // Mac Menu  
   initializeWindowMenu();
+  
+  // Dialog if author's name is unknown
+  showUserDialog(true)
 
 };
 async function closeWindow(a){
