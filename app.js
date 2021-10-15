@@ -821,7 +821,7 @@ async function _callback( name, event){
 
             
         }catch(err){       
-            displayLongAlert('Failed creating branch', err); 
+            displayLongAlert('Failed creating branch', err, 'error'); 
             console.log('Failed creating branch ');
             console.log(err);
         } 
@@ -874,7 +874,7 @@ async function _callback( name, event){
 
             
         }catch(err){       
-            displayLongAlert('Failed creating tag', err); 
+            displayLongAlert('Failed creating tag', err, 'error'); 
             console.log('Failed creating tag ');
             console.log(err);
         } 
@@ -1627,7 +1627,7 @@ async function _callback( name, event){
             }catch(err){        
                 console.log(err);
                 
-                displayLongAlert('Failed Checkout', err); 
+                displayLongAlert('Failed Checkout', err, 'error'); 
             }
             
         }else{
@@ -3404,7 +3404,7 @@ async function gitPush(){
         
 
     }catch(err){
-        displayLongAlert('Push Error' + attempt , err);
+        displayLongAlert('Push Error' + attempt , err, 'error');
     }
     
     await waitTime( 1000);  
@@ -3488,7 +3488,7 @@ async function gitPull(){
             
         }catch(err){
             
-            displayLongAlert('Failed pulling remote file', err); 
+            displayLongAlert('Failed pulling remote file', err, 'error'); 
             console.log('Error in gitPull()');
             console.log(err);
             error = err;
@@ -3496,7 +3496,7 @@ async function gitPull(){
         }
         _setMode('UNKNOWN');
     }else {
-        displayLongAlert('No files can be pulled from remote', err);
+        displayLongAlert('No files can be pulled from remote', err, 'error');
     }
 
 }
@@ -4059,10 +4059,17 @@ function displayAlert(title, message){
     // Show message
     document.getElementById('alertDialog').showModal();
 }
-function displayLongAlert(title, message){
-    // A simple wrapper to make a long alert with same paramters as for the short displayAlert
+function displayLongAlert(title, message, type){
+    /**
+     * A simple wrapper to make a long alert with same paramters as for the short displayAlert
+     * 
+     * title   --message title 
+     * message -- message text 
+     * type -- 'warning' (yellow border) or 'error' (red border)
+     */
+
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
-    showDialogInOwnWindow(title, message, buttonHtml, 260, 'warning');
+    showDialogInOwnWindow(title, message, buttonHtml, 260, type);
 }
     function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
@@ -4070,7 +4077,7 @@ function displayLongAlert(title, message){
          * message -- message text 
          * buttonsHtml -- html for buttons
          * maxHeight -- max dialog window height ( 260,  'auto')
-         * type is the class applied -- 'warning' (yellow border) or 'error' (red border)
+         * type -- 'warning' (yellow border) or 'error' (red border)
          * 
          * The dialog opens and is placed center top with main window.
          * Dialog grows up to certain height, after which the message gets a scroll bar
@@ -4078,10 +4085,13 @@ function displayLongAlert(title, message){
          * 
          * Multiline messages have /n end of lines, which are converted to <br>
          */
-        
-            // TODO         modes: warning, error 
+         
+            // Harden, if message is object
+            if (typeof message == 'object'){
+                message = message.toString();
+            }
             
-            let messageHtmlFormat = '<code>' + message.replaceAll('/n', '<br>') + '</code>';
+            let messageHtmlFormat = '<code>' + message.replaceAll('\n', '<br>') + '</code>';
             
             console.log('win.cWindow.left = ' + win.cWindow.left);
             console.log('win.cWindow.top = ' + win.cWindow.top);
