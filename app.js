@@ -4786,13 +4786,7 @@ function loadSettings(settingsFile){
     
         // 4) Build new state (with keys in the order I want them;  making json-file easier for humans, if always same ordr)
             state = {};
-        
-        // Repos (default is empty)
-            console.log('- setting repos');
-            state.repoNumber = setting( state_in.repoNumber, -1);
-            state.repos = setting( state_in.repos, [] );
-            
-            
+
         // Update
             state.ignoredVersion = setting( state_in.ignoredVersion, '0.0.0');
             
@@ -4855,7 +4849,13 @@ function loadSettings(settingsFile){
             state.graph.swimlanes  = setting( state_in.graph.swimlanes, false );
             state.graph.debug  = setting( state_in.graph.debug, false );  // Note, set by editing settings.json
             
-
+        
+        // Repos (default is empty)
+            console.log('- setting repos');
+            state.repoNumber = setting( state_in.repoNumber, -1);
+            state.repos = setting( state_in.repos, [] );
+            
+            
     //
     // Post-process state
     //
