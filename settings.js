@@ -595,17 +595,13 @@ async function closeWindow(){
     
     // Set Git author name and email (stored in git, not in settings)
     try{
-        commands = [ 'config', '--global', 'user.name', document.getElementById('authorName').value];
-        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-        function onConfig(err, result ){ console.log(result); console.log(err);  }
+        await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
     }catch(err){
         console.log('Failed storing git user.name');
     }
     
     try{  
-        commands = [ 'config', '--global', 'user.email', document.getElementById('authorEmail').value];
-        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-        function onConfig(err, result ){ console.log(result); console.log(err);  }
+        await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
     }catch(err){
         console.log('Failed storing git user.email');
     }
@@ -741,6 +737,7 @@ async function gitCreateBranch( folder, branchName){
     }
 
 }
+
 async function gitConfigList( localFolder ){
 let configList;
 
@@ -755,10 +752,15 @@ try{
 }
 return configList
 }     
-async function gitReadConfigKey( key, scope){
+async function gitReadConfigKey( repoNumber, key, scope){
     let output;
     try{
-        output = await simpleGit( state.repos[ state.repoNumber].localFolder).getConfig( key, scope);
+        if (scope == 'global'){
+            output = await simpleGit().getConfig( key, scope);
+        }else{
+            output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
+        } 
+        
         console.log(output);
     }catch(err){ 
         console.error(err); 
@@ -771,7 +773,12 @@ async function gitWriteConfigKey( key, value, scope){
 
         
     try{
-        await simpleGit( state.repos[ state.repoNumber].localFolder).addConfig(key, value, false, scope);
+        if (scope == 'global'){
+            await simpleGit().addConfig(key, value, false, scope);
+        }else{
+            await simpleGit( state.repos[ state.repoNumber].localFolder).addConfig(key, value, false, scope);
+        } 
+        
     }catch(err){ 
         console.error(err); 
     }              
@@ -864,14 +871,14 @@ async function injectIntoSettingsJs(document) {
     try{
         //configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
         //console.log(configList);
-        document.getElementById('authorName').value  = await gitReadConfigKey( 'user.name', 'global');
-        document.getElementById('authorEmail').value = await gitReadConfigKey( 'user.email','global');
+        document.getElementById('authorName').value  = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
+        document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
         
         // Show for local repo
         await updateLocalAuthorInfoView();  
         
     }catch(err){
-        console.log(err);
+        console.error(err);
     }
     
     // Set Zoom
@@ -1209,21 +1216,21 @@ async function updateLocalAuthorInfoView( globalSelected ){
     
     
      // Read local from git
-    let localAuthorName = await gitReadConfigKey( 'user.name', 'local');
-    let localAuthorEmail = await gitReadConfigKey( 'user.email', 'local');
+    let localAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'local');
+    let localAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'local');
     
-    
-    // If globalSelected is not set, this will be 
+    // Must be global if local is undefined
     let useGlobal = ( localAuthorName == undefined );
     
 
-    // If local is selected, make sure local author info is not undefined    
+    // If local    
     if (  globalSelected == false  ){
         if (localAuthorName == undefined)
             localAuthorName = document.getElementById('authorName').value;
         if (localAuthorEmail == undefined)
             localAuthorEmail = document.getElementById('authorEmail').value;
-                
+        
+        // Show / hide warning text for empty name        
         if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){       
             document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'visible';
         }else{
@@ -1233,6 +1240,7 @@ async function updateLocalAuthorInfoView( globalSelected ){
         useGlobal = false;
     }
     
+    // If Global
     if (globalSelected == true){
         useGlobal = true;
         document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
