@@ -255,17 +255,23 @@
                     
                                 
                     <!--  Force commit before branch change -->
+
                     <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="forceCommitBeforeBranchChange"> Branch change not allowed when there are uncommited files</label><br>
+
                     
                      <!--  Auto-push to remote -->
+<!--
                     <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
                     
+-->
                     <!--  --no-ff merge (gitflow recommends this) -->
+<!--
                     <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
                     
+-->
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br>
@@ -331,13 +337,59 @@
                     <h3>Tools </h3>
                     <div class="toolWrapper" > 
                         <div class="buttonWrapper">
-                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                              <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                              <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                              <button id="gitHubTab" class="tab-button-small" data-id="gitHubDiv">Add remote</button>
-                              <button id="gitignoreTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitIgnoreDiv">git-ignore</button>
+                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
                         </div>
                     </div>
+                     
                     
+                    <!--  This-repo settings TAB -->
+                    
+                    <div class="tool-content " id="thisRepoDiv" >  
+                        
+                        <p>
+                            These settings are specific for this repository. General settings are found in the Software tab, above.
+                        </p>
+                        
+                        <!--  Author info -->
+                        <table>            
+                          <tr style="border: none;">
+                                <td>
+                                    <label for="thisRepoAuthorName"> Author's name (required):</label><br>
+                                    <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />
+                                </td>
+                                <td>                
+                                    <label for="thisRepoAuthorEmail"> Author's email :</label><br>
+                                    <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/>
+                                    
+                                    <input type="checkbox" id="useGlobalAuthorInfo" name="name" value="true" onchange="_callback('useGlobalAuthorInfoCheckboxChanged',this)" checked>
+                                    <label for="useGlobalAuthorInfo"> Use global (from Software tab)</label><br>
+                                </td>
+                            </tr>
+                        </table>  
+                        
+                        <div id='warnThatLocalAuthorInfoMissing' class="red"> WARNING : Will use global Author's info because Author's name is missing</div>
+                        
+                        <br>
+     
+      
+                         <!--  Auto-push to remote -->
+                        <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
+                        <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        
+                        <!--  --no-ff merge (gitflow recommends this) -->
+                        <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
+                        <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
+                        
+                        <br><br>
+                    
+                            
+                        <p><span id="cloneStatus"></span></p>
+                    
+                    </div>                   
                     
                     <!--  Clone TAB -->
                     

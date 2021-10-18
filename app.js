@@ -3173,7 +3173,7 @@ async function gitAddCommitAndPush( message){
     // Push 
     await waitTime( 1000);
     
-    if (state.autoPushToRemote){ 
+    if (state.repos[state.repoNumber].autoPushToRemote){ 
         await gitPush();
     }
       
@@ -3512,7 +3512,7 @@ async function gitMerge( currentBranchName, selectedBranchName){
     
     // Set No-fast-forward option according to settings
     let options = ['--no-commit' ];
-    if (state.NoFF_merge){
+    if (state.repos[state.repoNumber].NoFF_merge){
         options = ['--no-ff', '--no-commit' ];
     }
     
@@ -3942,7 +3942,7 @@ function closeAllChildWindows( inputWin){
 }
 function setButtonText(){  // Store or Commit, depending on setting for autopush
     // Store-button : Store or Commit depending on setting
-    if (state.autoPushToRemote){
+    if (state.repos[state.repoNumber].autoPushToRemote){
         document.getElementById('store-button').innerText = 'Store';
     }else{
         document.getElementById('store-button').innerText = 'Commit';
@@ -4118,6 +4118,11 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('title').innerHTML = title;
                             cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
+                            
+                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');
+                            console.log(title);
+                            console.log(messageHtmlFormat);
+                            console.log(buttonsHtml);
                                                    
                             // Set initial dialog dimensions 
                             let dialogHeight = cWindows.window.document.body.offsetHeight;
@@ -4197,6 +4202,7 @@ function displayLongAlert(title, message, type){
                         </tr>
                     </table>   
             `; 
+        message = message.replaceAll('\n',' '); // Remove EOL from html formatting 
         
         const buttonHtml = `
             <button  id="okButton"
@@ -4820,8 +4826,8 @@ function loadSettings(settingsFile){
         // Git
             console.log('- setting git settings');
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
-            state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
-            state.NoFF_merge = setting( state_in.NoFF_merge, true);
+            //state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
+            //state.NoFF_merge = setting( state_in.NoFF_merge, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             state.StashPop = setting( state_in.StashPop, true);
             
@@ -4870,6 +4876,24 @@ function loadSettings(settingsFile){
             console.log('- setting repos');
             state.repoNumber = setting( state_in.repoNumber, -1);
             state.repos = setting( state_in.repos, [] );
+            
+            
+        // Set values individual repos
+            for (let i = 0; i < state_in.repos.length; i++){
+                // Local author info
+                state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
+                state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
+                state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
+                
+                // Default to global authorinfo if missing
+                if ( state.repos[i].authorName.trim().length == 0 ){
+                    state.repos[i].useGlobalAuthorInfo = true;
+                }
+                
+                // Local autoPush, No-fast-forward
+                state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
+                state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
+            }
             
             
     //
@@ -4990,7 +5014,6 @@ function updateWithNewSettings(){
         break;
       }
     }
-    
 
 }
 
