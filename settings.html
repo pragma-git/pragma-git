@@ -220,15 +220,16 @@
                     <table>            
                       <tr style="border: none;">
                             <td>
-                                <label for="authorName"> Author's name (required):</label><br>
+                                <label for="authorName"> <sup>*</sup>Author's name (required) :</label><br>
                                 <input id="authorName" type="text" size="30"/>
                             </td>
                             <td>                
-                                <label for="authorEmail"> Author's email :</label><br>
+                                <label for="authorEmail"> <sup>*</sup>Author's email  :</label><br>
                                 <input id="authorEmail" type="text" size="30"/>
                             </td>
                         </tr>
                     </table>  
+                    <br>
                     
                     
                     <!--  
@@ -259,19 +260,6 @@
                     <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="forceCommitBeforeBranchChange"> Branch change not allowed when there are uncommited files</label><br>
 
-                    
-                     <!--  Auto-push to remote -->
-<!--
-                    <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
-                    
--->
-                    <!--  --no-ff merge (gitflow recommends this) -->
-<!--
-                    <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
-                    
--->
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br>
@@ -282,6 +270,10 @@
                          Click <img id="StashPop" class="stashImg" height="17" width="auto" src="images/stash_pop.png">
                          to both apply and remove stash (<code>git stash pop</code>). Deselect to keep stash ( <code>git stash apply</code>)
                     </label><br><br>
+                    
+                    
+                    <sup>*</sup> These  are global settings. Individual repository set in "Repository / Software (this repo)" tab. 
+                    <br>
                 
                  
                   
