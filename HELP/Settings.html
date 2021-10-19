@@ -199,9 +199,10 @@
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
             </div>
         </div>
- 
+        
         <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
         a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
+        
         
          <p><b>Adding a local folder </b> :<br>  
         
@@ -212,6 +213,9 @@
         <li><b>The text field </b> displays the selected folder path     
         <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
         </ol>    
+        
+ 
+        <p>This is the same functionality as dropping a folder to the Pragma-git main window.</p>
         
         <br>
                
@@ -282,7 +286,7 @@
             <ol>
                 <li>Access token (Github has moved towards this -- see  
                 <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
-                <li>Old fashioned user-name and password
+                <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
             </ol>
         
         </p>
