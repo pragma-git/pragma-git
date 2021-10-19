@@ -544,23 +544,19 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
     };
     // utility functions
     function sizeNodes( hash, size){    // Make large node overlay image
+        
+        
         let node = draw.node.getElementById( 'img_' + hash);
         let commit = nodeMap.get(hash);
+
+        let X0 = commit.x * COL_WIDTH + 0.5;
+        let Y0 = commit.y * ROW_HEIGHT - 3;
+    
         
-        let X0 = commit.x * COL_WIDTH - (0.5 * size) + 1.5;
-        let Y0 = commit.y * ROW_HEIGHT - (0.5 * size) - 2;
-        
-        //SVG( node )
-            //.size(size,size)
-            //.move( X0 - 0.5 * size , Y0 - 0.5 * size);
-            
-        // mySvg left top corner
-        
-            
-        // Instead position node ontop
+        // Position node ontop, in mySvg-space (which is zoomed due to zoom-box -- so that zoom follows automatically)
         img = document.createElement('img'); 
-        img.style.left = X0 + document.getElementById('mySvg').getBoundingClientRect().left + document.body.scrollLeft; 
-        img.style.top = Y0 + document.getElementById('mySvg').getBoundingClientRect().top + document.body.scrollTop; 
+        img.style.left = X0; 
+        img.style.top = Y0; 
         img.style.width = size; 
         img.style.height = size; 
         img.setAttribute('pointer-events', 'none')
@@ -569,12 +565,12 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         img.src = node.href.baseVal; 
         img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
         img.id='selectedImage_' + hash;
-        document.body.appendChild(img);
+        
+        document.getElementById('mySvg').appendChild(img);
     }
     function resetNodeSize(){           // Reset node overlay image
             // Reset node sizes
             for (let i = 0; i < infoNodes.length; i++){
-                //sizeNodes( infoNodes[i], IMG_H)
                 let hash = infoNodes[i];
                 let id='selectedImage_' + hash;
                 document.getElementById(id).remove();
