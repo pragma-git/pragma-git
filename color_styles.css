@@ -208,6 +208,11 @@
         .warning{
             border-color: var(--warn-color);
         }
+        
+        .footnoteText{
+            font-size: 12px;
+            font-style: italic;
+        }
 
 
     

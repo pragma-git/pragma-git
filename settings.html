@@ -220,11 +220,11 @@
                     <table>            
                       <tr style="border: none;">
                             <td>
-                                <label for="authorName"> <sup>*</sup>Author's name (required) :</label><br>
+                                <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
                                 <input id="authorName" type="text" size="30"/>
                             </td>
                             <td>                
-                                <label for="authorEmail"> <sup>*</sup>Author's email  :</label><br>
+                                <label for="authorEmail"> <sup class="footnoteText">*</sup>Author's email  :</label><br>
                                 <input id="authorEmail" type="text" size="30"/>
                             </td>
                         </tr>
@@ -258,21 +258,23 @@
                     <!--  Force commit before branch change -->
 
                     <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="forceCommitBeforeBranchChange"> Branch change not allowed when there are uncommited files</label><br>
+                    <label for="forceCommitBeforeBranchChange"> Branch change only when all files are commited</label><br>
 
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br>
+                    <label for="FirstParent"> Search and history follow current branch </label><br>
                     
                     <!--  -- remove stash when pressing  () -->
                     <input type="checkbox" id="StashPop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="StashPop"> 
                          Click <img id="StashPop" class="stashImg" height="17" width="auto" src="images/stash_pop.png">
-                         to both apply and remove stash (<code>git stash pop</code>). Deselect to keep stash ( <code>git stash apply</code>)
+                         both applies and removes stash (<code>git stash pop</code>). Deselect to apply and keep stash ( <code>git stash apply</code>)
                     </label><br><br>
                     
                     
-                    <sup>*</sup> These  are global settings. Individual repository set in "Repository / Software (this repo)" tab. 
+                    <div class="footnoteText">
+                        <sup>*</sup> These are global settings. Individual repository setting in "Repository / Software (this repo)" tab.
+                    </div>
                     <br>
                 
                  
@@ -342,19 +344,15 @@
                     
                     <div class="tool-content " id="thisRepoDiv" >  
                         
-                        <p>
-                            These settings are specific for this repository. General settings are found in the Software tab, above.
-                        </p>
-                        
                         <!--  Author info -->
                         <table>            
                           <tr style="border: none;">
                                 <td>
-                                    <label for="thisRepoAuthorName"> Author's name (required):</label><br>
+                                    <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
                                     <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />
                                 </td>
                                 <td>                
-                                    <label for="thisRepoAuthorEmail"> Author's email :</label><br>
+                                    <label for="thisRepoAuthorEmail"> <sup class="footnoteText">*</sup>Author's email :</label><br>
                                     <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/>
                                     
                                     <input type="checkbox" id="useGlobalAuthorInfo" name="name" value="true" onchange="_callback('useGlobalAuthorInfoCheckboxChanged',this)" checked>
@@ -376,7 +374,12 @@
                         <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
                         <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
                         
-                        <br><br>
+                        <br>
+                        
+                        
+                        <p class="footnoteText">
+                            <sup>*</sup>These settings are specific for selected repository. General settings are found in the "Software tab", above.
+                        </p>
                     
                             
                         <p><span id="cloneStatus"></span></p>
