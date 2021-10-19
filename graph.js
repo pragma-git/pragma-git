@@ -1034,11 +1034,8 @@ async function drawGraph( document, splitted, branchHistory, history){
             let y0 = commit.y;
             
             let hashInThisRow = commit.hash;
-  
-
-            // Draw node
-            let id = 'img_' + commitArray[j].hash;
-            drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
+            
+            
             
   
             // Draw SVG horizontal help-line 
@@ -1047,6 +1044,11 @@ async function drawGraph( document, splitted, branchHistory, history){
                        LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
                        TOP_OFFSET + y0 * ROW_HEIGHT
                     ).stroke({ color: '#888', width: 0.25}); 
+  
+
+            // Draw node
+            let id = 'img_' + commitArray[j].hash;
+            drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
         }                  
 
     
