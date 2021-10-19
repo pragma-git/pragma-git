@@ -31,7 +31,7 @@
     "is-unc-path": "^1.0.0",
     "mime-types": "^2.1.27",
     "node-fetch": "^2.6.1",
-    "simple-git": "^2.11.0",
+    "simple-git": "^2.46.0",
     "terminal-tab": "^0.0.7",
     "windows-network-drive": "^3.0.1"
   },
