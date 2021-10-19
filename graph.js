@@ -1884,6 +1884,9 @@ function drawBranchColorHeader( branchNames){
         }
     }
     
+    // Add text below table
+    html += '<span class="footnoteText"> <br>(Click description to find branch)</span>';
+    
     // Set HTML
     document.getElementById('colorHeader').innerHTML = html;
 
