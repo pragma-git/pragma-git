@@ -151,6 +151,7 @@ td {
 .top-titlebar-notes-icon, .top-titlebar-pinned-icon, .bottom-titlebar-more-icon{
   display:inline;
   vertical-align:middle;
+  position: relative;
   -webkit-app-region: no-drag;
 }
 
@@ -224,6 +225,7 @@ td {
 .top-titlebar-branch-text,
 .top-titlebar-branch-arrow,
 .bottom-titlebar-status-text{
+  position: relative;
   display:inline-block;
   font-family: Arial;
   font-size: 11pt;
