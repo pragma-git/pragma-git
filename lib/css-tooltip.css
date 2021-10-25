@@ -5,6 +5,11 @@ https://www.npmjs.com/package/css-tooltip
 
 body{
     --tooltip_font_size: 8pt;
+    --display_tooltip: 0;  /* hide tooltip by default */
+}
+
+.display_tooltip{  /* Add this class to display tooltip */
+    --display_tooltip: 1;
 }
 
 [data-tooltip] {
@@ -46,7 +51,7 @@ body{
 }
 
 [data-tooltip]:hover:before, [data-tooltip]:hover:after, [data-tooltip]:focus:before, [data-tooltip]:focus:after, [data-tooltip]:active:before, [data-tooltip]:active:after {
-  opacity: 1;
+  opacity: var(--display_tooltip);
 }
 
 [data-tooltip].tooltip-multiline:before {

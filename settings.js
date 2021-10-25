@@ -855,6 +855,7 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
     document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
+    document.getElementById('displayToolTip').checked = state.displayToolTip;
     
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
     //document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;

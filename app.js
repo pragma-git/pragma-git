@@ -4816,8 +4816,10 @@ function loadSettings(settingsFile){
         // Visual
             console.log('- setting visual settings');
             state.darkmode = setting( state_in.darkmode, 'system');
+            
             state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
+            state.displayToolTip = setting( state_in.displayToolTip, true);
             
             state.zoom = setting( state_in.zoom, '1.0');
             state.zoomMain = setting( state_in.zoomMain, '1.0');
@@ -5014,6 +5016,15 @@ function updateWithNewSettings(){
         break;
       }
     }
+    
+    // Tootip
+    try{
+        document.body.classList.remove('display_tooltip');
+        if (state.displayToolTip){
+            document.body.classList.add('display_tooltip');
+        }
+        
+    }catch(err){}    
 
 }
 
