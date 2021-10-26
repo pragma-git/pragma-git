@@ -1,6 +1,14 @@
  
 <link rel="stylesheet" type="text/css" href="../slider_switch.css" /> 
 
+<style>
+        
+        img[src="../images/stash.png"],
+        img[src="../images/stash_pop.png"]
+        {
+            filter: var(--stash-icon-filter);
+        }
+</style>
  
 <h2 class="instructHeader">Overview</h2>
        
@@ -77,21 +85,6 @@
         <p>
         Commits are shown as circles.
         </p>
-    
-    
-    <h4>Commit Info</h4> 
-        <p>
-        Pointing the mouse to a commit circle displays information about the commit, and the parents of that commit.  
-        Also, the circles for the commit and its nearest parent are enlarged, giving a visual view of their relationship.
-  
-
-        
-        <figure>
-            <img src="images/Screenshot_graph_commit_info_dark.png" style="zoom:33%;filter: invert( 0% ); ">
-            <figcaption>
-                Commit info box displayed when hovering over a commit.
-            </figcaption>
-        </figure>
 
         
  
@@ -144,6 +137,31 @@
         moves history to the newly selected commit (both in graph and in main window).
         The bottom of the main window is updated to display number of modified files between the selected and the fixed (checkboxed) commits. 
         </p>
+    
+    
+    <h4>Stashes / Work in progress</h4>     
+        <p>
+        Stashed files ( <img src="../images/stash.png"  style="height: 17; width: auto; vertical-align:unset;"> from main window) 
+        can be retrieved by clicking the <img src="../images/stash_pop.png"  style="height: 17; width: auto; vertical-align:unset;"> icon.  
+        The stashes are numbered, with the lowest number being newest.  The icon is removed when a stash is retrieved, except if 
+        it causes a file conflict.
+        </p>
+        
+            
+    
+    <h4>Commit Info</h4> 
+        <p>
+        Pointing the mouse to a commit circle displays information about the commit, and the parents of that commit.  
+        Also, the circles for the commit and its nearest parent are enlarged, giving a visual view of their relationship.
+  
+
+        
+        <figure>
+            <img src="images/Screenshot_graph_commit_info_dark.png" style="zoom:33%;filter: invert( 0% ); ">
+            <figcaption>
+                Commit info box displayed when hovering over a commit.
+            </figcaption>
+        </figure>
 
 <!--------------------------------------------------------------------------------------------> 
 <hr>        
