@@ -77,10 +77,6 @@ async function injectIntoNotesJs(document) {
         [ button1struct, button2struct ],
     ];
 
-
-    // Add plugin 
-    options.plugins = [myPlugin];
-  
         
     // Initiate Editor
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
@@ -105,91 +101,10 @@ async function injectIntoNotesJs(document) {
     // Title
     let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
-    
-    
-    // Keybinding NEW-LINE and WYSIWYG ≈
-    document.onkeydown = function (pressed) {
-          console.log(pressed)
-          // Check for Soft Enter (SHIFT-ENTER)
-          if ( pressed.shiftKey && pressed.keyCode === 13 )
-          {
-            //pressed.preventDefault();
-            console.log('SHIFT ENTER from notes.js');
-            //editor.insertText('\n '); // The space is important. If row starts without space, then a whole list-element is removed
-            editor.exec('shiftEnter');  // My plugin-function for backspace
-            return false;
-          } 
-          // Check for Backspace
-          if ( (editor.getCurrentModeEditor().editorType == 'wysiwyg') && (pressed.keyCode === 8  ) )
-          {
-            //pressed.preventDefault();
-            console.log('Backspace from notes.js');
-            //editor.exec('preBackspace');  // My plugin-function for backspace
-            editor.exec('backspace');  // My plugin-function for backspace
-            return false;
-          } 
-    }
+
 
 
 };
-    function myPlugin() { // Plugin for backspace in wysiwyg editor
-    // See : https://github.com/nhn/tui.editor/blob/master/docs/en/plugin.md    Description
-    //       https://nhn.github.io/tui.editor/latest/                           API/Examples
-    //
-    // Run from debugger in wysiwyg mode : editor.exec('backspace')
-    //
-    // Mechanism : add a non-breaking space at end of line when doing Shift-ENTER
-    //             add a non-breaking space before deleting last character on line
-    //
-    //
-    // Reason:     I Found that backspace from line with no characters deletes parent node, but not if I leave a space after cursor when doing backspace
-    //             I don't fully understand why this is. It is reported as Github nhn/tui.editor issue #1812
-    //
-        const wysiwygCommands = {
-            preBackspace: preBackspace,
-            backspace: backspaceFunction,
-            shiftEnter: shiftEnterFunction
-        }
-        return { wysiwygCommands }
-    }
-    
-        function preBackspace(payload, state, dispatch){ 
-            return false
-            let from = state.selection.ranges[0].$from.pos;
-            editor.replaceSelection(' ', from, from);
-        }
-    
-        function backspaceFunction(payload, state, dispatch){ 
-
-            let from = state.selection.ranges[0].$from.pos; 
-            let to = state.selection.ranges[0].$to.pos;
-            
-            editor.setSelection( from - 1, from);
-            if (state.selection.ranges[0].$from.parentOffset > 1){   // More than one character on line
-                editor.replaceSelection('');
-                return true; // Change in editor content
-            }else{
-                editor.replaceSelection( String.fromCharCode(160) );  // Add non-breaking space when exactly one character left
-                editor.setSelection( from -1 , from -1);              // Put cursor back at start of line (so that next backspace will go to previous line )
-                return true; // Change in editor content
-            }
-
-            return false
-
-        }
-         function shiftEnterFunction(payload, state, dispatch){ 
-            // Note : keep strange formatting, so that EOL will be included.  CharCode 160 is a non-breaking space
-            let ENTER =`${String.fromCharCode(160)}
-`;            
-            let from = state.selection.ranges[0].$from.pos;
-            let to = state.selection.ranges[0].$to.pos;
-            
-            // This is where I should put shift-Enter into last element
-            editor.replaceSelection(ENTER, from , from );
-            
-            return false
-
-        }
 
 function save(){
     
