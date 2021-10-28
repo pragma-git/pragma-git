@@ -32,6 +32,8 @@
     --code-background: #DDDDDD;         /* (lighter grey) */
     --notes-code-text: var(--code-text);
     --notes-checkbox-filter: none;
+    --table-header-color: #FFF;                 /* (White text) */
+    --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     
     /* Main */
     --main-background: var(--body-background); 
@@ -72,7 +74,10 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
-    --notes-checkbox-filter: invert() brightness(0.75);
+    --notes-checkbox-filter: invert() brightness(0.75);    
+    --table-header-color: #FFF;                 /* (White text) */
+    --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
+    
     
     /* Merge */
     --merge-color: black;
@@ -137,6 +142,8 @@
             text-align:left; 
             color: var(--header-color);
         }
+        
+        
         h4{
             margin-block-end: auto;
         }  
