@@ -199,11 +199,23 @@
         filter: invert( 0% );
     }
     
-    th > p:first-child,
-    th
+    .toastui-editor-contents th > p:first-child,
+    .toastui-editor-contents table thead th
     {
-      color: var(--table-header-color);
-      background-color: var(--table-header-background-color);
+      color: var(--table-header-color) !important;
+      background-color: var(--table-header-background-color) !important;
+    }
+    
+    
+    .toastui-editor-contents table td,
+    .toastui-editor-contents table th
+    {
+      border-color: var(--table-header-color);
+      font-weight: 400;
+    }
+    
+    .toastui-editor-md-table .toastui-editor-md-table-cell {
+        color: var(--body-text) !important;
     }
         
  
