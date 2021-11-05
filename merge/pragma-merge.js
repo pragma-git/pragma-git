@@ -319,6 +319,14 @@ function initUI() {
         addSearch('editor3', 'CodeMirror-merge-editor');
         addSearch('right3', 'CodeMirror-merge-right');
     }
+    
+    // Dark mode
+    if (global.localState.dark){
+        cm = document.getElementsByClassName("CodeMirror");
+        for (var i = 0; i < cm.length; i++) {
+          cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula');
+        }
+    }
 
 }
 
