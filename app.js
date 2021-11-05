@@ -2589,6 +2589,7 @@ async function gitIsInstalled(){
             
             if (err == undefined){
                 isInstalled = true;
+                localState.gitVersion = result.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
             }
         }; 
     }catch(err){

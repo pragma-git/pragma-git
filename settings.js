@@ -848,6 +848,8 @@ async function injectIntoSettingsJs(document) {
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
     
+    
+    document.getElementById('gitVersion').innerText = localState.gitVersion;
 
     
     // Set values according to state variable
