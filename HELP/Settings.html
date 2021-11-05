@@ -1,6 +1,23 @@
 <link rel="stylesheet" type="text/css" href="../settings.css" />
 <link rel="stylesheet" type="text/css" href="../color_styles.css" />
 
+<style>
+     /* Settings : images */  
+                  
+        img[src="../images/stash_pop.png"],
+        img[src="../images/stash_pop_black.png"],
+        img[src="../images/stash_pop_hover.png"] 
+        {
+            filter: var(--stash-icon-filter);
+        }
+        
+               
+        .stashImg{
+            position: relative;
+            top: 2px;
+        }
+</style>
+
  
 <h2 class="instructHeader">Overview</h2>
    
@@ -14,128 +31,19 @@
     </p>
 
 <hr>   
-<!--------------------------------------------------------------------------------------------> 
 
-<h2 class="instructHeader" id="SoftwareTab">Software settings tab</h2>
-
-            <div class="wrapper">
-                <div class="buttonWrapper">
-                      <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
-                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
-                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
-                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
-                </div>
-            </div>   
-<!--------------------------------------------------------------------------------------------> 
-    <p>The software settings are grouped as follow : 
-        <dl>
-            <dt><h4>Visual</h4></dt>
-                <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
-                    <ul>
-                        <li>System setting : follow the system-defined light/dark theme</li>
-                        <li>Light mode :  light theme</li>
-                        <li>Dark mode :  dark theme</li>
-                    </ul>
-                 </dd>
-                <dd><b>- Always on top </b> , makes the main window always be on top of other program windows </dd>
-                <br>
-                <dd><b>- Show on all workspaces </b> , shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dd>
-                <br>
-                <dd><b>- Windows scaling </b> 
-                <br>
-                <dd>
-                    <!--  Zoom -->
-                    
-                    <b>- <input id="zoomMain" type="text" size="3" value="1.0"/> Scale-factor for main window</b> , 
-                    changes main-window scaling (useful for high definition screens)
-                    <br> 
-                    <b>- <input id="zoom" type="text" size="3" value="0.75"/> Scale-factor for other windows</b> , 
-                    for instance a setting of 0.75 means the size is 75% of default size
-                    </dt>
-                </dd>
-                <br>
-                
-                
-            <dt><h4>Git Settings</h4></dt> 
-                <br>
-                                         
-                <dd><b>- Author's name </b> : 
-                    Required field. Modify your name (on all your repositories on this computer)</dd>
-                <br>
-                                             
-                <dd><b>- Author's email </b> : 
-                    Modify your email (on all your repositories on this computer)</dd>
-                <br>
-                
-                <dd><b>- Branch change only if all files are stored </b> : 
-                    Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. </dd>
-                <br>
-                
-                <dd><b>- Auto-push to remote when Store clicked </b> : 
-                    The "Store" button performs the git commands "Add", "Commit", and if this setting is selected "Push". Disabling stops the "Push" command from being automatically run </dd>
-                <br>
-
-                                             
-                <dd><b>- Merge without fast-forward </b> : 
-                    This is default, and makes clearer merges.  This guarantees that a commit is created when merging,
-                    where the commit message can clarify the used workflow.  This is the recommended workflow in the popular "Gitflow" way to do branching.
-                    It is also recommended to enable this setting because searches will be easier to understand (see below setting).</dd>
-                <br>
-                                             
-                <dd><b>- Search in current branch </b> : 
-                    This is default, and makes search look in current branch.  This makes searches less confusing, since the 
-                    result follow a logical flow, and does not jump back and forth between branches.
-                    However: Results where fast-forward merge (above setting) are used will be confusing, 
-                    and if fast-forward-merges are your settings, it is recommended to disable the "Search in current branch" 
-                    setting.   <dd>
-                <br>
-
-                    
-                <br>
-                
-                
-            <dt><h4>Git tools</h4></dt>
-                <dd>
-                <p> Pragma-git has a built-in diff and merge tool.  
-                If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
-                 If you have your favorite Diff and Merge tool it may be used instead. 
-                 <br>
-                There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
-                are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
-                Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
-                The settings for external tools are :
-                 <br>
-                 </dd>
-                
-                <br>
-                <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
-                <br>
-                <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
-                <br>
-                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
-                    This can be fixed, by adding the path to the tools in this field.
-                    If you have different diff and merge tools, two paths may be needed.
-                    The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
-                </dd>
-                <br>
-         </dl>     
-    </p>
-       
-    
-    <hr>  
- 
 <!--------------------------------------------------------------------------------------------> 
 
             <h2 class="instructHeader" id="RepositoryTab">Repository tab</h2>
             
             <div class="wrapper">
-                <div class="buttonWrapper">
-                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
-                      <button class="tab-button active" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                <div class="buttonWrapper">                      
+                      <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
-            </div>   
+            </div>  
 <!-------------------------------------------------------------------------------------------->  
 
     <p>The repository settings have two parts : 
@@ -166,16 +74,104 @@
 
     <!--------------------------------------------------------------------------------------------> 
     <h3>The "Tools tabs"</h3>  
-    
+     
+
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
+           
+        <div class="toolWrapper" > 
+            <div class="buttonWrapper">
+                  <button id="cloneTab" class="tab-button-small active " style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+            </div>
+        </div>
+        
+
+        <p>This tab handles settings that are specific for the currently selected repository.  </p>
+        
+ 
+        
+        <dt><h4>Author's information</h4></dt> 
+        <br> 
+        <dd>
+        The author information here may override the global author information for this selected repository (see "Software" tab) 
+        </dd>
+        <br>
+                                       
+        <dd><b>Author's name textfield</b> —  
+            Required field. Modify your name (on all your repositories on this computer)</dd>
+        <br>
+                                     
+        <dd><b>Author's email textfield</b> —  
+            Modify your email (on all your repositories on this computer)</dd>
+        <br>
+        
+        <dd><input type="checkbox" checked>   Use global (from Software tab)  —    <br> 
+            When this is unchecked, the author's name and email fields are used instead of the global values.  If checked, global values are used and displayed.
+        </dd>
+        <br>
+ 
+        <dt><h4>Git behavior</h4></dt> 
+        <br> 
+                 
+        <dd><input type="checkbox" checked> 
+        
+        Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)  —  <br> 
+        Pragma-git has the possibility to auto-push if a remote repository exists.  This is handy most times, but it can be turned off by deselecting this checkbox.
+        </dd>
+        <br>
+        
+        <dd><input type="checkbox" checked>   Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  
+        Deselect to use fast-forward —     <br> 
+        
+        Fast-forward merge is a git feature that is debated.  Some developers love it because it may make the commit history appear cleaner than it really was,
+         and some thinks it is very awkward since it changes the history.
+        It is recommended that beginners have this checkbox selected, so that the history follows what has actually happened.   
+        
+        </dd>
+        <br>
+     
+        
+        
+        
+        
+        
+        
+        
+        <br>
+        
         
        <div class="toolWrapper" > 
             <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                  <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
+                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
             </div>
-        </div>  
+        </div>
+    
+
+        <p>This tab shows the .gitignore file, which is used to stop new files (matching a pattern) from being added to the repository.  
+        It can be viewed as a filter against files that change by theirselves when you develop.  This could
+        for instance be compiled files, log files, or automatically generated backup files</p>
+        
+        <p> <button>Edit .gitignore</button> opens a special editor for .gitignore files, that aids in creating and modifying the filter conditions</p>
+        
+        <br>
+
+        <div class="toolWrapper" > 
+            <div class="buttonWrapper">
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                  <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
+                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+            </div>
+        </div>
+                     
 
         <p>Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).</p>
         
@@ -189,21 +185,24 @@
         <li><button>Get Folder</button> button  is used to select the folder, into which the cloned repository is copied.
         <li><b>The second text field </b> displays the selected folder path   
         <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
-        </ol>    
+        </ol>   
+        
+        <br> 
                
         
-        
-    
-       <div class="toolWrapper" > 
+        <div class="toolWrapper" > 
             <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                  <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
             </div>
-        </div> 
- 
+        </div>
+        
         <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
         a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
+        
         
          <p><b>Adding a local folder </b> :<br>  
         
@@ -214,18 +213,22 @@
         <li><b>The text field </b> displays the selected folder path     
         <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
         </ol>    
+        
+ 
+        <p>This is the same functionality as dropping a folder to the Pragma-git main window.</p>
+        
+        <br>
                
-    
-    
-    
-    
-       <div class="toolWrapper" > 
+        
+        <div class="toolWrapper" > 
             <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                  <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add Remote</button>
+                  <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
             </div>
-        </div> 
+        </div>
         
          <p><b>Adding a remote repository</b> :<br>  
          
@@ -249,6 +252,8 @@
     
         <p><button>Github</button> button launches a Github dialog.  It has a separate help function
         </p>
+        
+        <br>
         
 
     <hr>  
@@ -281,7 +286,7 @@
             <ol>
                 <li>Access token (Github has moved towards this -- see  
                 <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
-                <li>Old fashioned user-name and password
+                <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
             </ol>
         
         </p>
@@ -323,11 +328,12 @@
 
             <h2 class="instructHeader" id="BranchTab">Branch tab</h2>
             
+            
             <div class="wrapper">
-                <div class="buttonWrapper">
-                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
-                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
-                      <button class="tab-button active" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                <div class="buttonWrapper">                      
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button active " data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
             </div>    
@@ -349,16 +355,137 @@
         
     
     <hr>               
-             
+<!--------------------------------------------------------------------------------------------> 
+
+<h2 class="instructHeader" id="SoftwareTab">Software settings tab</h2>
+
+            <div class="wrapper">
+                <div class="buttonWrapper">                      
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                      <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button active" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                </div>
+            </div>   
+<!--------------------------------------------------------------------------------------------> 
+    <p>The software settings are grouped as follow : 
+        <dl>
+            <dt><h4>Visual</h4></dt>
+                <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
+                    <dl>
+                        <dt><input type="radio" checked> System setting —  follow the system-defined light/dark theme</dt>
+                        <dt><input type="radio"> Light mode —   light theme</dt>
+                        <dt><input type="radio"> Dark mode —   dark theme</dt>
+                    </dl>
+                 </dd>
+                 
+                <dd> - <b>Window behavior  </b> 
+                    <dl>
+                        <dt><input type="checkbox" checked>  Always on top  —  makes the main window always be on top of other program windows </dt>
+                        <dt><input type="checkbox" checked>    Show on all workspaces  —  shows the Pragma-git on all virtual workspaces (this is a Mac and Linus thing) </dt>
+                        <dt><input type="checkbox" checked>    Show tooltips in main window  -- shows tooltip when hovering over most buttons (not history arrows or Store button) </dt>
+                    </dl>
+                </dd>
+                <br>
+                <dd> - <b>Windows scaling  </b> 
+                    <dl>
+                        <!--  Zoom -->
+                        <dt><input id="zoomMain" type="text" size="3" value="1.0"/> Scale-factor for main window — 
+                        changes main-window scaling (useful for high definition screens)
+                        </dt>
+                        <dt><input id="zoom" type="text" size="3" value="0.75"/> Scale-factor for other windows — 
+                        for instance a setting of 0.75 means the size is 75% of default size
+                        </dt>
+                     </dl>
+                </dd>
+                <br>
+                
+                
+            <dt><h4>Git Settings</h4></dt> 
+                
+                <br>
+                <dd>
+                These settings are common for all repositories. 
+                The author information may however be overridden by the setting in an individual repository (see "Repository / Software (this repo)" tab) 
+                </dd>
+                <br>
+                                         
+                <dd><b>Author's name textfield</b> —  
+                    Required field. Modify your name (on all your repositories on this computer)</dd>
+                <br>
+                                             
+                <dd><b>Author's email textfield</b> —  
+                    Modify your email (on all your repositories on this computer)</dd>
+                <br>
+                
+                <dd><input type="checkbox" checked>  Branch change only when all files are committed  —   
+                    Stops you from changing branch, if you have not Stored your data.  This is the safe way to work. 
+                </dd>
+                <br>
+
+                  
+                <dd><input type="checkbox" checked> Search and history follow current branch  —   
+                    This is default, and makes history follow the current branch.  
+                    Similarly, search look in the current branch.  This makes searches less confusing, since the 
+                    result follow a logical flow, and does not jump back and forth between branches.
+                    However: Results where fast-forward merge (above setting) are used will be confusing, 
+                    and if fast-forward-merges are your settings, it is recommended to disable the "Search in current branch" 
+                    setting.   
+                </dd>
+                <br>
+                
+                <dd><input type="checkbox" checked>                        
+                     Click <img id="StashPop" class="stashImg" height="17" width="auto" src="../images/stash_pop.png">
+                     both applies and removes stash (<code>git stash pop</code>). Deselect to apply and keep stash ( <code>git stash apply</code>) 
+                      — 
+                     <u>Background information:</u> 
+                     Stashed files can be popped back into the repository.  When a stash is applied, there are two options : 
+                     1) remove the stash, or 2) keep the stash.   
+                </dd>
+                <br>
+                
+                
+            <dt><h4>Git tools</h4></dt>
+                <dd>
+                <p> Pragma-git has a built-in diff and merge tool.  
+                If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
+                 If you have your favorite Diff and Merge tool it may be used instead. 
+                 <br>
+                There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
+                are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
+                Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
+                The settings for external tools are :
+                 <br>
+                 </dd>
+                
+                <br>
+                <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
+                <br>
+                <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
+                <br>
+                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
+                    This can be fixed, by adding the path to the tools in this field.
+                    If you have different diff and merge tools, two paths may be needed.
+                    The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
+                </dd>
+                <br>
+         </dl>     
+    </p>
+       
+    
+    <hr>  
+              
 <!--------------------------------------------------------------------------------------------> 
 
             <h2 id="SystemInfoTab" class="instructHeader">System Info tab</h2>
             
+            
+
             <div class="wrapper">
-                <div class="buttonWrapper">
-                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
-                      <button class="tab-button" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
+                <div class="buttonWrapper">                      
+                      <button class="tab-button" style="border-top-left-radius: 10px;" data-id="foldableDiv1" onClick="window.location.href='#RepositoryTab' ">Repository</button>
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
+                      <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
                 </div>
             </div>   

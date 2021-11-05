@@ -6,7 +6,7 @@
     --body-background: #FFFFFF;       /* in html windows  */
     --link-color: blue;            /* in html windows */
     --body-text: var(--text);
-    --input-background: #FFFFFF;
+    --input-background: #EEEEEE;
     --input-placeholder: #777777;
     --image-invert: 0%;               /* do not invert black-transparent images to white  */
     --header-color: #2F5496;
@@ -32,6 +32,9 @@
     --code-background: #DDDDDD;         /* (lighter grey) */
     --notes-code-text: var(--code-text);
     --notes-checkbox-filter: none;
+    --table-header-color: #DDDDDD;              /* (text ) */
+    --table-line-color: var(--text);            /* (line ) */
+    --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     
     /* Main */
     --main-background: var(--body-background); 
@@ -72,7 +75,11 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
-    --notes-checkbox-filter: invert() brightness(0.75);
+    --notes-checkbox-filter: invert() brightness(0.75);    
+    --table-header-color: var(--text);           /* (White text and line) */
+    --table-line-color: var(--text);            /* (line ) */
+    --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
+    
     
     /* Merge */
     --merge-color: black;
@@ -137,6 +144,8 @@
             text-align:left; 
             color: var(--header-color);
         }
+        
+        
         h4{
             margin-block-end: auto;
         }  
@@ -153,6 +162,7 @@
         }
         a{
             color: var(--link-color);
+            outline: none !important;  /* Dialogs have a problem showing blue outline when selected (tab between dialog elements) */
         }
         
         iframe{
@@ -183,7 +193,8 @@
             margin-top: 20px;
         }
         
-        dialog{
+        dialog, 
+	   .dialog{
             color:  var(--body-text);
             background-color: var(--body-background);
             font-size: 14px;
@@ -192,12 +203,24 @@
             -webkit-border-radius: 6px;
         }
         
-        dialog.error{
+        dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.5);/* make the backdrop a semi-transparent black */
+            backdrop-filter: blur(1px);
+        }
+        
+        dialog.error, 
+        .error{
             border-color: var(--err-color);
         }
         
-        dialog.warning{
+        dialog.warning, 
+        .warning{
             border-color: var(--warn-color);
+        }
+        
+        .footnoteText{
+            font-size: 12px;
+            font-style: italic;
         }
 
 

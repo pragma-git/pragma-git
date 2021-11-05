@@ -5,6 +5,7 @@
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="stylesheet" type="text/css" href="slider_switch.css" />
+    <link rel="stylesheet" href="lib/css-tooltip.css" />
     
     <script src="app.js"></script>
     
@@ -29,6 +30,17 @@
         }
     </script>
     
+    
+
+    <!-- Tooltip on/off --> 
+    <script>
+        if (state.displayToolTip){
+            document.body.classList.add('display_tooltip');
+        }
+    </script>
+    
+    
+    
     <!-- Top titlebar -->    
     
     <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
@@ -48,37 +60,44 @@
         <div id="top-titlebar-text" class="top-titlebar-text">
             
             <!-- Text Repo  --> 
-            &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
-                onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
-                        _callback('clicked-repo', 'menu')" 
-                onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
-                >&#x25BE;</div>
-                
-            <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
-                onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+            <div class="tooltip-bottom-left" data-tooltip="Repository" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+    
+                &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
+                    onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
+                            _callback('clicked-repo', 'menu')" 
+                    onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
+                    >&#x25BE;</div>
+                    
+                <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
+                    onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
+                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+                </div>
             </div>
             
             <!-- Text Branch  --> 
-            &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
-                onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
-                         _callback('clicked-branch', 'menu')" 
-                onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
-                >&#x25BE;</div>
-                
-                <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
-                         _callback('clicked-branch', 'cycle')" 
-                onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-            </div>)
+            <div class="tooltip-bottom-left" data-tooltip="Branch" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+            
+                &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
+                    onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
+                             _callback('clicked-branch', 'menu')" 
+                    onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
+                    >&#x25BE;</div>
+                    
+                    <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                    onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
+                             _callback('clicked-branch', 'cycle')" 
+                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+                </div>)
+            </div>
+            
             &nbsp;
              
             <!-- Icon Notes  -->                             
-            <div class="top-titlebar-notes-icon">
+            <div class="top-titlebar-notes-icon tooltip-bottom " data-tooltip="Personal notes">
                 <img id="top-titlebar-notes-icon" height="17" width="17" 
                     onclick="updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');
                              _callback('clicked-notes')"
@@ -86,6 +105,8 @@
                     onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
                     src="images/notes.png">
             </div> 
+            
+            
  
         </div>     
         
@@ -99,7 +120,7 @@
 
  
         <!-- Icon Branch  -->                             
-        <div class="top-titlebar-branch-icon">
+        <div class="top-titlebar-branch-icon tooltip-bottom " data-tooltip="Create branch">
             <img id="top-titlebar-branch-icon" height="17" width="17" 
                 onclick="updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');
                          document.getElementById('branchNameInputDialog').showModal();" 
@@ -110,7 +131,7 @@
                 
                                                  
         <!-- Icon Merge  -->                             
-        <div class="top-titlebar-merge-icon">
+        <div class="top-titlebar-merge-icon tooltip-bottom " data-tooltip="Merge">
             <img id="top-titlebar-merge-icon" height="17" width="17" 
                 onclick="updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');
                          _callback('clicked-merge-button')" 
@@ -121,7 +142,7 @@
                 
                         
         <!-- Icon Pull  --> 
-        <div class="top-titlebar-pull-icon">
+        <div class="top-titlebar-pull-icon tooltip-bottom-right " data-tooltip="Pull from remote">
             <img id="top-titlebar-pull-icon" height="17" width="17" 
                 onclick="_callback('clicked-pull-button')" 
                 onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
@@ -131,7 +152,7 @@
 
                    
         <!-- Icon Push  -->         
-        <div class="top-titlebar-push-icon">
+        <div class="top-titlebar-push-icon tooltip-bottom-right " data-tooltip="Push to remote">
             <img id="top-titlebar-push-icon" height="17" width="17" 
                 onclick="updateImageUrl('top-titlebar-push-icon', 'images/push.png');
                          _callback('clicked-push-button')" 
@@ -142,7 +163,7 @@
     
                         
         <!-- Icon Tag  -->                             
-        <div class="top-titlebar-tag-icon">
+        <div class="top-titlebar-tag-icon tooltip-bottom-right " data-tooltip="Tag">
             <img id="top-titlebar-tag-icon" height="17" width="auto" 
                 onclick="updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');
                          _callback('clicked-tag-button');" 
@@ -330,7 +351,7 @@
     <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
         
         <!-- Icon Folder  -->  
-        <div class="bottom-titlebar-folder-icon">
+        <div class="bottom-titlebar-folder-icon tooltip-top-left " data-tooltip="Repository folder">
             <img id="bottom-titlebar-folder-icon"  height="17" width="17"
                 onclick="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');
                          _callback('clicked-folder')" 
@@ -340,7 +361,7 @@
             </div>
 
         <!-- Icon Terminal  -->  
-        <div class="bottom-titlebar-terminal-icon">
+        <div class="bottom-titlebar-terminal-icon tooltip-top-left " data-tooltip="Command line">
             <img id="bottom-titlebar-terminal-icon"  height="17" width="17"
                 onclick="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal.png');
                          _callback('clicked-terminal')" 
@@ -365,7 +386,7 @@
             &nbsp;
             
             
-             <div class="bottom-titlebar-more-icon">          
+             <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
                 <img id="more" style="vertical-align:middle;" height="17" width="17" 
                                     onclick="_callback( 'clicked-graph')" 
                                     onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
@@ -375,7 +396,7 @@
             &nbsp;
                          
             <!-- Icon Pinned  -->                             
-            <div class="top-titlebar-pinned-icon">
+            <div class="top-titlebar-pinned-icon tooltip-top-left " data-tooltip="Fixed commit to compare with">
                 <img id="top-titlebar-pinned-icon" height="17" width="17" 
                     onclick=" wasPinned = (localState.pinnedCommit !== ''); 
                               isPinned = !wasPinned;
@@ -400,18 +421,20 @@
             
                 
             <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
-            <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
-                onclick="if (localState.pinnedCommit !== ''){
-                            document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
-                            _callback('clicked-pinned-hash');
-                        }else{
-                            // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
-                            navigator.clipboard.writeText(localState.historyHash);
-                        }"
-                        
-                onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');" 
+            <div class="tooltip-top-left" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                
+                <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
+                    onclick="if (localState.pinnedCommit !== ''){
+                                document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
+                                _callback('clicked-pinned-hash');
+                            }else{
+                                // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
+                                navigator.clipboard.writeText(localState.historyHash);
+                            }"
                             
-                onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+                    onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');"       
+                    onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+                </div>
             </div>
         </div>     
 
@@ -420,7 +443,7 @@
             
                                                
         <!-- Icon Stash  -->                             
-        <div class="bottom-titlebar-stash-icon">
+        <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
             <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
                 onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
                          _callback('clicked-stash-button')" 
@@ -431,7 +454,7 @@
         
                                              
         <!-- Icon Stash pop  -->                             
-        <div class="bottom-titlebar-stash_pop-icon">
+        <div class="bottom-titlebar-stash_pop-icon tooltip-top-right " data-tooltip="Retrieve latest stash">
             <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
                 onclick="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');
                          _callback('clicked-stash_pop-button')" 
@@ -445,7 +468,7 @@
             
 
         <!-- Icon Settings  -->  
-        <div class="bottom-titlebar-settings-field">
+        <div class="bottom-titlebar-settings-field tooltip-top-right " data-tooltip="Settings">
             <img id="bottom-titlebar-settings-icon"  height="17" width="17"
                 onclick="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');
                          _callback('clicked-settings')"
@@ -465,22 +488,70 @@
 
     <!--  General alert dialog  --> 
 
-    <dialog id="alertDialog"  style="max-height: 90%" class="warning">  
-        <p> 
-            <div id='alertTitle'></div><br>  
-            <div id='alertMessage'></div>  
-        </p>  
-        <button id="no"
+    <dialog id="alertDialog"  class="warning">  
+        <b><div id='alertTitle'></div></b><br> 
+        <div >
+        <span id='alertMessage'></span>
+        <button id="no", style="float:right"
             onclick="document.getElementById('alertDialog').close();selectedBranch='';">
             OK
         </button>  
+        </div> 
     </dialog>  
+ 
+ 
+ 
+    <!--Download new version -->   
+  
+    <dialog id="newVersionDetectedInputDialog" style="max-height: " class="warning">  
+        
+        <b>A new release is available</b> 
+    
+         
+        <a href='https://github.com/pragma-git/pragma-git/releases/latest' 
+            onclick="require('nw.gui').Shell.openExternal( this.href );return false;"  
+            style="float:right; cursor: pointer;"> 
+            (release notes) 
+        </a>
+
+        
+        <p>
+            Your current version is <code id='currentVersion'> </code>. Download and installer for the new <code id='newVersion'> </code> version!  
+        </p>
+
+
+  
+        <button  id="downloadButton"  
+            onclick="_callback('downloadRelease', 'Download' );" tabindex="0">
+            Download
+        </button>   
                 
+        <button id="waitButton"
+            onclick="_callback('downloadRelease', 'Wait' );">
+            Ignore now
+        </button> 
+         
+        <label for="ignoreThisVersion" style="float: right;">
+            <input type="checkbox" id="ignoreThisVersion"  style="vertical-align: middle;"
+            onchange = "
+                if ( this.checked){
+                    document.getElementById('waitButton').innerText = 'Skip this version';
+                }else{
+                    document.getElementById('waitButton').innerText = 'Ignore now';
+                }
+            "
+            /> 
+            
+            Skip version <code id='newVersion2'> </code> 
+        </label>
+
+    </dialog>             
+               
 
 
     <!-- Tag creation -->   
   
-    <dialog id="tagNameInputDialog" style="max-height: 90%" class="warning">  
+    <dialog id="tagNameInputDialog" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="tagNameTextarea" 
@@ -506,7 +577,7 @@
 
     <!-- Branch creation -->   
   
-    <dialog id="branchNameInputDialog" style="max-height: 90%" class="warning">  
+    <dialog id="branchNameInputDialog" class="warning">  
         <b>Create branch from this commit</b><br>
             <br>
             <textarea id="branchNameTextarea" 
@@ -547,7 +618,7 @@
 
     <!-- Git not installed alert -->   
   
-    <dialog id="gitNotInstalledAlert"  style="max-height: 90%" class="error">  
+    <dialog id="gitNotInstalledAlert"  class="error">  
         <b>ERROR -- Cannot find "git" !</b><br>
             Please make sure "git" is installed. <br>
             See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
@@ -564,7 +635,7 @@
 
     <!-- Detached head dialog -->   
   
-    <dialog id="detachedHeadDialog"  style="max-height: 90%" class="error">  
+    <dialog id="detachedHeadDialog"  class="error">  
         <b>WARNING -- detached HEAD !</b><br>
             You've created work in an old revision. <br>
             1) Keep work : a temporary branch will be created<br>
@@ -588,7 +659,7 @@
 
     <!-- Dropped file is not a repo -->   
   
-    <dialog id="doYouWantToInitializeRepoDialog"   style="max-height: 90%" class="warning">  
+    <dialog id="doYouWantToInitializeRepoDialog"   class="warning">  
         <b>WARNING -- the dropped folder is not a repository.</b><br>
             Do you want to initialize this folder as a git repository ? <br>
             <br>

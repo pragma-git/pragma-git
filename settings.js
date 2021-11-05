@@ -39,7 +39,90 @@ async function _callback( name, event){
             value = event.checked;
             state[id] = value;
             break;
+        } 
+        case 'localCheckboxChanged': {
+            console.log('checkboxChanged');
+            console.log(event);
+            value = event.checked;
+            //state[id] = value;
+            state.repos[state.repoNumber][id] = value;
+            break;
+        } 
+
+        case 'useGlobalAuthorInfoCheckboxChanged': {
+            console.log('useGlobalAuthorInfoCheckboxChanged');
+            console.log(event);
+            value = event.checked;
+            
+            if ( document.getElementById('useGlobalAuthorInfo').checked ){
+                // Remove from git config --local 
+                await gitRemoveConfigKey( state.repoNumber, 'user.name', 'local');
+                await gitRemoveConfigKey( state.repoNumber, 'user.email', 'local');
+            }
+            
+            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
+                // Set git config --local from stored value
+                try{ await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');   }catch (err) {}
+                try{ await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local'); }catch (err) {}
+            }
+            
+            state.repos[state.repoNumber].useGlobalAuthorInfo = document.getElementById('useGlobalAuthorInfo').checked;
+            
+            let globalSelected = document.getElementById('useGlobalAuthorInfo').checked; // global checkbox selected checked/unchecked 
+            await updateLocalAuthorInfoView( globalSelected ); 
+         
+            break;
         }
+        case 'localAuthorNameChanged': {
+            console.log('localAuthorNameChanged');
+            console.log(event);
+            value = event.checked;
+            
+            if ( document.getElementById('useGlobalAuthorInfo').checked ){
+                return
+            }
+            
+            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
+                // Set git config --local and store value  
+                state.repos[state.repoNumber].authorName = document.getElementById('thisRepoAuthorName').value;
+                try{ await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');   }catch (err) {}
+            }
+            
+            // Make sure that blank authorname is not registered in git-config local
+            if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){
+                state.repos[ state.repoNumber ].useGlobalAuthorInfo = true;
+                
+                document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'visible';
+                
+                // Remove from git config --local 
+                await gitRemoveConfigKey( state.repoNumber, 'user.name', 'local');
+                await gitRemoveConfigKey( state.repoNumber, 'user.email', 'local');
+            }else{
+                document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
+            }
+         
+            break;
+        }
+        case 'localAuthorEmailChanged': {
+            console.log('localAuthorEmailChanged');
+            console.log(event);
+            value = event.checked;
+            
+            if ( document.getElementById('useGlobalAuthorInfo').checked ){
+                return
+            }
+            
+            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
+                // Set git config --local and store value  
+                state.repos[state.repoNumber].authorEmail = document.getElementById('thisRepoAuthorEmail').value;
+                try{ await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local');   }catch (err) {}
+            }
+
+            await updateLocalAuthorInfoView( ); 
+         
+            break;
+        }
+
         case 'hideBranchCheckboxChanged': {
             console.log('hideBranchCheckboxChanged');
             console.log(event);
@@ -212,6 +295,19 @@ async function _callback( name, event){
                 
                 // Update cached branch list
                 opener.cacheBranchList();
+                
+                
+                // Update display of local author info (read from git)
+                await updateLocalAuthorInfoView();
+                
+                // Update local repo settingsDir
+                document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;
+                document.getElementById('NoFF_merge').checked = state.repos[state.repoNumber].NoFF_merge;
+                document.getElementById('useGlobalAuthorInfo').checked = state.repos[state.repoNumber].useGlobalAuthorInfo;
+                
+                
+ 
+                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);                
 
                 
             }catch(err){
@@ -466,10 +562,7 @@ function forgetButtonClicked(event){
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
 async function closeWindow(){
-    
-    // Remove from menu
-    opener.deleteWindowMenu('Settings');
-    
+
     // Read fields into state
     if ( !('tools' in state) ){
         state.tools = {};
@@ -502,17 +595,13 @@ async function closeWindow(){
     
     // Set Git author name and email (stored in git, not in settings)
     try{
-        commands = [ 'config', '--global', 'user.name', document.getElementById('authorName').value];
-        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-        function onConfig(err, result ){ console.log(result); console.log(err);  }
+        await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
     }catch(err){
         console.log('Failed storing git user.name');
     }
     
     try{  
-        commands = [ 'config', '--global', 'user.email', document.getElementById('authorEmail').value];
-        await simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-        function onConfig(err, result ){ console.log(result); console.log(err);  }
+        await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
     }catch(err){
         console.log('Failed storing git user.email');
     }
@@ -521,6 +610,9 @@ async function closeWindow(){
     // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
     //localState.settings = false;
+    
+    // Make global when git author's information missing
+    await fixEmptyLocalAuthors();
     
  
 }
@@ -645,6 +737,7 @@ async function gitCreateBranch( folder, branchName){
     }
 
 }
+
 async function gitConfigList( localFolder ){
 let configList;
 
@@ -658,7 +751,70 @@ try{
     console.log(err);
 }
 return configList
+}     
+async function gitReadConfigKey( repoNumber, key, scope){
+    let output;
+    try{
+        if (scope == 'global'){
+            output = await simpleGit().getConfig( key, scope);
+        }else{
+            output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
+        } 
+        
+        console.log(output);
+    }catch(err){ 
+        console.error(err); 
+        
+    }  
+    
+    return await output.value;             
 }
+async function gitWriteConfigKey( key, value, scope){
+
+        
+    try{
+        if (scope == 'global'){
+            await simpleGit().addConfig(key, value, false, scope);
+        }else{
+            await simpleGit( state.repos[ state.repoNumber].localFolder).addConfig(key, value, false, scope);
+        } 
+        
+    }catch(err){ 
+        console.error(err); 
+    }              
+}
+async function gitRemoveConfigKey( repoNumber, key, scope){
+    try{  
+        commands = [ 'config', '--' + scope, '--unset', key];
+         simpleGit(  state.repos[ repoNumber].localFolder  ).raw(commands ,onConfig);
+        function onConfig(err, result ){ }
+    }catch(err){
+        console.error('Failed removing key = ' + key + ' from ' + scope + ' scope');
+    }
+                       
+}
+
+async function fixEmptyLocalAuthors(){ // Empty local author info removed
+
+    for (let i = 0; i < state.repos.length; i++){
+
+        // Default to global authorinfo if missing
+        if ( state.repos[i].authorName.trim().length == 0 ){
+            state.repos[i].useGlobalAuthorInfo = true;
+            
+            // Clean from git config --local 
+            try{
+                gitRemoveConfigKey( i, 'user.name', 'local');
+                gitRemoveConfigKey( i, 'user.email', 'local');
+            }catch(err){}
+        }
+        
+    }
+}
+
+
+
+            
 
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
@@ -688,7 +844,7 @@ async function injectIntoSettingsJs(document) {
     // Write system information to divs
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
-    document.getElementById('latestVersion').innerText = global.LATEST_RELEASE;
+    document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
     
@@ -699,10 +855,11 @@ async function injectIntoSettingsJs(document) {
     
     document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
     document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
+    document.getElementById('displayToolTip').checked = state.displayToolTip;
     
     document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
-    document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
-    document.getElementById('NoFF_merge').checked = state.NoFF_merge;
+    //document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
+    //document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
     document.getElementById('StashPop').checked = state.StashPop;
     
@@ -713,13 +870,16 @@ async function injectIntoSettingsJs(document) {
     
     // Set values according to git-config
     try{
-        configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
-        console.log(configList);
-        document.getElementById('authorName').value = configList['user.name'];
-        document.getElementById('authorEmail').value = configList['user.email'];
+        //configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
+        //console.log(configList);
+        document.getElementById('authorName').value  = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
+        document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
+        
+        // Show for local repo
+        await updateLocalAuthorInfoView();  
         
     }catch(err){
-        console.log(err);
+        console.error(err);
     }
     
     // Set Zoom
@@ -1049,6 +1209,72 @@ async function generateBranchTable(document, table, branchlist) {
 
 
    
+}
+async function updateLocalAuthorInfoView( globalSelected ){
+    // The principle is that if local does not exist => checkbox will be selected to use global
+    // BUT, if local is manually selected with checkbox, globalSelected is true/false (call with one argument)
+    // (if called without argument, globalSelected = undefined )
+    
+    
+     // Read local from git
+    let localAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'local');
+    let localAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'local');
+    
+    // Must be global if local is undefined
+    let useGlobal = ( localAuthorName == undefined );
+    
+
+    // If local    
+    if (  globalSelected == false  ){
+        if (localAuthorName == undefined)
+            localAuthorName = document.getElementById('authorName').value;
+        if (localAuthorEmail == undefined)
+            localAuthorEmail = document.getElementById('authorEmail').value;
+        
+        // Show / hide warning text for empty name        
+        if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){       
+            document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'visible';
+        }else{
+             document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
+        }
+        
+        useGlobal = false;
+    }
+    
+    // If Global
+    if (globalSelected == true){
+        useGlobal = true;
+        document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
+    }
+    
+    
+    // Update HTML according to local / global
+    
+    if ( useGlobal ){
+        state.repos[state.repoNumber].useGlobalAuthorInfo = true;
+            
+       //document.getElementById('useGlobalAuthorInfo').checked = true   
+        document.getElementById('thisRepoAuthorName').value = document.getElementById('authorName').value;
+        document.getElementById('thisRepoAuthorEmail').value = document.getElementById('authorEmail').value;
+    
+        document.getElementById('thisRepoAuthorName').readOnly = true;
+        document.getElementById('thisRepoAuthorEmail').readOnly = true;
+        
+        document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
+    }else{
+        state.repos[state.repoNumber].useGlobalAuthorInfo = false;
+        
+        //document.getElementById('useGlobalAuthorInfo').checked = false
+        document.getElementById('thisRepoAuthorName').readOnly = false;
+        document.getElementById('thisRepoAuthorEmail').readOnly = false;
+        
+        document.getElementById('thisRepoAuthorName').value = localAuthorName;
+        document.getElementById('thisRepoAuthorEmail').value = localAuthorEmail; 
+
+
+    }   
+            
+
 }
 
 function displayAlert(title, message){

@@ -199,7 +199,11 @@
                        
                     <!--  On all workspaces (Mac and Linux virtual desktops) -->
                     <input type="checkbox" id="onAllWorkspaces" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br><br>  
+                    <label for="onAllWorkspaces" id="labelForOnAllWorkspaces"> Show on all workspaces (Mac and Linux)</label><br> 
+                    
+                    <!--  Tooltip in main window -->
+                    <input type="checkbox" id="displayToolTip" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
+                    <label for="displayToolTip" id="labelForDisplayToolTip"> Show tooltips in main window</label><br><br>  
     
      
                     Window scaling  (restart needed): <br>   
@@ -220,15 +224,16 @@
                     <table>            
                       <tr style="border: none;">
                             <td>
-                                <label for="authorName"> Author's name (required):</label><br>
+                                <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
                                 <input id="authorName" type="text" size="30"/>
                             </td>
                             <td>                
-                                <label for="authorEmail"> Author's email :</label><br>
+                                <label for="authorEmail"> <sup class="footnoteText">*</sup>Author's email  :</label><br>
                                 <input id="authorEmail" type="text" size="30"/>
                             </td>
                         </tr>
                     </table>  
+                    <br>
                     
                     
                     <!--  
@@ -255,27 +260,26 @@
                     
                                 
                     <!--  Force commit before branch change -->
+
                     <input type="checkbox" id="forceCommitBeforeBranchChange" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="forceCommitBeforeBranchChange"> Branch change not allowed when there are uncommited files</label><br>
-                    
-                     <!--  Auto-push to remote -->
-                    <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
-                    
-                    <!--  --no-ff merge (gitflow recommends this) -->
-                    <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
-                    
+                    <label for="forceCommitBeforeBranchChange"> Branch change only when all files are commited</label><br>
+
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
-                    <label for="FirstParent"> Search only in current branch (works best if setting 'Merge without fast-forward' have been used)</label><br>
+                    <label for="FirstParent"> Search and history follow current branch </label><br>
                     
                     <!--  -- remove stash when pressing  () -->
                     <input type="checkbox" id="StashPop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="StashPop"> 
                          Click <img id="StashPop" class="stashImg" height="17" width="auto" src="images/stash_pop.png">
-                         to both apply and remove stash (<code>git stash pop</code>). Deselect to keep stash ( <code>git stash apply</code>)
+                         both applies and removes stash (<code>git stash pop</code>). Deselect to apply and keep stash ( <code>git stash apply</code>)
                     </label><br><br>
+                    
+                    
+                    <div class="footnoteText">
+                        <sup>*</sup> These are global settings. Individual repository setting in "Repository / Software (this repo)" tab.
+                    </div>
+                    <br>
                 
                  
                   
@@ -318,7 +322,7 @@
                     </tbody>
                 </table>
                 <input id = "selectFolderInputButton" 
-                    type="file" nwdirectory directory multiple="false" 
+                    type="file" nwdirectory directory multiple="false"  
                     style='visibility: hidden;' 
                     onchange="_callback('folderSelectButtonPressed',this)" 
                     name="img"/>  <!--  open-folder dialog -- will be used as a tool, and called from settings.js when pressing the generated "Folder" button for cloning--> 
@@ -331,13 +335,60 @@
                     <h3>Tools </h3>
                     <div class="toolWrapper" > 
                         <div class="buttonWrapper">
-                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="cloneDiv">Clone</button>
+                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                              <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                              <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                              <button id="gitHubTab" class="tab-button-small" data-id="gitHubDiv">Add remote</button>
-                              <button id="gitignoreTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitIgnoreDiv">git-ignore</button>
+                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
                         </div>
                     </div>
+                     
                     
+                    <!--  This-repo settings TAB -->
+                    
+                    <div class="tool-content " id="thisRepoDiv" >  
+                        
+                        <!--  Author info -->
+                        <table>            
+                          <tr style="border: none;">
+                                <td>
+                                    <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
+                                    <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />
+                                </td>
+                                <td>                
+                                    <label for="thisRepoAuthorEmail"> <sup class="footnoteText">*</sup>Author's email :</label><br>
+                                    <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/>
+                                    
+                                    <input type="checkbox" id="useGlobalAuthorInfo" name="name" value="true" onchange="_callback('useGlobalAuthorInfoCheckboxChanged',this)" checked>
+                                    <label for="useGlobalAuthorInfo"> Use global (from Software tab)</label><br>
+                                </td>
+                            </tr>
+                        </table>  
+                        
+                        <div id='warnThatLocalAuthorInfoMissing' class="red"> WARNING : Will use global Author's info because Author's name is missing</div>
+                        
+                        <br>
+     
+      
+                         <!--  Auto-push to remote -->
+                        <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
+                        <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        
+                        <!--  --no-ff merge (gitflow recommends this) -->
+                        <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
+                        <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
+                        
+                        <br>
+                        
+                        
+                        <p class="footnoteText">
+                            <sup>*</sup>These settings are specific for selected repository. General settings are found in the "Software tab", above.
+                        </p>
+                    
+                            
+                        <p><span id="cloneStatus"></span></p>
+                    
+                    </div>                   
                     
                     <!--  Clone TAB -->
                     

@@ -20,6 +20,8 @@
     'DeepSkyBlue'
     ];
     
+    let STROKE = { color: '#888', width: 3};  // Line color
+
     
     var MODE = 'git-log-graph'; // Default, is set by state.graph.swimlane;
     
@@ -58,6 +60,9 @@
     var lastSelectedBranchName = '';  // Used to set default when renaming commit's branch name
     
     var infoNodes = [];  // An array of nodes that have been redrawn with mouse-over svg node circle
+    
+    const FIRSTPASSLENGTH = 70; // Number of git-log rows for first pass drawing
+    const INFINITY = 100000000;  // Used in first pass of drawing when position of parent node is not known (because of truncated git-log) 
 
 // GUI constants
         
@@ -84,6 +89,8 @@
     
     var COMPRESS;
     const DEBUG = state.graph.debug;       // true = show debug info on commit messages
+    
+    let firstRun = true;
 
 //
 // Functions
@@ -132,7 +139,7 @@ async function injectIntoJs(document){
         console.log(history);
     
         // Commit log output format
-        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
+        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
 
         
     //
@@ -157,11 +164,11 @@ async function injectIntoJs(document){
     //
            
         // Normal log command    
-        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];       
+        let commands = [ 'log',  '--date-order', '--oneline',  '--pretty',   messageFormat];       
          
         // Show all log command 
         if (state.graph.showall){
-            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty', '--graph',  messageFormat];
+            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty',  messageFormat];
         }
         
 
@@ -179,15 +186,58 @@ async function injectIntoJs(document){
         
         // Draw full graph, and label current branch
         let branchHistory = await readBranchHistory();
-        await drawGraph( document, graphText, branchHistory, history);
+        
+        
+        //
+        // Speed up by drawing 
+        //
         
             
+            draw = SVG();  // Canvas -- global variable
+            
+            let splitted;  // Git-log row array
+            
+            // Short part for pass 1, and all for pass 2
+            shortSplitted = graphText.split( UNIQUE_EOL + '\n').slice(0, FIRSTPASSLENGTH);  // Lines first pass
+            allSplitted  = graphText.split( UNIQUE_EOL + '\n');
+            
+            
+            
+            if (firstRun){ // Speed up on when window is opened first time
+                if ( FIRSTPASSLENGTH > allSplitted.length ){
+                    
+                    // Fewer lines than pass 1 => do everything in one pass
+                    
+                    await drawGraph( document, allSplitted, branchHistory, history);
+                    
+                }else{
+                    
+                    // first pass (top commits)
+                    try{
+                        await drawGraph( document, shortSplitted, branchHistory, history);
+                        await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+                    }catch(err){
+                        
+                    }
+                    
+                    // second pass (all)
+                    await drawGraph( document, allSplitted, branchHistory, history);               
+                }
+            }else{
+                // If not second run -- draw everything in one pass (otherwise changing checkboxes and moves will make it jump)
+                await drawGraph( document, allSplitted, branchHistory, history);
+            }
+            
+        // ColorHeader
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
         await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
         
-        
         // Populate branch-name edit menu
         await populateDropboxBranchSelection();
+        
+        
+        //Make MouseOver callbacks for node circles  
+        makeMouseOverNodeCallbacks();
  
     
     //
@@ -220,6 +270,9 @@ async function injectIntoJs(document){
         }catch(err){  
         }
 
+
+    // Finish
+    firstRun = false;
 
 }
 
@@ -328,64 +381,16 @@ function updateImageUrl(image_id, new_image_url) {
   if (image)
     image.src = new_image_url;
 }
-
-var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+ 
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
-        
-    //
-    // Circle mouse events
-    //
 
+    // Add mouse events for each circle ( mouse out event is created when overlay image is done)
     var arrElem = document.getElementsByTagName('image');
-    
-    // Size utility function
-    function sizeNodes( hash, size){
-        let node = draw.node.getElementById( 'img_' + hash);
-        let commit = nodeMap.get(hash);
-        
-        let X0 = LEFT_OFFSET + commit.x * COL_WIDTH;
-        let Y0 = TOP_OFFSET + commit.y * ROW_HEIGHT
-        
-        SVG( node )
-            .size(size,size)
-            .move( X0 - 0.5 * size , Y0 - 0.5 * size);
+    for (var i = 0; i < arrElem.length ; i++ ) {
+        arrElem[i].onmouseenter = mouseOverNodeCallback;
     }
-    function resetNodeSize(){
-            // Reset node sizes
-            for (let i = 0; i < infoNodes.length; i++){
-                sizeNodes( infoNodes[i], IMG_H)
-            }
-            infoNodes = [];
-            return
-    }
-
-    // Other utility functions
-    function closeInfoBox(){  // Info box closing
-            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
-            resetNodeSize();
-    }
-    function hasMouseLeft(){  // Tels if mouse is outside commmit circle
-        return !isMouseOverCommitCircle;  // true if mouse is not over
-    }
-    
-    //
-    // Add mouse events for each circle
-    //
-    for (var i = arrElem.length; i-- ;) {
-    
-
-        // onmouseout     
-                       
-        arrElem[i].onmouseleave = function(e) {
-            closeInfoBox();
-            isMouseOverCommitCircle = false;
-            return
-        };
-        
-        
-        // onmouseover 
-        
-        arrElem[i].onmouseenter = async function(e) {
+}       
+    async function mouseOverNodeCallback(e) {
             
             isMouseOverCommitCircle = true;
             
@@ -441,14 +446,29 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Commit
+            let mBody = '';
+            if (commit.messageBody.length > 0)
+                mBody += '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
+                    commit.messageBody.replaceAll('\n', '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + 
+                    '<br>';
+            
+            
             html += `<B><U>Commit </U></B> : <BR><BR> 
-                 <b><div> &nbsp; <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <span style = "left: 30 px; position: relative"> ${commit.message}</span>
-                 </div></b>
-                 <BR><BR>`
+                 <div> &nbsp; 
+                    <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                    <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+                 </div>
+                 <BR>`
+                 
+            
+            // HTML Commit message body (if multiple lines in message)
+            html += `<span> ${mBody}</span><BR>`
+            
             
             html += ` &nbsp; <i> ${author} </i><BR><BR>`
             html += ` &nbsp; ${commit.hash} <BR><BR>`
+            
+            
             
             
             html += '<HR><BR>' 
@@ -512,20 +532,56 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             let top = e.clientY - 15 - document.getElementById('displayedMouseOver').getBoundingClientRect().height;
             if (top < 0)
                 top = e.clientY - 15;
-                
-            
-            document.getElementById('displayedMouseOver').style.top = top;                
+
+            document.getElementById('displayedMouseOver').style.top = top;
+        }; 
+
+    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+    function mouseLeavingNodeCallback(){
+        closeInfoBox();
+        isMouseOverCommitCircle = false;
+        return
+    };
+    // utility functions
+    function sizeNodes( hash, size){    // Make large node overlay image
         
         
-            // Check if mouse left during execution
-            if (hasMouseLeft() ){
-                closeInfoBox();
-            }
-        
-        };
+        let node = draw.node.getElementById( 'img_' + hash);
+        let commit = nodeMap.get(hash);
+
+        let X0 = commit.x * COL_WIDTH + 0.5;
+        let Y0 = commit.y * ROW_HEIGHT - 3;
     
+        
+        // Position node ontop, in mySvg-space (which is zoomed due to zoom-box -- so that zoom follows automatically)
+        img = document.createElement('img'); 
+        img.style.left = X0; 
+        img.style.top = Y0; 
+        img.style.width = size; 
+        img.style.height = size; 
+        img.setAttribute('pointer-events', 'none')
+        img.setAttribute('z-index', 5000)
+        img.style.position='absolute'; 
+        img.src = node.href.baseVal; 
+        img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
+        img.id='selectedImage_' + hash;
+        
+        document.getElementById('mySvg').appendChild(img);
     }
-}        
+    function resetNodeSize(){           // Reset node overlay image
+            // Reset node sizes
+            for (let i = 0; i < infoNodes.length; i++){
+                let hash = infoNodes[i];
+                let id='selectedImage_' + hash;
+                document.getElementById(id).remove();
+            }
+            infoNodes = [];
+            return
+    }
+    function closeInfoBox(){            // Info box closing
+            document.getElementById('displayedMouseOver').style.visibility = 'collapse';
+            resetNodeSize();
+    }
 
 
 // Git
@@ -543,9 +599,9 @@ async function gitCommitAuthor(hash){
 }
 
 // Graphics
-async function drawGraph( document, graphText, branchHistory, history){
+async function drawGraph( document, splitted, branchHistory, history){
     // document :       HTML document
-    // graphText :      output from  raw git log graph
+    // splitted :      output from  raw git log graph, as array (one row per array item)
     // branchHistory :  output from  git log with --oneParent (used to find which commits are in current branch)
     // history :        the history after search, used to set different color for  commits found/not found in Search
           
@@ -578,19 +634,17 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             columnOccupiedStateArray = [];  
      
-            let splitted = graphText.split( UNIQUE_EOL + '\n');
             
             let previousDate = 'dummy'
     
     
         // Initiate drawing
      
-            draw = SVG();  // Global variable
             
             // Define arcs used for branch and merge curves
             const arc = draw.defs().path(`M ${R} 0 A ${R} ${R} 0 0 1  0 ${R}`)
                 .fill('none')
-                .stroke({ color: '#888', width: 3  });
+                .stroke(STROKE);
             const arcBranch = draw.defs().use(arc).move(-R,-R);
             const arcBranch2  = draw.defs().use(arc).flip('x').move(-R,-R);
             
@@ -637,7 +691,7 @@ async function drawGraph( document, graphText, branchHistory, history){
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
-            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] = splitGitLogRow( splitted[row] );
+            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
      
@@ -693,6 +747,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 thisCommit.message = thisRow;
                 thisCommit.decoration = decoration;
                 thisCommit.branchName = "";  // Default (hidden or unknown)
+                thisCommit.messageBody = messageBody;
                 
                 
             // Get branchName
@@ -766,7 +821,9 @@ async function drawGraph( document, graphText, branchHistory, history){
         
       
          NUMBER_OF_KNOWN_BRANCHES = branchNames.size;
-         let HIGHEST_LANE = 1;
+         //let HIGHEST_LANE = 1;
+         let HIGHEST_LANE = 9;
+
          
          nodeMap.delete("");  // Delete empty node
 
@@ -822,15 +879,15 @@ async function drawGraph( document, graphText, branchHistory, history){
             
             // Figure out stashes on this commit (most often zero or one, but can be multiple)
             let stashArray = [];
-            if ( global.stashMap.has(commit.hash) ){
-                stashArray = global.stashMap.get(commit.hash);
+            if ( localState.stashMap.has(commit.hash) ){
+                stashArray = localState.stashMap.get(commit.hash);
              }
                 
             
             if (DEBUG) {
                 let stashes = ' [ 0 stashes ] ';
-                if ( global.stashMap.has(commit.hash) ){
-                    let length = global.stashMap.get(commit.hash).length;
+                if ( localState.stashMap.has(commit.hash) ){
+                    let length = localState.stashMap.get(commit.hash).length;
                     stashes = ' [' + length + ' stashes] ';
                 }
                     
@@ -977,11 +1034,8 @@ async function drawGraph( document, graphText, branchHistory, history){
             let y0 = commit.y;
             
             let hashInThisRow = commit.hash;
-  
-
-            // Draw node
-            let id = 'img_' + commitArray[j].hash;
-            drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
+            
+            
             
   
             // Draw SVG horizontal help-line 
@@ -990,6 +1044,11 @@ async function drawGraph( document, graphText, branchHistory, history){
                        LEFT_OFFSET + HIGHEST_LANE * COL_WIDTH , 
                        TOP_OFFSET + y0 * ROW_HEIGHT
                     ).stroke({ color: '#888', width: 0.25}); 
+  
+
+            // Draw node
+            let id = 'img_' + commitArray[j].hash;
+            drawNode( draw, commitArray[j], commitArray[j].branchName, commitArray[j].unknownBranchName,id );
         }                  
 
     
@@ -1000,7 +1059,7 @@ async function drawGraph( document, graphText, branchHistory, history){
             document.getElementById('datesSwimLane').innerHTML = dateContent;      
         
             document.getElementById('mySvg').innerHTML = ''; // Clear
-            draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (HIGHEST_LANE + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
+            await draw.addTo( document.getElementById('mySvg') ).size( LEFT_OFFSET + (HIGHEST_LANE + 1) * COL_WIDTH , TOP_OFFSET + (line +1) * ROW_HEIGHT  )
         
             document.getElementById('graphContent').innerHTML = graphContent;    
         
@@ -1023,8 +1082,6 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
             } 
             
-            // Make MouseOver callbacks for node images  
-            makeMouseOverNodeCallbacks();
 
     }   
 
@@ -1160,12 +1217,12 @@ async function drawGraph( document, graphText, branchHistory, history){
             // Top horizontal
                 
                 if ((type == 1) || (type == 2)){
-                    draw.line( X1, Y1, LINECOL - R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X1, Y1, LINECOL - R, Y1).stroke(STROKE); // horizontal
                     draw.use(arcMerge).move( LINECOL, Y1  ); // arc
                 }
                 
                 if (type == 5 ){
-                    draw.line( X1, Y1, X0 + R, Y1).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X1, Y1, X0 + R, Y1).stroke(STROKE); // horizontal
                     draw.use(arcMerge2).move( X0, Y1  ); // arc
                 }
 
@@ -1173,13 +1230,13 @@ async function drawGraph( document, graphText, branchHistory, history){
             // Vertical
             
                 switch (type){
-                    case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke({ color: '#888', width: 3});  break;
-                    case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke({ color: '#888', width: 3});  break;
-                    case 7: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke({ color: '#888', width: 3});  break;
+                    case 1: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + R).stroke( STROKE);  break;
+                    case 2: draw.line( X0, Y0 - 0, X0, Y1 + R).stroke(STROKE);  break;
+                    case 3: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke(STROKE);  break;
+                    case 4: draw.line( X0, Y0 - 0, X0, Y1 + 0).stroke(STROKE);  break;
+                    case 5: draw.line( X0, Y0 + 0, X0, Y1 + R).stroke(STROKE);  break;
+                    case 6: draw.line( X1, Y0 - R, X1, Y1 + 0).stroke(STROKE);  break;
+                    case 7: draw.line( LINECOL, Y0 - R, LINECOL, Y1 + 0).stroke(STROKE);  break;
                 }
 
 
@@ -1204,12 +1261,12 @@ async function drawGraph( document, graphText, branchHistory, history){
             // Bottom horizontal
                 
                 if ((type == 1) || (type == 3)){
-                    draw.line( X0, Y0, LINECOL - R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X0, Y0, LINECOL - R, Y0).stroke(STROKE); // horizontal
                     draw.use(arcBranch).move( LINECOL, Y0  ); // arc
                 }                  
                 
                 if (type == 6 ){
-                    draw.line( X0, Y0, X1 + R, Y0).stroke({ color: '#888', width: 3}); // horizontal
+                    draw.line( X0, Y0, X1 + R, Y0).stroke(STROKE); // horizontal
                     draw.use(arcBranch2).move( X1 , Y0  );
                 }
                 
@@ -1318,8 +1375,12 @@ async function drawGraph( document, graphText, branchHistory, history){
                 }
                 
                 // Parents : Separate log row from parents(at end now when Notes removed)
+                let startOfMessageBody = gitLogRow.lastIndexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
+                let messageBodyInThisRow = gitLogRow.substring(startOfMessageBody + 2, startOfNote - 1); // Skip B=
+                
+                // Parents : Separate log row from parents(at end now when Notes removed)
                 let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
-                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfNote - 1); // Skip H=
+                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfMessageBody - 1); // Skip H=
                 
                 // Hash : Separate log row from long hash (at end now when Parents removed)
                 let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
@@ -1338,12 +1399,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 // Message : Separate log row from message (at end now when date removed)
                 let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
                 let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
-                
-                // Position of '*' node
-                let graphPartOfText = gitLogRow.substring(0, startOfMessage); // This may start with crud (previous empty line) + '/n' +  good graph info
-                let goodGraphPart = graphPartOfText.split('\n');
-                let graphNodeIndex = goodGraphPart[goodGraphPart.length -1].indexOf('*');
-                graphNodeIndex = 0.5 * graphNodeIndex;  // Every second column is unused
+
                                 
                 if (startOfDate == -1){
                     date = ''; // When no date found (set blank date)
@@ -1362,7 +1418,7 @@ async function drawGraph( document, graphText, branchHistory, history){
                 let parents = parentInThisRow.split(' ');
         
                 
-                return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, graphNodeIndex] 
+                return [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBodyInThisRow] 
           
             // Internal functions
                 function getLastBranchInNote( noteInThisRow){
@@ -1452,12 +1508,36 @@ async function drawGraph( document, graphText, branchHistory, history){
         return html 
     };
     function markLaneAsOccupied(commit){
-        if (nodeMap.get(commit.parents[0]) == undefined){
+
+
+        //if (nodeMap.get(commit.parents[0]) == undefined){
+            //return
+        //}
+        
+        if ( commit.parents[0] == undefined){
             return
         }
         
+        let until;
+        
+        if (nodeMap.has(commit.parents[0])){
+            until = nodeMap.get(commit.parents[0]).y;  
+        }else{
+            until = INFINITY; // Set as occupied 
+        }
+        
+        if ( until == undefined ){ // 
+            until = INFINITY;
+        }
+
+        
         let lane = commit.x ;
-        let until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        ////let until;
+        //if (nodeMap.get(commit.parents[0]) == undefined){
+            //until = INFINITY; // Set as occupied always
+        //}else{
+            //until = nodeMap.get(commit.parents[0]).y;  // Add one extra row
+        //}
         
         // Fill up if array too short
         while (lane > columnOccupiedStateArray.length){
@@ -1538,35 +1618,36 @@ async function drawGraph( document, graphText, branchHistory, history){
                     highestOccupiedCol = highestOccupiedCol + 1;
                 }
                 
-                function isOnActiveSwimlane(lane, commit){
-                    // Looks from commit to end of segment
-                    
-                    // Extent of segment
-                    let start = commit.y;
-                    
-
-                    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
-                        commit = nodeMap.get( commit.parents[0]);
-                    }
-                    let end = commit.y - 1;
-                    //console.log('start = ' + start + '   End = ' + end);
-                    
-                    // Return true any commit is on active swimlane
-                    let i = start;
-                    while ( i < end){
-                        if ( lane == branchNames.get(commitArray[i].branchName) ){
-                            console.log('commit.y = ' + commit.y );
-                            return true
-                        }
-                        i++;
-                    }
-                    return false
-                }
             }
             
         return highestOccupiedCol
         
     };
+    function isOnActiveSwimlane(lane, commit){
+    // Looks from commit to end of segment
+    
+    // Extent of segment
+    let start = commit.y;
+    
+
+    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
+        commit = nodeMap.get( commit.parents[0]);
+    }
+    let end = commit.y - 1;
+    //console.log('start = ' + start + '   End = ' + end);
+    
+    // Return true any commit is on active swimlane
+    let i = start;
+    while ( i < end){
+        if ( lane == branchNames.get(commitArray[i].branchName) ){
+            console.log('commit.y = ' + commit.y );
+            return true
+        }
+        i++;
+    }
+    return false
+}
+
     function isOnNamedBranch(commit){
         if ( branchNames.has( commit.branchName ) ){
             return ( branchNames.get( commit.branchName ) < NUMBER_OF_KNOWN_BRANCHES ); // Named branches are below index NUMBER_OF_KNOWN_BRANCHES
@@ -1800,6 +1881,9 @@ function drawBranchColorHeader( branchNames){
             idToLongestBranchName = id;
         }
     }
+    
+    // Add text below table
+    html += '<span class="footnoteText"> <br>(Click description to find branch)</span>';
     
     // Set HTML
     document.getElementById('colorHeader').innerHTML = html;

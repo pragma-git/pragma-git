@@ -61,18 +61,23 @@
         color: var(--body-text);
     }
  
- 
- 
-  
-    .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
-        zoom: 0.85;
-        height:auto;
-    }
-    
+
     .toastui-editor-toolbar-item-wrapper{
         margin: 0px;
         color: var(--header-color);
     }
+    
+    
+    /* Smaller icons and toolbar height */ 
+    .toastui-editor-toolbar-icons{
+        zoom: 0.8;
+    }   
+    
+    .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
+        zoom: 1;
+        height:38px;
+    }
+
 
 
     /* modify toast-ui  code */ 
@@ -189,11 +194,39 @@
     a{
         cursor: pointer;  /* because Toast UI have an edit-cursor, and I have overriden the edit function */ 
     }
+        
+    img{
+        filter: invert( 0% );
+    }
+    
+    /* table header preview */ 
+    .toastui-editor-contents th > p:first-child,
+    .toastui-editor-contents table thead th
+    {
+      color: var(--table-header-color) !important;
+      background-color: var(--table-header-background-color) !important;
+    }
+    
+    
+    /* table cells preview*/ 
+    .toastui-editor-contents table td,
+    .toastui-editor-contents table th
+    {
+      border-color: var(--table-header-color);
+      font-weight: 400;
+    }
+    
+    /* table cells markdown editor*/ 
+    .toastui-editor-md-table .toastui-editor-md-table-cell {
+        color: var(--body-text) !important;
+    }
+        
  
  </style>
 
-
   </head>
+  
+  
   
   <body class='light'>
     <!-- Dark mode on/off, zoom --> 
@@ -212,39 +245,28 @@
             <div id="editor"></div>
     </div>    
     
-        <!-- 
-        NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
-        
-        Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
-        from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
-        was the solution.
-        
-        Save downloaded file as : "lib/toastui-editor-all.js"
-        
-        Since I don't think this is a module, I have to load it from the HTML page, instead of using require.  
-        
-        -->
     
-        <!-- DOWNLOAD latest toastui-editor-all.js  like this :
-        cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
-        wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
-         -->
-            
-        <script src="lib/toastui-editor-all.js"></script>
+    <!-- 
+    NOTE: @toast-ui/editor/dist/toastui-editor.js  fails scroll  
     
+    Example01 on web works fine.  Therefore, figured out that downloading toastui-editor-all.js 
+    from  "https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"
+    was the solution.
     
-    
-    <!--
-        <script src="https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js"></script>
-    -->
-   
+    DOWNLOAD latest toastui-editor-all.js  like this :
+    --------------------------------------------------
+    cd ~/Documents/Projects/Pragma-git/Pragma-git/lib
+    wget --remote-encoding='UTF-8' 'https://nhn.github.io/tui.editor/latest/tutorial-example01-editor-basic/../dist/cdn/toastui-editor-all.js'
+     -->
+        
+        
 
+    <script src="lib/toastui-editor-all.js"></script>
 
  
     <!--  Onload, call javascript file  --> 
     <script>
         const Editor = toastui.Editor;
-        //const Editor = require('@toast-ui/editor'); /* CommonJS */
         
         window.addEventListener('DOMContentLoaded', (event) => {
             
@@ -287,6 +309,7 @@
         );
 
     </script> 
+    
         
     <!--  Add find  -->    
     <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
@@ -295,7 +318,7 @@
         findInNw.initialize();
         extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
     </script> 
-
+     
 
   </body>
 </html>

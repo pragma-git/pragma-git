@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Git-ignore Editor</title>
+        <title>Git-ignore Editor</title>  <!-- NOTE : Don't edit title, without updating listChanged.js which uses this title to close this editor --> 
         <script src="settings.js"></script>
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
         <link rel="stylesheet" type="text/css" href="settings.css" />
@@ -110,9 +110,7 @@
                         <img height="15" width="15" src="images/warning.png"> 
                         Ignore rules do not apply to tracked files.
                         "Retrack" removes tracked files, and retrack them according to ignore rules.
-                        Thus, previously tracked files may be removed from the repository.
-                        Typically this is a bad idea, and you should know the consequences. 
-                        "Retrack" takes a long time if many files in repository.  
+                        "Retrack" may take a long time if there are large folders not being ignored.  
                     </div>
 
                     </div>
@@ -183,14 +181,11 @@
             
             // NOTE 2:  The index of tracked files can be updated according to .gitignore, by :
             // git rm -r --cached .  # Clear index (will show lots of files modified)
-            // git add .   # Update index of tracked files, thus also removing the ones that were previously tracked, but should be untracked by new .gitignore
+            // git add .             # Update index of tracked files, thus also removing the ones that were previously tracked, but should be untracked by new .gitignore
             //
-            // Maybe I should have a button to "Reset tracking" ? Or a dialog when saving, if git status --ignored has changed when leaving this window
-            
-            
-            // Case - remove => untracked file added
-            // Case - new rule remove existing => tracked file should be ignored (TODO : Does not show up in ignored files)
-            
+            // TODO : Maybe I should have a button to "Reset tracking" ? Or a dialog when saving, if git status --ignored has changed when leaving this window
+            //        A simple "git reset" (means git reset --mixed) would suffice.  Maybe add that to Reset button ?
+
 
 
             // update html
@@ -215,11 +210,7 @@
             
             let hx = window.outerWidth - window.innerWidth;
             let hy = window.outerHeight - window.innerHeight;
-            //window.resizeTo(
-                //dx + hx * global.state.zoom + 1 * padding + 50 , 
-                //dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
-            //);
-            
+
         }
     );
     
@@ -248,6 +239,18 @@
         
         // Load .ignore backup 
         document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileBackup);
+
+
+        // Reset index 
+        try{
+            await simpleGit( global.state.repos[global.state.repoNumber].localFolder)
+                .reset( onReset);
+            function onReset(err, result ){ console.log(result) }        
+        }catch(err){
+            console.log('Error in git reset()');
+            console.log(err);
+        }      
+        
         
  
         await displayIgnoreList();
