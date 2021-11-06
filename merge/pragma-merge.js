@@ -324,7 +324,10 @@ function initUI() {
     if (global.localState.dark){
         cm = document.getElementsByClassName("CodeMirror");
         for (var i = 0; i < cm.length; i++) {
-          cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula');
+          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula editorBackground');
+          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-monokai editorBackground');
+          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-seti editorBackground');
+          cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
         }
     }
 

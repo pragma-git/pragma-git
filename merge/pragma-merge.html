@@ -11,7 +11,10 @@
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
  
-    <link rel="stylesheet" href="pragma_darcula.css">
+    <link rel="stylesheet" href="node_modules/codemirror/themepragma_darcula.css">
+    <link rel="stylesheet" href="node_modules/codemirror/theme/monokai.css">
+    <link rel="stylesheet" href="node_modules/codemirror/theme/seti.css">
+    <link rel="stylesheet" href="node_modules/codemirror/theme/midnight.css">
     
     
     
@@ -70,6 +73,18 @@
             margin-right: 10px;
             border:none;
         }
+        
+
+        .editorBackground.cm-s-seti.CodeMirror,
+        .editorBackground.cm-s-monokai.CodeMirror,
+        .editorBackground.cm-s-darcula.CodeMirror,
+        .editorBackground.cm-s-midnight.CodeMirror
+        {
+<!--
+            background : var(--input-background) !important;
+-->
+        }
+
      
      </style>
         
