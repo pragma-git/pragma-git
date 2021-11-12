@@ -184,8 +184,21 @@
 
     
             <span class=checkbox>
-                <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
-                <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+                <input type="checkbox" id='align' class=clicky 
+                    onclick="connect = connect ? null : 'align'; 
+                        initUI();
+                        obj = document.getElementById('theme-select');
+                        themeSelected( obj.options[obj.selectedIndex].text);"
+                > 
+                align
+                    
+                <input type="checkbox" id='hide-unchanged'  class=clicky  
+                    onclick="collapse = !collapse; 
+                        initUI();
+                        obj = document.getElementById('theme-select');
+                        themeSelected( obj.options[obj.selectedIndex].text);"
+                > 
+                hide unchanged
 
 
             <select id="theme-select" style="position: relative; left: 20px" 
