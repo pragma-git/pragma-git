@@ -225,13 +225,71 @@
                 <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
 
 
-            <select id="theme-select" style="position: relative; left: 20px" onChange="themeSelected(this);">
-                <option value="dog" selected>monokai</option>
-                <option value="cat">darcula</option>
-                <option value="hamster">abcdef</option>
-                <option value="parrot">ambiance</option>
-                <option value="spider">bespin</option>
-                <option value="goldfish">cobalt</option>
+            <select id="theme-select" style="position: relative; left: 20px" 
+                onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
+                <option>default</option>
+                <option>zenburn</option>
+                <option>3024-day</option>
+                <option>3024-night</option>
+                <option>abcdef</option>
+                <option>ambiance</option>
+                <option>ayu-dark</option>
+                <option>ayu-mirage</option>
+                <option>base16-dark</option>
+                <option>base16-light</option>
+                <option>bespin</option></option>
+                <option>blackboard</option>
+                <option>cobalt</option>
+                <option>colorforth</option>
+                <option>darcula</option>
+                <option>dracula</option>
+                <option>duotone-dark</option>
+                <option>duotone-light</option>
+                <option>eclipse</option>
+                <option>elegant</option>
+                <option>erlang-dark</option>
+                <option>gruvbox-dark</option>
+                <option>hopscotch</option>
+                <option>icecoder</option>
+                <option>idea</option>
+                <option>isotope</option>
+                <option>lesser-dark</option>
+                <option>liquibyte</option>
+                <option>lucario</option>
+                <option>material-darker</option>
+                <option>material-ocean</option>
+                <option>material-palenight</option>
+                <option>material</option>
+                <option>mbo</option>
+                <option>mdn-like</option>
+                <option>midnight</option>
+                <option>monokai</option>
+                <option>moxer</option>
+                <option>neat</option>
+                <option>neo</option>
+                <option>night</option>
+                <option>nord</option>
+                <option>oceanic-next</option>
+                <option>panda-syntax</option>
+                <option>paraiso-dark</option>
+                <option>paraiso-light</option>
+                <option>pastel-on-dark</option>
+                <option>railscasts</option>
+                <option>rubyblue</option>
+                <option>seti</option>
+                <option>shadowfox</option>
+                <option>solarized</option>
+                <option>ssms</option>
+                <option>the-matrix</option>
+                <option>tomorrow-night-bright</option>
+                <option>tomorrow-night-eighties</option>
+                <option>ttcn</option>
+                <option>twilight</option>
+                <option>vibrant-ink</option>
+                <option>xq-dark</option>
+                <option>xq-light</option>
+                <option>yeti</option>
+                <option>yonce</option>
             </select>            
             
             </span>
