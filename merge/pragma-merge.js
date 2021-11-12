@@ -26,7 +26,6 @@ var cachedFile = {};  // Struct to store content from files loaded
 var SAVED = false; // Flag to show that save has been performed.
 
 // Read paths
-//const ROOT = process.env.PWD;
 
 // These three files are also defined in app.js
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
@@ -374,17 +373,7 @@ function initUI() {
         addSearch('editor3', 'CodeMirror-merge-editor');
         addSearch('right3', 'CodeMirror-merge-right');
     }
-    
-    //// Dark mode
-    //if (global.localState.dark){
-        //cm = document.getElementsByClassName("CodeMirror");
-        //for (var i = 0; i < cm.length; i++) {
-          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula editorBackground');
-          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-monokai editorBackground');
-          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-seti editorBackground');
-          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
-        //}
-    //}
+
 
 }
 
