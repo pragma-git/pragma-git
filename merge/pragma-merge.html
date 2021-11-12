@@ -11,10 +11,12 @@
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
  
+<!--
     <link rel="stylesheet" href="node_modules/codemirror/themepragma_darcula.css">
     <link rel="stylesheet" href="node_modules/codemirror/theme/monokai.css">
     <link rel="stylesheet" href="node_modules/codemirror/theme/seti.css">
     <link rel="stylesheet" href="node_modules/codemirror/theme/midnight.css">
+-->
     
     
     
@@ -147,7 +149,8 @@
             visibility: collapse;  /* Hide */
         }
         
-        .CodeMirror{
+        .CodeMirror
+        {
             background: var(--merge-body-background);
             color: var(--merge-color);
             border:none;
@@ -155,9 +158,11 @@
         
         .CodeMirror-merge-gap, .CodeMirror-gutter,
         #editor2, #right2, 
-        #editor3, #left3, #right3 {
+        #editor3, #left3, #right3,
+        .CodeMirror-linenumber  
+        {
             background: var(--body-background);
-            color: var(--body-text);
+            color: var(--body-text) !important;
             border:none;
         }
         
@@ -216,8 +221,19 @@
 
     
             <span class=checkbox>
-            <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
-            <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+                <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
+                <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+
+
+            <select id="theme-select" style="position: relative; left: 20px" onChange="themeSelected(this);">
+                <option value="dog" selected>monokai</option>
+                <option value="cat">darcula</option>
+                <option value="hamster">abcdef</option>
+                <option value="parrot">ambiance</option>
+                <option value="spider">bespin</option>
+                <option value="goldfish">cobalt</option>
+            </select>            
+            
             </span>
             
         </div>

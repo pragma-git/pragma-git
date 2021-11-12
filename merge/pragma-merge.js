@@ -117,6 +117,48 @@ function getMimeType(filePath){
     return mime.lookup(fileExt);
 }
 
+
+// Callbacks
+function themeSelected( obj){
+    let themeName = obj.options[obj.selectedIndex].text;
+    console.log(themeName);
+    let themeDir = 'node_modules/codemirror/theme/';
+    let themeCssFile = themeDir + themeName + '.css';
+    loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
+    
+    
+    initUI();
+    
+    // Replace selected theme
+    cm = document.getElementsByClassName("CodeMirror");
+    for (var i = 0; i < cm.length; i++) {
+      //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
+      let themeString = 'cm-s-' + themeName;
+      let classString = themeString + ' editorBackground';
+      cm[i].className = cm[i].className.replace('cm-s-default', classString);
+    }
+    
+    
+    
+}
+function loadjscssfile(filename, filetype){
+    // From http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml
+    if (filetype=="js"){ //if filename is a external JavaScript file
+        var fileref=document.createElement('script')
+        fileref.setAttribute("type","text/javascript")
+        fileref.setAttribute("src", filename)
+    }
+    else if (filetype=="css"){ //if filename is an external CSS file
+        var fileref=document.createElement("link")
+        fileref.setAttribute("rel", "stylesheet")
+        fileref.setAttribute("type", "text/css")
+        fileref.setAttribute("href", filename)
+    }
+    if (typeof fileref!="undefined")
+        document.getElementsByTagName("head")[0].appendChild(fileref)
+}
+
+
 // Standard CodeMirror
 function toggleDifferences() {
   dv.setShowDifferences(highlight = !highlight);
@@ -320,16 +362,16 @@ function initUI() {
         addSearch('right3', 'CodeMirror-merge-right');
     }
     
-    // Dark mode
-    if (global.localState.dark){
-        cm = document.getElementsByClassName("CodeMirror");
-        for (var i = 0; i < cm.length; i++) {
-          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula editorBackground');
-          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-monokai editorBackground');
-          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-seti editorBackground');
-          cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
-        }
-    }
+    //// Dark mode
+    //if (global.localState.dark){
+        //cm = document.getElementsByClassName("CodeMirror");
+        //for (var i = 0; i < cm.length; i++) {
+          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-darcula editorBackground');
+          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-monokai editorBackground');
+          ////cm[i].className = cm[i].className.replace('cm-s-default','cm-s-seti editorBackground');
+          //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
+        //}
+    //}
 
 }
 
