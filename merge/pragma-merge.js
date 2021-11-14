@@ -159,7 +159,12 @@ function themeSelected( themeName){
     for (let i=0; i < els.length; i++) { 
         els[i].style.background= chunkColor;  // chunkColor == null if not defined in option
     }
-
+      
+    // Change connect-color (when align-checkbox off)
+    els = document.getElementsByClassName('CodeMirror-merge-r-connect'); 
+    for (let i=0; i < els.length; i++) { 
+        els[i].style.fill= chunkColor;  
+    }   
 
     
 }
