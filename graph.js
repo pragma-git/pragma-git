@@ -625,6 +625,12 @@ async function drawGraph( document, splitted, branchHistory, history){
             var dateContent = '';
             
             branchNames = new Map();   // Empty list of branch names
+            
+            // Add current branchName as first branch (will be to left)
+            let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
+            branchNames.set(branchName, branchNames.size);
+            
+            
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
             mapVisibleBranchToTopCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
