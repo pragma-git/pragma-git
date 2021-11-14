@@ -67,7 +67,7 @@
     --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
     --green-text: #5ff35f;            /* url works (green) */
     --red-text: #fd2020;              /* url fails (red) */
-    --grey-text: var(--text);      
+    --grey-text: var(--text);
     --code-text: #a2a2a2;             /* (light grey) */
     --tab-selected: #d6b51d;
     --tab-deselected: #DDDDDD;
@@ -75,7 +75,7 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
-    --notes-checkbox-filter: invert() brightness(0.75);    
+    --notes-checkbox-filter: invert() brightness(0.75);
     --table-header-color: var(--text);           /* (White text and line) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
@@ -92,7 +92,6 @@
     --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
     --message-placeholder: var(--text);           /* message field: other texts */
     --history-icon-brightness: 10;                 /* make white */
-
 }   
 
 

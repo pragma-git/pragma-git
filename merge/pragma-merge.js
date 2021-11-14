@@ -12,6 +12,7 @@ var gui = require("nw.gui");
 var os = require('os');
 var fs = require('fs');
 var mime = require('mime-types'); // Mime
+const util = require('./util_module.js'); // Pragma-git common functions
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -25,7 +26,6 @@ var cachedFile = {};  // Struct to store content from files loaded
 var SAVED = false; // Flag to show that save has been performed.
 
 // Read paths
-//const ROOT = process.env.PWD;
 
 // These three files are also defined in app.js
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
@@ -98,6 +98,14 @@ function injectIntoJs(document) {
     }   
 
     initUI();
+    
+    // Set theme
+    themeSelected( global.state.pragmaMerge.codeTheme);
+    
+    // Set theme-selection GUI to current
+    document.getElementById('theme-select').selectedIndex = 
+        util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+    
 
 };
 
@@ -116,6 +124,67 @@ function getMimeType(filePath){
     
     return mime.lookup(fileExt);
 }
+
+
+// Callbacks
+function themeSelected( themeName){
+    
+    // Save setting
+    global.state.pragmaMerge.codeTheme = themeName;
+    
+    if (themeName == "default"){
+        return
+    }
+    console.log(themeName);
+    
+    // Load theme
+    let themeDir = 'node_modules/codemirror/theme/';
+    let themeCssFile = themeDir + themeName + '.css';
+    loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
+
+    // Replace selected theme
+    cm = document.getElementsByClassName("CodeMirror");
+    for (var i = 0; i < cm.length; i++) {
+      let themeString = 'cm-s-' + themeName;
+      let classString = themeString + ' editorBackground';
+      cm[i].className = cm[i].className.replace('cm-s-default', classString);
+    }
+    
+    // Read chunk color from html option-tag
+    let index = util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+    let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
+     
+    // Change chunk-color
+    els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
+    for (let i=0; i < els.length; i++) { 
+        els[i].style.background= chunkColor;  // chunkColor == null if not defined in option
+    }
+      
+    // Change connect-color (when align-checkbox off)
+    els = document.getElementsByClassName('CodeMirror-merge-r-connect'); 
+    for (let i=0; i < els.length; i++) { 
+        els[i].style.fill= chunkColor;  
+    }   
+
+    
+}
+    function loadjscssfile(filename, filetype){
+        // From http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml
+        if (filetype=="js"){ //if filename is a external JavaScript file
+            var fileref=document.createElement('script')
+            fileref.setAttribute("type","text/javascript")
+            fileref.setAttribute("src", filename)
+        }
+        else if (filetype=="css"){ //if filename is an external CSS file
+            var fileref=document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", filename)
+        }
+        if (typeof fileref!="undefined")
+            document.getElementsByTagName("head")[0].appendChild(fileref)
+    }
+
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -319,6 +388,7 @@ function initUI() {
         addSearch('editor3', 'CodeMirror-merge-editor');
         addSearch('right3', 'CodeMirror-merge-right');
     }
+
 
 }
 

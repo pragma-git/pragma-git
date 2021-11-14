@@ -10,12 +10,8 @@
     
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
- 
-    
-    
-    
-    
-    
+
+  
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
     
     <script src="node_modules/codemirror/mode/xml/xml.js"></script>
@@ -30,25 +26,6 @@
     
     <script src="pragma-merge.js"></script>
     
-    
-    
- 
- <!-- Ctrl-F search-->
-<!--
-<link rel="stylesheet" href="node_modules/codemirror/lib/docs.css">   
-    
-    
-<link rel="stylesheet" href="node_modules/codemirror/addon/dialog/dialog.css">
-<link rel="stylesheet" href="node_modules/codemirror/addon/search/matchesonscrollbar.css">  
-  
-<script src="node_modules/codemirror/addon/dialog/dialog.js"></script>
-<script src="node_modules/codemirror/addon/search/searchcursor.js"></script>
-<script src="node_modules/codemirror/addon/search/search.js"></script>
-<script src="node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
-<script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
-<script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
--->
-    
 
     <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
     
@@ -61,6 +38,7 @@
             background: var(--body-background);
             color: var( --body-text);
             overflow: hidden;
+            --merge-chunk-color: grey;
         }  
 
 
@@ -70,6 +48,8 @@
             margin-right: 10px;
             border:none;
         }
+
+
      
      </style>
         
@@ -132,7 +112,8 @@
             visibility: collapse;  /* Hide */
         }
         
-        .CodeMirror{
+        .CodeMirror
+        {
             background: var(--merge-body-background);
             color: var(--merge-color);
             border:none;
@@ -140,15 +121,19 @@
         
         .CodeMirror-merge-gap, .CodeMirror-gutter,
         #editor2, #right2, 
-        #editor3, #left3, #right3 {
+        #editor3, #left3, #right3,
+        .CodeMirror-linenumber  
+        {
             background: var(--body-background);
-            color: var(--body-text);
+            color: var(--body-text) !important;
             border:none;
         }
         
         .CodeMirror-merge-copy{
             color: var(--merge-arrow);
         }
+        
+
 
   </style>
   
@@ -196,8 +181,90 @@
 
     
             <span class=checkbox>
-            <input type="checkbox" id='align' class=clicky onclick="connect = connect ? null : 'align'; initUI()"> align
-            <input type="checkbox" id='hide-unchanged'  class=clicky  onclick="collapse = !collapse; initUI()"> hide unchanged
+                <input type="checkbox" id='align' class=clicky 
+                    onclick="connect = connect ? null : 'align'; 
+                        initUI();
+                        obj = document.getElementById('theme-select');
+                        themeSelected( obj.options[obj.selectedIndex].text);"
+                > 
+                align
+                    
+                <input type="checkbox" id='hide-unchanged'  class=clicky  
+                    onclick="collapse = !collapse; 
+                        initUI();
+                        obj = document.getElementById('theme-select');
+                        themeSelected( obj.options[obj.selectedIndex].text);"
+                > 
+                hide unchanged
+
+
+            <select id="theme-select" style="position: relative; left: 20px" 
+                onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
+                <option>default</option>
+                <option disabled>──────────</option>
+                <option chunk-color="darkslategray">zenburn</option>
+                <option chunk-color="silver">3024-day</option>
+                <option chunk-color="darkslategray">3024-night</option>
+                <option chunk-color="darkslategray">abcdef</option>
+                <option chunk-color="grey">ambiance</option>
+                <option chunk-color="darkslategray">ayu-dark</option>
+                <option chunk-color="darkslategray">ayu-mirage</option>
+                <option chunk-color="darkslategray">base16-dark</option>
+                <option chunk-color="antiquewhite">base16-light</option>
+                <option chunk-color="darkslategray">bespin</option></option>
+                <option chunk-color="darkslategray">blackboard</option>
+                <option chunk-color="darkslategray">cobalt</option>
+                <option chunk-color="darkslategray">colorforth</option>
+                <option chunk-color="darkslategray">darcula</option>
+                <option chunk-color="darkslategray">dracula</option>
+                <option chunk-color="darkslategray">duotone-dark</option>
+                <option chunk-color="antiquewhite">duotone-light</option>
+                <option chunk-color="antiquewhite">eclipse</option>
+                <option chunk-color="antiquewhite">elegant</option>
+                <option chunk-color="darkslategray">erlang-dark</option>
+                <option chunk-color="darkslategray">gruvbox-dark</option>
+                <option chunk-color="darkslategray">hopscotch</option>
+                <option chunk-color="darkslategray">icecoder</option>
+                <option chunk-color="antiquewhite">idea</option>
+                <option chunk-color="antiquewhite">isotope</option>
+                <option chunk-color="darkslategray">liquibyte</option>
+                <option chunk-color="dimgray">lucario</option>
+                <option chunk-color="dimgray">material-darker</option>
+                <option chunk-color="dimgray">material-ocean</option>
+                <option chunk-color="darkslategray">material-palenight</option>
+                <option chunk-color="darkslategray">material</option>
+                <option chunk-color="darkslategray">mbo</option>
+                <option chunk-color="antiquewhite">mdn-like</option>
+                <option chunk-color="darkslategray">midnight</option>
+                <option chunk-color="darkslategray">monokai</option>
+                <option chunk-color="dimgray">moxer</option>
+                <option chunk-color="antiquewhite">neat</option>
+                <option chunk-color="antiquewhite">neo</option>
+                <option chunk-color="grey">night</option>
+                <option chunk-color="grey">nord</option>
+                <option chunk-color="darkslategray">oceanic-next</option>
+                <option chunk-color="darkslategray">panda-syntax</option>
+                <option chunk-color="darkslategray">paraiso-dark</option>
+                <option chunk-color="antiquewhite">paraiso-light</option>
+                <option chunk-color="darkslategray">pastel-on-dark</option>
+                <option chunk-color="darkslategray">railscasts</option>
+                <option chunk-color="darkslategray">rubyblue</option>
+                <option chunk-color="antiquewhite">seti</option>
+                <option chunk-color="darkslategray">shadowfox</option>
+                <option chunk-color="antiquewhite">solarized</option>
+                <option chunk-color="grey">ssms</option>
+                <option chunk-color="darkslategray">the-matrix</option>
+                <option chunk-color="darkslategray">tomorrow-night-bright</option>
+                <option chunk-color="darkslategray">tomorrow-night-eighties</option>
+                <option chunk-color="grey">ttcn</option>
+                <option chunk-color="darkslategray">twilight</option>
+                <option chunk-color="darkslategray">vibrant-ink</option>
+                <option chunk-color="darkslategray">xq-dark</option>
+                <option chunk-color="antiquewhite">xq-light</option>
+                <option chunk-color="antiquewhite">yeti</option>
+                <option chunk-color="darkslategray">yonce</option>
+            </select>            
+            
             </span>
             
         </div>
