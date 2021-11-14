@@ -135,22 +135,32 @@ function themeSelected( themeName){
     if (themeName == "default"){
         return
     }
-    
-    //let themeName = obj.options[obj.selectedIndex].text;
     console.log(themeName);
+    
+    // Load theme
     let themeDir = 'node_modules/codemirror/theme/';
     let themeCssFile = themeDir + themeName + '.css';
     loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
- 
+
     // Replace selected theme
     cm = document.getElementsByClassName("CodeMirror");
     for (var i = 0; i < cm.length; i++) {
-      //cm[i].className = cm[i].className.replace('cm-s-default','cm-s-midnight editorBackground');
       let themeString = 'cm-s-' + themeName;
       let classString = themeString + ' editorBackground';
       cm[i].className = cm[i].className.replace('cm-s-default', classString);
     }
     
+    // Read chunk color from html option-tag
+    let index = util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+    let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
+     
+    // Change chunk-color
+    els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
+    for (let i=0; i < els.length; i++) { 
+        els[i].style.background= chunkColor;  // chunkColor == null if not defined in option
+    }
+
+
     
 }
     function loadjscssfile(filename, filetype){
