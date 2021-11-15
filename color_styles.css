@@ -84,7 +84,7 @@
     /* Merge */
     --merge-color: black;
     --merge-body-background: #999999;
-    --merge-arrow: #999999;
+    --merge-arrow:  var(--text);
     
     /* Main window (different to rest of windows) */
     --main-background: var(--body-background);    /* main window background color (same as for html) */
