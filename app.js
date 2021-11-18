@@ -4132,7 +4132,7 @@ function displayLongAlert(title, message, type){
                             // Position centered in x, aligned near top
                             let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
                             const offsetY = 28;  // slightly below main window
-                            cWindows.moveTo( pMidx - 0.5 * dialogWidth, gui.Window.get().y + offsetY);
+                            cWindows.moveTo( Math.round(pMidx - 0.5 * dialogWidth) , gui.Window.get().y + offsetY);
                             
                             // So far the messageDiv increase in size with text        
                             // Lets now correct, so if the size is too large, we fix messageDiv and window height
