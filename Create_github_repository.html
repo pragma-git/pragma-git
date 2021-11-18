@@ -95,11 +95,7 @@
             <p>
                 <label for="accountName">
                     Github username (
-                    <a href="#" 
-                        onclick="nw.Window.open(
-                            'https://github.com/join', 
-                            { width: 768,height: 768, frame: true}
-                        )">
+                    <a href="https://github.com/join" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
                     Register a Github account
                     </a>)
                 </label>
@@ -110,11 +106,8 @@
             <!-- Add Access Token --> 
             <p>                        
                 <label for="token">Access Token or username:token (
-                    <a href="#" 
-                        onclick="nw.Window.open(
-                            'https://github.com/settings/tokens', 
-                            { width: 768,height: 768, frame: true}
-                        );">
+                
+                    <a href="https://github.com/settings/tokens" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
                     Create an access token
                 </a>)
                 </label>
