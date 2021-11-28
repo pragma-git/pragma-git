@@ -442,6 +442,17 @@
 
             
                                                
+        <!-- Icon Revert  -->                             
+        <div class="bottom-titlebar-revert-icon tooltip-top-right " data-tooltip="Revert (undo) changes in this commit">
+            <img id="bottom-titlebar-revert-icon" height="17" width="auto" 
+                onclick="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');
+                         _callback('clicked-revert-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');" 
+                src="images/revert.png">
+        </div> 
+            
+                                               
         <!-- Icon Stash  -->                             
         <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
             <img id="bottom-titlebar-stash-icon" height="17" width="auto" 

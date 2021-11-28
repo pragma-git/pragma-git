@@ -183,8 +183,6 @@ td {
   -webkit-app-region: no-drag;
 }
 
-
-
 .bottom-titlebar-stash_pop-icon
  {
   position: absolute;
@@ -195,6 +193,7 @@ td {
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
 }
+
 .bottom-titlebar-stash-icon
  {
   FONT-WEIGHT: 200;
@@ -207,6 +206,16 @@ td {
   -webkit-app-region: no-drag;
 }
 
+.bottom-titlebar-revert-icon
+ {
+  position: absolute;
+  right: 150;
+  width: auto;
+  height: 17px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
 
 .top-titlebar-text{
   position: absolute;

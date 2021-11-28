@@ -743,6 +743,45 @@ async function _callback( name, event){
         
         break;
       } 
+      case 'clicked-revert-button': {
+        // Git revert
+        // Only shown for historical non-merge commits
+        // I don't want the user to get into trouble with reverting merge commits.
+        try{
+            let hash = localState.historyHash;
+            console.log('Hash to revert = ' + hash);
+            
+            // Get history
+            var history = await gitHistory();
+
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .raw(['revert', '--no-commit', hash], onRevert);
+                
+            function onRevert(err, result ){ console.log(result);}
+
+
+            //
+            // Jump to HEAD, and suggest commit message
+            //
+
+            let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
+            
+            // Jump to HEAD
+            if ( getMode() === 'HISTORY'){
+                resetHistoryPointer(); 
+                await upArrowClicked(); // Get out of history
+            }
+            
+            // Write suggested message
+            let newMessage = 'Revert ' + oldMessage;
+            writeTextOutput( { value: newMessage } );
+            _setMode('CHANGED_FILES_TEXT_ENTERED');    
+            
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }
       case 'clicked-stash-button': {
 
         try{
@@ -2102,17 +2141,33 @@ async function _update(){
         }
         
                
-    // Pinned commit (show if in history mode)
+    // Show if in history mode / Hide otherwise
         try{
             if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
                 
+                 
+                // TODO : should only be visible when not Merge commit
+                // git log --pretty=%P -n 1 HASH lists parent hashes, which can be used to count number of parents
+                // Example output : "a88479e0b0f6869d2860dac5b54f3e9ee05a76bc 9d1153188b5797c9a34320806235f38e6c3f0d14" 
+                // create function gitIsMergeCommit(hash) which gives true if more than one parent
+                
                 document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
+                
+                
+                let isMergeCommit = await gitIsMergeCommit( localState.historyHash );
+                
+                if ( isMergeCommit ){
+                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                }else{
+                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                }
                 
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
                 
                 document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;';  // ▾
             }
@@ -2164,7 +2219,8 @@ async function _update(){
             document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
-            document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden';
+            document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'; 
+            document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'; 
             
             // Notes and folder icon hidden if no repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
@@ -3597,7 +3653,23 @@ try{
 return configList
 }
 
-
+async function gitIsMergeCommit(commit){
+    
+    if ( commit == '' ){ // HEAD with modified files 
+        return false;
+    }
+    
+    let returnValue = false;
+    try{
+        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
+        
+        returnValue = ( parentHashes.split(' ').length > 1 );
+    }catch(err){
+        console.error( err);
+    }
+    
+    return returnValue; // True if merge commit
+}
 
 function rememberDetachedBranch(){
     state.repos[state.repoNumber].detachedBranch = {};
