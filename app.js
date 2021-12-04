@@ -773,9 +773,9 @@ async function _callback( name, event){
             }
             
             // Write suggested message
+            await _setMode('CHANGED_FILES_TEXT_ENTERED');  
             let newMessage = 'Revert ' + oldMessage;
-            writeTextOutput( { value: newMessage } );
-            _setMode('CHANGED_FILES_TEXT_ENTERED');    
+            writeTextOutput( { value: newMessage } );  
             
         }catch(err){  
             console.log(err);
