@@ -439,7 +439,6 @@
         </div>     
 
 
-
             
                                                
         <!-- Icon Revert  -->                             
@@ -450,6 +449,17 @@
                 onmouseover="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert_hover.png');" 
                 onmouseout= "updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');" 
                 src="images/revert.png">
+        </div> 
+            
+                                               
+        <!-- Icon Cherry-pick  -->                             
+        <div class="bottom-titlebar-cherry-pick-icon tooltip-top-right " data-tooltip="cherry-pick this commit (to other branch)">
+            <img id="bottom-titlebar-cherry-pick-icon" height="17" width="auto" 
+                onclick="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');
+                         _callback('clicked-cherry-pick-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');" 
+                src="images/cherry-pick.png">
         </div> 
             
                                                

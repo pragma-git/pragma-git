@@ -782,6 +782,33 @@ async function _callback( name, event){
         }
         break;
       }
+      case 'clicked-cherry-pick-button': {
+          
+          
+        cachedBranchMenu = new gui.Menu();
+        
+        let currentBranch = cachedBranchList.current;
+        
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, cachedBranchList, 'clickedCherryPickContextualMenu'); 
+
+        // Add context menu title-row
+        cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+        cachedBranchMenu.insert(new gui.MenuItem({ label: 'Copy this commit to branch : ', enabled : false }), 0);
+        
+        // Popup as context menu
+        let pos = document.getElementById('bottom-titlebar-cherry-pick-icon').getBoundingClientRect();
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+          
+        break;
+      }
+      case 'clickedCherryPickContextualMenu': {
+          console.log('clicked branch = ' + event.selectedBranch);
+          // TODO : 
+          // 1) switch to selected branch (catch and make error dialog if not commited)
+          // 2) git cherry-pick --no-commit HASH
+          
+          break;
+      }
       case 'clicked-stash-button': {
 
         try{
@@ -2146,28 +2173,27 @@ async function _update(){
             if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
-                
-                 
-                // TODO : should only be visible when not Merge commit
-                // git log --pretty=%P -n 1 HASH lists parent hashes, which can be used to count number of parents
-                // Example output : "a88479e0b0f6869d2860dac5b54f3e9ee05a76bc 9d1153188b5797c9a34320806235f38e6c3f0d14" 
-                // create function gitIsMergeCommit(hash) which gives true if more than one parent
+
                 
                 document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
                 
                 
                 let isMergeCommit = await gitIsMergeCommit( localState.historyHash );
                 
-                if ( isMergeCommit ){
+                // Only visible if non-merge commit
+                if ( isMergeCommit ){  // 
                     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 }else{
                     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
                 }
-                
+             
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
                 document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;';  // ▾
             }
@@ -2221,6 +2247,7 @@ async function _update(){
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
             document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'; 
             document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'; 
+            document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
             
             // Notes and folder icon hidden if no repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
@@ -3787,7 +3814,13 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
                 
                 // Don't show remote if merge-menu (because merge requires local branch)
-                if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
+                // Don't show remote if cherry-pick-menu (because cherry-pick requires local branch)
+                if ( 
+                        (firstPart == "remotes") && ( 
+                            ( callbackName === "clickedMergeContextualMenu") || 
+                            ( callbackName === "clickedCherryPickContextualMenu") 
+                        )
+                    ){ 
                     continue 
                 }
                  
@@ -5116,6 +5149,7 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
     document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible'
     
  
 }
