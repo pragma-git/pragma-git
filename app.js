@@ -5115,6 +5115,7 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
     document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
     
  
 }
