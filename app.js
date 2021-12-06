@@ -785,7 +785,7 @@ async function _callback( name, event){
       case 'clicked-cherry-pick-button': {
           
           
-        cachedBranchMenu = new gui.Menu();
+        cachedBranchMenu = new gui.Menu(); 
         
         let currentBranch = cachedBranchList.current;
         
@@ -1374,11 +1374,8 @@ async function _callback( name, event){
 
         if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
             // Tell user to commit first (if that setting is enabled)
-            
-            let tempOutput = {};
-            tempOutput.placeholder = 'Before changing branch :' + os.EOL + 'Add description and Store ...';
-            tempOutput.value = '';
-            await writeTimedTextOutput(tempOutput, WAIT_TIME);
+
+            displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
             
             
         }else{
