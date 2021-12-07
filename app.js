@@ -802,12 +802,71 @@ async function _callback( name, event){
         break;
       }
       case 'clickedCherryPickContextualMenu': {
-          console.log('clicked branch = ' + event.selectedBranch);
-          // TODO : 
-          // 1) switch to selected branch (catch and make error dialog if not commited)
-          // 2) git cherry-pick --no-commit HASH
+        console.log('clicked branch = ' + event.selectedBranch);
+        // TODO : 
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        // 2) git cherry-pick --no-commit HASH
+        // 3) Jump to HEAD, and suggest commit message
           
-          break;
+        //
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        //
+                  
+            // Determine status of local repository
+            let status_data;  
+            try{
+              status_data = await gitStatus();
+            }catch(err){
+              console.log('Error in unComittedFiles,  calling  _mainLoop()');
+              console.log(err);
+            }
+            
+            // Alert and bail out if uncommited files
+            let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+            if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+              // Tell user to commit first (if that setting is enabled)
+              displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
+              break;
+            }
+            
+            // Remember current state
+            history = await gitHistory();
+            let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
+            let oldBranch = cachedBranchList.current;
+            
+            // Switch branch
+            gitSwitchBranch( event.selectedBranch);
+          
+        //
+        // 2) git cherry-pick --no-commit HASH
+        //
+            let hash = localState.historyHash;
+            console.log('Hash to revert = ' + hash);
+            
+            // Get history
+            var history = await gitHistory();
+            
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .raw(['cherry-pick', '--no-commit', hash], onCherryPick);
+                
+            function onCherryPick(err, result ){ console.log(result);}                
+          
+        //
+        // 3) Jump to HEAD, and suggest commit message
+        //               
+ 
+            // Jump to HEAD
+            if ( getMode() === 'HISTORY'){
+                resetHistoryPointer(); 
+                await upArrowClicked(); // Get out of history
+            }
+            
+            // Write suggested message
+            await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+            let newMessage = 'Cherry-picked "' + oldMessage + '" (from branch ' + oldBranch + ')';
+            writeTextOutput( { value: newMessage } );   
+          
+        break;
       }
       case 'clicked-stash-button': {
 
@@ -2944,7 +3003,7 @@ async function gitSwitchBranch(branchName){
         await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
         function onCheckout(err, result){console.log(result)}                                  
     }catch (err){
-        gitCycleToNextBranch();
+        //gitCycleToNextBranch();  // If error on switching branch, this will jump into infinite loop gitCycleToNextBranch -> gitSwitchBranchNumber -> gitSwitchBranch -> gitCycleToNextBranch ...
     }
     // Update info
     gitFetch();  
