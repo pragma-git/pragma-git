@@ -863,7 +863,7 @@ async function _callback( name, event){
             
             // Write suggested message
             await _setMode('CHANGED_FILES_TEXT_ENTERED');  
-            let newMessage = 'Cherry-picked "' + oldMessage + '" (from branch ' + oldBranch + ')';
+            let newMessage = 'Cherry-pick "' + oldMessage + '" (from branch "' + oldBranch + '")';
             writeTextOutput( { value: newMessage } );   
           
         break;
