@@ -5,6 +5,7 @@
     --text:  #222222;
     --body-background: #FFFFFF;       /* in html windows  */
     --link-color: blue;            /* in html windows */
+    --link-pressed-color: red;
     --body-text: var(--text);
     --input-background: #EEEEEE;
     --input-placeholder: #777777;
@@ -50,6 +51,7 @@
     --body-background: #454442;       /* in html windows (dark grey) */
     --body-text: var(--text);         /* in html windows and inputs */
     --link-color: #f3da67;            /* in html windows */
+    --link-pressed-color: #a3a040;
     --image-invert: 80%;               /* invert black-transparent images to white */
     --header-color: #d6b51d;
     --warn-color: #d6b51d;          /* for instance border of dialogs */
@@ -163,7 +165,10 @@
             color: var(--link-color);
             outline: none !important;  /* Dialogs have a problem showing blue outline when selected (tab between dialog elements) */
         }
-        
+        a:active{ 
+            color: var(--link-pressed-color) !important; 
+        }
+                
         iframe{
             width: 100%;
         }  
