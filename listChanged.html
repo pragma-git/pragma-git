@@ -245,6 +245,22 @@
 
 
 
+<!--  Warning dialog for file checkout  --> 
+
+<dialog id="fileCheckoutDialog"  class="error">    
+    <p>A modified version of this file already exists.  Do you want to overwrite ? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('fileCheckoutDialog').close();_callback('fileCheckout',selectedCommit, selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('fileCheckoutDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+
+
 <!--  Warning dialog for ignore  --> 
 
 <dialog id="ignoreDialog"  class="error">    
