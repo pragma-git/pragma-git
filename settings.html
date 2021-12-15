@@ -277,10 +277,16 @@
                     
                     
                     <div class="footnoteText">
-                        <sup>*</sup> These are global settings. Individual repository setting in "Repository / Software (this repo)" tab.
+                        <sup>*</sup> These are global settings. Individual repository setting in 
+                        <a style="cursor: pointer;" onclick="
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Repository').click();
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
+                        ">
+                            "Repository / Software (this repo)"
+                        </a> 
+                        tab.
                     </div>
                     <br>
-                
                  
                   
                 <h3>Git tools (built-in if empty)</h3>  
@@ -379,11 +385,18 @@
                         <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
                         
                         <br>
+
                         
+                        <div class="footnoteText">
+                        <sup>*</sup> These settings are specific for selected repository. General settings are found in the 
+                        <a style="cursor: pointer;" onclick="
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software').click();
+                        ">
+                            "Software tab"
+                        </a> 
+                        tab.
                         
-                        <p class="footnoteText">
-                            <sup>*</sup>These settings are specific for selected repository. General settings are found in the "Software tab", above.
-                        </p>
+                    </div>
                     
                             
                         <p><span id="cloneStatus"></span></p>
