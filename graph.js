@@ -416,6 +416,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML 
             let html =``
             
+            // Close button
+            html += `<img id="close-icon" style="width: 17px; float: right;"
+                onclick="mouseLeavingNodeCallback()" 
+                onmouseover="updateImageUrl('close-icon', 'images/button_close_hover.png');" 
+                onmouseout= "updateImageUrl('close-icon', 'images/button_close_black.png');" 
+                src="images/button_close_black.png">`
+            
+            
             let branchName = commit.branchName;
             
             
