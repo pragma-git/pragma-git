@@ -226,6 +226,12 @@
             font-size: 12px;
             font-style: italic;
         }
+        
+                
+        .image_background{ /* used in about.html and about_search.html to force white background to image */
+            background-color: white;
+            padding: 8px;
+        }
 
 
     
