@@ -73,7 +73,7 @@ async function injectIntoJs(document) {
     
     // Set title window_menu_handles_mapping
     tagDialogType = localState.tagListButton;
-    document.title = tagDialogType ´'tag dialog';
+    document.title = tagDialogType + 'tag dialog';
 
 };
 function fillSelectWithValues( tagValues, filterRule){
