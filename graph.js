@@ -392,9 +392,16 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
 }       
     async function mouseOverNodeCallback(e) {
             
+            // Clear old window if entering new one
+            if (lockedNodeInfoWindow == true){
+                closeInfoBox();
+            }
+            lockedNodeInfoWindow = true;
+            
+            // Set mouse position
             isMouseOverCommitCircle = true;
             
-            resetNodeSize(); // Clear resized nodes
+            resetNodeSize(); // Clear previously resized nodes
             
             console.log(e);
             let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
@@ -418,7 +425,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
-                onclick="mouseLeavingNodeCallback()" 
+                onclick="lockedNodeInfoWindow = false; mouseLeavingNodeCallback()" 
                 onmouseover="updateImageUrl('close-icon', 'images/button_close_hover.png');" 
                 onmouseout= "updateImageUrl('close-icon', 'images/button_close_black.png');" 
                 src="images/button_close_black.png">`
@@ -545,9 +552,13 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         }; 
 
     var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+    var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
     function mouseLeavingNodeCallback(){
-        closeInfoBox();
         isMouseOverCommitCircle = false;
+        if (lockedNodeInfoWindow == true){
+            return
+        }
+        closeInfoBox();
         return
     };
     // utility functions
