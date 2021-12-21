@@ -1,5 +1,5 @@
 #!/bin/bash#
-# export TOKEN=......
+TOKEN=$(cat ../../mytoken_test_scripts.txt)
 #
 # then run this script
 USER='JanAxelssonTest'

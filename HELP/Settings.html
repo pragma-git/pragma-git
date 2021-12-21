@@ -64,12 +64,17 @@
         
         
         <p><b>The second column</b> "Remote repository" shows the address to a connected remote repository.  If this is not defined, then you work with a local repository (
-        which is fine as long as you have a backup plan)</p>
+        which is fine as long as you have a backup plan).  
+        If defined, the connection status is shown with <span style="color: var(--red-text)">red color if login fails</span>, or with <span style="color:  var(--green-text)">green color if login works</span></p>
         
-        <p><b>The third column</b> has the <button>Set</button> button, which is used to test that the remote repository can be connected to, and at the same time storing the address</p>
+        <p><b>The third column</b> has the <button>Set</button> button. 
+        The function of this button is to store an edited remote address, and at the same time update the connection status</p>
 
-        <p><b>The forth column</b> has the <button>Forget</button> button, which is used remove the selected row from the list 
-        (it can always be added again, just as you did the first time by dropping the folder on the main window)</p>
+        <p><b>The forth column</b> has the <button>Forget</button> button, which is used remove the selected repository from the list. 
+        The files remains both locally and in the remote repository, and the repository can be added again by 
+        dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button> tab. 
+        
+        </p>
    
 
     <!--------------------------------------------------------------------------------------------> 
@@ -84,7 +89,7 @@
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
         </div>
         
@@ -149,7 +154,7 @@
                   <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
         </div>
     
@@ -168,7 +173,7 @@
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
         </div>
                      
@@ -196,7 +201,7 @@
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
         </div>
         
@@ -226,7 +231,7 @@
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                  <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
         </div>
         

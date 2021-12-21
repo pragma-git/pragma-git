@@ -5,6 +5,7 @@
     --text:  #222222;
     --body-background: #FFFFFF;       /* in html windows  */
     --link-color: blue;            /* in html windows */
+    --link-pressed-color: red;
     --body-text: var(--text);
     --input-background: #EEEEEE;
     --input-placeholder: #777777;
@@ -50,6 +51,7 @@
     --body-background: #454442;       /* in html windows (dark grey) */
     --body-text: var(--text);         /* in html windows and inputs */
     --link-color: #f3da67;            /* in html windows */
+    --link-pressed-color: #a3a040;
     --image-invert: 80%;               /* invert black-transparent images to white */
     --header-color: #d6b51d;
     --warn-color: #d6b51d;          /* for instance border of dialogs */
@@ -67,7 +69,7 @@
     --input-placeholder: #999999;     /* placeholder text in html inputs (lighter grey) */
     --green-text: #5ff35f;            /* url works (green) */
     --red-text: #fd2020;              /* url fails (red) */
-    --grey-text: var(--text);      
+    --grey-text: var(--text);
     --code-text: #a2a2a2;             /* (light grey) */
     --tab-selected: #d6b51d;
     --tab-deselected: #DDDDDD;
@@ -75,7 +77,7 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
-    --notes-checkbox-filter: invert() brightness(0.75);    
+    --notes-checkbox-filter: invert() brightness(0.75);
     --table-header-color: var(--text);           /* (White text and line) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
@@ -84,7 +86,7 @@
     /* Merge */
     --merge-color: black;
     --merge-body-background: #999999;
-    --merge-arrow: #999999;
+    --merge-arrow:  var(--text);
     
     /* Main window (different to rest of windows) */
     --main-background: var(--body-background);    /* main window background color (same as for html) */
@@ -92,7 +94,6 @@
     --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
     --message-placeholder: var(--text);           /* message field: other texts */
     --history-icon-brightness: 10;                 /* make white */
-
 }   
 
 
@@ -164,7 +165,10 @@
             color: var(--link-color);
             outline: none !important;  /* Dialogs have a problem showing blue outline when selected (tab between dialog elements) */
         }
-        
+        a:active{ 
+            color: var(--link-pressed-color) !important; 
+        }
+                
         iframe{
             width: 100%;
         }  
@@ -221,6 +225,12 @@
         .footnoteText{
             font-size: 12px;
             font-style: italic;
+        }
+        
+                
+        .image_background{ /* used in about.html and about_search.html to force white background to image */
+            background-color: white;
+            padding: 8px;
         }
 
 

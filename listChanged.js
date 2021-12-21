@@ -179,6 +179,54 @@ async function _callback( name, event, event2){
             
             break;
         }
+        case 'fileCheckoutLink': {
+            // Checks for already modified version, and warns with dialog
+            // If allow overwrite, or uncommitted does not exist => call callback 'fileCheckout'
+            let commit = event;
+            let file = event2;   
+            
+            
+            // Check if uncommited modified
+            let status_data = await opener.gitStatus();
+            console.error(status_data);
+            if ( status_data.modified.includes(file) ){
+                selectedFile = file;
+                selectedCommit = commit;
+                document.getElementById('fileCheckoutDialog').showModal();
+                return
+            }
+            
+            // Use same callback as for Modal dialog
+            _callback('fileCheckout', commit, file);
+                  
+            break;
+        }
+        case 'fileCheckout': {
+            let commit = event;
+            let file = event2;   
+
+   
+             // Prepare for git diff 
+            command = [  
+                'checkout',
+                commit,
+                file
+            ];
+
+
+            console.log(command);
+
+            // Git 
+            try{
+                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
+            }catch(err){
+                console.error('fileCheckoutLink -- caught error ');
+                console.error(err);
+            }
+            
+                                
+            break;
+        }
         case 'diffLink': {
             console.log('diffLink');
             console.log(event);
@@ -588,6 +636,7 @@ function createFileTable(status_data) {
                 // diff-link for history vs previous history
                 let commit = localState.historyHash;
                 cell.appendChild( diffLinkHistory( document, commit, file) );
+                cell.appendChild( fileCheckoutLink( document, commit, file) );
                 
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
@@ -630,6 +679,20 @@ function createFileTable(status_data) {
             }
             // Internal functions
 
+            function fileCheckoutLink(document, commit, file){
+                // Make fileCheckout link (work_dir)
+                var fileCheckoutLink = document.createElement('span');
+                if ( (typeOfChanged == 'modified')||(typeOfChanged == 'added') ){ // allow this for added or modified
+                    fileCheckoutLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    fileCheckoutLink.setAttribute('onclick', 
+                        "_callback('fileCheckoutLink', "  + "'"  + commit + "', " + "'"  + file + "')" );
+                    fileCheckoutLink.textContent=" (checkout)";
+                    return  fileCheckoutLink;
+                }else{
+                    fileCheckoutLink.innerHTML="";
+                    return  fileCheckoutLink;
+                }
+            };
             function diffLink(document, file){
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');

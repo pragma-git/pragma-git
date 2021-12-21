@@ -374,7 +374,8 @@ async function closeWindow(){
     opener.deleteWindowMenu("Resolve Conflicts");
 
     // Close window and return
-    localState.fileListWindow = false;  // Show to main program that window is closed
+    localState.conflictsWindow = false
+    //localState.fileListWindow = false;  // Show to main program that window is closed
     win.close();
     
 }

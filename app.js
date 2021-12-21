@@ -743,6 +743,131 @@ async function _callback( name, event){
         
         break;
       } 
+      case 'clicked-revert-button': {
+        // Git revert
+        // Only shown for historical non-merge commits
+        // I don't want the user to get into trouble with reverting merge commits.
+        try{
+            let hash = localState.historyHash;
+            console.log('Hash to revert = ' + hash);
+            
+            // Get history
+            var history = await gitHistory();
+
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .raw(['revert', '--no-commit', hash], onRevert);
+                
+            function onRevert(err, result ){ console.log(result);}
+
+
+            //
+            // Jump to HEAD, and suggest commit message
+            //
+
+            let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
+            
+            // Jump to HEAD
+            if ( getMode() === 'HISTORY'){
+                resetHistoryPointer(); 
+                await upArrowClicked(); // Get out of history
+            }
+            
+            // Write suggested message
+            await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+            let newMessage = 'Revert ' + oldMessage;
+            writeTextOutput( { value: newMessage } );  
+            
+        }catch(err){  
+            console.log(err);
+        }
+        break;
+      }
+      case 'clicked-cherry-pick-button': {
+          
+          
+        cachedBranchMenu = new gui.Menu(); 
+        
+        let currentBranch = cachedBranchList.current;
+        
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, cachedBranchList, 'clickedCherryPickContextualMenu'); 
+
+        // Add context menu title-row
+        cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+        cachedBranchMenu.insert(new gui.MenuItem({ label: 'Copy this commit to branch : ', enabled : false }), 0);
+        
+        // Popup as context menu
+        let pos = document.getElementById('bottom-titlebar-cherry-pick-icon').getBoundingClientRect();
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+          
+        break;
+      }
+      case 'clickedCherryPickContextualMenu': {
+        console.log('clicked branch = ' + event.selectedBranch);
+        // TODO : 
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        // 2) git cherry-pick --no-commit HASH
+        // 3) Jump to HEAD, and suggest commit message
+          
+        //
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        //
+                  
+            // Determine status of local repository
+            let status_data;  
+            try{
+              status_data = await gitStatus();
+            }catch(err){
+              console.log('Error in unComittedFiles,  calling  _mainLoop()');
+              console.log(err);
+            }
+            
+            // Alert and bail out if uncommited files
+            let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+            if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+              // Tell user to commit first (if that setting is enabled)
+              displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
+              break;
+            }
+            
+            // Remember current state
+            history = await gitHistory();
+            let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
+            let oldBranch = cachedBranchList.current;
+            
+            // Switch branch
+            gitSwitchBranch( event.selectedBranch);
+          
+        //
+        // 2) git cherry-pick --no-commit HASH
+        //
+            let hash = localState.historyHash;
+            console.log('Hash to revert = ' + hash);
+            
+            // Get history
+            var history = await gitHistory();
+            
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .raw(['cherry-pick', '--no-commit', hash], onCherryPick);
+                
+            function onCherryPick(err, result ){ console.log(result);}                
+          
+        //
+        // 3) Jump to HEAD, and suggest commit message
+        //               
+ 
+            // Jump to HEAD
+            if ( getMode() === 'HISTORY'){
+                resetHistoryPointer(); 
+                await upArrowClicked(); // Get out of history
+            }
+            
+            // Write suggested message
+            await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+            let newMessage = 'Cherry-pick "' + oldMessage + '" (from branch "' + oldBranch + '")';
+            writeTextOutput( { value: newMessage } );   
+          
+        break;
+      }
       case 'clicked-stash-button': {
 
         try{
@@ -1308,11 +1433,8 @@ async function _callback( name, event){
 
         if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
             // Tell user to commit first (if that setting is enabled)
-            
-            let tempOutput = {};
-            tempOutput.placeholder = 'Before changing branch :' + os.EOL + 'Add description and Store ...';
-            tempOutput.value = '';
-            await writeTimedTextOutput(tempOutput, WAIT_TIME);
+
+            displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
             
             
         }else{
@@ -2102,17 +2224,32 @@ async function _update(){
         }
         
                
-    // Pinned commit (show if in history mode)
+    // Show if in history mode / Hide otherwise
         try{
             if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+
                 
                 document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
                 
+                
+                let isMergeCommit = await gitIsMergeCommit( localState.historyHash );
+                
+                // Only visible if non-merge commit
+                if ( isMergeCommit ){  // 
+                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
+                }else{
+                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                }
+             
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
+                document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
                 document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;';  // ▾
             }
@@ -2164,7 +2301,9 @@ async function _update(){
             document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
-            document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden';
+            document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'; 
+            document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'; 
+            document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
             
             // Notes and folder icon hidden if no repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
@@ -2589,6 +2728,7 @@ async function gitIsInstalled(){
             
             if (err == undefined){
                 isInstalled = true;
+                localState.gitVersion = result.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
             }
         }; 
     }catch(err){
@@ -2863,7 +3003,7 @@ async function gitSwitchBranch(branchName){
         await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
         function onCheckout(err, result){console.log(result)}                                  
     }catch (err){
-        gitCycleToNextBranch();
+        //gitCycleToNextBranch();  // If error on switching branch, this will jump into infinite loop gitCycleToNextBranch -> gitSwitchBranchNumber -> gitSwitchBranch -> gitCycleToNextBranch ...
     }
     // Update info
     gitFetch();  
@@ -3596,7 +3736,23 @@ try{
 return configList
 }
 
-
+async function gitIsMergeCommit(commit){
+    
+    if ( commit == '' ){ // HEAD with modified files 
+        return false;
+    }
+    
+    let returnValue = false;
+    try{
+        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
+        
+        returnValue = ( parentHashes.split(' ').length > 1 );
+    }catch(err){
+        console.error( err);
+    }
+    
+    return returnValue; // True if merge commit
+}
 
 function rememberDetachedBranch(){
     state.repos[state.repoNumber].detachedBranch = {};
@@ -3714,7 +3870,13 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
                 
                 // Don't show remote if merge-menu (because merge requires local branch)
-                if ( ( callbackName === "clickedMergeContextualMenu") && (firstPart == "remotes") ) { 
+                // Don't show remote if cherry-pick-menu (because cherry-pick requires local branch)
+                if ( 
+                        (firstPart == "remotes") && ( 
+                            ( callbackName === "clickedMergeContextualMenu") || 
+                            ( callbackName === "clickedCherryPickContextualMenu") 
+                        )
+                    ){ 
                     continue 
                 }
                  
@@ -4131,7 +4293,7 @@ function displayLongAlert(title, message, type){
                             // Position centered in x, aligned near top
                             let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
                             const offsetY = 28;  // slightly below main window
-                            cWindows.moveTo( pMidx - 0.5 * dialogWidth, gui.Window.get().y + offsetY);
+                            cWindows.moveTo( Math.round(pMidx - 0.5 * dialogWidth) , gui.Window.get().y + offsetY);
                             
                             // So far the messageDiv increase in size with text        
                             // Lets now correct, so if the size is too large, we fix messageDiv and window height
@@ -4864,6 +5026,7 @@ function loadSettings(settingsFile){
             state.pragmaMerge = setting( state_in.pragmaMerge, {} );
             state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
             state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
+            state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             
         // Graph window
             state.graph = setting( state_in.graph, {} );
@@ -5041,6 +5204,8 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
     document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
+    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible'
     
  
 }

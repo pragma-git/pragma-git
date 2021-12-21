@@ -70,6 +70,10 @@ async function injectIntoJs(document) {
     
     // Set button name
     document.getElementById('Select-button').innerHTML =  localState.tagListButton;
+    
+    // Set title window_menu_handles_mapping
+    tagDialogType = localState.tagListButton;
+    document.title = 'Select tag to ' + tagDialogType;
 
 };
 function fillSelectWithValues( tagValues, filterRule){

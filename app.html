@@ -60,7 +60,7 @@
         <div id="top-titlebar-text" class="top-titlebar-text">
             
             <!-- Text Repo  --> 
-            <div class="tooltip-bottom-left" data-tooltip="Repository" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+            <div class="tooltip-bottom-left" data-tooltip="Repositories" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
     
                 &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
                     onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
@@ -77,7 +77,7 @@
             </div>
             
             <!-- Text Branch  --> 
-            <div class="tooltip-bottom-left" data-tooltip="Branch" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+            <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
             
                 &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
                     onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
@@ -439,7 +439,28 @@
         </div>     
 
 
-
+            
+                                               
+        <!-- Icon Revert  -->                             
+        <div class="bottom-titlebar-revert-icon tooltip-top-right " data-tooltip="Revert (undo) changes in this commit">
+            <img id="bottom-titlebar-revert-icon" height="17" width="auto" 
+                onclick="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');
+                         _callback('clicked-revert-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');" 
+                src="images/revert.png">
+        </div> 
+            
+                                               
+        <!-- Icon Cherry-pick  -->                             
+        <div class="bottom-titlebar-cherry-pick-icon tooltip-top-right " data-tooltip="cherry-pick this commit (to other branch)">
+            <img id="bottom-titlebar-cherry-pick-icon" height="17" width="auto" 
+                onclick="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');
+                         _callback('clicked-cherry-pick-button')" 
+                onmouseover="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');" 
+                src="images/cherry-pick.png">
+        </div> 
             
                                                
         <!-- Icon Stash  -->                             
@@ -491,7 +512,7 @@
     <dialog id="alertDialog"  class="warning">  
         <b><div id='alertTitle'></div></b><br> 
         <div >
-        <span id='alertMessage'></span>
+        <span id='alertMessage'></span>  &nbsp;&nbsp;&nbsp;
         <button id="no", style="float:right"
             onclick="document.getElementById('alertDialog').close();selectedBranch='';">
             OK
@@ -552,7 +573,7 @@
     <!-- Tag creation -->   
   
     <dialog id="tagNameInputDialog" class="warning">  
-        <b>Create branch from this commit</b><br>
+        <b>Create tag at this commit</b><br> 
             <br>
             <textarea id="tagNameTextarea" 
                 rows="2" 

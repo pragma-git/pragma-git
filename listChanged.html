@@ -17,9 +17,15 @@
             background: var(--body-background);
             color: var(--body-text);
         }
-        span { 
+        
+        span{ 
             color: var(--link-color); 
         }
+        
+        span:active{ 
+            color: var(--link-pressed-color) !important; 
+        }
+        
         .find-in-nw-current,
         .find-in-nw-of{
             color: black;
@@ -144,7 +150,7 @@
             
             <!-- Help button --> 
             <img id="about-icon" style='vertical-align:middle;float:right; padding-right: 15px' height="17" width="17"  
-                onclick="let evt = {}; evt.name='Graph';opener._callback('help',evt);" 
+                onclick="let evt = {}; evt.name='Modified Files';opener._callback('help',evt);" 
                 onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                 src="images/questionmark_black.png" >  
@@ -239,6 +245,22 @@
     </button>   
     <button id="no"
         onclick="document.getElementById('deleteDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
+
+
+
+<!--  Warning dialog for file checkout  --> 
+
+<dialog id="fileCheckoutDialog"  class="error">    
+    <p>A modified version of this file already exists.  Do you want to overwrite ? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('fileCheckoutDialog').close();_callback('fileCheckout',selectedCommit, selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('fileCheckoutDialog').close();selectedFile='';">
         No
     </button>  
 </dialog>  

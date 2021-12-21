@@ -208,12 +208,12 @@
      
                     Window scaling  (restart needed): <br>   
                     <!--  Zoom -->
-                    <input id="zoomMain" type="text" size="3"/>&nbsp;
+                    <input id="zoomMain" type="text" style="margin-top: 3px" size="3"/>&nbsp;
                     <label for="zoomMain"> Scale-factor for main window</label>
                     
                     <br> 
                     
-                    <input id="zoom" type="text" size="3"/>&nbsp;
+                    <input id="zoom" type="text" style="margin-top: 3px"  size="3"/>&nbsp;
                     <label for="zoom"> Scale-factor for other windows</label>
     
     
@@ -277,10 +277,16 @@
                     
                     
                     <div class="footnoteText">
-                        <sup>*</sup> These are global settings. Individual repository setting in "Repository / Software (this repo)" tab.
+                        <sup>*</sup> These are global settings. Individual repository setting in 
+                        <a style="cursor: pointer;" onclick="
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Repository').click();
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
+                        ">
+                            "Repository / Software (this repo)"
+                        </a> 
+                        tab.
                     </div>
                     <br>
-                
                  
                   
                 <h3>Git tools (built-in if empty)</h3>  
@@ -339,7 +345,7 @@
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Add remote</button>
+                              <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
                     </div>
                      
@@ -379,11 +385,18 @@
                         <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
                         
                         <br>
+
                         
+                        <div class="footnoteText">
+                        <sup>*</sup> These settings are specific for selected repository. General settings are found in the 
+                        <a style="cursor: pointer;" onclick="
+                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software').click();
+                        ">
+                            "Software tab"
+                        </a> 
+                        tab.
                         
-                        <p class="footnoteText">
-                            <sup>*</sup>These settings are specific for selected repository. General settings are found in the "Software tab", above.
-                        </p>
+                    </div>
                     
                             
                         <p><span id="cloneStatus"></span></p>
@@ -458,7 +471,7 @@
                     </div>   
                     
                     
-                    <!--  Add Remote TAB -->
+                    <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 
                          <p>
@@ -533,6 +546,10 @@
                 
                 Platform:
                 <div><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+
+                Git version:
+                <div><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
                 Settings folder:
                 <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div><br>

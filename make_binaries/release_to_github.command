@@ -13,19 +13,17 @@ RELEASE_TITLE='Fix'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-### Third pre-release of pragma-git 
+### Fourth release of pragma-git 
 
 Changes :
-- update download and install dialog 
-- tooltips in main window
-- setting for tooltip turnoff
-- stash icons in Graph
-- settings per repo instead of global
-- nicer dialogs
-- notes table improvements
-- upgrade notes to toastUI 3.1.1. Fix for soft line breaks within list items
-- graph, scrollbars if too long branch list
-- smaller bug fixes
+- Add "Revert" (git-revert) button when in historical commit
+- Add "Cherry-pick" button when in historical commit
+- Add single file "Checkout" in list of changed files, when in historical mode
+- Add multiple themes to Merge/Diff window
+- Show git version in Settings/System Info
+- Repair broken warning dialogs
+- Renamed Settings tab "Add Remote" to "Remote"
+- Minor tooltip and help text updates
 
 
 ___
