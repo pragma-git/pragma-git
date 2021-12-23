@@ -4319,6 +4319,10 @@ function displayLongAlert(title, message, type){
     }
     async function showUserDialog(test){
         
+        if (state.git == false){
+            return    // Bail out if git is not installed -- no way to get author info without git
+        }
+        
         // test -- if true, bail out if author name is known 
         
         // Get values according to git-config
