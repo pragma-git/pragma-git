@@ -294,7 +294,17 @@
                 var element = e.target || e.srcElement;
 
                 if (element.tagName == 'A') {
-                    require('nw.gui').Shell.openExternal( element.href );return false;
+                    
+                    if (element.href.startsWith('http') ){
+                        // Open in browser
+                        require('nw.gui').Shell.openExternal( element.href );
+                        return false; // prevent default action and stop event propagation
+                    }else{
+                        // Open in system's default app
+                        require('nw.gui').Shell.openItem( element.pathname );
+                        return false; // prevent default action and stop event propagation
+                    }
+
                     return false; // prevent default action and stop event propagation
                 }
             };            
