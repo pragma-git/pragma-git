@@ -38,7 +38,6 @@
             background: var(--body-background);
             color: var( --body-text);
             overflow: hidden;
-            --merge-chunk-color: antiquewhite;
         }  
 
 
@@ -133,13 +132,20 @@
             color: var(--merge-arrow);
         }
         
-        .CodeMirror-merge-r-chunk,
+        .CodeMirror-merge-r-chunk
+        {
+            background: antiquewhite !important;
+            fill: antiquewhite !important;
+            stroke: antiquewhite !important;
+        }      
+        
+        
         .CodeMirror-merge-r-connect
         {
-            background: var(--merge-chunk-color);
-            fill: var(--merge-chunk-color);
-            stroke: var(--merge-chunk-color);
-        }        
+            background: grey;
+            fill: grey;
+            stroke: grey;
+        }          
 
 
   </style>
