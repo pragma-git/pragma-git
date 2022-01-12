@@ -65,6 +65,7 @@ async function injectIntoJs(document) {
     
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
+        
         document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
 
         // Change from default text (two alternatives, if pinned or simple history)
@@ -765,6 +766,9 @@ function createFileTable(status_data) {
             if (localState.mode == 'HISTORY'){            
                 document.getElementById("applyButtonDiv").style.display = "none"; 
                 document.getElementById("applyButtonDiv").style.height= '0px';      
+                
+                
+        document.getElementById('commitFootnote').style.display = 'none'; // Only show instructions for history
                 
             }
             // ================= END  Internal functions  in  createFileTable =================
