@@ -376,16 +376,20 @@
     
     
             <!-- Text status  -->  
-            <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" 
-                onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
-                         _callback('clicked-status-text')"
-                         
-                onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
-                onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >
+            <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
+                    onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                             _callback('clicked-status-text')"
+                             
+                    onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
+                    onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >           
+
+                <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" >
+                </div>
             </div>
             &nbsp;
             
             
+            <!-- Icon Graph  --> 
              <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
                 <img id="more" style="vertical-align:middle;" height="17" width="17" 
                                     onclick="_callback( 'clicked-graph')" 
@@ -642,7 +646,7 @@
     <dialog id="gitNotInstalledAlert"  class="error">  
         <b>ERROR -- Cannot find "git" !</b><br>
             Please make sure "git" is installed. <br>
-            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  in top-left corner of the main window)<br>
+            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_hover.png"  height="17" width="17">  in top-left corner of the main window)<br>
             <br>
         
         <button 

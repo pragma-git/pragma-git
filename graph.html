@@ -115,7 +115,11 @@
         }
         
                
-        .rightInsert, .infoInsert, .rightDivider {
+        .rightInsert, 
+        .infoInsert, 
+        .rightDivider, 
+        #zoomDialog 
+        {
             background-color: var(--body-background);
             width: fit-content;
             height: fit-content;
@@ -159,6 +163,12 @@
             opacity: 0.9;
             padding: 15px;
         }
+        
+                
+        #zoomDialog {
+            visibility: hidden; 
+            position: fixed; 
+        }     
         
          
         .branchNameEditInsert{
@@ -232,7 +242,8 @@
             z-index: 10;
             width: 12px;
             left: -20;
-        }        
+        }   
+
    
         .node, 
         .noInvert, 
@@ -444,7 +455,12 @@
         
          <div id="displayedMouseOver"  class="infoInsert" style="width:fit-content;">  
  
-         </div>          
+         </div>     
+         
+         
+         <div id="zoomDialog">
+            Hej 
+         </div>     
          
   
          
@@ -468,11 +484,15 @@
         //      
         window.addEventListener('wheel', function (evt) {
             if (evt.ctrlKey) {
+                  
                 
+                if ( document.getElementById('zoombox').style.zoom == "" ){
+                    document.getElementById('zoombox').style.zoom = 1;  // Default
+                }
                 
                 event.preventDefault();
                 
-                console.log(evt)
+                console.error(evt.clientY)
                 
                 
                 if (evt.deltaY > 0) {
@@ -481,6 +501,8 @@
                     document.getElementById('zoombox').style.zoom = Number( document.getElementById('zoombox').style.zoom ) + 0.1;
                 }
                 
+
+                
                 if ( Number( document.getElementById('zoombox').style.zoom ) < 0.5 ){
                     document.getElementById('zoombox').style.zoom = 0.5;
                 }
@@ -488,11 +510,30 @@
                 if ( Number( document.getElementById('zoombox').style.zoom ) > 2 ){
                     document.getElementById('zoombox').style.zoom = 2;
                 }
+                
+                
+                document.getElementById('zoomDialog').style.top = evt.clientY - 30;
+                document.getElementById('zoomDialog').style.left = evt.clientX + 30;
+                document.getElementById('zoomDialog').innerText = "zoom = " + document.getElementById('zoombox').style.zoom;
+                document.getElementById('zoomDialog').style.visibility = "visible";  // Made visible here -- hide on keyup event below
+                              
             }
             return
         }, { passive: false });
   
+  
 
+        //
+        // Event listener for key up
+        //
+        document.body.addEventListener( 'keyup', function (evt) {
+            
+            document.getElementById('zoomDialog').style.visibility = "hidden";
+            
+            return
+        }, { passive: false });
+    
+    
     
     
         //

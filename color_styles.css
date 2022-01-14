@@ -23,7 +23,7 @@
     
     /* Settings */
     --green-text: green;
-    --red-text: red;
+    --red-text: #D22;               /* Tailored to work well also in Windows 10 */
     --grey-text: var(--text);
     --code-text: #c14d4d;
     --tab-selected: #888888;

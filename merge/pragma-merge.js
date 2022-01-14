@@ -153,11 +153,18 @@ function themeSelected( themeName){
     // Read chunk color from html option-tag
     let index = util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
-     
+    
+    let color = chunkColor;
+    if (chunkColor == "default"){
+        let bkg = document.getElementsByClassName('editorBackground'); 
+        let computedBackgroundColor = window.getComputedStyle(bkg[0], null).getPropertyValue( 'background-color');
+        color = 'rgba(255, 255, 255, 0.15)';
+    }
+            
     // Change chunk-color
     els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
     for (let i=0; i < els.length; i++) { 
-        els[i].style.background= chunkColor;  // chunkColor == null if not defined in option
+        els[i].style.backgroundColor = color;
     }
 
     

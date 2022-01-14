@@ -9,21 +9,21 @@ TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 echo "TAG = $TAG"
 
 # 2) Release Title
-RELEASE_TITLE='Release 0.9.2'
+RELEASE_TITLE='Release 0.9.3'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-### Fourth release of pragma-git 
+### Fifth release of pragma-git 
 
 Changes :
-- Add "Revert" (git-revert) button when in historical commit
-- Add "Cherry-pick" button when in historical commit
-- Add single file "Checkout" in list of changed files, when in historical mode
-- Add multiple themes to Merge/Diff window
-- Show git version in Settings/System Info
-- Repair broken warning dialogs
-- Renamed Settings tab "Add Remote" to "Remote"
-- Minor tooltip and help text updates
+* Graph window : Commit info window stays opened until close-button pressed. Gives less flicker. Allows copying text to clipboard
+* Graph window : zoom with ctrl + mousewheel
+* Graph window : close button for commit info window
+* Settings window : improve Windows 10 red font display
+* Notes window : hyperlink to a local document opens in system's default app. Internet link opens in browser.
+* Diff window : improve theme colors for code chunks that differ
+* Reintroduced message at first start : "Drop folder on window ..."
+* Fix failed to start on new install (only upgrading from previous versions worked)
 
 
 ___
