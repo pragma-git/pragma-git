@@ -2085,6 +2085,7 @@ async function _loopTimer( timerName, delayInMs){
     
 }
 async function _update(){ 
+    var startTime = performance.now();
     // Bail out if isPaused = true
     if(isPaused) {
         return;
@@ -2134,7 +2135,11 @@ async function _update(){
         // Check if repository 
         var isRepo;
         await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
-        function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+        function onCheckIsRepo(err, checkResult) { 
+            isRepo = checkResult
+            console.log(' ');
+            console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+        }
         
         if (!isRepo) {
             folder = "(not a repo) " + folder;
@@ -2274,9 +2279,11 @@ async function _update(){
         if (state.repos.length > 0){
             try{
                 
-                await simpleGit( state.repos[state.repoNumber].localFolder)
-                    .stash(['list'], onStash);
-                function onStash(err, result ){  stash_status = result }
+                await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
+                function onStash(err, result ){  
+                    stash_status = result 
+                    console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                }
                 
                 
                 //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
@@ -2356,6 +2363,7 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
+                console.log(`_update took ${ performance.now() - startTime} ms`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2421,7 +2429,7 @@ async function _update(){
             case 'CONFLICT': {  
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' ); 
-                    setStatusBar( fileStatusString( status_data)); 
+                setStatusBar( fileStatusString( status_data)); 
 
                 console.log('_update -- CONFLICT mode');
                 console.log(status);
@@ -2434,6 +2442,8 @@ async function _update(){
             }
         }    
     // return
+    
+        console.log(`_update took ${ performance.now() - startTime} ms`); 
         return true
 
 
@@ -5048,20 +5058,26 @@ function loadSettings(settingsFile){
             
             
         // Set values individual repos
-            for (let i = 0; i < state_in.repos.length; i++){
-                // Local author info
-                state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
-                state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
-                state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
-                
-                // Default to global authorinfo if missing
-                if ( state.repos[i].authorName.trim().length == 0 ){
-                    state.repos[i].useGlobalAuthorInfo = true;
+            try {
+                    
+                for (let i = 0; i < state_in.repos.length; i++){
+                    // Local author info
+                    state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
+                    state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
+                    state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
+                    
+                    // Default to global authorinfo if missing
+                    if ( state.repos[i].authorName.trim().length == 0 ){
+                        state.repos[i].useGlobalAuthorInfo = true;
+                    }
+                    
+                    // Local autoPush, No-fast-forward
+                    state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
+                    state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
                 }
                 
-                // Local autoPush, No-fast-forward
-                state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
-                state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
+            }catch(err){
+                console.warn('Failed reading individual repos');
             }
             
             
