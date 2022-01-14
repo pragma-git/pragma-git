@@ -4113,6 +4113,12 @@ function closeAllChildWindows( inputWin){
     
 }
 function setButtonText(){  // Store or Commit, depending on setting for autopush
+    
+    // Do nothing if no repos are defined
+    if (state.repoNumber < 1){
+        return  
+    }
+    
     // Store-button : Store or Commit depending on setting
     if (state.repos[state.repoNumber].autoPushToRemote){
         document.getElementById('store-button').innerText = 'Store';
