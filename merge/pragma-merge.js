@@ -124,53 +124,6 @@ function loadFile(filePath)  {
     return content;
 } 
 function getMimeType(filePath){
-<<<<<<< Updated upstream
-    var fileExt = filePath.split('.').pop();
-    var mimeType = mime.lookup(fileExt);
-    var modeName;
-    
-    if (mimeType !== false){
-        modeName = mimeType.split('/').pop();
-        if (modeName.startsWith('x-') ){
-            modeName = modeName.substr(2); 
-        }
-    }
-    
-    // Search mime types missing (from npm package mime-type, due to missing in mime-db)
-    //if (mimeType == false){
-        switch (fileExt) {
-            case 'm': {
-                mimeType = 'text/x-octave';
-                modeName = 'octave';
-                console.log('getMimeType not found in list => ' +  mimeType);
-                break;
-            }
-            //case 'html': {
-                //mimeType = 'text/html';
-                //modeName = 'htmlmixed';
-                //console.log('getMimeType not found in list => ' +  mimeType);
-                //break;
-            //}
-        } 
-    //}
-    
-    //// Load js-file for this language mode
-    //if (mimeType !== false){
-        //try {
-            
-            //let modeDir = 'node_modules/codemirror/mode/';
-            //let langModeJsFile = modeDir + modeName + '/' + modeName + '.js';
-            //console.log('Loading language mode  = ' +  langModeJsFile);
-            //loadjscssfile( langModeJsFile, "js") //dynamically load and add this .js file
-            
-            
-        //}catch (err){
-            
-        //}
-    //}
-    
-    return mimeType
-=======
     let fileExt = filePath.split('.').pop();
     let mimeType = mime.lookup(fileExt);;
     
@@ -232,7 +185,6 @@ function findMimeFromExtension( extension){
     
     return false 
     
->>>>>>> Stashed changes
 }
 
 
@@ -326,44 +278,10 @@ function initUI() {
     // New start
     options = optionsTemplate;
     
-    // Set Language mode
-    //if (firstRun){
-        mimeType = getMimeType(MERGED); // Mime
-        console.log('MIME-type = ' + mimeType);
-        window.resizeBy(1,0); window.resizeBy(-1,0); // Force Redraw
-    //}
-    //firstRun = false;
-    options.mode = mimeType;
     
-    
-    //let fileExt = MERGED.split('.').pop();
-    //let modeName = CodeMirror.findModeByExtension(fileExt).mode;
-    //options.mode = modeName;
-    
-    //if (modeName !== false){
-        //try {
-            //let modeDir = 'node_modules/codemirror/mode/';
-            //let langModeJsFile = modeDir + modeName + '/' + modeName + '.js';
-            //console.log('Loading language mode  = ' +  langModeJsFile);
-            //loadjscssfile( langModeJsFile, "js") //dynamically load and add this .js file
-            
-            
-        //}catch (err){
-            //console.warn('FAILED loading language mode  = ' +  langModeJsFile);
-        //}
-    //}
-    
-    //window.resizeBy(1,0); window.resizeBy(-1,0); // Force Redraw
-    
-    
-    
-    
-<<<<<<< Updated upstream
-=======
     // MIME : Old method (for reference)
     options.mode = getMimeType(MERGED); // Mime
     console.log('MIME-type = ' + options.mode);
->>>>>>> Stashed changes
     
     // MIMI : New method (used)
     let fileExt = MERGED.split('.').pop();
