@@ -121,8 +121,50 @@ function loadFile(filePath)  {
 } 
 function getMimeType(filePath){
     var fileExt = filePath.split('.').pop();
+    var mimeType = mime.lookup(fileExt);
+    var modeName;
     
-    return mime.lookup(fileExt);
+    if (mimeType !== false){
+        modeName = mimeType.split('/').pop();
+        if (modeName.startsWith('x-') ){
+            modeName = modeName.substr(2); 
+        }
+    }
+    
+    // Search mime types missing (from npm package mime-type, due to missing in mime-db)
+    //if (mimeType == false){
+        switch (fileExt) {
+            case 'm': {
+                mimeType = 'text/x-octave';
+                modeName = 'octave';
+                console.log('getMimeType not found in list => ' +  mimeType);
+                break;
+            }
+            //case 'html': {
+                //mimeType = 'text/html';
+                //modeName = 'htmlmixed';
+                //console.log('getMimeType not found in list => ' +  mimeType);
+                //break;
+            //}
+        } 
+    //}
+    
+    //// Load js-file for this language mode
+    //if (mimeType !== false){
+        //try {
+            
+            //let modeDir = 'node_modules/codemirror/mode/';
+            //let langModeJsFile = modeDir + modeName + '/' + modeName + '.js';
+            //console.log('Loading language mode  = ' +  langModeJsFile);
+            //loadjscssfile( langModeJsFile, "js") //dynamically load and add this .js file
+            
+            
+        //}catch (err){
+            
+        //}
+    //}
+    
+    return mimeType
 }
 
 
@@ -216,9 +258,38 @@ function initUI() {
     // New start
     options = optionsTemplate;
     
+    // Set Language mode
+    //if (firstRun){
+        mimeType = getMimeType(MERGED); // Mime
+        console.log('MIME-type = ' + mimeType);
+        window.resizeBy(1,0); window.resizeBy(-1,0); // Force Redraw
+    //}
+    //firstRun = false;
+    options.mode = mimeType;
     
-    options.mode = getMimeType(MERGED); // Mime
-    console.log('MIME-type = ' + options.mode);
+    
+    //let fileExt = MERGED.split('.').pop();
+    //let modeName = CodeMirror.findModeByExtension(fileExt).mode;
+    //options.mode = modeName;
+    
+    //if (modeName !== false){
+        //try {
+            //let modeDir = 'node_modules/codemirror/mode/';
+            //let langModeJsFile = modeDir + modeName + '/' + modeName + '.js';
+            //console.log('Loading language mode  = ' +  langModeJsFile);
+            //loadjscssfile( langModeJsFile, "js") //dynamically load and add this .js file
+            
+            
+        //}catch (err){
+            //console.warn('FAILED loading language mode  = ' +  langModeJsFile);
+        //}
+    //}
+    
+    //window.resizeBy(1,0); window.resizeBy(-1,0); // Force Redraw
+    
+    
+    
+    
     
     // Set state as set with clicky-buttons
     options.collapseIdentical = collapse; // Updated from GUI button
