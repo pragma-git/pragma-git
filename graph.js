@@ -219,7 +219,17 @@ async function injectIntoJs(document){
                     }catch(err){
                         
                     }
+                       
+                    // ColorHeader
+                    document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader'
+                    await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
                     
+                    // Wait for redraw
+                    function sleep(ms) {
+                        return new Promise(resolve => setTimeout(resolve, ms));
+                    }
+                    await sleep(50); 
+                                       
                     // second pass (all)
                     await drawGraph( document, allSplitted, branchHistory, history);               
                 }
