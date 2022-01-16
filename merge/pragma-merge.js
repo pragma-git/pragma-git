@@ -123,29 +123,6 @@ function loadFile(filePath)  {
     
     return content;
 } 
-function getMimeType(filePath){
-    let fileExt = filePath.split('.').pop();
-    let mimeType = mime.lookup(fileExt);;
-    
-    //if (mimeType == false){
-        switch (fileExt) {
-            case 'm': {
-                mimeType = 'text/x-octave';
-                modeName = 'octave';
-                console.log('getMimeType not found in list => ' +  mimeType);
-                break;
-            }
-            case 'java': {
-                mimeType = 'text/x-java';
-                modeName = 'java';
-                console.log('getMimeType not found in list => ' +  mimeType);
-                break;
-            }
-        } 
-    //}
-    
-    return mimeType
-}
 function findMimeFromExtension( extension){
     
     // Read  "node_modules/codemirror/mode/meta.js"  to find mime-type  
@@ -277,11 +254,6 @@ function initUI() {
     
     // New start
     options = optionsTemplate;
-    
-    
-    // MIME : Old method (for reference)
-    options.mode = getMimeType(MERGED); // Mime
-    console.log('MIME-type = ' + options.mode);
     
     // MIMI : New method (used)
     let fileExt = MERGED.split('.').pop();
