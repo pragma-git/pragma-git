@@ -2117,8 +2117,8 @@ async function _update(){
         await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
         function onCheckIsRepo(err, checkResult) { 
             isRepo = checkResult
-            console.log(' ');
-            console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+            //console.log(' ');
+            //console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
         }
         
         if (!isRepo) {
@@ -2262,7 +2262,7 @@ async function _update(){
                 await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
                 function onStash(err, result ){  
                     stash_status = result 
-                    console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                    //console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
                 }
                 
                 
@@ -2343,7 +2343,7 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                console.log(`_update took ${ performance.now() - startTime} ms`); 
+                //console.log(`_update took ${ performance.now() - startTime} ms`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2423,7 +2423,7 @@ async function _update(){
         }    
     // return
     
-        console.log(`_update took ${ performance.now() - startTime} ms`); 
+        //console.log(`_update took ${ performance.now() - startTime} ms`); 
         return true
 
 
