@@ -2105,6 +2105,10 @@ async function _update(){
         _setMode('UNKNOWN');
     }
     
+    // If mode says CHANGED_FILES, but no changed files anymore
+    if ( ( modeName == 'CHANGED_FILES') && ( status_data.changedFiles == false ) ){ 
+        _setMode('UNKNOWN');
+    }
     
     // Validate repo and folder :
  
