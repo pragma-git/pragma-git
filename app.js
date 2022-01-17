@@ -1035,29 +1035,9 @@ async function _callback( name, event){
         
         await simpleGit(folder).init( onInit );
         function onInit(err, initResult) { }
-        
-        await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-        function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult }
-        
-        await waitTime( 1000);
-        
-        //await gitAddCommitAndPush( 'First commit');
 
-        topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-        
-        // Initial commit
-        setStatusBar( 'Initial commit');
-        let outputData;
-        await simpleGit( folder )
-            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
-            
-        function onCommit(err, result) {console.log(result); outputData = result };
-        
         await waitTime( 1000);
-        console.log(outputData);
-        
-        
+ 
         // add repo to program
         try {
             await addExistingRepo( folder); 
@@ -2588,6 +2568,9 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            if (HEAD_title == undefined){
+                textOutput.placeholder = "No modified files"  ;
+            }
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
@@ -2601,7 +2584,10 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
             textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
-            //if (currentMode ==  'CHANGED_FILES') { return};
+            // Alternative message if no previous commit
+            if (HEAD_title == undefined){
+                textOutput.placeholder = "There are modified files - type description and press Store"  ;
+            }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";          
