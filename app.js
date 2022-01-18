@@ -1811,13 +1811,14 @@ async function _callback( name, event){
             
             // Display
             //localState.mode = 'HISTORY';
-            _setMode('HISTORY');
+            await _setMode('HISTORY');
+            _update();
             //writeMessage( localState.historyString, false);
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
             status_data = await gitShowHistorical();
-            setStatusBar( fileStatusString( status_data));
+            await setStatusBar( fileStatusString( status_data));
             
             selectInGraph(localState.historyHash);
             
@@ -1856,8 +1857,8 @@ async function _callback( name, event){
             //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
             textOutput.value = '';
             writeTextOutput( textOutput);
-            _setMode('UNKNOWN');
-            await _update()
+            await _setMode('UNKNOWN');
+            _update()
             
         }else{
             // Show history
