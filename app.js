@@ -3782,7 +3782,7 @@ function rememberDetachedBranch(){
     saveSettings(); // Make sure detached branch is saved
 }
 
-async function commitSettingsDir(){  // Settings dir local incremental backup is done in a git repository 
+async function commitSettingsDir(from){  // Settings dir local incremental backup is done in a git repository 
 
     // Message (format: 2021-09-29@09:24 )
     var currentdate = new Date();
@@ -3790,7 +3790,8 @@ async function commitSettingsDir(){  // Settings dir local incremental backup is
     + "-" + (currentdate.getMonth() + 1).toString().padStart(2, "0") 
     + "-" + currentdate.getDate().toString().padStart(2, "0") 
     + "@" + currentdate.getHours().toString().padStart(2, "0") 
-    + ":" + currentdate.getMinutes().toString().padStart(2, "0");
+    + ":" + currentdate.getMinutes().toString().padStart(2, "0")
+    + " -- " + from;
  
  
     // Copy .gitignore to settings Dir
@@ -3803,7 +3804,7 @@ async function commitSettingsDir(){  // Settings dir local incremental backup is
         });
     }
  
-    // Initialize (safe is it is already a repository)
+    // Initialize (safe if it is already a repository)
     await simpleGit(settingsDir).init( onInit );
     function onInit(err, initResult) { }
 
@@ -5330,7 +5331,7 @@ async function closeWindow(a){
     
     // Commit settings
     try{
-        await commitSettingsDir();    
+        await commitSettingsDir('Saved settings when Pragma-git closed');    
     }catch (err){
         
     }
