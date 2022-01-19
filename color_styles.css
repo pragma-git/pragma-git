@@ -138,18 +138,23 @@
             font-weight: 400;
             background-color: var(--body-background);
             color: var(--body-text);
+            margin: 0px;
         }
 
 
         h1, h2, h3, h4{
             text-align:left; 
             color: var(--header-color);
+            margin-block-end: 1.0em;
+            margin-block-start: 2.2em;
         }
-        
-        
-        h4{
-            margin-block-end: auto;
-        }  
+
+        h1, h2{
+            text-align:left; 
+            color: var(--header-color);
+            margin-block-end: 1.0em;
+            margin-block-start: 1.5em;
+        }
 
         
         img{
