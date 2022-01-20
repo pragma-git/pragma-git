@@ -240,8 +240,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         }catch (err){
             
         }
-        
-        var updateIsRunning = false;
 
 
     // Inititate listening to Pragma-merge start signal
@@ -2068,23 +2066,6 @@ async function _loopTimer( timerName, delayInMs){
     
 }
 async function _update(){ 
-    if (updateIsRunning){
-        console.warn('skiped _update from ' );
-        console.warn(this);
-        return;
-    }
-    updateIsRunning = true;
-    await _update2();
-    updateIsRunning = false;
-}
-    
-async function _update2(){ 
-    
-    // Turn on and off local logging
-    function log( text){
-        console.log(text);
-    }
-    
     var startTime = performance.now();
     // Bail out if isPaused = true
     if(isPaused) {
@@ -2141,8 +2122,8 @@ async function _update2(){
         await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
         function onCheckIsRepo(err, checkResult) { 
             isRepo = checkResult
-            log(' ');
-            log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+            //console.log(' ');
+            //console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
         }
         
         if (!isRepo) {
@@ -2286,7 +2267,7 @@ async function _update2(){
                 await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
                 function onStash(err, result ){  
                     stash_status = result 
-                    log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                    //console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
                 }
                 
                 
@@ -2367,7 +2348,7 @@ async function _update2(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
+                //console.log(`_update took ${ performance.now() - startTime} ms`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2447,7 +2428,7 @@ async function _update2(){
         }    
     // return
     
-        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
+        //console.log(`_update took ${ performance.now() - startTime} ms`); 
         return true
 
 
