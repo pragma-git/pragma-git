@@ -150,15 +150,28 @@ function extendFindInNw( elementToSearch){
         
         console.log(elements);
         
-        
+        // Search HTML
         elements.forEach(function (element) {
         if (element.id !== 'find-in-nw-search-box') {
-            window.findAndReplaceDOMText(element, {
-            find: RegExp(text,'gi') ,
-            wrap: 'mark',
-            wrapClass: 'find-in-nw-token'
-            });
-        }
+                window.findAndReplaceDOMText(element, {
+                find: RegExp(text,'gi') ,
+                wrap: 'mark',
+                wrapClass: 'find-in-nw-token'
+                });
+            }
+        });
+        
+        
+        // Search for hash (id in text class, in Graph)
+        let textElements = document.getElementsByClassName('text');
+        textElements.forEach(function (textElement) {
+        if (textElement.id.startsWith(text) ) {
+            window.findAndReplaceDOMText(textElement, {
+                find: RegExp(textElement.innerText,'gi') ,
+                wrap: 'mark',
+                wrapClass: 'find-in-nw-token'
+                });
+            }
         });
         
         this.lastSearched = text;
