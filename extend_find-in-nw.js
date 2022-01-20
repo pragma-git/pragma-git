@@ -162,17 +162,21 @@ function extendFindInNw( elementToSearch){
         });
         
         
-        // Search for hash (id in text class, in Graph)
-        let textElements = document.getElementsByClassName('text');
-        textElements.forEach(function (textElement) {
-        if (textElement.id.startsWith(text) ) {
-            window.findAndReplaceDOMText(textElement, {
-                find: RegExp(textElement.innerText,'gi') ,
-                wrap: 'mark',
-                wrapClass: 'find-in-nw-token'
-                });
-            }
-        });
+        // Search for hash (element id in text class, in Graph)
+        try{
+            let textElements = document.getElementsByClassName('text');
+            textElements.forEach(function (textElement) {
+            if (textElement.id.startsWith(text) ) {
+                window.findAndReplaceDOMText(textElement, {
+                    find: RegExp(textElement.innerText,'gi') ,
+                    wrap: 'mark',
+                    wrapClass: 'find-in-nw-token'
+                    });
+                }
+            });
+        }catch (err){
+            // May fail in other windows.
+        }
         
         this.lastSearched = text;
         this.setDataPositionAttribute();
