@@ -186,10 +186,9 @@ function extendFindInNw( elementToSearch){
                     wrapClass: 'find-in-nw-token'
                     });
                 }
-                this.currentToken = this.currentToken + 1;
             });
         }catch (err){
-            // May fail in other windows.
+            // Will fail in other windows
         }
 
         
