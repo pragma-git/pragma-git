@@ -2842,6 +2842,7 @@ async function gitStatus(){
             (status_data.modified.length 
             + status_data.not_added.length 
             + status_data.created.length
+            + status_data.renamed.length 
             + status_data.deleted.length) > 0);
             
         status_data.current;  // Name of current branch
@@ -2868,6 +2869,7 @@ async function gitStatus(){
             status_data = [];
             status_data.conflicted = [];
             status_data.modified = []; // zero length
+            status_data.renamed = []; // zero length
             status_data.not_added = [];
             status_data.created = [];
             status_data.deleted = [];
@@ -4882,7 +4884,7 @@ function fileStatusString( status_data){
                 
             }else{
                 return 'Modified = ' 
-                + status_data.modified.length 
+                + ( status_data.modified.length + status_data.renamed.length )
                 + ' |  New = ' + ( status_data.not_added.length + status_data.created.length )
                 + ' |  Deleted = ' + status_data.deleted.length;
 
