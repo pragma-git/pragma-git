@@ -617,13 +617,20 @@ function createFileTable(status_data) {
                     typeOfChanged = 'renamed';
                     
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
-
-                    filetext = substrings[1] + ' -> ' + substrings[2];
+                    
+                    if ( substrings.length <= 1){
+                        filetext = file;
+                    }else{
+                        filetext = substrings[1] + ' -> ' + substrings[2];
+                    }
+                    
                 break;
             }
             
             
-            var description = document.createTextNode( filetext);
+            var description = document.createElement('div');
+            description.innerHTML =  filetext.replace(/->/g, '&#10142;'); // Make arrow if '->'
+            
             label.appendChild(description);
 
             cell.appendChild(label);
