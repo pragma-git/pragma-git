@@ -288,11 +288,6 @@ async function _callback( name, event){
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
                 
-                // Update displayed .gitignore 
-                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
-
-                
                 // Update cached branch list
                 opener.cacheBranchList();
                 
@@ -301,13 +296,30 @@ async function _callback( name, event){
                 await updateLocalAuthorInfoView();
                 
                 // Update local repo settingsDir
+                
+                document.getElementById('doNotPushToRemote').checked = state.repos[state.repoNumber].doNotPushToRemote;
+                if ( state.repos[state.repoNumber].doNotPushToRemote ){                                    
+                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                }else{
+                    document.getElementById('autoPushDiv').style.visibility = 'visible';
+                } 
+                
                 document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;
+                
                 document.getElementById('NoFF_merge').checked = state.repos[state.repoNumber].NoFF_merge;
                 document.getElementById('useGlobalAuthorInfo').checked = state.repos[state.repoNumber].useGlobalAuthorInfo;
                 
                 
  
-                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);                
+                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);       
+                
+                                
+                // Update displayed .gitignore     
+                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
+                if (fs.existsSync(ignoreFileName) ){
+                    document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+                }
+         
 
                 
             }catch(err){
