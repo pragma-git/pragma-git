@@ -377,16 +377,16 @@
        
        
                          <!--  Don't-push to remote -->
-                        <input type="checkbox" id="doNotPushToRemote" 
+                        <input type="checkbox" id="allowPushToRemote" 
                             onchange="_callback('localCheckboxChanged',this)
                                         if (this.checked){
-                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                                        }else{
                                             document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                        }else{
+                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
                                         } 
                             " 
                             >
-                        <label for="doNotPushToRemote"> Don't push. Use if you don't have write access (for instance a cloned public repo)</label><br>
+                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
                             
       
                          <!--  Auto-push to remote -->
@@ -403,7 +403,7 @@
 
                         
                         <div class="footnoteText">
-                            <sup>*</sup> These settings are specific for selected repository. General settings are found in the 
+                            <sup>*</sup> These settings are specific for the currently selected repository. General settings are found in the 
                             <a style="cursor: pointer;" onclick="
                                 Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software').click();
                             ">

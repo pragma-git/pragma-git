@@ -297,11 +297,11 @@ async function _callback( name, event){
                 
                 // Update local repo settingsDir
                 
-                document.getElementById('doNotPushToRemote').checked = state.repos[state.repoNumber].doNotPushToRemote;
-                if ( state.repos[state.repoNumber].doNotPushToRemote ){                                    
-                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                }else{
+                document.getElementById('allowPushToRemote').checked = state.repos[state.repoNumber].allowPushToRemote;
+                if ( state.repos[state.repoNumber].allowPushToRemote ){                                    
                     document.getElementById('autoPushDiv').style.visibility = 'visible';
+                }else{
+                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
                 } 
                 
                 document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;

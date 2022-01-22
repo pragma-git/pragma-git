@@ -2160,7 +2160,7 @@ async function _update(){
             
     // Push button (show if ahead of remote)
         try{
-            let pushAllowed = ! state.repos[ state.repoNumber].doNotPushToRemote;  
+            let pushAllowed = state.repos[ state.repoNumber].allowPushToRemote;  
             if ( (status_data.ahead > 0) && pushAllowed ){
                 document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
             }else{
@@ -5073,8 +5073,8 @@ function loadSettings(settingsFile){
                         state.repos[i].useGlobalAuthorInfo = true;
                     }
                     
-                    // Local doNotPushToRemote, autoPush, No-fast-forward
-                    state.repos[i].doNotPushToRemote = setting( state_in.repos[i].doNotPushToRemote, false ); 
+                    // Local allowPushToRemote, autoPush, No-fast-forward
+                    state.repos[i].allowPushToRemote = setting( state_in.repos[i].allowPushToRemote, true ); 
                     state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
                     state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
                     
