@@ -258,6 +258,15 @@ function initUI() {
     // MIMI : New method (used)
     let fileExt = MERGED.split('.').pop();
     options.mode = findMimeFromExtension( fileExt)
+    if (options.mode == false){
+        let fileName = MERGED.split(pathsep).pop();
+        let mime = CodeMirror.findModeByFileName( fileName );
+        if (mime !== undefined){
+            options.mode = mime.mime;
+        }
+    }
+    
+    
     console.log('MIME-type (new method) = ' + options.mode);
     
     
