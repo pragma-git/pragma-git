@@ -75,6 +75,8 @@
         dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button> tab. 
         
         </p>
+        <br>
+        <br>
    
 
     <!--------------------------------------------------------------------------------------------> 
@@ -82,6 +84,7 @@
      
 
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
+        <br>
            
         <div class="toolWrapper" > 
             <div class="buttonWrapper">
@@ -95,68 +98,67 @@
         
 
         <p>This tab handles settings that are specific for the currently selected repository.  </p>
-        <br>
-        
+      
  
         
         <dt><h4>Author's information</h4></dt> 
-        <br> 
-        <dd>
-        The author information here may override the global author information for this selected repository (see "Software" tab) 
-        </dd>
-        <br>
-        <br>
-                                       
-        <dd><label for="thisRepoAuthorName"> Author's name (required):</label><br>
-            <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />  —  
-            <i>Required field. Modify your name (on all your repositories on this computer)</i>
-        </dd>
-        <br>
-        <br>
-                                     
-        <dd><label for="thisRepoAuthorEmail"> Author's email :</label><br>
-            <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/> —  
-            <i>Modify your email (on all your repositories on this computer)</i> — <br> <br>
-        </dd>
-        <br>
-        
-        <dd><input type="checkbox" checked>   Use global (from Software tab)    — <br> <br>
-            <i>When this is unchecked, the author's name and email fields are used instead of the global values.  If checked, global values are used and displayed.</i>
-        </dd>
-        <br>
- 
-        <dt><h4>Git behavior</h4></dt> 
-        <br> 
-        
-
-                 
-        <dd><input type="checkbox" checked> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo) — <br> <br>
-        
-        <i>Disabling this checkbox prohibits pushing to remote repository.  
-        This is useful when you do not have write access to the remote repository.  
-        This stops the constant nagging for a password</i>
-        
-        </dd>
-        <br>
-        <br>
-        
-                         
-        <dd><input type="checkbox" checked> 
-        
-        Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)   — <br> <br>
-        <i>Pragma-git has the possibility to auto-push if a remote repository exists.  This is handy most times, but it can be turned off by deselecting this checkbox.</i>
-        </dd>
-        <br>
-        <br>
-        
-        
-        <dd><input type="checkbox" checked>   Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  
-        Deselect to use fast-forward  — <br> <br>
-        
-        <i>Fast-forward merge is a git feature that is debated.  Some developers love it because it may make the commit history appear cleaner than it really was,
-         and some thinks it is very awkward since it changes the history.
-        It is recommended that beginners have this checkbox selected, so that the history follows what has actually happened. </i>  
-        
+            <br> 
+            <dd>
+            The author information here may override the global author information for this selected repository (see "Software" tab) 
+            </dd>
+            <br>
+            <br>
+                                           
+            <dd><label for="thisRepoAuthorName"> Author's name (required):</label><br>
+                <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />  —  
+                <i>Required field. Modify your name (on all your repositories on this computer)</i>
+            </dd>
+            <br>
+            <br>
+                                         
+            <dd><label for="thisRepoAuthorEmail"> Author's email :</label><br>
+                <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/> —  
+                <i>Modify your email (on all your repositories on this computer)</i> — <br> <br>
+            </dd>
+            <br>
+            
+            <dd><input type="checkbox" checked>   Use global (from Software tab)    — <br> <br>
+                <i>When this is unchecked, the author's name and email fields are used instead of the global values.  If checked, global values are used and displayed.</i>
+            </dd>
+            <br>
+     
+            <dt><h4>Git behavior</h4></dt> 
+            <br> 
+            
+    
+                     
+            <dd><input type="checkbox" checked> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo) — <br> <br>
+            
+            <i>Disabling this checkbox prohibits pushing to remote repository.  
+            This is useful when you do not have write access to the remote repository.  
+            This stops the constant nagging for a password</i>
+            
+            </dd>
+            <br>
+            <br>
+            
+                             
+            <dd><input type="checkbox" checked> 
+            
+            Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)   — <br> <br>
+            <i>Pragma-git has the possibility to auto-push if a remote repository exists.  This is handy most times, but it can be turned off by deselecting this checkbox.</i>
+            </dd>
+            <br>
+            <br>
+            
+            
+            <dd><input type="checkbox" checked>   Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  
+            Deselect to use fast-forward  — <br> <br>
+            
+            <i>Fast-forward merge is a git feature that is debated.  Some developers love it because it may make the commit history appear cleaner than it really was,
+             and some thinks it is very awkward since it changes the history.
+            It is recommended that beginners have this checkbox selected, so that the history follows what has actually happened. </i>  
+            
         </dd>
         <br>
         <br>
@@ -181,41 +183,79 @@
             </div>
         </div>
     
-
-        <p>This tab shows the .gitignore file, which is used to stop new files (matching a pattern) from being added to the repository.  
-        It can be viewed as a filter against files that change by theirselves when you develop.  This could
-        for instance be compiled files, log files, or automatically generated backup files</p>
         
-        <p> <button>Edit .gitignore</button> opens a special editor for .gitignore files, that aids in creating and modifying the filter conditions</p>
+        <dt><h4>Ignore </h4></dt> 
+     
+            <dd>
+    
+            <p>This tab shows the .gitignore file, which is used to stop new files (matching a pattern) from being added to the repository.  
+            It can be viewed as a filter against files that change by theirselves when you develop.  This could
+            for instance be compiled files, log files, or automatically generated backup files</p>
+            
+            <p> <button>Edit .gitignore</button> opens a special editor for .gitignore files, that aids in creating and modifying the filter conditions</p>
+            </dd>  
         
-        <br>
-
-        <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+            <br>
+            <br>
+    
+            <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                      <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                </div>
             </div>
-        </div>
-                     
-
-        <p>Instead of starting with a local folder, you may connect with an existing repository (this process is called cloning).</p>
+                         
+    
+            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+         
         
-         <p><b>Cloning a remote repository</b> :<br> 
-        
-        </p>
-        
-        <ol>  
-        <li><b>The first text field </b> is used to define the remote repository address (url)   
-        <li><button>Test URL</button> button  is used to verify that you can connect to the defined remote repository  
-        <li><button>Get Folder</button> button  is used to select the folder, into which the cloned repository is copied.
-        <li><b>The second text field </b> displays the selected folder path   
-        <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
-        </ol>   
-        
+        <dt><h4>Cloning </h4></dt> 
         <br> 
+            <dd>
+            When cloning from a remote repository to a local folder, the url (remote repository) and the path to a local folder is needed. 
+            In addition, information if the remote repository is writeable is needed. These settings are specified in the following inputs:
+            </dd>
+            <br>
+                                           
+            <dd><textarea id="urlToClone"  placeholder="URL to clone from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
+            </dd>
+            <br>
+                                         
+            <dd><textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            </dd>
+            <br>
+            
+            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   — <br> <br>
+                <i>This checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).</i>
+            </dd>
+            <br>
+            <br>
+            
+            <dd> In addition, there is the <button>Clone</button>,  which starts the cloning process.     
+            </dd>
+            <br>
+     
+     
+            <dt><h4>Workflow </h4></dt>   
+            <br>      
+            
+            <dd> The workflow is from top to bottom :  
+                <ol>  
+                    <li>Input the remote repository address (url)   
+                    <li>Check that you have access with the <button>Test URL</button> button  
+                    <li>Select local folder with the <button>Get Folder</button> button. 
+                    <li>The second text field displays the selected folder path   
+                    <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                </ol>   
+            </dd>
+            <br>       
+            
+     
+            
+            <br> 
                
         
         <div class="toolWrapper" > 
@@ -228,61 +268,71 @@
             </div>
         </div>
         
-        <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
-        a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
         
-        
-         <p><b>Adding a local folder </b> :<br>  
-        
-        </p>
-        
-        <ol>
-        <li><button>Get Folder</button> button is used to select the folder, into which the cloned repository is copied.  
-        <li><b>The text field </b> displays the selected folder path     
-        <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
-        </ol>    
-        
- 
-        <p>This is the same functionality as dropping a folder to the Pragma-git main window.</p>
-        
-        <br>
-               
-        
-        <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
-        </div>
-        
-         <p><b>Adding a remote repository</b> :<br>  
+        <dt><h4>Local folder </h4></dt> 
+            <dd>
+                <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
+                a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
+                
+                
+                 <p><b>Adding a local folder </b> :<br>  
+                
+                </p>
+                
+                <ol>
+                <li><button>Get Folder</button> button is used to select the folder, into which the cloned repository is copied.  
+                <li><b>The text field </b> displays the selected folder path     
+                <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
+                </ol>    
+                
          
-        <!-- Same as in settings.html -->
-        <p>
-             For remote git services, enter remote URL manually for selected repository. <br>
-             Format : <code>https://name:password@address</code> 
-             (for token-based services, exchange name for token-name, and password for token) 
-        </p> 
-         <p>                            
-             The password, and token, may be left out, and instead stored with the git credential manager.<br>
-             Format : <code>https://name@address</code>  .
-             If you have problems, fall back to method above.
-         </p>                        
-
-        <!-- Same as in settings.html -->
+                <p>This is the same functionality as dropping a folder to the Pragma-git main window.</p>
+            </dd>
+            <br>
+            <br>
+                   
+            
+            <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                </div>
+            </div>
         
-        <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
-        allowing for creation of access tokens, or to create a new repository.
-        </p>
-    
-        <p><button>Github</button> button launches a Github dialog.  It has a separate help function
-        </p>
         
-        <br>
         
+        <dt><h4>Remote repository </h4></dt>  
+            
+            <dd>
+                <br>   
+                 <p><b>Adding a remote repository</b> :<br>  
+                 
+                <!-- Same as in settings.html -->
+                <p>
+                     For remote git services, enter remote URL manually for selected repository. <br>
+                     Format : <code>https://name:password@address</code> 
+                     (for token-based services, exchange name for token-name, and password for token) 
+                </p> 
+                 <p>                            
+                     The password, and token, may be left out, and instead stored with the git credential manager.<br>
+                     Format : <code>https://name@address</code>  .
+                     If you have problems, fall back to method above.
+                 </p>                        
+        
+                <!-- Same as in settings.html -->
+                
+                <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
+                allowing for creation of access tokens, or to create a new repository.
+                </p>
+            
+                <p><button>Github</button> button launches a Github dialog.  It has a separate help function
+                </p>
+                
+                <br>
+            </dd> 
 
     <hr>  
 
