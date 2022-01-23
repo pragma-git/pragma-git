@@ -188,7 +188,6 @@ async function _callback( name, event){
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
 
-        
             break;
         }  
         case 'addRepoButtonPressed' : {
@@ -684,40 +683,30 @@ async function gitClone( folderName, repoURL){
         }
         
         // Set to current
-        state.repoNumber = index;  // Found that it could become a string sometimes
+        state.repoNumber = index;  // Found that it could become a string sometimes
         localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
     
         // Set global
         state.repos[state.repoNumber].localFolder = topFolder;
-        state.repos[state.repoNumber].remoteURL = document.getElementById( index + 10000).value;
+        state.repos[state.repoNumber].remoteURL = document.getElementById('urlToClone').value;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        // Update "Allow git push" setting
+        let allowPush = document.getElementById('allowPushToRemoteClone').checked;  // Read from checkbox in the clone command
+        state.repos[state.repoNumber].allowPushToRemote = allowPush;  // Set to state for this repo (so it will be redrawn)
+        
+        // Set other per repo settings to default value
+        state.repos[state.repoNumber].autoPushToRemote = true;
+        state.repos[state.repoNumber].NoFF_merge = true;
+        
+        // Change to Software tab (In repo tab, where we already are)
+        Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
 
     }catch(err){
         console.log(err);
         return
     }
-    
-    // Update Settings display, repos
-    document.getElementById("folderSelectButton").setAttribute("id", "dummy"); // Take away this id, before making a new button with same id
 
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    createHtmlTable(document);
-    
-    
-                
-    // Update Settings display, branches 
-    table = document.getElementById("branchesTableBody");
-    data2 = Object.keys(state.repos[0]);  // Used for headers
-    
-    branchList = await gitBranchList( localFolder2);
-    
-    document.getElementById('branchNameTextarea').value = ""; // Clear text field
-    
-    
-    document.getElementById("branchesTableBody").innerHTML = ""; 
-    generateBranchTable( document, table, branchList); // generate the new branch table 
-    
-  
 
 } 
 async function gitBranchList( folderName){

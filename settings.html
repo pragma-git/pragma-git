@@ -376,7 +376,7 @@
                         
        
        
-                         <!--  Don't-push to remote -->
+                         <!--  Allow push to remote -->
                         <input type="checkbox" id="allowPushToRemote" 
                             onchange="_callback('localCheckboxChanged',this)
                                         if (this.checked){
@@ -412,9 +412,7 @@
                             tab.
                             
                         </div>
-                    
-                            
-                        <p><span id="cloneStatus"></span></p>
+
                     
                     </div>                   
                     
@@ -434,6 +432,7 @@
                                     </td>
                                 </tr>
                                 
+                                
                                 <tr class="tool">
                                     <td>
                                         <textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder"></textarea>
@@ -442,18 +441,30 @@
                                         <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
                                     </td>
                                 </tr>
-
+                                
                                 
                                 <tr class="tool">
                                     <td>
-                                        <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button>
+                                     <!--  Allow push to remote (This input is saved indirectly when pressing cloneButton ) -->
+                                    <input type="checkbox" id="allowPushToRemoteClone" >
+                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password.</label><br>
+                           
                                     </td>                                
                                 </tr>
                                 
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus"></span>
+                                    </td>                                
+                                </tr>
+                            
+                                
                             </tbody>
+                            
+                            
                         </table>
                         
-                        <p><span id="cloneStatus"></span></p>
                     
                     </div>
                     
