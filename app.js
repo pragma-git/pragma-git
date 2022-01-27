@@ -294,8 +294,21 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 // Main functions
 async function _callback( name, event){ 
+    
+    // Log event
     console.log('_callback = ' + name);
     console.log(event);
+    
+    // Log the callback to file
+    let eventString = '';
+    if ( ( event == undefined ) || ( typeof event !== 'string' ) || ( event.trim() == '' )  ){
+        eventString = '';
+    } else{
+        eventString = '   event  = ' + event;  // Can only be a string at this point
+    }
+    pragmaLog('_callback = ' + name + eventString);
+    
+    
     switch(name) {
 
       // Top title-bar
@@ -372,7 +385,7 @@ async function _callback( name, event){
         // Checkout local branch
         try{
             await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
-            function onCheckout(err, result){console.log(result)} 
+            function onCheckout(err, result){console.log(result); pragmaLog(result);} 
 
         }catch(err){        
             console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
