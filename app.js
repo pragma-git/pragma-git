@@ -183,6 +183,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
         
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
+        const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt';  
+        fs.writeFileSync(MAINLOGFILE,'', 'utf8'); // Clear log file
+        pragmaLog('Initiating app.js');
         
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
         const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
@@ -4181,6 +4184,12 @@ function getDownloadsDir(){
     }
     
 }
+function pragmaLog(message){
+    let timeStamp = new Date().toISOString();
+    let space = '   ';
+    let output = timeStamp + space + message + os.EOL;
+    fs.appendFileSync(MAINLOGFILE,output,'utf8'); // Signal file that pragma-git is up
+}
 
 // Update other windows
 async function updateGraphWindow(){
@@ -4948,6 +4957,9 @@ function drawPinImage(isPinned){
 // Settings
 function saveSettings(){
     
+    pragmaLog('' );
+    pragmaLog('Save settings to file = ' + settingsFile);
+    
     // Update current window position
         win = gui.Window.get();
         state.position.x = win.x;
@@ -4958,6 +4970,8 @@ function saveSettings(){
     // Save settings
     let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
+    
+    pragmaLog('Done saving settings');
 }
 function loadSettings(settingsFile){
     // 1) Try to read file into state_in
@@ -4965,6 +4979,10 @@ function loadSettings(settingsFile){
     // Use internal function "setting" to :
     // 3) If some struct keys are missing in state_in, create them
     // 4) Build a new state struct -- setting default value for each undefined parameter (otherwise, keep parameter value from state_in)
+    
+    
+    pragmaLog('' );
+    pragmaLog('Load settings from file = ' + settingsFile);
 
     try{
         // 1) Read json
@@ -5105,6 +5123,8 @@ function loadSettings(settingsFile){
                 console.warn('Failed reading individual repos');
             }
             
+    
+    pragmaLog('Starts post-processing settings' );
             
     //
     // Post-process state
@@ -5172,6 +5192,8 @@ function loadSettings(settingsFile){
     console.log(localState);
     console.log('state:');
     console.log(state);
+    
+    pragmaLog('Done post-processing settings' );
     
     return state;
 }
@@ -5275,6 +5297,11 @@ window.onresize = function() {
   updateContentStyle();
 };
 window.onload = async function() {
+    
+  
+  pragmaLog('' );
+  pragmaLog('Starting app (app.js/window.onload)');
+  
   var win = nw.Window.get();
   main_win = win;
 
@@ -5305,6 +5332,7 @@ window.onload = async function() {
   
   // Write signal file that pragma-git is running
   fs.writeFileSync(MAINSIGNALFILE,'running','utf8'); // Signal file that pragma-git is up
+  pragmaLog('Showing main app window');
 
   win.show();
   
@@ -5332,6 +5360,8 @@ window.onload = async function() {
   
   // Dialog if author's name is unknown
   showUserDialog(true)
+  
+  pragmaLog('Done starting app');
 
 };
 async function closeWindow(a){
