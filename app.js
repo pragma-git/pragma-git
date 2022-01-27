@@ -1038,6 +1038,10 @@ async function _callback( name, event){
                 }catch (err){
                     console.log('Failed pushing tag -- probably no remote repository' );
                 }
+            }else{
+                pragmaLog('   not allowed to push new tag, because (at least one of these are disabled) : ');
+                pragmaLog('   setting autoPushToRemote  = ' + state.repos[state.repoNumber].autoPushToRemote);
+                pragmaLog('   setting allowPushToRemote = ' + state.repos[state.repoNumber].allowPushToRemote);
             }
             
             setStatusBar( 'Creating Tag "' + newTagName);
@@ -3398,9 +3402,7 @@ async function gitAddCommitAndPush( message){
     // Push 
     await waitTime( 1000);
     
-    if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote){ 
-        await gitPush();
-    }
+    await gitPush();
       
     // Finish up
     localState.unstaged = [];
@@ -3563,6 +3565,13 @@ async function gitStashMap( folder ){
 }     
 
 async function gitPush(){
+    
+    if ( ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ) == false ){ 
+        pragmaLog('   not allowed to push, because (at least one of these are disabled) : ');
+        pragmaLog('   setting autoPushToRemote  = ' + state.repos[state.repoNumber].autoPushToRemote);
+        pragmaLog('   setting allowPushToRemote = ' + state.repos[state.repoNumber].allowPushToRemote);
+        return
+    }
     
     // Read current branch
     try{
