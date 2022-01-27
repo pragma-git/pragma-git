@@ -2526,7 +2526,7 @@ async function _setMode( inputModeName){
     let currentMode = await getMode();
     console.log('setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')');
     
-    pragmaLog('   _setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')' );
+    pragmaLog('_setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')' );
     
     var HEAD_title;    
            
@@ -5040,6 +5040,7 @@ function saveSettings(){
     fs.writeFileSync(settingsFile, jsonString);
     
     pragmaLog('Done saving settings');
+    pragmaLog('');
 }
 function loadSettings(settingsFile){
     // 1) Try to read file into state_in
@@ -5430,6 +5431,7 @@ window.onload = async function() {
   showUserDialog(true)
   
   pragmaLog('Done starting app');
+  pragmaLog('');
 
 };
 async function closeWindow(a){
