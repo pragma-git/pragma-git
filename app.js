@@ -1021,16 +1021,9 @@ async function _callback( name, event){
                 commit = localState.historyHash;
             }
   
-  async function testFunction(command, stdout, stderr){
-      console.log(command);
-      console.log(stdout);
-      console.log(stderr);
-  }
- 
-  
             // Create new Tag
             pragmaLogGitCommand( 'tag', [newTagName, commit]);
-            await simpleGit( folder).outputHandler(testFunction).tag(  [newTagName, commit], onCreateTag);
+            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
             function onCreateTag(err, result ){console.log(result);console.log(err);};
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
@@ -1038,11 +1031,13 @@ async function _callback( name, event){
             await updateGraphWindow();
         
            // Push tag to remote
-            try{
-                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
-                function onPush(err, result) {console.log(result) };
-            }catch (err){
-                console.log('Failed pushing tag -- probably no remote repository' );
+            if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ){ 
+                try{
+                    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+                    function onPush(err, result) {console.log(result) };
+                }catch (err){
+                    console.log('Failed pushing tag -- probably no remote repository' );
+                }
             }
             
             setStatusBar( 'Creating Tag "' + newTagName);
@@ -3403,7 +3398,7 @@ async function gitAddCommitAndPush( message){
     // Push 
     await waitTime( 1000);
     
-    if (state.repos[state.repoNumber].autoPushToRemote){ 
+    if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote){ 
         await gitPush();
     }
       
@@ -4201,7 +4196,7 @@ function setButtonText(){  // Store or Commit, depending on setting for autopush
     }
     
     // Store-button : Store or Commit depending on setting
-    if (state.repos[state.repoNumber].autoPushToRemote){
+    if (state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote){
         document.getElementById('store-button').innerText = 'Store';
     }else{
         document.getElementById('store-button').innerText = 'Commit';
