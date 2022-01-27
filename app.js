@@ -3632,6 +3632,7 @@ async function gitPush(){
             }
             
             async function push(){
+                pragmaLog('push remembered branchname to remote');
                  // Push commits and tags, and set upstream
                 await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
                 
