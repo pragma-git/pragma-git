@@ -1742,21 +1742,27 @@ async function _callback( name, event){
     async function deleteTag(tagName){
         
         // Delete remote
-        try{
-            let folder = state.repos[state.repoNumber].localFolder;
-
-            setStatusBar( 'Deleting tag');
-
-            await simpleGit( folder )
-            .raw( [  'push', '--delete' , 'origin', tagName] , onPush);
-            function onPush(err, result) {console.log(result); console.log(err) };
-            
-            await waitTime( 1000);  
-            
-        }catch(err){
-            console.log('Failed deleting remote tag = ' + tagName);
-            console.log(err);
-            
+        if ( ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote )  ){ 
+            try{
+                let folder = state.repos[state.repoNumber].localFolder;
+    
+                setStatusBar( 'Deleting tag');
+    
+                await simpleGit( folder )
+                .raw( [  'push', '--delete' , 'origin', tagName] , onPush);
+                function onPush(err, result) {console.log(result); console.log(err) };
+                
+                await waitTime( 1000);  
+                
+            }catch(err){
+                console.log('Failed deleting remote tag = ' + tagName);
+                console.log(err);
+                
+            }
+        }else{
+            pragmaLog('   not allowed to delete remote tag, because (at least one of these are disabled) : ');
+            pragmaLog('   setting autoPushToRemote  = ' + state.repos[state.repoNumber].autoPushToRemote);
+            pragmaLog('   setting allowPushToRemote = ' + state.repos[state.repoNumber].allowPushToRemote);
         }
         
         // Delete local
