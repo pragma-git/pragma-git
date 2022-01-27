@@ -341,7 +341,10 @@ async function _callback( name, event){
       case 'clickedRepoContextualMenu': {
         console.log('Selected repo = ' + event.selectedRepo);
         console.log('Selected repo = ' + event.selectedRepoNumber);
+        pragmaLog('   reponame = ' + event.selectedRepo);
+        
         state.repoNumber = event.selectedRepoNumber;
+        pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder );
         gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
         
         
@@ -381,6 +384,7 @@ async function _callback( name, event){
       case 'clickedBranchContextualMenu': { 
         console.log('Selected branch = ' + event.selectedBranch);
         let branchName = event.selectedBranch;
+        pragmaLog('   branchname = ' + branchName);
         
         // Checkout local branch
         try{
@@ -450,6 +454,10 @@ async function _callback( name, event){
         let selectedBranch = event;
         console.log('clickedMergeContextualMenu, selected = ' + event.selectedBranch);
         console.log('clickedMergeContextualMenu, current  = ' + event.currentBranch);
+        pragmaLog('   Merge ');
+        pragmaLog('   from selected branch = ' + event.selectedBranch );
+        pragmaLog('   into current  branch = ' + event.currentBranch );
+
         await gitMerge( event.currentBranch, event.selectedBranch); 
         
         break;
@@ -457,9 +465,11 @@ async function _callback( name, event){
       case 'tagSelected': { // Called from tagList.js
         switch (event.buttonText ){
             case 'Checkout' :
+                pragmaLog('   Checkout tag = ' + event.selected );
                 checkoutTag(event.selected);
                 break;
             case 'Delete' :
+                pragmaLog('   Delete tag = ' + event.selected );
                 deleteTag(event.selected);
                 break;
         }
@@ -728,6 +738,9 @@ async function _callback( name, event){
                 localState.historyHash = localState.pinnedCommit;
                 localState.historyString = historyMessage(history, localState.historyNumber);
                 
+                
+                pragmaLog('   hash of pinned commit = ' + localState.pinnedCommit );
+                
                 selectInGraph(localState.historyHash);
 
 
@@ -819,6 +832,7 @@ async function _callback( name, event){
       }
       case 'clickedCherryPickContextualMenu': {
         console.log('clicked branch = ' + event.selectedBranch);
+                
         // TODO : 
         // 1) switch to selected branch (catch and make error dialog if not commited)
         // 2) git cherry-pick --no-commit HASH
@@ -850,6 +864,7 @@ async function _callback( name, event){
             let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
             let oldBranch = cachedBranchList.current;
             
+            
             // Switch branch
             gitSwitchBranch( event.selectedBranch);
           
@@ -859,13 +874,20 @@ async function _callback( name, event){
             let hash = localState.historyHash;
             console.log('Hash to revert = ' + hash);
             
+            pragmaLog('   cherry pick current commit = ' + oldMessage + ' (hash = ' + hash + ')' );
+            pragmaLog('   into selected branch       = ' + event.selectedBranch );
+            
             // Get history
             var history = await gitHistory();
             
             await simpleGit( state.repos[state.repoNumber].localFolder)
                 .raw(['cherry-pick', '--no-commit', hash], onCherryPick);
                 
-            function onCherryPick(err, result ){ console.log(result);}                
+            function onCherryPick(err, result ){ 
+                console.log(result);
+                 pragmaLog('   result                     = ' + result );
+                 pragmaLog('   err                        = ' + err );
+            }                
           
         //
         // 3) Jump to HEAD, and suggest commit message
@@ -880,6 +902,7 @@ async function _callback( name, event){
             // Write suggested message
             await _setMode('CHANGED_FILES_TEXT_ENTERED');  
             let newMessage = 'Cherry-pick "' + oldMessage + '" (from branch "' + oldBranch + '")';
+            pragmaLog('   suggest message            = ' + newMessage );
             writeTextOutput( { value: newMessage } );   
           
         break;
@@ -937,6 +960,9 @@ async function _callback( name, event){
             newBranchName = gitflowPrefix + newBranchName;
         }
         
+        
+        pragmaLog('   create new branch name = ' + newBranchName );
+        
 
         
         // Create and checkout new branch
@@ -982,6 +1008,8 @@ async function _callback( name, event){
       }
       case 'addTagButtonPressed' : {
         let newTagName = document.getElementById('tagNameTextarea').value;
+        
+        pragmaLog('   create new tag = ' + newTagName );
       
         // Create new Tag
         try{
@@ -1024,6 +1052,7 @@ async function _callback( name, event){
       }    
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
+        pragmaLog('   clicked = ' + event );
         
         switch (event) {
             case  'Delete' : {
@@ -1339,6 +1368,8 @@ async function _callback( name, event){
             if (state.repoNumber >= numberOfRepos){
                 state.repoNumber = 0;
             }
+            
+            pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder);
             gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
         }
         
@@ -1420,6 +1451,7 @@ async function _callback( name, event){
                 }else{
                     // Committed change in detached HEAD -- throw dialog
                     console.log('Commits on detached HEAD.  Show dialog');
+                    pragmaLog('show modal dialog = detachedHeadDialog' );
                     document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
                 }
                 
@@ -1512,6 +1544,7 @@ async function _callback( name, event){
                         branchName = branchList.local[localState.branchNumber];
                     }
                     console.log(branchName);
+                    pragmaLog('   branchname = ' + branchName);
                 }
                 while ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchList.local[localState.branchNumber]) ); // Look until non-hidden branch. NOTE: This can lock if all branches are hidden!!
         
@@ -1629,7 +1662,9 @@ async function _callback( name, event){
             new gui.MenuItem(
                 { 
                     label: 'New tag', 
-                    click: () => { document.getElementById('tagNameInputDialog').showModal();} 
+                    click: () => { 
+                        pragmaLog('show modal dialog = New Tag' );
+                        document.getElementById('tagNameInputDialog').showModal();} 
                 } 
             )        
         )
@@ -1744,6 +1779,7 @@ async function _callback( name, event){
     async function storeButtonClicked() { 
         
         // Could be called for Store, or History Checkout 
+        pragmaLog('   Mode = ' + getMode() );
         
         if ( getMode() == 'HISTORY' ){
             // History
@@ -1962,6 +1998,7 @@ async function _callback( name, event){
         if (entry.isFile) {
             folder = path.dirname(file); // Correct, because file was dropped
             console.log( 'Folder = ' + folder );
+            pragmaLog('   Folder = ' + folder );
         } 
     
         // Dialog if repo does not exist
@@ -1976,6 +2013,7 @@ async function _callback( name, event){
             if (!isRepo){
                 // Ask permisson to init repo
                 localState.droppedRepoFolder = folder;
+                pragmaLog('show modal dialog = doYouWantToInitializeRepoDialog' );
                 document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
                 return
             } else {
@@ -2486,7 +2524,9 @@ async function _setMode( inputModeName){
     var newModeName;
     
     let currentMode = await getMode();
-    console.log('setMode = ' + inputModeName + ' ( from current mode )= ' + currentMode + ')');
+    console.log('setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')');
+    
+    pragmaLog('   _setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')' );
     
     var HEAD_title;    
            
@@ -2775,6 +2815,7 @@ async function gitIsInstalled(){
 
     // Alert dialog if not installed
     if ( !isInstalled){
+        pragmaLog('show modal dialog = gitNotInstalledAlert' );
         document.getElementById('gitNotInstalledAlert').showModal();
         return
     }
@@ -3078,6 +3119,7 @@ async function gitCycleToNextBranch(){
 }
 
 async function gitSetLocalBranchNumber(){
+    
         
     let branchSummary;
     try{
@@ -4267,6 +4309,10 @@ function displayAlert(title, message){
     //  divId = "resultRepo" (with title=resultRepoTitle, message=resultRepoMessage)
     //
     // first argument is ignored
+    
+    pragmaLog('   displayAlert : ' + os.EOL + 
+        'title   = ' + title + os.EOL + 
+        'message = ' + message + os.EOL );
 
     document.getElementById('alertTitle').innerHTML = title;
     document.getElementById('alertMessage').innerHTML = message;
@@ -4282,6 +4328,12 @@ function displayLongAlert(title, message, type){
      * message -- message text 
      * type -- 'warning' (yellow border) or 'error' (red border)
      */
+     
+    pragmaLog('   displayLongAlert :' + os.EOL + 
+        'type    = ' + type + os.EOL + 
+        'title   = ' + title + os.EOL + 
+        'message = ' + os.EOL + 
+         message);
 
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 260, type);
@@ -4466,6 +4518,9 @@ function downloadNewVersionDialog(){
     
     // Show only if you have not previously selected to skip this version
     if ( localState.LATEST_RELEASE !== state.ignoredVersion ){
+        pragmaLog('show modal dialog = newVersionDetectedInputDialog' );
+        pragmaLog('   currentVersion = ' + localState.currentVersion );
+        pragmaLog('   newVersion     = ' + localState.LATEST_RELEASE );
         document.getElementById('newVersionDetectedInputDialog').showModal();
     }
 }
