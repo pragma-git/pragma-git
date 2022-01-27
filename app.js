@@ -1021,8 +1021,16 @@ async function _callback( name, event){
                 commit = localState.historyHash;
             }
   
+  async function testFunction(command, stdout, stderr){
+      console.log(command);
+      console.log(stdout);
+      console.log(stderr);
+  }
+ 
+  
             // Create new Tag
-            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
+            pragmaLogGitCommand( 'tag', [newTagName, commit]);
+            await simpleGit( folder).outputHandler(testFunction).tag(  [newTagName, commit], onCreateTag);
             function onCreateTag(err, result ){console.log(result);console.log(err);};
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
@@ -4244,6 +4252,10 @@ function pragmaLog(message){
     let space = '   ';
     let output = timeStamp + space + message + os.EOL;
     fs.appendFileSync(MAINLOGFILE,output,'utf8'); // Signal file that pragma-git is up
+}
+function pragmaLogGitCommand(first, rest){
+    let message = 'git ' + first + ' ' + rest.join(" ") ;
+    pragmaLog(message);
 }
 
 // Update other windows
