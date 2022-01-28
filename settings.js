@@ -32,12 +32,30 @@ async function _callback( name, event){
     let newUrl;
     
     console.log('_callback = ' + name);
+    
+    { // Log callbacks
+        let eventString = '';
+        
+        // Prepare logging callback to file
+        if ( ( event == undefined ) || ( typeof event !== 'string' ) || ( event.trim() == '' )  ){
+            eventString = '';
+        } else{
+            eventString = '   event  = ' + event;  // Can only be a string at this point
+        }
+        
+        // Log to file
+        opener.pragmaLog('settings._callback = ' + name + eventString);
+    }
+        
+    
+    
     switch(name) {  
         case 'checkboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
             value = event.checked;
             state[id] = value;
+            opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             break;
         } 
         case 'localCheckboxChanged': {
@@ -45,6 +63,7 @@ async function _callback( name, event){
             console.log(event);
             value = event.checked;
             //state[id] = value;
+            opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             state.repos[state.repoNumber][id] = value;
             break;
         } 
@@ -283,6 +302,8 @@ async function _callback( name, event){
                 let folderObject =  await opener.gitLocalFolder() ;
                 document.getElementById('shortCurrentRepo').innerText = folderObject.folderName;
                 document.getElementById('currentRepo').innerText = folderObject.folderPath;
+                
+                opener.pragmaLog('   settings.repopath = ' + folderObject.folderPath);
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
@@ -369,6 +390,7 @@ async function _callback( name, event){
             console.log('deleteBranchClicked -- branch = ' + branchName);
             
             try{
+                opener.pragmaLogGitCommand('branch', ['-d', branchName] ) ;
                 await simpleGit( localFolder ).branch( ['-d', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
@@ -406,6 +428,7 @@ async function _callback( name, event){
             console.log('forceDeleteBranchClicked -- branch = ' + branchName);
             
             try{
+                opener.pragmaLogGitCommand('branch', ['-D', branchName] ) ;
                 await simpleGit(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
@@ -452,6 +475,7 @@ async function _callback( name, event){
                 newUrl = document.getElementById(textareaId).value;
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
+                    opener.pragmaLogGitCommand('raw', commands ) ;
                     await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
@@ -649,10 +673,12 @@ async function gitClone( folderName, repoURL){
         // 1) Clone 
         let options = [];
         opener.mkdir(folderName);  // Create folder if it does not exist
+        opener.pragmaLogGitCommand('clone', [repoURL] ) ;
         await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){console.log(result);console.log(error) }; 
         
         // 2) Checkout default branch
+        opener.pragmaLogGitCommand('checkout', [] ) ;
         await simpleGit(topFolder).checkout( onCheckout);
         function onCheckout(err, result){console.log(result)};
         
@@ -725,6 +751,7 @@ async function gitCreateBranch( folder, branchName){
     
     try{
         const commands = [ 'branch', branchName];
+        opener.pragmaLogGitCommand('raw', commands) ;
         await simpleGit( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){
             console.log(result);
