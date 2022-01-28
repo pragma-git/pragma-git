@@ -303,7 +303,9 @@ async function _callback( name, event){
                 document.getElementById('shortCurrentRepo').innerText = folderObject.folderName;
                 document.getElementById('currentRepo').innerText = folderObject.folderPath;
                 
-                opener.pragmaLog('   settings.repopath = ' + folderObject.folderPath);
+                opener.pragmaLog('   repopath = ' + folderObject.folderPath);
+                opener.pragmaLog('   repo url = ' + opener.removeUrlCredentials( state.repos[state.repoNumber].remoteURL ) ) ;
+                opener.pragmaLog(' ');
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
@@ -394,7 +396,8 @@ async function _callback( name, event){
                 await simpleGit( localFolder ).branch( ['-d', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
-                    console.log(err);     
+                    console.log(err); 
+                    opener.pragmaLog(result); 
                 }
             }catch(err){ 
 
@@ -433,6 +436,7 @@ async function _callback( name, event){
                 function onDeleteBranch(err, result ){
                     console.log(result);
                     console.log(err);
+                    opener.pragmaLog(result); 
                 }
             }catch(err){ 
                 
@@ -479,7 +483,8 @@ async function _callback( name, event){
                     await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
-                        console.log(err)  
+                        console.log(err) ;
+                        opener.pragmaLog(result); 
                     };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
@@ -675,12 +680,12 @@ async function gitClone( folderName, repoURL){
         opener.mkdir(folderName);  // Create folder if it does not exist
         opener.pragmaLogGitCommand('clone', [repoURL] ) ;
         await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
-        function onClone(error, result ){console.log(result);console.log(error) }; 
+        function onClone(error, result ){console.log(result);console.log(error); opener.pragmaLog(result);  }; 
         
         // 2) Checkout default branch
         opener.pragmaLogGitCommand('checkout', [] ) ;
         await simpleGit(topFolder).checkout( onCheckout);
-        function onCheckout(err, result){console.log(result)};
+        function onCheckout(err, result){console.log(result); opener.pragmaLog(result); };
         
     }catch(err){ 
         console.log(err);
@@ -756,6 +761,7 @@ async function gitCreateBranch( folder, branchName){
         function onCreateBranch(err, result ){
             console.log(result);
             console.log(err);
+            opener.pragmaLog(result); 
         };
     }catch(err){        
         
