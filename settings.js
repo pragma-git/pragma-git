@@ -331,7 +331,7 @@ async function _callback( name, event){
                 document.getElementById('currentRepo').innerText = folderObject.folderPath;
                 
                 opener.pragmaLog('   repopath = ' + folderObject.folderPath);
-                opener.pragmaLog('   repo url = ' + opener.removeUrlCredentials( state.repos[state.repoNumber].remoteURL ) ) ;
+                opener.pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
                 opener.pragmaLog(' ');
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)

@@ -359,7 +359,7 @@ async function _callback( name, event){
         
         state.repoNumber = event.selectedRepoNumber;
         pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder );
-        pragmaLog('   repo url = ' + removeUrlCredentials( state.repos[state.repoNumber].remoteURL )) ;
+        pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
         pragmaLog(' ');
         
         
@@ -1392,7 +1392,7 @@ async function _callback( name, event){
             }
             
             pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder);
-            pragmaLog('   repo url = ' + removeUrlCredentials( state.repos[state.repoNumber].remoteURL ) );
+            pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL );
             pragmaLog(' ');
             gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
         }
@@ -4304,20 +4304,6 @@ function pragmaLog(message){
     let space = '   ';
     let output = timeStamp + space + cleanedMessage + os.EOL;
     stream.write( output);
-}
-function removeUrlCredentials(url){
-    // Return if cleaning not required
-    if ( !url.includes('@' )){
-        return url
-    }
-    
-    // Clean
-    // Example url = 'https://user:passwd@github.com/JanAxelsson/imlook4d.git' 
-    let protocol = url.split('://')[0]; // https
-    let server= url.split('@')[1];      // github.com/JanAxelsson/imlook4d.git
-    let cleanedUrl = protocol + '://CREDENTIALS@' + server;  // https://CREDENTIALS@github.com/JanAxelsson/imlook4d.git 
-    
-    return cleanedUrl;
 }
 function sendGitOutputToFile() {
   let counter = 0;
