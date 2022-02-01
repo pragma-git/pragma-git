@@ -143,7 +143,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const os = require('os');
         const fs = require('fs');
         const path = require('path');
-        const downloadsFolder = require('downloads-folder'); // Test -- I wasn't allowed to run at NUS due to McAffee end point securityv
+        const downloadsFolder = require('downloads-folder'); // Test -- I wasn't allowed to run at NUS due to McAffee end point security
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const util = require('./util_module.js'); // Pragma-git common functions
         

@@ -9,7 +9,6 @@ var util = require('./util_module.js'); // Pragma-git common functions
 const pathsep = require('path').sep;  // Os-dependent path separator
 
 let simpleGit = require('simple-git');
-// Logging equivalent to simpleGit
 function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler(opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
 
 
@@ -25,28 +24,6 @@ var win
 // FUNCTIONS
 // ---------  
 
-
-//function sendGitOutputToFile() {
-  ////const path = '/tmp/pragma_test.log';
-  ////const stream = require('fs').createWriteStream(path, { flags: 'a' });
-  //let counter = 0;
-
-  //return (cmd, stdOut, stdErr, args) => {
-    //const id = ++counter;
-
-    ////stream.write( Buffer.from(`\nCOMMAND[${id}] ${cmd} ${args.join(' ')}`) );
-    //opener.pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
-    
-    //stdOut.on('data', buffer => {
-        ////stream.write(Buffer.concat([ Buffer.from(`\nSTDOUT[${id}] `), buffer] ));
-        //opener.pragmaLog( `STDOUT [${id}] ${buffer.toString()}`);
-    //});
-    //stdErr.on('data', buffer => {
-        ////stream.write(Buffer.concat([ Buffer.from(`\nSTDERR[${id}] `), buffer] ));
-        //opener.pragmaLog( `STDERR[${id}] ${buffer.toString()}` );
-    //});
-  //}
-//}
 
 // Callbacks 
 async function _callback( name, event){
