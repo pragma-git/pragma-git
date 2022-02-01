@@ -5,11 +5,14 @@
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
-const simpleGit = require('simple-git');  
-
 var util = require('./util_module.js'); // Pragma-git common functions
-       
 const pathsep = require('path').sep;  // Os-dependent path separator
+
+let simpleGit = require('simple-git');
+// Logging equivalent to simpleGit
+function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler(opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+
+
 
 // Global for whole app
 var state = global.state; // internal copy of global.state
@@ -17,9 +20,33 @@ var localState = global.localState;
 
 var win
 
+
 // ---------
 // FUNCTIONS
-// ---------    
+// ---------  
+
+
+//function sendGitOutputToFile() {
+  ////const path = '/tmp/pragma_test.log';
+  ////const stream = require('fs').createWriteStream(path, { flags: 'a' });
+  //let counter = 0;
+
+  //return (cmd, stdOut, stdErr, args) => {
+    //const id = ++counter;
+
+    ////stream.write( Buffer.from(`\nCOMMAND[${id}] ${cmd} ${args.join(' ')}`) );
+    //opener.pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
+    
+    //stdOut.on('data', buffer => {
+        ////stream.write(Buffer.concat([ Buffer.from(`\nSTDOUT[${id}] `), buffer] ));
+        //opener.pragmaLog( `STDOUT [${id}] ${buffer.toString()}`);
+    //});
+    //stdErr.on('data', buffer => {
+        ////stream.write(Buffer.concat([ Buffer.from(`\nSTDERR[${id}] `), buffer] ));
+        //opener.pragmaLog( `STDERR[${id}] ${buffer.toString()}` );
+    //});
+  //}
+//}
 
 // Callbacks 
 async function _callback( name, event){
@@ -392,14 +419,14 @@ async function _callback( name, event){
             console.log('deleteBranchClicked -- branch = ' + branchName);
             
             try{
-                opener.pragmaLogGitCommand('branch', ['-d', branchName] ) ;
-                await simpleGit( localFolder ).branch( ['-d', branchName], onDeleteBranch);
+                await simpleGitLog( localFolder ).branch( ['-d', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
                     console.log(err); 
-                    opener.pragmaLog(result); 
+                    //opener.pragmaLog(result); 
                 }
             }catch(err){ 
+                opener.pragmaLog(err); 
 
                 // Most likely, this is because the branch was not fully merged. 
                 if ( err.message.includes('is not fully merged') ) {
@@ -431,12 +458,11 @@ async function _callback( name, event){
             console.log('forceDeleteBranchClicked -- branch = ' + branchName);
             
             try{
-                opener.pragmaLogGitCommand('branch', ['-D', branchName] ) ;
-                await simpleGit(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
+                await simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
                     console.log(err);
-                    opener.pragmaLog(result); 
+                    //opener.pragmaLog(result); 
                 }
             }catch(err){ 
                 
@@ -468,7 +494,7 @@ async function _callback( name, event){
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-        
+
   
             //  Set remote URL 
             if ( isSetButton ){
@@ -479,12 +505,12 @@ async function _callback( name, event){
                 newUrl = document.getElementById(textareaId).value;
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
-                    opener.pragmaLogGitCommand('raw', commands ) ;
-                    await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
+                    await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
                         console.log(err) ;
-                        opener.pragmaLog(result); 
+                        //opener.pragmaLog(result); 
+                        //opener.pragmaLog(err); 
                     };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
@@ -678,17 +704,16 @@ async function gitClone( folderName, repoURL){
         // 1) Clone 
         let options = [];
         opener.mkdir(folderName);  // Create folder if it does not exist
-        opener.pragmaLogGitCommand('clone', [repoURL] ) ;
-        await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
-        function onClone(error, result ){console.log(result);console.log(error); opener.pragmaLog(result);  }; 
+        await simpleGitLog(topFolder).clone(  repoURL, topFolder, options, onClone);
+        function onClone(error, result ){}; 
         
         // 2) Checkout default branch
-        opener.pragmaLogGitCommand('checkout', [] ) ;
-        await simpleGit(topFolder).checkout( onCheckout);
-        function onCheckout(err, result){console.log(result); opener.pragmaLog(result); };
+        await simpleGitLog(topFolder).checkout( onCheckout);
+        function onCheckout(err, result){};
         
     }catch(err){ 
         console.log(err);
+        opener.pragmaLog(err);
         
         displayAlert('Failed cloning', err)
         return
@@ -756,12 +781,11 @@ async function gitCreateBranch( folder, branchName){
     
     try{
         const commands = [ 'branch', branchName];
-        opener.pragmaLogGitCommand('raw', commands) ;
-        await simpleGit( folder).raw(  commands, onCreateBranch);
+        await simpleGitLog( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){
             console.log(result);
             console.log(err);
-            opener.pragmaLog(result); 
+            //opener.pragmaLog(result); 
         };
     }catch(err){        
         

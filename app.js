@@ -144,11 +144,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const fs = require('fs');
         const path = require('path');
         const downloadsFolder = require('downloads-folder'); // Test -- I wasn't allowed to run at NUS due to McAffee end point securityv
-        
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
-        const simpleGit = require('simple-git');  // npm install simple-git
-
         const util = require('./util_module.js'); // Pragma-git common functions
+        
+        const simpleGit = require('simple-git');  // npm install simple-git
+        function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+
+
     
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
@@ -185,6 +187,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt';  
         fs.writeFileSync(MAINLOGFILE,'', 'utf8'); // Clear log file
+        
         pragmaLog('Initiating app.js');
         
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
@@ -218,6 +221,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.helpWindow = false; // True when help window is open
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
+        
+        localState.logFileStream = fs.createWriteStream( MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
 
     // Display text
         var textOutput = {
@@ -401,8 +406,7 @@ async function _callback( name, event){
         
         // Checkout local branch
         try{
-            pragmaLogGitCommand('checkout', [branchName]) ;
-            await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+            await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
             function onCheckout(err, result){console.log(result); pragmaLog(result);} 
 
         }catch(err){        
@@ -797,8 +801,7 @@ async function _callback( name, event){
             // Get history
             var history = await gitHistory();
 
-            pragmaLogGitCommand('raw', ['revert', '--no-commit', hash]) ;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
+            await simpleGitLog( state.repos[state.repoNumber].localFolder)
                 .raw(['revert', '--no-commit', hash], onRevert);
                 
             function onRevert(err, result ){ console.log(result); pragmaLog(result);}
@@ -895,8 +898,7 @@ async function _callback( name, event){
             // Get history
             var history = await gitHistory();
             
-            pragmaLogGitCommand('raw', ['cherry-pick', '--no-commit', hash]) ;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
+            await simpleGitLog( state.repos[state.repoNumber].localFolder)
                 .raw(['cherry-pick', '--no-commit', hash], onCherryPick);
                 
             function onCherryPick(err, result ){ 
@@ -993,8 +995,7 @@ async function _callback( name, event){
             
             // Create new branch
             let commands = [ 'checkout', '-b', newBranchName, commit];
-            pragmaLogGitCommand('raw', commands) ;
-            await simpleGit( folder).raw(  commands, onCreateBranch);
+            await simpleGitLog( folder).raw(  commands, onCreateBranch);
             function onCreateBranch(err, result ){console.log(result); pragmaLog(result); };
             
             setStatusBar( 'Creating branch "' + newBranchName);
@@ -1039,8 +1040,7 @@ async function _callback( name, event){
             }
   
             // Create new Tag
-            pragmaLogGitCommand( 'tag', [newTagName, commit]);
-            await simpleGit( folder).tag(  [newTagName, commit], onCreateTag);
+            await simpleGitLog( folder).tag(  [newTagName, commit], onCreateTag);
             function onCreateTag(err, result ){console.log(result);console.log(err); pragmaLog(result); };
             setStatusBar( 'Creating Tag "' + newTagName);
             waitTime( WAIT_TIME);  
@@ -1050,8 +1050,7 @@ async function _callback( name, event){
            // Push tag to remote
             if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ){ 
                 try{
-                    pragmaLogGitCommand('push', [ 'origin', '--tags' ] ) ;
-                    await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', {'--tags' : null}, onPush);
                     function onPush(err, result) {console.log(result); pragmaLog(result);  };
                 }catch (err){
                     console.log('Failed pushing tag -- probably no remote repository' );
@@ -1103,8 +1102,7 @@ async function _callback( name, event){
         folder = localState.droppedRepoFolder;
         localState.droppedRepoFolder='';  // Clear
         
-        pragmaLogGitCommand('init', [] ) ;
-        await simpleGit(folder).init( onInit );
+        await simpleGitLog(folder).init( onInit );
         function onInit(err, initResult) { pragmaLog(result); }
         
         await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
@@ -1119,10 +1117,7 @@ async function _callback( name, event){
         // Initial commit
         setStatusBar( 'Initial commit');
         let outputData;
-        pragmaLogGitCommand('raw', [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] ) ;
-        await simpleGit( folder )
-            .raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-            //.commit( 'Initial commit', {'--all' : null, '--allow-empty' : null} , onCommit);
+        await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
             
         function onCommit(err, result) {console.log(result); outputData = result; pragmaLog(result); };
         
@@ -1438,8 +1433,7 @@ async function _callback( name, event){
             // Is detached Head (lets see if any new commits)
             try{              
                 let branchSummary;
-                pragmaLogGitCommand('branch', [ ]) ;
-                await simpleGit(state.repos[state.repoNumber].localFolder).branch( onLog);
+                await simpleGitLog(state.repos[state.repoNumber].localFolder).branch( onLog);
                 function onLog(err, result){console.log(result);console.log(err);branchSummary=result; pragmaLog(result);}  // result.current is the detachment point.  result.detached = true if detached
                 
                 //branchSummary :
@@ -1746,8 +1740,7 @@ async function _callback( name, event){
             hash = hash.replace(/(\r\n|\n|\r)/gm, ""); // Remove  EOL characters
             
             // checkout tag using hash
-            pragmaLogGitCommand('checkout', [ hash ]) ;
-            await simpleGit(folder).checkout( hash, onCheckout);
+            await simpleGitLog(folder).checkout( hash, onCheckout);
             function onCheckout(err, result){console.log(result); pragmaLog(result);} 
             
             localState.historyHash = hash;
@@ -1772,9 +1765,7 @@ async function _callback( name, event){
     
                 setStatusBar( 'Deleting tag');
     
-                pragmaLogGitCommand('raw', [  'push', '--delete' , 'origin', tagName] ) ;
-                await simpleGit( folder )
-                .raw( [  'push', '--delete' , 'origin', tagName] , onPush);
+                await simpleGitLog( folder ).raw( [  'push', '--delete' , 'origin', tagName] , onPush);
                 function onPush(err, result) {console.log(result); console.log(err); pragmaLog(result); };
                 
                 await waitTime( 1000);  
@@ -1796,9 +1787,7 @@ async function _callback( name, event){
 
             setStatusBar( 'Deleting tag');
 
-            pragmaLogGitCommand('raw', [  'tag', '-d' , tagName] ) ;
-            await simpleGit( folder )
-            .raw( [  'tag', '-d' , tagName] , onDelete);
+            await simpleGitLog( folder ).raw( [  'tag', '-d' , tagName] , onDelete);
             function onDelete(err, result) {console.log(result); console.log(err); pragmaLog(result); };
             
             await waitTime( 1000);  
@@ -1828,8 +1817,7 @@ async function _callback( name, event){
                 
                 // Checkout this commit (into a detached HEAD)             
                 console.log('storeButtonClicked -- checking out historical commit = ' + localState.historyHash); 
-                pragmaLogGitCommand('checkout', [  localState.historyHash] ) ;
-                await simpleGit(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
+                await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( localState.historyHash ,onDetachedHead);
                 function onDetachedHead(err, result){console.log(result);console.log(err); history = result.all; pragmaLog(result);} 
                 
                 // Set historyNumber to top
@@ -2843,13 +2831,10 @@ async function gitIsInstalled(){
     var isInstalled = false;
     var resultMessage = "";
     try{
-        pragmaLogGitCommand('raw', [  'version'] ) ;
-        await simpleGit().raw([ 'version'], test );
+        await simpleGitLog().raw([ 'version'], test );
         function test(err, result){ 
             console.log(result); 
             resultMessage = result;
-            pragmaLog('   version = ' + result);
-            pragmaLog('');
             
             if (err == undefined){
                 isInstalled = true;
@@ -2933,9 +2918,7 @@ async function gitDefineBuiltInMergeTool(){
       
     // Set in global git .config file
     try{
-        pragmaLogGitCommand('raw', command ) ;
-        await simpleGit(  )
-        .raw( command , onConfig);
+        await simpleGitLog(  ).raw( command , onConfig);
     }catch(err){
         console.log('Failed setting internal merge tool');
         console.log(err);
@@ -3130,8 +3113,7 @@ async function gitSwitchBranch(branchName){
     }
     
     try{
-        pragmaLogGitCommand('checkout', [branchName] ) ;
-        await simpleGit(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
+        await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
         function onCheckout(err, result){console.log(result); pragmaLog(result);}                                  
     }catch (err){
         //gitCycleToNextBranch();  // If error on switching branch, this will jump into infinite loop gitCycleToNextBranch -> gitSwitchBranchNumber -> gitSwitchBranch -> gitCycleToNextBranch ...
@@ -3426,8 +3408,7 @@ async function gitAddCommitAndPush( message){
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     try{
-        pragmaLogGitCommand('commit', [] ) ;
-        await simpleGit( state.repos[state.repoNumber].localFolder )
+        await simpleGitLog( state.repos[state.repoNumber].localFolder )
         .commit( message, onCommit);    
         function onCommit(err, result) {console.log(result); pragmaLog(result); };
     }catch(err){
@@ -3465,8 +3446,7 @@ async function gitRememberBranch( hash, name){
     
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
-        pragmaLogGitCommand('raw', [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash]) ;   
-        await simpleGit( state.repos[state.repoNumber].localFolder )
+        await simpleGitLog( state.repos[state.repoNumber].localFolder )
             .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err); pragmaLog(result); };
     }catch(err){
@@ -3478,8 +3458,7 @@ async function gitRememberBranch( hash, name){
 async function gitStash(){
     // Stash
     try{
-        pragmaLogGitCommand('stash', ['push', '--include-untracked']) ; 
-        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
+        await simpleGitLog( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
         function onStash(err, result) {console.log(result);console.log(err); pragmaLog(result); };
     
     }catch(err){
@@ -3511,8 +3490,7 @@ async function gitStashPop( stashRef){
     
     // Stash 
     try{
-        pragmaLogGitCommand('stash', options) ; 
-        await simpleGit( state.repos[state.repoNumber].localFolder ).stash( options, onStashPop);
+        await simpleGitLog( state.repos[state.repoNumber].localFolder ).stash( options, onStashPop);
         function onStashPop(err, result) {console.log(result);console.log(err); pragmaLog(result); };
     }catch(err){
         // TODO : gitStashPop -- Possibility for this error : error: could not restore untracked files from stash
@@ -3654,8 +3632,7 @@ async function gitPush(){
         // remote.origin.mirror  -- two cases
         if ( configItems.all['remote.origin.mirror'] === 'true'){
             // 'mirror' incompatible with refspace ('origin') and '--tags'
-            pragmaLogGitCommand('push', []) ;
-            await simpleGit( state.repos[state.repoNumber].localFolder ).push( onPush);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( onPush);
         }else{
             
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
@@ -3676,13 +3653,10 @@ async function gitPush(){
             async function push(){
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
-                pragmaLogGitCommand('push', [currentBranch, '--set-upstream', '--tags' ]);
-                //await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,{'--set-upstream' : null, '--tags' : null}, onPush);
-                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                pragmaLogGitCommand('push', ['origin', 'refs/notes/branchname']) ; 
-                await simpleGit( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
             }
 
         }
@@ -3759,8 +3733,7 @@ async function gitPull(){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
 
         try{
-            pragmaLogGitCommand('pull', [ ]) ; 
-            await simpleGit( state.repos[state.repoNumber].localFolder ).pull( onPull);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).pull( onPull);
             function onPull(err, result) {
                 //console.log(result) ; 
                 pragmaLog(result);
@@ -3806,9 +3779,8 @@ async function gitMerge( currentBranchName, selectedBranchName){
     
     // Merge
     try{
-        pragmaLogGitCommand( ['merge', selectedBranchName], options ) ; 
         setStatusBar( 'mergeFromTo "' + selectedBranchName + '" -> "' + currentBranchName + '"');
-        await simpleGit( state.repos[state.repoNumber].localFolder )
+        await simpleGitLog( state.repos[state.repoNumber].localFolder )
             .mergeFromTo( selectedBranchName, currentBranchName, options, onMerge);
             
         function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err; pragmaLog(result); };
@@ -3934,23 +3906,20 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
     }
  
     // Initialize (safe if it is already a repository)
-    pragmaLogGitCommand('init', [] ) ;
-    await simpleGit(settingsDir).init( onInit );
+    await simpleGitLog(settingsDir).init( onInit );
     function onInit(err, initResult) { pragmaLog(result);}
 
  
     // Add all
     var path = '.'; 
-    pragmaLogGitCommand('add', [ path ] ) ;
-    await simpleGit( settingsDir )
+    await simpleGitLog( settingsDir )
         .add( path, onAdd );   
     function onAdd(err, result) {console.log(result); pragmaLog(result); }
 
     
     // Commit 
     try{
-        pragmaLogGitCommand('commit', ['-m', message] ) ;
-        await simpleGit( settingsDir )
+        await simpleGitLog( settingsDir )
         .commit( message, onCommit);    
         function onCommit(err, result) {console.log(result); pragmaLog(result); };
     }catch(err){
@@ -4312,27 +4281,55 @@ function getDownloadsDir(){
 
 // Logging to file
 function pragmaLog(message){
+    message = message.toString();
+    
+    
+    
+    // Remove anything between :// and @ 
+    // Example : BLABLA https://user:passwd@github.com/JanAxelsson/imlook4d.git BLABLA 
+    // =>        BLABLA https://CREDENTIALS@github.com/JanAxelsson/imlook4d.git BLABLA
+    let cleanedMessage;
+    if ( message.includes('://') && message.includes('@') ){
+        let before = message.split('://')[0]; // https
+        let after= message.split('@')[1];      // github.com/JanAxelsson/imlook4d.git
+        cleanedMessage = before + '://CREDENTIALS@' + after;   
+    }else{
+        cleanedMessage = message;
+    }
+    
+    // Write message to stream
+    const stream = require('fs').createWriteStream(MAINLOGFILE, { flags: 'a' });
+    
     let timeStamp = new Date().toISOString();
     let space = '   ';
-    let output = timeStamp + space + message + os.EOL;
-    fs.appendFileSync(MAINLOGFILE,output,'utf8'); // Signal file that pragma-git is up
-}
-function pragmaLogGitCommand(first, rest){
-    const prompt = '>> '
-    let message = prompt + 'git ' + first + ' ' + rest.join(" ") ;
-    if (first == "raw"){
-        message = prompt + 'git ' + ' ' + rest.join(" "); // Last part is unfolding array with spaces between
-        message = message.replace(/(\r\n|\n|\r)/gm, "");  // Remove  EOL characters
-    }
-    pragmaLog(message);
+    let output = timeStamp + space + cleanedMessage + os.EOL;
+    stream.write( output);
 }
 function removeUrlCredentials(url){
+    // Return if cleaning not required
+    if ( !url.includes('@' )){
+        return url
+    }
+    
+    // Clean
     // Example url = 'https://user:passwd@github.com/JanAxelsson/imlook4d.git' 
     let protocol = url.split('://')[0]; // https
     let server= url.split('@')[1];      // github.com/JanAxelsson/imlook4d.git
-    let cleanedUrl = protocol + '://' + server + ' (removed credentials)';  // https://github.com/JanAxelsson/imlook4d.git (removed credentials)
+    let cleanedUrl = protocol + '://CREDENTIALS@' + server;  // https://CREDENTIALS@github.com/JanAxelsson/imlook4d.git 
     
     return cleanedUrl;
+}
+function sendGitOutputToFile() {
+  let counter = 0;
+
+  return (cmd, stdOut, stdErr, args) => {
+    const id = ++counter;
+
+    pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
+    
+    stdOut.on('data', buffer => { pragmaLog( `STDOUT [${id}] ${buffer.toString()}`) });
+    stdErr.on('data', buffer => { pragmaLog( `STDERR[${id}] ${buffer.toString()}` ) });
+  }
 }
 
 // Update other windows
@@ -4582,8 +4579,7 @@ function displayLongAlert(title, message, type){
         function setAuthorInfo( authorName, authorEmail){
             try{
                 commands = [ 'config', '--global', 'user.name', authorName];
-                pragmaLogGitCommand('raw', commands ) ;
-                simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
                 function onConfig(err, result ){ console.log(result); console.log(err); pragmaLog(result);  }
             }catch(err){
                 console.log('Failed storing git user.name');
@@ -4591,8 +4587,7 @@ function displayLongAlert(title, message, type){
             
             try{  
                 commands = [ 'config', '--global', 'user.email', authorEmail];
-                pragmaLogGitCommand('raw', commands ) ;
-                simpleGit(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
+                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
                 function onConfig(err, result ){ console.log(result); console.log(err); pragmaLog(result);  }
             }catch(err){
                 console.log('Failed storing git user.email');
