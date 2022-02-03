@@ -148,7 +148,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const util = require('./util_module.js'); // Pragma-git common functions
         
         const simpleGit = require('simple-git');  // npm install simple-git
-        function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+        function simpleGitLog(pwd) {  pragmaLog('pwd = ' + pwd); return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
 
 
     
@@ -1103,7 +1103,7 @@ async function _callback( name, event){
         localState.droppedRepoFolder='';  // Clear
         
         await simpleGitLog(folder).init( onInit );
-        function onInit(err, initResult) { pragmaLog(result); }
+        function onInit(err, result) {}
         
         await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
         function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult;  }
@@ -1117,12 +1117,21 @@ async function _callback( name, event){
         // Initial commit
         setStatusBar( 'Initial commit');
         let outputData;
-        await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Initial commit'] , onCommit);
-            
-        function onCommit(err, result) {console.log(result); outputData = result; pragmaLog(result); };
+        await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Created Repository'] , onCommit);
+        function onCommit(err, result) {};
         
         await waitTime( 1000);
         console.log(outputData);
+        
+        if ( event.firstBranch == 'develop'){
+            // Create and move to develop branch
+            let commands = [ 'checkout', '-b', 'develop'];
+            await simpleGitLog( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){};
+        }else{
+            // Do not create develop 
+        }
+        
         
         
         // add repo to program
@@ -4311,10 +4320,11 @@ function sendGitOutputToFile() {
   return (cmd, stdOut, stdErr, args) => {
     const id = ++counter;
 
+    pragmaLog( ' ');
     pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
     
     stdOut.on('data', buffer => { pragmaLog( `STDOUT [${id}] ${buffer.toString()}`) });
-    stdErr.on('data', buffer => { pragmaLog( `STDERR[${id}] ${buffer.toString()}` ) });
+    stdErr.on('data', buffer => { pragmaLog( `STDERR [${id}] ${buffer.toString()}` ) });
   }
 }
 

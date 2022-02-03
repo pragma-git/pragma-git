@@ -9,8 +9,8 @@ var util = require('./util_module.js'); // Pragma-git common functions
 const pathsep = require('path').sep;  // Os-dependent path separator
 
 let simpleGit = require('simple-git');
-function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler(opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
-
+//function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
 
 // Global for whole app
@@ -254,7 +254,7 @@ async function _callback( name, event){
         }
         case 'initializeRepoOK' : {
             
-            await opener._callback('initializeRepoOK');
+            await opener._callback('initializeRepoOK', event);
             
             let folder = document.getElementById('addFolder').value; 
  

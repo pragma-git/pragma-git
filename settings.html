@@ -629,19 +629,26 @@
             Cancel
         </button>  
     </dialog>   
-    <dialog id="doYouWantToInitializeRepoDialog" class="warning">  <!-- Folder is not a repo --> 
-        <b>WARNING -- the selected folder is not a repository.</b><br>
-            Do you want to initialize this folder as a git repository ? <br>
+    <dialog id="doYouWantToInitializeRepoDialog"   class="warning">  
+        <b>WARNING</b> -- Do you want to initialize this folder as a git repository ?
+             <br>
+            <br>
+            
+        Start working in branch &nbsp; 
+        <select id="firstBranchToWorkOn" name="firstBranchToWorkOn" >
+            <option value="master">master</option>
+            <option value="develop" selected>develop</option>
+        </select> <br>
             <br>
         
         <button id="initializeRepoDialogOK" 
-            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK',this);">
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
             Initialize
         </button>   
         <button id="initializeRepoDialogCancel" 
             onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
             Cancel
-        </button>     
+        </button>    
 
     </dialog>  
      
