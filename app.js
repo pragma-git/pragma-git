@@ -148,7 +148,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const util = require('./util_module.js'); // Pragma-git common functions
         
         const simpleGit = require('simple-git');  // npm install simple-git
-        function simpleGitLog(pwd) {  pragmaLog('pwd = ' + pwd); return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+        
+        // Use as with simpleGit, but this one atuo-logs through pragmaLog
+        function simpleGitLog(pwd) {  
+            pragmaLog('pwd = ' + pwd); return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) 
+        } 
 
 
     
