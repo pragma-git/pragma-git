@@ -2851,7 +2851,7 @@ async function gitIsInstalled(){
             
             if (err == undefined){
                 isInstalled = true;
-                localState.gitVersion = resultc
+                localState.gitVersion = result
             }
         }; 
     }catch(err){

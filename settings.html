@@ -578,13 +578,22 @@
                 <div><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
                 Settings folder:
-                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
                 
                  <script>
                      document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
                  </script>    
+                 <br>          
+                
+                Log file:
+                <div><code><span id='logFile' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+                 <script>
+                     document.getElementById("logFile").innerHTML = opener.getSettingsDir() + '.tmp/pragma-git-log.txt';
+                 </script>    
                            
                 <br>
+                
                  Your system's path as seen by Pragma-git :<br>
                 <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
 
