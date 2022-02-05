@@ -25,7 +25,6 @@
     "chokidar": "^3.4.2",
     "codemirror": "^5.57.0",
     "css-spinners": "^1.0.1",
-    "debug": "^2.6.9",
     "diff-match-patch": "^1.0.5",
     "downloads-folder": "^3.0.1",
     "findinnw": "^1.1.3",
