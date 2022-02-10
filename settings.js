@@ -690,6 +690,7 @@ async function gitClone( folderName, repoURL){
             // TODO : if err =="Error: fatal: You are on a branch yet to be born"
             //        I should create branches as when calling 'doYouWantToInitializeRepoDialog' dialog
             //        Difference is that repo is initialized, but the rest should be the same.
+            //        Maybe reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
         };
         
     }catch(err){ 
