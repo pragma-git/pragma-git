@@ -686,7 +686,11 @@ async function gitClone( folderName, repoURL){
         
         // 2) Checkout default branch
         await simpleGitLog(topFolder).checkout( onCheckout);
-        function onCheckout(err, result){};
+        function onCheckout(err, result){
+            // TODO : if err =="Error: fatal: You are on a branch yet to be born"
+            //        I should create branches as when calling 'doYouWantToInitializeRepoDialog' dialog
+            //        Difference is that repo is initialized, but the rest should be the same.
+        };
         
     }catch(err){ 
         console.log(err);
