@@ -681,7 +681,7 @@ async function gitClone( folderName, repoURL){
         // 1) Clone 
         let options = [];
         opener.mkdir(folderName);  // Create folder if it does not exist
-        await simpleGitLog(topFolder).clone(  repoURL, topFolder, options, onClone);
+        await simpleGitLog(folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){}; 
         
         // 2) Checkout default branch
