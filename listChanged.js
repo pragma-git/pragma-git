@@ -592,6 +592,7 @@ function createFileTable(status_data) {
                     label.setAttribute("class","deleted"); // index+work_dir "D " " D"
                     typeOfChanged = 'deleted';
                     break;
+                    
                 case "M " :
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
                     typeOfChanged = 'modified';
@@ -600,6 +601,11 @@ function createFileTable(status_data) {
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
                     typeOfChanged = 'modified';
                     break;
+                case "MM" :
+                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    typeOfChanged = 'modified';
+                    break;
+
                 case "A " :
                     label.setAttribute("class","added"); // index+work_dir "A " "??"
                     typeOfChanged = 'added';
