@@ -258,9 +258,8 @@ async function _callback( name, event){
             
             let folder = document.getElementById('addFolder').value; 
  
-            // add repo to program
+            // update list
             try {
-                await opener.addExistingRepo( folder); 
                 // Replace table 
                 document.getElementById("settingsTableBody").innerHTML = ""; 
                 createHtmlTable(document);
@@ -687,17 +686,22 @@ async function gitClone( folderName, repoURL){
         // 2) Checkout default branch
         await simpleGitLog(topFolder).checkout( onCheckout);
         function onCheckout(err, result){
-            // TODO : if err =="Error: fatal: You are on a branch yet to be born"
-            //        I should create branches as when calling 'doYouWantToInitializeRepoDialog' dialog
-            //        Difference is that repo is initialized, but the rest should be the same.
-            //        Maybe reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
+            // if err =="Error: fatal: You are on a branch yet to be born"
+            // This happens for instance when a Github repo is created, but no commits exist.
+            // Reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
+            // which asks permisson to init repo
+            if ( err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
+                localState.droppedRepoFolder = topFolder;
+                document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                return
+            }                    
         };
         
     }catch(err){ 
         console.log(err);
         opener.pragmaLog(err);
         
-        displayAlert('Failed cloning', err)
+        //displayAlert('Failed cloning', err)
         return
     }
         
