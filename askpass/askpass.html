@@ -87,12 +87,26 @@
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`);
         document.getElementById('pwdlabel').innerText = ARG1;
         
+        
+        <!-- FIRST DIALOG -->
         if ( ARG1.startsWith('Username') ){
             document.getElementById('pwdlabel').innerHTML= 'Username / Token name <br>';
+            
+            <!-- simplify message if known to have ACCESS TOKEN -->
+            if ( ARG1.includes('github.com') ){
+                document.getElementById('pwdlabel').innerHTML= 'Access Token  <br>';
+            }
         }
         
+        
+        <!-- SECOND DIALOG -->
         if ( ARG1.startsWith('Password') ){
             document.getElementById('pwdlabel').innerHTML = 'Password / Access Token <br>';
+                        
+            <!-- empty password if known to have ACCESS TOKEN in Username dialog-->
+            if ( ARG1.includes('github.com') ){
+                document.getElementById('pwd').placeholder='Leave empty for github'
+            }
         }
 
 
