@@ -3666,7 +3666,11 @@ async function gitPush(){
             async function push(){
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                try{
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                }catch(err){
+                    displayLongAlert('Push Error' + attempt , err, 'error');
+                }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
                 await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
