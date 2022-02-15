@@ -13,7 +13,7 @@ RELEASE_TITLE='Major rewrite, including new Graph'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-### Second release of pragma-git 
+### Changes in this release : 
 
 Major rewrite and minor bug fixes.  Rewrite includes:
 - new Graph
@@ -33,6 +33,8 @@ The aim with Pragma-git is to be
 
 Read more on the home page : https://pragma-git.github.io
 
+---
+
 ### Quick Install
 
 Download the *one* installer that matches your system from the "__*assets*__" link below: 
@@ -43,7 +45,8 @@ Download the *one* installer that matches your system from the "__*assets*__" li
 - __win-x86__ (Windows 32 bit)
 
 [Install instructions](https://pragma-git.github.io#installation)
----
+
+___
 
 # NOTE : If header name in https://pragma-git.github.io is changed, its element id will be changed.  
 # Modify link above from "installation" to new id (the id can be found by from html-source of https://pragma-git.github.io).
