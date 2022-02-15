@@ -9,21 +9,23 @@ TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 echo "TAG = $TAG"
 
 # 2) Release Title
-RELEASE_TITLE='Release 0.9.3'
+RELEASE_TITLE='Release 0.9.4'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
 ### Fifth release of pragma-git 
 
 Changes :
-* Graph window : Commit info window stays opened until close-button pressed. Gives less flicker. Allows copying text to clipboard
-* Graph window : zoom with ctrl + mousewheel
-* Graph window : close button for commit info window
-* Settings window : improve Windows 10 red font display
-* Notes window : hyperlink to a local document opens in system's default app. Internet link opens in browser.
-* Diff window : improve theme colors for code chunks that differ
-* Reintroduced message at first start : "Drop folder on window ..."
-* Fix failed to start on new install (only upgrading from previous versions worked)
+
+* Color-theme added for about 120 code languages in merge window
+* Speed-up of graph drawing for large repos
+* Search in Graph : allow search for commit hash (and as before, text in commit message)
+* Setting per repository to allow push. This stops annoying password dialog for remotes that you don't have push access to
+* Github empty github-repository gets init dialog
+* Github credential dialog gives better hints (when to enter ACCESS TOKEN and empty password field)
+* Logfile showing git commands and user input (located in "HOMEFOLDER/.Pragma-git/.tmp/pragma-git-log.txt")
+* Bug fix : message placeholder now reflects file status correctly after 1) stashing, or 2) removing modified files from repo
+* Bug fix : in some niche cases, a modified file did not show links for diff in list of modified files
 
 
 ___

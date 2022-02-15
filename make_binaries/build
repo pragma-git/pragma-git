@@ -56,7 +56,7 @@
    
    
 -  # Not allowed to run rcedit.exe 
-   # On Mac, go to "System Settings/Security nd Privacy/General" and click "Allow" button.  (Then restart build)
+   # On Mac, go to "System Settings/Security and Privacy/General" and click "Allow" button.  (Then restart build)
 
 ////
 
