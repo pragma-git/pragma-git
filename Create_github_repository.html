@@ -423,22 +423,7 @@
         toolTabButton[0].click()
                 
     </script>
-    
-        
-    
-    <script>
-        // Set window size to match content
-        let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
-        let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
-        let dy = document.getElementById('body').scrollHeight * global.state.zoom;
-        
-        let hx = window.outerWidth - window.innerWidth;
-        let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(
-            dx + hx * global.state.zoom + 1 * padding + 50 , 
-            dy + hy * global.state.zoom + 2 * padding + 150 / global.state.zoom
-        );
-    </script>
+
     
  
 </body>

@@ -69,8 +69,20 @@ function extendFindInNw( elementToSearch){
         }catch(err){
             // Not a Pragma-merge window
         }            
+         
         
-          
+        // If Graph
+        try{
+            if (graphSearchInEditorId){  // graphSearchInEditorId = true if a graph window
+                searchElement = document.getElementById( 'graphContent');  
+            }
+
+        }catch(err){
+            // Not a Graph window
+        }      
+        
+        
+                 
     
         // Find all elements
         for (let i = 0; i < searchElement.children.length; i++) {
@@ -150,16 +162,37 @@ function extendFindInNw( elementToSearch){
         
         console.log(elements);
         
-        
+        // Search HTML
+        let numberFoundInHtml = 0;
         elements.forEach(function (element) {
         if (element.id !== 'find-in-nw-search-box') {
-            window.findAndReplaceDOMText(element, {
-            find: RegExp(text,'gi') ,
-            wrap: 'mark',
-            wrapClass: 'find-in-nw-token'
-            });
-        }
+                window.findAndReplaceDOMText(element, {
+                find: RegExp(text,'gi') ,
+                wrap: 'mark',
+                wrapClass: 'find-in-nw-token'
+                });
+            }
         });
+        
+        
+        // Search for hash (element id in text class, in Graph)
+        if (text.length >= 2){ // Only search for hash when string is 2 characters or more         
+            try{
+                let textElements = document.getElementsByClassName('text');
+                textElements.forEach(function (textElement) {
+                if (textElement.id.startsWith(text) ) {
+                    window.findAndReplaceDOMText(textElement, {
+                        find: RegExp(textElement.innerText,'gi') ,
+                        wrap: 'mark',
+                        wrapClass: 'find-in-nw-token'
+                        });
+                    }
+                });
+            }catch (err){
+                // Will fail in other windows
+            }
+
+        }
         
         this.lastSearched = text;
         this.setDataPositionAttribute();

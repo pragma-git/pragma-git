@@ -358,11 +358,11 @@
                         <table>            
                           <tr style="border: none;">
                                 <td>
-                                    <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
+                                    <label for="thisRepoAuthorName"> Author's name (required):</label><br>
                                     <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />
                                 </td>
                                 <td>                
-                                    <label for="thisRepoAuthorEmail"> <sup class="footnoteText">*</sup>Author's email :</label><br>
+                                    <label for="thisRepoAuthorEmail"> Author's email :</label><br>
                                     <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/>
                                     
                                     <input type="checkbox" id="useGlobalAuthorInfo" name="name" value="true" onchange="_callback('useGlobalAuthorInfoCheckboxChanged',this)" checked>
@@ -373,12 +373,27 @@
                         
                         <div id='warnThatLocalAuthorInfoMissing' class="red"> WARNING : Will use global Author's info because Author's name is missing</div>
                         
-                        <br>
-     
+                        
+       
+       
+                         <!--  Allow push to remote -->
+                        <input type="checkbox" id="allowPushToRemote" 
+                            onchange="_callback('localCheckboxChanged',this)
+                                        if (this.checked){
+                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                        }else{
+                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                                        } 
+                            " 
+                            >
+                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
+                            
       
                          <!--  Auto-push to remote -->
-                        <input type="checkbox" id="autoPushToRemote" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
-                        <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        <div id = 'autoPushDiv'>
+                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
+                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        </div>
                         
                         <!--  --no-ff merge (gitflow recommends this) -->
                         <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
@@ -388,18 +403,16 @@
 
                         
                         <div class="footnoteText">
-                        <sup>*</sup> These settings are specific for selected repository. General settings are found in the 
-                        <a style="cursor: pointer;" onclick="
-                            Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software').click();
-                        ">
-                            "Software tab"
-                        </a> 
-                        tab.
-                        
-                    </div>
-                    
+                            <sup>*</sup> These settings are specific for the currently selected repository. General settings are found in the 
+                            <a style="cursor: pointer;" onclick="
+                                Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software').click();
+                            ">
+                                "Software tab"
+                            </a> 
+                            tab.
                             
-                        <p><span id="cloneStatus"></span></p>
+                        </div>
+
                     
                     </div>                   
                     
@@ -419,6 +432,7 @@
                                     </td>
                                 </tr>
                                 
+                                
                                 <tr class="tool">
                                     <td>
                                         <textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder"></textarea>
@@ -427,18 +441,30 @@
                                         <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
                                     </td>
                                 </tr>
-
+                                
                                 
                                 <tr class="tool">
                                     <td>
-                                        <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button>
+                                     <!--  Allow push to remote (This input is saved indirectly when pressing cloneButton ) -->
+                                    <input type="checkbox" id="allowPushToRemoteClone" >
+                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password.</label><br>
+                           
                                     </td>                                
                                 </tr>
                                 
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus"></span>
+                                    </td>                                
+                                </tr>
+                            
+                                
                             </tbody>
+                            
+                            
                         </table>
                         
-                        <p><span id="cloneStatus"></span></p>
                     
                     </div>
                     
@@ -552,13 +578,22 @@
                 <div><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
                 Settings folder:
-                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
                 
                  <script>
                      document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
                  </script>    
+                 <br>          
+                
+                Log file:
+                <div><code><span id='logFile' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+                 <script>
+                     document.getElementById("logFile").innerHTML = opener.getSettingsDir() + '.tmp/pragma-git-log.txt';
+                 </script>    
                            
                 <br>
+                
                  Your system's path as seen by Pragma-git :<br>
                 <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
 
@@ -603,19 +638,26 @@
             Cancel
         </button>  
     </dialog>   
-    <dialog id="doYouWantToInitializeRepoDialog" class="warning">  <!-- Folder is not a repo --> 
-        <b>WARNING -- the selected folder is not a repository.</b><br>
-            Do you want to initialize this folder as a git repository ? <br>
+    <dialog id="doYouWantToInitializeRepoDialog"   class="warning">  
+        <b>WARNING</b> -- Do you want to initialize this folder as a git repository ?
+             <br>
+            <br>
+            
+        Start working in branch &nbsp; 
+        <select id="firstBranchToWorkOn" name="firstBranchToWorkOn" >
+            <option value="master">master</option>
+            <option value="develop" selected>develop</option>
+        </select> <br>
             <br>
         
         <button id="initializeRepoDialogOK" 
-            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK',this);">
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
             Initialize
         </button>   
         <button id="initializeRepoDialogCancel" 
             onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
             Cancel
-        </button>     
+        </button>    
 
     </dialog>  
      

@@ -215,13 +215,18 @@ async function injectIntoJs(document){
                     // first pass (top commits)
                     try{
                         await drawGraph( document, shortSplitted, branchHistory, history);
-                        await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
                     }catch(err){
                         
                     }
-                    
+
+                    // Wait for redraw (I have a feeling that it helps with lines being visible before circles)
+                    function sleep(ms) {
+                        return new Promise(resolve => setTimeout(resolve, ms));
+                    }
+                    await sleep(50); 
+                                       
                     // second pass (all)
-                    await drawGraph( document, allSplitted, branchHistory, history);               
+                    await drawGraph( document, allSplitted, branchHistory, history);  // Need to await so branchNames will be ready for drawBranchColorHeader           
                 }
             }else{
                 // If not second run -- draw everything in one pass (otherwise changing checkboxes and moves will make it jump)
@@ -230,10 +235,10 @@ async function injectIntoJs(document){
             
         // ColorHeader
         document.getElementById('colorHeader').innerHTML = ''; // Clear 'colorHeader' html
-        await drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
+        drawBranchColorHeader( branchNames); // Append to 'colorHeader' html
         
         // Populate branch-name edit menu
-        await populateDropboxBranchSelection();
+        populateDropboxBranchSelection();
         
         
         //Make MouseOver callbacks for node circles  

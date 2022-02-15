@@ -5,11 +5,13 @@
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
-const simpleGit = require('simple-git');  
-
 var util = require('./util_module.js'); // Pragma-git common functions
-       
 const pathsep = require('path').sep;  // Os-dependent path separator
+
+let simpleGit = require('simple-git');
+//function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
+
 
 // Global for whole app
 var state = global.state; // internal copy of global.state
@@ -17,9 +19,11 @@ var localState = global.localState;
 
 var win
 
+
 // ---------
 // FUNCTIONS
-// ---------    
+// ---------  
+
 
 // Callbacks 
 async function _callback( name, event){
@@ -32,12 +36,30 @@ async function _callback( name, event){
     let newUrl;
     
     console.log('_callback = ' + name);
+    
+    { // Log callbacks
+        let eventString = '';
+        
+        // Prepare logging callback to file
+        if ( ( event == undefined ) || ( typeof event !== 'string' ) || ( event.trim() == '' )  ){
+            eventString = '';
+        } else{
+            eventString = '   event  = ' + event;  // Can only be a string at this point
+        }
+        
+        // Log to file
+        opener.pragmaLog('settings._callback = ' + name + eventString);
+    }
+        
+    
+    
     switch(name) {  
         case 'checkboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
             value = event.checked;
             state[id] = value;
+            opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             break;
         } 
         case 'localCheckboxChanged': {
@@ -45,6 +67,7 @@ async function _callback( name, event){
             console.log(event);
             value = event.checked;
             //state[id] = value;
+            opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             state.repos[state.repoNumber][id] = value;
             break;
         } 
@@ -188,7 +211,6 @@ async function _callback( name, event){
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
 
-        
             break;
         }  
         case 'addRepoButtonPressed' : {
@@ -232,13 +254,12 @@ async function _callback( name, event){
         }
         case 'initializeRepoOK' : {
             
-            await opener._callback('initializeRepoOK');
+            await opener._callback('initializeRepoOK', event);
             
             let folder = document.getElementById('addFolder').value; 
  
-            // add repo to program
+            // update list
             try {
-                await opener.addExistingRepo( folder); 
                 // Replace table 
                 document.getElementById("settingsTableBody").innerHTML = ""; 
                 createHtmlTable(document);
@@ -284,14 +305,13 @@ async function _callback( name, event){
                 let folderObject =  await opener.gitLocalFolder() ;
                 document.getElementById('shortCurrentRepo').innerText = folderObject.folderName;
                 document.getElementById('currentRepo').innerText = folderObject.folderPath;
+                
+                opener.pragmaLog('   repopath = ' + folderObject.folderPath);
+                opener.pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
+                opener.pragmaLog(' ');
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
-                
-                // Update displayed .gitignore 
-                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
-
                 
                 // Update cached branch list
                 opener.cacheBranchList();
@@ -301,13 +321,30 @@ async function _callback( name, event){
                 await updateLocalAuthorInfoView();
                 
                 // Update local repo settingsDir
+                
+                document.getElementById('allowPushToRemote').checked = state.repos[state.repoNumber].allowPushToRemote;
+                if ( state.repos[state.repoNumber].allowPushToRemote ){                                    
+                    document.getElementById('autoPushDiv').style.visibility = 'visible';
+                }else{
+                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                } 
+                
                 document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;
+                
                 document.getElementById('NoFF_merge').checked = state.repos[state.repoNumber].NoFF_merge;
                 document.getElementById('useGlobalAuthorInfo').checked = state.repos[state.repoNumber].useGlobalAuthorInfo;
                 
                 
  
-                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);                
+                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);       
+                
+                                
+                // Update displayed .gitignore     
+                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
+                if (fs.existsSync(ignoreFileName) ){
+                    document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+                }
+         
 
                 
             }catch(err){
@@ -358,12 +395,14 @@ async function _callback( name, event){
             console.log('deleteBranchClicked -- branch = ' + branchName);
             
             try{
-                await simpleGit( localFolder ).branch( ['-d', branchName], onDeleteBranch);
+                await simpleGitLog( localFolder ).branch( ['-d', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
-                    console.log(err);     
+                    console.log(err); 
+                    //opener.pragmaLog(result); 
                 }
             }catch(err){ 
+                opener.pragmaLog(err); 
 
                 // Most likely, this is because the branch was not fully merged. 
                 if ( err.message.includes('is not fully merged') ) {
@@ -395,10 +434,11 @@ async function _callback( name, event){
             console.log('forceDeleteBranchClicked -- branch = ' + branchName);
             
             try{
-                await simpleGit(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
+                await simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).branch( ['-D', branchName], onDeleteBranch);
                 function onDeleteBranch(err, result ){
                     console.log(result);
                     console.log(err);
+                    //opener.pragmaLog(result); 
                 }
             }catch(err){ 
                 
@@ -430,7 +470,7 @@ async function _callback( name, event){
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
-        
+
   
             //  Set remote URL 
             if ( isSetButton ){
@@ -441,10 +481,12 @@ async function _callback( name, event){
                 newUrl = document.getElementById(textareaId).value;
                 try{
                     const commands = [ 'remote', 'set-url','origin', newUrl];
-                    await simpleGit( localFolder3).raw(  commands, onSetRemoteUrl);
+                    await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
-                        console.log(err)  
+                        console.log(err) ;
+                        //opener.pragmaLog(result); 
+                        //opener.pragmaLog(err); 
                     };
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
@@ -638,17 +680,28 @@ async function gitClone( folderName, repoURL){
         // 1) Clone 
         let options = [];
         opener.mkdir(folderName);  // Create folder if it does not exist
-        await simpleGit( folderName).clone(  repoURL, topFolder, options, onClone);
-        function onClone(error, result ){console.log(result);console.log(error) }; 
+        await simpleGitLog(folderName).clone(  repoURL, topFolder, options, onClone);
+        function onClone(error, result ){}; 
         
         // 2) Checkout default branch
-        await simpleGit(topFolder).checkout( onCheckout);
-        function onCheckout(err, result){console.log(result)};
+        await simpleGitLog(topFolder).checkout( onCheckout);
+        function onCheckout(err, result){
+            // if err =="Error: fatal: You are on a branch yet to be born"
+            // This happens for instance when a Github repo is created, but no commits exist.
+            // Reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
+            // which asks permisson to init repo
+            if ( err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
+                localState.droppedRepoFolder = topFolder;
+                document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+                return
+            }                    
+        };
         
     }catch(err){ 
         console.log(err);
+        opener.pragmaLog(err);
         
-        displayAlert('Failed cloning', err)
+        //displayAlert('Failed cloning', err)
         return
     }
         
@@ -672,40 +725,30 @@ async function gitClone( folderName, repoURL){
         }
         
         // Set to current
-        state.repoNumber = index;  // Found that it could become a string sometimes
+        state.repoNumber = index;  // Found that it could become a string sometimes
         localState.branchNumber = 0; // Should always start at 0, because that is the first one found in git lookup ( such as used in branchedClicked()  )
     
         // Set global
         state.repos[state.repoNumber].localFolder = topFolder;
-        state.repos[state.repoNumber].remoteURL = document.getElementById( index + 10000).value;
+        state.repos[state.repoNumber].remoteURL = document.getElementById('urlToClone').value;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        // Update "Allow git push" setting
+        let allowPush = document.getElementById('allowPushToRemoteClone').checked;  // Read from checkbox in the clone command
+        state.repos[state.repoNumber].allowPushToRemote = allowPush;  // Set to state for this repo (so it will be redrawn)
+        
+        // Set other per repo settings to default value
+        state.repos[state.repoNumber].autoPushToRemote = true;
+        state.repos[state.repoNumber].NoFF_merge = true;
+        
+        // Change to Software tab (In repo tab, where we already are)
+        Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
 
     }catch(err){
         console.log(err);
         return
     }
-    
-    // Update Settings display, repos
-    document.getElementById("folderSelectButton").setAttribute("id", "dummy"); // Take away this id, before making a new button with same id
 
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    createHtmlTable(document);
-    
-    
-                
-    // Update Settings display, branches 
-    table = document.getElementById("branchesTableBody");
-    data2 = Object.keys(state.repos[0]);  // Used for headers
-    
-    branchList = await gitBranchList( localFolder2);
-    
-    document.getElementById('branchNameTextarea').value = ""; // Clear text field
-    
-    
-    document.getElementById("branchesTableBody").innerHTML = ""; 
-    generateBranchTable( document, table, branchList); // generate the new branch table 
-    
-  
 
 } 
 async function gitBranchList( folderName){
@@ -724,10 +767,11 @@ async function gitCreateBranch( folder, branchName){
     
     try{
         const commands = [ 'branch', branchName];
-        await simpleGit( folder).raw(  commands, onCreateBranch);
+        await simpleGitLog( folder).raw(  commands, onCreateBranch);
         function onCreateBranch(err, result ){
             console.log(result);
             console.log(err);
+            //opener.pragmaLog(result); 
         };
     }catch(err){        
         

@@ -7,28 +7,24 @@
     </p> 
          
     <p>
-    There is one Notes sheet per repository (so same Notes regardless of current branch) 
+    There is one Notes sheet per repository (same Notes for all branches) 
     </p>  
  
+<br>
  <h4>Saving</h4>       
     <p>
-    There is no manual save. Notes are auto-saved, and are saved when window is closed. 
+    There is no manual save. Notes are auto-saved regularly, and are also saved when window is closed. 
     </p>  
 
   
     <p>
     The Notes sheet is saved in the pragma-git settings folder, on the local computer. 
     The location of the settings folder for this computer can be found from the section System Info, in the Settings ( <img style='vertical-align:middle;' src="../images/settings_black.png"  height="14" width="14"> )
+    The file will be the same as for the repository folder, so if that folder is renamed also the notes file has to be renamed.
     </p>  
 
-  
-    <p>
-    Notes are also saved incrementally with a time stamp, when the Notes window is closed. 
-    This is achieved by letting the settings folder be its own local git repository.
-    (To find an older version of a file, add the settings folder to the repository list (settings, or drag and drop on main window) and navigate
-    to an older version the same way as for other repositories)    
-    </p>
-    
+ 
+<br>   
  <h4>WYSIWYG or Markdown</h4>  
 
     <p>
@@ -43,6 +39,7 @@
     Notes are saved in markdown notation. 
     </p>  
 
+<br>
  <h4>Toolbar</h4>       
     <p>
     There are a number of self-explanatory buttons at the toolbar.  Hovering over a button gives a brief explanation.  
@@ -54,6 +51,7 @@
     There is also a search function ( <img style='vertical-align:middle;' src="../images/find_black.png"  height="14" width="14"> )
     </p>  
 
+<br>
  <h4>Tricks for list items and check boxes</h4> 
     <p>
         Check boxes, point lists or numbered lists are all lists, which behave similarly. 
@@ -72,3 +70,20 @@
     </ul>
         
     </p> 
+    
+    
+    
+ 
+<br>
+<h4>Get back old version of Notes</h4>  
+    <p>
+    Notes are also saved incrementally with a time stamp, when the Notes window is closed. 
+    This is achieved by letting the settings folder be its own local git repository.
+    </p>
+    
+    
+    <p>
+    To find an older version of a file, add the settings folder to the repository list. This is done just as for adding any repository; 
+    through settings, or by drag and drop onto main window.  Then navigate
+    to an older version the same way as for other repositories.     
+    </p>

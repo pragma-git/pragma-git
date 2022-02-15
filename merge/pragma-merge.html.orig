@@ -10,7 +10,7 @@
     
     <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
-        
+    <link rel="stylesheet" href="node_modules/codemirror/addon/mode/simple.js">
 
   
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
@@ -24,10 +24,23 @@
     
     <!-- Read in all language modes-->    
     
-    <script src="node_modules/codemirror/addon/mode/simple.js"></script>
     
+
+    <script src="node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="node_modules/codemirror/mode/java/java.js"></script>
+    <script src="node_modules/codemirror/mode/javascript/javascript.js"></script>
+    <script src="node_modules/codemirror/mode/octave/octave.js"></script>
     <script src="node_modules/codemirror/mode/xml/xml.js"></script>
     <script src="node_modules/codemirror/mode/css/css.js"></script>
+<<<<<<< Updated upstream
+
+    
+<!--
+    <script src="node_modules/codemirror/mode/meta.js"></script>
+-->
+
+
+=======
     <script src="node_modules/codemirror/mode/javascript/javascript.js"></script>
     <script src="node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
     <script src="node_modules/codemirror/mode/clike/clike.js"></script>
@@ -53,6 +66,7 @@
     <script src='node_modules/codemirror/mode/dart/dart.js'></script>
     <script src='node_modules/codemirror/mode/diff/diff.js'></script>
     <script src='node_modules/codemirror/mode/django/django.js'></script>
+>>>>>>> Stashed changes
     
     <script src='node_modules/codemirror/mode/dockerfile/dockerfile.js'></script>
     
@@ -269,13 +283,6 @@
             color: var(--body-text) !important;
             border:none;
         }
-        
-
-        .CodeMirror-linenumber{
-            padding-right: 5px !important;
-            padding-left: 5px !important;
-        }
-
         
         .CodeMirror-merge-copy{
             color: var(--merge-arrow);

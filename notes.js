@@ -11,6 +11,8 @@ var util = require('./util_module.js'); // Pragma-git common functions
 var editor;  // Editor object
 var filePath;// Path to open file
 
+var repoName = 'unknown'
+
 
 window.setInterval(save, 30 * 1000 );
 
@@ -99,7 +101,7 @@ async function injectIntoNotesJs(document) {
     
     
     // Title
-    let repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
+    repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
 
 
@@ -146,7 +148,7 @@ async function closeWindow(){
     opener.deleteWindowMenu('Notes');
     
     // Commmit .Pragma-git settings dir
-    await opener.commitSettingsDir();
+    await opener.commitSettingsDir('Saved Notes for ' + repoName);
     
     // Mark that closed
     global.localState.notesWindow.open = false;

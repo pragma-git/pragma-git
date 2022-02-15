@@ -592,6 +592,7 @@ function createFileTable(status_data) {
                     label.setAttribute("class","deleted"); // index+work_dir "D " " D"
                     typeOfChanged = 'deleted';
                     break;
+                    
                 case "M " :
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
                     typeOfChanged = 'modified';
@@ -600,6 +601,11 @@ function createFileTable(status_data) {
                     label.setAttribute("class","modified"); // index+work_dir "M " " M"
                     typeOfChanged = 'modified';
                     break;
+                case "MM" :
+                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
+                    typeOfChanged = 'modified';
+                    break;
+
                 case "A " :
                     label.setAttribute("class","added"); // index+work_dir "A " "??"
                     typeOfChanged = 'added';
@@ -617,13 +623,20 @@ function createFileTable(status_data) {
                     typeOfChanged = 'renamed';
                     
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
-
-                    filetext = substrings[1] + ' -> ' + substrings[2];
+                    
+                    if ( substrings.length <= 1){
+                        filetext = file;
+                    }else{
+                        filetext = substrings[1] + ' -> ' + substrings[2];
+                    }
+                    
                 break;
             }
             
             
-            var description = document.createTextNode( filetext);
+            var description = document.createElement('div');
+            description.innerHTML =  filetext.replace(/->/g, '&#10142;'); // Make arrow if '->'
+            
             label.appendChild(description);
 
             cell.appendChild(label);
