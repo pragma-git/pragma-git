@@ -2091,7 +2091,7 @@ async function _callback( name, event){
         
         console.log('Settings button pressed');
         
-        if ( getMode() == 'SETTINGS' ){
+        if ( ( getMode() == 'SETTINGS' ) || ( localState.settings == true) ){
             try{ settings_win.focus(); }catch(err){ }
             return
         }
@@ -2253,7 +2253,7 @@ async function _update(){
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
 
-            localState.settings = false;
+            //localState.settings = false;
             
             updateWithNewSettings();
             saveSettings();

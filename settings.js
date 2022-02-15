@@ -651,7 +651,7 @@ async function closeWindow(){
     
     // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
-    //localState.settings = false;
+    localState.settings = false;
     
     // Make global when git author's information missing
     await fixEmptyLocalAuthors();
