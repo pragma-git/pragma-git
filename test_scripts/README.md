@@ -1,5 +1,16 @@
 TESTS
 -----
+ 
+ 
+### Create empty github repository
+
+**setup :** create_empty_github.command
+
+**TODO :  **
+
+**Pragma-git :** 
+
+**Expected :** /tmp/clonedRemote_branch_test_repo is an empty repo cloned from github
 
  
 
