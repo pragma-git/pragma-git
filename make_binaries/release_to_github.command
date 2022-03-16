@@ -9,7 +9,7 @@ TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 echo "TAG = $TAG"
 
 # 2) Release Title
-RELEASE_TITLE='Release 0.9.4'
+RELEASE_TITLE='Release 0.9.5'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
@@ -17,15 +17,8 @@ read -r -d '' RELEASE_NOTES << ---
 
 Changes :
 
-* Color-theme added for about 120 code languages in merge window
-* Speed-up of graph drawing for large repos
-* Search in Graph : allow search for commit hash (and as before, text in commit message)
-* Setting per repository to allow push. This stops annoying password dialog for remotes that you don't have push access to
-* Github empty github-repository gets init dialog
-* Github credential dialog gives better hints (when to enter ACCESS TOKEN and empty password field)
-* Logfile showing git commands and user input (located in "HOMEFOLDER/.Pragma-git/.tmp/pragma-git-log.txt")
-* Bug fix : message placeholder now reflects file status correctly after 1) stashing, or 2) removing modified files from repo
-* Bug fix : in some niche cases, a modified file did not show links for diff in list of modified files
+* Fix workflow 1) create local repo, 2) create remote with github-button
+* Minor bug fixes : Add path separator in Settings info. Disallow multiple setting windows.
 
 
 ___
