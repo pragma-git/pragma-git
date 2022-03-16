@@ -221,6 +221,7 @@ async function _callback( name, event){
             console.log('addRepoButtonPressed');
 
             let folder = document.getElementById('addFolder').value;  
+            util.mkdir(folder); // Make folder if not existing
             
             // Dialog if repo does not exist
             try{
@@ -475,12 +476,14 @@ async function _callback( name, event){
             //  Set remote URL 
             if ( isSetButton ){
                 
+                // First attempt : Set remote url
+                
                 let localFolder3 = state.repos[ realId].localFolder; 
 
-                // Set remote url
                 newUrl = document.getElementById(textareaId).value;
+                let commands = [ 'remote', 'set-url','origin', newUrl];
                 try{
-                    const commands = [ 'remote', 'set-url','origin', newUrl];
+                    
                     await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
@@ -491,10 +494,43 @@ async function _callback( name, event){
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
+                    
+                    
                 }catch(err){
+                    
+                    // Second attempt : Create remote url
+                    
                     console.log('Repository set URL failed');
                     console.log(err);
-                }           
+                    console.log('Try adding remote URL instead');
+                    
+                    try{
+                        const commands = [ 'remote', 'add','origin', newUrl];
+                        await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
+                        function onSetRemoteUrl(err, result ){
+                            console.log(result);
+                            console.log(err) ;
+                            //opener.pragmaLog(result); 
+                            //opener.pragmaLog(err); 
+                        };
+                        
+                        // Set if change didn't cause error (doesn't matter if URL works)
+                        state.repos[realId].remoteURL = newUrl;
+                    }catch(err){
+                        console.log('Repository set URL failed');
+                        console.log(err);
+                    } 
+                    
+                    
+                    // Push (doesn't harm, but sends an initial commit if created locally but not yet pushed)
+                    opener.gitPush();
+                    
+                    
+                } 
+                
+                
+                
+                          
             }
             testURL(textareaId, event);
 
@@ -651,7 +687,7 @@ async function closeWindow(){
     
     // Return (NOTE: Settings window is a'mode' in app.js -- let app.js _update take care of this)
     localState.mode = 'UNKNOWN';
-    //localState.settings = false;
+    localState.settings = false;
     
     // Make global when git author's information missing
     await fixEmptyLocalAuthors();
