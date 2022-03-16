@@ -522,6 +522,10 @@ async function _callback( name, event){
                     } 
                     
                     
+                    // Push (doesn't harm, but sends an initial commit if created locally but not yet pushed)
+                    opener.gitPush();
+                    
+                    
                 } 
                 
                 
