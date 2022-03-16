@@ -476,12 +476,14 @@ async function _callback( name, event){
             //  Set remote URL 
             if ( isSetButton ){
                 
+                // First attempt : Set remote url
+                
                 let localFolder3 = state.repos[ realId].localFolder; 
 
-                // Set remote url
                 newUrl = document.getElementById(textareaId).value;
+                let commands = [ 'remote', 'set-url','origin', newUrl];
                 try{
-                    const commands = [ 'remote', 'set-url','origin', newUrl];
+                    
                     await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                         console.log(result);
@@ -492,10 +494,39 @@ async function _callback( name, event){
                     
                     // Set if change didn't cause error (doesn't matter if URL works)
                     state.repos[realId].remoteURL = newUrl;
+                    
+                    
                 }catch(err){
+                    
+                    // Second attempt : Create remote url
+                    
                     console.log('Repository set URL failed');
                     console.log(err);
-                }           
+                    console.log('Try adding remote URL instead');
+                    
+                    try{
+                        const commands = [ 'remote', 'add','origin', newUrl];
+                        await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
+                        function onSetRemoteUrl(err, result ){
+                            console.log(result);
+                            console.log(err) ;
+                            //opener.pragmaLog(result); 
+                            //opener.pragmaLog(err); 
+                        };
+                        
+                        // Set if change didn't cause error (doesn't matter if URL works)
+                        state.repos[realId].remoteURL = newUrl;
+                    }catch(err){
+                        console.log('Repository set URL failed');
+                        console.log(err);
+                    } 
+                    
+                    
+                } 
+                
+                
+                
+                          
             }
             testURL(textareaId, event);
 
