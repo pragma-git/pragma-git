@@ -130,27 +130,7 @@
             <dt><h4>Git behavior</h4></dt> 
             <br> 
             
-    
-                     
-            <dd><input type="checkbox" checked> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo) — <br> <br>
-            
-            <i>Disabling this checkbox prohibits pushing to remote repository.  
-            This is useful when you do not have write access to the remote repository.  
-            This stops the constant nagging for a password</i>
-            
-            </dd>
-            <br>
-            <br>
-            
-                             
-            <dd><input type="checkbox" checked> 
-            
-            Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)   — <br> <br>
-            <i>Pragma-git has the possibility to auto-push if a remote repository exists.  This is handy most times, but it can be turned off by deselecting this checkbox.</i>
-            </dd>
-            <br>
-            <br>
-            
+
             
             <dd><input type="checkbox" checked>   Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  
             Deselect to use fast-forward  — <br> <br>
@@ -304,11 +284,9 @@
         
         
         
-        <dt><h4>Remote repository </h4></dt>  
+        <dt><h4>Adding a remote repository manually </h4></dt>  
             
             <dd>
-                <br>   
-                 <p><b>Adding a remote repository</b> :<br>  
                  
                 <!-- Same as in settings.html -->
                 <p>
@@ -320,10 +298,18 @@
                      The password, and token, may be left out, and instead stored with the git credential manager.<br>
                      Format : <code>https://name@address</code>  .
                      If you have problems, fall back to method above.
-                 </p>                        
-        
-                <!-- Same as in settings.html -->
-                
+                 </p>    
+                 
+                <br>                    
+
+            
+            </dd>
+            
+            
+        <dt><h4>Adding a remote repository with Github wizard </h4></dt>  
+            
+            <dd>         
+                 
                 <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
                 allowing for creation of access tokens, or to create a new repository.
                 </p>
@@ -332,6 +318,37 @@
                 </p>
                 
                 <br>
+                
+            </dd>
+            
+            
+        <dt><h4>Git behavior </h4></dt> <br> 
+            
+            <dd>        
+             
+                         
+                <dd><input type="checkbox" checked> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo) — <br> <br>
+                
+                <i>Disabling this checkbox prohibits pushing to remote repository.  
+                This is useful when you do not have write access to the remote repository.  
+                This stops the constant nagging for a password</i>
+                
+                </dd>
+                <br>
+                <br>
+                
+                                 
+                <dd><input type="checkbox" checked> 
+                
+                Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)   — <br> <br>
+                <i>Pragma-git has the possibility to auto-push if a remote repository exists.  This is handy most times, but it can be turned off by deselecting this checkbox.</i>
+                </dd>
+                <br>
+                <br>
+            
+                
+                
+                
             </dd> 
 
     <hr>  
