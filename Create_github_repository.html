@@ -157,6 +157,16 @@
                             evt.id = state.repoNumber + 20000;
                             opener._callback('setButtonClicked',evt);
                             
+                            
+                            // Set default in Settings / Remote tab
+                            
+                            opener.document.getElementById('allowPushToRemote').checked = false; 
+                            opener.document.getElementById('allowPushToRemote').click(); 
+                            
+                            opener.document.getElementById('autoPushToRemote').checked = false; 
+                            opener.document.getElementById('autoPushToRemote').click(); 
+                            
+                            
                             window.close()"
                         >
                         Set as Remote
@@ -228,6 +238,16 @@
                             evt.innerHTML = 'Set';
                             evt.id = state.repoNumber + 20000;
                             opener._callback('setButtonClicked',evt);
+                            
+                            
+                            // Set default in Settings / Remote tab
+                            
+                            opener.document.getElementById('allowPushToRemote').checked = false; 
+                            opener.document.getElementById('allowPushToRemote').click(); 
+                            
+                            opener.document.getElementById('autoPushToRemote').checked = false; 
+                            opener.document.getElementById('autoPushToRemote').click(); 
+                            
                             
                             window.close()"
                         >
