@@ -9,16 +9,16 @@ TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 echo "TAG = $TAG"
 
 # 2) Release Title
-RELEASE_TITLE='Release 0.9.5'
+RELEASE_TITLE='Release 0.9.6'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-### Fifth release of pragma-git 
 
 Changes :
 
-* Fix workflow 1) create local repo, 2) create remote with github-button
-* Minor bug fixes : Add path separator in Settings info. Disallow multiple setting windows.
+* Moved autopush setting to Settings/Remote tab
+* Github wizard, defaults to allowing push to remote, and autopush.
+* Fixed crash on first install
 
 
 ___

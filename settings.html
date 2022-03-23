@@ -373,27 +373,7 @@
                         
                         <div id='warnThatLocalAuthorInfoMissing' class="red"> WARNING : Will use global Author's info because Author's name is missing</div>
                         
-                        
-       
-       
-                         <!--  Allow push to remote -->
-                        <input type="checkbox" id="allowPushToRemote" 
-                            onchange="_callback('localCheckboxChanged',this)
-                                        if (this.checked){
-                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
-                                        }else{
-                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                                        } 
-                            " 
-                            >
-                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
-                            
-      
-                         <!--  Auto-push to remote -->
-                        <div id = 'autoPushDiv'>
-                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
-                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
-                        </div>
+
                         
                         <!--  --no-ff merge (gitflow recommends this) -->
                         <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
@@ -500,21 +480,53 @@
                     <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 
-                         <p>
-                             For remote git services, enter remote URL manually for selected repository. <br>
-                             Format : <code>https://name:password@address</code> 
-                             (for token-based services, exchange name for token-name, and password for token) 
-                        </p> 
-                         <p>                            
-                             The password, and token, may be left out, and instead stored with the git credential manager.<br>
-                             Format : <code>https://name@address</code>  .
-                             If you have problems, fall back to method above.
-                         </p>                        
-                         
+                        
+                        Add URL in "Remote repository" field, for selected repository above <sup>*</sup>  <br>
+                        Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
+
                          <hr>
-                         <p>
-                             Help to setup or create Github repository : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
-                         </p>
+       
+                         <!--  Allow push to remote -->
+                        <input type="checkbox" id="allowPushToRemote" 
+                            onchange="_callback('localCheckboxChanged',this)
+                                        if (this.checked){
+                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                        }else{
+                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                                        } 
+                            " 
+                            >
+                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
+                            
+      
+                         <!--  Auto-push to remote -->
+                        <div id = 'autoPushDiv'>
+                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
+                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        </div>
+    
+                                              
+                        <hr>
+                                                 
+                        <div class="footnoteText">                  
+                            <p>
+                            <sup>*</sup>      
+                                 For remote git services, enter remote URL manually for selected repository. <br>
+                                 Format : <code>https://name:password@address</code> 
+                                 (for token-based services, exchange name for token-name, and password for token) 
+                            </p> 
+                             <p>                            
+                                 The password, and token, may be left out, and instead stored with the git credential manager.<br>
+                                 Format : <code>https://name@address</code>  .
+                                 If you have problems, fall back to method above.
+                             </p>   
+                            
+                        </div>
+                        
+                        
+   
+                         
+  
                           
                     </div>
                                         

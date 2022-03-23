@@ -187,9 +187,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Pragma-merge : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+        mkdir(SIGNALDIR); 
         
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
-        const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt';  
+        const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt'; 
         fs.writeFileSync(MAINLOGFILE,'', 'utf8'); // Clear log file
         
         pragmaLog('Initiating app.js');
@@ -322,6 +323,7 @@ async function _callback( name, event){
         if ( name.includes('key_up') || name.includes('-arrow') ){
             // Skip because annoyingly frequent when typing
         }else{
+            pragmaLog('-' );
             pragmaLog('_callback = ' + name + eventString);
         }
     }
