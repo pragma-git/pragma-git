@@ -210,6 +210,9 @@ async function _callback( name, event){
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
+            
+            // Switch to Remote  tab
+            document.getElementById('gitHubTab').click()
 
             break;
         }  
