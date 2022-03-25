@@ -2063,6 +2063,7 @@ async function _callback( name, event){
                 await addExistingRepo( folder); 
             }
         }catch(error){
+            displayLongAlert('Failed adding repo', error, 'error'); 
             console.log(error);
         }
 
