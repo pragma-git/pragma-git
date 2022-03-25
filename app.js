@@ -1108,8 +1108,13 @@ async function _callback( name, event){
         folder = localState.droppedRepoFolder;
         localState.droppedRepoFolder='';  // Clear
         
-        await simpleGitLog(folder).init( onInit );
-        function onInit(err, result) {}
+        try{
+            await simpleGitLog(folder).init( onInit );
+            function onInit(err, result) {}
+        }catch(err){
+            displayLongAlert('Failed initializing repo', err, 'error'); 
+            console.log(error);
+        }
         
         await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
         function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult;  }
@@ -4527,6 +4532,9 @@ function displayLongAlert(title, message, type){
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
                             cWindows.show();     
+                            
+                            // Workaround so it is not hidden by windows
+                            cWindows.setAlwaysOnTop(true); 
                         }
                     );
     
