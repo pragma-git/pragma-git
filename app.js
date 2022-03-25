@@ -4258,14 +4258,34 @@ function setButtonText(){  // Store or Commit, depending on setting for autopush
     }
          
 }
-async function getLatestRelease( url ){     
+async function getLatestRelease( url,  wantPreRelease){  
+    // getLatestRelease( RELEASE_URL, true)  // Get latest normal release
+    // getLatestRelease( RELEASE_URL, false) // Get latest pre-release
+
+    wantNormalRelease = !wantPreRelease;
 
     let outData; 
     
     await fetch(url)
     .then(response => response.json())
     .then(data => { 
+        // First guess (use if wanting prerelease; or nothing else found)
         outData = data[0];
+        
+        // Make sure it is a normal release
+        if (wantNormalRelease){
+            let i = 0;
+            while ( data[i].prerelease || (i < data.length)  ){
+                if ( data[i].prerelease == false ){
+                    outData = data[i];
+                    console.log('i = ' + i + ' data[i].tag_name = ' +  data[i].tag_name);
+                    break
+                }else{
+                    console.log('i = ' + i + ' data[i].tag_name = ' +  data[i].tag_name + '  (PRERELASE)');
+                }
+                i++; 
+            }
+        }
     });
     return outData; // outData.tag_name is latest release
 } 
@@ -5187,6 +5207,7 @@ function loadSettings(settingsFile){
 
         // Update
             state.ignoredVersion = setting( state_in.ignoredVersion, '0.0.0');
+            state.allowPrerelease = setting( state_in.allowPrerelease, false); // Don't user prerelases on github.  Set to true manually to override
             
         
         // Visual
@@ -5500,8 +5521,9 @@ window.onload = async function() {
   // New Release available
     let releaseData = 'could not determine';
     try{
-        let releaseData = await getLatestRelease( RELEASE_URL );
+        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
         localState.LATEST_RELEASE = await releaseData.tag_name;
+        console.log('Latest release = ' + localState.LATEST_RELEASE );
         
         localState.currentVersion = await require('./package.json').version;
         if ( localState.LATEST_RELEASE > localState.currentVersion){
