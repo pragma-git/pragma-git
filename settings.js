@@ -7,6 +7,7 @@ var os = require('os');
 var fs = require('fs');
 var util = require('./util_module.js'); // Pragma-git common functions
 const pathsep = require('path').sep;  // Os-dependent path separator
+const path = require('path');
 
 let simpleGit = require('simple-git');
 //function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
@@ -171,6 +172,34 @@ async function _callback( name, event){
             // Update cached branch list
             opener.cacheBranchList();
                 
+            break;
+        }
+        case 'droppedFolder': {
+            
+            try{
+                const item = event.dataTransfer.items[0];
+                const entry = item.webkitGetAsEntry();
+                    
+                var file = item.getAsFile().path;
+                file = file.replace(/(\r\n|\n|\r)/gm, ''); // Remove windows EOL characters
+                var folder = file; // Guess that a folder was dropped 
+            
+                if (entry.isFile) {
+                    folder = path.dirname(file); // Correct, because file was dropped
+                    console.log( 'Folder = ' + folder );
+                } 
+                
+                document.getElementById('addFolder').innerText=folder;
+                document.getElementById('cloneFolder').innerText = folder;               
+            }catch(err){
+                
+            }
+
+            
+            // Remove hover class
+            document.getElementById('addFolder').className = '';
+            document.getElementById('cloneFolder').className = '';
+                                    
             break;
         }
         case 'folderSelectButton' : {

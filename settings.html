@@ -143,6 +143,20 @@
     </style> 
 
 
+    <!-- Border for dropping folder-->
+
+    <style>
+        #addFolder, #cloneFolder { 
+            border-style:  solid;  
+            border-width: thin;
+        }
+        #addFolder.hover,  #cloneFolder.hover  { 
+            border-style:  dashed;  
+            border-width: medium;
+        }
+    </style>
+
+
     
 </head> 
 
@@ -415,7 +429,11 @@
                                 
                                 <tr class="tool">
                                     <td>
-                                        <textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder"></textarea>
+                                        <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) :" 
+                                            ondrop="_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; "
+                                        ></textarea>
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
@@ -458,7 +476,11 @@
   
                                 <tr class="tool">
                                     <td>
-                                        <textarea  id="addFolder" placeholder="Path to local folder"></textarea>
+                                        <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
+                                            ondrop = "_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; " 
+                                        ></textarea>
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
@@ -755,7 +777,35 @@
             closeWindow(window);
             }
         );
+    
     </script>
+    
+    
+        
+    <!-- Drop folder initiate script-->    
+    <script>
+    
+        //Same as $(document).ready();
+        function ready(fn) {
+            if (document.readyState != 'loading'){
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+    
+        //When the page has loaded, run this code
+        ready( function(){
+            // prevent default behavior from changing page on dropped file
+            window.ondragover = function(e) { e.preventDefault(); return false };
+            
+            // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
+            window.ondrop = function(e) { e.preventDefault(); return false };
+
+        });
+    </script>
+
+    
    
 </body>
 
