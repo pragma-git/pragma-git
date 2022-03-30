@@ -1894,9 +1894,11 @@ function drawBranchColorHeader( branchNames){
             onclick = "
                 var el=document.getElementById( '${mapVisibleBranchToTopCommit.get(key)}' );
                 var desc=document.getElementById( 'desc_${mapVisibleBranchToTopCommit.get(key)}' );
+                var img=document.getElementById( 'img_${mapVisibleBranchToTopCommit.get(key)}' );
                 el.scrollIntoView(true);
                 blink(el)
                 blink(desc)
+                blink(img)
         "> 
             <img class="node" src="${colorFileName}"> 
             <pre>${key} </pre>
@@ -1913,7 +1915,7 @@ function drawBranchColorHeader( branchNames){
     }
     
     // Add text below table
-    html += '<span class="footnoteText"> <br>(Click description to find branch)</span>';
+    html += '<span class="footnoteText"> <br>(Click shows top of branch)</span>';
     
     // Set HTML
     document.getElementById('colorHeader').innerHTML = html;
