@@ -2034,7 +2034,7 @@ async function _callback( name, event){
         e.preventDefault();
         
         // Reset css 
-        document.getElementById('content').className = '';
+        document.getElementById('message').classList.remove('hover');
         
         const item = e.dataTransfer.items[0];
         const entry = item.webkitGetAsEntry();
