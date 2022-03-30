@@ -4929,7 +4929,7 @@ function updateContentStyle() {
 
     
     // Set content size
-    var top = tb_height;
+    var top = tb_height + 3;
     var contentStyle = "position: absolute; ";
     contentStyle += "left: 0px; ";
     contentStyle += "top: " + top + "px; ";

@@ -10,11 +10,22 @@
     <script src="app.js"></script>
     
 
+    
+
     <!-- Border for dropping folder-->
+
+
     <style>
-        #content { border: 3px solid #dddddd; }
-        #content.hover  { border: 3px dashed #333; }
+        #message { 
+            border-style:  solid;  
+            border-width: thin;
+        }
+        #message.hover { 
+            border-style:  dashed; 
+            border-width: medium; 
+        }
     </style>
+
 
 
 </head>
@@ -732,9 +743,9 @@
             // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
             window.ondrop = function(e) { e.preventDefault(); return false };
         
-            const holder = document.getElementById('content');
-            holder.ondragover = function () { this.className = 'hover'; return false; };
-            holder.ondragleave = function () { this.className = ''; return false; };
+            const holder = document.getElementById('message');
+            holder.ondragover = function () { document.getElementById('message').classList.add('hover'); return false; };
+            holder.ondragleave = function () { document.getElementById('message').classList.remove('hover'); return false; };
             
             holder.ondrop = function(e) {  _callback('file-dropped', e); return false }; // See app.js
         
