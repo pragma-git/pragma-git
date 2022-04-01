@@ -253,6 +253,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         }catch (err){
             
         }
+        
+        var updateIsRunning = false;
 
 
     // Inititate listening to Pragma-merge start signal
@@ -337,7 +339,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-repo': {
-        repoClicked(event);
+        repoClicked(event);  // Menu or click to switch -- if Menu, then mode is kept until menu-select
         clearFindFields();
         
         // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
@@ -355,6 +357,12 @@ async function _callback( name, event){
             
         await updateGraphWindow();
         await gitStashMap(state.repos[state.repoNumber].localFolder);
+
+        // HISTORY kept if menu -- don't update until menu-item selected
+        if (getMode() !== 'HISTORY'){
+            await _setMode('UNKNOWN');
+            await _update2();
+        }
         
         break;
       }
@@ -378,7 +386,7 @@ async function _callback( name, event){
         
         clearFindFields();
         localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
-        _setMode('UNKNOWN');
+        //_setMode('UNKNOWN');
 
         
         // Update repo in settings_win 
@@ -393,6 +401,11 @@ async function _callback( name, event){
 
         await updateGraphWindow();
         updateSettingsWindow();
+        
+        //if (getMode() !== 'HISTORY'){
+            await _setMode('UNKNOWN');
+            await _update2();
+        //}
        
         break;
       }
@@ -2189,6 +2202,27 @@ async function _loopTimer( timerName, delayInMs){
     
 }
 async function _update(){ 
+    if (updateIsRunning){
+        console.warn('skiped _update from ' );
+        console.warn(this);
+        return;
+    }
+    updateIsRunning = true;
+    try{
+        await _update2();
+    }catch(err){
+        
+    }
+    updateIsRunning = false;
+}
+    
+async function _update2(){ 
+    
+    // Turn on and off local logging
+    function log( text){
+        console.log(text);
+    }
+    
     var startTime = performance.now();
     // Bail out if isPaused = true
     if(isPaused) {
@@ -2245,8 +2279,8 @@ async function _update(){
         await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
         function onCheckIsRepo(err, checkResult) { 
             isRepo = checkResult
-            //console.log(' ');
-            //console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+            log(' ');
+            log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
         }
         
         if (!isRepo) {
@@ -2391,7 +2425,7 @@ async function _update(){
                 await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
                 function onStash(err, result ){  
                     stash_status = result 
-                    //console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                    log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
                 }
                 
                 
@@ -2472,7 +2506,7 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                //console.log(`_update took ${ performance.now() - startTime} ms`); 
+                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2552,7 +2586,7 @@ async function _update(){
         }    
     // return
     
-        //console.log(`_update took ${ performance.now() - startTime} ms`); 
+        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
 
 
