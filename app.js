@@ -2203,8 +2203,7 @@ async function _loopTimer( timerName, delayInMs){
 }
 async function _update(){ 
     if (updateIsRunning){
-        console.warn('skiped _update from ' );
-        console.warn(this);
+        console.warn('skiped _update' );
         return;
     }
     updateIsRunning = true;
