@@ -719,13 +719,13 @@ async function closeWindow(){
     
     // Set Git author name and email (stored in git, not in settings)
     try{
-        await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
+        gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
     }catch(err){
         console.log('Failed storing git user.name');
     }
     
     try{  
-        await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
+        gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
     }catch(err){
         console.log('Failed storing git user.email');
     }
@@ -737,6 +737,7 @@ async function closeWindow(){
     
     // Make global when git author's information missing
     await fixEmptyLocalAuthors();
+    await opener.saveSettings();
     
  
 }
