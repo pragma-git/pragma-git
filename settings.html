@@ -220,16 +220,22 @@
                     <label for="displayToolTip" id="labelForDisplayToolTip"> Show tooltips in main window</label><br><br>  
     
      
-                    Window scaling  (restart needed): <br>   
+                    Window scaling : <br>   
                     <!--  Zoom -->
-                    <input id="zoomMain" type="text" style="margin-top: 3px" size="3"/>&nbsp;
-                    <label for="zoomMain"> Scale-factor for main window</label>
+                    <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
+                        onchange="global.state.zoomMain = this.value;
+                            opener.saveSettings();
+                            opener.win.reload()"
+                        />&nbsp;
+                    <label for="zoomMain"> Main window</label>
                     
                     <br> 
                     
-                    <input id="zoom" type="text" style="margin-top: 3px"  size="3"/>&nbsp;
-                    <label for="zoom"> Scale-factor for other windows</label>
+                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" onchange="global.state.zoom = this.value;"/>&nbsp;
+                    <label for="zoom"> Other windows</label>
     
+                    <br>
+                    <br>
     
                     
                 <h3>Git Settings</h3>  
