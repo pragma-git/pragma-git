@@ -198,11 +198,11 @@
                 
                     <!--  Dark mode -->
                     Dark mode setting (restart needed): <br>
-                    <input type="radio" id="system" name="darkmode" value="system">
+                    <input type="radio" id="system" name="darkmode" value="system" onclick="_callback('visualModeChanged',this)">
                     <label for="system">System setting</label><br>
-                    <input type="radio" id="light" name="darkmode" value="light">
+                    <input type="radio" id="light" name="darkmode" value="light" onclick="_callback('visualModeChanged',this)">
                     <label for="light">Light mode</label><br>
-                    <input type="radio" id="dark" name="darkmode" value="dark">
+                    <input type="radio" id="dark" name="darkmode" value="dark" onclick="_callback('visualModeChanged',this)">
                     <label for="dark">Dark mode</label><br><br> 
                        
                     

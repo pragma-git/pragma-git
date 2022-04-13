@@ -63,6 +63,19 @@ async function _callback( name, event){
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             break;
         } 
+        case 'visualModeChanged': {
+            console.log('visualModeChanged');
+            console.log(event);
+            global.state.darkmode = id;
+            opener.pragmaLog('   settings radiobutton ' + id + ' = ' + value);
+            
+            // Reload main if Dark mode change
+            opener.updateWithNewSettings();
+            opener.saveSettings();
+            opener.win.reload();
+            
+            break;
+        }    
         case 'localCheckboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
