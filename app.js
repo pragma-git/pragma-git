@@ -353,10 +353,6 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchList();
-            
-        await updateGraphWindow();
-        await gitStashMap(state.repos[state.repoNumber].localFolder);
 
         // HISTORY kept if menu -- don't update until menu-item selected
         if (getMode() !== 'HISTORY'){
