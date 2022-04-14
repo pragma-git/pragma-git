@@ -1424,6 +1424,11 @@ async function _callback( name, event){
             pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL );
             pragmaLog(' ');
             gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
+                        
+			cacheBranchList();
+            
+			await updateGraphWindow();
+			await gitStashMap(state.repos[state.repoNumber].localFolder);
         }
         
         // Update remote info immediately
