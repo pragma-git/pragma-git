@@ -83,7 +83,7 @@ async function injectIntoNotesJs(document) {
     // Initiate Editor
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
     
-    //const Editor = require('@toast-ui/editor'); 
+    const Editor = require('@toast-ui/editor'); 
     editor =  new Editor( options);
 
 
@@ -104,6 +104,12 @@ async function injectIntoNotesJs(document) {
     repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
     document.title = `Notes  —  ${repoName}  `;
 
+    if (global.localState.dark){
+        document.getElementById('editor').classList.add('dark');
+        
+        document.body.classList.add('dark');
+        document.body.classList.remove('light');
+    }
 
 
 };
