@@ -83,7 +83,6 @@ async function injectIntoNotesJs(document) {
     // Initiate Editor
     options.initialEditType = global.state.notesWindow.editMode; // Set wysiwyg or markdown
     
-    const Editor = require('@toast-ui/editor'); 
     editor =  new Editor( options);
 
 
@@ -110,7 +109,7 @@ async function injectIntoNotesJs(document) {
         document.body.classList.add('dark');
         document.body.classList.remove('light');
     }
-
+    //window.document.body.style.zoom = global.state.zoom;
 
 };
 
