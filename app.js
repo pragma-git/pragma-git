@@ -1390,7 +1390,7 @@ async function _callback( name, event){
                                 label: myEvent.selectedRepo, 
                                 type: 'checkbox',
                                 checked : true,
-                                enabled: false,
+                                enabled: true,
                                 click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                             } 
                         )
@@ -4084,7 +4084,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         label : branchNames[i], 
                         type: 'checkbox',
                         checked : isCurrentBranch,
-                        enabled: !isCurrentBranch,
+                        enabled: true,
                         click :  () => { _callback(callbackName,myEvent);}  
                     }));    
                 }
@@ -4105,7 +4105,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                                 label: secondPart,
                                 type: 'checkbox',
                                 checked : isCurrentBranch,
-                                enabled: !isCurrentBranch,  
+                                enabled: true,  
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
