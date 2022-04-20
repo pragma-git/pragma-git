@@ -247,6 +247,7 @@ function resize() {
     }
     document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
 
+
 }
 
 // Redraw 
