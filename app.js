@@ -4084,7 +4084,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         label : branchNames[i], 
                         type: 'checkbox',
                         checked : isCurrentBranch,
-                        enabled: true,
+                        enabled: !isCurrentBranch,
                         click :  () => { _callback(callbackName,myEvent);}  
                     }));    
                 }
@@ -4105,7 +4105,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                                 label: secondPart,
                                 type: 'checkbox',
                                 checked : isCurrentBranch,
-                                enabled: true,  
+                                enabled: !isCurrentBranch,  
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
