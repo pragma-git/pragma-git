@@ -22,6 +22,8 @@ window.setInterval(save, 30 * 1000 );
 async function injectIntoNotesJs(document) {
     win = gui.Window.get();
     
+    document.body.style.zoom = global.state.zoom;
+    
     filePath = global.arguments[0];
     global.arguments =[]; // Empty this
     
