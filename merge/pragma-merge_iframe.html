@@ -172,7 +172,12 @@
 
     
      <style>
-
+        :root {
+              --windowScaling: 1;
+              --vw: 100vw;
+              --vh: 100vh;
+        }     
+            
         html, body {
             margin: 0;
             padding: 0;
@@ -312,7 +317,8 @@
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
-
+        
+        let root = document.documentElement;
         root.style.setProperty('--windowScaling', global.state.zoom);
         
     </script>

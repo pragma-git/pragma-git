@@ -17,6 +17,7 @@
                 border : 0px;
                 transform: scale( var(--windowScaling) );
                 transform-origin: top left;
+                position: absolute;
             }
 
         </style>
@@ -27,8 +28,8 @@
             
             
             root.style.setProperty('--windowScaling', global.state.zoom);
-            root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') );
-            root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') );
+            root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
+            root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
             
             
             //document.getElementById('iframe').
@@ -53,7 +54,7 @@
         
         
         
-        <iframe id="iframe" src="/pragma-merge_iframe.html"></iframe>
+        <iframe id="iframe" src="pragma-merge_iframe.html"></iframe>
             
             
             
