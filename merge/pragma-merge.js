@@ -49,7 +49,7 @@ console.log('$MERGED = ' + MERGED);
 process.chdir( ROOT);  // Now all relative paths works
 
 // HTML Title
-const HTML_TITLE = 'File &nbsp;&nbsp; = &nbsp;&nbsp;' + MERGED
+const HTML_TITLE = 'File    =   ' + MERGED
 
 // Modified from GUI
 var connect = null; // null or "align"
@@ -70,7 +70,7 @@ dv.panes = panes; // Initial value
 
         
 // Define help icon
-const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="opener._callback('help',{name: 'Merge Window'})">`;
+const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
 
 //-----------
 // FUNCTIONS
@@ -86,7 +86,7 @@ function injectIntoJs(document) {
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
     
-    document.getElementById('title').innerHTML = HTML_TITLE;
+    parent.document.title = HTML_TITLE;
     
 
     // Set saved gui mode settings
@@ -483,7 +483,7 @@ function readOnlyOption( readonly){
         // Make readonly
         options.revertButtons = false;
         options.readOnly = true; 
-        document.getElementById('title').innerHTML = HTML_TITLE + ' &nbsp;&nbsp;(READ-ONLY VIEW)';
+        parent.document.title = `${HTML_TITLE}    ( READ-ONLY VIEW )`;
         
         // Hide Save and cancel buttons
         document.getElementById('cancel').style.visibility = 'collapse';
@@ -582,7 +582,7 @@ function closeWindowNicely(exitCode){
     
     
     // Remove from menu
-    opener.deleteWindowMenu('Pragma-merge');
+    parent.opener.deleteWindowMenu('Pragma-merge');
 
     win.close();
 }
