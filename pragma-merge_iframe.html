@@ -172,6 +172,7 @@
 
     
      <style>
+
         html, body {
             margin: 0;
             padding: 0;
@@ -311,8 +312,9 @@
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
-        //window.document.body.style.zoom = global.state.zoom;
-        //window.document.body.style.zoom = 1  // Fix, because selection becomes crazy on other zoom levels
+
+        root.style.setProperty('--windowScaling', global.state.zoom);
+        
     </script>
 
 

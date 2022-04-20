@@ -4,16 +4,37 @@
         <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
         
         
-        <style>       
+        <style>           
+            :root {
+              --windowScaling: 1;
+              --vw: 100vw;
+              --vh: 100vh;
+            }     
+            
             iframe {
-                width: 125vw !important;
-                height: 125vh !important;;
+                width:  var(--vw);
+                height: var(--vh);
                 border : 0px;
-                transform: scale(0.8);
+                transform: scale( var(--windowScaling) );
                 transform-origin: top left;
             }
 
         </style>
+        
+        
+        <script>
+            let root = document.documentElement;
+            
+            
+            root.style.setProperty('--windowScaling', global.state.zoom);
+            root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') );
+            root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') );
+            
+            
+            //document.getElementById('iframe').
+        </script>      
+        
+        
     </head>
 
 
@@ -27,7 +48,28 @@
             }
         </script>
         
+        
+  
+        
+        
+        
         <iframe id="iframe" src="/pragma-merge_iframe.html"></iframe>
+            
+            
+            
+        <script>
+            window.addEventListener('DOMContentLoaded', (event) => {
+                    let root = document.documentElement;
+                    
+                    
+                    root.style.setProperty('--windowScaling', global.state.zoom);
+                    root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
+                    root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
+            
+                }
+            );  
+        </script>  
+            
     
     </body>    
 </html>
