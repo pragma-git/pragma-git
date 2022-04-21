@@ -47,8 +47,6 @@
             color: var(--header-color);
         }
     
-    
-        span, 
         .te-editor, 
         .toastui-editor-contents h5,  
         .toastui-editor-contents h6,   
@@ -75,6 +73,9 @@
             color: var(--header-color);
         }
         
+        span{
+            color: var(--body-text);
+        }
         
         a{
             cursor: pointer;  /* because Toast UI have an edit-cursor, and I have overriden the edit function */ 
@@ -83,7 +84,23 @@
         img{
             filter: invert( 0% );
         }
-    
+            
+        /* table contextual menu, images better contrast */ 
+        .toastui-editor-context-menu .add-row-up::before, 
+        .toastui-editor-context-menu .add-row-down::before,
+        .toastui-editor-context-menu .remove-row::before,
+        .toastui-editor-context-menu .add-column-left::before,
+        .toastui-editor-context-menu .add-column-right::before,
+        .toastui-editor-context-menu .remove-column::before,
+        .toastui-editor-context-menu .align-column-left::before,
+        .toastui-editor-context-menu .align-column-center::before,
+        .toastui-editor-context-menu .align-column-right::before,
+        .toastui-editor-context-menu .remove-table::before 
+        {
+          filter: invert( 100% );
+        }
+ 
+       
     
     /* Smaller icons and toolbar height */ 
     
