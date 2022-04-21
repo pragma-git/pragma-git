@@ -95,7 +95,7 @@ async function injectIntoNotesJs(document) {
     button2.addEventListener('click', () => {
         let evt = {}; 
         evt.name='Notes';
-        opener._callback('help',evt); 
+        parent.opener._callback('help',evt); 
     });       
     
     
