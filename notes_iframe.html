@@ -175,8 +175,12 @@
     }
     
     
-     /* Hide tooltip border (hack, I suspect tooltip is solid background overwritten by unknown text css) */   
-    .toastui-editor-tooltip .toastui-editor-tooltip .arrow{
+    /* Hide tooltip border (hack, I suspect tooltip is solid background overwritten by unknown text css) */   
+    .toastui-editor-tooltip {
+        background-color: var(--body-background);
+        color: var(--body-background);
+    }       
+    .toastui-editor-tooltip .arrow{
         background-color: var(--body-background);
         color: var(--body-background);
     }
