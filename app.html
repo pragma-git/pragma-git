@@ -655,14 +655,18 @@
     <!-- Git not installed alert -->   
   
     <dialog id="gitNotInstalledAlert"  class="error">  
-        <b>ERROR -- Cannot find "git" !</b><br>
-            Please make sure "git" is installed. <br>
-            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_hover.png"  height="17" width="17">  in top-left corner of the main window)<br>
+        <b>ERROR -- Cannot find "git" </b><br>
+        <br>
+            Download and install "git" from : 
+            
+            <a href="https://git-scm.com/downloads" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">https://git-scm.com/downloads</a>
+
+            <br>
             <br>
         
         <button 
-            onclick="document.getElementById('gitNotInstalledAlert').close();">
-            OK
+            onclick="document.getElementById('gitNotInstalledAlert').close(); win.close()">
+            Close Pragma-git
         </button>   
         
     </dialog>      
