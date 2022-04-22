@@ -205,12 +205,13 @@
       --volname "Mac-Pragma-git-Installer" \
       --volicon "../../Pragma-git/images/icon_installer.icns" \
       --window-pos 200 120 \
-      --window-size 500 320 \
+      --window-size 500 520 \
       --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
       --icon-size 80 \
       --icon "Pragma-git.app"  125 175 \
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
+      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
       --icon ".fseventsd"  1000 190 \
       --icon ".VolumeIcon.icns"  1000 190 \
       "$(echo "$DIR.dmg")" \
