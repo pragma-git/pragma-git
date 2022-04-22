@@ -9,20 +9,17 @@ TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
 echo "TAG = $TAG"
 
 # 2) Release Title
-RELEASE_TITLE='Major rewrite, including new Graph'
+RELEASE_TITLE='Release 0.9.6'
 
 # 3) Release Notes (edit first part before line)
 read -r -d '' RELEASE_NOTES << ---
-### Changes in this release : 
 
-Major rewrite and minor bug fixes.  Rewrite includes:
-- new Graph
-- new Settings layout
-  - gitignore editor
-  - github helper
-- Notes migrated to toastUI 3.0
-- Search in all windows
-- Help in all windows
+Changes :
+
+* Moved autopush setting to Settings/Remote tab
+* Github wizard, defaults to allowing push to remote, and autopush.
+* Fixed crash on first install
+
 
 ___
 ### About Pragma-git
@@ -33,8 +30,6 @@ The aim with Pragma-git is to be
 
 Read more on the home page : https://pragma-git.github.io
 
----
-
 ### Quick Install
 
 Download the *one* installer that matches your system from the "__*assets*__" link below: 
@@ -42,11 +37,9 @@ Download the *one* installer that matches your system from the "__*assets*__" li
 - __mac-x64.dmg__ (Mac 64 bit)
 - __linux-x64.deb__ (Linux 64 bit for Ubuntu, Linux Mint, Debian, ...)
 - __linux-x64.rpm__ (Linux 64 bit RedHat, Fedora, CentOS, openSUSE, ...)
-- __win-x86__ (Windows 32 bit)
 
 [Install instructions](https://pragma-git.github.io#installation)
-
-___
+---
 
 # NOTE : If header name in https://pragma-git.github.io is changed, its element id will be changed.  
 # Modify link above from "installation" to new id (the id can be found by from html-source of https://pragma-git.github.io).
@@ -79,8 +72,6 @@ REPO=pragma-git/pragma-git
 
     echo 'UPLOAD MAC'
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
-    echo 'UPLOAD WIN32'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls win32/Pragma-git*.exe)" 
     echo 'UPLOAD WIN64'
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
     echo 'UPLOAD LINUX DEB'

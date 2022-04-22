@@ -155,7 +155,7 @@
 
     # Build All platforms
     ~/Documents/Projects/Pragma-git/pragma-git/node_modules/.bin/build \
-    --tasks win-x86,win-x64,linux-x64,mac-x64 \
+    --tasks win-x64,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
     --name Pragma-git  \
     --concurrent true  \
@@ -243,23 +243,6 @@
     -DOUTPUT="win64/$DIR.exe" \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
-    windows_installer.nsi
-
-    tput setaf $COLOR; echo ' '
-    echo '===================='
-    echo 'INSTALLER WIN 32-BIT'
-    echo '===================='
-    tput sgr0
-    
-    rm -r ../dist/win32
-    mkdir ../dist/win32
-
-    DIR=$(ls -1 ../dist/|grep  'win-x86')
-    makensis \
-    -DEXEFOLDER=$DIR \
-    -DOUTPUT="win32/$DIR.exe" \
-    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
-    -DPROGRAMFILESFOLDER='$PROGRAMFILES32' \
     windows_installer.nsi
     
 
