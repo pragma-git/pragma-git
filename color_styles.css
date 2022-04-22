@@ -36,6 +36,8 @@
     --table-header-color: #DDDDDD;              /* (text ) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
+    --notes-tooltip-background: #333;
+    --notes-tooltip-text: white;
     
     /* Main */
     --main-background: var(--body-background); 
@@ -81,7 +83,8 @@
     --table-header-color: var(--text);           /* (White text and line) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
-    
+    --notes-tooltip-background:  #333;
+    --notes-tooltip-text: white;
     
     /* Merge */
     --merge-color: black;

@@ -105,7 +105,8 @@
     /* Smaller icons and toolbar height */ 
     
         .toastui-editor-toolbar-icons{
-            zoom: 0.8;
+            transform:scale(0.8); 
+            transform-origin: top left;
         }   
         
         .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
@@ -227,14 +228,20 @@
     
     
     /* Hide tooltip border (hack, I suspect tooltip is solid background overwritten by unknown text css) */
-       
+        
         .toastui-editor-tooltip {
-            background-color: var(--body-background);
-            color: var(--body-background);
-        }       
+            color: var(--notes-tooltip-text);
+            background-color: var(--notes-tooltip-background);
+        }   
+             
+        .toastui-editor-tooltip span{
+            color: var(--notes-tooltip-text);
+            background-color: var(--notes-tooltip-background);
+        }   
+            
         .toastui-editor-tooltip .arrow{
-            background-color: var(--body-background);
-            color: var(--body-background);
+            color: var(--notes-tooltip-background);
+            background-color: var(--notes-tooltip-background);
         }
 
 
