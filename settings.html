@@ -143,6 +143,20 @@
     </style> 
 
 
+    <!-- Border for dropping folder-->
+
+    <style>
+        #addFolder, #cloneFolder { 
+            border-style:  solid;  
+            border-width: thin;
+        }
+        #addFolder.hover,  #cloneFolder.hover  { 
+            border-style:  dashed;  
+            border-width: medium;
+        }
+    </style>
+
+
     
 </head> 
 
@@ -184,11 +198,11 @@
                 
                     <!--  Dark mode -->
                     Dark mode setting (restart needed): <br>
-                    <input type="radio" id="system" name="darkmode" value="system">
+                    <input type="radio" id="system" name="darkmode" value="system" onclick="_callback('visualModeChanged',this)">
                     <label for="system">System setting</label><br>
-                    <input type="radio" id="light" name="darkmode" value="light">
+                    <input type="radio" id="light" name="darkmode" value="light" onclick="_callback('visualModeChanged',this)">
                     <label for="light">Light mode</label><br>
-                    <input type="radio" id="dark" name="darkmode" value="dark">
+                    <input type="radio" id="dark" name="darkmode" value="dark" onclick="_callback('visualModeChanged',this)">
                     <label for="dark">Dark mode</label><br><br> 
                        
                     
@@ -206,16 +220,22 @@
                     <label for="displayToolTip" id="labelForDisplayToolTip"> Show tooltips in main window</label><br><br>  
     
      
-                    Window scaling  (restart needed): <br>   
+                    Window scaling : <br>   
                     <!--  Zoom -->
-                    <input id="zoomMain" type="text" style="margin-top: 3px" size="3"/>&nbsp;
-                    <label for="zoomMain"> Scale-factor for main window</label>
+                    <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
+                        onchange="global.state.zoomMain = this.value;
+                            opener.saveSettings();
+                            opener.win.reload()"
+                        />&nbsp;
+                    <label for="zoomMain"> Main window</label>
                     
                     <br> 
                     
-                    <input id="zoom" type="text" style="margin-top: 3px"  size="3"/>&nbsp;
-                    <label for="zoom"> Scale-factor for other windows</label>
+                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" onchange="global.state.zoom = this.value;"/>&nbsp;
+                    <label for="zoom"> Other windows</label>
     
+                    <br>
+                    <br>
     
                     
                 <h3>Git Settings</h3>  
@@ -415,7 +435,11 @@
                                 
                                 <tr class="tool">
                                     <td>
-                                        <textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder"></textarea>
+                                        <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) :" 
+                                            ondrop="_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; "
+                                        ></textarea>
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
@@ -458,7 +482,11 @@
   
                                 <tr class="tool">
                                     <td>
-                                        <textarea  id="addFolder" placeholder="Path to local folder"></textarea>
+                                        <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
+                                            ondrop = "_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; " 
+                                        ></textarea>
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
@@ -482,7 +510,6 @@
                     <div class="tool-content " id="gitHubDiv" > 
                         
                         Add URL in "Remote repository" field, for selected repository above <sup>*</sup>  <br>
-                        Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
 
                          <hr>
        
@@ -523,6 +550,8 @@
                             
                         </div>
                         
+                        
+                        Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
                         
    
                          
@@ -754,7 +783,35 @@
             closeWindow(window);
             }
         );
+    
     </script>
+    
+    
+        
+    <!-- Drop folder initiate script-->    
+    <script>
+    
+        //Same as $(document).ready();
+        function ready(fn) {
+            if (document.readyState != 'loading'){
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+    
+        //When the page has loaded, run this code
+        ready( function(){
+            // prevent default behavior from changing page on dropped file
+            window.ondragover = function(e) { e.preventDefault(); return false };
+            
+            // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
+            window.ondrop = function(e) { e.preventDefault(); return false };
+
+        });
+    </script>
+
+    
    
 </body>
 

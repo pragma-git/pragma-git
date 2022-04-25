@@ -253,6 +253,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         }catch (err){
             
         }
+        
+        var updateIsRunning = false;
 
 
     // Inititate listening to Pragma-merge start signal
@@ -337,7 +339,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-repo': {
-        repoClicked(event);
+        repoClicked(event);  // Menu or click to switch -- if Menu, then mode is kept until menu-select
         clearFindFields();
         
         // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
@@ -351,10 +353,12 @@ async function _callback( name, event){
         }catch(err){ 
         }
         
-        cacheBranchList();
-            
-        await updateGraphWindow();
-        await gitStashMap(state.repos[state.repoNumber].localFolder);
+
+        // HISTORY kept if menu -- don't update until menu-item selected
+        if (getMode() !== 'HISTORY'){
+            await _setMode('UNKNOWN');
+            await _update2();
+        }
         
         break;
       }
@@ -378,7 +382,7 @@ async function _callback( name, event){
         
         clearFindFields();
         localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
-        _setMode('UNKNOWN');
+        //_setMode('UNKNOWN');
 
         
         // Update repo in settings_win 
@@ -393,6 +397,11 @@ async function _callback( name, event){
 
         await updateGraphWindow();
         updateSettingsWindow();
+        
+        //if (getMode() !== 'HISTORY'){
+            await _setMode('UNKNOWN');
+            await _update2();
+        //}
        
         break;
       }
@@ -685,7 +694,7 @@ async function _callback( name, event){
         // If window open, redraw and bail out
         if ( localState.graphWindow == true ){
             graph_win.window.injectIntoJs(graph_win.window.document);
-            graph_win.focus();
+            //graph_win.focus();
             return
         }
         
@@ -1108,8 +1117,13 @@ async function _callback( name, event){
         folder = localState.droppedRepoFolder;
         localState.droppedRepoFolder='';  // Clear
         
-        await simpleGitLog(folder).init( onInit );
-        function onInit(err, result) {}
+        try{
+            await simpleGitLog(folder).init( onInit );
+            function onInit(err, result) {}
+        }catch(err){
+            displayLongAlert('Failed initializing repo', err, 'error'); 
+            console.log(error);
+        }
         
         await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
         function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult;  }
@@ -1376,7 +1390,7 @@ async function _callback( name, event){
                                 label: myEvent.selectedRepo, 
                                 type: 'checkbox',
                                 checked : true,
-                                enabled: false,
+                                enabled: true,
                                 click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                             } 
                         )
@@ -1410,6 +1424,11 @@ async function _callback( name, event){
             pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL );
             pragmaLog(' ');
             gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
+                        
+			cacheBranchList();
+            
+			await updateGraphWindow();
+			await gitStashMap(state.repos[state.repoNumber].localFolder);
         }
         
         // Update remote info immediately
@@ -2029,7 +2048,7 @@ async function _callback( name, event){
         e.preventDefault();
         
         // Reset css 
-        document.getElementById('content').className = '';
+        document.getElementById('message').classList.remove('hover');
         
         const item = e.dataTransfer.items[0];
         const entry = item.webkitGetAsEntry();
@@ -2063,6 +2082,7 @@ async function _callback( name, event){
                 await addExistingRepo( folder); 
             }
         }catch(error){
+            displayLongAlert('Failed adding repo', error, 'error'); 
             console.log(error);
         }
 
@@ -2183,6 +2203,26 @@ async function _loopTimer( timerName, delayInMs){
     
 }
 async function _update(){ 
+    if (updateIsRunning){
+        console.warn('skiped _update' );
+        return;
+    }
+    updateIsRunning = true;
+    try{
+        await _update2();
+    }catch(err){
+        
+    }
+    updateIsRunning = false;
+}
+    
+async function _update2(){ 
+    
+    // Turn on and off local logging
+    function log( text){
+        console.log(text);
+    }
+    
     var startTime = performance.now();
     // Bail out if isPaused = true
     if(isPaused) {
@@ -2239,8 +2279,8 @@ async function _update(){
         await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
         function onCheckIsRepo(err, checkResult) { 
             isRepo = checkResult
-            //console.log(' ');
-            //console.log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+            log(' ');
+            log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
         }
         
         if (!isRepo) {
@@ -2385,7 +2425,7 @@ async function _update(){
                 await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
                 function onStash(err, result ){  
                     stash_status = result 
-                    //console.log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                    log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
                 }
                 
                 
@@ -2466,7 +2506,7 @@ async function _update(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                //console.log(`_update took ${ performance.now() - startTime} ms`); 
+                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2546,7 +2586,7 @@ async function _update(){
         }    
     // return
     
-        //console.log(`_update took ${ performance.now() - startTime} ms`); 
+        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
 
 
@@ -4258,14 +4298,34 @@ function setButtonText(){  // Store or Commit, depending on setting for autopush
     }
          
 }
-async function getLatestRelease( url ){     
+async function getLatestRelease( url,  wantPreRelease){  
+    // getLatestRelease( RELEASE_URL, true)  // Get latest normal release
+    // getLatestRelease( RELEASE_URL, false) // Get latest pre-release
+
+    wantNormalRelease = !wantPreRelease;
 
     let outData; 
     
     await fetch(url)
     .then(response => response.json())
     .then(data => { 
+        // First guess (use if wanting prerelease; or nothing else found)
         outData = data[0];
+        
+        // Make sure it is a normal release
+        if (wantNormalRelease){
+            let i = 0;
+            while ( data[i].prerelease || (i < data.length)  ){
+                if ( data[i].prerelease == false ){
+                    outData = data[i];
+                    console.log('i = ' + i + ' data[i].tag_name = ' +  data[i].tag_name);
+                    break
+                }else{
+                    console.log('i = ' + i + ' data[i].tag_name = ' +  data[i].tag_name + '  (PRERELASE)');
+                }
+                i++; 
+            }
+        }
     });
     return outData; // outData.tag_name is latest release
 } 
@@ -4506,6 +4566,9 @@ function displayLongAlert(title, message, type){
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
                             cWindows.show();     
+                            
+                            // Workaround so it is not hidden by windows
+                            cWindows.setAlwaysOnTop(true); 
                         }
                     );
     
@@ -4900,7 +4963,7 @@ function updateContentStyle() {
 
     
     // Set content size
-    var top = tb_height;
+    var top = tb_height + 3;
     var contentStyle = "position: absolute; ";
     contentStyle += "left: 0px; ";
     contentStyle += "top: " + top + "px; ";
@@ -5187,13 +5250,14 @@ function loadSettings(settingsFile){
 
         // Update
             state.ignoredVersion = setting( state_in.ignoredVersion, '0.0.0');
+            state.allowPrerelease = setting( state_in.allowPrerelease, false); // Don't user prerelases on github.  Set to true manually to override
             
         
         // Visual
             console.log('- setting visual settings');
             state.darkmode = setting( state_in.darkmode, 'system');
             
-            state.alwaysOnTop = setting( state_in.alwaysOnTop, true);
+            state.alwaysOnTop = setting( state_in.alwaysOnTop, false);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
             state.displayToolTip = setting( state_in.displayToolTip, true);
             
@@ -5500,8 +5564,9 @@ window.onload = async function() {
   // New Release available
     let releaseData = 'could not determine';
     try{
-        let releaseData = await getLatestRelease( RELEASE_URL );
+        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
         localState.LATEST_RELEASE = await releaseData.tag_name;
+        console.log('Latest release = ' + localState.LATEST_RELEASE );
         
         localState.currentVersion = await require('./package.json').version;
         if ( localState.LATEST_RELEASE > localState.currentVersion){

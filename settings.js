@@ -7,6 +7,7 @@ var os = require('os');
 var fs = require('fs');
 var util = require('./util_module.js'); // Pragma-git common functions
 const pathsep = require('path').sep;  // Os-dependent path separator
+const path = require('path');
 
 let simpleGit = require('simple-git');
 //function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
@@ -62,6 +63,19 @@ async function _callback( name, event){
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
             break;
         } 
+        case 'visualModeChanged': {
+            console.log('visualModeChanged');
+            console.log(event);
+            global.state.darkmode = id;
+            opener.pragmaLog('   settings radiobutton ' + id + ' = ' + value);
+            
+            // Reload main if Dark mode change
+            opener.updateWithNewSettings();
+            opener.saveSettings();
+            opener.win.reload();
+            
+            break;
+        }    
         case 'localCheckboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
@@ -173,6 +187,34 @@ async function _callback( name, event){
                 
             break;
         }
+        case 'droppedFolder': {
+            
+            try{
+                const item = event.dataTransfer.items[0];
+                const entry = item.webkitGetAsEntry();
+                    
+                var file = item.getAsFile().path;
+                file = file.replace(/(\r\n|\n|\r)/gm, ''); // Remove windows EOL characters
+                var folder = file; // Guess that a folder was dropped 
+            
+                if (entry.isFile) {
+                    folder = path.dirname(file); // Correct, because file was dropped
+                    console.log( 'Folder = ' + folder );
+                } 
+                
+                document.getElementById('addFolder').innerText=folder;
+                document.getElementById('cloneFolder').innerText = folder;               
+            }catch(err){
+                
+            }
+
+            
+            // Remove hover class
+            document.getElementById('addFolder').className = '';
+            document.getElementById('cloneFolder').className = '';
+                                    
+            break;
+        }
         case 'folderSelectButton' : {
             //This calls the hidden folder dialog input-element in settings.html
             document.getElementById("selectFolderInputButton").value = "";  // Reset value (so that I am allowed to chose the same folder as last time)
@@ -210,6 +252,9 @@ async function _callback( name, event){
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
+            
+            // Switch to Remote  tab
+            document.getElementById('gitHubTab').click()
 
             break;
         }  
@@ -540,7 +585,21 @@ async function _callback( name, event){
             // For :
             // - Build a url
             
-            nw.Window.open('Create_github_repository.html', {});
+            nw.Window.open('Create_github_repository.html', 
+                {},
+                function(cWindows){ 
+                    
+                    cWindows.on('loaded', 
+                        function(){
+                            cWindows.show();     
+                            
+                            // Workaround so it is not hidden by windows
+                            cWindows.setAlwaysOnTop(true); 
+                        }
+                    );
+    
+                }
+            );
 
             break;
         }
@@ -673,13 +732,13 @@ async function closeWindow(){
     
     // Set Git author name and email (stored in git, not in settings)
     try{
-        await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
+        gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global')
     }catch(err){
         console.log('Failed storing git user.name');
     }
     
     try{  
-        await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
+        gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global')
     }catch(err){
         console.log('Failed storing git user.email');
     }
@@ -691,6 +750,7 @@ async function closeWindow(){
     
     // Make global when git author's information missing
     await fixEmptyLocalAuthors();
+    await opener.saveSettings();
     
  
 }

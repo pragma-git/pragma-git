@@ -10,11 +10,22 @@
     <script src="app.js"></script>
     
 
+    
+
     <!-- Border for dropping folder-->
+
+
     <style>
-        #content { border: 3px solid #dddddd; }
-        #content.hover  { border: 3px dashed #333; }
+        #message { 
+            border-style:  solid;  
+            border-width: thin;
+        }
+        #message.hover { 
+            border-style:  dashed; 
+            border-width: medium; 
+        }
     </style>
+
 
 
 </head>
@@ -541,7 +552,7 @@
 
         
         <p>
-            Your current version is <code id='currentVersion'> </code>. Download and installer for the new <code id='newVersion'> </code> version!  
+            Your current version is <code id='currentVersion'> </code>. Download the new <code id='newVersion'> </code> installer!  
         </p>
 
 
@@ -644,14 +655,18 @@
     <!-- Git not installed alert -->   
   
     <dialog id="gitNotInstalledAlert"  class="error">  
-        <b>ERROR -- Cannot find "git" !</b><br>
-            Please make sure "git" is installed. <br>
-            See manual for help (<img style='vertical-align:middle;' src="images/questionmark_hover.png"  height="17" width="17">  in top-left corner of the main window)<br>
+        <b>ERROR -- Cannot find "git" </b><br>
+        <br>
+            Download and install "git" from : 
+            
+            <a href="https://git-scm.com/downloads" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">https://git-scm.com/downloads</a>
+
+            <br>
             <br>
         
         <button 
-            onclick="document.getElementById('gitNotInstalledAlert').close();">
-            OK
+            onclick="document.getElementById('gitNotInstalledAlert').close(); win.close()">
+            Close Pragma-git
         </button>   
         
     </dialog>      
@@ -732,9 +747,9 @@
             // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
             window.ondrop = function(e) { e.preventDefault(); return false };
         
-            const holder = document.getElementById('content');
-            holder.ondragover = function () { this.className = 'hover'; return false; };
-            holder.ondragleave = function () { this.className = ''; return false; };
+            const holder = document.getElementById('message');
+            holder.ondragover = function () { document.getElementById('message').classList.add('hover'); return false; };
+            holder.ondragleave = function () { document.getElementById('message').classList.remove('hover'); return false; };
             
             holder.ondrop = function(e) {  _callback('file-dropped', e); return false }; // See app.js
         

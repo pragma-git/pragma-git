@@ -1,11 +1,10 @@
 {
-  "version": "0.9.6",
+  "version": "0.9.7",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
   "author": "Jan Axelsson",
   "license": "MIT",
-  "chromium-args": "--disable-gpu",
   "window": {
     "show": false,
     "toolbar": false,
@@ -31,7 +30,7 @@
     "is-unc-path": "^1.0.0",
     "mime-types": "^2.1.27",
     "node-fetch": "^2.6.1",
-    "simple-git": "^3.1.1",
+    "simple-git": "^3.5.0",
     "terminal-tab": "^0.0.7",
     "windows-network-drive": "^3.0.1"
   },

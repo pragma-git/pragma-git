@@ -34,7 +34,11 @@ InstallDir "${PROGRAMFILESFOLDER}\${APP_NAME}\"
 !insertmacro MUI_PAGE_INSTFILES
 
 !define MUI_FINISHPAGE_RUN_TEXT "Start ${APP_NAME}"
-!define MUI_FINISHPAGE_RUN "$INSTDIR\${MAIN_APP_EXE}"
+
+#http://mdb-blog.blogspot.com/2013/01/nsis-lunch-program-as-user-from-uac.html
+!define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
+!define MUI_FINISHPAGE_RUN_PARAMETERS "$INSTDIR\${MAIN_APP_EXE}"
+#!define MUI_FINISHPAGE_RUN "$INSTDIR\${MAIN_APP_EXE}"
 
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_LANGUAGE "English"

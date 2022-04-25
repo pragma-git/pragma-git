@@ -60,6 +60,29 @@
 
 ////
 
+    
+    # Declare formatting function (return "[OK] - " or "[XX] - ")
+    
+    formatReturn () {
+        inCode=$1
+        echo -n '['
+        
+        if [ $inCode -eq 0 ] ; then
+            tput setaf 2  # Green
+            echo -n "OK"
+            tput sgr0  
+            echo -n ']   - '
+        else
+            tput setaf 1  # Red
+            echo -n "XX"
+            tput sgr0  
+            echo -n '] -'
+        fi
+    }
+
+
+
+
     COLOR=5
     tput setaf $COLOR; tput setaf $COLOR; echo ' '
     echo '============================'
@@ -154,12 +177,14 @@
 
 
     # Build All platforms
+    BUILD_EXIT=0;
     ~/Documents/Projects/Pragma-git/pragma-git/node_modules/.bin/build \
-    --tasks win-x86,win-x64,linux-x64,mac-x64 \
+    --tasks win-x64,linux-x64,mac-x64 \
     --mirror https://dl.nwjs.io/  \
     --name Pragma-git  \
     --concurrent true  \
-    ~/Documents/Projects/Pragma-git/pragma-git
+    ~/Documents/Projects/Pragma-git/pragma-git \
+    || BUILD_EXIT=$?
 
     #Options :
     # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
@@ -169,6 +194,8 @@
     echo 'Make "pragma-merge" executable'
     chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge"
 
+    echo ' '
+    echo $(formatReturn $BUILD_EXIT) Building
 
 #
 # Build Mac installer
@@ -178,6 +205,8 @@
     echo 'INSTALLER MACOS 64-BIT'
     echo '======================'
     tput sgr0
+    
+    MAC_EXIT=0
 
 
     # Move .app to temporary folder
@@ -190,8 +219,8 @@
     # About dialog -- edit plist
     plist=../dist/temp-macos/Pragma-git.app/Contents/Info.plist
     
-    CFBundleVersion=$(git rev-parse --short HEAD)  # Hash as build version (version n.n.n is taken from package.json)
-    plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist
+    CFBundleVersion=$(git rev-parse --short HEAD) || MAC_EXIT=$?  # Hash as build version (version n.n.n is taken from package.json)
+    plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist || MAC_EXIT=$?
 
     
     # Work in destination folder (dist/mac) 
@@ -205,16 +234,18 @@
       --volname "Mac-Pragma-git-Installer" \
       --volicon "../../Pragma-git/images/icon_installer.icns" \
       --window-pos 200 120 \
-      --window-size 500 320 \
+      --window-size 500 520 \
       --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
       --icon-size 80 \
       --icon "Pragma-git.app"  125 175 \
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
+      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
       --icon ".fseventsd"  1000 190 \
       --icon ".VolumeIcon.icns"  1000 190 \
       "$(echo "$DIR.dmg")" \
-      "../temp-macos/"
+      "../temp-macos/" \
+    || MAC_EXIT=$?
     
     # Clean up 
     cd -
@@ -222,6 +253,9 @@
     rm -r ../dist/temp-macos
 
     pwd
+    
+    echo ' '
+    echo $(formatReturn $MAC_EXIT) Creating Mac installer
 
 #
 # Build Windows installers
@@ -233,6 +267,8 @@
     echo '===================='
     tput sgr0
     
+    WIN_EXIT=0
+    
     rm -r ../dist/win64
     mkdir ../dist/win64
 
@@ -242,26 +278,11 @@
     -DOUTPUT="win64/$DIR.exe" \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
     -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
-    windows_installer.nsi
-
-    tput setaf $COLOR; echo ' '
-    echo '===================='
-    echo 'INSTALLER WIN 32-BIT'
-    echo '===================='
-    tput sgr0
+    windows_installer.nsi \
+    || WIN_EXIT=$?
     
-    rm -r ../dist/win32
-    mkdir ../dist/win32
-
-    DIR=$(ls -1 ../dist/|grep  'win-x86')
-    makensis \
-    -DEXEFOLDER=$DIR \
-    -DOUTPUT="win32/$DIR.exe" \
-    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
-    -DPROGRAMFILESFOLDER='$PROGRAMFILES32' \
-    windows_installer.nsi
-    
-
+    echo ' '
+    echo $(formatReturn $WIN_EXIT) Creating Windows installer
 
 #
 # Build Linux DEB installer
@@ -273,6 +294,8 @@
     echo '============================'
     tput sgr0
     
+    DEB_EXIT=0
+    
     cd ~/Documents/Projects/Pragma-git/dist
     rm linux64/*.deb
     mkdir linux64
@@ -281,8 +304,7 @@
     DIR=$(ls -1 ../dist/|grep  'linux-x64') # Pragma-git-0.1.0-linux-x64
     VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-linux-x64 => VERSION='0.1.0'
     chmod -R a+x "$DIR"
-    
-    rm "linux64/$DIR.deb" 
+
     
     fpm \
     --input-type dir \
@@ -296,7 +318,11 @@
     --package "linux64/$DIR.deb" \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
-    .=/opt/pragma-git
+    .=/opt/pragma-git \
+    || DEB_EXIT=$?
+    
+    echo ' '
+    echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
     
     # Remove installation : sudo dpkg --remove pragma-git
     # Installation : sudo dpkg --install /mnt/Pragma-git/linux64/Pragma-git- (tab)
@@ -313,6 +339,8 @@
     echo '============================'
     tput sgr0
     
+    RPM_EXIT=0
+    
     cd ~/Documents/Projects/Pragma-git/dist
     rm linux64/*.rpm
     mkdir linux64
@@ -322,7 +350,6 @@
     VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-linux-x64 => VERSION='0.1.0'
     chmod -R a+x "$DIR"
     
-    rm "linux64/$DIR.rpm" 
     
     # Dependencies are added from problems I had with CentOS7
     fpm \
@@ -339,7 +366,11 @@
     --rpm-os linux \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
-    .=/opt/pragma-git
+    .=/opt/pragma-git \
+    || RPM_EXIT=$?
+    
+    echo ' '
+    echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
     
     # For a fresh centos 7 install, do  : sudo yum erase libXScrnSaver libatomic pragma-git
     # For centos7 install from file, do : sudo yum localinstall /mnt/Pragma-git/linux64/Pragma-git- (tab)
@@ -353,5 +384,16 @@
     echo 'DONE '
     echo '====='   
     tput sgr0  
+    
+
+    
+    # Output summary
+    echo 'Summary : '
+    echo $(formatReturn $BUILD_EXIT) Building
+    echo $(formatReturn $MAC_EXIT) Creating Mac installer
+    echo $(formatReturn $WIN_EXIT) Creating Windows installer
+    echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
+    echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
+    echo ' '
 
     read -n 1 -s -r -p "DONE : Press any key to continue" && tput setaf $COLOR; echo ' '

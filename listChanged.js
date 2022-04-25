@@ -118,6 +118,13 @@ async function _callback( name, event, event2){
             console.log('applyRestoreAllButton');
             console.log(event);
             
+            // Add all files to index (all newest versions of working-tree files will be in index)
+            var path = '.'; // Add all
+            await simpleGit( state.repos[state.repoNumber].localFolder )
+                .add( path, onAdd );   
+            function onAdd(err, result) {console.log(result) ;console.log(err); }
+            
+            // Reset all tracked files            
             await simpleGit( state.repos[state.repoNumber].localFolder )
                 .raw( [  'reset', '--hard' ] , onReset); 
 

@@ -204,7 +204,7 @@
             </dd>
             <br>
                                          
-            <dd><textarea id="cloneFolder" placeholder="Clone creates subfolder in selected folder" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            <dd><textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
             </dd>
             <br>
             
@@ -214,7 +214,7 @@
             <br>
             <br>
             
-            <dd> In addition, there is the <button>Clone</button>,  which starts the cloning process.     
+            <dd> The <button>Clone</button> initiates the cloning operation.     
             </dd>
             <br>
      
@@ -226,7 +226,7 @@
                 <ol>  
                     <li>Input the remote repository address (url)   
                     <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. 
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
                     <li>The second text field displays the selected folder path   
                     <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
                 </ol>   
@@ -260,9 +260,10 @@
                 </p>
                 
                 <ol>
-                <li><button>Get Folder</button> button is used to select the folder, into which the cloned repository is copied.  
-                <li><b>The text field </b> displays the selected folder path     
-                <li><button>Add</button> adds the repository inside the selected folder, and asks to make the folder a repository if necessary.
+                <li><button>Get Folder</button> button is used to select the folder. Alternatively an existing folder can be droped on text field.  
+                <li><b>The text field </b> displays the selected folder path.     
+                <li><button>Add</button> adds the repository inside the selected folder.
+                If folder is not a repository, a dialog asks permission to create a git repository.
                 </ol>    
                 
          
@@ -466,7 +467,7 @@
     <p>The software settings are grouped as follow : 
         <dl>
             <dt><h4>Visual</h4></dt>
-                <dd><b>- Dark mode setting </b> , changes the visual theme (requires restart of Pragma-git).  Options are:
+                <dd><b>- Dark mode setting </b> , changes the visual theme.  Options are:
                     <dl>
                         <dt><input type="radio" checked> System setting —  follow the system-defined light/dark theme</dt>
                         <dt><input type="radio"> Light mode —   light theme</dt>
@@ -486,10 +487,10 @@
                     <dl>
                         <!--  Zoom -->
                         <dt><input id="zoomMain" type="text" size="3" value="1.0"/> Scale-factor for main window — 
-                        changes main-window scaling (useful for high definition screens)
-                        </dt>
+                        changes main-window scaling (useful for high definition screens). Change takes effect when pressing Enter key.
+                        </dt></br>
                         <dt><input id="zoom" type="text" size="3" value="0.75"/> Scale-factor for other windows — 
-                        for instance a setting of 0.75 means the size is 75% of default size
+                        a setting of 0.75 means the size is 75% of default size. Change takes effect when closing and opening each window.
                         </dt>
                      </dl>
                 </dd>
