@@ -70,6 +70,41 @@
                 }
             );  
         </script>  
+        
+        
+        
+        
+          
+        <dialog id="isBinaryFile"   class="warning">  
+            <b>WARNING</b> -- The file seems to be a binary file
+                 <br>
+                <br>
+                
+            Select how to proceed : <br>
+            
+            
+            <button id="initializeRepoDialogOK" 
+                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
+                Keep this
+            </button>   
+             (file from current local branch)  <br>
+            
+            
+            
+            <button id="initializeRepoDialogCancel" 
+                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+                Keep other
+            </button> 
+            
+            <br> 
+            <hr>
+            <button id="initializeRepoDialogCancel" 
+                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+                Interactive merge (works best with text files)
+            </button>    
+            
+    
+        </dialog>  
             
     
     </body>    

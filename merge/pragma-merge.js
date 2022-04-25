@@ -11,6 +11,7 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
+const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
 
@@ -47,6 +48,14 @@ console.log('$MERGED = ' + MERGED);
 
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
+
+
+// Check if binary
+console.error(isBinaryFileSync(BASE)); // true or false
+if (isBinaryFileSync(BASE) ){
+    document.getElementById('isBinaryFile').showModal(); 
+}
+
 
 // HTML Title
 const HTML_TITLE = 'File    =   ' + MERGED
