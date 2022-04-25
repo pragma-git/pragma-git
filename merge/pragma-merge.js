@@ -48,13 +48,12 @@ console.log('$MERGED = ' + MERGED);
 
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
-
-
-// Check if binary
-console.error(isBinaryFileSync(BASE)); // true or false
-if (isBinaryFileSync(BASE) ){
-    document.getElementById('isBinaryFile').showModal(); 
-}
+parent.opener.pragmaLog('$ROOT   = ' + ROOT);
+parent.opener.pragmaLog('$BASE   = ' + BASE);
+parent.opener.pragmaLog('$LOCAL  = ' + LOCAL);
+parent.opener.pragmaLog('$REMOTE = ' + REMOTE);
+parent.opener.pragmaLog('$MERGED = ' + MERGED);
+parent.opener.pragmaLog('Is binary = ' + isBinaryFileSync(LOCAL) );
 
 
 // HTML Title
@@ -96,6 +95,14 @@ function injectIntoJs(document) {
     cachedFile.MERGED = loadFile(MERGED);
     
     parent.document.title = HTML_TITLE;
+    
+    
+    // Check if binary
+    console.error(isBinaryFileSync(LOCAL)); // true or false
+    if (isBinaryFileSync(LOCAL) ){
+        document.getElementById('isBinaryFile').showModal(); 
+    }
+
     
 
     // Set saved gui mode settings
