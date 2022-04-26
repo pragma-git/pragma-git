@@ -478,7 +478,12 @@
                 
                 // Dialog if binary, otherwise open as usual
                 if (isBinaryFile() ){
-                    document.getElementById('isBinaryFile').showModal();
+                    if ( getMode() == 'MERGE' ){
+                        document.getElementById('isBinaryMerge').showModal();
+                    }else{
+                        document.getElementById('isBinaryDiff').showModal();
+                    }
+                    
                 }else{
                     injectIntoJs(document);
                 }
@@ -521,39 +526,64 @@
         
         
          
-    <!--  Dialog  -->  
+    <!--  Dialogs  -->  
             
-    <dialog id="isBinaryFile"   class="warning">  
-        <b>WARNING</b> -- The file seems to be a binary file
+    <dialog id="isBinaryMerge"   class="warning">  
+        <b>WARNING</b> -- Looks like a binary file
             
         <br><br>
             
         Select how to proceed : 
         
-        <br> <br>
+        <br> 
         
-        <button
-            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
-            Keep this
+        <button style = "margin-top: 8px; margin-bottom: 8px;"
+            onclick =  "document.getElementById('isBinaryMerge').close();
+                        keepThis();">
+            Keep this 
         </button>   
-         (file from current local branch)  
-         
-         <br><br>
+        <sup>*</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
         
-        
-        <button  
-            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+        <button  style = "float: right; margin-top: 8px; margin-bottom: 8px;"  
+            onclick =  "document.getElementById('isBinaryMerge').close();
+                        keepOther();"> 
             Keep other
         </button> 
         
-        <br> 
+        
+        <br>
+        <div class="footnoteText" >
+             <sup>*</sup> (file from current local branch)                  
+        </div>
+
         <hr>
         
-        <button  onclick = "document.getElementById('isBinaryFile').close();
-                            injectIntoJs(document); " 
+        
+        <button style = "margin-top: 8px; margin-bottom: 8px;"
+            onclick =  "document.getElementById('isBinaryMerge').close();
+                        injectIntoJs(document); " 
         > Interactive merge </button>    
         (works best with text files)
+
+    </dialog>  
+    
+    
+                
+    <dialog id="isBinaryDiff"   class="warning">  
+        <b>WARNING</b> -- Looks like a binary file
+            
+        <br><br>
+ 
+        <button  onclick = "document.getElementById('isBinaryDiff').close();
+                            injectIntoJs(document); " 
+        > View binary </button>    
         
+                
+        <button style="float: right" 
+            onclick = "parent.window.close();"   
+        > Cancel </button>    
+ 
 
     </dialog>  
 </body>    

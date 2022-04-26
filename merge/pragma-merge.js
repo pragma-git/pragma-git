@@ -84,6 +84,8 @@ const helpIcon = `<img style="vertical-align:middle;float: right; padding-right:
 // FUNCTIONS
 //-----------
 
+// Start initiated from html
+
 function isBinaryFile(){
     
     try{
@@ -93,9 +95,6 @@ function isBinaryFile(){
     
     return false
 }
-
-
-// Start initiated from html
 function injectIntoJs(document) {
     win = gui.Window.get();
     
@@ -243,8 +242,12 @@ function themeSelected( themeName){
         if (typeof fileref!="undefined")
             document.getElementsByTagName("head")[0].appendChild(fileref)
     }
-
-
+function keepThis(){
+    
+}
+function keepOther(){
+    
+}
 // Standard CodeMirror
 function toggleDifferences() {
   dv.setShowDifferences(highlight = !highlight);
