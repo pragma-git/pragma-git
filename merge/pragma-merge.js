@@ -14,6 +14,10 @@ var fs = require('fs');
 const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
+const simpleGit = require('simple-git');  // npm install simple-git
+
+const pragmaLog = parent.opener.pragmaLog;         // Defined in app.js
+const simpleGitLog = parent.opener.simpleGitLog;   // Defined in app.js
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -48,12 +52,6 @@ console.log('$MERGED = ' + MERGED);
 
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
-parent.opener.pragmaLog('$ROOT   = ' + ROOT);
-parent.opener.pragmaLog('$BASE   = ' + BASE);
-parent.opener.pragmaLog('$LOCAL  = ' + LOCAL);
-parent.opener.pragmaLog('$REMOTE = ' + REMOTE);
-parent.opener.pragmaLog('$MERGED = ' + MERGED);
-parent.opener.pragmaLog('Is binary = ' + isBinaryFileSync(LOCAL) );
 
 
 // HTML Title
@@ -243,10 +241,23 @@ function themeSelected( themeName){
             document.getElementsByTagName("head")[0].appendChild(fileref)
     }
 function keepThis(){
-    
+    pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
+    gitCheckout([ MERGED, '--ours']);
+    parent.window.close();
 }
 function keepOther(){
-    
+    pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
+    gitCheckout([ MERGED, '--theirs']);
+    parent.window.close();
+}
+async function gitCheckout(options){
+    let folder = global.state.repos[global.state.repoNumber].localFolder;
+    await simpleGitLog(folder).checkout( options, onCheckout);
+    function onCheckout(err, result){
+        console.log(result); 
+        console.log(err); 
+        //pragmaLog(result);
+    } 
 }
 // Standard CodeMirror
 function toggleDifferences() {
