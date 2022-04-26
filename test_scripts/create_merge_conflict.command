@@ -61,7 +61,7 @@ rm DU
 echo 'master created AA' >  AA
 echo 'master edited UU' >>  UU
 echo 'master edited UD' >>  UD
-cp "$SCRIPT_DIR/assets/binary.bin" binary.bin
+cp "$SCRIPT_DIR/assets/binary2.bin" binary.bin
 
 git add .
 git commit -m 'C1'
@@ -81,12 +81,12 @@ git add .
 git commit -m 'C2'
 
 
-## work on branch master - commit C3
-#git checkout 'master'
-#echo 'master created AU' >  AU
+## work on branch master - commit C3 (modified binary.bin)
+git checkout 'master'
 
-#git add .
-#git commit -m 'C3'
+cp "$SCRIPT_DIR/assets/binary.bin" binary.bin
+git add .
+git commit -m 'C3'
 
 
 # End in branch master

@@ -475,7 +475,15 @@
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
             console.log('merge.html :DOM fully loaded and parsed');
-            injectIntoJs(document);
+                
+                // Dialog if binary, otherwise open as usual
+                if (isBinaryFile() ){
+                    document.getElementById('isBinaryFile').showModal();
+                }else{
+                    injectIntoJs(document);
+                }
+      
+                
             }
         );    
             
@@ -513,36 +521,40 @@
         
         
          
-          
-        <dialog id="isBinaryFile"   class="warning">  
-            <b>WARNING</b> -- The file seems to be a binary file
-                 <br>
-                <br>
-                
-            Select how to proceed : <br>
+    <!--  Dialog  -->  
             
+    <dialog id="isBinaryFile"   class="warning">  
+        <b>WARNING</b> -- The file seems to be a binary file
             
-            <button id="initializeRepoDialogOK" 
-                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
-                Keep this
-            </button>   
-             (file from current local branch)  <br>
+        <br><br>
             
-            
-            
-            <button id="initializeRepoDialogCancel" 
-                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
-                Keep other
-            </button> 
-            
-            <br> 
-            <hr>
-            <button id="initializeRepoDialogCancel" 
-                onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
-                Interactive merge (works best with text files)
-            </button>    
-            
-    
-        </dialog>  
+        Select how to proceed : 
+        
+        <br> <br>
+        
+        <button
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();_callback('initializeRepoOK', {firstBranch : document.getElementById('firstBranchToWorkOn').value });">
+            Keep this
+        </button>   
+         (file from current local branch)  
+         
+         <br><br>
+        
+        
+        <button  
+            onclick="document.getElementById('doYouWantToInitializeRepoDialog').close();localState.droppedRepoFolder=''; "> <!-- Forget dropped folder -->  
+            Keep other
+        </button> 
+        
+        <br> 
+        <hr>
+        
+        <button  onclick = "document.getElementById('isBinaryFile').close();
+                            injectIntoJs(document); " 
+        > Interactive merge </button>    
+        (works best with text files)
+        
+
+    </dialog>  
 </body>    
 </html>

@@ -84,6 +84,16 @@ const helpIcon = `<img style="vertical-align:middle;float: right; padding-right:
 // FUNCTIONS
 //-----------
 
+function isBinaryFile(){
+    
+    try{
+        return isBinaryFileSync(LOCAL);
+    }catch (err){  
+    }
+    
+    return false
+}
+
 
 // Start initiated from html
 function injectIntoJs(document) {
@@ -96,14 +106,7 @@ function injectIntoJs(document) {
     
     parent.document.title = HTML_TITLE;
     
-    
-    // Check if binary
-    console.error(isBinaryFileSync(LOCAL)); // true or false
-    if (isBinaryFileSync(LOCAL) ){
-        document.getElementById('isBinaryFile').showModal(); 
-    }
 
-    
 
     // Set saved gui mode settings
     collapse = global.state.pragmaMerge.hide_unchanged;
