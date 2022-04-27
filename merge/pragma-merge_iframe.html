@@ -475,7 +475,20 @@
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
             console.log('merge.html :DOM fully loaded and parsed');
-            injectIntoJs(document);
+                
+                // Dialog if binary, otherwise open as usual
+                if (isBinaryFile() ){
+                    if ( getMode() == 'MERGE' ){
+                        document.getElementById('isBinaryMerge').showModal();
+                    }else{
+                        document.getElementById('isBinaryDiff').showModal();
+                    }
+                    
+                }else{
+                    injectIntoJs(document);
+                }
+      
+                
             }
         );    
             
@@ -501,6 +514,7 @@
     </script>  
     
     <!--  Add find  -->    
+    
     <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
     <script src="../extend_find-in-nw.js"></script>
     <script>
@@ -510,6 +524,59 @@
         var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
     </script> 
 
+        
+        
+         
+    <!--  Dialog for Merging Binary files -->  
+            
+    <dialog id="isBinaryMerge"   class="warning"> 
+         
+        <b>WARNING</b> -- Looks like a binary file
+            
+        <br><br>
+             
+            <button style = "margin-top: 0px; margin-bottom: 8px;"
+                onclick =  "parent.document.getElementById('iframe').contentWindow.keepThis();
+                            document.getElementById('isBinaryMerge').close();">
+                Keep this 
+            </button>   
+            <sup>*</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    
+            
+            <button  style = "float: right; margin-top: 0px; margin-bottom: 8px;"  
+                onclick =  "parent.document.getElementById('iframe').contentWindow.keepOther();
+                            document.getElementById('isBinaryMerge').close();"> 
+                Keep other
+            </button> 
+            
 
+        <br> 
+            <div class="footnoteText" > <sup>*</sup> (file from current local branch) </div>
+
+        <hr>
+        
+            <button style = "margin-top: 8px; margin-bottom: 8px;" onclick =  "document.getElementById('isBinaryMerge').close(); injectIntoJs(document); " > 
+                Interactive merge 
+            </button>    
+            (works best with text files)
+
+    </dialog>  
+    
+
+         
+    <!--  Dialog for Diff of Binary files -->       
+                
+    <dialog id="isBinaryDiff"   class="warning">  
+        <b>WARNING</b> -- Looks like a binary file 
+             
+        <br><br>
+            <button  onclick = "document.getElementById('isBinaryDiff').close(); injectIntoJs(document); " > 
+                View binary 
+            </button>    
+            
+            <button style="float: right"  onclick = "parent.window.close();"> 
+                Cancel 
+            </button>    
+    </dialog>  
 </body>    
 </html>

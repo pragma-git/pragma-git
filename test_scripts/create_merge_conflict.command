@@ -25,7 +25,7 @@
 #
 # Emod and Gmod are new compared to created with "make_three_filled_branches.command"
 
-
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 REPO=/tmp/twoBranches
 
 # start all over
@@ -61,6 +61,7 @@ rm DU
 echo 'master created AA' >  AA
 echo 'master edited UU' >>  UU
 echo 'master edited UD' >>  UD
+cp "$SCRIPT_DIR/assets/binary2.bin" binary.bin
 
 git add .
 git commit -m 'C1'
@@ -74,17 +75,18 @@ echo 'second created UA' >  UA
 echo 'second created AA' >  AA
 echo 'second edited UU' >>  UU
 echo 'second edited DU' >>  DU
+cp "$SCRIPT_DIR/assets/binary2.bin" binary.bin
 
 git add .
 git commit -m 'C2'
 
 
-## work on branch master - commit C3
-#git checkout 'master'
-#echo 'master created AU' >  AU
+## work on branch master - commit C3 (modified binary.bin)
+git checkout 'master'
 
-#git add .
-#git commit -m 'C3'
+cp "$SCRIPT_DIR/assets/binary.bin" binary.bin
+git add .
+git commit -m 'C3'
 
 
 # End in branch master

@@ -11,8 +11,13 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
+const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
+const simpleGit = require('simple-git');  // npm install simple-git
+
+const pragmaLog = parent.opener.pragmaLog;         // Defined in app.js
+const simpleGitLog = parent.opener.simpleGitLog;   // Defined in app.js
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -48,6 +53,7 @@ console.log('$MERGED = ' + MERGED);
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
 
+
 // HTML Title
 const HTML_TITLE = 'File    =   ' + MERGED
 
@@ -76,8 +82,16 @@ const helpIcon = `<img style="vertical-align:middle;float: right; padding-right:
 // FUNCTIONS
 //-----------
 
-
-// Start initiated from html
+// Start is initiated from html
+function isBinaryFile(){
+    
+    try{
+        return isBinaryFileSync(LOCAL);
+    }catch (err){  
+    }
+    
+    return false
+}
 function injectIntoJs(document) {
     win = gui.Window.get();
     
@@ -88,6 +102,7 @@ function injectIntoJs(document) {
     
     parent.document.title = HTML_TITLE;
     
+
 
     // Set saved gui mode settings
     collapse = global.state.pragmaMerge.hide_unchanged;
@@ -224,7 +239,24 @@ function themeSelected( themeName){
         if (typeof fileref!="undefined")
             document.getElementsByTagName("head")[0].appendChild(fileref)
     }
-
+function keepThis(){
+    pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
+    gitCheckout([ MERGED, '--ours']);
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
+}
+function keepOther(){
+    pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
+    gitCheckout([ MERGED, '--theirs']);
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
+}
+async function gitCheckout(options){
+    let folder = global.state.repos[global.state.repoNumber].localFolder;
+    await simpleGitLog(folder).checkout( options, onCheckout);
+    function onCheckout(err, result){
+        console.log(result); 
+        console.log(err); 
+    } 
+}
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -443,7 +475,6 @@ function initUI() {
 
 
 }
-
 function addSearch(headerId, editorId){
     
     let leftPos = document.getElementsByClassName(editorId)[0].getBoundingClientRect().x + 40;
@@ -467,7 +498,6 @@ function enable(id){
 function disable(id){
     document.getElementById(id).checked = false;
 }
-
 function enable2(id){
     document.getElementById(id).classList.remove('disabled');
     document.getElementById(id).classList.add('enabled');
@@ -477,7 +507,7 @@ function disable2(id){
     document.getElementById(id).classList.add('disabled');
 }
 
-// Make readonly
+// Get / set mode
 function readOnlyOption( readonly){
     if (readonly){
         // Make readonly
@@ -496,7 +526,6 @@ function readOnlyOption( readonly){
 
     }
 }
-
 function getMode( ){
     if ( REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
@@ -541,11 +570,6 @@ function finish( wayToFinish){
     }
 
 }
-
-
-
-
-
 function save(){
     let content = "";
     try{
@@ -556,7 +580,6 @@ function save(){
         console.log(err);
     }    
 }
-
 function closeWindowNicely(exitCode){
     
     // Write exit code to file for script to pick up
@@ -574,6 +597,8 @@ function closeWindowNicely(exitCode){
     
     } catch(err) {
         console.error(err)
+        pragmaLog('ERROR in closeWindowNicely : ');
+        pragmaLog(err);
     }
     
     // Store gui mode settings
