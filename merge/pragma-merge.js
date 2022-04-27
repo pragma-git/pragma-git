@@ -607,6 +607,8 @@ function closeWindowNicely(exitCode){
     
     } catch(err) {
         console.error(err)
+        pragmaLog('ERROR in closeWindowNicely : ');
+        pragmaLog(err);
     }
     
     // Store gui mode settings
