@@ -82,8 +82,7 @@ const helpIcon = `<img style="vertical-align:middle;float: right; padding-right:
 // FUNCTIONS
 //-----------
 
-// Start initiated from html
-
+// Start is initiated from html
 function isBinaryFile(){
     
     try{
@@ -243,12 +242,12 @@ function themeSelected( themeName){
 function keepThis(){
     pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
     gitCheckout([ MERGED, '--ours']);
-    parent.window.close();
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
 }
 function keepOther(){
     pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
     gitCheckout([ MERGED, '--theirs']);
-    parent.window.close();
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
 }
 async function gitCheckout(options){
     let folder = global.state.repos[global.state.repoNumber].localFolder;
@@ -256,9 +255,9 @@ async function gitCheckout(options){
     function onCheckout(err, result){
         console.log(result); 
         console.log(err); 
-        //pragmaLog(result);
     } 
 }
+
 // Standard CodeMirror
 function toggleDifferences() {
   dv.setShowDifferences(highlight = !highlight);
@@ -476,7 +475,6 @@ function initUI() {
 
 
 }
-
 function addSearch(headerId, editorId){
     
     let leftPos = document.getElementsByClassName(editorId)[0].getBoundingClientRect().x + 40;
@@ -500,7 +498,6 @@ function enable(id){
 function disable(id){
     document.getElementById(id).checked = false;
 }
-
 function enable2(id){
     document.getElementById(id).classList.remove('disabled');
     document.getElementById(id).classList.add('enabled');
@@ -510,7 +507,7 @@ function disable2(id){
     document.getElementById(id).classList.add('disabled');
 }
 
-// Make readonly
+// Get / set mode
 function readOnlyOption( readonly){
     if (readonly){
         // Make readonly
@@ -529,7 +526,6 @@ function readOnlyOption( readonly){
 
     }
 }
-
 function getMode( ){
     if ( REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
@@ -574,11 +570,6 @@ function finish( wayToFinish){
     }
 
 }
-
-
-
-
-
 function save(){
     let content = "";
     try{
@@ -589,7 +580,6 @@ function save(){
         console.log(err);
     }    
 }
-
 function closeWindowNicely(exitCode){
     
     // Write exit code to file for script to pick up
