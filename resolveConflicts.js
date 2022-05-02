@@ -6,7 +6,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 // INIT
 // ---------
-var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
         
@@ -136,38 +136,44 @@ async function _callback( name, event){
             '--gui' , 
             '--tool=' + tool 
         ];
-        try{
-            // Store conflicting file names
-            console.log('gitResolveConflicts -- Resolving conflicting files');
-            
-            // Resolve with external merge tool
-            //writeMessage( 'Resolving conflicts');
-            await simpleGit( folder).raw(command, onResolveConflict );
-            function onResolveConflict(err, result){ console.log(result); console.log(err) };
-            //await waitTime( 1000);
-            
-            console.log('gitResolveConflicts -- Finished resolving conflicting files');
-    
-            
-        }catch(err){
-            console.log('gitResolveConflicts -- caught error ');
-            console.log(err);
-            // If external diff tool does not exist => write messate about this
-            
-        }
         
-        // Update table
-        let status_data;
-        try{
-            console.log('gitResolveConflicts -- update table getting status');
-            await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-            function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+        // Loop all unresolved files  TODO : Status to files to merge (not all conflicting files as now)
+        for (let i in origConflictingFiles) {
             
-            console.log('gitResolveConflicts -- redraw table ');
-            createConflictingFileTable(document, status_data)
-        }catch(err){
-            console.log('gitResolveConflicts -- error redrawing table');
-            console.log(err);
+            try{
+                // Store conflicting file names
+                console.log('gitResolveConflicts -- Resolving conflicting files');
+                
+                // Resolve with external merge tool
+                //writeMessage( 'Resolving conflicts');
+                await simpleGit( folder).raw(command.concat( origConflictingFiles[i] ), onResolveConflict );
+                function onResolveConflict(err, result){ console.log(result); console.log(err) };
+                await waitTime( 1000);
+                
+                console.log('gitResolveConflicts -- Finished resolving conflicting files');
+        
+                
+            }catch(err){
+                console.log('gitResolveConflicts -- caught error ');
+                console.log(err);
+                // If external diff tool does not exist => write messate about this
+                
+            }
+            
+            // Update table
+            let status_data;
+            try{
+                console.log('gitResolveConflicts -- update table getting status');
+                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                
+                console.log('gitResolveConflicts -- redraw table ');
+                createConflictingFileTable(document, status_data)
+            }catch(err){
+                console.log('gitResolveConflicts -- error redrawing table');
+                console.log(err);
+            }
+            
         }
         
         

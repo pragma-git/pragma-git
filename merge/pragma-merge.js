@@ -35,7 +35,7 @@ var SAVED = false; // Flag to show that save has been performed.
 // These three files are also defined in app.js
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
-const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
+const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 process.chdir( SIGNALDIR);
 const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");   
@@ -239,23 +239,39 @@ function themeSelected( themeName){
         if (typeof fileref!="undefined")
             document.getElementsByTagName("head")[0].appendChild(fileref)
     }
-function keepThis(){
+async function keepThis(){
     pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
-    gitCheckout([ MERGED, '--ours']);
+     await gitCheckout([ MERGED, '--ours']);
+    closeWindowNicely(0);
+    document.getElementById('isBinaryMerge').close();
+    
     parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
 }
-function keepOther(){
+async function keepOther(){
     pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
-    gitCheckout([ MERGED, '--theirs']);
+    await gitCheckout([ MERGED, '--theirs']);
+    closeWindowNicely(0);
+    document.getElementById('isBinaryMerge').close();
+    
     parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
 }
 async function gitCheckout(options){
+    let file = options[0];
+    
     let folder = global.state.repos[global.state.repoNumber].localFolder;
+    
     await simpleGitLog(folder).checkout( options, onCheckout);
     function onCheckout(err, result){
         console.log(result); 
         console.log(err); 
     } 
+    
+    simpleGitLog(folder).add( file, onAdd);
+    function onAdd(err, result){
+        console.log(result); 
+        console.log(err); 
+    } 
+    
 }
 
 // Standard CodeMirror
@@ -544,6 +560,11 @@ function finish( wayToFinish){
     switch(wayToFinish) {
         case 'cancel':  {
             closeWindowNicely(1);
+            //if (getMode() == 'MERGE'){
+                //closeWindowNicely(100);  // Error code if Merge
+            //}else{
+                //closeWindowNicely(1);  // Error code if Diff
+            //}
             break;
         }
         case 'close':  {
@@ -568,6 +589,7 @@ function finish( wayToFinish){
             break;
         }
     }
+    win.close();
 
 }
 function save(){
@@ -590,6 +612,16 @@ function closeWindowNicely(exitCode){
         console.log(err);
         fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
     }
+
+    
+    // Store gui mode settings
+    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
+    global.state.pragmaMerge.align = document.getElementById('align').checked;
+    
+    
+    // Remove from menu
+    parent.opener.deleteWindowMenu('Pragma-merge');
+        
         
     // Remove file, to let script know it has stopped
     try {
@@ -601,15 +633,8 @@ function closeWindowNicely(exitCode){
         pragmaLog(err);
     }
     
-    // Store gui mode settings
-    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
-    global.state.pragmaMerge.align = document.getElementById('align').checked;
     
-    
-    // Remove from menu
-    parent.opener.deleteWindowMenu('Pragma-merge');
-
-    win.close();
+    //win.close();
 }
 
 

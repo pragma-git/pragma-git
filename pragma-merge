@@ -1,5 +1,6 @@
 #!/bin/bash
 
+##bash recipy
 
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
@@ -7,14 +8,14 @@ then
     # Mac or Linux  
     TMP="$HOME/.Pragma-git/.tmp"
     echo "Mac or Linux" > "$TMP/mergelog.txt"
-    env >> "$TMP/mergelog.txt"
+    #env >> "$TMP/mergelog.txt"
     echo $(pwd) > "$TMP/repo_path"
     echo "TMP=$TMP" >> "$TMP/mergelog.txt"
 else
     # Windows
     TMP="$USERPROFILE/.Pragma-git/.tmp"
     echo "WINDOWS" > "$TMP/mergelog.txt"
-    env >> "$TMP/mergelog.txt"
+    #env >> "$TMP/mergelog.txt"
     echo $(pwd -W) > "$TMP/repo_path"
     echo "TMP=$TMP" >> "$TMP/mergelog.txt"
 fi
@@ -55,5 +56,23 @@ rm "$EXIT"
 echo  " " >> "$TMP/mergelog.txt"
 echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"
 echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/mergelog.txt"
+
+# Add to conflicts if EXITCODE<>0  
+##if [ $EXITCODE -eq 100 ]  # This script should only be created if MERGE (Error code 100) -- not DIFF
+##then
+##    # Log
+##    echo  "$(date) MERGE FAIL : EXITCODE = $EXITCODE" >> "$TMP/mergelog.txt"
+##    echo  "$(date) CREATING SCRIPT 'recipy' " >> "$TMP/mergelog.txt"
+##    
+##    # Create script
+##    echo "git reset '"$4"'" > recipy
+##    echo "git checkout --conflict=merge '"$4"'" >> recipy
+##    echo 'rm "$0"' >> recipy
+##    
+##    EXITCODE=0
+##fi
+
+echo  " " >> "$TMP/mergelog.txt"
+    
 
 exit $EXITCODE
