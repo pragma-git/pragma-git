@@ -293,20 +293,14 @@ async function _callback( name, event){
                
     }
     async function gitUndoMerge( folder){
-        let tool = state.tools.mergetool;
-        let command = [  
-            'mergetool', 
-            '--gui' , 
-            '--tool=' + tool 
-        ];
+
         try{
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
             // Resolve with external merge tool
-            //writeMessage( 'Resolving conflicts');
-            //await simpleGit( folder).merge(['--abort'], onUndoMerge );
-            await simpleGit( folder).reset(['--merge'], onUndoMerge );
+            await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            //await simpleGit( folder).reset(['--merge'], onUndoMerge );
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
