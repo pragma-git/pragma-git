@@ -493,8 +493,10 @@
         );    
             
         window.addEventListener('unload', (event) => {
-            console.log('merge.html :DOM fully unloaded -- maybe window closed ');
-            finish('unloadWindow');
+                console.log('merge.html :DOM fully unloaded -- maybe window closed ');
+                if ( CLOSED == false){
+                    finish('unloadWindow');
+                }
             }
         );     
         

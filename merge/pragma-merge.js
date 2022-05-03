@@ -29,6 +29,7 @@ var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
 var SAVED = false; // Flag to show that save has been performed.
+var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
 
 // Read paths
 
@@ -86,7 +87,10 @@ const helpIcon = `<img style="vertical-align:middle;float: right; padding-right:
 function isBinaryFile(){
     
     try{
-        return isBinaryFileSync(LOCAL);
+        if ( isBinaryFileSync(MERGED) ){
+            pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
+            return true
+        }
     }catch (err){  
     }
     
@@ -99,6 +103,9 @@ function injectIntoJs(document) {
     cachedFile.LOCAL = loadFile(LOCAL);
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
+    
+    
+    pragmaLog('Pragma-merge open file = "' + MERGED + '"');
     
     parent.document.title = HTML_TITLE;
     
@@ -242,6 +249,7 @@ function themeSelected( themeName){
 async function keepThis(){
     pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
      await gitCheckout([ MERGED, '--ours']);
+
     closeWindowNicely(0);
     document.getElementById('isBinaryMerge').close();
     
@@ -250,6 +258,7 @@ async function keepThis(){
 async function keepOther(){
     pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
     await gitCheckout([ MERGED, '--theirs']);
+    
     closeWindowNicely(0);
     document.getElementById('isBinaryMerge').close();
     
@@ -607,6 +616,7 @@ function closeWindowNicely(exitCode){
     // Write exit code to file for script to pick up
     try{
         fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+        pragmaLog('Pragma-merge exit code = ' + exitCode );
     }catch(err){
         console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
         console.log(err);
@@ -633,7 +643,7 @@ function closeWindowNicely(exitCode){
         pragmaLog(err);
     }
     
-    
+    CLOSED = true;
     //win.close();
 }
 

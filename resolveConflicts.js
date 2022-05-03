@@ -13,6 +13,7 @@ var fs = require('fs');
 const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git'); 
+const pragmaLog = opener.pragmaLog;         // Defined in app.js
 
 const util = require('./util_module.js'); // Pragma-git common functions 
 
@@ -148,7 +149,7 @@ async function _callback( name, event){
                 //writeMessage( 'Resolving conflicts');
                 await simpleGit( folder).raw(command.concat( origConflictingFiles[i] ), onResolveConflict );
                 function onResolveConflict(err, result){ console.log(result); console.log(err) };
-                await waitTime( 1000);
+                //await waitTime( 1000);
                 
                 console.log('gitResolveConflicts -- Finished resolving conflicting files');
         
