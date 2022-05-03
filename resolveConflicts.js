@@ -28,7 +28,6 @@ const delayInMs = 1000;
 var timer = _loopTimer( 1000);
 
 // Storage of paths to backup files
-const backupExtension = '.orig';
 var origConflictingFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
 
 // ---------
@@ -69,12 +68,16 @@ async function injectIntoJs(document) {
     document.getElementById('collapsibleUnsure').click();   // Open collapsed section 1)
     
     if (b.length == 0){
+        document.getElementById('resolveAllUnsureButton').disabled = true;
         document.getElementById('resolveAllConflictsButton').disabled = false; // Second button is enabled if no conflicts
     }
     
     let a = createConflictingFileTable(document, status_data);
     document.getElementById('collapsibleConflict').click();  // Open collapsed section 2)
     
+    if (a.length == 0){
+        document.getElementById('resolveAllConflictsButton').disabled = true; // Second button is enabled if any conflicts
+    }   
     
     document.getElementById('collapsibleResolved').click();  // Open collapsed section 3)
     
@@ -107,6 +110,9 @@ async function _callback( name, event){
             // Enable "Solve conflicting files" button in step 2)
             document.getElementById('resolveAllConflictsButton').disabled = false;
             
+            // Disable this button from step 1)
+            document.getElementById('resolveAllUnsureButton').disabled = true;
+            
             break;
      
         case 'conflictsResolvedButton':
@@ -119,7 +125,6 @@ async function _callback( name, event){
             console.log('undoMergeButton');
             console.log(event);
             gitUndoMerge( state.repos[state.repoNumber].localFolder);
-            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
             break;
 
 
@@ -245,7 +250,7 @@ async function _callback( name, event){
         // Remove .orig
         for (let i in origConflictingFiles) {
             try {
-                let file = folder + pathsep + origConflictingFiles[i] + backupExtension;
+                let file = folder + pathsep + origConflictingFiles[i] + '.orig';
                 console.log('gitDeleteBackups -- deleting file = ' + file);
                 fs.unlinkSync(file)
                 //file removed
@@ -298,13 +303,16 @@ async function _callback( name, event){
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
-            // Resolve with external merge tool
             await simpleGit( folder).merge(['--abort'], onUndoMerge );
-            //await simpleGit( folder).reset(['--merge'], onUndoMerge );
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
-            console.log('gitUndoMerge -- Finished ');
+            // Remove git backup-files
+            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            
+            // Close pragma-merge window (may or may not be opened)
+            opener.merge_win.close();
+            
             
         }catch(err){
             console.log('gitUndoMerge -- caught error ');
