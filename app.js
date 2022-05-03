@@ -151,7 +151,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Use as with simpleGit, but this one atuo-logs through pragmaLog
         function simpleGitLog(pwd) {  
-            pragmaLog('pwd = ' + pwd); return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) 
+            pragmaLog( ' ');
+            pragmaLog('REPO  = ' + pwd); 
+            return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) 
         } 
 
 
@@ -4390,11 +4392,21 @@ function sendGitOutputToFile() {
   return (cmd, stdOut, stdErr, args) => {
     const id = ++counter;
 
-    pragmaLog( ' ');
     pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
+
+    stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ) });
+    stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() + '\n') }); // Stderr + extra line
     
-    stdOut.on('data', buffer => { pragmaLog( `STDOUT [${id}] ${buffer.toString()}`) });
-    stdErr.on('data', buffer => { pragmaLog( `STDERR [${id}] ${buffer.toString()}` ) });
+    
+    function separateLines( prefix, multiLineString){
+        // Add prefix before each row of message
+        let lines = multiLineString.split("\n");
+        for (var i = 0; i < lines.length; i++) {
+            pragmaLog( `${prefix} ${lines[i]}`);
+        }
+    }
+    
+    
   }
 }
 
