@@ -4392,7 +4392,7 @@ function sendGitOutputToFile() {
   return (cmd, stdOut, stdErr, args) => {
     const id = ++counter;
 
-    pragmaLog( `COMMAND[${id}] ${args.join(' ')}`);
+    pragmaLog( `COMMAND[${id}] ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
 
     stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ) });
     stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() + '\n') }); // Stderr + extra line
