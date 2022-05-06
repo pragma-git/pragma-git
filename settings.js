@@ -59,8 +59,14 @@ async function _callback( name, event){
             console.log('checkboxChanged');
             console.log(event);
             value = event.checked;
-            state[id] = value;
+            global.state[id] = value;
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
+            
+            // Reload main if change
+            opener.updateWithNewSettings();
+            opener.saveSettings();
+            opener.win.reload();
+            
             break;
         } 
         case 'visualModeChanged': {
@@ -82,7 +88,7 @@ async function _callback( name, event){
             value = event.checked;
             //state[id] = value;
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
-            state.repos[state.repoNumber][id] = value;
+            state.repos[state.repoNumber][id] = value;      
             break;
         } 
 
