@@ -215,12 +215,19 @@ function themeSelected( themeName){
     let index = util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
     
+    // Set color from specification in pragma-merge_iframe.html 
+    // 1) specified chunkColor
+    // 2) specified alpha
     let color = chunkColor;
-    if (chunkColor == "default"){
+    
+    if (chunkColor.substr(0,2) == "0.") {
         let bkg = document.getElementsByClassName('editorBackground'); 
         let computedBackgroundColor = window.getComputedStyle(bkg[0], null).getPropertyValue( 'background-color');
-        color = 'rgba(255, 255, 255, 0.15)';
+        
+        alpha = chunkColor;
+        color = computedBackgroundColor.substr(0, computedBackgroundColor.length - 1) + ', ' + alpha + ')';
     }
+
             
     // Change chunk-color
     els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 

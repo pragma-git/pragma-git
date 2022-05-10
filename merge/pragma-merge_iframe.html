@@ -368,72 +368,73 @@
                 > 
                 hide unchanged
 
-    
+                <!-- option = default is hard coded in code-mirror.css -->
+                <!-- override by chunk-color, which specifies  alpha, or  html color -->
                 <select id="theme-select" style="position: relative; left: 20px" 
                     onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
                     <option>default</option>
                     <option disabled>──────────</option>
-                    <option chunk-color="default">zenburn</option>
-                    <option chunk-color="antiquewhite">3024-day</option>
-                    <option chunk-color="default">3024-night</option>
-                    <option chunk-color="default">abcdef</option>
-                    <option chunk-color="#888">ambiance</option>
-                    <option chunk-color="default">ayu-dark</option>
-                    <option chunk-color="default">ayu-mirage</option>
-                    <option chunk-color="default">base16-dark</option>
-                    <option chunk-color="antiquewhite">base16-light</option>
-                    <option chunk-color="default">bespin</option>
-                    <option chunk-color="default">blackboard</option>
-                    <option chunk-color="default">cobalt</option>
-                    <option chunk-color="default">colorforth</option>
-                    <option chunk-color="default">darcula</option>
-                    <option chunk-color="default">dracula</option>
-                    <option chunk-color="default">duotone-dark</option>
-                    <option chunk-color="antiquewhite">duotone-light</option>
+                    <option chunk-color="0.25">zenburn</option>
+                    <option chunk-color="0.25">3024-day</option>
+                    <option chunk-color="0.25">3024-night</option>
+                    <option chunk-color="0.25">abcdef</option>
+                    <option chunk-color="0.25">ambiance</option>
+                    <option chunk-color="0.25">ayu-dark</option>
+                    <option chunk-color="0.25">ayu-mirage</option>
+                    <option chunk-color="0.25">base16-dark</option>
+                    <option chunk-color="0.25">base16-light</option>
+                    <option chunk-color="0.25">bespin</option>
+                    <option chunk-color="0.25">blackboard</option>
+                    <option chunk-color="0.25">cobalt</option>
+                    <option chunk-color="0.25">colorforth</option>
+                    <option chunk-color="0.25">darcula</option>
+                    <option chunk-color="0.25">dracula</option>
+                    <option chunk-color="0.25">duotone-dark</option>
+                    <option chunk-color="0.25">duotone-light</option>
                     <option chunk-color="antiquewhite">eclipse</option>
                     <option chunk-color="antiquewhite">elegant</option>
-                    <option chunk-color="default">erlang-dark</option>
-                    <option chunk-color="default">gruvbox-dark</option>
-                    <option chunk-color="default">hopscotch</option>
-                    <option chunk-color="default">icecoder</option>
+                    <option chunk-color="0.25">erlang-dark</option>
+                    <option chunk-color="0.25">gruvbox-dark</option>
+                    <option chunk-color="0.25">hopscotch</option>
+                    <option chunk-color="0.25">icecoder</option>
                     <option chunk-color="antiquewhite">idea</option>
-                    <option chunk-color="dimgray">isotope</option>
-                    <option chunk-color="default">liquibyte</option>
-                    <option chunk-color="default">lucario</option>
-                    <option chunk-color="#333">material-darker</option>
-                    <option chunk-color="#222">material-ocean</option>
-                    <option chunk-color="#333">material-palenight</option>
-                    <option chunk-color="#333">material</option>
-                    <option chunk-color="default">mbo</option>
-                    <option chunk-color="antiquewhite">mdn-like</option>
-                    <option chunk-color="default">midnight</option>
-                    <option chunk-color="default">monokai</option>
-                    <option chunk-color="dimgray">moxer</option>
+                    <option chunk-color="0.25">isotope</option>
+                    <option chunk-color="0.25">liquibyte</option>
+                    <option chunk-color="0.25">lucario</option>
+                    <option chunk-color="0.25">material-darker</option>
+                    <option chunk-color="0.25">material-ocean</option>
+                    <option chunk-color="0.25">material-palenight</option>
+                    <option chunk-color="0.25">material</option>
+                    <option chunk-color="0.25">mbo</option>
+                    <option chunk-color="0.25">mdn-like</option>
+                    <option chunk-color="0.25">midnight</option>
+                    <option chunk-color="0.25">monokai</option>
+                    <option chunk-color="0.25">moxer</option>
                     <option chunk-color="antiquewhite">neat</option>
-                    <option chunk-color="antiquewhite">neo</option>
-                    <option chunk-color="default">night</option>
-                    <option chunk-color="#888">nord</option>
-                    <option chunk-color="darkslategray">oceanic-next</option>
-                    <option chunk-color="default">panda-syntax</option>
-                    <option chunk-color="default">paraiso-dark</option>
-                    <option chunk-color="bisque">paraiso-light</option>
-                    <option chunk-color="default">pastel-on-dark</option>
-                    <option chunk-color="default">railscasts</option>
-                    <option chunk-color="default">rubyblue</option>
-                    <option chunk-color="antiquewhite">seti</option>
-                    <option chunk-color="default">shadowfox</option>
+                    <option chunk-color="0.25">neo</option>
+                    <option chunk-color="0.25">night</option>
+                    <option chunk-color="0.25">nord</option>
+                    <option chunk-color="0.25">oceanic-next</option>
+                    <option chunk-color="0.25">panda-syntax</option>
+                    <option chunk-color="0.25">paraiso-dark</option>
+                    <option chunk-color="0.25">paraiso-light</option>
+                    <option chunk-color="0.25">pastel-on-dark</option>
+                    <option chunk-color="0.25">railscasts</option>
+                    <option chunk-color="0.25">rubyblue</option>
+                    <option chunk-color="0.25">seti</option>
+                    <option chunk-color="0.25">shadowfox</option>
                     <option chunk-color="antiquewhite">solarized</option>
                     <option chunk-color="antiquewhite">ssms</option>
-                    <option chunk-color="default">the-matrix</option>
-                    <option chunk-color="default">tomorrow-night-bright</option>
-                    <option chunk-color="default">tomorrow-night-eighties</option>
+                    <option chunk-color="0.25">the-matrix</option>
+                    <option chunk-color="0.25">tomorrow-night-bright</option>
+                    <option chunk-color="0.25">tomorrow-night-eighties</option>
                     <option chunk-color="antiquewhite">ttcn</option>
-                    <option chunk-color="default">twilight</option>
-                    <option chunk-color="default">vibrant-ink</option>
-                    <option chunk-color="default">xq-dark</option>
+                    <option chunk-color="0.25">twilight</option>
+                    <option chunk-color="0.25">vibrant-ink</option>
+                    <option chunk-color="0.25">xq-dark</option>
                     <option chunk-color="antiquewhite">xq-light</option>
-                    <option chunk-color="#666">yeti</option>
-                    <option chunk-color="default">yonce</option>
+                    <option chunk-color="#FCFAF8">yeti</option>
+                    <option chunk-color="0.25">yonce</option>
                 </select>            
                 
             </span>
