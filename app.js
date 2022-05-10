@@ -4425,7 +4425,14 @@ async function updateSettingsWindow(){
     await _update();
 
     if (localState.settings){
-        settings_win.window.injectIntoSettingsJs(settings_win.window.document)
+        //settings_win.window.injectIntoSettingsJs(settings_win.window.document)  // Update whole settings window
+                
+                
+        // Update repo in settings_win 
+        try{
+            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        }catch(err){ 
+        }
     }
     
     win.focus();
