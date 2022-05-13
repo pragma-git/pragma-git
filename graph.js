@@ -1658,12 +1658,17 @@ async function drawGraph( document, splitted, branchHistory, history){
     
     // Extent of segment
     let start = commit.y;
+    let end = commit.y - 1;
     
 
-    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
+    while (  !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
         commit = nodeMap.get( commit.parents[0]);
+        // If no parent, return false
+        if ( commit == undefined ){
+            return false;
+        }
+        end = commit.y - 1;
     }
-    let end = commit.y - 1;
     //console.log('start = ' + start + '   End = ' + end);
     
     // Return true any commit is on active swimlane
