@@ -652,7 +652,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             
             // Add current branchName as first branch (will be to left)
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-            branchNames.set(branchName, branchNames.size);
+            //branchNames.set(branchName, branchNames.size);
             
             
             childMap = new Map();  // List of children for commits
@@ -797,7 +797,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 }  
                 
                 // is topmost commit on a branch
-                let isTopCommit = ( !branchNames.has(branchName) && ( branchName !== "") );   
+                let isTopCommit = ( ( !branchNames.has(branchName) && ( branchName !== "") ) || (row == 0) );   
                 
             // Visible / hidden branch
                 if ( showBranch(branchName) ){
