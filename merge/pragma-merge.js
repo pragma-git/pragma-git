@@ -194,6 +194,7 @@ function themeSelected( themeName){
     global.state.pragmaMerge.codeTheme = themeName;
     
     if (themeName == "default"){
+        root.style.setProperty('--markerColor', 'antiquewhite');
         return
     }
     console.log(themeName);
@@ -226,14 +227,15 @@ function themeSelected( themeName){
         
         alpha = chunkColor;
         color = computedBackgroundColor.substr(0, computedBackgroundColor.length - 1) + ', ' + alpha + ')';
+        root.style.setProperty('--markerColor', 'color');
     }
 
             
-    // Change chunk-color
-    els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
-    for (let i=0; i < els.length; i++) { 
-        els[i].style.backgroundColor = color;
-    }
+    //// Change chunk-color
+    //els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
+    //for (let i=0; i < els.length; i++) { 
+        //els[i].style.backgroundColor = color;
+    //}
 
     
 }
