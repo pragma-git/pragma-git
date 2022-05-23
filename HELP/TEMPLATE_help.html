@@ -1,0 +1,71 @@
+<html>
+    <head>
+        <title id='title'>Template</title>  <!-- TITLE --> 
+
+        <link rel="stylesheet" type="text/css" href="../color_styles.css" />
+        
+    </head>
+    
+     
+ 
+    
+
+<body class='light'> 
+    
+    <!-- Dark mode on/off , zoom--> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.add('dark');
+        }
+        window.document.body.style.zoom = global.state.zoom;
+    </script>       
+                
+
+    <div id="outer-content">
+        
+<!-------------------------------------------------------------------------------------------->    
+    <h1>Help on <span id='name'></span>
+    
+        <img id="about-icon" style='vertical-align:middle;position: absolute; right: 25;' height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('about-icon').src='../images/find.png' " 
+                onmouseout="document.getElementById('about-icon').src='../images/find_hover.png' " 
+                src="../images/find_hover.png" >
+    </h1>   <!-- TITLE --> 
+<!-------------------------------------------------------------------------------------------->       
+    
+
+            
+        <div id="inner-content">
+<!-- CONTENT START--------------------------------------------------------------------------------> 
+        
+        
+        
+
+    
+
+<!--- CONTENT END -------------------------------------------------------------------------------->         
+        </div> <!-- inner-content --> 
+    </div> <!-- content --> 
+
+        
+    <!--  Add find  -->    
+    <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="../extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
+    </script> 
+    
+    <!-- Event listeners--> 
+    <script>
+    
+        window.addEventListener('unload', (event) => {
+            let title = document.getElementById('title').innerText;
+            opener.deleteWindowMenu(title);
+            }
+        );
+    </script>
+
+</body>
+</html>

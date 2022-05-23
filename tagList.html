@@ -2,9 +2,47 @@
     <head>
         <title>List tags</title>
         <script src="tagList.js"></script>
+    
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
+        <style>
+            body{
+                font-family: Arial;
+                font-size: 11pt;
+                background: var(--body-background);
+                color: var(--body-text);
+            }
+            
+            textarea{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+            
+            
+            select{ 
+                width: 100%;
+                line-height: 1;
+                color: var(--body-text);
+                border-width: thin;
+                background-color: var(--input-background);
+            }
+        
+        </style>
     </head>
     
-    <body>
+<body class='light'>
+    <!-- Dark mode on/off , zoom --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+        
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
 
         <div id="outerContent"  style="width: fit-content;padding: 10px">
               
@@ -24,11 +62,7 @@
 
         <label for="tagSelection"> Select one</label><br>
         <select name="tagSelection" id="tagSelection" size="15" style="width: 100%">
-            <option value="SM">http://www.scriptingmaster.com</option>
-            <option value="Google">http://www.google.com</option>
-            <option value="MSN">http://www.msn.com</option>
-            <option value="yahoo">http://www.yahoo.com</option>
-            <option value="microsoft">http://www.microsoft.com</option>
+            <!--  Filled in by tagList.js  -->
             </select>
             
         <br>

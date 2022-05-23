@@ -1,42 +1,63 @@
-#!/bin/bash -x
+#!/bin/bash
 
-TMP="$HOME/.Pragma-git/.tmp"
-mkdir "$TMP"
+##bash recipy
+
+# Home dir
+if [ -z ${SYSTEMDRIVE+x} ]
+then
+    # Mac or Linux  
+    TMP="$HOME/.Pragma-git/.tmp"
+    echo "Mac or Linux" > "$TMP/mergelog.txt"
+    #env >> "$TMP/mergelog.txt"
+    echo $(pwd) > "$TMP/repo_path"
+    echo "TMP=$TMP" >> "$TMP/mergelog.txt"
+else
+    # Windows
+    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    echo "WINDOWS" > "$TMP/mergelog.txt"
+    #env >> "$TMP/mergelog.txt"
+    echo $(pwd -W) > "$TMP/repo_path"
+    echo "TMP=$TMP" >> "$TMP/mergelog.txt"
+fi
+
+
+
+mkdir "$TMP" 2>/dev/null
 
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
-EXIT="$TMP/exit"                     # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-# 
+# Bail out if already running
+if [  -f "$RUNNING" ] ; then
+    echo  " " >> "$TMP/mergelog.txt"
+    echo  "$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
+    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
+    exit
+fi
+
+# Store input parameters for Pragma-git to pick them up
 echo $1 > "$TMP/first"
 echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"
 echo $4 > "$TMP/fourth"
 
-# Repo path
-if [ -z ${SYSTEMDRIVE+x} ]
-then
-    # Mac or Linux  
-    echo "Mac or Linux" > "$TMP/mergelog.txt"
-    echo $(pwd) > "$TMP/repo_path"
-    env >> "$TMP/mergelog.txt"
-else
-    # Windows
-    echo "WINDOWS" > "$TMP/mergelog.txt"
-    #echo "\"$(pwd -W | sed 's/\//\\/g' )\"" > "$TMP/repo_path"  # Win32 path with "/", replace with "\"
-    echo $(pwd -W) > "$TMP/repo_path"
-    env >> "$TMP/mergelog.txt"
-fi
 
 # Run Pragma-merge while $RUNNING exists (removed by Pragma-merge when closed)
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
-  echo 'waiting'
   sleep 1 
 done
 
 # Exited Pragma-merge
 EXITCODE=$(cat "$EXIT")
 rm "$EXIT"
+
+echo  " " >> "$TMP/mergelog.txt"
+echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"
+echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/mergelog.txt"
+
+echo  " " >> "$TMP/mergelog.txt"
+    
 
 exit $EXITCODE

@@ -3,46 +3,79 @@ Pragma-git
 
  
 
-"Pragma-git" is the friendly pragmatic git control app, *fully compatible* with
+*Pragma-git* is a friendly pragmatic *git* control app, *fully compatible* with
 other git client softwares.
 
-The difference to other git clients are:
+ 
 
--   small window — leaves more screen-space without hiding program
+### The aim with *Pragma-git* is to be
 
--   easy overview — you don’t need the branch diagrams in daily work
+-   ”pragmatic” — aiming to be the opposite to how many beginners perceive *git*
 
--   shows git functions only when applicable — no confusion
+-   easy to start — and something to grow in for daily programming tasks
 
--   uses external diff and merge tools — use your favourite
-
--   note taking for each repository
+-   friendly — guiding you through risks of data loss with pop-up warnings and
+    instructions
 
  
 
-Git is an impressive toolbox with over 100 commands, and knowing what commands
-to use makes the threshold to get started overwhelming.
+### Differences to other git clients
 
- 
+-   small window — no need hiding other apps
 
-The aim with Pragma-git is to be
+-   easy overview of project state
 
--   ”pragmatic” — the antonym (opposite) to impractical, irrational, or
-    unreasonable.
+-   show buttons only when applicable — less confusion
 
--   just right — making the best features of git easy to use
+-   use built-in or external diff and merge tools — use your favourite
 
--   watching out — guiding you through dangers of losing data
+-   note taking — todo lists and notes at your finger tips
 
  
 
 Screen shot
 -----------
 
-Example screen shot with all the functions enabled (most of the time when not
-applicable, many of these will be hidden)
+Example screen shot with all the functions enabled (most of the time many of
+these icons will be hidden, and they are shown only when meaningful) :
 
 ![](images/Pragma-git-screen-shot.png)
+
+Features
+--------
+
+-   Easy overview of current repository, branch and number of changed files
+
+-   Dash-board small screen estate, fits on screen with other softwares  
+      
+    
+
+-   Drag-and-drop to create or add repository
+
+-   Note-taking, wysiwyg or markdown, with todo lists etc  
+    
+
+-   Auto-push to remote repository (can be disabled in settings)
+
+-   Auto-fetch, and indication if if pull is possible
+
+-   Standard git features, such as branch, merge, push, pull, tag, stash  
+    
+
+-   History browser
+
+-   Builtin *pragma-merge* diff and merge tool (external tool may be used
+    instead)
+
+-   Settings, handling repository, branches, remotes, cloning as well as
+    software preferences  
+    
+
+-   Fully git compatible, try it, and use together with other clients
+
+ 
+
+ 
 
 Installation
 ------------

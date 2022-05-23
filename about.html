@@ -2,12 +2,16 @@
     <head>
       <title>About</title>
       
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
     </head>
     
     <style>
-        body{
+        body{ 
             font-family: Arial;
             font-size: 12pt;
+            background-color: var(--body-background);
+            color: var(--body-text);
+            margin: 20px;
         }
         
         h4{
@@ -17,7 +21,7 @@
             text-align:center;   
         }       
         code{
-            color: #006400; 
+            color: var(--code-text);
             font-size: 11pt;  
         }
         
@@ -38,6 +42,26 @@
         td{
             padding: 6px;
         }
+        
+        dd{
+            padding-top: 6px;
+            text-indent: -22px ;
+        }
+                
+        img{
+            filter: invert( var(--image-invert) );
+        }        
+        
+        img[src="images/Cheat-sheet.png"],
+        img[src="images/Cheat-sheet-advanced.png"], 
+        img[src="images/top-title-bar.png"] , 
+        img[src="images/bottom-status-bar.png"] , 
+        img[src="images/conflict-status-bar.png"] , 
+        img[src="images/top-title-bar.png"] 
+        {
+            filter: invert( 0% );
+        }
+
 
 
         
@@ -87,8 +111,15 @@
     </style>
 
     
-
-<body>   
+<body class='light'> 
+    
+    <!-- Dark mode on/off , zoom--> 
+    <script>
+        if (global.localState.dark){
+            document.body.classList.add('dark');
+        }
+        window.document.body.style.zoom = global.state.zoom;
+    </script>    
     
       
 <div id="content">
@@ -96,9 +127,17 @@
         
     <div id="inner-content">
  <!-------------------------------------------------------------------------------------------->  
-        <p style="text-align:right;"> version <span id='version'></span></p>                                
+        <p style="text-align:right;">Pragma-git  <span id='version'></span>
+         </p>                              
             
-        <h2>About Pragma-git</h2>
+        <h2>About Pragma-git
+                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('about-icon').src='images/find.png' " 
+                onmouseout="document.getElementById('about-icon').src='images/find_hover.png' " 
+                src="images/find_hover.png" >
+        
+        </h2>
         
     
         <hr>
@@ -123,12 +162,10 @@
  <!-------------------------------------------------------------------------------------------->             
         <h4>Help</h4>
                                
-            <p>Help for the main window is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            <p>Help is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
+            This icon also appears in many opened windows.
             </p>
-                               
-            <p>Instructions for windows that are opened outside the main windown are found at the bottom of each window, and can be read by clicking on the banner :
-            <img style='vertical-align:middle;' src="images/instructions-button.png"  height="24">
-            </p>  
+
         <hr>          
 
  <!-------------------------------------------------------------------------------------------->             
@@ -150,9 +187,9 @@
              <p>For git first-timers, the workflow would simply be: 
              <ul>
                 <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the "Store" button to store a snapshot of your files</li>
+                <li>When finished with some task: write a description in the text area, and press the <button>Store</button> button to store a snapshot of your files</li>
                 <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the "Store" button</li>
+                <li>When finished with some task: write a description in the text area, and press the  <button>Store</button> button</li>
                 <li>...</li>
              </ul>  
             </p>    
@@ -162,13 +199,19 @@
         <hr>          
   <!-------------------------------------------------------------------------------------------->  
         <h4>How it works</h4>       
-        
-        <img style='vertical-align:middle;' src="images/Cheat-sheet.png" width="80%">
-    
-        <br>
+        <p>
+            <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet.png" width="80%">
+        </p>
         <br>
         <hr>           
-            
+    <!-------------------------------------------------------------------------------------------->  
+        <h4>Advanced usage</h4>        
+        <p>
+            <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet-advanced.png" width="80%">
+        </p>
+        <br>
+        <hr>           
+                      
  <!-------------------------------------------------------------------------------------------->                                  
         <h3>Learn more</h3>   
         <hr>  
@@ -179,32 +222,60 @@
              <dl>
               <dt>Most things can be clicked :</dt>
                 <dd>&nbsp;</dd>
+                
                 <dt><i>These buttons are always visible :</i></dt>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
                     <dd>&nbsp;</dd>
+                    
                 <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
+                <dd> <img src="images/terminal_black.png"  height="17" width="17"> Open terminal in project folder</dd>
                 <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
-                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project</dd>
-                    <dd>&nbsp;</dd>
-                <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
-                <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
-                    <dd>&nbsp;</dd>
-                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. View it as a temporary Store, which leaves no trace in the revision history</dd>
-                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
-                    <dd>&nbsp;</dd>
-                <dd> <img style='vertical-align:middle;' src="images/store-button.png"  height="24"> Stores the current state of your work as a revision. </dd>
+                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project.<a href="#NOTES">Learn more.</a></dd>
                     <dd>&nbsp;</dd>
                     
-                <dt><i>These buttons are visible only when they can be used :</i></dt>
+                <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
+                <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
+                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>    
+                <dd> <img src="images/more_black.png"  height="17" width="17"> Shows a graphical view of the commit history   </dd>
+                    <dd>&nbsp;</dd>
+                    
+                <dd>  <button>Store</button> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
+                    <dd>&nbsp;</dd>
+                    
+                    
+                    
+                <dt><i>These buttons are used when working with active files (visible only when they can be used) :</i></dt>
+                
                     <dd>&nbsp;</dd>
                 <dd> <img src="images/branch_black.png"  height="17" width="17"> Create a new branch from your position </dd>
                 <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
-                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository</dd>
+                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository. Please click.</dd>
                 <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
                 <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
-                    <dd>&nbsp;</dd>
-                <dd> <img style='vertical-align:middle;' src="images/checkout-button.png"  height="20"> Check out an older revison (shown when browsing history)</dd>
+                    <dd>&nbsp;</dd>                    
+                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history</dd>
+                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
+                    <dd>&nbsp;</dd>              
+   
+                <dt><i>These buttons are active when browsing history :</i></dt>   
+                    <dd>&nbsp;</dd>   
+                           
+                <dd>  <span style='font-size: 15pt;'> &#x25B2;</span>  Button to get out of history browsing (shown beside branch name in history mode) </dd>   
+                    <dd>&nbsp;</dd>   
+                    
+                <dd> <img src="images/revert_black.png"  height="17" width="17"> "Revert" (undo changes) introduced in this commit. Commit these changes or keep editing</dd>                                    
+                <dd> <img src="images/cherry-pick_black.png"  height="17" width="17"> "Cherry-pick" (copy changes) introduced in this commit to branch selected from dropdown menu. Commit these changes or keep editing</dd>
+                    <dd>&nbsp;</dd>  
+                     
+                <dd> <img src="images/pinned_disabled_black.png"  height="17" width="17"> Not marked, means that history is compared with previous commit </dd>
+                <dd><img src="images/pinned_enabled_black.png"  height="17" width="17"> Marked checkbox, means that other commits are compared to the marked commit</dd>
+
+                    <dd>&nbsp;</dd>   
+                    
+                    
+                <dd>  <button>Checkout</button> Check out an older revison (shown when browsing history)</dd>
                     <dd>&nbsp;</dd>
                 </dd>
               
@@ -215,7 +286,9 @@
                  
  <!-------------------------------------------------------------------------------------------->                           
          <h4>A little git dictionary</h4>
-         <button class="collapsible" id="repoSettings">&nbsp; (click to view) </button> 
+         
+         Here follows a dictionary of a number  of terms used in git, and also how they can be understood in Pragma-git :
+         <button class="collapsible" style="background-color: var(--body-background); color: var(--body-text);" id="repoSettings">&nbsp; (click to view / hide) </button> 
          <div  class="content">
 
               <p>There are a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control</p>
@@ -233,11 +306,6 @@
                         <td>A version of all your project files, freezed to exactly this state forever</td>
                     </tr>
                                                
-                     <tr>
-                        <td>Project folder </td> 
-                        <td>A location for storing the files. See "Repository" below</td>
-                    </tr>
-                                  
                      <tr>
                         <td>Project folder </td> 
                         <td>A location for storing the files. See "Repository" below</td>
@@ -281,19 +349,28 @@
                                        
                     <tr>
                         <td>Add, Commit</td>
-                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above</td>
+                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above. 
+                        The <button>Commit</button> button in Pragma-git does this.
+                        This mode, not auto-pushing, is configured in the settings menu of Pragma-git.
+                        </td>
                     </tr>
                     
                     <tr>
                         <td>Add, Commit, Push </td>
-                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. The "Store"-button in Pragma-git does this.</td>
+                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. 
+                        The  <button>Store</button> button in Pragma-git does this.
+                        See "Store" below
+                        </td>
                     </tr>
                     
                     <tr>
                         <td>Store</td>
-                        <td>The "Pragma-git" way to (with one button) store a snapshot in a repository, <i>and</i> to send a copy to the remote repository.
-                        "Stored", refers to commited in "git language".  "Non-stored", "non-commited" and similar phrasing means that there are changed files
-                        that should be stored (commited)</td>
+                        <td>The "Pragma-git" way to (with one click) store a snapshot of the files at this time-point in a repository, <i>and</i> 
+                        to send a copy to the remote repository.
+                        
+                        This mode, auto-pushing, is default in Pragma-git, and is configured in the settings menu of Pragma-git.
+                        
+                        </td>
                     </tr>
  
                      
@@ -331,7 +408,7 @@
                     <tr>
                         <td>Push</td>
                         <td>Send a copy of your snapshots to the remote repository.  
-                        In Pragma-git, the default is to do a "push" when pressing the "Store" button.  
+                        In Pragma-git, the default is to do a "push" when pressing the  <button>Store</button> button.  
                         This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
                         In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
                     </tr>    
@@ -402,7 +479,7 @@
         <hr>      
 
  <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Store version with short description </h4>
+         <h4 id="STORE">Store version with short description </h4>
              <p>
                 When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
                 you may store a named revision of the project. The nice thing about the revision control system is, 
@@ -410,8 +487,8 @@
             </p>
                     
             <p>
-                To store a revision of the changed files, you click in the text field, and type a descriptive text. The Store button  
-                <img style='vertical-align:middle;' src="images/store-button.png"  height="24" > becomes active when you start typing.  Press this button to store your revision.
+                To store a revision of the changed files, you click in the text field, and type a descriptive text. The  <button>Store</button> button  
+                becomes active when you start typing.  Press this button to store your revision.
             </p> 
         <hr>  
             
@@ -429,15 +506,17 @@
          <hr>    
             
  <!-------------------------------------------------------------------------------------------->                                  
-           <h4>Project Notes </h4>                    
-            <p> You may write personal notes for each repository.  The format is "markdown" rich text, 
-            which you can type in a visual mode (what you see is what you get), or in a traditional markdown editor.  
-            You change mode at the bottom-right of the editor.
+           <h4 id="NOTES">Project Notes</h4>                    
+            <p> You may write personal notes for each repository.  
+            The notes are accessed by clicking the  <img src="images/notes_black.png"  height="17" width="17"> icon, in the top titlebar.
+            </p>
             
+            <p>The notes are written using the built-in editor, which support both visual editing and editing with "markdown" rich text format.
+            At the bottom of the editor, you can chose to change between editing in WYSIWYG (what-you-see-is-what-you-get), or Markdown.
             </p> 
             
              <p>The notes-file is stored in your home folder's <code>.Pragma-git/Notes</code> directory.  
-             Files are saved automatically every 30 seconds, and when you close the window.
+             Files are auto-saved every 30 seconds, and when you close the window.
             </p>     
          <hr>    
             
@@ -481,15 +560,20 @@
  <!-------------------------------------------------------------------------------------------->                                  
           <h4>History, and checkout </h4>    
              
-            <p><u>Browsing history</u> : As described above, the arrow buttons let you browse back in time.
+            <p><u>Browsing history</u> : As described above, the arrow buttons 
+            (<img style='vertical-align:middle;' src="images/down-arrow_hover.png"  height="17" width="17"><img style='vertical-align:middle;' src="images/up-arrow_hover.png"  height="17" width="17">) 
+            let you browse back in time.
+            Also, a graphical representation can be viewed by clicking the icon  <img style='vertical-align:middle;' src="images/more_black.png"  height="17" width="17">
             </p>
             
-            <p>When you view an old commit, the "Store-button" is changed into a "Checkout" button.  
-            Pressing "Checkout" sets the files in the project to the same state as it was when Stored. This is useful if you wish to test your work as it was at this time point.
+            <p>When you view an old commit, the <button>Store</button> button
+            is changed into a  <button>Checkout</button> button
+             
+            Pressing "Checkout" sets the files in the project to the same state as it was once, when Stored. This is useful if you wish to test your work as it was at this time point.
             If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
             </p>
             
-            <p><u>Peculiarity with git</u> : If you, however, change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
+            <p><u>Peculiarity with git</u> : If you change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
             </p>
                        
             <p><u>Detached HEAD branch</u> : The branch-name in the title bar is changed to "HEAD", which in git language is referred to as a "detached HEAD".
@@ -497,10 +581,10 @@
             </p>
             
             <p><u>Modified files in HEAD branch</u> : 
-            If you have modified any files from this checkout and want to keep your changes, you need to move those changes to another branch.
+            If you have modified any files after this checkout and want to keep your changes, you need to move those changes to another branch.
             </p>
                         
-            <p><u>Not Stored files</u> : The easiest way to do move modified (but not Stored) files from a detached HEAD is : 
+            <p><u>Not Stored files</u> : The easiest way to move modified (which are not Stored) files from a detached HEAD is : 
                 <ol>
                     <li>Press the stash button <img 'vertical-align:middle;' src="images/stash_black.png"  height="17" width="17"> </li><br>
                     <li>Click on the branch name (HEAD), until you are at the branch where you wish to add your changes to</li><br>
@@ -525,8 +609,50 @@
             </p> 
                         
         <br>
-        <hr>               
-     
+        <hr> 
+                      
+ <!-------------------------------------------------------------------------------------------->   
+
+        <iframe id="Iframe" src='about_search.html' style="border-width: 0px">
+        </iframe>
+    
+        <script>
+            var frame = document.getElementById("Iframe");
+              
+            // Adjusting the iframe onload 
+            frame.onload = function()
+            {
+              // set the height of the iframe as its content (with a few pixels margin to stop iframe scrolling to occur)
+                frame.style.height =  frame.contentWindow.document.body.scrollHeight + 6 + 'px';                  
+            }
+        </script>
+ 
+          <hr>
+ <!-------------------------------------------------------------------------------------------->             
+
+         <h4 id="SEARCH2">History - comparing with fixed commit </h4>            
+         
+         
+        <p>When in history mode, either by clicking down arrow, or search, the difference in the status bar is shown relative previous commit.
+        </p>
+        
+        <p>Enabling the checkbox 
+            <img src="images/pinned_disabled_black.png"  height="17" width="17"> <img src="images/pinned_enabled_black.png"  height="17" width="17">
+            sets the current commit as the reference, and when moving in history the differences are relative this commit.
+        </p>        
+              
+        <p>The difference is always shown as a comparison between the newest to the oldest commit, 
+        regardless if the current commit is newer or older than the fixed commit.  This eliminates the 
+        problem that the same file can be marked as new or deleted in a comparison between two commits, depending on which of the two commits was fixed.
+        </p>       
+            
+      
+        
+        <br>
+        <br>
+        
+        <hr> 
+
  <!-------------------------------------------------------------------------------------------->             
          <h2 id="INSTALLATION">Installation </h2>
         <hr>             
@@ -596,6 +722,26 @@
 <script>
         var VERSION = require('./package.json').version; 
         document.getElementById('version').innerText = VERSION;
+</script>
+  
+  
+          
+<!--  Add find  -->    
+<script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+<script src="extend_find-in-nw.js"></script>
+<script>
+    findInNw.initialize();
+    extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
+</script> 
+
+    
+<!-- Event listeners--> 
+<script>
+
+    window.addEventListener('unload', (event) => {
+        opener.deleteWindowMenu('About');
+        }
+    );
 </script>
   
 </body>

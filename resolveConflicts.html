@@ -5,6 +5,8 @@
     
     <title>Resolve Conflicts</title>
     
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
     <script src="resolveConflicts.js"></script>
     
     <!-- As in settings.html -->
@@ -12,6 +14,11 @@
         body{
             font-family: Arial;
             font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+        span { 
+            color: var(--link-color); 
         }
         th{
             border-collapse: collapse;
@@ -76,9 +83,25 @@
 
     
 </head>
-<body>
+<body class='light'>
+    <!-- Dark mode on/off , zoom --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+        
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
     
-    <h2>Resolve Conflicts</h2>
+    <h2>Resolve Conflicts
+            <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+            onclick="let evt = {}; evt.name='Resolve Conflicts';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+        </h2>
+    
     
     <!--  1) KEEP OR DELETE -->     
     <button class="collapsible" id="collapsibleUnsure">&nbsp; 1) Select files to keep</button>
@@ -163,44 +186,6 @@
         <br>
         
     </div><br>
-    
-    
-
-    <!--  INSTRUCTIONS  -->     
-    <button class="collapsible" id="collapsibleConflict">&nbsp; Instructions</button>
-    <div class="content">
-        
-        <p>You are in this window because there are file conflicts.  This could be because the file has been deleted or modified in one place, or
-         that there are differences in overlapping parts of two files.  Both these cases needs a manual choice, which change to keep.
-        </p>   
-        
-        <p><b>This window has a stepwise approach</b> : <br>  
-        Resolve the conflicts one section at a time. You may fold the sections, by clicking on the header.  
-        </p>
-        
-        <p><b>Section "1) Select files to keep"</b> : <br>  
-        The files listed here were in a state where it could not be determined if they should be kept, or deleted.  Check files you wish to keep.
-        </p>      
-           
-        <p><b>Section "2) Conflicting files"</b> : <br>  
-        Clicking the "Solve conflicting files"-button starts an external merge tool (see Requirements, below).
-        This button will be enabled when there are no conflicts in step 1).
-        </p>
-
-        
-        <p><b>Section "3) Accept changes"</b> : <br>  
-        This is your last chance to change your mind.  <br>
-        Press "Undo Merge" in case you do not accept. <br>
-        Press "Click to Accept" to finish.  (This will also remove some backup-files created when working with the conflicts)<br><br>
-        NOTE : After this, you should type a description and press the Store-button in the main window
-        </p>
-        
-        <p><b>Requirements</b> : <br>  
-        This window uses the external merge tool, which you define in the settings window.  
-        </p>
-        
-    </div><br>
-
 
 
 <!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
@@ -237,6 +222,8 @@
     window.addEventListener(
         'unload', 
         (event) => {
+            localState.conflictsWindow = false
+            opener.deleteWindowMenu("Resolve Conflicts");
             console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
         }

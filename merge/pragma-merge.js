@@ -3,7 +3,7 @@
 // Learned from :
 // https://blog.beardhatcode.be/2018/03/your-own-git-mergetool.html
 
-
+ 
 
 // ---------
 // INIT
@@ -11,7 +11,13 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
+const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
+const util = require('./util_module.js'); // Pragma-git common functions
+const simpleGit = require('simple-git');  // npm install simple-git
+
+const pragmaLog = parent.opener.pragmaLog;         // Defined in app.js
+const simpleGitLog = parent.opener.simpleGitLog;   // Defined in app.js
 
 const pathsep = require('path').sep;  // Os-dependent path separator
 
@@ -23,14 +29,14 @@ var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
 var SAVED = false; // Flag to show that save has been performed.
+var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
 
 // Read paths
-//const ROOT = process.env.PWD;
 
 // These three files are also defined in app.js
 const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
-const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit';
+const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 process.chdir( SIGNALDIR);
 const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");   
@@ -48,8 +54,9 @@ console.log('$MERGED = ' + MERGED);
 // Set working folder
 process.chdir( ROOT);  // Now all relative paths works
 
+
 // HTML Title
-const HTML_TITLE = 'File &nbsp;&nbsp; = &nbsp;&nbsp;' + MERGED
+const HTML_TITLE = 'File    =   ' + MERGED
 
 // Modified from GUI
 var connect = null; // null or "align"
@@ -68,11 +75,27 @@ var options = optionsTemplate;
 var dv = {}; // initUI sets this CodeMirror.MergeView instance 
 dv.panes = panes; // Initial value
 
+        
+// Define help icon
+const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
+
 //-----------
 // FUNCTIONS
 //-----------
 
-// Start initiated from html
+// Start is initiated from html
+function isBinaryFile(){
+    
+    try{
+        if ( isBinaryFileSync(MERGED) ){
+            pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
+            return true
+        }
+    }catch (err){  
+    }
+    
+    return false
+}
 function injectIntoJs(document) {
     win = gui.Window.get();
     
@@ -81,9 +104,35 @@ function injectIntoJs(document) {
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
     
-    document.getElementById('title').innerHTML = HTML_TITLE;
     
+    pragmaLog('Pragma-merge open file = "' + MERGED + '"');
+    
+    parent.document.title = HTML_TITLE;
+    
+
+
+    // Set saved gui mode settings
+    collapse = global.state.pragmaMerge.hide_unchanged;
+
+    if ( global.state.pragmaMerge.align ) {
+        connect = 'align';
+    }else{
+        connect = null;
+    }   
+    
+    console.log('Mime-modes : ');
+    console.log(CodeMirror.mimeModes);
+
     initUI();
+    
+    // Set theme
+    themeSelected( global.state.pragmaMerge.codeTheme);
+    
+    // Set theme-selection GUI to current
+    document.getElementById('theme-select').selectedIndex = 
+        util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+    
+
 };
 
 function loadFile(filePath)  { 
@@ -96,10 +145,149 @@ function loadFile(filePath)  {
     
     return content;
 } 
-function getMimeType(filePath){
-    var fileExt = filePath.split('.').pop();
+function findMimeFromExtension( extension){
     
-    return mime.lookup(fileExt);
+    // Read  "node_modules/codemirror/mode/meta.js"  to find mime-type  
+    
+    // My version below works better than this :
+    //found = CodeMirror.findModeByFileName(extension);
+    
+    let found = undefined;
+    
+    modeInfo = CodeMirror.modeInfo;
+    
+    
+    modeInfo.forEach( handleMode);
+    
+    function handleMode( row){
+        if (row.ext == undefined){
+            return;
+        }
+        
+        i = row.ext.length - 1;
+        while ( ( i >= 0 )  ){
+            if ( row.ext[i] == extension ){
+                found = row;
+            }
+            //console.log( row.ext[i] );
+            i--;
+        }
+        
+    }
+    
+    
+    console.log( found);
+    
+    if (found !== undefined){
+        return  found.mime
+    }
+    
+    return false 
+    
+}
+
+
+// Callbacks
+function themeSelected( themeName){
+    
+    // Save setting
+    global.state.pragmaMerge.codeTheme = themeName;
+    
+    if (themeName == "default"){
+        return
+    }
+    console.log(themeName);
+    
+    // Load theme
+    let themeDir = 'node_modules/codemirror/theme/';
+    let themeCssFile = themeDir + themeName + '.css';
+    loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
+
+    // Replace selected theme
+    cm = document.getElementsByClassName("CodeMirror");
+    for (var i = 0; i < cm.length; i++) {
+      let themeString = 'cm-s-' + themeName;
+      let classString = themeString + ' editorBackground';
+      cm[i].className = cm[i].className.replace('cm-s-default', classString);
+    }
+    
+    // Read chunk color from html option-tag
+    let index = util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+    let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
+    
+    // Set color from specification in pragma-merge_iframe.html 
+    // 1) specified chunkColor
+    // 2) specified alpha
+    let color = chunkColor;
+    
+    if (chunkColor.substr(0,2) == "0.") {
+        let bkg = document.getElementsByClassName('editorBackground'); 
+        let computedBackgroundColor = window.getComputedStyle(bkg[0], null).getPropertyValue( 'background-color');
+        
+        alpha = chunkColor;
+        color = computedBackgroundColor.substr(0, computedBackgroundColor.length - 1) + ', ' + alpha + ')';
+    }
+
+            
+    // Change chunk-color
+    els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
+    for (let i=0; i < els.length; i++) { 
+        els[i].style.backgroundColor = color;
+    }
+
+    
+}
+    function loadjscssfile(filename, filetype){
+        // From http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml
+        if (filetype=="js"){ //if filename is a external JavaScript file
+            var fileref=document.createElement('script')
+            fileref.setAttribute("type","text/javascript")
+            fileref.setAttribute("src", filename)
+        }
+        else if (filetype=="css"){ //if filename is an external CSS file
+            var fileref=document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", filename)
+        }
+        if (typeof fileref!="undefined")
+            document.getElementsByTagName("head")[0].appendChild(fileref)
+    }
+async function keepThis(){
+    pragmaLog('Pragma-merge : Selected to keep THIS binary file.');
+     await gitCheckout([ MERGED, '--ours']);
+
+    closeWindowNicely(0);
+    document.getElementById('isBinaryMerge').close();
+    
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
+}
+async function keepOther(){
+    pragmaLog('Pragma-merge : Selected to keep OTHER binary file.');
+    await gitCheckout([ MERGED, '--theirs']);
+    
+    closeWindowNicely(0);
+    document.getElementById('isBinaryMerge').close();
+    
+    parent.window.close();  // Implies finish('unloadWindow');  because of pragma-merge_iframe.html unload-eventlistener
+}
+async function gitCheckout(options){
+    let file = options[0];
+    
+    let folder = global.state.repos[global.state.repoNumber].localFolder;
+    
+    await simpleGitLog(folder).checkout( options, onCheckout);
+    function onCheckout(err, result){
+        console.log(result); 
+        console.log(err); 
+    } 
+    
+    simpleGitLog(folder).add( file, onAdd);
+    function onAdd(err, result){
+        console.log(result); 
+        console.log(err); 
+    } 
+    
 }
 
 // Standard CodeMirror
@@ -111,24 +299,19 @@ function mergeViewHeight(mergeView) {
     if (!editor) return 0;
     return editor.getScrollInfo().height;
   }
-  return Math.max(editorHeight(mergeView.leftOriginal()),
+  return global.state.zoom * Math.max(editorHeight(mergeView.leftOriginal()),
                   editorHeight(mergeView.editor()),
                   editorHeight(mergeView.rightOriginal()));
 }
-function resize(mergeView) {
-  var height = mergeViewHeight(mergeView);
-  for(;;) {
-    if (mergeView.leftOriginal())
-      mergeView.leftOriginal().setSize(null, height);
-    mergeView.editor().setSize(null, height);
-    if (mergeView.rightOriginal())
-      mergeView.rightOriginal().setSize(null, height);
+function resize() {
+    
+    let elements = document.getElementsByClassName('CodeMirror');
+    for (i = 0;  i< elements.length; i++){
+        document.getElementsByClassName('CodeMirror')[i].style.height = document.body.offsetHeight  - 86 + 'px'
+    }
+    document.getElementsByClassName('CodeMirror-merge')[0].style.height = document.body.offsetHeight  - 86+ 'px'
 
-    var newHeight = mergeViewHeight(mergeView);
-    if (newHeight >= height) break;
-    else height = newHeight;
-  }
-  mergeView.wrap.style.height = height + "px";
+
 }
 
 // Redraw 
@@ -137,9 +320,20 @@ function initUI() {
     // New start
     options = optionsTemplate;
     
+    // MIMI : New method (used)
+    let fileExt = MERGED.split('.').pop();
+    options.mode = findMimeFromExtension( fileExt)
+    if (options.mode == false){
+        let fileName = MERGED.split(pathsep).pop();
+        let mime = CodeMirror.findModeByFileName( fileName );
+        if (mime !== undefined){
+            options.mode = mime.mime;
+        }
+    }
     
-    options.mode = getMimeType(MERGED); // Mime
-    console.log('MIME-type = ' + options.mode);
+    
+    console.log('MIME-type (new method) = ' + options.mode);
+    
     
     // Set state as set with clicky-buttons
     options.collapseIdentical = collapse; // Updated from GUI button
@@ -189,13 +383,13 @@ function initUI() {
         // html
         document.getElementById('left3').innerHTML = 'this ';
         document.getElementById('editor3').innerHTML = 'merge here ';
-        document.getElementById('right3').innerHTML = 'other';
+        document.getElementById('right3').innerHTML = 'other' + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'collapse';
         document.getElementById('Headers3').style.visibility = 'visible';
         
-        disable('two-way');
-        enable('three-way');
+        disable2('two-way');
+        enable2('three-way');
       }  
       
       if ( panes == 2){
@@ -221,6 +415,11 @@ function initUI() {
           case 'HISTORY_DIFF':  { //
             editorLabel = 'selected'; 
             rightViewerLabel = 'previous';
+            
+            if (global.localState.pinnedCommit !== ''){ 
+                rightViewerLabel = 'pinned commit < ' + global.localState.pinnedCommit.substring(0,6) + ' >';
+            }
+            
             options.value = cachedFile.REMOTE;  // Can't be changed, because readonly
             options.orig = cachedFile.LOCAL;
             
@@ -249,17 +448,17 @@ function initUI() {
             break;
           }
         } 
-        
+   
         // Apply mode-dependency html
         document.getElementById('editor2').innerHTML = editorLabel;
-        document.getElementById('right2').innerHTML = rightViewerLabel;
+        document.getElementById('right2').innerHTML = rightViewerLabel + helpIcon;
         
         document.getElementById('Headers2').style.visibility = 'visible';
         document.getElementById('Headers3').style.visibility = 'collapse';
           
            
-        enable('two-way');
-        disable('three-way');
+        enable2('two-way');
+        disable2('three-way');
       }
 
 
@@ -289,27 +488,64 @@ function initUI() {
     }else{
         disable('hide-unchanged'); 
     }
+    
+    //
+    // Set size
+    //
+        
+    resize();
+    
+    if ( panes == 2){
+        addSearch('editor2', 'CodeMirror-merge-editor');
+        addSearch('right2', 'CodeMirror-merge-right');
+    }
+    if ( panes == 3){
+        addSearch('left3', 'CodeMirror-merge-left ');
+        addSearch('editor3', 'CodeMirror-merge-editor');
+        addSearch('right3', 'CodeMirror-merge-right');
+    }
 
 
+}
+function addSearch(headerId, editorId){
+    
+    let leftPos = document.getElementsByClassName(editorId)[0].getBoundingClientRect().x + 40;
+    let searchIconElementId = headerId + '_search';
+    
+    let headerElement = document.getElementById(headerId);
+        
+    headerElement.innerHTML = headerElement.innerHTML + 
+    `  <!-- Search button --> 
+                <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
+                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBoxPragmaMerge()" 
+                    onmouseover="document.getElementById('${searchIconElementId}').src='../images/find.png' " 
+                    onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
+                    src="../images/find_black.png" >`;
 }
 
 // Show button states
 function enable(id){
+    document.getElementById(id).checked = true;
+}
+function disable(id){
+    document.getElementById(id).checked = false;
+}
+function enable2(id){
     document.getElementById(id).classList.remove('disabled');
     document.getElementById(id).classList.add('enabled');
 }
-function disable(id){
+function disable2(id){
     document.getElementById(id).classList.remove('enabled');
     document.getElementById(id).classList.add('disabled');
 }
 
-// Make readonly
+// Get / set mode
 function readOnlyOption( readonly){
     if (readonly){
         // Make readonly
         options.revertButtons = false;
         options.readOnly = true; 
-        document.getElementById('title').innerHTML = HTML_TITLE + ' &nbsp;&nbsp;(READ-ONLY VIEW)';
+        parent.document.title = `${HTML_TITLE}    ( READ-ONLY VIEW )`;
         
         // Hide Save and cancel buttons
         document.getElementById('cancel').style.visibility = 'collapse';
@@ -322,7 +558,6 @@ function readOnlyOption( readonly){
 
     }
 }
-
 function getMode( ){
     if ( REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
@@ -341,6 +576,11 @@ function finish( wayToFinish){
     switch(wayToFinish) {
         case 'cancel':  {
             closeWindowNicely(1);
+            //if (getMode() == 'MERGE'){
+                //closeWindowNicely(100);  // Error code if Merge
+            //}else{
+                //closeWindowNicely(1);  // Error code if Diff
+            //}
             break;
         }
         case 'close':  {
@@ -365,13 +605,9 @@ function finish( wayToFinish){
             break;
         }
     }
+    win.close();
 
 }
-
-
-
-
-
 function save(){
     let content = "";
     try{
@@ -382,17 +618,27 @@ function save(){
         console.log(err);
     }    
 }
-
 function closeWindowNicely(exitCode){
     
     // Write exit code to file for script to pick up
     try{
         fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+        pragmaLog('Pragma-merge exit code = ' + exitCode );
     }catch(err){
         console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
         console.log(err);
         fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
     }
+
+    
+    // Store gui mode settings
+    global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
+    global.state.pragmaMerge.align = document.getElementById('align').checked;
+    
+    
+    // Remove from menu
+    parent.opener.deleteWindowMenu('Pragma-merge');
+        
         
     // Remove file, to let script know it has stopped
     try {
@@ -400,8 +646,12 @@ function closeWindowNicely(exitCode){
     
     } catch(err) {
         console.error(err)
+        pragmaLog('ERROR in closeWindowNicely : ');
+        pragmaLog(err);
     }
-    win.close();
+    
+    CLOSED = true;
+    //win.close();
 }
 
 

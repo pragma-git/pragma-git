@@ -50,12 +50,12 @@ async function injectIntoJs(document) {
     
     // Set size to match content
     let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
-    let dx = document.getElementById('outerContent').scrollWidth;
-    let dy = document.getElementById('outerContent').scrollHeight;
+    let dx = document.getElementById('outerContent').scrollWidth * global.state.zoom;
+    let dy = document.getElementById('outerContent').scrollHeight * global.state.zoom;
     
     let hx = window.outerWidth - window.innerWidth;
     let hy = window.outerHeight - window.innerHeight;
-    window.resizeTo(dx + hx + 2 * padding , dy + hy + 2 * padding);
+    window.resizeTo(dx + hx + 2 * padding , dy + hy + 2 * padding + 32);
     
     // Always on top
     win.setAlwaysOnTop( state.alwaysOnTop );
@@ -70,6 +70,10 @@ async function injectIntoJs(document) {
     
     // Set button name
     document.getElementById('Select-button').innerHTML =  localState.tagListButton;
+    
+    // Set title window_menu_handles_mapping
+    tagDialogType = localState.tagListButton;
+    document.title = 'Select tag to ' + tagDialogType;
 
 };
 function fillSelectWithValues( tagValues, filterRule){

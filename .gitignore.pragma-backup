@@ -1,0 +1,11 @@
+
+node_modules/
+
+package-lock.json
+
+docs/~$Tech-overview.pptx
+
+log*.txt
+
+mytoken.txt
+´adfs

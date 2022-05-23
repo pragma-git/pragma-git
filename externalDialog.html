@@ -1,0 +1,139 @@
+<html>
+    
+<!--
+    Test run from app.js by calling : 
+    showInfoDialogInOwnWindow( 'My title',  'Hej this /n is long /n and spans mult/n iple rows',  'error');  // Type can be 'warning' (yellow) or 'error' (red border)
+      or
+    displayLongAlert('My title', 'Hej this /n is long /n and spans mult/n iple rows');
+    
+-->
+    <head>
+      <title>Dialog</title>
+
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        
+        <style>
+            html {
+              margin: 0px;
+              overflow: hidden;
+            }
+            
+            body {
+                margin: 0px;
+                padding: 0px;
+                overflow: auto;
+                color:  var(--body-text);
+                background-color: var(--body-background);
+                font-size: 14px;
+                border: none;
+                border: 5px solid;
+                height: max-content;
+                font-family: Arial;
+                font-size: 11pt;
+            }
+            
+            label {
+                font-family: Arial;
+                font-size: 9pt;   
+            }
+            
+                    
+            error{
+                border-color: var(--err-color);
+            }
+            
+            warning{
+                border-color: var(--warn-color);
+            }
+            
+            
+            ::-webkit-scrollbar-thumb {
+              display: none;
+            }
+            
+            
+            div#outer-content {
+                width: -webkit-fill-available;
+                /* height: -webkit-fill-available; */
+            }
+            
+            #titleDiv {
+                height: 20px;
+                overflow: auto;
+                /* padding-bottom: 20px; */
+            }
+            #messageDiv {
+                overflow: auto;
+                height: auto;
+                margin-bottom: 15px;
+                margin-top: 10px;
+            }
+            #messageText{
+                overflow: hidden;
+            }
+            
+            #buttonDiv{
+                height: 30px
+                bottom: 20px;
+                height: 20px;
+                right: 20px;
+            }
+            
+            div#inner-content {
+                overflow: hidden;
+                /* width: 90%; *//* width: 90%; */
+                /* height: -webkit-fill-available; */
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+                
+            
+            
+            .OK-button{
+              float: Right;
+              /* bottom: 10px; */
+            }
+        
+        </style>
+    
+    </head>
+
+    
+<body class='light dialog' style="position: relative;">
+    
+
+    <div id="outer-content">       
+        <!-- Dark mode on/off--> 
+        <script>
+            if (global.localState.dark){
+                document.body.classList.remove('light');
+                document.body.classList.add('dark');
+            }
+
+        </script>
+    
+        
+        <div id="inner-content">
+     
+            <div id='titleDiv'>
+                <b><div id='title'>test-title</div></b>
+            </div> 
+             
+            <div id='messageDiv'>
+                <div id='messageText'>test message</div>
+                
+            </div> 
+ 
+            <div id="buttonDiv">       
+<!--
+                <button class="OK-button" onclick="window.close();"> OK  </button> 
+-->
+            </div>  
+        
+        </div> 
+    </div> 
+
+
+  
+</body>
+</html>

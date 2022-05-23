@@ -56,6 +56,20 @@ myModule.findObjectIndex = function ( myArray, objectField, stringToFind ){
     
     return Number(foundIndex);
 }
+myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFind ){ 
+    
+    var foundIndex; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        if (myArray[i][objectField].startsWith( stringToFind)){
+            foundIndex = i;
+        }
+    } 
+    
+    return Number(foundIndex);
+}
+
 
 // Branch name filtered by allowed chars
 myModule.branchCharFilter = function ( string ){
@@ -72,12 +86,28 @@ myModule.branchCharFilter = function ( string ){
     
 }
 
+// True if hidden branch
+myModule.isHiddenBranch = function( hiddenBranchNames, branchToCheck){
+    // Checks if localBranchToCheck is listed in hiddenBranchNames
+    if (hiddenBranchNames === undefined){
+        return false
+    }
+
+    let result = false;
+    for (let j = 0; j < hiddenBranchNames.length; j++) { // Loop all branches
+        if  ( branchToCheck === hiddenBranchNames[j] ){
+            result = true;
+        }
+    }
+    return result;
+}      
+
+// File system
 myModule.mkdir = function (dir){
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
     }
 }
-
 myModule.rm = function (f){
     if (fs.existsSync(f)){
         fs.unlinkSync(f);

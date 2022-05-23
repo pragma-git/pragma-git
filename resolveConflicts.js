@@ -6,13 +6,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 // INIT
 // ---------
-var gui = require("nw.gui"); // TODO : don't know if this will be needed
+var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git'); 
+const pragmaLog = opener.pragmaLog;         // Defined in app.js
 
 const util = require('./util_module.js'); // Pragma-git common functions 
 
@@ -27,7 +28,6 @@ const delayInMs = 1000;
 var timer = _loopTimer( 1000);
 
 // Storage of paths to backup files
-const backupExtension = '.orig';
 var origConflictingFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
 
 // ---------
@@ -46,10 +46,7 @@ async function injectIntoJs(document) {
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
     }
   
-    // Always on top
-    win.setAlwaysOnTop( state.alwaysOnTop );
-    
-    
+
     let status_data;
     
           
@@ -71,12 +68,16 @@ async function injectIntoJs(document) {
     document.getElementById('collapsibleUnsure').click();   // Open collapsed section 1)
     
     if (b.length == 0){
+        document.getElementById('resolveAllUnsureButton').disabled = true;
         document.getElementById('resolveAllConflictsButton').disabled = false; // Second button is enabled if no conflicts
     }
     
     let a = createConflictingFileTable(document, status_data);
     document.getElementById('collapsibleConflict').click();  // Open collapsed section 2)
     
+    if (a.length == 0){
+        document.getElementById('resolveAllConflictsButton').disabled = true; // Second button is enabled if any conflicts
+    }   
     
     document.getElementById('collapsibleResolved').click();  // Open collapsed section 3)
     
@@ -109,6 +110,9 @@ async function _callback( name, event){
             // Enable "Solve conflicting files" button in step 2)
             document.getElementById('resolveAllConflictsButton').disabled = false;
             
+            // Disable this button from step 1)
+            document.getElementById('resolveAllUnsureButton').disabled = true;
+            
             break;
      
         case 'conflictsResolvedButton':
@@ -121,7 +125,6 @@ async function _callback( name, event){
             console.log('undoMergeButton');
             console.log(event);
             gitUndoMerge( state.repos[state.repoNumber].localFolder);
-            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
             break;
 
 
@@ -139,38 +142,44 @@ async function _callback( name, event){
             '--gui' , 
             '--tool=' + tool 
         ];
-        try{
-            // Store conflicting file names
-            console.log('gitResolveConflicts -- Resolving conflicting files');
-            
-            // Resolve with external merge tool
-            //writeMessage( 'Resolving conflicts');
-            await simpleGit( folder).raw(command, onResolveConflict );
-            function onResolveConflict(err, result){ console.log(result); console.log(err) };
-            //await waitTime( 1000);
-            
-            console.log('gitResolveConflicts -- Finished resolving conflicting files');
-    
-            
-        }catch(err){
-            console.log('gitResolveConflicts -- caught error ');
-            console.log(err);
-            // If external diff tool does not exist => write messate about this
-            
-        }
         
-        // Update table
-        let status_data;
-        try{
-            console.log('gitResolveConflicts -- update table getting status');
-            await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
-            function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+        // Loop all unresolved files  TODO : Status to files to merge (not all conflicting files as now)
+        for (let i in origConflictingFiles) {
             
-            console.log('gitResolveConflicts -- redraw table ');
-            createConflictingFileTable(document, status_data)
-        }catch(err){
-            console.log('gitResolveConflicts -- error redrawing table');
-            console.log(err);
+            try{
+                // Store conflicting file names
+                console.log('gitResolveConflicts -- Resolving conflicting files');
+                
+                // Resolve with external merge tool
+                //writeMessage( 'Resolving conflicts');
+                await simpleGit( folder).raw(command.concat( origConflictingFiles[i] ), onResolveConflict );
+                function onResolveConflict(err, result){ console.log(result); console.log(err) };
+                //await waitTime( 1000);
+                
+                console.log('gitResolveConflicts -- Finished resolving conflicting files');
+        
+                
+            }catch(err){
+                console.log('gitResolveConflicts -- caught error ');
+                console.log(err);
+                // If external diff tool does not exist => write messate about this
+                
+            }
+            
+            // Update table
+            let status_data;
+            try{
+                console.log('gitResolveConflicts -- update table getting status');
+                await simpleGit( state.repos[state.repoNumber].localFolder).status( onStatus );
+                function onStatus(err, result ){ status_data = result; console.log(result); console.log(err) };
+                
+                console.log('gitResolveConflicts -- redraw table ');
+                createConflictingFileTable(document, status_data)
+            }catch(err){
+                console.log('gitResolveConflicts -- error redrawing table');
+                console.log(err);
+            }
+            
         }
         
         
@@ -241,7 +250,7 @@ async function _callback( name, event){
         // Remove .orig
         for (let i in origConflictingFiles) {
             try {
-                let file = folder + pathsep + origConflictingFiles[i] + backupExtension;
+                let file = folder + pathsep + origConflictingFiles[i] + '.orig';
                 console.log('gitDeleteBackups -- deleting file = ' + file);
                 fs.unlinkSync(file)
                 //file removed
@@ -289,23 +298,21 @@ async function _callback( name, event){
                
     }
     async function gitUndoMerge( folder){
-        let tool = state.tools.mergetool;
-        let command = [  
-            'mergetool', 
-            '--gui' , 
-            '--tool=' + tool 
-        ];
+
         try{
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
-            // Resolve with external merge tool
-            //writeMessage( 'Resolving conflicts');
             await simpleGit( folder).merge(['--abort'], onUndoMerge );
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
-            console.log('gitUndoMerge -- Finished ');
+            // Remove git backup-files
+            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            
+            // Close pragma-merge window (may or may not be opened)
+            opener.merge_win.close();
+            
             
         }catch(err){
             console.log('gitUndoMerge -- caught error ');
@@ -352,13 +359,32 @@ async function _update(){
     
 }
 
-function closeWindow(){
+async function closeWindow(){
+    
+    // Handle two scenarios : 
+    // 1) no files were modified, 
+    // 2) files were modified
+    
+    let status_data = await opener.gitStatus();
+    if (status_data.changedFiles === false){
+        // Case 1)  no changed files : End conflict resolution from here
+        
+        // Pragma-git does not know that it needs to commit to finish the conflict resolution. 
+        // Force it to finish with a standard message.
+        await opener.gitAddCommitAndPush( 'Conflict resolved without modifying files');
+        
+    }else {
+        // Case 2) most common : Files are modified, and Pragma-git will know that a commit is required
+        localState.mode = 'UNKNOWN';
+        
+    }
 
-    // Return
-    localState.mode = 'UNKNOWN';
-    
-    localState.fileListWindow = false;  // Show to main program that window is closed
-    
+    // Remove from menu
+    opener.deleteWindowMenu("Resolve Conflicts");
+
+    // Close window and return
+    localState.conflictsWindow = false
+    //localState.fileListWindow = false;  // Show to main program that window is closed
     win.close();
     
 }

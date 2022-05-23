@@ -1,0 +1,22 @@
+{
+  "name": "Pragma-git-password-helper",
+  "description": "Chrome platform app.",
+  "version": "0.4.1",
+  "main": "askpass.html",
+  "author": "Jan Axelsson",
+  "license": "MIT",
+  "window": {
+    "id": "askpass-id",
+    "position": "center",
+    "width": 300,
+    "height": 450,
+    "min_width": 350,
+    "min_height": 140,
+    "icon": "../images/icon.png"
+  },
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "os": "^0.1.1",
+    "path": "^0.12.7"
+  }
+}
