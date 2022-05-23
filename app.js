@@ -153,7 +153,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         function simpleGitLog(pwd) {  
             pragmaLog( ' ');
             pragmaLog('REPO  = ' + pwd); 
-            return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) 
+            const options = {
+               completion: {
+                  onExit: 50,
+                  onClose: true,
+               }
+            };
+            return simpleGit(options,pwd).outputHandler( sendGitOutputToFile() ) 
         } 
 
 
