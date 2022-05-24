@@ -189,11 +189,13 @@ function findMimeFromExtension( extension){
 
 // Callbacks
 function themeSelected( themeName){
+    let root = document.documentElement;
     
     // Save setting
     global.state.pragmaMerge.codeTheme = themeName;
     
     if (themeName == "default"){
+        root.style.setProperty('--markerColor', 'antiquewhite');
         return
     }
     console.log(themeName);
@@ -216,26 +218,18 @@ function themeSelected( themeName){
     let chunkColor = document.getElementById('theme-select').options[index].getAttribute('chunk-color')
     
     // Set color from specification in pragma-merge_iframe.html 
-    // 1) specified chunkColor
-    // 2) specified alpha
+    
+    // Alt 1) specified chunkColor
     let color = chunkColor;
     
+    // Alt 2) specified alpha
     if (chunkColor.substr(0,2) == "0.") {
-        let bkg = document.getElementsByClassName('editorBackground'); 
-        let computedBackgroundColor = window.getComputedStyle(bkg[0], null).getPropertyValue( 'background-color');
-        
         alpha = chunkColor;
-        color = computedBackgroundColor.substr(0, computedBackgroundColor.length - 1) + ', ' + alpha + ')';
-    }
+        color = 'rgba(128, 128, 128, ' + alpha + ')';
 
-            
-    // Change chunk-color
-    els = document.getElementsByClassName('CodeMirror-merge-r-chunk'); 
-    for (let i=0; i < els.length; i++) { 
-        els[i].style.backgroundColor = color;
     }
-
     
+    root.style.setProperty('--markerColor', color);   
 }
     function loadjscssfile(filename, filetype){
         // From http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml

@@ -289,10 +289,18 @@
         
         .CodeMirror-merge-r-chunk
         {
-            background: antiquewhite;
+            background-color: antiquewhite;
             fill: antiquewhite;
             stroke: antiquewhite;
-        }      
+        }  
+        
+        
+        .CodeMirror-merge-r-chunk
+        {
+            background-color: var(--markerColor);
+            fill: var(--markerColor);
+            stroke: var(--markerColor);
+        }     
         
         
         .CodeMirror-merge-r-connect
@@ -320,6 +328,7 @@
         
         let root = document.documentElement;
         root.style.setProperty('--windowScaling', global.state.zoom);
+        
         
     </script>
 
