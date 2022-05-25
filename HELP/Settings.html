@@ -16,6 +16,10 @@
             position: relative;
             top: 2px;
         }
+        
+        .indent{
+            margin-left: 20;
+        }
 </style>
 
  
@@ -75,13 +79,14 @@
         dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button> tab. 
         
         </p>
-        <br>
-        <br>
+        <hr>
+        
    
 
     <!--------------------------------------------------------------------------------------------> 
-    <h3>The "Tools tabs"</h3>  
+    <h2>The Repository Tools tabs</h2>  
      
+    <div class="indent">
 
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
         <br>
@@ -409,75 +414,75 @@
                 
                 
             </dd> 
-
-    <hr>  
-
-    <!--------------------------------------------------------------------------------------------> 
-    <h2>Some words about remote repositories</h2>  
+        <hr>  
     
-    It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
-    This section describes how to set up user-names and passwords for remote repositories.
-
+        <!--------------------------------------------------------------------------------------------> 
+        <h2>Some words about remote repositories</h2>  
         
-     <h4>(I) Creating an account </h4> 
-         
-         
-         <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
-            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
-         </p>
-         
-        <p> Get an account, go to the web interface, and create a new repository.  
-            You will get a link on the format 
-            <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
-            which you need to copy.    
-        </p>
-        
-        
-     <h4>(II) Authentication </h4> 
-     
-        <p>
-            Login to a repository may require some kind of authentication. Some alternatives are : 
-            <ol>
-                <li>Access token (Github has moved towards this -- see  
-                <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
-                <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
-            </ol>
-        
-        </p>
-         
-         
- 
-     <h4>(III) Using your link (address / url) </h4> 
-                                            
-         <p>Paste the link to your repository into the text-field under "Remote repository". 
-         </p>  
-         
-         
-         <p>
-            <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
-            <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
-            For instance :<br>
-            <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
-         </p>  
-         
-         <p>
-            <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
-            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
-            For instance :<br>
-            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
-         </p>  
-
-                    
-         <p>The repository is set (and tested) by pressing the  <button>Set</button> button.
-            If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
-         </p>   
-                                 
-         <p>If git is using a credential manager, you can now remove the <code>:PASSWORD</code> (note the <code>:</code>) and test if it now works without storing the password in the link.
-         Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
-         </p>         
-         
-    <hr>           
+        It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
+        This section describes how to set up user-names and passwords for remote repositories.
+    
+            
+         <h4>(I) Creating an account </h4> 
              
+             
+             <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
+                <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+             </p>
+             
+            <p> Get an account, go to the web interface, and create a new repository.  
+                You will get a link on the format 
+                <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
+                which you need to copy.    
+            </p>
+            
+            
+         <h4>(II) Authentication </h4> 
+         
+            <p>
+                Login to a repository may require some kind of authentication. Some alternatives are : 
+                <ol>
+                    <li>Access token (Github has moved towards this -- see  
+                    <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
+                    <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
+                </ol>
+            
+            </p>
+             
+             
+     
+         <h4>(III) Using your link (address / url) </h4> 
+                                                
+             <p>Paste the link to your repository into the text-field under "Remote repository". 
+             </p>  
+             
+             
+             <p>
+                <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
+                <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+                For instance :<br>
+                <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
+             </p>  
+             
+             <p>
+                <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
+                <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
+                For instance :<br>
+                <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
+             </p>  
+    
+                        
+             <p>The repository is set (and tested) by pressing the  <button>Set</button> button.
+                If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
+             </p>   
+                                     
+             <p>If git is using a credential manager, you can now remove the <code>:PASSWORD</code> (note the <code>:</code>) and test if it now works without storing the password in the link.
+             Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
+             </p>         
+                      
+
+    </div> 
+    <hr>              
 <!--------------------------------------------------------------------------------------------> 
 
             <h2 class="instructHeader" id="BranchTab">Branch tab</h2>
