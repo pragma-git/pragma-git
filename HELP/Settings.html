@@ -91,6 +91,7 @@
                   <button id="cloneTab" class="tab-button-small active " style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -158,6 +159,7 @@
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -183,6 +185,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                       <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                 </div>
@@ -236,13 +239,67 @@
      
             
             <br> 
-               
+           <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv">Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                </div>
+            </div>
+                         
+    
+            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+         
+        
+        <dt><h4>Forking </h4></dt> 
+        <br> 
+            <dd>
+            Forking a remote repository is the same as cloning, but you disconnect from the remote repository.  The point is to develop on this forked project, and not push back to the cloned original project.
+        
+            </dd>
+            <br>
+                                           
+            <dd><textarea id="urlToClone"  placeholder="URL to fork from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
+            </dd>
+            <br>
+                                         
+            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            </dd>
+
+            <br>
+            <br>
+            
+            <dd> The <button>Fork</button> initiates the forking operation.     
+            </dd>
+     
+     
+            <dt><h4>Workflow </h4></dt>   
+            <br>      
+            
+            <dd> The workflow is from top to bottom :  
+                <ol>  
+                    <li>Input the remote repository address (url)   
+                    <li>Check that you have access with the <button>Test URL</button> button  
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
+                    <li>The second text field displays the selected folder path   
+                    <li><button>Fork</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                </ol>   
+            </dd>
+            <br>       
+            
+     
+            
+            <br>               
         
         <div class="toolWrapper" > 
             <div class="buttonWrapper">
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -278,6 +335,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                      <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                       <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                 </div>

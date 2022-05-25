@@ -238,6 +238,7 @@ async function _callback( name, event){
             
             // I know that the last row has index same as length of number of repos
             document.getElementById('cloneFolder').value = localFolder;
+            document.getElementById('forkFolder').value = localFolder;
             document.getElementById('addFolder').value = localFolder;
         
             break;
@@ -263,7 +264,41 @@ async function _callback( name, event){
             document.getElementById('gitHubTab').click()
 
             break;
-        }  
+        }   
+        case 'forkButtonPressed' : {
+            console.log('forkButtonPressed');
+            
+            // I know that the last row has index same as length of number of repos
+            id = state.repos.length;
+            
+            let folder = document.getElementById('forkFolder').value;  
+            let URL = document.getElementById('urlTofork').value; 
+            
+            // Make a clone
+            document.getElementById('forkStatus').innerHTML = 'Fork in progress ';
+            const dummy = await gitClone( folder, URL);
+            document.getElementById('forkStatus').innerHTML = '';
+                 
+            // Combine URL and folder name => repo folder
+            let repoWithExtension = URL.replace(/^.*[\\\/]/, '');
+            let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
+            let topFolder = folder + pathsep + repoName;
+            topFolder = topFolder.replace(/[\\\/]$/, '')
+    
+               
+            // Remove remote origin (make it a fork)
+            await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
+            function onDeleteRemoteUrl(err, checkResult) { }
+                
+            // Replace table 
+            document.getElementById("settingsTableBody").innerHTML = ""; 
+            createHtmlTable(document);
+            
+            // Switch to Remote  tab
+            document.getElementById('gitHubTab').click()
+
+            break;
+        } 
         case 'addRepoButtonPressed' : {
             // If folder is a repo -> add
             // If not a repo show dialog doYouWantToInitializeRepoDialog
