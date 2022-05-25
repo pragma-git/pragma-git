@@ -570,16 +570,29 @@ async function _callback( name, event){
                 let commands = [ 'remote', 'set-url','origin', newUrl];
                 try{
                     
-                    await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){
-                        console.log(result);
-                        console.log(err) ;
-                        //opener.pragmaLog(result); 
-                        //opener.pragmaLog(err); 
-                    };
+                    // Add remote if url, otherwise remove
+                        
+                    if (newUrl.includes('://')){
+                        await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
+                        function onSetRemoteUrl(err, result ){
+                            console.log(result);
+                            console.log(err) ;
+                            
+                            // Set if change didn't cause error (doesn't matter if URL works)
+                            state.repos[realId].remoteURL = newUrl;
+                        };
+                    }else{
+                            
+                        // Remove remote origin (make it a fork)
+                        await simpleGit(localFolder3).removeRemote('origin',onDeleteRemoteUrl);
+                        function onDeleteRemoteUrl(err, result) { console.warn(err);console.log(result)}
+                        
+                        state.repos[ realId].remoteURL = undefined;
+                        document.getElementById(textareaId).value = undefined;
+
+                    }
+  
                     
-                    // Set if change didn't cause error (doesn't matter if URL works)
-                    state.repos[realId].remoteURL = newUrl;
                     
                     
                 }catch(err){
