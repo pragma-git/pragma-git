@@ -265,6 +265,8 @@
         try{      
             await fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value);
             await fs.unlinkSync(ignoreFileBackup);
+            opener.document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+            
         }catch(err){
             
         }
@@ -327,7 +329,7 @@
         await displayIgnoreList();
     }     
     async function displayIgnoreList(){  // Preview ignored files
-        
+        opener.document.getElementById('gitignoreText').innerText = document.getElementById('ignoreFile').value;
         // Save .gitignore
         save();
 
