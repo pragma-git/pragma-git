@@ -473,19 +473,19 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : <BR><BR> 
-                 <div> &nbsp; 
-                    <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+            html += `<B><U>Commit </U></B> : <div style="float:right"> <i>${author}</i> </div><BR><BR> 
+                 <div> 
+                     <p>&nbsp; 
+                        <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                        <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+                     </p>
                  </div>
-                 <BR>`
+                 <BR><BR>`
                  
             
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            
-            html += ` &nbsp; <i> ${author} </i><BR><BR>`
             html += ` &nbsp; ${commit.hash} <BR><BR>`
             
             
@@ -510,11 +510,11 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                  let id = "img_" + parentHashes[i];
                  let imageSrc = document.getElementById(id).href.baseVal;
                  
-                html += ` <b><div> &nbsp; 
+                html += `
+                <p>&nbsp; 
                     <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
-                 </div></b>
-                  <BR>`
+                    <b> <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span></b>
+                </p>`
                   
                 // Change parent node size  
                 sizeNodes( parentHashes[i], IMG_H + 6); 
@@ -531,7 +531,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             }
             
             
-            html +='</div>';
+            html +='</div><BR><BR>';
                 
             
             // Display HTML 
