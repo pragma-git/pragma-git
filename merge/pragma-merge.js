@@ -171,8 +171,10 @@ function injectIntoJs(document) {
         
         if  (THIRD == '--show'){
             readOnlyOption( true); // Hides and changes some HTML
+          
             // Override file with one from git
-            cachedFile.BASE = require('simple-git')( global.state.repos[global.state.repoNumber].localFolder ).show( 'd88438179a825001e993361a6ccb9a08e1bcfad9:edit_ignore.html')
+            let hash = global.localState.historyHash;
+            cachedFile.BASE = require('simple-git')( global.state.repos[global.state.repoNumber].localFolder ).show( hash + ':' + BASE)
         }       
         
         
@@ -609,20 +611,14 @@ function changeToEditor(){
     
     document.getElementById('find-in-nw-search-box').style.right = '20px';
     document.getElementById('find-in-nw-search-box').style.left = 'unset';
-    
-    
+
     document.getElementById('align').style.display = 'none';
     document.getElementById('align-text').style.display = 'none';
     document.getElementById('hide-unchanged').style.display = 'none';
     document.getElementById('hide-unchanged-text').style.display = 'none';
-    
-    
+ 
     document.getElementById('up').style.display = 'none';
     document.getElementById('down').style.display = 'none';
-    
-    //document.getElementsByClassName('hScrollbar')[0].style.overflow = 'auto';
-
-    
 }
 
 // Show button states
