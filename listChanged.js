@@ -14,7 +14,7 @@ const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git');  
 
-
+const STARTDIR = process.cwd(); // Folder where this file was started
 
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
@@ -66,14 +66,14 @@ async function injectIntoJs(document) {
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
         
-        document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
+        ////document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
 
-        // Change from default text (two alternatives, if pinned or simple history)
-        if (localState.pinnedCommit !== ''){ 
-            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since commit ' + localState.pinnedCommit.substring(0,6) + ' :';  
-        }else{
-            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
-        }
+        //// Change from default text (two alternatives, if pinned or simple history)
+        //if (localState.pinnedCommit !== ''){ 
+            //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since commit ' + localState.pinnedCommit.substring(0,6) + ' :';  
+        //}else{
+            //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
+        //}
     }
 
 
@@ -299,6 +299,46 @@ async function _callback( name, event, event2){
                 simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
             }catch(err){
                 console.log('diffLinkHistory -- caught error ');
+                console.log(err);
+            }
+        
+
+            break;
+        }
+        case 'editLinkHistory': {  // Used both for historical and uncommmitted new files
+         
+            // Three inputs
+            console.log('editLinkHistory');
+            console.log(event);
+
+            let file = event;
+            let rw_switch = event2; // --rw or --ro  or --show 
+
+            
+
+            // Setup running pragma-merge in edit mode 
+            try{
+                
+                const { exec } = require("child_process");
+                opener.pragmaLog('Starting pragma-merge in edit mode');
+                exec('./pragma-merge "' + file + '"' + '  --edit ' + rw_switch, 
+                    (error, stdout, stderr) => {
+                      // catch err, stdout, stderr
+                        if (error) {
+                            opener.pragmaLog('-Error starting pragma-merge');
+                            return;
+                        }
+                        if (stderr) {
+                            opener.pragmaLog('-An error occured running pragma-merge');
+                            return;
+                        }
+                        opener.pragmaLog('-Result of running pragma-merge script',stdout);
+                    }
+                );
+                
+                
+            }catch(err){
+                console.log('editLinkHistory -- caught error ');
                 console.log(err);
             }
         
@@ -664,6 +704,15 @@ function createFileTable(status_data) {
                 let commit = 'HEAD'
                 //cell.appendChild( diffLinkHistory( document, commit, file) );
                 cell.appendChild( diffLink( document, file));
+                
+                                    
+                if (typeOfChanged == 'added'){  // two files to compare only in modified (only one file in added)
+                    var addLink = document.createElement('span');
+                    addLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    addLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--rw ') ");
+                    addLink.textContent=" (edit)";
+                    cell.appendChild(addLink);  
+                }  
                  
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
@@ -748,6 +797,13 @@ function createFileTable(status_data) {
                     diffLink.textContent=" (diff)";
                 }
                     
+                if (typeOfChanged == 'added'){  // only one file in added
+
+                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--show ') ");
+                    diffLink.textContent=" (view)";
+                }   
+                                 
                 if (typeOfChanged == 'renamed'){  // two files to compare only in modified (only one file in deleted or added)
                     
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]

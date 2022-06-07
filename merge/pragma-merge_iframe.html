@@ -367,7 +367,7 @@
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
-                align
+                <span id='align-text'>align</span>
                     
                 <input type="checkbox" id='hide-unchanged'  class=clicky  
                     onclick="collapse = !collapse; 
@@ -375,7 +375,7 @@
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
-                hide unchanged
+                <span id='hide-unchanged-text'>hide unchanged</span>
 
                 <!-- option = default is hard coded in code-mirror.css -->
                 <!-- override by chunk-color, which specifies  alpha, or  html color -->
@@ -488,7 +488,7 @@
                 
                 // Dialog if binary, otherwise open as usual
                 if (isBinaryFile() ){
-                    if ( getMode() == 'MERGE' ){
+                    if ( getMode() == 'MERGE' || getMode() == 'EDITOR'){
                         document.getElementById('isBinaryMerge').showModal();
                     }else{
                         document.getElementById('isBinaryDiff').showModal();
