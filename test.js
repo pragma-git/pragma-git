@@ -1,4 +1,5 @@
-
+EXAMPLE NEW FILE USED FOR TESTING 
+REMOVE IN A FEW COMMITS
 
 // Learned from :
 // https://blog.beardhatcode.be/2018/03/your-own-git-mergetool.html
@@ -105,26 +106,16 @@ dv.panes = panes; // Initial value
 function isBinaryFile(){
     
     try{
-        if ( isBinaryFileSync(MERGED)  ){
+        if ( isBinaryFileSync(MERGED) ){
             pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
             return true
         }
-        
-        // TODO: isBinary for historical file in editor
-        //require("isbinaryfile").isBinaryFile( 
-            //Buffer.from( 
-                //await simpleGit( state.repos[state.repoNumber].localFolder )
-                    //.show( 'd6f1126da0e75c070fafc549a438a456e563cacb:make_binaries/assets-mac/dmg_background_org.png')
-                //, "utf-8" ) 
-            //)
-        
-        
     }catch (err){  
     }
     
     return false
 }
-async function injectIntoJs(document) {
+function injectIntoJs(document) {
     win = gui.Window.get();
     
     cachedFile.BASE = loadFile(BASE);
@@ -168,19 +159,6 @@ async function injectIntoJs(document) {
         if  (THIRD == '--ro'){
             readOnlyOption( true); // Hides and changes some HTML
         }
-        
-        if  (THIRD == '--show'){
-            readOnlyOption( true); // Hides and changes some HTML
-          
-            // Override file with one from git
-            let hash = global.localState.historyHash;
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
-            function  onCatFile(err, res){
-                cachedFile.BASE = res;
-            }
-        }       
-        
-        
             
         // Hide additional HTML if editor instead of diff
         //changeToEditor();
@@ -609,19 +587,14 @@ function changeToEditor(){
     document.getElementById('editor2').style.width = '-webkit-fill-available';
     
     
-    document.getElementById('editor2_search').style.right = '20px';
-    document.getElementById('editor2_search').style.left = 'unset';
-    
-    document.getElementById('find-in-nw-search-box').style.right = '20px';
-    document.getElementById('find-in-nw-search-box').style.left = 'unset';
-
     document.getElementById('align').style.display = 'none';
     document.getElementById('align-text').style.display = 'none';
     document.getElementById('hide-unchanged').style.display = 'none';
     document.getElementById('hide-unchanged-text').style.display = 'none';
- 
-    document.getElementById('up').style.display = 'none';
-    document.getElementById('down').style.display = 'none';
+    
+    //document.getElementsByClassName('hScrollbar')[0].style.overflow = 'auto';
+
+    
 }
 
 // Show button states
