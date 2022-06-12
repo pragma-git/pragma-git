@@ -54,6 +54,7 @@ const REMOTE = THIRD;
 
 var MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
+var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
 
 console.log('PATHS : ')
 console.log('$ROOT   = ' + ROOT);
@@ -64,6 +65,7 @@ console.log('$MERGED = ' + MERGED);
 
 // Set mode if called as editor
 if (SECOND == '--edit'){
+    setupAsBinary();
     EDIT = true; 
     MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
 }
@@ -101,23 +103,47 @@ dv.panes = panes; // Initial value
 // FUNCTIONS
 //-----------
 
+async function setupAsBinary(){
+        
+    // Set Read-Only for Editor-mode 
+    if ( (SECOND == '--edit') ){
+
+        if  (THIRD == '--show'){
+          
+            // Override file with one from git
+            let hash = global.localState.historyHash;
+            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
+            function  onCatFile(err, res){
+                cachedFile.BASE = res;
+            }
+            
+            // Figure out if binary
+            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
+            IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
+            console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
+            
+        }       
+
+    }
+}
+
 // Start is initiated from html
 function isBinaryFile(){
-    
+
     try{
         if ( isBinaryFileSync(MERGED)  ){
             pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
             return true
+        }        
+    }catch (err){  
+    }
+        
+    try{
+        if ( (getMode() == 'EDITOR') && (THIRD == '--show') ){   
+            console.log('IS_BINARY_HISTORICAL in isBinaryFile() = ' + IS_BINARY_HISTORICAL); 
+            return IS_BINARY_HISTORICAL
         }
-        
-        // TODO: isBinary for historical file in editor
-        //require("isbinaryfile").isBinaryFile( 
-            //Buffer.from( 
-                //await simpleGit( state.repos[state.repoNumber].localFolder )
-                    //.show( 'd6f1126da0e75c070fafc549a438a456e563cacb:make_binaries/assets-mac/dmg_background_org.png')
-                //, "utf-8" ) 
-            //)
-        
         
     }catch (err){  
     }
@@ -178,12 +204,15 @@ async function injectIntoJs(document) {
             function  onCatFile(err, res){
                 cachedFile.BASE = res;
             }
-        }       
-        
-        
             
-        // Hide additional HTML if editor instead of diff
-        //changeToEditor();
+            // Figure out if binary
+            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
+            IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
+            console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
+            
+        }       
+
     }
 
 };
