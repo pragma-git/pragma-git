@@ -196,7 +196,7 @@ async function _callback( name, event, event2){
             
             // Check if uncommited modified
             let status_data = await opener.gitStatus();
-            console.error(status_data);
+            console.log(status_data);
             if ( status_data.modified.includes(file) ){
                 selectedFile = file;
                 selectedCommit = commit;
