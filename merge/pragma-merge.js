@@ -158,6 +158,14 @@ async function injectIntoJs(document) {
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
     
+    // Set mode if called as editor
+    if (SECOND == '--edit'){
+        await setupAsBinary();
+        EDIT = true; 
+        MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
+    }
+    
+    
     
     pragmaLog('Pragma-merge open file = "' + MERGED + '"');
     
