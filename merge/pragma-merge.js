@@ -222,6 +222,11 @@ async function injectIntoJs(document) {
         }       
 
     }
+    
+    // Force show binary scroll bar
+    if (isBinaryFile()){
+        dv.edit.refresh();  // Force redraw -- makes binary show scroll bars
+    }
 
 };
 
