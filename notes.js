@@ -146,14 +146,15 @@ async function closeWindow(){
         global.state.notesWindow.editMode = 'markdown';
     }
     
-    opener.saveSettings(); // Save settings to file
+    parent.opener.saveSettings(); // Save settings to file
+    
     
     
     // Remove from menu
-    opener.deleteWindowMenu('Notes');
+    parent.opener.deleteWindowMenu('Notes');
     
     // Commmit .Pragma-git settings dir
-    await opener.commitSettingsDir('Saved Notes for ' + repoName);
+    await parent.opener.commitSettingsDir('Saved Notes for ' + repoName);
     
     // Mark that closed
     global.localState.notesWindow.open = false;
