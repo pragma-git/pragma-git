@@ -806,6 +806,8 @@ async function closeWindow(){
     await fixEmptyLocalAuthors();
     await opener.saveSettings();
     
+    opener.deleteWindowMenu('Settings')
+    
  
 }
 
