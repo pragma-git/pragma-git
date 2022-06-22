@@ -309,10 +309,7 @@
             fill: grey;
             stroke: grey;
         }        
-        
-        .CodeMirror-vscrollbar{
-            overflow-y:auto;
-        }  
+
 
 
   </style>
@@ -513,10 +510,31 @@
             }
         );     
         
+        
+        var resizeTimer;
+        
         window.addEventListener('resize',  update );
         function update(){
             initUI();
             themeSelected( global.state.pragmaMerge.codeTheme);
+            
+            
+
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout( function() {
+            
+                // Run code here, resizing has "stopped"
+                console.warn('resize stopped')
+ 
+                // Scrollbars
+                let scrollBars = document.getElementsByClassName('CodeMirror');
+                for (var i = 0; i < scrollBars.length; ++i) {
+                    scrollBars[i].style.overflowY = 'scroll';
+                }
+                        
+            }, 250);
+            
+            
         }
 
         window.addEventListener("keydown", event => {
