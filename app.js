@@ -149,11 +149,53 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const simpleGit = require('simple-git');  // npm install simple-git
         
-        // Use as with simpleGit, but this one atuo-logs through pragmaLog
+        // Use as with simpleGit, but this one auto-logs through pragmaLog
         function simpleGitLog(pwd) {  
             pragmaLog( ' ');
-            pragmaLog('REPO  = ' + pwd); 
-            return simpleGit(pwd).outputHandler( sendGitOutputToFile() ) 
+            pragmaLog('REPOSITORY : "' + pwd + '"'); 
+            //pragmaLog( 'line = ' + global.__line); 
+            pragmaLog( 'LINE       : ' + stackInfoSimpleGitLogger() ); 
+            
+
+            return simpleGit(pwd).outputHandler( sendGitOutputToFile() );
+            
+                        
+            // Log line number of calling function
+            function stackInfoSimpleGitLogger(){
+                //let stack = global.__stack;
+                
+                var orig = Error.prepareStackTrace;
+                Error.prepareStackTrace = function(_, stack){ return stack; };
+                var err = new Error;
+                Error.captureStackTrace(err, arguments.callee);
+                var stack = err.stack;
+                
+                
+                
+                let i = 0;
+                while ( ! stack[i].getFunctionName().includes('simpleGitLog')  && ( i < stack.length - 1)) {
+                    i++;
+                }
+                console.log('i = ' + i);
+                console.log('stack.length = ' + stack.length);
+                
+                if ( i > ( stack.length - 2 ) ){
+                        return 'error in line number from stack trace';
+                }else{
+                    let stackItem = stack[ i + 1 ]; // Stack level that called simpleGitLog 
+                    
+                    let file = stackItem.getFileName().split('/');
+                    let fileName = file[file.length-1];
+                    
+                    let line = stackItem.getLineNumber();
+                    let funcName = stackItem.getFunctionName();
+                    
+                    return funcName + '/' + fileName + '  line ' + line;
+                }
+                
+            }
+
+
         } 
 
 
@@ -3178,7 +3220,7 @@ async function gitSwitchBranch(branchName){
     // Update info
     gitFetch();  
     cacheBranchList();
-        await updateGraphWindow();
+    await updateGraphWindow();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -4391,8 +4433,8 @@ function sendGitOutputToFile() {
 
   return (cmd, stdOut, stdErr, args) => {
     const id = ++counter;
-
-    pragmaLog( `COMMAND[${id}] ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
+ 
+    pragmaLog( `COMMAND[${id}] : ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
 
     stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ) });
     stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() + '\n') }); // Stderr + extra line
@@ -4402,7 +4444,7 @@ function sendGitOutputToFile() {
         // Add prefix before each row of message
         let lines = multiLineString.split("\n");
         for (var i = 0; i < lines.length; i++) {
-            pragmaLog( `${prefix} ${lines[i]}`);
+            pragmaLog( `  ${prefix} ${lines[i]}`);
         }
     }
     
