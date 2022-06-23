@@ -149,55 +149,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const simpleGit = require('simple-git');  // npm install simple-git
         
-        // Use as with simpleGit, but this one auto-logs through pragmaLog
-        function simpleGitLog(pwd) {  
-            pragmaLog( ' ');
-            pragmaLog('REPOSITORY : "' + pwd + '"'); 
-            //pragmaLog( 'line = ' + global.__line); 
-            pragmaLog( 'LINE       : ' + stackInfoSimpleGitLogger() ); 
-            
-
-            return simpleGit(pwd).outputHandler( sendGitOutputToFile() );
-            
-                        
-            // Log line number of calling function
-            function stackInfoSimpleGitLogger(){
-                //let stack = global.__stack;
-                
-                var orig = Error.prepareStackTrace;
-                Error.prepareStackTrace = function(_, stack){ return stack; };
-                var err = new Error;
-                Error.captureStackTrace(err, arguments.callee);
-                var stack = err.stack;
-                
-                
-                
-                let i = 0;
-                while ( ! stack[i].getFunctionName().includes('simpleGitLog')  && ( i < stack.length - 1)) {
-                    i++;
-                }
-                console.log('i = ' + i);
-                console.log('stack.length = ' + stack.length);
-                
-                if ( i > ( stack.length - 2 ) ){
-                        return 'error in line number from stack trace';
-                }else{
-                    let stackItem = stack[ i + 1 ]; // Stack level that called simpleGitLog 
-                    
-                    let file = stackItem.getFileName().split('/');
-                    let fileName = file[file.length-1];
-                    
-                    let line = stackItem.getLineNumber();
-                    let funcName = stackItem.getFunctionName();
-                    
-                    return funcName + '/' + fileName + '  line ' + line;
-                }
-                
-            }
-
-
-        } 
-
 
     
     // Constants 
@@ -236,6 +187,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt'; 
         fs.writeFileSync(MAINLOGFILE,'', 'utf8'); // Clear log file
+        var mainLogFileStream;  // Global logfile stream
         
         pragmaLog('Initiating app.js');
         
@@ -271,8 +223,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
-        localState.logFileStream = fs.createWriteStream( MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
-
     // Display text
         var textOutput = {
             value: '',        // First row is title, rows after are message
@@ -370,7 +320,7 @@ async function _callback( name, event){
             // Skip because annoyingly frequent when typing
         }else{
             pragmaLog('-' );
-            pragmaLog('_callback = ' + name + eventString);
+            pragmaLog('_callback = ' + name + eventString + stackInfo(1) );
         }
     }
         
@@ -2926,6 +2876,55 @@ function startPragmaAskPass(){
 }
 
 // Git commands
+
+function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs through pragmaLog
+    pragmaLog( ' ');
+    pragmaLog('REPOSITORY : "' + pwd + '"'); 
+    //pragmaLog( 'line = ' + global.__line); 
+    pragmaLog( 'LINE       : ' + stackInfoSimpleGitLogger() ); 
+    
+
+    return simpleGit(pwd).outputHandler( sendGitOutputToFile() );
+    
+                
+    // Log line number of calling function
+    function stackInfoSimpleGitLogger(){
+        //let stack = global.__stack;
+        
+        var orig = Error.prepareStackTrace;
+        Error.prepareStackTrace = function(_, stack){ return stack; };
+        var err = new Error;
+        Error.captureStackTrace(err, arguments.callee);
+        var stack = err.stack;
+        
+        
+        
+        let i = 0;
+        while ( ! stack[i].getFunctionName().includes('simpleGitLog')  && ( i < stack.length - 1)) {
+            i++;
+        }
+        console.log('i = ' + i);
+        console.log('stack.length = ' + stack.length);
+        
+        if ( i > ( stack.length - 2 ) ){
+                return 'error in line number from stack trace';
+        }else{
+            let stackItem = stack[ i + 1 ]; // Stack level that called simpleGitLog 
+            
+            let file = stackItem.getFileName().split('/');
+            let fileName = file[file.length-1];
+            
+            let line = stackItem.getLineNumber();
+            let funcName = stackItem.getFunctionName();
+            
+            return funcName + '/' + fileName + '  line ' + line;
+        }
+        
+    }
+
+
+} 
+
 async function gitIsInstalled(){
     var isInstalled = false;
     var resultMessage = "";
@@ -4421,12 +4420,15 @@ function pragmaLog(message){
     }
     
     // Write message to stream
-    const stream = require('fs').createWriteStream(MAINLOGFILE, { flags: 'a' });
+    if (mainLogFileStream == undefined){
+        mainLogFileStream = require('fs').createWriteStream(MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
+    }
+    
     
     let timeStamp = new Date().toISOString();
     let space = '   ';
     let output = timeStamp + space + cleanedMessage + os.EOL;
-    stream.write( output);
+    mainLogFileStream.write( output);
 }
 function sendGitOutputToFile() {
   let counter = 0;
@@ -4451,6 +4453,39 @@ function sendGitOutputToFile() {
     
   }
 }
+function stackInfo( level ){
+    //let stack = global.__stack;
+    
+    var orig = Error.prepareStackTrace;
+    Error.prepareStackTrace = function(_, stack){ return stack; };
+    var err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    var stack = err.stack;
+    
+
+    if (stack.length <= level){ 
+        return ' ';
+    }
+
+
+    let stackItem = stack[ level ]; // Stack level to report
+    
+    
+    if (stackItem == undefined){
+        return ' ';
+    }
+    
+    let file = stackItem.getFileName().split('/');
+    let fileName = file[file.length-1];
+    
+    let line = stackItem.getLineNumber();
+    let funcName = stackItem.getFunctionName();
+    
+    return '   (' + funcName + '/' + fileName + '  line ' + line + ')';
+
+
+}
+
 
 // Update other windows
 async function updateGraphWindow(){
