@@ -319,7 +319,6 @@ async function _callback( name, event){
         if ( name.includes('key_up') || name.includes('-arrow') ){
             // Skip because annoyingly frequent when typing
         }else{
-            pragmaLog('-' );
             pragmaLog('_callback = ' + name + eventString + stackInfo(1) );
         }
     }
