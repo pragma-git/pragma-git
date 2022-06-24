@@ -2291,7 +2291,6 @@ async function _update2(){
             //localState.settings = false;
             
             updateWithNewSettings();
-            saveSettings();
                 
             // Remove from menu
             deleteWindowMenu('Settings');
