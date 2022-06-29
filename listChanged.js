@@ -46,7 +46,14 @@ async function injectIntoJs(document) {
         if (localState.mode == 'HISTORY'){
             status_data = await opener.gitShowHistorical();  
         }else{
-            status_data = await opener.gitStatus();
+            status_data = await opener.gitStatus();  
+            
+            // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
+            for (var i = 0; i < status_data.not_added.length; ++i) {              
+                let fileName = status_data.not_added[i];            
+                status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+            }                   
+              
         }
     }catch(err){
         console.log("injectIntoJs -- Error " );
@@ -596,7 +603,7 @@ function createFileTable(status_data) {
         let Y = fileStruct.working_dir
         let XY = X + Y;  
         
-        console.log( '[' + XY + '] ' + fileStruct.path);
+        //console.log( '[' + XY + '] ' + fileStruct.path);
         
         // Remember found file
         foundFiles.push(file);

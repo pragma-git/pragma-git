@@ -2170,6 +2170,7 @@ async function _callback( name, event){
                         }
                         list_win = nw.Window.get(win.window);
                         addWindowMenu( title, 'list_win');
+                        //list_win.showDevTools(); // Auto-open Dev-tools for this window
                     }
                 )
             
