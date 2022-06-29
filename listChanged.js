@@ -19,6 +19,10 @@ const STARTDIR = process.cwd(); // Folder where this file was started
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
+var lowRange = 1;
+var rangeWidth = 1000;  // Update also in listChanged.html id="highRange"
+var maxRange;
+
 var win
 
 var origFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
@@ -55,6 +59,7 @@ async function injectIntoJs(document) {
             }                   
               
         }
+        maxRange = status_data.files.length;
     }catch(err){
         console.log("injectIntoJs -- Error " );
         console.log(err);
@@ -66,9 +71,17 @@ async function injectIntoJs(document) {
         win.showDevTools();  // WARNING : causes redraw issues on startup
     }
 
+    // Update rangeWidth
+    document.getElementById('lowRange').innerText = lowRange;
+    document.getElementById('highRange').innerText = Math.min(   lowRange + rangeWidth - 1 , status_data.files.length );
+    if (maxRange > rangeWidth){
+        document.getElementById('fileRange').style.display = 'block';
+    }
+    
+ 
     // Draw table
     origFiles = createFileTable(status_data);
-    
+       
     
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
@@ -591,7 +604,8 @@ function createFileTable(status_data) {
     console.log(status_data);
 
     // Fill tbody with content
-    for (let i in status_data.files) { 
+    for (let j in status_data.files.slice( lowRange - 1, lowRange + rangeWidth - 1) ) { 
+        i = Number(j) + lowRange - 1;
         let fileStruct = status_data.files[i];
         let file = fileStruct.path;
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
