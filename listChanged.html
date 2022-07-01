@@ -46,6 +46,10 @@
         }
         td{
             padding: 6px;
+            right: 0px;
+        }
+        .localFolder{
+            width: 80%;
         }
         
         .icon {
@@ -161,6 +165,27 @@
                 onmouseover="document.getElementById('find-icon').src='images/find.png' " 
                 onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
                 src="images/find_black.png" >
+                
+            <!-- File range buttons --> 
+            <div id="fileRange" style="display:none"> 
+                <span id='down' style="cursor:pointer; zoom: 0.8;" 
+                    onclick="
+                        lowRange = Math.max(1, lowRange - rangeWidth); 
+                        injectIntoJs(document);"
+                > &#x25C0;</span> 
+                
+                <span id="lowRange">1</span> - <span id="highRange">1000</span>
+                
+                <span id='up'   style="cursor:pointer; zoom: 0.8;" 
+                    onclick="
+                        if ( ( lowRange + rangeWidth ) <= maxRange){
+                            lowRange = lowRange + rangeWidth;
+                        }
+                        ; injectIntoJs(document);"
+                > &#x25B6;</span> 
+ 
+            </div>
+
     </h2>
     
     <p>
