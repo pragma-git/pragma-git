@@ -381,10 +381,9 @@ async function _callback( name, event){
                 table = document.getElementById("branchesTableBody");
                 let myLocalFolder = state.repos[id].localFolder;
 
-                branchList = await gitBranchList( myLocalFolder);
                 
                 
-                generateBranchTable( document, table, branchList); // generate the table first
+                drawBranchTab(document);
 
                 
                     
@@ -1029,7 +1028,7 @@ async function injectIntoSettingsJs(document) {
     console.log('Settings - state :');  
     console.log(global.state);
     
-    // Write path to div
+    // Write path to System info 
     if ( os.platform().startsWith('win') ){    
         document.getElementById('path').innerHTML = process.env.PATH
         .replace(/;\s*/g,';<br>'); // Replace semicolons
@@ -1037,7 +1036,76 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
     
+    // Draw tabs
+    await drawBranchTab(document);
+    await drawRepoTab(document);
+    await drawSoftwareTab(document);
+    
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
+
+    // Set Software as first sub-tab in Repo tab
+    document.getElementById('SoftwareTab').click(); 
+    
+    
+    // Warn if no repos
+    if (state.repos.length == 0){
+        
+        // Warn if no repos
+        displayAlert(
+            "No repositories", 
+            
+            `<p>
+                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
+                <ol>
+                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
+            
+                    </li>
+                    or
+                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
+        
+            
+                    </li>
+        
+                </ol>
+                
+                
+                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
+            </p>
+            
+            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
+            </p>
+            `
+        );
+        
+        // Set tab from setting
+        let tab = 1; // Repository tab
+        tabButton[ tab ].click();
+    }
+
+
+
+};
+
+// Draw
+async function drawBranchTab(document){
+    let myLocalFolder = state.repos[state.repoNumber].localFolder;
+    
+    document.getElementById("branchesTableBody").innerHTML = ""; 
+    table = document.getElementById("branchesTableBody");
+    let branchList = await gitBranchList( myLocalFolder);
+    generateBranchTable(document, table, branchList); 
+}
+async function drawRepoTab(document){
+    
+    let data = state.repos;
+    let table = document.getElementById("settingsTableBody");
+    generateRepoTable(document, table, data);
+}
+async function drawSoftwareTab(document){
+    
     // Write system information to divs
+    
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
@@ -1089,58 +1157,8 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('onAllWorkspaces').disabled = true;
     }
     
-    // Build repo table
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    await createHtmlTable(document);  
+}
 
-
-    // Set tab from setting
-    tabButton[state.settingsWindow.selectedTab].click();
-
-    document.getElementById('cloneTab').click(); 
-    
-    
-    // Warn if no repos
-
-    if (state.repos.length == 0){
-        
-        // Warn if no repos
-        displayAlert(
-            "No repositories", 
-            
-            `<p>
-                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
-                <ol>
-                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
-            
-                    </li>
-                    or
-                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
-        
-            
-                    </li>
-        
-                </ol>
-                
-                
-                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
-            </p>
-            
-            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
-            </p>
-            `
-        );
-        
-        // Set tab from setting
-        let tab = 1; // Repository tab
-        tabButton[ tab ].click();
-    }
-
-
-
-};
-
-// Draw
 async function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
@@ -1297,17 +1315,7 @@ async function generateRepoTable(document, table, data) {
             index ++;
         }
     } // if any repos
- 
-    
-    
-    // Draw branch by simulating click
-    let event =[];
-    event.id = foundIndex; // Simulate first clicked
-    
-    await _callback( "repoRadiobuttonChanged", event);
 
-    
-    console.log(table);
 }
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
