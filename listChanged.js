@@ -341,11 +341,13 @@ async function _callback( name, event, event2){
                 
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
-                exec('./pragma-merge "' + file + '"' + '  --edit ' + rw_switch, 
+                let fullPath = state.repos[state.repoNumber].localFolder + pathsep + file;
+                exec( './pragma-merge "' + fullPath + '"' + '  --edit ' + rw_switch, 
                     (error, stdout, stderr) => {
                       // catch err, stdout, stderr
                         if (error) {
                             opener.pragmaLog('-Error starting pragma-merge');
+                            opener.pragmaLog(error.toString());
                             return;
                         }
                         if (stderr) {
