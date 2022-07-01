@@ -381,10 +381,9 @@ async function _callback( name, event){
                 table = document.getElementById("branchesTableBody");
                 let myLocalFolder = state.repos[id].localFolder;
 
-                branchList = await gitBranchList( myLocalFolder);
                 
                 
-                generateBranchTable( document, table, branchList); // generate the table first
+                drawBranchTab(document);
 
                 
                     
@@ -1038,18 +1037,18 @@ async function injectIntoSettingsJs(document) {
     }
     
     // Draw tabs
-    drawBranchTab(document);
-    drawRepoTab(document);
-    drawSoftwareTab(document);
-
+    await drawBranchTab(document);
+    await drawRepoTab(document);
+    await drawSoftwareTab(document);
+    
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
 
-    document.getElementById('cloneTab').click(); 
+    // Set Software as first sub-tab in Repo tab
+    document.getElementById('SoftwareTab').click(); 
     
     
     // Warn if no repos
-
     if (state.repos.length == 0){
         
         // Warn if no repos
@@ -1316,17 +1315,7 @@ async function generateRepoTable(document, table, data) {
             index ++;
         }
     } // if any repos
- 
-    
-    
-    // Draw branch by simulating click
-    let event =[];
-    event.id = foundIndex; // Simulate first clicked
-    
-    await _callback( "repoRadiobuttonChanged", event);
 
-    
-    console.log(table);
 }
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
