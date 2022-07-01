@@ -1038,20 +1038,9 @@ async function injectIntoSettingsJs(document) {
     }
     
     // Draw tabs
-    
     drawBranchTab(document);
-    
     drawRepoTab(document);
-    
-
-    
     drawSoftwareTab(document);
-    
-    
-    // Build repo table
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    await createHtmlTable(document);  
-
 
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
