@@ -2170,6 +2170,7 @@ async function _callback( name, event){
                         }
                         list_win = nw.Window.get(win.window);
                         addWindowMenu( title, 'list_win');
+                        //list_win.showDevTools(); // Auto-open Dev-tools for this window
                     }
                 )
             
@@ -3035,12 +3036,14 @@ async function gitStatus(){
     // Make safe for empty repos
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
-
+    
+    let options = [ '--untracked-files=no' ];  // It is not uncommon that whole folders of untracked files are added.  They may take a long time to parse, so do it separately instead.
+    //options = [];
     
     // Handle normal status of uncommited
     try{
         await simpleGit( state.repos[state.repoNumber].localFolder)
-            .status( onStatus);
+            .status( options, onStatus);
         function onStatus(err, result ){  status_data = result }
         
         // New files can be not_added (user created them) or created (git merge created them)
@@ -3052,6 +3055,9 @@ async function gitStatus(){
             + status_data.deleted.length) > 0);
             
         status_data.current;  // Name of current branch
+        
+        // Get untracked files
+        status_data = await getUnTracked( status_data);
 
     }catch(err){
         console.log('Error in gitStatus()');
@@ -3071,6 +3077,26 @@ async function gitStatus(){
     //
     // Internal functions
     //
+        async function getUnTracked( status_data){
+            let out;
+            await simpleGit( state.repos[state.repoNumber].localFolder)
+                .raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
+            function onLsFiles(err, result ){  
+                console.log(err);
+                console.log(result);
+                out = result;
+            }
+            
+            
+            if (out.length == 0){
+                status_data.not_added = [];
+            }else{
+                status_data.not_added = out.split('\n');    // Make array of output from ls-files
+                status_data.not_added.pop();                // Remove last line which is empty
+            }
+            
+            return status_data;
+        };
         function createEmptyGitStatus(){
             status_data = [];
             status_data.conflicted = [];
