@@ -1029,7 +1029,7 @@ async function injectIntoSettingsJs(document) {
     console.log('Settings - state :');  
     console.log(global.state);
     
-    // Write path to div
+    // Write path to System info 
     if ( os.platform().startsWith('win') ){    
         document.getElementById('path').innerHTML = process.env.PATH
         .replace(/;\s*/g,';<br>'); // Replace semicolons
@@ -1037,57 +1037,16 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
     
-    // Write system information to divs
-    let VERSION = require('./package.json').version;
-    document.getElementById('version').innerText = VERSION;
-    document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
-    document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
-    document.getElementById('platform').innerText = process.platform;
+    // Draw tabs
     
+    drawBranchTab(document);
     
-    document.getElementById('gitVersion').innerText = localState.gitVersion;
+    drawRepoTab(document);
+    
 
     
-    // Set values according to state variable
-    document.getElementById(state.darkmode).checked = true;
+    drawSoftwareTab(document);
     
-    document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
-    document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
-    document.getElementById('displayToolTip').checked = state.displayToolTip;
-    
-    document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
-    //document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
-    //document.getElementById('NoFF_merge').checked = state.NoFF_merge;
-    document.getElementById('FirstParent').checked = state.FirstParent;
-    document.getElementById('StashPop').checked = state.StashPop;
-    
-    
-    document.getElementById('gitDiffTool').value = state.tools.difftool;
-    document.getElementById('gitMergeTool').value = state.tools.mergetool;
-    document.getElementById('pathAddition').value = state.tools.addedPath;
-    
-    // Set values according to git-config
-    try{
-        //configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
-        //console.log(configList);
-        document.getElementById('authorName').value  = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
-        document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
-        
-        // Show for local repo
-        await updateLocalAuthorInfoView();  
-        
-    }catch(err){
-        console.error(err);
-    }
-    
-    // Set Zoom
-    document.getElementById('zoom').value = state.zoom;
-    document.getElementById('zoomMain').value = state.zoomMain;
-    
-    // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
-    if ( ! win.canSetVisibleOnAllWorkspaces() ){
-        document.getElementById('onAllWorkspaces').disabled = true;
-    }
     
     // Build repo table
     document.getElementById("settingsTableBody").innerHTML = ""; 
@@ -1141,6 +1100,77 @@ async function injectIntoSettingsJs(document) {
 };
 
 // Draw
+async function drawBranchTab(document){
+    let myLocalFolder = state.repos[state.repoNumber].localFolder;
+    
+    document.getElementById("branchesTableBody").innerHTML = ""; 
+    table = document.getElementById("branchesTableBody");
+    let branchList = await gitBranchList( myLocalFolder);
+    generateBranchTable(document, table, branchList); 
+}
+async function drawRepoTab(document){
+    
+    let data = state.repos;
+    let table = document.getElementById("settingsTableBody");
+    generateRepoTable(document, table, data);
+}
+async function drawSoftwareTab(document){
+    
+    // Write system information to divs
+    
+    let VERSION = require('./package.json').version;
+    document.getElementById('version').innerText = VERSION;
+    document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
+    document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
+    document.getElementById('platform').innerText = process.platform;
+    
+    
+    document.getElementById('gitVersion').innerText = localState.gitVersion;
+
+    
+    // Set values according to state variable
+    document.getElementById(state.darkmode).checked = true;
+    
+    document.getElementById('alwaysOnTop').checked = state.alwaysOnTop;
+    document.getElementById('onAllWorkspaces').checked = state.onAllWorkspaces;
+    document.getElementById('displayToolTip').checked = state.displayToolTip;
+    
+    document.getElementById('forceCommitBeforeBranchChange').checked = state.forceCommitBeforeBranchChange;
+    //document.getElementById('autoPushToRemote').checked = state.autoPushToRemote;
+    //document.getElementById('NoFF_merge').checked = state.NoFF_merge;
+    document.getElementById('FirstParent').checked = state.FirstParent;
+    document.getElementById('StashPop').checked = state.StashPop;
+    
+    
+    document.getElementById('gitDiffTool').value = state.tools.difftool;
+    document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    document.getElementById('pathAddition').value = state.tools.addedPath;
+    
+    // Set values according to git-config
+    try{
+        //configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
+        //console.log(configList);
+        document.getElementById('authorName').value  = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
+        document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
+        
+        // Show for local repo
+        await updateLocalAuthorInfoView();  
+        
+    }catch(err){
+        console.error(err);
+    }
+    
+    // Set Zoom
+    document.getElementById('zoom').value = state.zoom;
+    document.getElementById('zoomMain').value = state.zoomMain;
+    
+    // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
+    if ( ! win.canSetVisibleOnAllWorkspaces() ){
+        document.getElementById('onAllWorkspaces').disabled = true;
+    }
+    
+}
+
 async function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
