@@ -193,7 +193,7 @@
         
 
         <div id="inner-content">   
-            <div class="content" id="foldableDiv2">  <!--  SOFTWARE SETTINGS tab -->             
+            <div class="content" id="foldableDiv2" style="display:none;">  <!--  SOFTWARE SETTINGS tab -->             
                     
                 <h3>Visual</h3>  
                 
@@ -336,7 +336,7 @@
     
         
             </div>                
-            <div class="content" id="foldableDiv1" > <!--  REPO SETTINGS tab  --> 
+            <div class="content" id="foldableDiv1"  style="display:none;"> <!--  REPO SETTINGS tab  --> 
                 <h3>Repository table </h3>  
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
@@ -627,7 +627,7 @@
                     
                 </div>
             </div>
-            <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  -->     
+            <div class="content" id="foldableDiv4"  style="display:none;"> <!--  BRANCH SETTINGS tab  -->     
                                     
                 <h3 style="padding:0">Branches for : "<span id="shortCurrentRepo"></span>"</h3>  
                 <span id="currentRepo"></span>      
@@ -647,7 +647,7 @@
                 </table>    
         
             </div>     
-            <div class="content" id="foldableDiv3">  <!--  SYSTEM INFO  tab --> 
+            <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
                 <h3>Information </h3>
                 
@@ -795,6 +795,14 @@
                 });           
                 document.getElementById(id).style.display='contents';
                 document.getElementById(id).style.visibility='visible';
+                
+                // Read tab into state
+                state.settingsWindow.selectedTab = 0;  // First tab default
+                for (i = 0; i < tabButton.length; i++) {
+                    if ( tabButton[i].classList[1] == 'active'){
+                        state.settingsWindow.selectedTab = i;
+                    }
+                }
             }
         }
         
