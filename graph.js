@@ -473,7 +473,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : <div style="float:right"> <i>${author}</i> </div><BR><BR> 
+            html += `<B><U>Commit </U></B> : &nbsp;&nbsp; <div style="float:right"> <i>${author}</i> </div><BR><BR> 
                  <div> 
                      <p>&nbsp; 
                         <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
@@ -615,7 +615,14 @@ async function gitCommitAuthor(hash){
     try{
         let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
         await simpleGit( folder).raw(  commands, onGitCommitAuthor);
-        function onGitCommitAuthor(err, result ){text = result; console.log(result); };
+        function onGitCommitAuthor(err, result ){
+            text = result; 
+            // Remove parenthesis if email is empty
+            if (text.includes('()') ){
+                text = text.substring(0, text.length-3);  
+            }
+        };
+        
     }catch(err){        
         console.log(err);
     }
