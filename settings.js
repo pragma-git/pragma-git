@@ -768,6 +768,14 @@ async function closeWindow(){
         state.settingsWindow.unfolded[tabButton[i].id] = ( tabButton[i].classList[1] == 'active');
     }
     
+    // Read tab into state
+    state.settingsWindow.selectedTab = 0;  // First tab default
+    for (i = 0; i < tabButton.length; i++) {
+        if ( tabButton[i].classList[1] == 'active'){
+            state.settingsWindow.selectedTab = i;
+        }
+    }
+    
     // Read Dark mode 
     state.darkmode = document.querySelectorAll("input[name=darkmode]:checked")[0].value;
     
@@ -1089,9 +1097,10 @@ async function drawBranchTab(document){
     generateBranchTable(document, table, branchList); 
 }
 async function drawRepoTab(document){
-    document.getElementById("settingsTableBody").innerHTML = ""; 
+    
+    let data = state.repos;
     let table = document.getElementById("settingsTableBody");
-    generateRepoTable( document, table, state.repos);
+    generateRepoTable(document, table, data);
 }
 async function drawSoftwareTab(document){
     
