@@ -140,6 +140,9 @@
     
     rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe 
     ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
+    
+    # Allow running for file downloaded from internet (TODO : Verify that it works)
+    xattr -d com.apple.quarantine '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe'
 
     echo 'done'
     
