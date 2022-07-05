@@ -147,7 +147,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const util = require('./util_module.js'); // Pragma-git common functions
         
-        const simpleGit = require('simple-git');  // npm install simple-git
+        const simpleGit0 = require('simple-git');  // npm install simple-git
         
 
     
@@ -2875,7 +2875,15 @@ function startPragmaAskPass(){
 }
 
 // Git commands
-
+function simpleGit(pwd){
+    return simpleGit0(
+    { completion: {
+          onExit: 50,
+          onClose: true,
+       },
+    },
+    pwd) 
+}
 function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs through pragmaLog
     pragmaLog( ' ');
     pragmaLog('REPOSITORY : ' + pwd + ''); 
