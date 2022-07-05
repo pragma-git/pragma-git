@@ -2883,7 +2883,13 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
     pragmaLog( 'CODE       : ' + stackInfoSimpleGitLogger() ); 
     
 
-    return simpleGit(pwd).outputHandler( sendGitOutputToFile() );
+    return simpleGit(
+    { completion: {
+          onExit: 50,
+          onClose: true,
+       },
+    },
+    pwd).outputHandler( sendGitOutputToFile() );
     
                 
     // Log line number of calling function
