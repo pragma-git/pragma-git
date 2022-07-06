@@ -333,7 +333,6 @@ async function _callback( name, event, event2){
 
             let file = event;
             let rw_switch = event2; // --rw or --ro  or --show 
-
             
 
             // Setup running pragma-merge in edit mode 
@@ -341,11 +340,16 @@ async function _callback( name, event, event2){
                 
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
-                exec('./pragma-merge "' + file + '"' + '  --edit ' + rw_switch, 
+                
+                let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
+                let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                
+                exec( CD + RUN, 
                     (error, stdout, stderr) => {
                       // catch err, stdout, stderr
                         if (error) {
                             opener.pragmaLog('-Error starting pragma-merge');
+                            opener.pragmaLog(error.toString());
                             return;
                         }
                         if (stderr) {
