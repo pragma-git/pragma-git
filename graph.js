@@ -346,9 +346,17 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
     
     // Set history in main window
     localState.historyHash = hash;
-    localState.historyString = opener.historyMessage(history, localState.historyNumber);
     localState.historyLength = history.length;
+
+    let commit = nodeMap.get(hash);
     
+    localState.historyString =  opener.formatHistoryMessage( commit.date, commit.message, commit.messageBody)
+
+    // Off-branch is NaN, set to -1 
+    if ( isNaN( localState.historyNumber ) ){
+        localState.historyNumber = -1;
+    }
+     
     await opener._setMode('HISTORY');
     await opener._update();
 }
@@ -728,7 +736,9 @@ async function drawGraph( document, splitted, branchHistory, history){
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
-            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
+            [ longDate, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
+            
+            let date =  longDate.substring(0,10);  // Short date
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
      
@@ -738,7 +748,7 @@ async function drawGraph( document, splitted, branchHistory, history){
 
                      
             // Add date (only print when date is different to previous)
-            if (date == previousDate){
+            if ( date == previousDate){
                 date = '';
             }else{
                 // Keep date, and remember new date
@@ -785,6 +795,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.decoration = decoration;
                 thisCommit.branchName = "";  // Default (hidden or unknown)
                 thisCommit.messageBody = messageBody;
+                thisCommit.date = longDate;
                 
                 
             // Get branchName
@@ -1431,7 +1442,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 // Date : Separate log row from date (at end now when decorate removed)
                 let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
                 let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
-                date = date.substring(0,10);
+                //date = date.substring(0,10);
                   
                 // Message : Separate log row from message (at end now when date removed)
                 let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)

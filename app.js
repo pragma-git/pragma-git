@@ -5145,6 +5145,7 @@ function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
 function historyMessage(history, historyNumber ){
+
             
     // Test : get branches for current commit  (TODO : If useful -- maybe incorporate.  Now a bit cluttered display)
     var historyBranchesAtPoint = ""; // Do not comment out this row !
@@ -5162,20 +5163,24 @@ function historyMessage(history, historyNumber ){
     
     let historyHash = history[historyNumber].hash; // Store hash
     
+    return formatHistoryMessage( history[historyNumber].date, history[historyNumber].message, history[historyNumber].body)
+
+}
+function formatHistoryMessage( longDate, message, body){
     // Reformated date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-    let historyString = ( history[historyNumber].date).substring( 11,11+5) 
-    + ' (' + ( history[historyNumber].date).substring( 0,10) + ')';
+    let historyString = longDate.substring( 11,11+5) 
+    + ' (' + longDate.substring( 0,10) + ')';
     
     // Branches on this commit
-    historyString += historyBranchesAtPoint;
+    //historyString += historyBranchesAtPoint;
 
     // Message
     historyString += os.EOL 
     + os.EOL 
-    + history[historyNumber].message
+    + message
     + os.EOL 
     + os.EOL 
-    + history[historyNumber].body;
+    + body;
     
     return historyString
 }
@@ -5234,13 +5239,14 @@ function fileStatusString( status_data){
         + ' of ' 
         + localState.historyLength 
         + ')';
- 
-    if ( isNaN(localState.historyNumber) ){
-        historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
-    }
+
        
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
+        
+        if ( localState.historyNumber < 0 ){ // Can only be if set off-branch from click in graph
+            historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
+        }
         
         return 'Modified = ' 
             + status_data.modified.length 
