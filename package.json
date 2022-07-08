@@ -5,6 +5,7 @@
   "main": "app.html",
   "author": "Jan Axelsson",
   "license": "MIT",
+  "chromium-args": "--disable-gpu",
   "window": {
     "show": false,
     "toolbar": false,
