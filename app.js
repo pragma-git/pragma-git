@@ -2229,52 +2229,58 @@ async function _update2(){
     let  status_data = [];
     let  folder = "";
     let fullFolderPath = "";
+    let isRepo;
+    let stash_status;
         
     // Initiate   
     if (state.repos.length >0){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
+    
+    let folderExists = fs.existsSync( fullFolderPath );
   
     var startTime = performance.now();      
     
     //
     // Test parallelize all git calls
     //
+        let promises = [];
     
-        var isRepo;
-        const repoCheck =  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
+        // Promise 1
+        promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
         function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
         
-        const getStatus =  simpleGit(fullFolderPath).status( onStatus);
+        // Promise 2
+        promises.push(  simpleGit(fullFolderPath).status( onStatus) );
         function onStatus(err, result) { status_data = result; }   
         
-        status_data =  gitStatus(); 
+        // Promise 3
+        promises.push( status_data =  gitStatus() );
         
-        let getFolder = gitLocalFolder().then( function(value) { folder = value.folderName},) ;
+        // Promise 4 (allowed to check if folder exists)
+        if ( folderExists ) {
+            let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
+            promises.push( folderCheck );
+        }
+        
+        // Promise 5
+        promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
+        function onStash(err, result ){  
+            stash_status = result 
+            log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+        }
         
 
-        await Promise.all( [ getStatus, repoCheck, status_data, getFolder ] )
+        // Run in parallell
+        await Promise.all( promises )
 
-        
-
-    
-    //if (state.repos.length >0){
-        //fullFolderPath = state.repos[ state.repoNumber].localFolder; 
-    //}
     
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
         try{
-            //status_data = await gitStatus();
-            //log(`_update took ${ performance.now() - startTime} ms (at gitStatus)`); 
-            //let result = await gitLocalFolder();
-            //log(`_update took ${ performance.now() - startTime} ms (at gitLocalFolder)`); 
-            //folder = result.folderName;
-            //folder = getFolder[0].folderName;
             currentBranch = status_data.current; 
             gitSetLocalBranchNumber();  // Update localState.branchNumber here
-            //log(`_update took ${ performance.now() - startTime} ms (at gitSetLocalBranchNumber)`);
         }catch(err){
             console.log(err);
 
@@ -2294,22 +2300,9 @@ async function _update2(){
         _setMode('UNKNOWN');
     }
     
-    // Validate repo and folder :
- 
-    // Check if localFolder exists 
-    if (fs.existsSync( fullFolderPath ) ) {
-        // If folder exists, I am allowed to check if repo
-        
-        //// Check if repository 
-        //var isRepo;
-        //await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
-        //function onCheckIsRepo(err, checkResult) { 
-            //isRepo = checkResult
-            //log(' ');
-            //log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
-        //}
-        
-        //isRepo = true;
+
+    // Validate repo and folder : Check if localFolder exists 
+    if ( folderExists ) {
         if (!isRepo) {
             folder = "(not a repo) " + folder;
             currentBranch = "";
@@ -2318,6 +2311,7 @@ async function _update2(){
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
     }   
+
 
     // If left settings window
         if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
@@ -2444,18 +2438,16 @@ async function _update2(){
         }
             
     // Stash-pop button (show if no changed files)
-        let stash_status;
+        //let stash_status;
         if (state.repos.length > 0){
             try{
                 
-                await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
-                function onStash(err, result ){  
-                    stash_status = result 
-                    log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
-                }
-                
-                
-                //if ( (stash_status.length > 0) && (!status_data.changedFiles) ){
+                //await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
+                //function onStash(err, result ){  
+                    //stash_status = result 
+                    //log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
+                //}
+
                 if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
                 {
                     document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
@@ -2534,13 +2526,7 @@ async function _update2(){
                 }
                 log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
-                setTitleBar( 'top-titlebar-repo-text', folder );
-                setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
-                setStatusBar( fileStatusString( status_data));         
-                // If not correct mode, fix :
-                if (!status_data.changedFiles){
-                    _setMode('UNKNOWN');
-                }
+
                 break;
             }
                 
@@ -3071,25 +3057,20 @@ async function gitStatus(){
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
     
     let options = [ '--untracked-files=no' ];  // It is not uncommon that whole folders of untracked files are added.  They may take a long time to parse, so do it separately instead.
-    //options = [];
     
     // Handle normal status of uncommited
     try{
         
         // Get untracked files
         let status_data2 = [];
-        const p1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
+        const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
         function onLsFiles(err, result ){ status_data2 = result; }
             
-        
         // Get tracked files
-        const p2 =simpleGit( state.repos[state.repoNumber].localFolder).status( options, onStatus);
+        const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( options, onStatus);
         function onStatus(err, result ){  status_data = result }
         
-        //await p1;
-        //await p2;
-        
-        await Promise.all( [ p1, p2]);
+        await Promise.all( [ promise1, promise2]);
          
         
         if (status_data2.length == 0){
@@ -3133,15 +3114,7 @@ async function gitStatus(){
             let out;
             await simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
             function onLsFiles(err, result ){ out = result; }
-            
-            
-            //if (out.length == 0){
-                //status_data.not_added = [];
-            //}else{
-                //status_data.not_added = out.split('\n');    // Make array of output from ls-files
-                //status_data.not_added.pop();                // Remove last line which is empty
-            //}
-            
+
             return out;
         };
         function createEmptyGitStatus(){
