@@ -2211,13 +2211,13 @@ async function _update(){
 }
     
 async function _update2(){ 
+     
     
     // Turn on and off local logging
     function log( text){
         console.log(text);
     }
     
-    var startTime = performance.now();
     // Bail out if isPaused = true
     if(isPaused) {
         return;
@@ -2229,20 +2229,52 @@ async function _update2(){
     let  status_data = [];
     let  folder = "";
     let fullFolderPath = "";
-    
+        
+    // Initiate   
     if (state.repos.length >0){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
+  
+    var startTime = performance.now();      
+    
+    //
+    // Test parallelize all git calls
+    //
+    
+        var isRepo;
+        const repoCheck =  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
+        function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
+        
+        const getStatus =  simpleGit(fullFolderPath).status( onStatus);
+        function onStatus(err, result) { status_data = result; }   
+        
+        status_data =  gitStatus(); 
+        
+        let getFolder = gitLocalFolder().then( function(value) { folder = value.folderName},) ;
+        
+
+        await Promise.all( [ getStatus, repoCheck, status_data, getFolder ] )
+
+        
+
+    
+    //if (state.repos.length >0){
+        //fullFolderPath = state.repos[ state.repoNumber].localFolder; 
+    //}
     
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
         try{
-            status_data = await gitStatus();
-            let result = await gitLocalFolder();
-            folder = result.folderName;
+            //status_data = await gitStatus();
+            //log(`_update took ${ performance.now() - startTime} ms (at gitStatus)`); 
+            //let result = await gitLocalFolder();
+            //log(`_update took ${ performance.now() - startTime} ms (at gitLocalFolder)`); 
+            //folder = result.folderName;
+            //folder = getFolder[0].folderName;
             currentBranch = status_data.current; 
             gitSetLocalBranchNumber();  // Update localState.branchNumber here
+            //log(`_update took ${ performance.now() - startTime} ms (at gitSetLocalBranchNumber)`);
         }catch(err){
             console.log(err);
 
@@ -2268,15 +2300,16 @@ async function _update2(){
     if (fs.existsSync( fullFolderPath ) ) {
         // If folder exists, I am allowed to check if repo
         
-        // Check if repository 
-        var isRepo;
-        await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
-        function onCheckIsRepo(err, checkResult) { 
-            isRepo = checkResult
-            log(' ');
-            log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
-        }
+        //// Check if repository 
+        //var isRepo;
+        //await simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo);
+        //function onCheckIsRepo(err, checkResult) { 
+            //isRepo = checkResult
+            //log(' ');
+            //log(`_update took ${ performance.now() - startTime} ms (at onCheckIsRepo)`); 
+        //}
         
+        //isRepo = true;
         if (!isRepo) {
             folder = "(not a repo) " + folder;
             currentBranch = "";
@@ -3042,10 +3075,30 @@ async function gitStatus(){
     
     // Handle normal status of uncommited
     try{
-        await simpleGit( state.repos[state.repoNumber].localFolder)
-            .status( options, onStatus);
+        
+        // Get untracked files
+        let status_data2 = [];
+        const p1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
+        function onLsFiles(err, result ){ status_data2 = result; }
+            
+        
+        // Get tracked files
+        const p2 =simpleGit( state.repos[state.repoNumber].localFolder).status( options, onStatus);
         function onStatus(err, result ){  status_data = result }
         
+        //await p1;
+        //await p2;
+        
+        await Promise.all( [ p1, p2]);
+         
+        
+        if (status_data2.length == 0){
+            status_data.not_added = [];
+        }else{
+            status_data.not_added = status_data2.split('\n');    // Make array of output from ls-files
+            status_data.not_added.pop();                         // Remove last line which is empty
+        }     
+          
         // New files can be not_added (user created them) or created (git merge created them)
         status_data.changedFiles = ( 
             (status_data.modified.length 
@@ -3055,9 +3108,8 @@ async function gitStatus(){
             + status_data.deleted.length) > 0);
             
         status_data.current;  // Name of current branch
+
         
-        // Get untracked files
-        status_data = await getUnTracked( status_data);
 
     }catch(err){
         console.log('Error in gitStatus()');
@@ -3077,25 +3129,20 @@ async function gitStatus(){
     //
     // Internal functions
     //
-        async function getUnTracked( status_data){
+        async function getUnTracked( ){
             let out;
-            await simpleGit( state.repos[state.repoNumber].localFolder)
-                .raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
-            function onLsFiles(err, result ){  
-                console.log(err);
-                console.log(result);
-                out = result;
-            }
+            await simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
+            function onLsFiles(err, result ){ out = result; }
             
             
-            if (out.length == 0){
-                status_data.not_added = [];
-            }else{
-                status_data.not_added = out.split('\n');    // Make array of output from ls-files
-                status_data.not_added.pop();                // Remove last line which is empty
-            }
+            //if (out.length == 0){
+                //status_data.not_added = [];
+            //}else{
+                //status_data.not_added = out.split('\n');    // Make array of output from ls-files
+                //status_data.not_added.pop();                // Remove last line which is empty
+            //}
             
-            return status_data;
+            return out;
         };
         function createEmptyGitStatus(){
             status_data = [];
