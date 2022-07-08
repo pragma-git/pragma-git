@@ -2250,24 +2250,26 @@ async function _update2(){
 
     // Promise 1
     promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
-    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
+    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; log(`_update took ${ performance.now() - startTime} ms (at PROMISE 1)`); }    
     
     // Promise 2
-    promises.push(  simpleGit(fullFolderPath).status( onStatus) );
-    function onStatus(err, result) { status_data = result; }   
+    //promises.push(  simpleGit(fullFolderPath).status( onStatus) );
+    //function onStatus(err, result) { status_data = result; log(`_update took ${ performance.now() - startTime} ms (at PROMISE  2)`); }   
     
     // Promise 3
-    promises.push( status_data =  gitStatus() );
+    let statusCheck = gitStatus().then(  function(value) { status_data = value; log(`_update took ${ performance.now() - startTime} ms (at PROMISES 3)`); }  );
+    promises.push( statusCheck );
     
     // Promise 4 (allowed to check if folder exists)
     if ( folderExists ) {
-        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
+        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; log(`_update took ${ performance.now() - startTime} ms (at PROMISES 4)`); }  );
         promises.push( folderCheck );
     }
     
     // Promise 5
     promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
     function onStash(err, result ){  
+        log(`_update took ${ performance.now() - startTime} ms (at PROMISE 5)`); 
         stash_status = result 
     }
     
@@ -2275,6 +2277,7 @@ async function _update2(){
     // Run 
     await Promise.all( promises )
 
+    log(`_update took ${ performance.now() - startTime} ms (at PROMISES)`); 
 
     //
     // Process
@@ -3047,6 +3050,7 @@ async function gitDefineBuiltInMergeTool(){
 async function gitStatus(){
     // Determine if changed files (from git status)
     let status_data = [] ;  
+    let status_data2 = [];
     status_data.changedFiles = false;
     status_data.current = "";
     
@@ -3054,18 +3058,16 @@ async function gitStatus(){
     if (state.repos.length == 0){ return status_data}
     if (state.repoNumber > (state.repos.length -1) ){ return status_data}
     
-    let options = [ '--untracked-files=no' ];  // It is not uncommon that whole folders of untracked files are added.  They may take a long time to parse, so do it separately instead.
     
     // Handle normal status of uncommited
     try{
         
         // Get untracked files
-        let status_data2 = [];
         const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
         function onLsFiles(err, result ){ status_data2 = result; }
             
         // Get tracked files
-        const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( options, onStatus);
+        const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
         function onStatus(err, result ){  status_data = result }
         
         await Promise.all( [ promise1, promise2]);
