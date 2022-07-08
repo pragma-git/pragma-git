@@ -2241,40 +2241,45 @@ async function _update2(){
   
     var startTime = performance.now();      
     
-    //
-    // Test parallelize all git calls
-    //
-        let promises = [];
     
-        // Promise 1
-        promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
-        function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
-        
-        // Promise 2
-        promises.push(  simpleGit(fullFolderPath).status( onStatus) );
-        function onStatus(err, result) { status_data = result; }   
-        
-        // Promise 3
-        promises.push( status_data =  gitStatus() );
-        
-        // Promise 4 (allowed to check if folder exists)
-        if ( folderExists ) {
-            let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
-            promises.push( folderCheck );
-        }
-        
-        // Promise 5
-        promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
-        function onStash(err, result ){  
-            stash_status = result 
-            log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
-        }
-        
-
-        // Run in parallell
-        await Promise.all( promises )
-
+    //
+    // Parallelize all git calls
+    //
     
+    let promises = [];
+
+    // Promise 1
+    promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
+    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
+    
+    // Promise 2
+    promises.push(  simpleGit(fullFolderPath).status( onStatus) );
+    function onStatus(err, result) { status_data = result; }   
+    
+    // Promise 3
+    promises.push( status_data =  gitStatus() );
+    
+    // Promise 4 (allowed to check if folder exists)
+    if ( folderExists ) {
+        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
+        promises.push( folderCheck );
+    }
+    
+    // Promise 5
+    promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
+    function onStash(err, result ){  
+        stash_status = result 
+    }
+    
+
+    // Run 
+    await Promise.all( promises )
+
+
+    //
+    // Process
+    //
+       
     // If not DEFAULT  --  since DEFAULT is special case (when nothing is defined)
     if ( modeName != 'DEFAULT'){  // git commands won't work if no repo
         
@@ -2441,13 +2446,6 @@ async function _update2(){
         //let stash_status;
         if (state.repos.length > 0){
             try{
-                
-                //await simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash);
-                //function onStash(err, result ){  
-                    //stash_status = result 
-                    //log(`_update took ${ performance.now() - startTime} ms (at onStash)`); 
-                //}
-
                 if ( (stash_status.length > 0) && (!status_data.changedFiles) && FALSE_IN_HISTORY_MODE )
                 {
                     document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
