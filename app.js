@@ -2250,34 +2250,25 @@ async function _update2(){
 
     // Promise 1
     promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
-    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; log(`_update took ${ performance.now() - startTime} ms (at PROMISE 1)`); }    
+    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
     
     // Promise 2
-    //promises.push(  simpleGit(fullFolderPath).status( onStatus) );
-    //function onStatus(err, result) { status_data = result; log(`_update took ${ performance.now() - startTime} ms (at PROMISE  2)`); }   
-    
-    // Promise 3
-    let statusCheck = gitStatus().then(  function(value) { status_data = value; log(`_update took ${ performance.now() - startTime} ms (at PROMISES 3)`); }  );
+    let statusCheck = gitStatus().then(  function(value) { status_data = value; }  );
     promises.push( statusCheck );
     
-    // Promise 4 (allowed to check if folder exists)
+    // Promise 3 (allowed to check if folder exists)
     if ( folderExists ) {
-        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; log(`_update took ${ performance.now() - startTime} ms (at PROMISES 4)`); }  );
+        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
         promises.push( folderCheck );
     }
     
-    // Promise 5
+    // Promise 4
     promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
-    function onStash(err, result ){  
-        log(`_update took ${ performance.now() - startTime} ms (at PROMISE 5)`); 
-        stash_status = result 
-    }
+    function onStash(err, result ){ stash_status = result; }
     
 
     // Run 
     await Promise.all( promises )
-
-    log(`_update took ${ performance.now() - startTime} ms (at PROMISES)`); 
 
     //
     // Process
@@ -3061,14 +3052,15 @@ async function gitStatus(){
     
     // Handle normal status of uncommited
     try{
+        console.log('gitStatus start promises');
         
         // Get untracked files
         const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
-        function onLsFiles(err, result ){ status_data2 = result; }
+        function onLsFiles(err, result ){ status_data2 = result; console.log('gitStatus promise1 done');}
             
         // Get tracked files
         const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
-        function onStatus(err, result ){  status_data = result }
+        function onStatus(err, result ){  status_data = result; console.log('gitStatus promise2 done'); }
         
         await Promise.all( [ promise1, promise2]);
          
@@ -3105,6 +3097,7 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     
+    console.log('gitStatus done');
     return status_data;
 
     //

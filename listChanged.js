@@ -50,14 +50,7 @@ async function injectIntoJs(document) {
         if (localState.mode == 'HISTORY'){
             status_data = await opener.gitShowHistorical();  
         }else{
-            status_data = await opener.gitStatus();  
-            
-            // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
-            for (var i = 0; i < status_data.not_added.length; ++i) {              
-                let fileName = status_data.not_added[i];            
-                status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
-            }                   
-              
+            status_data = await listGitStatus();    
         }
         maxRange = status_data.files.length;
     }catch(err){
@@ -215,7 +208,7 @@ async function _callback( name, event, event2){
             
             
             // Check if uncommited modified
-            let status_data = await opener.gitStatus();
+            let status_data = await listGitStatus();
             console.log(status_data);
             if ( status_data.modified.includes(file) ){
                 selectedFile = file;
@@ -399,7 +392,7 @@ async function _callback( name, event, event2){
                 if (localState.mode == 'HISTORY'){
                     status_data = await opener.gitShowHistorical();  
                 }else{
-                    status_data = await opener.gitStatus();
+                    status_data = await listGitStatus();
                 }
             }catch(err){
                 console.log("discardLink -- Error " );
@@ -438,7 +431,7 @@ async function _callback( name, event, event2){
                 if (localState.mode == 'HISTORY'){
                     status_data = await opener.gitShowHistorical();  
                 }else{
-                    status_data = await opener.gitStatus();
+                    status_data = await listGitStatus();
                 }
             }catch(err){
                 console.log("deleteLink -- Error " );
@@ -498,7 +491,7 @@ async function _callback( name, event, event2){
                     if (localState.mode == 'HISTORY'){
                         status_data = await opener.gitShowHistorical();  
                     }else{
-                        status_data = await opener.gitStatus();
+                        status_data = await listGitStatus();
                     }
                 }catch(err){
                     console.log("ignoreLink -- Error " );
@@ -578,7 +571,22 @@ function closeWindow(){
     win.close();
     
 }
-
+async function listGitStatus(){  
+    
+    // This function adds untracked files tostatus_data.files
+    // That is not done by opener.gitStatus since it is very time consuming if alot of untracked files, and thus locks the main window.
+    // Thus, it is delegated to be done if needed -- that is in listChanged.js
+     
+    let status_data = await opener.gitStatus(); 
+      
+    // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
+    for (var i = 0; i < status_data.not_added.length; ++i) {              
+        let fileName = status_data.not_added[i];            
+        status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+    }  
+    
+    return status_data;
+}
 // Draw
 function createFileTable(status_data) {
 
