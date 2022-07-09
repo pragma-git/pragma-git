@@ -332,8 +332,7 @@ async function setPinned(hash, isPinned){ // Called from EventListener added in 
 
     localState.pinnedCommit = hash; 
     localState.historyHash = hash;
-    localState.historyNumber = util.findObjectIndex(history,'hash', hash);
-    //opener._callback('clicked-pinned-icon', isPinned);
+    localState.historyNumber = util.findObjectIndex(history,'hash', hash);  // Will be NaN if off-branch
     opener.drawPinImage(isPinned);
     
     console.log(localState.pinnedDiv);

@@ -5257,7 +5257,7 @@ function fileStatusString( status_data){
     if (localState.mode == 'HISTORY'){
         // Work on hash from current history pointer
         
-        if ( localState.historyNumber < 0 ){ // Can only be if set off-branch from click in graph
+        if (  isNaN( localState.historyNumber ) || ( localState.historyNumber < 0 )  ){ // Can only be if set off-branch from click in graph.  Will be NaN if pinned, otherwise -1
             historyStatus = '<B>&nbsp;&nbsp;  (off branch)</B>';
         }
         
