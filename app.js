@@ -5306,10 +5306,14 @@ function drawPinImage(isPinned){
             // Do not allow to pin if outside history mode
             localState.pinnedCommit = localState.historyHash;
             updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+            
+            document.getElementById('commit_tool_tip').setAttribute('data-tooltip', 'Compare with commit, click jumps to  this commit');
         }
         if (!isPinned){
             localState.pinnedCommit = '';
             updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+            
+            document.getElementById('commit_tool_tip').setAttribute('data-tooltip', 'Commit hash, click to copy');
         }
     
 }

@@ -433,7 +433,8 @@
             
                 
             <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
-            <div class="tooltip-top-left" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                    <!-- Note : tooltip changes in app/drawPinImage depending of pin checkbox --> 
+            <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
                 
                 <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
                     onclick="if (localState.pinnedCommit !== ''){
