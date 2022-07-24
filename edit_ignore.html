@@ -75,7 +75,7 @@
                 <h2 id="header_Settings">.gitignore Editor
             
                 <!-- HELP HERE -->
-                <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
+                <img id="about-icon" style='vertical-align:middle;float: right;position:relative; right: 20px' height="17" width="17"  
                     onclick="let evt = {}; evt.name='Git-ignore Editor';opener.opener._callback('help',evt);" 
                     onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                     onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
@@ -97,8 +97,7 @@
                         Retrack <img height="12" width="12"  src="images/warning.png"> 
                     </button>
 
-                    <button style="float: left" onclick="displayIgnoreList()">Preview</button>  
-                    <button style="float: left; margin-left: 20px" onclick="resetGitIgnore()">Reset</button>  <br><br>
+                    <button style="float: left; " onclick="resetGitIgnore()">Reset</button>  <br><br>
                      
                     <br>
                     <!-- Warning text -->                     
@@ -265,6 +264,8 @@
         try{      
             await fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value);
             await fs.unlinkSync(ignoreFileBackup);
+            opener.document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+            
         }catch(err){
             
         }
@@ -327,7 +328,7 @@
         await displayIgnoreList();
     }     
     async function displayIgnoreList(){  // Preview ignored files
-        
+        opener.document.getElementById('gitignoreText').innerText = document.getElementById('ignoreFile').value;
         // Save .gitignore
         save();
 

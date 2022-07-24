@@ -68,7 +68,16 @@
                     root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
             
                 }
-            );  
+            ); 
+            
+                        
+            // Close 
+            window.addEventListener('unload', (event) => {
+                console.log('notes.html :DOM fully unloaded -- maybe window closed ');
+                //closeWindow(window);
+                document.getElementById('iframe').contentWindow.closeWindow(window)
+                }
+            ); 
         </script>  
             
     

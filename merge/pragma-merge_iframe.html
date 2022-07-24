@@ -289,10 +289,18 @@
         
         .CodeMirror-merge-r-chunk
         {
-            background: antiquewhite;
+            background-color: antiquewhite;
             fill: antiquewhite;
             stroke: antiquewhite;
-        }      
+        }  
+        
+        
+        .CodeMirror-merge-r-chunk
+        {
+            background-color: var(--markerColor);
+            fill: var(--markerColor);
+            stroke: var(--markerColor);
+        }     
         
         
         .CodeMirror-merge-r-connect
@@ -300,7 +308,8 @@
             background: grey;
             fill: grey;
             stroke: grey;
-        }          
+        }        
+
 
 
   </style>
@@ -320,6 +329,7 @@
         
         let root = document.documentElement;
         root.style.setProperty('--windowScaling', global.state.zoom);
+        
         
     </script>
 
@@ -358,7 +368,7 @@
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
-                align
+                <span id='align-text'>align</span>
                     
                 <input type="checkbox" id='hide-unchanged'  class=clicky  
                     onclick="collapse = !collapse; 
@@ -366,74 +376,75 @@
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
-                hide unchanged
+                <span id='hide-unchanged-text'>hide unchanged</span>
 
-    
+                <!-- option = default is hard coded in code-mirror.css -->
+                <!-- override by chunk-color, which specifies  alpha, or  html color -->
                 <select id="theme-select" style="position: relative; left: 20px" 
                     onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
                     <option>default</option>
                     <option disabled>──────────</option>
-                    <option chunk-color="default">zenburn</option>
-                    <option chunk-color="antiquewhite">3024-day</option>
-                    <option chunk-color="default">3024-night</option>
-                    <option chunk-color="default">abcdef</option>
-                    <option chunk-color="#888">ambiance</option>
-                    <option chunk-color="default">ayu-dark</option>
-                    <option chunk-color="default">ayu-mirage</option>
-                    <option chunk-color="default">base16-dark</option>
-                    <option chunk-color="antiquewhite">base16-light</option>
-                    <option chunk-color="default">bespin</option>
-                    <option chunk-color="default">blackboard</option>
-                    <option chunk-color="default">cobalt</option>
-                    <option chunk-color="default">colorforth</option>
-                    <option chunk-color="default">darcula</option>
-                    <option chunk-color="default">dracula</option>
-                    <option chunk-color="default">duotone-dark</option>
-                    <option chunk-color="antiquewhite">duotone-light</option>
+                    <option chunk-color="0.25">zenburn</option>
+                    <option chunk-color="0.25">3024-day</option>
+                    <option chunk-color="0.25">3024-night</option>
+                    <option chunk-color="0.25">abcdef</option>
+                    <option chunk-color="0.25">ambiance</option>
+                    <option chunk-color="0.25">ayu-dark</option>
+                    <option chunk-color="0.25">ayu-mirage</option>
+                    <option chunk-color="0.25">base16-dark</option>
+                    <option chunk-color="0.25">base16-light</option>
+                    <option chunk-color="0.25">bespin</option>
+                    <option chunk-color="0.25">blackboard</option>
+                    <option chunk-color="0.25">cobalt</option>
+                    <option chunk-color="0.25">colorforth</option>
+                    <option chunk-color="0.25">darcula</option>
+                    <option chunk-color="0.25">dracula</option>
+                    <option chunk-color="0.25">duotone-dark</option>
+                    <option chunk-color="0.25">duotone-light</option>
                     <option chunk-color="antiquewhite">eclipse</option>
                     <option chunk-color="antiquewhite">elegant</option>
-                    <option chunk-color="default">erlang-dark</option>
-                    <option chunk-color="default">gruvbox-dark</option>
-                    <option chunk-color="default">hopscotch</option>
-                    <option chunk-color="default">icecoder</option>
+                    <option chunk-color="0.25">erlang-dark</option>
+                    <option chunk-color="0.25">gruvbox-dark</option>
+                    <option chunk-color="0.25">hopscotch</option>
+                    <option chunk-color="0.25">icecoder</option>
                     <option chunk-color="antiquewhite">idea</option>
-                    <option chunk-color="dimgray">isotope</option>
-                    <option chunk-color="default">liquibyte</option>
-                    <option chunk-color="default">lucario</option>
-                    <option chunk-color="#333">material-darker</option>
-                    <option chunk-color="#222">material-ocean</option>
-                    <option chunk-color="#333">material-palenight</option>
-                    <option chunk-color="#333">material</option>
-                    <option chunk-color="default">mbo</option>
-                    <option chunk-color="antiquewhite">mdn-like</option>
-                    <option chunk-color="default">midnight</option>
-                    <option chunk-color="default">monokai</option>
-                    <option chunk-color="dimgray">moxer</option>
+                    <option chunk-color="0.25">isotope</option>
+                    <option chunk-color="0.25">liquibyte</option>
+                    <option chunk-color="0.25">lucario</option>
+                    <option chunk-color="0.25">material-darker</option>
+                    <option chunk-color="0.25">material-ocean</option>
+                    <option chunk-color="0.25">material-palenight</option>
+                    <option chunk-color="0.25">material</option>
+                    <option chunk-color="0.25">mbo</option>
+                    <option chunk-color="0.25">mdn-like</option>
+                    <option chunk-color="0.25">midnight</option>
+                    <option chunk-color="0.25">monokai</option>
+                    <option chunk-color="0.25">moxer</option>
                     <option chunk-color="antiquewhite">neat</option>
-                    <option chunk-color="antiquewhite">neo</option>
-                    <option chunk-color="default">night</option>
-                    <option chunk-color="#888">nord</option>
-                    <option chunk-color="darkslategray">oceanic-next</option>
-                    <option chunk-color="default">panda-syntax</option>
-                    <option chunk-color="default">paraiso-dark</option>
-                    <option chunk-color="bisque">paraiso-light</option>
-                    <option chunk-color="default">pastel-on-dark</option>
-                    <option chunk-color="default">railscasts</option>
-                    <option chunk-color="default">rubyblue</option>
-                    <option chunk-color="antiquewhite">seti</option>
-                    <option chunk-color="default">shadowfox</option>
+                    <option chunk-color="0.25">neo</option>
+                    <option chunk-color="0.25">night</option>
+                    <option chunk-color="0.25">nord</option>
+                    <option chunk-color="0.25">oceanic-next</option>
+                    <option chunk-color="0.25">panda-syntax</option>
+                    <option chunk-color="0.25">paraiso-dark</option>
+                    <option chunk-color="0.25">paraiso-light</option>
+                    <option chunk-color="0.25">pastel-on-dark</option>
+                    <option chunk-color="0.25">railscasts</option>
+                    <option chunk-color="0.25">rubyblue</option>
+                    <option chunk-color="0.25">seti</option>
+                    <option chunk-color="0.25">shadowfox</option>
                     <option chunk-color="antiquewhite">solarized</option>
                     <option chunk-color="antiquewhite">ssms</option>
-                    <option chunk-color="default">the-matrix</option>
-                    <option chunk-color="default">tomorrow-night-bright</option>
-                    <option chunk-color="default">tomorrow-night-eighties</option>
+                    <option chunk-color="0.25">the-matrix</option>
+                    <option chunk-color="0.25">tomorrow-night-bright</option>
+                    <option chunk-color="0.25">tomorrow-night-eighties</option>
                     <option chunk-color="antiquewhite">ttcn</option>
-                    <option chunk-color="default">twilight</option>
-                    <option chunk-color="default">vibrant-ink</option>
-                    <option chunk-color="default">xq-dark</option>
+                    <option chunk-color="0.25">twilight</option>
+                    <option chunk-color="0.25">vibrant-ink</option>
+                    <option chunk-color="0.25">xq-dark</option>
                     <option chunk-color="antiquewhite">xq-light</option>
-                    <option chunk-color="#666">yeti</option>
-                    <option chunk-color="default">yonce</option>
+                    <option chunk-color="#FCFAF8">yeti</option>
+                    <option chunk-color="0.25">yonce</option>
                 </select>            
                 
             </span>
@@ -474,21 +485,56 @@
     <!--  Onload, call javascript file  --> 
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
-            console.log('merge.html :DOM fully loaded and parsed');
-            injectIntoJs(document);
+
+            // Dialog if binary, otherwise open as usual
+            if ( isBinaryFile() ){
+                if ( getMode() == 'MERGE'){
+                    document.getElementById('isBinaryMerge').showModal();
+                }else if (getMode() == 'EDITOR'){
+                    document.getElementById('isBinaryEditor').showModal();
+                }else{
+                    document.getElementById('isBinaryDiff').showModal();
+                }
+                
+            }else{
+                injectIntoJs(document);
             }
-        );    
+     
+        });    
             
         window.addEventListener('unload', (event) => {
-            console.log('merge.html :DOM fully unloaded -- maybe window closed ');
-            finish('unloadWindow');
+                console.log('merge.html :DOM fully unloaded -- maybe window closed ');
+                if ( CLOSED == false){
+                    finish('unloadWindow');
+                }
             }
         );     
+        
+        
+        var resizeTimer;
         
         window.addEventListener('resize',  update );
         function update(){
             initUI();
             themeSelected( global.state.pragmaMerge.codeTheme);
+            
+            
+
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout( function() {
+            
+                // Run code here, resizing has "stopped"
+                console.warn('resize stopped')
+ 
+                // Scrollbars
+                let scrollBars = document.getElementsByClassName('CodeMirror');
+                for (var i = 0; i < scrollBars.length; ++i) {
+                    scrollBars[i].style.overflowY = 'overflow';
+                }
+                        
+            }, 250);
+            
+            
         }
 
         window.addEventListener("keydown", event => {
@@ -501,6 +547,7 @@
     </script>  
     
     <!--  Add find  -->    
+    
     <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
     <script src="../extend_find-in-nw.js"></script>
     <script>
@@ -510,6 +557,75 @@
         var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
     </script> 
 
+        
+        
+         
+    <!--  Dialog for Merging Binary files -->  
+            
+    <dialog id="isBinaryMerge"   class="warning"> 
+         
+        <b>WARNING</b> -- Looks like a binary file
+            
+        <br><br>
+             
+            <button style = "margin-top: 0px; margin-bottom: 8px;"
+                onclick =  "parent.document.getElementById('iframe').contentWindow.keepThis()">
+                Keep this 
+            </button>   
+            <sup>*</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    
+            
+            <button  style = "float: right; margin-top: 0px; margin-bottom: 8px;"  
+                onclick =  "parent.document.getElementById('iframe').contentWindow.keepOther();"> 
+                Keep other
+            </button> 
+            
 
+        <br> 
+            <div class="footnoteText" > <sup>*</sup> (file from current local branch) </div>
+
+        <hr>
+        
+            <button style = "margin-top: 8px; margin-bottom: 8px;" onclick =  "document.getElementById('isBinaryMerge').close(); injectIntoJs(document); " > 
+                Interactive merge 
+            </button>    
+            (works best with text files)
+
+    </dialog>  
+    
+
+         
+    <!--  Dialog for Diff of Binary files -->       
+                
+    <dialog id="isBinaryDiff"   class="warning">  
+        <b>WARNING</b> -- Looks like a binary file 
+             
+        <br><br>
+            <button  onclick = "document.getElementById('isBinaryDiff').close(); injectIntoJs(document); " > 
+                View binary 
+            </button>    
+            
+            <button style="float: right"  onclick = "parent.window.close();"> 
+                Cancel 
+            </button>    
+    </dialog>  
+    
+       
+
+         
+    <!--  Dialog for View/edit Binary files -->       
+                
+    <dialog id="isBinaryEditor"   class="warning">  
+        <b>WARNING</b> -- Looks like a binary file 
+             
+        <br><br>
+            <button  onclick = "document.getElementById('isBinaryEditor').close(); injectIntoJs(document); " > 
+                View binary 
+            </button>    
+            
+            <button style="float: right"  onclick = "parent.window.close();"> 
+                Cancel 
+            </button>    
+    </dialog> 
 </body>    
 </html>

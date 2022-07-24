@@ -14,10 +14,14 @@ const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = require('simple-git');  
 
-
+const STARTDIR = process.cwd(); // Folder where this file was started
 
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
+
+var lowRange = 1;
+var rangeWidth = 1000;  // Update also in listChanged.html id="highRange"
+var maxRange;
 
 var win
 
@@ -46,8 +50,9 @@ async function injectIntoJs(document) {
         if (localState.mode == 'HISTORY'){
             status_data = await opener.gitShowHistorical();  
         }else{
-            status_data = await opener.gitStatus();
+            status_data = await listGitStatus();    
         }
+        maxRange = status_data.files.length;
     }catch(err){
         console.log("injectIntoJs -- Error " );
         console.log(err);
@@ -59,21 +64,29 @@ async function injectIntoJs(document) {
         win.showDevTools();  // WARNING : causes redraw issues on startup
     }
 
+    // Update rangeWidth
+    document.getElementById('lowRange').innerText = lowRange;
+    document.getElementById('highRange').innerText = Math.min(   lowRange + rangeWidth - 1 , status_data.files.length );
+    if (maxRange > rangeWidth){
+        document.getElementById('fileRange').style.display = 'block';
+    }
+    
+ 
     // Draw table
     origFiles = createFileTable(status_data);
-    
+       
     
     // Change text that does not match History mode 
     if (localState.mode == 'HISTORY'){
         
-        document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
+        ////document.getElementById('instructionsHEAD').style.display = 'none'; // Only show instructions for history
 
-        // Change from default text (two alternatives, if pinned or simple history)
-        if (localState.pinnedCommit !== ''){ 
-            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since commit ' + localState.pinnedCommit.substring(0,6) + ' :';  
-        }else{
-            document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
-        }
+        //// Change from default text (two alternatives, if pinned or simple history)
+        //if (localState.pinnedCommit !== ''){ 
+            //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since commit ' + localState.pinnedCommit.substring(0,6) + ' :';  
+        //}else{
+            //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
+        //}
     }
 
 
@@ -195,8 +208,8 @@ async function _callback( name, event, event2){
             
             
             // Check if uncommited modified
-            let status_data = await opener.gitStatus();
-            console.error(status_data);
+            let status_data = await listGitStatus();
+            console.log(status_data);
             if ( status_data.modified.includes(file) ){
                 selectedFile = file;
                 selectedCommit = commit;
@@ -305,6 +318,50 @@ async function _callback( name, event, event2){
 
             break;
         }
+        case 'editLinkHistory': {  // Used both for historical and uncommmitted new files
+         
+            // Three inputs
+            console.log('editLinkHistory');
+            console.log(event);
+
+            let file = event;
+            let rw_switch = event2; // --rw or --ro  or --show 
+            
+
+            // Setup running pragma-merge in edit mode 
+            try{
+                
+                const { exec } = require("child_process");
+                opener.pragmaLog('Starting pragma-merge in edit mode');
+                
+                let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
+                let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                
+                exec( CD + RUN, 
+                    (error, stdout, stderr) => {
+                      // catch err, stdout, stderr
+                        if (error) {
+                            opener.pragmaLog('-Error starting pragma-merge');
+                            opener.pragmaLog(error.toString());
+                            return;
+                        }
+                        if (stderr) {
+                            opener.pragmaLog('-An error occured running pragma-merge');
+                            return;
+                        }
+                        opener.pragmaLog('-Result of running pragma-merge script',stdout);
+                    }
+                );
+                
+                
+            }catch(err){
+                console.log('editLinkHistory -- caught error ');
+                console.log(err);
+            }
+        
+
+            break;
+        }
         case 'discardLink': {
             console.log('discardLink');
             console.log(event);
@@ -335,7 +392,7 @@ async function _callback( name, event, event2){
                 if (localState.mode == 'HISTORY'){
                     status_data = await opener.gitShowHistorical();  
                 }else{
-                    status_data = await opener.gitStatus();
+                    status_data = await listGitStatus();
                 }
             }catch(err){
                 console.log("discardLink -- Error " );
@@ -374,7 +431,7 @@ async function _callback( name, event, event2){
                 if (localState.mode == 'HISTORY'){
                     status_data = await opener.gitShowHistorical();  
                 }else{
-                    status_data = await opener.gitStatus();
+                    status_data = await listGitStatus();
                 }
             }catch(err){
                 console.log("deleteLink -- Error " );
@@ -434,7 +491,7 @@ async function _callback( name, event, event2){
                     if (localState.mode == 'HISTORY'){
                         status_data = await opener.gitShowHistorical();  
                     }else{
-                        status_data = await opener.gitStatus();
+                        status_data = await listGitStatus();
                     }
                 }catch(err){
                     console.log("ignoreLink -- Error " );
@@ -514,7 +571,22 @@ function closeWindow(){
     win.close();
     
 }
-
+async function listGitStatus(){  
+    
+    // This function adds untracked files tostatus_data.files
+    // That is not done by opener.gitStatus since it is very time consuming if alot of untracked files, and thus locks the main window.
+    // Thus, it is delegated to be done if needed -- that is in listChanged.js
+     
+    let status_data = await opener.gitStatus(); 
+      
+    // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
+    for (var i = 0; i < status_data.not_added.length; ++i) {              
+        let fileName = status_data.not_added[i];            
+        status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+    }  
+    
+    return status_data;
+}
 // Draw
 function createFileTable(status_data) {
 
@@ -544,7 +616,8 @@ function createFileTable(status_data) {
     console.log(status_data);
 
     // Fill tbody with content
-    for (let i in status_data.files) { 
+    for (let j in status_data.files.slice( lowRange - 1, lowRange + rangeWidth - 1) ) { 
+        i = Number(j) + lowRange - 1;
         let fileStruct = status_data.files[i];
         let file = fileStruct.path;
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
@@ -556,7 +629,7 @@ function createFileTable(status_data) {
         let Y = fileStruct.working_dir
         let XY = X + Y;  
         
-        console.log( '[' + XY + '] ' + fileStruct.path);
+        //console.log( '[' + XY + '] ' + fileStruct.path);
         
         // Remember found file
         foundFiles.push(file);
@@ -664,6 +737,15 @@ function createFileTable(status_data) {
                 let commit = 'HEAD'
                 //cell.appendChild( diffLinkHistory( document, commit, file) );
                 cell.appendChild( diffLink( document, file));
+                
+                                    
+                if (typeOfChanged == 'added'){  // two files to compare only in modified (only one file in added)
+                    var addLink = document.createElement('span');
+                    addLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    addLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--rw ') ");
+                    addLink.textContent=" (edit)";
+                    cell.appendChild(addLink);  
+                }  
                  
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
@@ -748,6 +830,13 @@ function createFileTable(status_data) {
                     diffLink.textContent=" (diff)";
                 }
                     
+                if (typeOfChanged == 'added'){  // only one file in added
+
+                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--show ') ");
+                    diffLink.textContent=" (view)";
+                }   
+                                 
                 if (typeOfChanged == 'renamed'){  // two files to compare only in modified (only one file in deleted or added)
                     
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]

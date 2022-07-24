@@ -97,11 +97,12 @@
             width: 50px;
         } 
         .branchAction {
-            width: 15%;
+            width: fit-content;
             text-align:right; 
         }  
         .branchName{
             width: fit-content;
+            padding-right: 50px;
         }
         
         .indented{
@@ -192,7 +193,7 @@
         
 
         <div id="inner-content">   
-            <div class="content" id="foldableDiv2">  <!--  SOFTWARE SETTINGS tab -->             
+            <div class="content" id="foldableDiv2" style="display:none;">  <!--  SOFTWARE SETTINGS tab -->             
                     
                 <h3>Visual</h3>  
                 
@@ -335,7 +336,7 @@
     
         
             </div>                
-            <div class="content" id="foldableDiv1" > <!--  REPO SETTINGS tab  --> 
+            <div class="content" id="foldableDiv1"  style="display:none;"> <!--  REPO SETTINGS tab  --> 
                 <h3>Repository table </h3>  
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
@@ -361,9 +362,10 @@
                     <h3>Tools </h3>
                     <div class="toolWrapper" > 
                         <div class="buttonWrapper">
-                              <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                              <button id="SoftwareTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                              <button id="forkTab" class="tab-button-small" data-id="forkDiv">Fork</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
@@ -471,7 +473,56 @@
                         
                     
                     </div>
+
+                    <!--  Fork TAB -->
                     
+                    
+                    <div class="tool-content " id="forkDiv" >  
+                        Fork a remote repository to this computer :
+                        <table class="toolTable">
+                            <tbody>
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <textarea id="urlTofork"  placeholder="URL to fork from"></textarea>
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="testforkUrl"  class="toolButton" onclick="testURL('urlTofork', {id: 'urlTofork', type: ''})">Test  &nbsp;URL</button>
+                                    </td>
+                                </tr>
+                                
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <textarea id="forkFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" 
+                                            ondrop="_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; "
+                                        ></textarea>
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="forkFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                    </td>
+                                </tr>
+                                
+                                
+
+                                
+                                
+                                <tr class="tool">
+                                    <td>
+                                        <button id="forkButton"  onclick="_callback('forkButtonPressed',this)">Fork</button> &nbsp; <span id="forkStatus"></span>
+                                    </td>                                
+                                </tr>
+                            
+                                
+                            </tbody>
+                            
+                            
+                        </table>
+                        
+                    
+                    </div>                  
                     
                      <!--  Add TAB -->
                     
@@ -576,7 +627,7 @@
                     
                 </div>
             </div>
-            <div class="content" id="foldableDiv4" > <!--  BRANCH SETTINGS tab  -->     
+            <div class="content" id="foldableDiv4"  style="display:none;"> <!--  BRANCH SETTINGS tab  -->     
                                     
                 <h3 style="padding:0">Branches for : "<span id="shortCurrentRepo"></span>"</h3>  
                 <span id="currentRepo"></span>      
@@ -596,7 +647,7 @@
                 </table>    
         
             </div>     
-            <div class="content" id="foldableDiv3">  <!--  SYSTEM INFO  tab --> 
+            <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
                 <h3>Information </h3>
                 
@@ -725,7 +776,7 @@
         });   
         
         
-        // Set event listener
+        // Set TAB event listener
         tabs.onclick = e => {
         
             const id = e.target.dataset.id;
@@ -744,27 +795,34 @@
                 });           
                 document.getElementById(id).style.display='contents';
                 document.getElementById(id).style.visibility='visible';
+                
+                // Read tab into state
+                state.settingsWindow.selectedTab = 0;  // First tab default
+                for (i = 0; i < tabButton.length; i++) {
+                    if ( tabButton[i].classList[1] == 'active'){
+                        state.settingsWindow.selectedTab = i;
+                    }
+                }
             }
         }
         
         
-        // Set event listener
+        // Set Toolbar-TAB event listener
         toolTabs.onclick = e => {
         
-            const id = e.target.dataset.id;
+            let id = e.target.dataset.id;
             if (id) {
                 toolTabButton.forEach(btn => {
                     btn.classList.remove("active");
                 });
                 e.target.classList.add("active");
-                
-                //const element = document.getElementById(id);
-                //element.classList.add("active");
+
                 
                 toolMyContents.forEach(cnt => {
                     cnt.style.display='none';
                     cnt.style.visibility='none';
-                });           
+                });    
+     
                 document.getElementById(id).style.display='block';
                 document.getElementById(id).style.visibility='visible';
             }

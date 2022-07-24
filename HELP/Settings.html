@@ -16,6 +16,10 @@
             position: relative;
             top: 2px;
         }
+        
+        .indent{
+            margin-left: 20;
+        }
 </style>
 
  
@@ -75,13 +79,14 @@
         dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button> tab. 
         
         </p>
-        <br>
-        <br>
+        <hr>
+        
    
 
     <!--------------------------------------------------------------------------------------------> 
-    <h3>The "Tools tabs"</h3>  
+    <h2>The Repository Tools tabs</h2>  
      
+    <div class="indent">
 
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
         <br>
@@ -91,6 +96,7 @@
                   <button id="cloneTab" class="tab-button-small active " style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -158,6 +164,7 @@
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -183,6 +190,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                       <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                 </div>
@@ -236,13 +244,67 @@
      
             
             <br> 
-               
+           <div class="toolWrapper" > 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv">Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                </div>
+            </div>
+                         
+    
+            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+         
+        
+        <dt><h4>Forking </h4></dt> 
+        <br> 
+            <dd>
+            Forking a remote repository is the same as cloning, but you disconnect from the remote repository.  The point is to develop on this forked project, and not push back to the cloned original project.
+        
+            </dd>
+            <br>
+                                           
+            <dd><textarea id="urlToClone"  placeholder="URL to fork from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
+            </dd>
+            <br>
+                                         
+            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            </dd>
+
+            <br>
+            <br>
+            
+            <dd> The <button>Fork</button> initiates the forking operation.     
+            </dd>
+     
+     
+            <dt><h4>Workflow </h4></dt>   
+            <br>      
+            
+            <dd> The workflow is from top to bottom :  
+                <ol>  
+                    <li>Input the remote repository address (url)   
+                    <li>Check that you have access with the <button>Test URL</button> button  
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
+                    <li>The second text field displays the selected folder path   
+                    <li><button>Fork</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                </ol>   
+            </dd>
+            <br>       
+            
+     
+            
+            <br>               
         
         <div class="toolWrapper" > 
             <div class="buttonWrapper">
                   <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                   <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                   <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                   <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
                   <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
             </div>
@@ -278,6 +340,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
+                      <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                       <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                 </div>
@@ -351,75 +414,75 @@
                 
                 
             </dd> 
-
-    <hr>  
-
-    <!--------------------------------------------------------------------------------------------> 
-    <h2>Some words about remote repositories</h2>  
+        <hr>  
     
-    It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
-    This section describes how to set up user-names and passwords for remote repositories.
-
+        <!--------------------------------------------------------------------------------------------> 
+        <h2>Some words about remote repositories</h2>  
         
-     <h4>(I) Creating an account </h4> 
-         
-         
-         <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
-            <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
-         </p>
-         
-        <p> Get an account, go to the web interface, and create a new repository.  
-            You will get a link on the format 
-            <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
-            which you need to copy.    
-        </p>
-        
-        
-     <h4>(II) Authentication </h4> 
-     
-        <p>
-            Login to a repository may require some kind of authentication. Some alternatives are : 
-            <ol>
-                <li>Access token (Github has moved towards this -- see  
-                <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
-                <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
-            </ol>
-        
-        </p>
-         
-         
- 
-     <h4>(III) Using your link (address / url) </h4> 
-                                            
-         <p>Paste the link to your repository into the text-field under "Remote repository". 
-         </p>  
-         
-         
-         <p>
-            <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
-            <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
-            For instance :<br>
-            <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
-         </p>  
-         
-         <p>
-            <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
-            <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
-            For instance :<br>
-            <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
-         </p>  
-
-                    
-         <p>The repository is set (and tested) by pressing the  <button>Set</button> button.
-            If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
-         </p>   
-                                 
-         <p>If git is using a credential manager, you can now remove the <code>:PASSWORD</code> (note the <code>:</code>) and test if it now works without storing the password in the link.
-         Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
-         </p>         
-         
-    <hr>           
+        It is already described, above, how you link your project to a remote repository; and also how you clone a remote repository to your local computer.
+        This section describes how to set up user-names and passwords for remote repositories.
+    
+            
+         <h4>(I) Creating an account </h4> 
              
+             
+             <p>There are multiple remote repository hosting services that you can use on internet. One popular site is 
+                <a href='https://github.com' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Github</a> (by Microsoft), which gives free accounts.    
+             </p>
+             
+            <p> Get an account, go to the web interface, and create a new repository.  
+                You will get a link on the format 
+                <code style = "margin-left: 15px"> https://github.com/JanAxelssonTest/test.git</code> <br>
+                which you need to copy.    
+            </p>
+            
+            
+         <h4>(II) Authentication </h4> 
+         
+            <p>
+                Login to a repository may require some kind of authentication. Some alternatives are : 
+                <ol>
+                    <li>Access token (Github has moved towards this -- see  
+                    <a href='https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">link</a> 
+                    <li>Old fashioned user-name and password (this is being phased out by many git services, but may be applicable if you run your own git repository)
+                </ol>
+            
+            </p>
+             
+             
+     
+         <h4>(III) Using your link (address / url) </h4> 
+                                                
+             <p>Paste the link to your repository into the text-field under "Remote repository". 
+             </p>  
+             
+             
+             <p>
+                <b>Alternative 1) access tokens</b>, modify the link by adding the  <code>ACCESSTOKEN</code>, and an <code>@</code>-sign  : <br>
+                <code style = "margin-left: 15px">   https://ACCESSTOKEN@github.com/USERNAME/REPOSITORY_NAME.git</code>.
+                For instance :<br>
+                <code style = "margin-left: 15px">https://25badab677c62a7a3e44e5dd123a916adab8580677e0ffbd@github.com/JanAxelssonTest/test.git</code>
+             </p>  
+             
+             <p>
+                <b>Alternative 2) username and passwords</b>, modify the link by adding <code>user:password</code>, and an <code>@</code>-sign  : <br>
+                <code style = "margin-left: 15px">   https://USER:PASSWORD@github.com/USERNAME/REPOSITORY_NAME.git</code>
+                For instance :<br>
+                <code style = "margin-left: 15px">https://JanAxelssonTest:PASSWORD@github.com/JanAxelssonTest/test.git</code>
+             </p>  
+    
+                        
+             <p>The repository is set (and tested) by pressing the  <button>Set</button> button.
+                If the text becomes green, the remote repository is correctly defined.  Adjust your remote repository text until the "Set" button creates a green text, then it should work.
+             </p>   
+                                     
+             <p>If git is using a credential manager, you can now remove the <code>:PASSWORD</code> (note the <code>:</code>) and test if it now works without storing the password in the link.
+             Also, if git forgets the password after a while, you will need to keep the password field or install a credential manager.  Mac and Windows should be fine by default.
+             </p>         
+                      
+
+    </div> 
+    <hr>              
 <!--------------------------------------------------------------------------------------------> 
 
             <h2 class="instructHeader" id="BranchTab">Branch tab</h2>

@@ -59,8 +59,14 @@ async function _callback( name, event){
             console.log('checkboxChanged');
             console.log(event);
             value = event.checked;
-            state[id] = value;
+            global.state[id] = value;
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
+            
+            // Reload main if change
+            opener.updateWithNewSettings();
+            opener.saveSettings();
+            opener.win.reload();
+            
             break;
         } 
         case 'visualModeChanged': {
@@ -82,7 +88,7 @@ async function _callback( name, event){
             value = event.checked;
             //state[id] = value;
             opener.pragmaLog('   settings checkbox ' + id + ' = ' + value);
-            state.repos[state.repoNumber][id] = value;
+            state.repos[state.repoNumber][id] = value;      
             break;
         } 
 
@@ -232,6 +238,7 @@ async function _callback( name, event){
             
             // I know that the last row has index same as length of number of repos
             document.getElementById('cloneFolder').value = localFolder;
+            document.getElementById('forkFolder').value = localFolder;
             document.getElementById('addFolder').value = localFolder;
         
             break;
@@ -257,7 +264,41 @@ async function _callback( name, event){
             document.getElementById('gitHubTab').click()
 
             break;
-        }  
+        }   
+        case 'forkButtonPressed' : {
+            console.log('forkButtonPressed');
+            
+            // I know that the last row has index same as length of number of repos
+            id = state.repos.length;
+            
+            let folder = document.getElementById('forkFolder').value;  
+            let URL = document.getElementById('urlTofork').value; 
+            
+            // Make a clone
+            document.getElementById('forkStatus').innerHTML = 'Fork in progress ';
+            const dummy = await gitClone( folder, URL);
+            document.getElementById('forkStatus').innerHTML = '';
+                 
+            // Combine URL and folder name => repo folder
+            let repoWithExtension = URL.replace(/^.*[\\\/]/, '');
+            let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
+            let topFolder = folder + pathsep + repoName;
+            topFolder = topFolder.replace(/[\\\/]$/, '')
+    
+               
+            // Remove remote origin (make it a fork)
+            await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
+            function onDeleteRemoteUrl(err, checkResult) { }
+                
+            // Replace table 
+            document.getElementById("settingsTableBody").innerHTML = ""; 
+            createHtmlTable(document);
+            
+            // Switch to Remote  tab
+            document.getElementById('gitHubTab').click()
+
+            break;
+        } 
         case 'addRepoButtonPressed' : {
             // If folder is a repo -> add
             // If not a repo show dialog doYouWantToInitializeRepoDialog
@@ -340,10 +381,9 @@ async function _callback( name, event){
                 table = document.getElementById("branchesTableBody");
                 let myLocalFolder = state.repos[id].localFolder;
 
-                branchList = await gitBranchList( myLocalFolder);
                 
                 
-                generateBranchTable( document, table, branchList); // generate the table first
+                drawBranchTab(document);
 
                 
                     
@@ -529,16 +569,29 @@ async function _callback( name, event){
                 let commands = [ 'remote', 'set-url','origin', newUrl];
                 try{
                     
-                    await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){
-                        console.log(result);
-                        console.log(err) ;
-                        //opener.pragmaLog(result); 
-                        //opener.pragmaLog(err); 
-                    };
+                    // Add remote if url, otherwise remove
+                        
+                    if (newUrl.includes('://')){
+                        await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
+                        function onSetRemoteUrl(err, result ){
+                            console.log(result);
+                            console.log(err) ;
+                            
+                            // Set if change didn't cause error (doesn't matter if URL works)
+                            state.repos[realId].remoteURL = newUrl;
+                        };
+                    }else{
+                            
+                        // Remove remote origin (make it a fork)
+                        await simpleGit(localFolder3).removeRemote('origin',onDeleteRemoteUrl);
+                        function onDeleteRemoteUrl(err, result) { console.warn(err);console.log(result)}
+                        
+                        state.repos[ realId].remoteURL = undefined;
+                        document.getElementById(textareaId).value = undefined;
+
+                    }
+  
                     
-                    // Set if change didn't cause error (doesn't matter if URL works)
-                    state.repos[realId].remoteURL = newUrl;
                     
                     
                 }catch(err){
@@ -751,6 +804,8 @@ async function closeWindow(){
     // Make global when git author's information missing
     await fixEmptyLocalAuthors();
     await opener.saveSettings();
+    
+    opener.deleteWindowMenu('Settings')
     
  
 }
@@ -973,7 +1028,7 @@ async function injectIntoSettingsJs(document) {
     console.log('Settings - state :');  
     console.log(global.state);
     
-    // Write path to div
+    // Write path to System info 
     if ( os.platform().startsWith('win') ){    
         document.getElementById('path').innerHTML = process.env.PATH
         .replace(/;\s*/g,';<br>'); // Replace semicolons
@@ -981,7 +1036,76 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
     
+    // Draw tabs
+    await drawBranchTab(document);
+    await drawRepoTab(document);
+    await drawSoftwareTab(document);
+    
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
+
+    // Set Software as first sub-tab in Repo tab
+    document.getElementById('SoftwareTab').click(); 
+    
+    
+    // Warn if no repos
+    if (state.repos.length == 0){
+        
+        // Warn if no repos
+        displayAlert(
+            "No repositories", 
+            
+            `<p>
+                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
+                <ol>
+                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
+            
+                    </li>
+                    or
+                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
+        
+            
+                    </li>
+        
+                </ol>
+                
+                
+                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
+            </p>
+            
+            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
+            </p>
+            `
+        );
+        
+        // Set tab from setting
+        let tab = 1; // Repository tab
+        tabButton[ tab ].click();
+    }
+
+
+
+};
+
+// Draw
+async function drawBranchTab(document){
+    let myLocalFolder = state.repos[state.repoNumber].localFolder;
+    
+    document.getElementById("branchesTableBody").innerHTML = ""; 
+    table = document.getElementById("branchesTableBody");
+    let branchList = await gitBranchList( myLocalFolder);
+    generateBranchTable(document, table, branchList); 
+}
+async function drawRepoTab(document){
+    
+    let data = state.repos;
+    let table = document.getElementById("settingsTableBody");
+    generateRepoTable(document, table, data);
+}
+async function drawSoftwareTab(document){
+    
     // Write system information to divs
+    
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
@@ -1033,58 +1157,8 @@ async function injectIntoSettingsJs(document) {
         document.getElementById('onAllWorkspaces').disabled = true;
     }
     
-    // Build repo table
-    document.getElementById("settingsTableBody").innerHTML = ""; 
-    await createHtmlTable(document);  
+}
 
-
-    // Set tab from setting
-    tabButton[state.settingsWindow.selectedTab].click();
-
-    document.getElementById('cloneTab').click(); 
-    
-    
-    // Warn if no repos
-
-    if (state.repos.length == 0){
-        
-        // Warn if no repos
-        displayAlert(
-            "No repositories", 
-            
-            `<p>
-                <b>Note : </b>You have not defined any repositories. A new repository can be added from the "Repository tab" on this page by:
-                <ol>
-                    <li><b>Clone</b> an existing repository from internet (select "Repository", and then "Clone")
-            
-                    </li>
-                    or
-                    <li><b>Add</b> an existing project from a local folder  (select "Repository", and then "Add")
-        
-            
-                    </li>
-        
-                </ol>
-                
-                
-                The manual tells you how to get started (click the question-mark icon  <img style='vertical-align:middle;' height="17" width="17" src="images/questionmark_black.png"> above)
-            </p>
-            
-            <p><b>Alternatively</b>, drop a local folder on the main window to add it as a repository. 
-            </p>
-            `
-        );
-        
-        // Set tab from setting
-        let tab = 1; // Repository tab
-        tabButton[ tab ].click();
-    }
-
-
-
-};
-
-// Draw
 async function createHtmlTable(document){
     
     console.log('Settings - createHtmlTable entered');
@@ -1241,17 +1315,7 @@ async function generateRepoTable(document, table, data) {
             index ++;
         }
     } // if any repos
- 
-    
-    
-    // Draw branch by simulating click
-    let event =[];
-    event.id = foundIndex; // Simulate first clicked
-    
-    await _callback( "repoRadiobuttonChanged", event);
 
-    
-    console.log(table);
 }
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs

@@ -332,8 +332,7 @@ async function setPinned(hash, isPinned){ // Called from EventListener added in 
 
     localState.pinnedCommit = hash; 
     localState.historyHash = hash;
-    localState.historyNumber = util.findObjectIndex(history,'hash', hash);
-    //opener._callback('clicked-pinned-icon', isPinned);
+    localState.historyNumber = util.findObjectIndex(history,'hash', hash);  // Will be NaN if off-branch
     opener.drawPinImage(isPinned);
     
     console.log(localState.pinnedDiv);
@@ -346,9 +345,17 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
     
     // Set history in main window
     localState.historyHash = hash;
-    localState.historyString = opener.historyMessage(history, localState.historyNumber);
     localState.historyLength = history.length;
+
+    let commit = nodeMap.get(hash);
     
+    localState.historyString =  opener.formatHistoryMessage( commit.date, commit.message, commit.messageBody)
+
+    // Off-branch is NaN, set to -1 
+    if ( isNaN( localState.historyNumber ) ){
+        localState.historyNumber = -1;
+    }
+     
     await opener._setMode('HISTORY');
     await opener._update();
 }
@@ -473,19 +480,19 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : <BR><BR> 
-                 <div> &nbsp; 
-                    <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+            html += `<B><U>Commit </U></B> : &nbsp;&nbsp; <div style="float:right"> <i>${author}</i> </div><BR><BR> 
+                 <div> 
+                     <p>&nbsp; 
+                        <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
+                        <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
+                     </p>
                  </div>
-                 <BR>`
+                 <BR><BR>`
                  
             
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            
-            html += ` &nbsp; <i> ${author} </i><BR><BR>`
             html += ` &nbsp; ${commit.hash} <BR><BR>`
             
             
@@ -510,11 +517,11 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                  let id = "img_" + parentHashes[i];
                  let imageSrc = document.getElementById(id).href.baseVal;
                  
-                html += ` <b><div> &nbsp; 
+                html += `
+                <p>&nbsp; 
                     <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
-                    <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span>
-                 </div></b>
-                  <BR>`
+                    <b> <span style = "left: 30 px; position: relative"> ${nodeMap.get( parentHashes[i] ).message} </span></b>
+                </p>`
                   
                 // Change parent node size  
                 sizeNodes( parentHashes[i], IMG_H + 6); 
@@ -531,7 +538,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             }
             
             
-            html +='</div>';
+            html +='</div><BR><BR>';
                 
             
             // Display HTML 
@@ -615,7 +622,14 @@ async function gitCommitAuthor(hash){
     try{
         let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
         await simpleGit( folder).raw(  commands, onGitCommitAuthor);
-        function onGitCommitAuthor(err, result ){text = result; console.log(result); };
+        function onGitCommitAuthor(err, result ){
+            text = result; 
+            // Remove parenthesis if email is empty
+            if (text.includes('()') ){
+                text = text.substring(0, text.length-3);  
+            }
+        };
+        
     }catch(err){        
         console.log(err);
     }
@@ -652,7 +666,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             
             // Add current branchName as first branch (will be to left)
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-            branchNames.set(branchName, branchNames.size);
+            //branchNames.set(branchName, branchNames.size);
             
             
             childMap = new Map();  // List of children for commits
@@ -721,7 +735,9 @@ async function drawGraph( document, splitted, branchHistory, history){
         for(var row = 0; row < splitted.length; row++) {
     
             // Disect git-log row into useful parts
-            [ date, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
+            [ longDate, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
+            
+            let date =  longDate.substring(0,10);  // Short date
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
      
@@ -731,7 +747,7 @@ async function drawGraph( document, splitted, branchHistory, history){
 
                      
             // Add date (only print when date is different to previous)
-            if (date == previousDate){
+            if ( date == previousDate){
                 date = '';
             }else{
                 // Keep date, and remember new date
@@ -778,6 +794,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.decoration = decoration;
                 thisCommit.branchName = "";  // Default (hidden or unknown)
                 thisCommit.messageBody = messageBody;
+                thisCommit.date = longDate;
                 
                 
             // Get branchName
@@ -797,7 +814,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 }  
                 
                 // is topmost commit on a branch
-                let isTopCommit = ( !branchNames.has(branchName) && ( branchName !== "") );   
+                let isTopCommit = ( ( !branchNames.has(branchName) && ( branchName !== "") ) || (row == 0) );   
                 
             // Visible / hidden branch
                 if ( showBranch(branchName) ){
@@ -1424,7 +1441,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 // Date : Separate log row from date (at end now when decorate removed)
                 let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
                 let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
-                date = date.substring(0,10);
+                //date = date.substring(0,10);
                   
                 // Message : Separate log row from message (at end now when date removed)
                 let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
@@ -1658,12 +1675,17 @@ async function drawGraph( document, splitted, branchHistory, history){
     
     // Extent of segment
     let start = commit.y;
+    let end = commit.y - 1;
     
 
-    while ( !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
+    while (  !isAfterEndOfSegment(commit, false) && ( commit.y < commitArray.length - 1) ){
         commit = nodeMap.get( commit.parents[0]);
+        // If no parent, return false
+        if ( commit == undefined ){
+            return false;
+        }
+        end = commit.y - 1;
     }
-    let end = commit.y - 1;
     //console.log('start = ' + start + '   End = ' + end);
     
     // Return true any commit is on active swimlane

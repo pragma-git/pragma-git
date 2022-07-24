@@ -1,9 +1,5 @@
 .DS_Store
-
 node_modules*/
-
 docs/~*
-
 log*.txt
-
 mytoken.txt
