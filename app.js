@@ -5598,7 +5598,7 @@ function updateWithNewSettings(){
         state.tools.mergetool = "pragma-git";
     }   
 
-    // Set dark mode
+    // Set dark mode variable
     switch (state.darkmode) {
       case 'system': {
         localState.dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -5613,6 +5613,44 @@ function updateWithNewSettings(){
         break;
       }
     }
+    
+    // Set mode on all opened windows (this is used when settings dark/light mode is changed)
+    gui.Window.getAll( 
+        
+        function callback( windows) {
+
+            for (let i = 0; i < windows.length; i++) {
+                
+                // windows 
+                let win_handle =  windows[i];
+                win_handle.window.document.body.classList.remove('light');
+                win_handle.window.document.body.classList.remove('dark');
+                
+                // windows iframe
+                let iframe_handle = win_handle.window.document.getElementById('iframe');
+                if ( iframe_handle != null ){ 
+                   iframe_handle.contentWindow.document.body.classList.remove('light');
+                   iframe_handle.contentWindow.document.body.classList.remove('dark');
+                }  
+                
+                if (localState.dark){
+                    win_handle.window.document.body.classList.add('dark');
+                    
+                    if ( iframe_handle != null ){ 
+                        iframe_handle.contentWindow.document.body.classList.add('dark');
+                    }
+                }else{
+                    win_handle.window.document.body.classList.add('light');
+                    
+                    if ( iframe_handle != null ){ 
+                       iframe_handle.contentWindow.document.body.classList.add('light');
+                    }                
+                }
+                
+            }    
+        } 
+    );
+    
     
     // Tootip
     try{

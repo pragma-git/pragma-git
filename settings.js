@@ -78,7 +78,6 @@ async function _callback( name, event){
             // Reload main if Dark mode change
             opener.updateWithNewSettings();
             opener.saveSettings();
-            opener.win.reload();
             
             break;
         }    
