@@ -19,10 +19,11 @@ var fileDir; // Path to folder of open file
 
 var repoName = 'unknown'
 
+var cachedHistory;  // Cached history for all versions of this file
+var historyNumber = -1; // step back in history.  -1 means not in history. First history is at index 0
 
+// Save every 30 seconds
 window.setInterval(save, 30 * 1000 );
-
-
 
 // Start initiated from notes.html
 async function injectIntoNotesJs(document) {
@@ -117,6 +118,9 @@ async function injectIntoNotesJs(document) {
         document.body.classList.remove('light');
     }
     //window.document.body.style.zoom = global.state.zoom;
+    
+    // Get history
+    getHistory();
 
 };
 
@@ -168,14 +172,10 @@ async function closeWindow(){
 
     console.log('clicked close window');
 }
-
-async function gitHistoricalNote( historyNumber){
-    
-    // Example :  oldText = await gitHistoricalNote( 'Notes/Pragma-git.md', 1);
-    
+async function getHistory(){
+        
     let file = path.relative(settingsDir, filePath);
     
-    let history; // List of old commits
     let hash;    // hash of commit to get
     let text;    // text in file
     
@@ -183,22 +183,30 @@ async function gitHistoricalNote( historyNumber){
     try{
         await simpleGit(settingsDir).log( [ file ], onHistory);
         function onHistory(err, result){
-            console.log(result); history = result.all; 
-            console.log(' ============ Found N = ' + history.length);
-            
-            if ( historyNumber > ( history.length - 1 ) ){
-                historyNumber = history.length - 1;
-            }
-            if ( historyNumber < 0 ){
-                historyNumber = 0;
-            }
-            
-            hash = history[ historyNumber].hash; 
+            console.log(result); 
+            cachedHistory = result.all; 
+            console.log(' ============ Found N = ' + cachedHistory.length);
         } 
     }catch(err){        
         console.log(err);
     } 
+}
+async function getHistoricalNote( historyNumber){
+    
+    // Example :  oldText = await gitHistoricalNote( 1);
+    
+    let file = path.relative(settingsDir, filePath);
+        
+    if ( historyNumber > ( cachedHistory.length - 1 ) ){
+        historyNumber = cachedHistory.length - 1;
+    }
+    if ( historyNumber < 0 ){
+        historyNumber = 0;
+    }
+    
+
      
+    let hash = cachedHistory[ historyNumber].hash;
     
     // Read text from file with historyNumber
     await simpleGit(settingsDir).show( [ hash + ':' + file ], onCatFile)
