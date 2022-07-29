@@ -5,11 +5,17 @@ const gui = require("nw.gui"); // TODO : don't know if this will be needed
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const simpleGit = require('simple-git'); 
 
 var util = require('./util_module.js'); // Pragma-git common functions
 
+const pathsep = require('path').sep;  // Os-dependent path separator
+    
+const settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
+
 var editor;  // Editor object
 var filePath;// Path to open file
+var fileDir; // Path to folder of open file
 
 var repoName = 'unknown'
 
@@ -23,6 +29,7 @@ async function injectIntoNotesJs(document) {
     win = gui.Window.get();
     
     filePath = global.arguments[0];
+    fileDir = path.dirname(filePath);
     global.arguments =[]; // Empty this
     
     // Open file
@@ -162,3 +169,43 @@ async function closeWindow(){
     console.log('clicked close window');
 }
 
+async function gitHistoricalNote( historyNumber){
+    
+    // Example :  oldText = await gitHistoricalNote( 'Notes/Pragma-git.md', 1);
+    
+    let file = path.relative(settingsDir, filePath);
+    
+    let history; // List of old commits
+    let hash;    // hash of commit to get
+    let text;    // text in file
+    
+    // Get hashes for all notes
+    try{
+        await simpleGit(settingsDir).log( [ file ], onHistory);
+        function onHistory(err, result){
+            console.log(result); history = result.all; 
+            console.log(' ============ Found N = ' + history.length);
+            
+            if ( historyNumber > ( history.length - 1 ) ){
+                historyNumber = history.length - 1;
+            }
+            if ( historyNumber < 0 ){
+                historyNumber = 0;
+            }
+            
+            hash = history[ historyNumber].hash; 
+        } 
+    }catch(err){        
+        console.log(err);
+    } 
+     
+    
+    // Read text from file with historyNumber
+    await simpleGit(settingsDir).show( [ hash + ':' + file ], onCatFile)
+    function  onCatFile(err, res){
+        text = res;
+    }
+    
+    return text
+    
+}
