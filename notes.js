@@ -81,7 +81,7 @@ async function injectIntoNotesJs(document) {
     // Add history button to toolbar
     button3 = document.createElement('button');
     button3.style = "background-color: transparent; top: -2px; position: absolute; right: 120px";
-    button3.setAttribute("id", 'help-icon');
+    button3.setAttribute("id", 'history-icon');
     button3.innerHTML = '<img height="17" width="17"  src="images/history_hover.png" >';
     button3struct = {  
             name: 'help',
@@ -122,11 +122,8 @@ async function injectIntoNotesJs(document) {
     button3.addEventListener('click', () => {
         let evt = {}; 
         evt.name='Notes';
-        if ( parent.document.getElementById("historyMenu").style.display == 'block' ){
-            parent.document.getElementById("historyMenu").style.display = 'none'
-        }else{
-            parent.document.getElementById("historyMenu").style.display = 'block'
-        }
+        // Note : Action takes place in notes_iframe.html at  "Override document-click" 
+        //        (this allows open/close menu from icon, and close menu from document-click)
     });       
       
     

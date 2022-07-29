@@ -355,7 +355,10 @@
                 }
             );
     
-            // Override click-link event - open in browser window
+            // Override document-click
+            // - click link -> open link in browser window
+            // - history-button -> open/close history-menu
+            // - document-click -> close history-menu (if open)
             document.onclick = function (e) {
                 e = e ||  window.event;
                 var element = e.target || e.srcElement;
@@ -373,6 +376,18 @@
                     }
 
                     return false; // prevent default action and stop event propagation
+                }
+                
+                if ( e.path[1].id == 'history-icon'){
+                    if ( parent.document.getElementById("historyMenu").style.display == 'block'){
+                        parent.document.getElementById("historyMenu").style.display = 'none';
+                    }else{
+                        parent.document.getElementById("historyMenu").style.display = 'block';
+                    }
+                }
+                
+                if ( e.path[1].id != 'history-icon' && parent.document.getElementById("historyMenu").style.display == 'block'){
+                    parent.document.getElementById("historyMenu").style.display = 'none'
                 }
             };            
             
