@@ -367,7 +367,6 @@ async function _callback( name, event){
             
             console.log('repoRadiobuttonChanged');
             console.log(event);
-            value = event.checked;
                 
             try{                    
                 // Set state (so it will be updated in main program)
@@ -1039,6 +1038,10 @@ async function injectIntoSettingsJs(document) {
     await drawBranchTab(document);
     await drawRepoTab(document);
     await drawSoftwareTab(document);
+    
+    // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+    _callback('repoRadiobuttonChanged', {id: state.repoNumber});
+    //_callback('repoRadiobuttonChanged', {id: state.repoNumber, checked: true});
     
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
