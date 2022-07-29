@@ -32,6 +32,7 @@
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
     --notes-code-text: var(--code-text);
+    --notes-popup-text: #555555;
     --notes-checkbox-filter: none;
     --table-header-color: #DDDDDD;              /* (text ) */
     --table-line-color: var(--text);            /* (line ) */
@@ -79,6 +80,7 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
+    --notes-popup-text: #555555;
     --notes-checkbox-filter: invert() brightness(0.75);
     --table-header-color: var(--text);           /* (White text and line) */
     --table-line-color: var(--text);            /* (line ) */

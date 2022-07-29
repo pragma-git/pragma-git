@@ -77,6 +77,19 @@ async function injectIntoNotesJs(document) {
             el: button2
         };
     
+ 
+    // Add history button to toolbar
+    button3 = document.createElement('button');
+    button3.style = "background-color: transparent; top: -2px; position: absolute; right: 120px";
+    button3.setAttribute("id", 'help-icon');
+    button3.innerHTML = '<img height="17" width="17"  src="images/history_hover.png" >';
+    button3struct = {  
+            name: 'help',
+            event: 'clickCustomButton3',
+            el: button3
+        };
+ 
+    
     // Add buttons to editor options (omit 'scrollSync' function)
     options.toolbarItems = [
         ['heading', 'bold', 'italic', 'strike'],
@@ -84,7 +97,7 @@ async function injectIntoNotesJs(document) {
         ['ul', 'ol', 'task', 'indent', 'outdent'],
         ['table', 'image', 'link'],
         ['code', 'codeblock'],
-        [ button1struct, button2struct ],
+        [ button1struct, button2struct, button3struct ],
     ];
 
         
@@ -106,6 +119,12 @@ async function injectIntoNotesJs(document) {
         parent.opener._callback('help',evt); 
     });       
     
+    button3.addEventListener('click', () => {
+        let evt = {}; 
+        evt.name='Notes';
+        parent.document.getElementById("historyMenu").style.display = 'block'
+    });       
+      
     
     // Title
     repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);

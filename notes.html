@@ -3,6 +3,7 @@
     <head>
         <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
         
+        <link rel="stylesheet" type="text/css" href="node_modules/@toast-ui/editor/dist/toastui-editor.css" /> 
         
         <style>           
             :root {
@@ -18,6 +19,18 @@
                 transform: scale( var(--windowScaling) );
                 transform-origin: top left;
                 position: absolute;
+            }
+            
+            .myButton {
+                margin: 10px;
+                font-size: 13px;
+                border: 1px solid #dadde6;
+                padding: 5px;
+            }
+            
+            .notes-popup-text {
+                color: var(--notes-popup-text);
+                font-weight: 600;
             }
 
         </style>
@@ -78,7 +91,48 @@
                 document.getElementById('iframe').contentWindow.closeWindow(window)
                 }
             ); 
-        </script>  
+        </script> 
+        
+        
+        <script>
+            function olderVersion(){
+                document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber + 1;
+            }
+            
+            function newerVersion(){
+                document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber - 1;
+            }
+            
+            function resetHistory(){
+                document.getElementById("iframe").contentWindow.historyNumber = -1; // Set to original (not historical)
+            }
+            
+            function setHistory(){
+                document.getElementById('historyMenu').style.display = "none";
+            }
+            
+            
+        </script>
+        
+        <div id="historyMenu" class="toastui-editor-popup" aria-role="dialog" style="display: block; width: fit-content; right: 100px; top: 39px;">
+            <div class="toastui-editor-popup-body">
+                <div aria-label="Previous versions of this file">
+   
+                    <div class="toastui-editor-button-container" style="text-align: left; margin: 0px">
+                        <span class="notes-popup-text">Version: </span><br>
+                        <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
+                        <button id="forward" class="myButton" onClick="newerVersion();">Newer</button><br>
+                        
+                        <div id="info" class="notes-popup-text">today at 12:23</div><br>
+                        
+                        <button class="myButton" onClick="resetHistory();">Reset</button>
+                        <button class="myButton" onClick="setHistory();">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div> 
+            
+            
             
     
     </body>    
