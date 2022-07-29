@@ -122,7 +122,11 @@ async function injectIntoNotesJs(document) {
     button3.addEventListener('click', () => {
         let evt = {}; 
         evt.name='Notes';
-        parent.document.getElementById("historyMenu").style.display = 'block'
+        if ( parent.document.getElementById("historyMenu").style.display == 'block' ){
+            parent.document.getElementById("historyMenu").style.display = 'none'
+        }else{
+            parent.document.getElementById("historyMenu").style.display = 'block'
+        }
     });       
       
     

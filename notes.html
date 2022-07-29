@@ -106,15 +106,12 @@
             function resetHistory(){
                 document.getElementById("iframe").contentWindow.historyNumber = -1; // Set to original (not historical)
             }
-            
-            function setHistory(){
-                document.getElementById('historyMenu').style.display = "none";
-            }
+
             
             
         </script>
         
-        <div id="historyMenu" class="toastui-editor-popup" aria-role="dialog" style="display: block; width: fit-content; right: 100px; top: 39px;">
+        <div id="historyMenu" class="toastui-editor-popup" aria-role="dialog" style="display: none; width: fit-content; right: 100px; top: 39px;">
             <div class="toastui-editor-popup-body">
                 <div aria-label="Previous versions of this file">
    
@@ -125,8 +122,7 @@
                         
                         <div id="info" class="notes-popup-text">today at 12:23</div><br>
                         
-                        <button class="myButton" onClick="resetHistory();">Reset</button>
-                        <button class="myButton" onClick="setHistory();">OK</button>
+                        <button class="myButton" onClick="resetHistory();">Original</button>
                     </div>
                 </div>
             </div>
