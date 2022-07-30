@@ -227,7 +227,7 @@ async function getHistoricalNote(){
         historyNumber = cachedHistory.length - 1;
     }
     if ( historyNumber < 0 ){
-        historyNumber = 0;
+        historyNumber = -1;
     }
     
 
