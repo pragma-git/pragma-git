@@ -175,7 +175,7 @@
                 }
                 
                 // Only forward 
-                if (historyNumber > ( cachedHistory.length - 1 ) ){
+                if (historyNumber >= ( cachedHistory.length - 1 ) ){
                     document.getElementById("back").disabled = true;
                     document.getElementById("forward").disabled = false;
                     document.getElementById("original").disabled = false;
