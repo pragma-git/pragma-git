@@ -146,6 +146,12 @@ async function injectIntoNotesJs(document) {
 
 function save(){
     
+    // Bail out if history menu is open
+    if ( parent.document.getElementById("historyMenu").style.display == 'block' ){
+        console.log('NO SAVE -- history menu is open');
+        return
+    }    
+    
     // Bail out if find-in-nw has marked stuff
     if (findInNw.total > 0){
         console.log('WARNING DID NOT SAVE -- REASON: FIND IS OPEN, AND MARKS ARE INSERTED (Close find to save)');
@@ -211,7 +217,7 @@ async function getHistory(){
         console.log(err);
     } 
 }
-async function getHistoricalNote( historyNumber){
+async function getHistoricalNote(){
     
     // Example :  oldText = await gitHistoricalNote( 1);
     
@@ -234,6 +240,17 @@ async function getHistoricalNote( historyNumber){
         text = res;
     }
     
-    return text
+    console.log(text);
+    
+    // Set editor text
+    editor.setMarkdown(text);
+    editor.moveCursorToStart();
+    
+    // Set info text in history menu
+    let dateTime = cachedHistory[ historyNumber].date;
+    let date = dateTime.substr(0,10);
+    let time = dateTime.substr(11,5);
+    
+    parent.document.getElementById('info').innerHTML = time + '<br>' + date;
     
 }

@@ -97,14 +97,29 @@
         <script>
             function olderVersion(){
                 document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber + 1;
+                document.getElementById("iframe").contentWindow.getHistoricalNote();
             }
             
             function newerVersion(){
                 document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber - 1;
+                document.getElementById("iframe").contentWindow.getHistoricalNote();
             }
             
             function resetHistory(){
-                document.getElementById("iframe").contentWindow.historyNumber = -1; // Set to original (not historical)
+                // Read saved file
+                try{
+                    let text = require('fs').readFileSync( document.getElementById("iframe").contentWindow.filePath, 'utf8' );
+                                        
+                    // Set editor text
+                    document.getElementById("iframe").contentWindow.editor.setMarkdown(text);
+                    document.getElementById("iframe").contentWindow.editor.moveCursorToStart();
+                    
+                    // Set menu text
+                    document.getElementById('info').innerHTML = 'latest' + '<br>';
+                }catch(err){
+                    
+                }
+
             }
 
             
@@ -120,7 +135,7 @@
                         <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
                         <button id="forward" class="myButton" onClick="newerVersion();">Newer</button><br>
                         
-                        <div id="info" class="notes-popup-text">today at 12:23</div><br>
+                        <div id="info" class="notes-popup-text" style="text-align: center;" > latest <br> </div><br>
                         
                         <button class="myButton" onClick="resetHistory();">Original</button>
                     </div>

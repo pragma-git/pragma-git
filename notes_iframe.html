@@ -363,6 +363,7 @@
                 e = e ||  window.event;
                 var element = e.target || e.srcElement;
 
+                // http link open in browser
                 if (element.tagName == 'A') {
                     
                     if (element.href.startsWith('http') ){
@@ -378,14 +379,17 @@
                     return false; // prevent default action and stop event propagation
                 }
                 
+                // Show/hide history button (clicked button)
                 if ( e.path[1].id == 'history-icon'){
                     if ( parent.document.getElementById("historyMenu").style.display == 'block'){
                         parent.document.getElementById("historyMenu").style.display = 'none';
                     }else{
-                        parent.document.getElementById("historyMenu").style.display = 'block';
+                        save();  // Has to be done before opening history menu (which blocks save)
+                        parent.document.getElementById("historyMenu").style.display = 'block';  // Open history menu
                     }
                 }
                 
+                // Close history menu when clicking outside menu
                 if ( e.path[1].id != 'history-icon' && parent.document.getElementById("historyMenu").style.display == 'block'){
                     parent.document.getElementById("historyMenu").style.display = 'none'
                 }
