@@ -385,6 +385,12 @@
                         parent.document.getElementById("historyMenu").style.display = 'none';
                     }else{
                         save();  // Has to be done before opening history menu (which blocks save)
+                        parent.opener.commitSettingsDir();  // Commit saved file
+                        
+                        getHistory();  // Update history with above commit
+                        
+                        parent.document.getElementById("iframe").contentWindow.historyNumber = -1;  // always open as non-historical
+                        
                         parent.document.getElementById("historyMenu").style.display = 'block';  // Open history menu
                         parent.historyButtonVisibility();
                     }
