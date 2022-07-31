@@ -3,6 +3,7 @@
     <head>
         <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
         
+        <link rel="stylesheet" type="text/css" href="node_modules/@toast-ui/editor/dist/toastui-editor.css" /> 
         
         <style>           
             :root {
@@ -18,6 +19,18 @@
                 transform: scale( var(--windowScaling) );
                 transform-origin: top left;
                 position: absolute;
+            }
+            
+            .myButton {
+                margin: 10px;
+                font-size: 13px;
+                border: 1px solid #dadde6;
+                padding: 5px;
+            }
+            
+            .notes-popup-text {
+                color: var(--notes-popup-text);
+                font-weight: 600;
             }
 
         </style>
@@ -78,7 +91,101 @@
                 document.getElementById('iframe').contentWindow.closeWindow(window)
                 }
             ); 
-        </script>  
+        </script> 
+        
+        
+ 
+        
+        <div id="historyMenu" class="toastui-editor-popup" aria-role="dialog" style="display: none; width: fit-content; right: 100px; top: 39px;">
+            <div class="toastui-editor-popup-body">
+                <div aria-label="Previous versions of this file">
+   
+                    <div class="toastui-editor-button-container" style="text-align: left; margin: 0px">
+                        <span class="notes-popup-text">Version: </span><br>
+                        <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
+                        <button id="forward" class="myButton" onClick="newerVersion();">Newer</button><br>
+                        
+                        <div id="info" class="notes-popup-text" style="text-align: center;" > latest <br> </div><br>
+                        
+                        <button id="original" class="myButton" onClick="resetHistory();">Original</button>
+                    </div>
+                </div>
+            </div>
+        </div> 
+        
+        <script>
+            function olderVersion(){
+                document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber + 1;
+                document.getElementById("iframe").contentWindow.getHistoricalNote();
+                
+                // Set button visibility
+                historyButtonVisibility(); 
+            }
+            
+            function newerVersion(){
+                document.getElementById("iframe").contentWindow.historyNumber = document.getElementById("iframe").contentWindow.historyNumber - 1;
+                document.getElementById("iframe").contentWindow.getHistoricalNote();
+                
+                // Get latest or 
+                if (document.getElementById("iframe").contentWindow.historyNumber < 0){
+                    resetHistory();
+                }else{
+                    // Set button visibility
+                    historyButtonVisibility();
+                }
+            }
+            
+            function resetHistory(){
+                // Read saved file
+                try{
+                    let text = require('fs').readFileSync( document.getElementById("iframe").contentWindow.filePath, 'utf8' );
+                    
+                    document.getElementById("iframe").contentWindow.historyNumber = - 1;
+                                        
+                    // Set editor text
+                    document.getElementById("iframe").contentWindow.editor.setMarkdown(text);
+                    document.getElementById("iframe").contentWindow.editor.moveCursorToStart();
+                    
+                    // Set menu text
+                    document.getElementById('info').innerHTML = 'latest' + '<br>';
+                    
+                    // Set button visibility
+                    historyButtonVisibility();
+                }catch(err){
+                    
+                }
+
+            }
+
+            function historyButtonVisibility(){
+                
+                let historyNumber = document.getElementById("iframe").contentWindow.historyNumber;
+                let cachedHistory = document.getElementById("iframe").contentWindow.cachedHistory;
+                
+                // Guess both back and forward
+                document.getElementById("back").disabled = false;
+                document.getElementById("forward").disabled = false;
+                document.getElementById("original").disabled = false;
+                
+                // Only back
+                if (historyNumber < 0){
+                    document.getElementById("back").disabled = false;
+                    document.getElementById("forward").disabled = true;
+                    document.getElementById("original").disabled = false;
+                }
+                
+                // Only forward 
+                if (historyNumber >= ( cachedHistory.length - 1 ) ){
+                    document.getElementById("back").disabled = true;
+                    document.getElementById("forward").disabled = false;
+                    document.getElementById("original").disabled = false;
+                }
+                
+            }
+            
+            
+        </script>
+            
             
     
     </body>    

@@ -5,24 +5,32 @@ const gui = require("nw.gui"); // TODO : don't know if this will be needed
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const simpleGit = require('simple-git'); 
 
 var util = require('./util_module.js'); // Pragma-git common functions
 
+const pathsep = require('path').sep;  // Os-dependent path separator
+    
+const settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
+
 var editor;  // Editor object
 var filePath;// Path to open file
+var fileDir; // Path to folder of open file
 
 var repoName = 'unknown'
 
+var cachedHistory;  // Cached history for all versions of this file
+var historyNumber = -1; // step back in history.  -1 means not in history. First history is at index 0
 
+// Save every 30 seconds
 window.setInterval(save, 30 * 1000 );
-
-
 
 // Start initiated from notes.html
 async function injectIntoNotesJs(document) {
     win = gui.Window.get();
     
     filePath = global.arguments[0];
+    fileDir = path.dirname(filePath);
     global.arguments =[]; // Empty this
     
     // Open file
@@ -69,6 +77,19 @@ async function injectIntoNotesJs(document) {
             el: button2
         };
     
+ 
+    // Add history button to toolbar
+    button3 = document.createElement('button');
+    button3.style = "background-color: transparent; top: -2px; position: absolute; right: 120px";
+    button3.setAttribute("id", 'history-icon');
+    button3.innerHTML = '<img height="17" width="17"  src="images/history_hover.png" >';
+    button3struct = {  
+            name: 'help',
+            event: 'clickCustomButton3',
+            el: button3
+        };
+ 
+    
     // Add buttons to editor options (omit 'scrollSync' function)
     options.toolbarItems = [
         ['heading', 'bold', 'italic', 'strike'],
@@ -76,7 +97,7 @@ async function injectIntoNotesJs(document) {
         ['ul', 'ol', 'task', 'indent', 'outdent'],
         ['table', 'image', 'link'],
         ['code', 'codeblock'],
-        [ button1struct, button2struct ],
+        [ button1struct, button2struct, button3struct ],
     ];
 
         
@@ -98,6 +119,13 @@ async function injectIntoNotesJs(document) {
         parent.opener._callback('help',evt); 
     });       
     
+    button3.addEventListener('click', () => {
+        let evt = {}; 
+        evt.name='Notes';
+        // Note : Action takes place in notes_iframe.html at  "Override document-click" 
+        //        (this allows open/close menu from icon, and close menu from document-click)
+    });       
+      
     
     // Title
     repoName = path.basename( global.state.repos[global.state.repoNumber].localFolder);
@@ -110,10 +138,19 @@ async function injectIntoNotesJs(document) {
         document.body.classList.remove('light');
     }
     //window.document.body.style.zoom = global.state.zoom;
+    
+    // Get history
+    getHistory();
 
 };
 
 function save(){
+    
+    // Bail out if history menu is open
+    if ( parent.document.getElementById("historyMenu").style.display == 'block' ){
+        console.log('NO SAVE -- history menu is open');
+        return
+    }    
     
     // Bail out if find-in-nw has marked stuff
     if (findInNw.total > 0){
@@ -161,4 +198,59 @@ async function closeWindow(){
 
     console.log('clicked close window');
 }
+async function getHistory(){
+        
+    let file = path.relative(settingsDir, filePath);
+    
+    let hash;    // hash of commit to get
+    let text;    // text in file
+    
+    // Get hashes for all notes
+    try{
+        await simpleGit(settingsDir).log( [ file ], onHistory);
+        function onHistory(err, result){
+            console.log(result); 
+            cachedHistory = result.all; 
+            console.log(' ============ Found N = ' + cachedHistory.length);
+        } 
+    }catch(err){        
+        console.log(err);
+    } 
+}
+async function getHistoricalNote(){
+    
+    // Example :  oldText = await gitHistoricalNote( 1);
+    
+    let file = path.relative(settingsDir, filePath);
+        
+    if ( historyNumber > ( cachedHistory.length - 1 ) ){
+        historyNumber = cachedHistory.length - 1;
+    }
+    if ( historyNumber < 0 ){
+        historyNumber = -1;
+    }
+    
 
+     
+    let hash = cachedHistory[ historyNumber].hash;
+    
+    // Read text from file with historyNumber
+    await simpleGit(settingsDir).show( [ hash + ':' + file ], onCatFile)
+    function  onCatFile(err, res){
+        text = res;
+    }
+    
+    console.log(text);
+    
+    // Set editor text
+    editor.setMarkdown(text);
+    editor.moveCursorToStart();
+    
+    // Set info text in history menu
+    let dateTime = cachedHistory[ historyNumber].date;
+    let date = dateTime.substr(0,10);
+    let time = dateTime.substr(11,5);
+    
+    parent.document.getElementById('info').innerHTML = time + '<br>' + date;
+    
+}
