@@ -402,21 +402,58 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         arrElem[i].onmouseenter = mouseOverNodeCallback;
     }
 }       
+    // State variables
+    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+    var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
+    var currentImageNode = '';
+    // callbacks
     async function mouseOverNodeCallback(e) {
+        
+        resetNodeSize(); // Clear previously resized nodes
+                    
+        // Set mouse position
+        isMouseOverCommitCircle = true;
+        
+        // Lock window (stays open)
+        lockedNodeInfoWindow = true;
             
-            // Clear old window if entering new one
-            if (lockedNodeInfoWindow == true){
-                closeInfoBox();
-            }
-            lockedNodeInfoWindow = true;
-            
-            // Set mouse position
-            isMouseOverCommitCircle = true;
-            
-            resetNodeSize(); // Clear previously resized nodes
-            
-            console.log(e);
-            let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+        let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+        await makePopupWindow(e, hash);
+    }
+    function mouseOverExistingNodeCallback(hash){
+        console.log('mouseOverExistingNodeCallback');
+        let id = 'img_' + hash;
+        
+        if (currentImageNode == id){
+            return
+        }
+        currentImageNode = id;
+        
+        let e = {};
+        e.toElement = {};
+        e.toElement.id = id;
+        
+        e.target = {};
+        e.target.href = {};
+        e.target.href.baseVal = 'img_' + hash;
+        e.target.href.baseVal = document.getElementById(id).href.baseVal;
+        
+        mouseOverNodeCallback(e);
+    }
+
+    function mouseLeavingNodeCallback(){
+        isMouseOverCommitCircle = false;
+        if (lockedNodeInfoWindow == true){
+            return
+        }
+        closeInfoBox();
+        return
+    };
+    // utility functions
+        async function makePopupWindow(e, hash){
+
+            let imageSrc = e.target.href.baseVal;
+      
             let commit = nodeMap.get(hash);
             
             // Get git author
@@ -424,7 +461,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
               
             console.log( 'commit : ' + commit.message );
             
-            let imageSrc = e.target.href.baseVal;
             
             // Parents      
             let parentHashes = commit.parents;
@@ -437,7 +473,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
-                onclick="lockedNodeInfoWindow = false; mouseLeavingNodeCallback()" 
+                onclick="lockedNodeInfoWindow = false; mouseLeavingNodeCallback();closeInfoBox()" 
                 onmouseover="updateImageUrl('close-icon', 'images/button_close_hover.png');" 
                 onmouseout= "updateImageUrl('close-icon', 'images/button_close_black.png');" 
                 src="images/button_close_black.png">`
@@ -562,18 +598,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
 
             document.getElementById('displayedMouseOver').style.top = top;
         }; 
-
-    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
-    var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
-    function mouseLeavingNodeCallback(){
-        isMouseOverCommitCircle = false;
-        if (lockedNodeInfoWindow == true){
-            return
-        }
-        closeInfoBox();
-        return
-    };
-    // utility functions
     function sizeNodes( hash, size){    // Make large node overlay image
         
         
@@ -595,8 +619,11 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         img.style.position='absolute'; 
         img.src = node.href.baseVal; 
         img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
+        
         img.id='selectedImage_' + hash;
         
+        img.setAttribute('onmouseenter', 'console.log("ENTER");mouseOverExistingNodeCallback( "' + hash + '" )' );
+
         document.getElementById('mySvg').appendChild(img);
     }
     function resetNodeSize(){           // Reset node overlay image
