@@ -3560,13 +3560,13 @@ async function gitAddCommitAndPush( message){
     await gitRememberBranch( 'HEAD', currentBranch);
 
     // Push 
-    await waitTime( 1000);
+    if ( state.repos[state.repoNumber].autoPushToRemote ){ 
+        await waitTime( 1000);
+        await gitPush();
+    }
     
-    await gitPush();
-      
     // Finish up
     localState.unstaged = [];
-    //writeMessage('',false);  // Remove this message 
     textOutput.value = '';
     writeTextOutput( textOutput);
     _setMode('UNKNOWN');  
@@ -3726,12 +3726,10 @@ async function gitStashMap( folder ){
 
 async function gitPush(){
     
-    if ( ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ) == false ){ 
-        pragmaLog('   not allowed to push, because (at least one of these are disabled) : ');
-        pragmaLog('   setting autoPushToRemote  = ' + state.repos[state.repoNumber].autoPushToRemote);
-        pragmaLog('   setting allowPushToRemote = ' + state.repos[state.repoNumber].allowPushToRemote);
+    if ( state.repos[state.repoNumber].allowPushToRemote  == false ){ 
+        pragmaLog('   not allowed to push, because setting allowPushToRemote = false');
         return
-    }
+    }    
     
     // Read current branch
     try{
