@@ -379,11 +379,9 @@ function toggleDate( show){
     if (show){
           document.getElementById('datesSwimLane').style.visibility = 'visible';  
           document.getElementById('datesSwimLane').style.width = 'fit-content'; 
-          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width'];  
     }else{
           document.getElementById('datesSwimLane').style.visibility = 'hidden';  
           document.getElementById('datesSwimLane').style.width = '0'; 
-          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width']; 
     }
     document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
 
@@ -394,6 +392,7 @@ function updateImageUrl(image_id, new_image_url) {
     image.src = new_image_url;
 }
  
+// Info popup functionality
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
 
     // Add mouse events for each circle ( mouse out event is created when overlay image is done)
@@ -440,7 +439,6 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         
         mouseOverNodeCallback(e);
     }
-
     function mouseLeavingNodeCallback(){
         isMouseOverCommitCircle = false;
         if (lockedNodeInfoWindow == true){
@@ -450,7 +448,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         return
     };
     // utility functions
-        async function makePopupWindow(e, hash){
+    async function makePopupWindow(e, hash){
 
             let imageSrc = e.target.href.baseVal;
       
