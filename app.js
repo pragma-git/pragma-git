@@ -3560,7 +3560,7 @@ async function gitAddCommitAndPush( message){
     await gitRememberBranch( 'HEAD', currentBranch);
 
     // Push 
-    if ( state.repos[state.repoNumber].autoPushToRemote ){ 
+    if ( state.repos[state.repoNumber].autoPushToRemote ){  
         await waitTime( 1000);
         await gitPush();
     }
