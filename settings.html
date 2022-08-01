@@ -246,11 +246,11 @@
                       <tr style="border: none;">
                             <td>
                                 <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
-                                <input id="authorName" type="text" size="30"/>
+                                <input id="authorName" type="text" size="30"  oninput="_callback('globalAuthorNameChanged',this)"/>
                             </td>
                             <td>                
                                 <label for="authorEmail"> <sup class="footnoteText">*</sup>Author's email  :</label><br>
-                                <input id="authorEmail" type="text" size="30"/>
+                                <input id="authorEmail" type="text" size="30"  oninput="_callback('globalAuthorEmailChanged',this)"/>
                             </td>
                         </tr>
                     </table>  

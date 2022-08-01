@@ -145,6 +145,15 @@ async function _callback( name, event){
          
             break;
         }
+        case 'globalAuthorNameChanged': {
+            console.log('globalAuthorNameChanged');
+            console.log(event);
+
+            try{ await gitRemoveConfigKey( state.repoNumber, 'user.name', 'global'); }catch (err) {}
+            try{ await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global');   }catch (err) {}
+
+            break;
+        }
         case 'localAuthorEmailChanged': {
             console.log('localAuthorEmailChanged');
             console.log(event);
@@ -161,6 +170,16 @@ async function _callback( name, event){
             }
 
             await updateLocalAuthorInfoView( ); 
+         
+            break;
+        }
+        case 'globalAuthorEmailChanged': {
+            console.log('localAuthorEmailChanged');
+            console.log(event);
+            
+            try{ await gitRemoveConfigKey( state.repoNumber, 'user.email', 'global'); }catch (err) {}
+            try{ await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global');   }catch (err) {}
+
          
             break;
         }
