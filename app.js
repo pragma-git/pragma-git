@@ -1128,7 +1128,7 @@ async function _callback( name, event){
         topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
         
         // Initial commit
-        setStatusBar( 'Initial commit');
+        setStatusBar( 'Initial commit'); 
         let outputData;
         await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Created Repository'] , onCommit);
         function onCommit(err, result) {};
