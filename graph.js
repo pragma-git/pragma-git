@@ -454,6 +454,8 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
       
             let commit = nodeMap.get(hash);
             
+            let maxColumn = commit.x;
+            
             // Get git author
             let author = await gitCommitAuthor(hash);
               
@@ -561,6 +563,12 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 sizeNodes( parentHashes[i], IMG_H + 6); 
                 
                 infoNodes.push(parentHashes[i]); // Remember hash of resized node
+                
+                // Column
+                let commit = nodeMap.get(parentHashes[i]);
+                if ( commit.x > maxColumn)
+                    maxColumn = commit.x;
+                
             }
             
             html +='<BR><div>';
@@ -582,9 +590,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').style.visibility = 'visible';
             
             // Set x to the right of lane
-            let x = getFreeLane(commit, false);
-            if (commit.x > x )
-                x = commit.x;
+            x = maxColumn;    
 
             let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
             document.getElementById('displayedMouseOver').style.left = e.clientX + X0 + 20;
@@ -595,6 +601,8 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 top = e.clientY - 15;
 
             document.getElementById('displayedMouseOver').style.top = top;
+            
+            console.log( 'maxColumn : ' + maxColumn);
         }; 
     function sizeNodes( hash, size){    // Make large node overlay image
         
