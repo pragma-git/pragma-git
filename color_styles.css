@@ -39,6 +39,8 @@
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     --notes-tooltip-background: #333;
     --notes-tooltip-text: white;
+    --notes-input-background: white;
+    --notes-input-text: var( --notes-popup-text);
     
     /* Main */
     --main-background: var(--body-background); 
@@ -87,6 +89,8 @@
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     --notes-tooltip-background:  #333;
     --notes-tooltip-text: white;
+    --notes-input-background: white;
+    --notes-input-text: var( --notes-popup-text);
     
     /* Merge */
     --merge-color: black;
