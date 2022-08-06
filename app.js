@@ -5466,6 +5466,11 @@ function loadSettings(settingsFile){
                     
                 for (let i = 0; i < state_in.repos.length; i++){
                     
+                    // LocalFolder and URLs
+                    state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
+                    state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' );
+                    state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );
+                    
                     // Local author info
                     state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
                     state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
@@ -5480,8 +5485,7 @@ function loadSettings(settingsFile){
                     state.repos[i].allowPushToRemote = setting( state_in.repos[i].allowPushToRemote, true ); 
                     state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
                     state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
-                    
-                    
+        
                 }
                 
             }catch(err){

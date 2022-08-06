@@ -303,6 +303,8 @@ async function _callback( name, event){
             let topFolder = folder + pathsep + repoName;
             topFolder = topFolder.replace(/[\\\/]$/, '')
     
+            // Store forkedURL
+            state.repos[id].forkedFromURL = URL;
                
             // Remove remote origin (make it a fork)
             await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
@@ -1011,7 +1013,7 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
     for (let i = 0; i < state.repos.length; i++){
 
         // Default to global authorinfo if missing
-        if ( state.repos[i].authorName.trim().length == 0 ){
+        if ( state.repos[i].authorName == undefined || state.repos[i].authorName.trim().length == 0 ){
             state.repos[i].useGlobalAuthorInfo = true;
             
             // Clean from git config --local 
@@ -1019,6 +1021,14 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
                 gitRemoveConfigKey( i, 'user.name', 'local');
                 gitRemoveConfigKey( i, 'user.email', 'local');
             }catch(err){}
+        }
+        
+        if ( state.repos[i].authorName == undefined) {
+            state.repos[i].authorName = "";
+        }
+        
+        if ( state.repos[i].authorEmail == undefined) {
+            state.repos[i].authorEmail = "";
         }
         
     }
