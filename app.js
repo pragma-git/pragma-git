@@ -5458,13 +5458,16 @@ function loadSettings(settingsFile){
         // Repos (default is empty)
             console.log('- setting repos');
             state.repoNumber = setting( state_in.repoNumber, -1);
-            state.repos = setting( state_in.repos, [] );
+            //state.repos = setting( state_in.repos, [] );
+            state.repos = [];
             
             
         // Set values individual repos
             try {
                     
                 for (let i = 0; i < state_in.repos.length; i++){
+                    
+                    state.repos[i] = {};
                     
                     // LocalFolder and URLs
                     state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
