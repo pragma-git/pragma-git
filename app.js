@@ -4129,17 +4129,33 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
                 
-                // Don't show remote if merge-menu (because merge requires local branch)
-                // Don't show remote if cherry-pick-menu (because cherry-pick requires local branch)
-                // BUT if remotes/upstream, then remotes should be shown
-                if ( 
-                        (firstPart == "remotes") && ( isOrigin ) && 
-                        ( 
-                            ( callbackName === "clickedMergeContextualMenu") || 
-                            ( callbackName === "clickedCherryPickContextualMenu") 
-                        )
-                    ){ 
-                    continue 
+                // 1) Branch menu :
+                //     only show remote/origin  and   locals (skip remotes/xxx except origin)
+                //
+                // 2) Merge menu : 
+                //     show all remotes except remote/origin (skip remotes/origin)
+                //     (remote/origin can't be merged, but use local branch instead.
+                //      remote/xxx    can be merged because it is an upstream branch which is fetched and merged from this menu)
+                //
+                // 3) Cherrypick menu : 
+                //     only show locals (nothing starting with remotes)
+                
+                
+                // 1) Branch menu
+                if (  isRemoteBranch &&  ( !isOrigin ) && ( callbackName === "clickedBranchContextualMenu")  ) {
+                    continue
+                }
+
+                
+                // 2) Merge menu
+                if ( isRemoteBranch && ( isOrigin ) && ( callbackName === "clickedMergeContextualMenu")  ){
+                    continue
+                }
+
+                                
+                // 3) Cherrypick menu
+                if ( isRemoteBranch && ( callbackName === "clickedCherryPickContextualMenu")  ){
+                    continue
                 }
                  
                  
