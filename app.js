@@ -3391,7 +3391,7 @@ async function gitBranchList(){
             // Set extendedBranchSummaryResult.show for remote, this remote has an existing local with matching name
             //               
             
-                if ( branchName.startsWith('remotes') ){
+                if ( branchName.startsWith('remotes/origin') ){
                     let remoteBranchName = branchName;
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
                 } else{
@@ -4123,6 +4123,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let requireNewSubMenu = (firstPart !== cachedFirstPart);
 
                 let isRemoteBranch = (firstPart === 'remotes');
+                let isUpstream = secondPart.startsWith('upstream');
                 let isLocalBranch = !isRemoteBranch;
                 let showRemote = branchList.branches[ branchNames[i] ].show; 
                 
@@ -4130,8 +4131,10 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 // Don't show remote if merge-menu (because merge requires local branch)
                 // Don't show remote if cherry-pick-menu (because cherry-pick requires local branch)
+                // BUT if remotes/upstream, then remotes should be shown
                 if ( 
-                        (firstPart == "remotes") && ( 
+                        (firstPart == "remotes") && ( !isUpstream ) && 
+                        ( 
                             ( callbackName === "clickedMergeContextualMenu") || 
                             ( callbackName === "clickedCherryPickContextualMenu") 
                         )
@@ -4171,8 +4174,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( isSubMenuItem ){
                     //console.log( `Branch : ${firstPart}/${secondPart}`);
                    
-                    // Special case for remote
-                    if (isRemoteBranch){    
+                    // Special case for remote (but not for upstream)
+                    if (isRemoteBranch && !isUpstream ){    
                         myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
                     }
                     
