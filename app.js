@@ -4173,6 +4173,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let submenu = new gui.Menu(); // Prepare an empty submenu for future use
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
             
+            let isRemoteUpstream = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
+            
             for (var i = 0; i < branchNames.length; ++i) {
                 
                 // Populate utility variables 
@@ -4260,6 +4262,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
                         
+                        // If upstream ahead -- add tip
+                        if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
+                            secondPart = '! ' + secondPart;
+                            isRemoteUpstream = true;
+                        }
+                        
                         let tempSubMenu = new gui.MenuItem( { 
                                 label: secondPart,
                                 type: 'checkbox',
@@ -4291,6 +4299,9 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             // Add remotes to menu
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
+                if (isRemoteUpstream){
+                    cachedFirstPart = '! ' + cachedFirstPart;
+                }
                 menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
             }
                  
