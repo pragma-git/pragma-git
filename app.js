@@ -145,6 +145,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const path = require('path');
         const downloadsFolder = require('downloads-folder'); 
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
+        const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
         
         const simpleGit = require('simple-git');  // npm install simple-git
@@ -4076,7 +4077,8 @@ async function cacheBranchList(){
 
     try{
         cachedBranchList = await gitBranchList();
-        let currentBranch = cachedBranchList.current; 
+        //let currentBranch = cachedBranchList.current; 
+        await updateBranchListWithUpstream();
         
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
@@ -4084,6 +4086,66 @@ async function cacheBranchList(){
     }                
 
 }
+    async function updateBranchListWithUpstream(){
+        
+        let promises = [];
+        let last = '';  // Used to avoid repeting promise for the same name
+        
+        // Loop all branches
+        let array = cachedBranchList.branches;
+        for (var key in array) {
+            last = key;
+            
+            let branchItem = cachedBranchList.branches[key]; 
+            
+            // Build list of Promises
+            if  ( (branchItem.name.startsWith('remotes') && ( ! branchItem.name.startsWith('remotes/origin') ) ) ){
+                
+                let upstreamName = branchItem.name.split('/')[1]; // remotes/upstream/main  becomes  upstream
+                last = upstreamName;
+                
+                promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+            }
+            
+        }
+    
+        await Promise.all( promises )
+        
+    }
+        async function gitListUpstreams(branchName){
+        ;
+            
+            let RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName + " 2>&1 ";
+            RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName;
+        
+            let child = await exec( RUN , 
+                (error, stdout, stderr) => { 
+        
+                    // Typical response (or totally empty) :
+                    //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
+                            //276f6e7..1c89d32  main       -> upstream/main
+                    //`
+        
+                    // Parse response and update  cachedBranchList.branches.upstreamAhead 
+                    let returnedRemotes = [];
+        
+                    let rows = stderr.split('\n'); 
+                    for (var i = 0; i < rows.length; ++i) {
+                        
+                        let columns = rows[i].split('->'); 
+                        let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
+                        
+                        if ( remoteBranchShortName.startsWith(branchName) ){
+                            let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
+                            cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                        }
+                    }
+             
+                }  // end callback handler
+            );  // End exec
+            
+        }
+    
 function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
         // menu is a nw.Menu
         // currentBranch is a string
@@ -4251,6 +4313,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 
 // Utility functions
+
 function getMode(){
     return localState.mode;
 }
@@ -4455,7 +4518,9 @@ function getDownloadsDir(){
     
 }
 
+
 // Logging to file
+
 function pragmaLog(message){
     message = message.toString();
     
@@ -4541,6 +4606,7 @@ function stackInfo( level ){
 
 
 // Update other windows
+
 async function updateGraphWindow(){
     
     await _update();
