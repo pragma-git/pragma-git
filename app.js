@@ -4102,9 +4102,12 @@ async function cacheBranchList(){
             if  ( (branchItem.name.startsWith('remotes') && ( ! branchItem.name.startsWith('remotes/origin') ) ) ){
                 
                 let upstreamName = branchItem.name.split('/')[1]; // remotes/upstream/main  becomes  upstream
-                last = upstreamName;
                 
-                promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+                // Only add promise if a new upstream
+                if ( upstreamName !== last){
+                    promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+                }
+                last = upstreamName;
             }
             
         }
@@ -4174,6 +4177,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
             
             let isRemoteUpstream = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
+            const UPSTREAM_AHEAD_MARKER = '!  ';
             
             for (var i = 0; i < branchNames.length; ++i) {
                 
@@ -4264,7 +4268,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         
                         // If upstream ahead -- add tip
                         if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
-                            secondPart = '! ' + secondPart;
+                            secondPart = UPSTREAM_AHEAD_MARKER + secondPart;
                             isRemoteUpstream = true;
                         }
                         
@@ -4300,7 +4304,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                 if (isRemoteUpstream){
-                    cachedFirstPart = '! ' + cachedFirstPart;
+                    cachedFirstPart = UPSTREAM_AHEAD_MARKER + cachedFirstPart;
                 }
                 menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
             }
