@@ -3823,16 +3823,19 @@ function gitFetch( upstreamBranch){ // Fetch
     //
      try{
 
-    
         if ( upstreamBranch == undefined){
-            // Fetch
+            
+            // Fetch from default (origin)
             simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
             function onFetch(err, result) {
             };
             
         }else{
-            let upstreamName = upstreamBranch;
+            
             // Fetch from upstreamBranch
+            
+            // Shorten upstream branchname if remote ( remotes/upstream/main becomes upstream)
+            let upstreamName = upstreamBranch;
             if ( upstreamBranch.startsWith( 'remotes' ) ){
                 upstreamName = upstreamBranch.split('/')[1];
             }
