@@ -516,7 +516,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : &nbsp;&nbsp; <div style="float:right"> <i>${author}</i> </div><BR><BR> 
+            html += `<B><U>Commit </U></B> : <BR><BR>
                  <div> 
                      <p>&nbsp; 
                         <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
@@ -529,12 +529,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += ` &nbsp; ${commit.hash} <BR><BR>`
+            html += `<div style="width: -webkit-fill-available;"> &nbsp;&nbsp; ${commit.hash} </div><BR>`
             
+            html += `<div style="width: -webkit-fill-available;"> &nbsp;&nbsp; Author : <i> ${author} </i> </div><BR>
+                       <div style="width: -webkit-fill-available;"> &nbsp;&nbsp; Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
+                     </div><BR><BR>`;
             
+            html += '<BR><HR><BR>' 
             
-            
-            html += '<HR><BR>' 
             
              // Change commit node size
             sizeNodes( hash, IMG_H + 6);
