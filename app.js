@@ -485,6 +485,8 @@ async function _callback( name, event){
         pragmaLog('   from selected branch = ' + event.selectedBranch );
         pragmaLog('   into current  branch = ' + event.currentBranch );
 
+
+        await gitFetch( event.selectedBranch); 
         await gitMerge( event.currentBranch, event.selectedBranch); 
         
         break;
@@ -3808,8 +3810,11 @@ async function gitPush(){
     await waitTime( 1000);  
 
 }
-function gitFetch(){ // Fetch and ls-remote
+function gitFetch( upstreamBranch){ // Fetch 
+    // Default without argument -- fetch from origin
+    // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
+
      
     var error = "";
 
@@ -3818,11 +3823,32 @@ function gitFetch(){ // Fetch and ls-remote
     //
      try{
 
-        // Fetch
-        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
-        function onFetch(err, result) {
-            //console.log(result) 
-        };
+    
+        if ( upstreamBranch == undefined){
+            // Fetch
+            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+            function onFetch(err, result) {
+            };
+            
+        }else{
+            let upstreamName = upstreamBranch;
+            // Fetch from upstreamBranch
+            if ( upstreamBranch.startsWith( 'remotes' ) ){
+                upstreamName = upstreamBranch.split('/')[1];
+            }
+            
+            setStatusBar('fetching from remote ' );
+            
+            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( [ upstreamName], onFetch);
+            function onFetch(err, result) {
+                console.log(result);
+                updateBranchListWithUpstream(); // Update ahead flags
+            };
+            
+            
+        }
+
+
 
 
     }catch(err){
@@ -4097,6 +4123,8 @@ async function cacheBranchList(){
             last = key;
             
             let branchItem = cachedBranchList.branches[key]; 
+            
+            branchItem.upstreamAhead = false; // Guess not ahead, updates in calls to gitListUpstreams below
             
             // Build list of Promises
             if  ( (branchItem.name.startsWith('remotes') && ( ! branchItem.name.startsWith('remotes/origin') ) ) ){
