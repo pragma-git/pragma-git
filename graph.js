@@ -839,6 +839,10 @@ async function drawGraph( document, splitted, branchHistory, history){
                 if (decoration !== ''){
                     sortedLocalBranchList.forEach( 
                         (entry) => { 
+                            if ( entry.startsWith( 'remotes') ){
+                                entry = entry.substr(8);  // sortedLocalBranchList have long names -- remove 'remotes/'
+                            }
+                            
                             if (decoration.includes(entry)  ) {  
                                 branchName = entry;
                             }
