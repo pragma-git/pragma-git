@@ -3810,7 +3810,7 @@ async function gitPush(){
     await waitTime( 1000);  
 
 }
-function gitFetch( upstreamBranch){ // Fetch 
+function gitFetch( longUpstreamBranch){ // Fetch 
     // Default without argument -- fetch from origin
     // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
@@ -3818,12 +3818,13 @@ function gitFetch( upstreamBranch){ // Fetch
      
     var error = "";
 
+
     //
     // Fetch
     //
      try{
 
-        if ( upstreamBranch == undefined){
+        if ( longUpstreamBranch == undefined){
             
             // Fetch from default (origin)
             simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
@@ -3832,22 +3833,29 @@ function gitFetch( upstreamBranch){ // Fetch
             
         }else{
             
-            // Fetch from upstreamBranch
+            // Fetch from longUpstreamBranch
+                
+            // "remotes/test5/child-process-with-timer" -> repo=test5, branch=child-process-with-timer"
+            let splitted = longUpstreamBranch.split('/');
+            let repo = splitted[1];
+            let branch = splitted[2];
+
             
             // Shorten upstream branchname if remote ( remotes/upstream/main becomes upstream)
-            let upstreamName = upstreamBranch;
-            if ( upstreamBranch.startsWith( 'remotes' ) ){
-                upstreamName = upstreamBranch.split('/')[1];
-            }
-            
-            setStatusBar('fetching from remote ' );
-            
-            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( [ upstreamName], onFetch);
-            function onFetch(err, result) {
-                console.log(result);
-                updateBranchListWithUpstream(); // Update ahead flags
-            };
-            
+
+            if ( longUpstreamBranch.startsWith( 'remotes' ) ){
+                let upstreamName = longUpstreamBranch.split('/')[1];
+                let upstreamBranch = longUpstreamBranch.split('/')[2];
+
+                
+                setStatusBar('fetching from remote ' );
+                
+                simpleGit( state.repos[state.repoNumber].localFolder ).fetch( upstreamName, upstreamBranch, onFetch);
+                function onFetch(err, result) {
+                    console.log(result);
+                    updateBranchListWithUpstream(); // Update ahead flags
+                };
+            }           
             
         }
 
@@ -4106,7 +4114,6 @@ async function cacheBranchList(){
 
     try{
         cachedBranchList = await gitBranchList();
-        //let currentBranch = cachedBranchList.current; 
         await updateBranchListWithUpstream();
         
     }catch(err){        
@@ -4120,29 +4127,37 @@ async function cacheBranchList(){
         let promises = [];
         let last = '';  // Used to avoid repeting promise for the same name
         
-        // Loop all branches
-        let array = cachedBranchList.branches;
-        for (var key in array) {
-            last = key;
-            
-            let branchItem = cachedBranchList.branches[key]; 
-            
-            branchItem.upstreamAhead = false; // Guess not ahead, updates in calls to gitListUpstreams below
-            
-            // Build list of Promises
-            if  ( (branchItem.name.startsWith('remotes') && ( ! branchItem.name.startsWith('remotes/origin') ) ) ){
+        
+        // Find remotes
+        try{
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).remote( ['-v'], onRemote);
+            function onRemote(err, result) {
                 
-                let upstreamName = branchItem.name.split('/')[1]; // remotes/upstream/main  becomes  upstream
-                
-                // Only add promise if a new upstream
-                if ( upstreamName !== last){
-                    promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+                let rows = result.split('\n');
+                for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
+                    let upstreamName = rows[j].split('\t')[0];
+                    
+                    // Clean ahead flags
+                    let newAllList = [];
+                    for ( var i=0; i < cachedBranchList.all.length; i++){
+                        let thisBranchName = cachedBranchList.all[i];
+                        cachedBranchList.branches[ thisBranchName ].upstreamAhead = false;
+                    }
+                    
+                    // Only add promise if a new upstream
+                    if ( upstreamName !== last){
+                        promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+                    }
+                    last = upstreamName;
                 }
-                last = upstreamName;
-            }
-            
+            };
+        
+        }catch(err){
+            console.log('Error in updateBranchListWithUpstream()');
+            console.log(err);
         }
-    
+
+        // Check upstreams in parallel
         await Promise.all( promises )
         
     }
@@ -4171,7 +4186,14 @@ async function cacheBranchList(){
                         
                         if ( remoteBranchShortName.startsWith(branchName) ){
                             let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
-                            cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                            
+                            //cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                            cachedBranchList.branches[remoteBranchLongName] =
+                                {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true};
+                            
+                            if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
+                                cachedBranchList.all.push(remoteBranchLongName);
+                            }
                         }
                     }
              
