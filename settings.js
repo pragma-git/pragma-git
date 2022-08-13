@@ -292,7 +292,7 @@ async function _callback( name, event){
             let folder = document.getElementById('forkFolder').value;  
             let URL = document.getElementById('urlTofork').value; 
             
-            // Make a clone
+            // Make a clone from fork-URL
             document.getElementById('forkStatus').innerHTML = 'Fork in progress ';
             const dummy = await gitClone( folder, URL);
             document.getElementById('forkStatus').innerHTML = '';
@@ -303,10 +303,24 @@ async function _callback( name, event){
             let topFolder = folder + pathsep + repoName;
             topFolder = topFolder.replace(/[\\\/]$/, '')
     
-            // Store forkedURL
-            state.repos[id].forkedFromURL = URL;
+            // Store forkedURL            
+            try{
+                const commands = [ 'remote', 'add','upstream', URL];
+                await simpleGitLog( state.repos[id].localFolder).raw(  commands, onSetRemoteUrl);
+                function onSetRemoteUrl(err, result ){
+                    console.log(result);
+                    console.log(err) ;
+                };
+                
+                // Set if change didn't cause error (doesn't matter if URL works)
+                state.repos[id].forkedFromURL = URL;
+            }catch(err){
+                console.log('Repository store fork-URL failed');
+                console.log(err);
+            } 
+            
                
-            // Remove remote origin (make it a fork)
+            // Remove remote origin (makes it a fork -- remote/origin has to be defined manually)
             await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
             function onDeleteRemoteUrl(err, checkResult) { }
                 
