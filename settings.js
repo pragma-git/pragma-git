@@ -488,6 +488,28 @@ async function _callback( name, event){
         }        
         case 'newBranchNameKeyUp': {
 
+            break;   
+        } 
+        case 'newRemoteRepoButton': {
+            
+            remoteRepos.fetch.names.push('');
+            remoteRepos.fetch.URLs.push('');
+            
+            remoteRepos.fetch.pos = remoteRepos.fetch.names.length;
+            
+            updateRemoteRepos(); // Displays current data in GUI
+            break;   
+        }  
+        case 'setRemoteRepoButton': {
+
+            break;   
+        } 
+        case 'forgetRemoteRepoButton': {
+
+            break;   
+        } 
+        case 'newBranchNameKeyUp': {
+
             document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)
             break;   
         }            
@@ -1155,9 +1177,6 @@ async function injectIntoSettingsJs(document) {
 // Remote repos functionality
 function getRemoteRepoInfo(){ // Reads data for current repo
     
-    //remoteRepos.fetch.names = ['origin', 'upstream', 'jan', 'test'];
-    //remoteRepos.fetch.URLs = ['https://origin.com','https://upstream.com', 'https://jan.com', 'https://test.com'];
-    
     remoteRepos.fetch.names = opener.cachedBranchList.remoteRepos.fetch.names;
     remoteRepos.fetch.URLs  = opener.cachedBranchList.remoteRepos.fetch.URLs;
     
@@ -1180,6 +1199,10 @@ function getRemoteRepoInfo(){ // Reads data for current repo
    
 }
 function updateRemoteRepos(){ // Displays current data in GUI
+    
+        
+    // Calculate max (using fetch)
+    remoteRepos.fetch.max = remoteRepos.fetch.names.length;  // Default, if only remotes/origin.  Other remotes such as upstream will be > 1
 
     // Position values
     document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos;

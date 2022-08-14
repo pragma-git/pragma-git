@@ -4224,9 +4224,6 @@ async function cacheBranchList(){
                             
                             if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
                                 cachedBranchList.all.push(remoteBranchLongName);
-                                
-                                cachedBranchList.remoteRepos.fetch.names.push( remoteBranchLongName );
-                                cachedBranchList.remoteRepos.fetch.URLs.push( remoteBranchLongName );
                             }
                         }
                     }
