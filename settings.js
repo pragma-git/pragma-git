@@ -214,7 +214,7 @@ async function _callback( name, event){
             console.log(state.repos[ state.repoNumber].hiddenBranches);
             
             // Update cached branch list
-            opener.cacheBranchList();
+            await opener.cacheBranchList();
                 
             break;
         }
@@ -423,6 +423,8 @@ async function _callback( name, event){
 
                 
                 
+                // Update cached branch list
+                await opener.cacheBranchList();                
                                 
                 // Update remote repos dialog
                 getRemoteRepoInfo();
@@ -444,9 +446,7 @@ async function _callback( name, event){
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
                 document.getElementById(id).checked=true
-                
-                // Update cached branch list
-                opener.cacheBranchList();
+
 
                 
                 // Update display of local author info (read from git)
@@ -861,18 +861,6 @@ async function closeWindow(){
     
  
 }
-function updateRemoteRepos(){
-
-    // Position values
-    document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos;
-    document.getElementById('remoteReposMax').innerText = remoteRepos.fetch.max;  
-    
-    // Text areas
-    let arrayIndex = remoteRepos.fetch.pos - 1;
-    document.getElementById('newRepoAliasTextarea').innerText = remoteRepos.fetch.names[ arrayIndex]; 
-    document.getElementById('additionalRemoteURL').innerText = remoteRepos.fetch.URLs[ arrayIndex];    
-
-}
 
 
 // Git
@@ -1163,14 +1151,48 @@ async function injectIntoSettingsJs(document) {
 
 };
 
-function getRemoteRepoInfo(){
+
+// Remote repos functionality
+function getRemoteRepoInfo(){ // Reads data for current repo
     
-    remoteRepos.fetch.names = ['origin', 'upstream', 'jan', 'test'];
-    remoteRepos.fetch.URLs = ['https://origin.com','https://upstream.com', 'https://jan.com', 'https://test.com'];
+    //remoteRepos.fetch.names = ['origin', 'upstream', 'jan', 'test'];
+    //remoteRepos.fetch.URLs = ['https://origin.com','https://upstream.com', 'https://jan.com', 'https://test.com'];
+    
+    remoteRepos.fetch.names = opener.cachedBranchList.remoteRepos.fetch.names;
+    remoteRepos.fetch.URLs  = opener.cachedBranchList.remoteRepos.fetch.URLs;
+    
+    remoteRepos.push.names  = opener.cachedBranchList.remoteRepos.push.names;
+    remoteRepos.push.URLs   = opener.cachedBranchList.remoteRepos.push.URLs;
+    
+    // Add fake origin if empty
+    if (remoteRepos.fetch.names.length == 0){
+        remoteRepos.fetch.names = ['origin'];
+        remoteRepos.fetch.URLs  = [''];
+    }
+    if (remoteRepos.push.names.length == 0){
+        remoteRepos.push.names = ['origin'];
+        remoteRepos.push.URLs  = [''];
+    }    
+    
+    // Calculate position (using fetch)
     remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
     remoteRepos.fetch.max = remoteRepos.fetch.names.length;  // Default, if only remotes/origin.  Other remotes such as upstream will be > 1
    
 }
+function updateRemoteRepos(){ // Displays current data in GUI
+
+    // Position values
+    document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos;
+    document.getElementById('remoteReposMax').innerText = remoteRepos.fetch.max;  
+    
+    // Text areas
+    let arrayIndex = remoteRepos.fetch.pos - 1;
+    document.getElementById('newRepoAliasTextarea').innerText = remoteRepos.fetch.names[ arrayIndex]; 
+    document.getElementById('additionalRemoteURL').innerText = remoteRepos.fetch.URLs[ arrayIndex];    
+
+}
+
+
 
 // Draw
 async function drawBranchTab(document){

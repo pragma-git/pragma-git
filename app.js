@@ -4129,9 +4129,20 @@ async function cacheBranchList(){
 
 }
     async function updateBranchListWithUpstream(){
+        // This function does two things
+        // 1) find remote repos
+        // 2) seacrhes for remote branches calling gitListUpstreams   
         
         let promises = [];
         let last = '';  // Used to avoid repeting promise for the same name
+        
+        cachedBranchList.remoteRepos = {};
+        cachedBranchList.remoteRepos.fetch = {};  // Start over
+        cachedBranchList.remoteRepos.fetch.names = []; 
+        cachedBranchList.remoteRepos.fetch.URLs = []; 
+        cachedBranchList.remoteRepos.push = {};  // Start over
+        cachedBranchList.remoteRepos.push.names = []; 
+        cachedBranchList.remoteRepos.push.URLs = []; 
         
         
         // Find remotes
@@ -4141,7 +4152,22 @@ async function cacheBranchList(){
                 
                 let rows = result.split('\n');
                 for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
+                    
+                    // Split 'test9	https://github.com/pragma-git/issue7715.git (push)'
                     let upstreamName = rows[j].split('\t')[0];
+                    let upstreamURL = rows[j].split('\t')[1].split(' ')[0];
+                    let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];
+                    
+                    // Store splitted in cachedBranchList.remoteRepos
+                    if ( upstreamFetchOrPull.includes('fetch') ){
+                        cachedBranchList.remoteRepos.fetch.names.push( upstreamName );
+                        cachedBranchList.remoteRepos.fetch.URLs.push( upstreamURL );
+                    }
+                    if ( upstreamFetchOrPull.includes('push') ){
+                        cachedBranchList.remoteRepos.push.names.push( upstreamName );
+                        cachedBranchList.remoteRepos.push.URLs.push( upstreamURL );
+                    }
+                    
                     
                     // Clean ahead flags
                     let newAllList = [];
@@ -4168,7 +4194,6 @@ async function cacheBranchList(){
         
     }
         async function gitListUpstreams(branchName){
-        ;
             
             let RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName + " 2>&1 ";
             RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName;
@@ -4199,6 +4224,9 @@ async function cacheBranchList(){
                             
                             if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
                                 cachedBranchList.all.push(remoteBranchLongName);
+                                
+                                cachedBranchList.remoteRepos.fetch.names.push( remoteBranchLongName );
+                                cachedBranchList.remoteRepos.fetch.URLs.push( remoteBranchLongName );
                             }
                         }
                     }
