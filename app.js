@@ -341,11 +341,11 @@ async function _callback( name, event){
         updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
         
                 
-        // Update repo in settings_win 
-        try{
-            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        }catch(err){ 
-        }
+        //// Update repo in settings_win 
+        //try{
+            //await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        //}catch(err){ 
+        //}
         
 
         // HISTORY kept if menu -- don't update until menu-item selected
@@ -1425,6 +1425,12 @@ async function _callback( name, event){
             
 			await updateGraphWindow();
 			await gitStashMap(state.repos[state.repoNumber].localFolder);
+        }
+        
+        // Update repo in settings_win (here, because not used when opening menu)
+        try{
+            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        }catch(err){ 
         }
         
         // Update remote info immediately

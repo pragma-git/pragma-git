@@ -21,6 +21,13 @@ var localState = global.localState;
 var win
 
 
+// Counter for remote repos dialog    
+var remoteRepos ={};  // Struct containing counter for GUI of remote repos
+remoteRepos.fetch = {};
+remoteRepos.push = {};  // Prepare for having different data in push
+
+
+
 // ---------
 // FUNCTIONS
 // ---------  
@@ -35,7 +42,7 @@ async function _callback( name, event){
     var localFolder = "";
     let textareaId, realId;
     let newUrl;
-    
+
     console.log('_callback = ' + name);
     
     { // Log callbacks
@@ -416,6 +423,12 @@ async function _callback( name, event){
 
                 
                 
+                                
+                // Update remote repos dialog
+                getRemoteRepoInfo();
+                updateRemoteRepos();
+                
+                                
                 drawBranchTab(document);
 
                 
@@ -434,7 +447,7 @@ async function _callback( name, event){
                 
                 // Update cached branch list
                 opener.cacheBranchList();
-                
+
                 
                 // Update display of local author info (read from git)
                 await updateLocalAuthorInfoView();
@@ -463,6 +476,7 @@ async function _callback( name, event){
                 if (fs.existsSync(ignoreFileName) ){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
+
          
 
                 
@@ -476,7 +490,12 @@ async function _callback( name, event){
 
             document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)
             break;   
-        }           
+        }            
+        case 'newRepoAliasKeyUp': {  // Typing name of new remote repo
+
+            document.getElementById('newRepoAliasTextarea').value = util.branchCharFilter( document.getElementById('newRepoAliasTextarea').value)
+            break;   
+        }        
         case 'addBranchButtonPressed': {
         
             console.log('addBranchButtonPressed');
@@ -842,6 +861,19 @@ async function closeWindow(){
     
  
 }
+function updateRemoteRepos(){
+
+    // Position values
+    document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos;
+    document.getElementById('remoteReposMax').innerText = remoteRepos.fetch.max;  
+    
+    // Text areas
+    let arrayIndex = remoteRepos.fetch.pos - 1;
+    document.getElementById('newRepoAliasTextarea').innerText = remoteRepos.fetch.names[ arrayIndex]; 
+    document.getElementById('additionalRemoteURL').innerText = remoteRepos.fetch.URLs[ arrayIndex];    
+
+}
+
 
 // Git
 async function gitClone( folderName, repoURL){
@@ -1084,7 +1116,6 @@ async function injectIntoSettingsJs(document) {
     
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
     _callback('repoRadiobuttonChanged', {id: state.repoNumber});
-    //_callback('repoRadiobuttonChanged', {id: state.repoNumber, checked: true});
     
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
@@ -1131,6 +1162,15 @@ async function injectIntoSettingsJs(document) {
 
 
 };
+
+function getRemoteRepoInfo(){
+    
+    remoteRepos.fetch.names = ['origin', 'upstream', 'jan', 'test'];
+    remoteRepos.fetch.URLs = ['https://origin.com','https://upstream.com', 'https://jan.com', 'https://test.com'];
+    remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
+    remoteRepos.fetch.max = remoteRepos.fetch.names.length;  // Default, if only remotes/origin.  Other remotes such as upstream will be > 1
+   
+}
 
 // Draw
 async function drawBranchTab(document){
