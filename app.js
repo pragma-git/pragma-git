@@ -4120,7 +4120,7 @@ async function cacheBranchList(){
 
     try{
         cachedBranchList = await gitBranchList();
-        await updateBranchListWithUpstream();
+        await updateBranchListWithUpstream();  
         
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
@@ -4131,7 +4131,7 @@ async function cacheBranchList(){
     async function updateBranchListWithUpstream(){
         // This function does two things
         // 1) find remote repos
-        // 2) seacrhes for remote branches calling gitListUpstreams   
+        // 2) searches for remote branches needing fetching, calling gitListUpstreams   
         
         let promises = [];
         let last = '';  // Used to avoid repeting promise for the same name
@@ -4178,7 +4178,7 @@ async function cacheBranchList(){
                     
                     // Only add promise if a new upstream
                     if ( upstreamName !== last){
-                        promises.push( gitListUpstreams( upstreamName ) );  // Add promise
+                        promises.push( gitListUpstreamsNeedingFetch( upstreamName ) );  // Add promise
                     }
                     last = upstreamName;
                 }
@@ -4193,7 +4193,8 @@ async function cacheBranchList(){
         await Promise.all( promises )
         
     }
-        async function gitListUpstreams(branchName){
+        async function gitListUpstreamsNeedingFetch(branchName){
+            // Sets upstreamAhead flag
             
             let RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName + " 2>&1 ";
             RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName;
@@ -4201,7 +4202,7 @@ async function cacheBranchList(){
             let child = await exec( RUN , 
                 (error, stdout, stderr) => { 
         
-                    // Typical response (or totally empty) :
+                    // Typical response (or totally empty if fetch is not needed) :
                     //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
                             //276f6e7..1c89d32  main       -> upstream/main
                     //`
