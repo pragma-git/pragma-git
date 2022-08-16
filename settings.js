@@ -1272,17 +1272,16 @@ async function injectIntoSettingsJs(document) {
 // Remote repos functionality
 function getRemoteRepoInfo() { // Reads data for current repo
 
-    remoteRepos.fetch.names = opener.cachedBranchList.remoteRepos.fetch.names;
-    remoteRepos.fetch.URLs  = opener.cachedBranchList.remoteRepos.fetch.URLs;
-    
-    remoteRepos.push.names  = opener.cachedBranchList.remoteRepos.push.names;
-    remoteRepos.push.URLs   = opener.cachedBranchList.remoteRepos.push.URLs;
-    
+    // Read and put 'origin' first
     let  input = { names: opener.cachedBranchList.remoteRepos.fetch.names, URLs: opener.cachedBranchList.remoteRepos.fetch.URLs } ;
     setOriginFirst( input );
     remoteRepos.fetch.names = input['names'];
     remoteRepos.fetch.URLs  = input['URLs'];
     
+    input = { names: opener.cachedBranchList.remoteRepos.push.names, URLs: opener.cachedBranchList.remoteRepos.push.URLs } ;
+    input = setOriginFirst( input );
+    remoteRepos.push.names = input['names'];
+    remoteRepos.push.URLs  = input['URLs'];   
     
     // Add fake origin if empty
     if (remoteRepos.fetch.names.length == 0){
@@ -1320,7 +1319,7 @@ function getRemoteRepoInfo() { // Reads data for current repo
         input['URLs'] = [originURL].concat(URLs);
         
         
-        
+        return input
     }
     
    
