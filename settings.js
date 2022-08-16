@@ -504,11 +504,26 @@ async function _callback( name, event){
         }  
         case 'setRemoteRepoButton': {
             
+            
+            let localFolder3 = state.repos[ state.repoNumber].localFolder; 
+            
             let alias =  document.getElementById('newRepoAliasTextarea').value.trim();
             let newUrl = document.getElementById('additionalRemoteURL').value.trim();
-
+            
             
             let index = remoteRepos.fetch.pos - 1;
+            let oldAlias = remoteRepos.fetch.names[index];
+            
+            
+            // If changed alias, then remove the old before creating the new one
+            if ( alias !== oldAlias ){
+                
+                // Remove remote origin 
+                await simpleGit(localFolder3).removeRemote(oldAlias,onDeleteRemoteUrl);
+                function onDeleteRemoteUrl(err, result) { console.warn(err);console.log(result)}
+            }
+
+            // Update store
             remoteRepos.fetch.names[index] = alias;
             remoteRepos.fetch.URLs[index] = newUrl;
             remoteRepos.push.names[index] = alias;
@@ -517,7 +532,6 @@ async function _callback( name, event){
             
             // First attempt : Set remote url
             
-            let localFolder3 = state.repos[ state.repoNumber].localFolder; 
 
             let commands = [ 'remote', 'set-url',alias, newUrl];
             try{
@@ -527,12 +541,10 @@ async function _callback( name, event){
                 if (newUrl.includes('://')){
                     await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
-                        console.log(result);
-                        console.log(err) ;
                     };
                 }else{
                         
-                    // Remove remote origin (make it a fork)
+                    // Remove remote origin 
                     await simpleGit(localFolder3).removeRemote(alias,onDeleteRemoteUrl);
                     function onDeleteRemoteUrl(err, result) { console.warn(err);console.log(result)}
                 }
@@ -831,7 +843,6 @@ async function testURL(textareaId, event){
     
     document.getElementById(textareaId).classList.add('grey');  // Make grey until known if success or fail
     
-    let repoId = textareaId - 10000;
     let remoteURL
             
     // Test if remote URL works
@@ -839,7 +850,6 @@ async function testURL(textareaId, event){
             remoteURL = document.getElementById(textareaId).value;
         
             console.log('textareaId = ' + textareaId);
-            console.log('TESTURL ID = ' + repoId);
             console.log('remoteURL = ' + remoteURL);
     
              
@@ -856,8 +866,6 @@ async function testURL(textareaId, event){
             }
 
             function onListRemote(err, result ){
-                console.log('onListRemote');
-                console.log(err);
                 outputColor = 'green'
                 if (result == undefined){
                     outputColor = 'red'
@@ -870,7 +878,6 @@ async function testURL(textareaId, event){
         outputColor = 'red'
         document.getElementById(textareaId).classList.add('red');
         console.log('Repository test failed ' + remoteURL);
-        console.log(err);
     }
                 
     // Set color        
@@ -1263,13 +1270,19 @@ async function injectIntoSettingsJs(document) {
 
 
 // Remote repos functionality
-function getRemoteRepoInfo(){ // Reads data for current repo
-    
+function getRemoteRepoInfo() { // Reads data for current repo
+
     remoteRepos.fetch.names = opener.cachedBranchList.remoteRepos.fetch.names;
     remoteRepos.fetch.URLs  = opener.cachedBranchList.remoteRepos.fetch.URLs;
     
     remoteRepos.push.names  = opener.cachedBranchList.remoteRepos.push.names;
     remoteRepos.push.URLs   = opener.cachedBranchList.remoteRepos.push.URLs;
+    
+    let  input = { names: opener.cachedBranchList.remoteRepos.fetch.names, URLs: opener.cachedBranchList.remoteRepos.fetch.URLs } ;
+    setOriginFirst( input );
+    remoteRepos.fetch.names = input['names'];
+    remoteRepos.fetch.URLs  = input['URLs'];
+    
     
     // Add fake origin if empty
     if (remoteRepos.fetch.names.length == 0){
@@ -1280,9 +1293,36 @@ function getRemoteRepoInfo(){ // Reads data for current repo
         remoteRepos.push.names = ['origin'];
         remoteRepos.push.URLs  = [''];
     }    
+
     
     // Calculate position (using fetch)
     remoteRepos.fetch.max = remoteRepos.fetch.names.length;  
+    
+    
+        
+    // Internal function
+    function setOriginFirst( input){
+        let names = input[ 'names'];
+        let URLs = input[ 'URLs'];
+        
+        if ( !names.includes('origin') ) {
+            return
+        }
+        
+        let originIndex = names.indexOf('origin');
+        let originURL = URLs[originIndex];  // Store to use later
+        
+        names.splice(originIndex, 1);
+        URLs.splice(originIndex, 1);
+        
+        // Set new values in returned variables
+        input['names'] = ['origin'].concat(names);
+        input['URLs'] = [originURL].concat(URLs);
+        
+        
+        
+    }
+    
    
 }
 function updateRemoteRepos(){ // Displays current data in GUI
