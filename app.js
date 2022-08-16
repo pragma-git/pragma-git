@@ -292,8 +292,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
+        var cachedRemoteOrigins = {};  
+        cachedRemoteOrigins.names = [];
+        cachedRemoteOrigins.URLs = [];
+        cachedRemoteOrigins.folders= [];
 
-    
+            
+  // Cache remote urls
+  cacheRemoteOrigins();
     
 // ---------
 // FUNCTIONS 
@@ -4233,6 +4239,57 @@ async function cacheBranchList(){
             );  // End exec
             
         }
+
+async function cacheRemoteOrigins(){
+    
+    let promises = [];
+    var newCachedRemoteOrigins = {};
+    cachedRemoteOrigins.names = new Array(state.repos.length).fill(null);
+    cachedRemoteOrigins.URLs = new Array(state.repos.length).fill(null);
+    cachedRemoteOrigins.folders = new Array(state.repos.length).fill(null);
+    
+    for (var i = 0; i < state.repos.length; ++i) {
+        promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); // Add promise
+    }
+    
+    await Promise.all( promises )
+    
+    
+    
+    async function getRemoteOrigin( repoNumber, folder){
+        
+        await simpleGitLog( folder ).remote( [ '-v'], onRemote);
+        function onRemote(err, result) {
+            
+            let rows = result.split('\n');
+            
+            for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
+                
+                // Split 'test9	https://github.com/pragma-git/issue7715.git (push)'
+                let upstreamName = rows[j].split('\t')[0];
+                let upstreamURL = rows[j].split('\t')[1].split(' ')[0];
+                let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];
+
+                // Only store if remote origin
+                if ( upstreamName == 'origin'){       
+                    cachedRemoteOrigins.names[repoNumber] = upstreamName;
+                    cachedRemoteOrigins.URLs[repoNumber] = upstreamURL;
+                    cachedRemoteOrigins.folders[repoNumber] = folder;
+                    
+                    state.repos[repoNumber].remoteURL = upstreamURL;
+                    
+                    console.warn(repoNumber);
+
+                    return
+                }
+            }
+            
+        };
+ 
+    }
+
+}
+
     
 function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
         // menu is a nw.Menu
@@ -5666,7 +5723,7 @@ function loadSettings(settingsFile){
                     
                     // LocalFolder and URLs
                     state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
-                    state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' );
+                    //state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
                     state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );
                     
                     // Local author info
