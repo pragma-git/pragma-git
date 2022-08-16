@@ -1330,9 +1330,14 @@ function updateRemoteRepos(){ // Displays current data in GUI
     // Calculate max (using fetch)
     remoteRepos.fetch.max = remoteRepos.fetch.names.length;  // Default, if only remotes/origin.  Other remotes such as upstream will be > 1
 
-    // Position values
+    // Position values   
+    if ( remoteRepos.fetch.pos > remoteRepos.fetch.names.length ){
+        remoteRepos.fetch.pos = 1;
+        remoteRepos.fetch.max = remoteRepos.fetch.names.length;
+    }
     document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos;
     document.getElementById('remoteReposMax').innerText = remoteRepos.fetch.max;  
+
     
     // Text areas
     let arrayIndex = remoteRepos.fetch.pos - 1;
