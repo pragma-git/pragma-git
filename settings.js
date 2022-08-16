@@ -1374,6 +1374,16 @@ function updateRemoteRepos(){ // Displays current data in GUI
     document.getElementById('additionalRemoteURL').classList.remove('green');
     document.getElementById('additionalRemoteURL').classList.remove('grey');
     document.getElementById('additionalRemoteURL').classList.remove('red');
+    
+    // Show / hide auto-push buttons (only show for remote origin)
+    if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
+        document.getElementById('allowToPushDiv').style.display = 'block';
+        document.getElementById('allowToPushDiv').style.visibility = 'visible';
+    }else{
+        document.getElementById('allowToPushDiv').style.display = 'none';
+        document.getElementById('allowToPushDiv').style.visibility = 'none';
+    }
+        
 }
 
 

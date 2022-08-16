@@ -341,7 +341,7 @@
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
                         <th class="localFolder">Local folder</th>
-                        <th class="remoteURL">Remote repository</th>
+                        <th class="remoteURL">Remote repository ("origin")</th>
                         <th class="testURL"  style="text-align: center">Remote</th>
                         <th class="repoAction"  style="text-align: center">Action</th>
                     </tr></thead>
@@ -618,29 +618,29 @@
 
        
                          <!--  Allow push to remote -->
-                        <input type="checkbox" id="allowPushToRemote" 
-                            onchange="_callback('localCheckboxChanged',this)
-                                        if (this.checked){
-                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
-                                        }else{
-                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                                        } 
-                            " 
-                            >
-                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
-
-
-                                                
-      
-                         <!--  Auto-push to remote -->
-                        <div id = 'autoPushDiv'>
-                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
-                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
-                        
-
-                        
-                        
+                        <div id="allowToPushDiv">
+                            <div id="autoPushDiv">
+                                <input type="checkbox" id="allowPushToRemote" 
+                                    onchange="_callback('localCheckboxChanged',this)
+                                                if (this.checked){
+                                                    document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                                }else{
+                                                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                                                } 
+                                    " 
+                                    >
+                                <label for="autoPushDiv"> Allow <code>git push</code>. Disable if you don't have write access</label><br>
+                            </div>
+                                                    
+          
+                             <!--  Auto-push to remote -->
+                            <div id = 'autoPushDiv'>
+                                <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
+                                <label for="autoPushToRemote"> Auto-push to remote, when Store-button clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+        
+                            </div>
                         </div>
+   
     
                                               
                         <hr>
