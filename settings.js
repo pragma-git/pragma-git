@@ -514,7 +514,12 @@ async function _callback( name, event){
             let alias =  document.getElementById('newRepoAliasTextarea').value.trim();
             let newUrl = document.getElementById('additionalRemoteURL').value.trim();
             
-            
+              
+            // Keep 'origin' alias name fixed
+            if ( ( oldAlias == 'origin') &&  ( alias !== oldAlias ) && ( remoteRepos.fetch.pos == 1) ){
+                document.getElementById('newRepoAliasTextarea').value = 'origin';
+                alias = 'origin'; // Not allowed to change 'origin' alias name
+            }          
             
 
             // Remove remote  
@@ -526,14 +531,7 @@ async function _callback( name, event){
             }
             
                         
-            
-            //// If changed alias, then remove the old before creating the new one
-            //if ( alias !== oldAlias ){
-                
-                //// Remove remote origin 
-                //await simpleGit(localFolder3).removeRemote(oldAlias,onDeleteRemoteUrl);
-                //function onDeleteRemoteUrl(err, result) { console.warn(err);console.log(result)}
-            //}
+
 
 
             // Update store
