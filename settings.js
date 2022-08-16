@@ -583,6 +583,14 @@ async function _callback( name, event){
             updateRemoteRepos();
             
             testURL('additionalRemoteURL', event);
+            
+            // Update the remote in the table if needed
+            if ( alias == 'origin' ){
+                let id = 10000 + state.repoNumber;
+                document.getElementById(id).value = newUrl;
+                testURL( id, event);
+            }
+            
 
             break;   
         } 
@@ -805,6 +813,15 @@ async function _callback( name, event){
                           
             }
             testURL(textareaId, event);
+            
+            // Update Remote tab 
+            if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
+                await opener.cacheBranchList(); 
+                getRemoteRepoInfo();
+                updateRemoteRepos();
+                
+                document.getElementById('additionalRemoteURL') = newUrl;
+            }
 
             break;
         }
