@@ -1305,7 +1305,7 @@ function getRemoteRepoInfo() { // Reads data for current repo
         let URLs = input[ 'URLs'];
         
         if ( !names.includes('origin') ) {
-            return
+            return input;
         }
         
         let originIndex = names.indexOf('origin');
