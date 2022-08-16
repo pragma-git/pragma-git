@@ -1375,11 +1375,21 @@ function updateRemoteRepos(){ // Displays current data in GUI
     
     // Show / hide auto-push buttons (only show for remote origin)
     if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
+        // Auto-push checkboxes
         document.getElementById('allowToPushDiv').style.display = 'block';
         document.getElementById('allowToPushDiv').style.visibility = 'visible';
+        
+        // Readonly origin
+        document.getElementById('newRepoAliasTextarea').readOnly = true;
+        document.getElementById('newRepoAliasTextarea').classList.add('readonly')
     }else{
+        // Auto-push checkboxes
         document.getElementById('allowToPushDiv').style.display = 'none';
         document.getElementById('allowToPushDiv').style.visibility = 'none';
+        
+        // Readwrite remote (non-origin)
+        document.getElementById('newRepoAliasTextarea').readOnly = false;
+        document.getElementById('newRepoAliasTextarea').classList.remove('readonly')
     }
         
 }

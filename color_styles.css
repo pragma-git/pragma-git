@@ -134,6 +134,10 @@
         border-width: thin;
         background-color: var(--input-background);
     }
+    
+    .readonly{
+        filter: opacity(0.5);
+    }
 
 
 
