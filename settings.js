@@ -337,6 +337,12 @@ async function _callback( name, event){
             
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()
+            
+            // Update store
+            remoteRepos.fetch.names[index] = alias;
+            remoteRepos.fetch.URLs[index] = newUrl;
+            remoteRepos.push.names[index] = alias;
+            remoteRepos.push.URLs[index] = newUrl;
 
             break;
         } 
