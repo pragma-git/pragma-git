@@ -4408,12 +4408,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( isSubMenuItem ){
                     //console.log( `Branch : ${firstPart}/${secondPart}`);
                    
-                    // Special case for remote origin
+                    // Special case for remote origin : Make origin look like a local branch
                     if (isRemoteBranch && isOrigin ){    
                         myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
                     }
                     
-                    // Special case if not remote origin, but other remote
+                    // Special case if not remote but not origin : Make submenu-name 
                     if (isRemoteBranch && !isOrigin ){
                         // remotes/upstream/test
                         // firstPart = remotes
