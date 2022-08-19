@@ -4321,7 +4321,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
             
             let isRemoteUpstreamAhead = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
-            const UPSTREAM_AHEAD_MARKER = '!  ';
+            //const UPSTREAM_AHEAD_MARKER = '!  ';
+            const UPSTREAM_AHEAD_MARKER = '';
             
             for (var i = 0; i < branchNames.length; ++i) {
                 
@@ -4340,7 +4341,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let showRemote = branchList.branches[ branchNames[i] ].show; 
                 
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
-                
+                         
                 // 1) Branch menu :
                 //     only show remote/origin  and   locals (skip remotes/xxx except origin)
                 //
@@ -4369,14 +4370,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( isRemoteBranch && ( callbackName === "clickedCherryPickContextualMenu")  ){
                     continue
                 }
-                 
-                 
-                // Add finished submenu to menu
-                if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
-                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
-                    submenuInProgress = false;
-                    submenu = new gui.Menu(); // Prepare an empty submenu for future use
-                }                   
+                         
                        
                                
                 // Skip hidden menus  
@@ -4419,6 +4413,29 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
                     }
                     
+                    // Special case if not remote origin, but other remote
+                    if (isRemoteBranch && !isOrigin ){
+                        // remotes/upstream/test
+                        // firstPart = remotes
+                        // secondPart = upstream/test
+                        // =>
+                        // firstPart = remotes/upstream
+                        // secondPart = test
+                        beginningOfSecondPart = secondPart.substring( 0, secondPart.indexOf('/') ); // = 'upstream'
+                        secondPart =  secondPart.substring( secondPart.indexOf('/') +1);            // = 'test'
+                        firstPart = firstPart + '/' + beginningOfSecondPart; // = 'remotes/upstream'
+                    }
+                    
+ 
+                 
+                    // Add finished submenu to menu
+                    if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
+                        menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                        submenuInProgress = false;
+                        submenu = new gui.Menu(); // Prepare an empty submenu for future use
+                    }  
+                    
+                                   
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
 
@@ -4431,9 +4448,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
-                        if (isRemoteBranch && showRemote) {
+                        if (isRemoteBranch && isOrigin && showRemote) {
                             remoteSubmenu.append( tempSubMenu); 
                             submenuInProgress = false;
+                        //}else if (isRemoteBranch && !isOrigin && showRemote)  {
+                            //submenu.append( tempSubMenu); 
+                            //submenuInProgress = false;
                         }else {
                             submenu.append( tempSubMenu); 
                             submenuInProgress = true;
@@ -4446,6 +4466,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
  
                     
                 }
+
                 cachedFirstPart = firstPart;
   
             } // End - branch list loop 
