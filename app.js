@@ -1099,14 +1099,19 @@ async function _callback( name, event){
             case  'Delete' : {
                 // Move out of "detached Head" (losing track of it)
                 branchClicked(false);
-                
                 cacheBranchList();
-                
                 break;
             }    
+            case  'Merge' : {
+                break;
+            }     
+            case  'Temp Branch' : {
+                document.getElementById('detachedHeadDialog').close();document.getElementById('branchNameInputDialog').showModal();
+                break;
+            }           
             case  'Cancel' : {
                 break;
-            }          
+            }                
             
         }
         break; 
@@ -1259,7 +1264,107 @@ async function _callback( name, event){
         document.getElementById('newVersionDetectedInputDialog').close();
         break;  
       }
+      case 'clicked-detachedMergeSelectBranch-button': {
+          
+          
+        cachedBranchMenu = new gui.Menu(); 
+        
+        let currentBranch = cachedBranchList.current;
+        
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, cachedBranchList, 'clickedDetachedMergeSelectBranchContextualMenu'); 
 
+        // Add context menu title-row
+        cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+        cachedBranchMenu.insert(new gui.MenuItem({ label: 'Copy this commit to branch : ', enabled : false }), 0);
+        
+        // Popup as context menu
+        let pos = document.getElementById('mergeWithDetachedBranchLink').getBoundingClientRect();
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+          
+        break;
+      }
+      case 'clickedDetachedMergeSelectBranchContextualMenu': {
+        document.getElementById('mergeWithBranch').checked = true; // Select radio-button
+        
+        return
+        
+        // TODO : Make this work with Merge
+                
+        // TODO : 
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        // 2) git cherry-pick --no-commit HASH
+        // 3) Jump to HEAD, and suggest commit message
+          
+        //
+        // 1) switch to selected branch (catch and make error dialog if not commited)
+        //
+                  
+            // Determine status of local repository
+            let status_data;  
+            try{
+              status_data = await gitStatus();
+            }catch(err){
+              console.log('Error in unComittedFiles,  calling  _mainLoop()');
+              console.log(err);
+            }
+            
+            // Alert and bail out if uncommited files
+            let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+            if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+              // Tell user to commit first (if that setting is enabled)
+              displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
+              break;
+            }
+            
+            // Remember current state
+            history = await gitHistory();
+            let oldMessage = history[ localState.historyNumber ].message; // Get old message before jumping to HEAD
+            let oldBranch = cachedBranchList.current;
+            
+            
+            // Switch branch
+            gitSwitchBranch( event.selectedBranch);
+          
+        //
+        // 2) git cherry-pick --no-commit HASH
+        //
+            let hash = localState.historyHash;
+            console.log('Hash to revert = ' + hash);
+            
+            pragmaLog('   cherry pick current commit = ' + oldMessage + ' (hash = ' + hash + ')' );
+            pragmaLog('   into selected branch       = ' + event.selectedBranch );
+            
+            // Get history
+            var history = await gitHistory();
+            
+            await simpleGitLog( state.repos[state.repoNumber].localFolder)
+                .raw(['cherry-pick', '--no-commit', hash], onCherryPick);
+                
+            function onCherryPick(err, result ){ 
+                console.log(result);
+                 pragmaLog('   result                     = ' + result );
+                 pragmaLog('   err                        = ' + err );
+            }                
+          
+        //
+        // 3) Jump to HEAD, and suggest commit message
+        //               
+ 
+            // Jump to HEAD
+            if ( getMode() === 'HISTORY'){
+                resetHistoryPointer(); 
+                await upArrowClicked(); // Get out of history
+            }
+            
+            // Write suggested message
+            await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+            let newMessage = 'Cherry-pick "' + oldMessage + '" (from branch "' + oldBranch + '")';
+            pragmaLog('   suggest message            = ' + newMessage );
+            writeTextOutput( { value: newMessage } );   
+          
+        break;
+      }
+ 
       // Help
       case 'help': {
            
@@ -4291,7 +4396,7 @@ async function cacheRemoteOrigins(){
 }
 
     
-function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
+function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked, mergeClicked, clickedCherryPick
         // menu is a nw.Menu
         // currentBranch is a string
         // branchList is a struct where branchList.all is an array of branch names
@@ -4351,6 +4456,9 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 //
                 // 3) Cherrypick menu : 
                 //     only show locals (nothing starting with remotes)
+                //
+                // 4) Merge detached head menu : 
+                //     only show locals (nothing starting with remotes)
                 
                 
                 // 1) Branch menu
@@ -4369,7 +4477,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( isRemoteBranch && ( callbackName === "clickedCherryPickContextualMenu")  ){
                     continue
                 }
-                 
+                
+                // 4) Merge detached head menu
+                if ( isRemoteBranch && ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu")  ){
+                    continue
+                }                
+                
                  
                 // Add finished submenu to menu
                 if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
