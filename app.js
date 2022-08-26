@@ -1097,9 +1097,8 @@ async function _callback( name, event){
         
         switch (event) {
             case  'Delete' : {
-                // Move out of "detached Head" (losing track of it)
-                branchClicked(false);
-                cacheBranchList();
+                // Move back from "detached Head" (losing track of it -- can be found with git reflog)
+                gitSwitchBranch('-');  // Back to latest
                 break;
             }    
             case  'Merge' : {
