@@ -674,6 +674,8 @@
     <!-- Detached head dialog -->   
   
     <dialog id="detachedHeadDialog"  class="error">  
+        
+        <!-- Warning text -->  
         <b>WARNING -- detached HEAD !</b><br>
             You've created work in an old revision. <br>
 
@@ -682,10 +684,14 @@
             Temp branch : keep work in a temporary branch
         </label>
 
+        <!-- Radio-buttons -->  
         <label for="mergeWithBranch">
             <input type="radio" id="mergeWithBranch" name="detachedBranchRadiobuttonGroup" value="Merge">
-            Merge : keep work and merge with existing branch ( 
-            <a id="mergeWithDetachedBranchLink" onclick="_callback('clicked-detachedMergeSelectBranch-button')" href="javascript:void(0);">select branch</a> )
+            Merge : keep work and merge with 
+            <select name="cars" id="mergeWithDetachedBranchLink" onclick="_callback('clicked-detachedMergeSelectBranch-button')" onmousedown="(function(e){ e.preventDefault(); })(event, this)">
+                <option id="detachedBranchDialogMergeWith"  value="anything">select branch</option>
+            </select>
+            
         </label>
         
         <label for="deleteDetachedHead">
@@ -693,6 +699,7 @@
             Delete : drop work done after checkout of old revision
         </label>
 
+        <!-- OK / Cancel buttons-->  
         <br style = "line-height: 0.4em;">
         
         <button id="tempBranchDetachedDialog" value="Temp_Branch"
