@@ -1351,6 +1351,8 @@ async function _callback( name, event){
             }             
             
         }
+        
+        document.getElementById('detachedBranchDialogMergeWith').innerText = 'select branch';  // Set default text again (overwrite selected branch name in GUI)
         break; 
       } // end case 'detachedHeadDialog'       
       case 'clicked-detachedMergeSelectBranch-button': {
