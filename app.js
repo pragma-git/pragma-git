@@ -1091,119 +1091,6 @@ async function _callback( name, event){
         break;
 
       }    
-      case 'detachedHeadDialog': {
-        console.log('detachedHeadDialog -- returned ' + event);
-        pragmaLog('   clicked = ' + event );
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move back from "detached Head" (losing track of it -- can be found with git reflog)
-                gitSwitchBranch('-');  // Back to latest
-                break;
-            }    
-            case  'Temp Branch' : {
-                document.getElementById('detachedHeadDialog').close();
-                document.getElementById('branchNameInputDialog').showModal();
-                break;
-            }           
-            case  'Cancel' : {
-                break;
-            }        
-            case  'Merge' : { 
-                {// Merge functionality
-                    
-                    // TODO : Make this work with Merge
-                            
-                    // TODO : 
-                    // 1) switch to selected branch (catch and make error dialog if not commited)
-                    // 2) git merge --no-commit HASH
-                    // 3) Jump to HEAD, and suggest commit message
-                    
-                    
-                    // 0) Collect information
-                                        
-                        // Get hash of detached branch
-                        let hash;
-                        let oldMessage = 'unknown';
-                        await simpleGitLog( state.repos[state.repoNumber].localFolder).raw([ 'reflog', '--no-abbrev'], onReflog);
-                        function onReflog(err, result){
-                            console.log(result); 
-                            let firstRow = result.split('\n')[0];   // 0fdb48f HEAD@{0}: commit: created file new4
-                            hash = firstRow.split(' ')[0];          // hash = 0fdb48f
-                            oldMessage = firstRow.split(':')[2];    // oldMessage = 'created file new4
-                        }  
-                        console.log('Hash to revert = ' + hash);
-                    
-                      
-                    //
-                    // 1) switch to selected branch (catch and make error dialog if not commited)
-                    //
-                    
-                        let selectedBranch = document.getElementById('detachedBranchDialogMergeWith').innerText;
-                              
-                        // Determine status of local repository
-                        let status_data;  
-                        try{
-                          status_data = await gitStatus();
-                        }catch(err){
-                          console.log('Error in unComittedFiles,  calling  _mainLoop()');
-                          console.log(err);
-                        }
-                        
-                        // Alert and bail out if uncommited files
-                        let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
-                        if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
-                          // Tell user to commit first (if that setting is enabled)
-                          displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
-                          break;
-                        }
-      
-                        // Switch branch
-                        gitSwitchBranch( selectedBranch);
-                      
-                    //
-                    // 2) git merge --no-commit HASH
-                    //
-
-                        
-                        pragmaLog('   merge detached head = ' + ' (hash = ' + hash + ')' );
-                        pragmaLog('   into selected branch       = ' + selectedBranch );
-                        
-                        // Merge
-                        await simpleGitLog( state.repos[state.repoNumber].localFolder)
-                            .raw(['merge', '--no-commit', hash], onMerge);
-                            
-                        function onMerge(err, result ){ 
-                            console.log(result);
-                             pragmaLog('   result                     = ' + result );
-                             pragmaLog('   err                        = ' + err );
-                        }                
-                      
-                    //
-                    // 3) Jump to HEAD, and suggest commit message
-                    //               
-             
-                        // Jump to HEAD
-                        if ( getMode() === 'HISTORY'){
-                            resetHistoryPointer(); 
-                            await upArrowClicked(); // Get out of history
-                        }
-                        
-                        // Write suggested message
-                        await _setMode('CHANGED_FILES_TEXT_ENTERED');  
-                        let newMessage = 'Merge "' + oldMessage + '" (from branch detached branch with hash = "' + hash + '")';
-                        pragmaLog('   suggest message            = ' + newMessage );
-                        writeTextOutput( { value: newMessage } );   
-                      
-                
-                }
-
-                break;
-            }             
-            
-        }
-        break; 
-      } // end case 'detachedHeadDialog'  
       case 'initializeRepoOK' : {
           
         setStatusBar( 'Initializing git');
@@ -1352,10 +1239,124 @@ async function _callback( name, event){
         document.getElementById('newVersionDetectedInputDialog').close();
         break;  
       }
+
+      case 'detachedHeadDialog': {
+        console.log('detachedHeadDialog -- returned ' + event);
+        pragmaLog('   clicked = ' + event );
+        
+        switch (event) {
+            case  'Delete' : {
+                // Move back from "detached Head" (losing track of it -- can be found with git reflog)
+                gitSwitchBranch('-');  // Back to latest
+                break;
+            }    
+            case  'Temp Branch' : {
+                document.getElementById('detachedHeadDialog').close();
+                document.getElementById('branchNameInputDialog').showModal();
+                break;
+            }           
+            case  'Cancel' : {
+                break;
+            }        
+            case  'Merge' : { 
+                {// Merge functionality
+                    
+                    // TODO : Make this work with Merge
+                            
+                    // TODO : 
+                    // 1) switch to selected branch (catch and make error dialog if not commited)
+                    // 2) git merge --no-commit HASH
+                    // 3) Jump to HEAD, and suggest commit message
+                    
+                    
+                    // 0) Collect information
+                                        
+                        // Get hash of detached branch
+                        let hash;
+                        let oldMessage = 'unknown';
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder).raw([ 'reflog', '--no-abbrev'], onReflog);
+                        function onReflog(err, result){
+                            console.log(result); 
+                            let firstRow = result.split('\n')[0];   // 0fdb48f HEAD@{0}: commit: created file new4
+                            hash = firstRow.split(' ')[0];          // hash = 0fdb48f
+                            oldMessage = firstRow.split(':')[2];    // oldMessage = 'created file new4
+                        }  
+                        console.log('Hash to revert = ' + hash);
+                    
+                      
+                    //
+                    // 1) switch to selected branch (catch and make error dialog if not commited)
+                    //
+                    
+                        let selectedBranch = document.getElementById('detachedBranchDialogMergeWith').innerText;
+                              
+                        // Determine status of local repository
+                        let status_data;  
+                        try{
+                          status_data = await gitStatus();
+                        }catch(err){
+                          console.log('Error in unComittedFiles,  calling  _mainLoop()');
+                          console.log(err);
+                        }
+                        
+                        // Alert and bail out if uncommited files
+                        let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+                        if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+                          // Tell user to commit first (if that setting is enabled)
+                          displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
+                          break;
+                        }
+      
+                        // Switch branch
+                        gitSwitchBranch( selectedBranch);
+                      
+                    //
+                    // 2) git merge --no-commit HASH
+                    //
+
+                        
+                        pragmaLog('   merge detached head = ' + ' (hash = ' + hash + ')' );
+                        pragmaLog('   into selected branch       = ' + selectedBranch );
+                        
+                        // Merge
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder)
+                            .raw(['merge', '--no-commit', hash], onMerge);
+                            
+                        function onMerge(err, result ){ 
+                            console.log(result);
+                             pragmaLog('   result                     = ' + result );
+                             pragmaLog('   err                        = ' + err );
+                        }                
+                      
+                    //
+                    // 3) Jump to HEAD, and suggest commit message
+                    //               
+             
+                        // Jump to HEAD
+                        if ( getMode() === 'HISTORY'){
+                            resetHistoryPointer(); 
+                            await upArrowClicked(); // Get out of history
+                        }
+                        
+                        // Write suggested message
+                        await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+                        let newMessage = 'Merge "' + oldMessage + '" (from branch detached branch with hash = "' + hash + '")';
+                        pragmaLog('   suggest message            = ' + newMessage );
+                        writeTextOutput( { value: newMessage } );   
+                      
+                
+                }
+
+                break;
+            }             
+            
+        }
+        break; 
+      } // end case 'detachedHeadDialog'       
       case 'clicked-detachedMergeSelectBranch-button': {
           
           
-        cachedBranchMenu = new gui.Menu(); 
+        cachedBranchMenu = await new gui.Menu(); 
         
         let currentBranch = cachedBranchList.current;
         
@@ -1374,11 +1375,21 @@ async function _callback( name, event){
       case 'clickedDetachedMergeSelectBranchContextualMenu': {
         document.getElementById('mergeWithBranch').checked = true; // Select radio-button
         document.getElementById('detachedBranchDialogMergeWith').innerText = event.selectedBranch;
-
+        _callback('updateDetachedBranchDialog');  // Update state of OK button
         break;
       }
- 
-      // Help
+      case 'updateDetachedBranchDialog': {
+        // Disable if 'Merge Branch' is not selected
+        if ( ( document.querySelector('input[name=\'detachedBranchRadiobuttonGroup\']:checked').value == 'Merge') && (document.getElementById('detachedBranchDialogMergeWith').innerText == 'select branch') ) {
+            document.getElementById('detachedBranchDialogOK').disabled = true;
+        }else{
+            document.getElementById('detachedBranchDialogOK').disabled = false;
+        }
+
+        break;
+      } 
+
+      // Help      
       case 'help': {
            
         console.log('Help pressed');
@@ -4492,7 +4503,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 }
                 
                 // 4) Merge detached head menu
-                if ( isRemoteBranch && ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu")  ){
+                if ( ( isRemoteBranch && ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu") )
+                    || ( ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu") && isCurrentBranch ) ){
                     continue
                 }                
                 
