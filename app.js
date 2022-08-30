@@ -2953,14 +2953,14 @@ async function _setMode( inputModeName){
             newModeName = 'CONFLICT';
             if (currentMode ==  'CONFLICT') { return};
             setButtonText();// Set button
-            document.getElementById('store-button').disabled = true;
-            textOutput.value = "";
-            textOutput.placeholder = 
-                "There is a file conflict to resolve" + os.EOL + 
-                "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
-                "- Write a message, and press Store when done";    
-            textOutput.readOnly = true;
-            writeTextOutput(textOutput);
+            //document.getElementById('store-button').disabled = true;
+            //textOutput.value = "";
+            //textOutput.placeholder = 
+                //"There is a file conflict to resolve" + os.EOL + 
+                //"- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
+                //"- Write a message, and press Store when done";    
+            //textOutput.readOnly = true;
+            //writeTextOutput(textOutput);
             break;
         }
         
