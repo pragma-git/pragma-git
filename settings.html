@@ -341,7 +341,7 @@
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
                         <th class="localFolder">Local folder</th>
-                        <th class="remoteURL">Remote repository</th>
+                        <th class="remoteURL">Remote repository ("origin")</th>
                         <th class="testURL"  style="text-align: center">Remote</th>
                         <th class="repoAction"  style="text-align: center">Action</th>
                     </tr></thead>
@@ -559,29 +559,88 @@
                     <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 
-                        
-                        Add URL in "Remote repository" field, for selected repository above <sup>*</sup>  <br>
 
-                         <hr>
+                         <!--  Remotes handling dialog -->
+                        <div id="additionalRemotesDiv" style="display: block; visibility: visible;">   
+                           Remote repositories : &nbsp;&nbsp;&nbsp;
+                           
+                           
+                            <!-- remote dialog range buttons -->
+                            <div id="fileRange" style="display:block">
+                                <span id='remoteReposDown' style="cursor:pointer; zoom: 0.8;" 
+                                    onclick="
+                                        remoteRepos.fetch.pos = Math.max( 1, remoteRepos.fetch.pos - 1); 
+                                        updateRemoteRepos()
+                                        document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"
+                                > &#x25C0;</span> 
+                                
+                                <span id="remoteReposCurrentPos">1</span>  of <span id="remoteReposMax">1</span>
+                                
+                                <span id='remoteReposUp'   style="cursor:pointer; zoom: 0.8;" 
+                                    onclick="
+                                        remoteRepos.fetch.pos = Math.min( remoteRepos.fetch.max, remoteRepos.fetch.pos + 1); 
+                                        updateRemoteRepos();
+                                        document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"
+                                > &#x25B6;</span> 
+                 
+                            </div>
+                           
+                           
+                           <!-- remote dialog textareas-->
+                           
+                            <table class="toolTable">
+                                <tbody>
+      
+                                    <tr class="tool">
+                                        <td  style="width: 20%">
+                                            <textarea id="newRepoAliasTextarea" 
+                                                placeholder="repo alias" 
+                                                onkeyup="_callback('newRepoAliasKeyUp', this);"></textarea>
+                                        </td>
+                                        
+                                        <td style="width: 60%">
+                                            <textarea id="additionalRemoteURL" placeholder="URL for additional remote "></textarea>
+                                        </td>
+                                        
+                                        <td class="toolButtonField">
+                                            <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">New</button>
+                                            <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                            <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)">Remove</button>
+                                        </td>
+                                    </tr>
+
+                                    
+                                </tbody>
+                            </table>                    
+                        </div>
+                        
+                        
+
        
                          <!--  Allow push to remote -->
-                        <input type="checkbox" id="allowPushToRemote" 
-                            onchange="_callback('localCheckboxChanged',this)
-                                        if (this.checked){
-                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
-                                        }else{
-                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                                        } 
-                            " 
-                            >
-                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
-                            
-      
-                         <!--  Auto-push to remote -->
-                        <div id = 'autoPushDiv'>
-                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
-                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        <div id="allowToPushDiv">
+                            <div id="allowPushDiv">
+                                <input type="checkbox" id="allowPushToRemote" 
+                                    onchange="_callback('localCheckboxChanged',this)
+                                                if (this.checked){
+                                                    document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                                }else{
+                                                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                                                } 
+                                    " 
+                                    >
+                                <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access</label><br>
+                            </div>
+                                                    
+          
+                             <!--  Auto-push to remote -->
+                            <div id = 'autoPushDiv'>
+                                <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
+                                <label for="autoPushToRemote"> Auto-push to remote, when Store-button clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+        
+                            </div>
                         </div>
+   
     
                                               
                         <hr>
@@ -604,10 +663,7 @@
                         
                         Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
                         
-   
-                         
-  
-                          
+                      
                     </div>
                                         
                     

@@ -841,6 +841,10 @@ async function drawGraph( document, splitted, branchHistory, history){
                 if (decoration !== ''){
                     sortedLocalBranchList.forEach( 
                         (entry) => { 
+                            if ( entry.startsWith( 'remotes') ){
+                                entry = entry.substr(8);  // sortedLocalBranchList have long names -- remove 'remotes/'
+                            }
+                            
                             if (decoration.includes(entry)  ) {  
                                 branchName = entry;
                             }
@@ -1844,7 +1848,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                     let lane = lastOfSegment[i].x;      
                     columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
                     
-                    if (lane == 0) { // Block column until next parent   
+                    if ( (lane == 0) && ( parents[0] !== "") ){ // Block column until next parent   
                         columnOccupiedStateArray[ lane ] =  nodeMap.get( commit.parents[0] ).y;  
                     }
                     

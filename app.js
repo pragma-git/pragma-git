@@ -145,6 +145,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const path = require('path');
         const downloadsFolder = require('downloads-folder'); 
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
+        const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
         
         const simpleGit = require('simple-git');  // npm install simple-git
@@ -291,8 +292,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Cached objects
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
+        var cachedRemoteOrigins = {};  
+        cachedRemoteOrigins.names = [];
+        cachedRemoteOrigins.URLs = [];
+        cachedRemoteOrigins.folders= [];
 
-    
+            
+  // Cache remote urls
+  cacheRemoteOrigins();
     
 // ---------
 // FUNCTIONS 
@@ -340,11 +347,11 @@ async function _callback( name, event){
         updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
         
                 
-        // Update repo in settings_win 
-        try{
-            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        }catch(err){ 
-        }
+        //// Update repo in settings_win 
+        //try{
+            //await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        //}catch(err){ 
+        //}
         
 
         // HISTORY kept if menu -- don't update until menu-item selected
@@ -484,6 +491,8 @@ async function _callback( name, event){
         pragmaLog('   from selected branch = ' + event.selectedBranch );
         pragmaLog('   into current  branch = ' + event.currentBranch );
 
+
+        await gitFetch( event.selectedBranch); 
         await gitMerge( event.currentBranch, event.selectedBranch); 
         
         break;
@@ -1082,26 +1091,6 @@ async function _callback( name, event){
         break;
 
       }    
-      case 'detachedHeadDialog': {
-        console.log('detachedHeadDialog -- returned ' + event);
-        pragmaLog('   clicked = ' + event );
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move back from "detached Head" (losing track of it -- can be found with git reflog)
-                gitSwitchBranch('-');  // Back to latest
-                
-                cacheBranchList();
-                
-                break;
-            }    
-            case  'Cancel' : {
-                break;
-            }          
-            
-        }
-        break; 
-      } // end case 'detachedHeadDialog'  
       case 'initializeRepoOK' : {
           
         setStatusBar( 'Initializing git');
@@ -1251,7 +1240,156 @@ async function _callback( name, event){
         break;  
       }
 
-      // Help
+      case 'detachedHeadDialog': {
+        console.log('detachedHeadDialog -- returned ' + event);
+        pragmaLog('   clicked = ' + event );
+        
+        switch (event) {
+            case  'Delete' : {
+                // Move back from "detached Head" (losing track of it -- can be found with git reflog)
+                gitSwitchBranch('-');  // Back to latest
+                break;
+            }    
+            case  'Temp Branch' : {
+                document.getElementById('detachedHeadDialog').close();
+                document.getElementById('branchNameInputDialog').showModal();
+                break;
+            }           
+            case  'Cancel' : {
+                break;
+            }        
+            case  'Merge' : { 
+                {// Merge functionality
+                    
+                    // TODO : Make this work with Merge
+                            
+                    // TODO : 
+                    // 1) switch to selected branch (catch and make error dialog if not commited)
+                    // 2) git merge --no-commit HASH
+                    // 3) Jump to HEAD, and suggest commit message
+                    
+                    
+                    // 0) Collect information
+                                        
+                        // Get hash of detached branch
+                        let hash;
+                        let oldMessage = 'unknown';
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder).raw([ 'reflog', '--no-abbrev'], onReflog);
+                        function onReflog(err, result){
+                            console.log(result); 
+                            let firstRow = result.split('\n')[0];   // 0fdb48f HEAD@{0}: commit: created file new4
+                            hash = firstRow.split(' ')[0];          // hash = 0fdb48f
+                            oldMessage = firstRow.split(':')[2];    // oldMessage = 'created file new4
+                        }  
+                        console.log('Hash to revert = ' + hash);
+                    
+                      
+                    //
+                    // 1) switch to selected branch (catch and make error dialog if not commited)
+                    //
+                    
+                        let selectedBranch = document.getElementById('detachedBranchDialogMergeWith').innerText;
+                              
+                        // Determine status of local repository
+                        let status_data;  
+                        try{
+                          status_data = await gitStatus();
+                        }catch(err){
+                          console.log('Error in unComittedFiles,  calling  _mainLoop()');
+                          console.log(err);
+                        }
+                        
+                        // Alert and bail out if uncommited files
+                        let uncommitedFiles = status_data.changedFiles; // Determine if no files to commit
+                        if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+                          // Tell user to commit first (if that setting is enabled)
+                          displayAlert('Uncommitted files', 'Add description and Store, before changing branch', 'warning')
+                          break;
+                        }
+      
+                        // Switch branch
+                        gitSwitchBranch( selectedBranch);
+                      
+                    //
+                    // 2) git merge --no-commit HASH
+                    //
+
+                        
+                        pragmaLog('   merge detached head = ' + ' (hash = ' + hash + ')' );
+                        pragmaLog('   into selected branch       = ' + selectedBranch );
+                        
+                        // Merge
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder)
+                            .raw(['merge', '--no-commit', hash], onMerge);
+                            
+                        function onMerge(err, result ){ 
+                            console.log(result);
+                             pragmaLog('   result                     = ' + result );
+                             pragmaLog('   err                        = ' + err );
+                        }                
+                      
+                    //
+                    // 3) Jump to HEAD, and suggest commit message
+                    //               
+             
+                        // Jump to HEAD
+                        if ( getMode() === 'HISTORY'){
+                            resetHistoryPointer(); 
+                            await upArrowClicked(); // Get out of history
+                        }
+                        
+                        // Write suggested message
+                        await _setMode('CHANGED_FILES_TEXT_ENTERED');  
+                        let newMessage = 'Merge "' + oldMessage + '" (from branch detached branch with hash = "' + hash + '")';
+                        pragmaLog('   suggest message            = ' + newMessage );
+                        writeTextOutput( { value: newMessage } );   
+                      
+                
+                }
+
+                break;
+            }             
+            
+        }
+        break; 
+      } // end case 'detachedHeadDialog'       
+      case 'clicked-detachedMergeSelectBranch-button': {
+          
+          
+        cachedBranchMenu = await new gui.Menu(); 
+        
+        let currentBranch = cachedBranchList.current;
+        
+        let dummy = await makeBranchMenu( cachedBranchMenu, currentBranch, cachedBranchList, 'clickedDetachedMergeSelectBranchContextualMenu'); 
+
+        // Add context menu title-row
+        cachedBranchMenu.insert(new gui.MenuItem({ type: 'separator' }), 0);
+        cachedBranchMenu.insert(new gui.MenuItem({ label: 'Select branch to merge into : ', enabled : false }), 0);
+        
+        // Popup as context menu
+        let pos = document.getElementById('mergeWithDetachedBranchLink').getBoundingClientRect();
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+          
+        break;
+      }
+      case 'clickedDetachedMergeSelectBranchContextualMenu': {
+        document.getElementById('mergeWithBranch').checked = true; // Select radio-button
+        document.getElementById('detachedBranchDialogMergeWith').innerText = event.selectedBranch;
+        _callback('updateDetachedBranchDialog');  // Update state of OK button
+        break;
+      }
+      case 'updateDetachedBranchDialog': {
+        // Disable if 'Merge Branch' is not selected
+        if ( ( document.querySelector('input[name=\'detachedBranchRadiobuttonGroup\']:checked').value == 'Merge') && (document.getElementById('detachedBranchDialogMergeWith').innerText == 'select branch') ) {
+            document.getElementById('detachedBranchDialogOK').disabled = true;
+        }else{
+            document.getElementById('detachedBranchDialogOK').disabled = false;
+        }
+
+        break;
+      } 
+
+      // Help      
       case 'help': {
            
         console.log('Help pressed');
@@ -1422,6 +1560,12 @@ async function _callback( name, event){
             
 			await updateGraphWindow();
 			await gitStashMap(state.repos[state.repoNumber].localFolder);
+        }
+        
+        // Update repo in settings_win (here, because not used when opening menu)
+        try{
+            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+        }catch(err){ 
         }
         
         // Update remote info immediately
@@ -2809,14 +2953,14 @@ async function _setMode( inputModeName){
             newModeName = 'CONFLICT';
             if (currentMode ==  'CONFLICT') { return};
             setButtonText();// Set button
-            document.getElementById('store-button').disabled = true;
-            textOutput.value = "";
-            textOutput.placeholder = 
-                "There is a file conflict to resolve" + os.EOL + 
-                "- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
-                "- Write a message, and press Store when done";    
-            textOutput.readOnly = true;
-            writeTextOutput(textOutput);
+            //document.getElementById('store-button').disabled = true;
+            //textOutput.value = "";
+            //textOutput.placeholder = 
+                //"There is a file conflict to resolve" + os.EOL + 
+                //"- Click the message 'Conflicts ... ' (in status-bar below) " + os.EOL + 
+                //"- Write a message, and press Store when done";    
+            //textOutput.readOnly = true;
+            //writeTextOutput(textOutput);
             break;
         }
         
@@ -3391,7 +3535,7 @@ async function gitBranchList(){
             // Set extendedBranchSummaryResult.show for remote, this remote has an existing local with matching name
             //               
             
-                if ( branchName.startsWith('remotes') ){
+                if ( branchName.startsWith('remotes/origin') ){
                     let remoteBranchName = branchName;
                     extendedBranchSummaryResult.branches[ remoteBranchName ].show = ! localVersionExists( extendedBranchSummaryResult.all, remoteBranchName);   
                 } else{
@@ -3807,21 +3951,56 @@ async function gitPush(){
     await waitTime( 1000);  
 
 }
-function gitFetch(){ // Fetch and ls-remote
+function gitFetch( longUpstreamBranch){ // Fetch 
+    // Default without argument -- fetch from origin
+    // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
+
      
     var error = "";
+
 
     //
     // Fetch
     //
      try{
 
-        // Fetch
-        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
-        function onFetch(err, result) {
-            //console.log(result) 
-        };
+        if ( longUpstreamBranch == undefined){
+            
+            // Fetch from default (origin)
+            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+            function onFetch(err, result) {
+            };
+            
+        }else{
+            
+            // Fetch from longUpstreamBranch
+                
+            // "remotes/test5/child-process-with-timer" -> repo=test5, branch=child-process-with-timer"
+            let splitted = longUpstreamBranch.split('/');
+            let repo = splitted[1];
+            let branch = splitted[2];
+
+            
+            // Shorten upstream branchname if remote ( remotes/upstream/main becomes upstream)
+
+            if ( longUpstreamBranch.startsWith( 'remotes' ) ){
+                let upstreamName = longUpstreamBranch.split('/')[1];
+                let upstreamBranch = longUpstreamBranch.split('/')[2];
+
+                
+                setStatusBar('fetching from remote ' );
+                
+                simpleGit( state.repos[state.repoNumber].localFolder ).fetch( upstreamName, upstreamBranch, onFetch);
+                function onFetch(err, result) {
+                    console.log(result);
+                    updateBranchListWithUpstream(); // Update ahead flags
+                };
+            }           
+            
+        }
+
+
 
 
     }catch(err){
@@ -4076,7 +4255,7 @@ async function cacheBranchList(){
 
     try{
         cachedBranchList = await gitBranchList();
-        let currentBranch = cachedBranchList.current; 
+        await updateBranchListWithUpstream();  
         
     }catch(err){        
         console.log('Error determining local branches, in branchClicked()');
@@ -4084,11 +4263,170 @@ async function cacheBranchList(){
     }                
 
 }
-function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked and mergeClicked
+    async function updateBranchListWithUpstream(){
+        // This function does two things
+        // 1) find remote repos
+        // 2) searches for remote branches needing fetching, calling gitListUpstreams   
+        
+        let promises = [];
+        let last = '';  // Used to avoid repeting promise for the same name
+        
+        cachedBranchList.remoteRepos = {};
+        cachedBranchList.remoteRepos.fetch = {};  // Start over
+        cachedBranchList.remoteRepos.fetch.names = []; 
+        cachedBranchList.remoteRepos.fetch.URLs = []; 
+        cachedBranchList.remoteRepos.push = {};  // Start over
+        cachedBranchList.remoteRepos.push.names = []; 
+        cachedBranchList.remoteRepos.push.URLs = []; 
+        
+        
+        // Find remotes
+        try{
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).remote( ['-v'], onRemote);
+            function onRemote(err, result) {
+                
+                let rows = result.split('\n');
+                for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
+                    
+                    // Split 'test9	https://github.com/pragma-git/issue7715.git (push)'
+                    let upstreamName = rows[j].split('\t')[0];
+                    let upstreamURL = rows[j].split('\t')[1].split(' ')[0];
+                    let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];
+                    
+                    // Store splitted in cachedBranchList.remoteRepos
+                    if ( upstreamFetchOrPull.includes('fetch') ){
+                        cachedBranchList.remoteRepos.fetch.names.push( upstreamName );
+                        cachedBranchList.remoteRepos.fetch.URLs.push( upstreamURL );
+                    }
+                    if ( upstreamFetchOrPull.includes('push') ){
+                        cachedBranchList.remoteRepos.push.names.push( upstreamName );
+                        cachedBranchList.remoteRepos.push.URLs.push( upstreamURL );
+                    }
+                    
+                    
+                    // Clean ahead flags
+                    let newAllList = [];
+                    for ( var i=0; i < cachedBranchList.all.length; i++){
+                        let thisBranchName = cachedBranchList.all[i];
+                        cachedBranchList.branches[ thisBranchName ].upstreamAhead = false;
+                    }
+                    
+                    // Only add promise if a new upstream
+                    if ( upstreamName !== last){
+                        promises.push( gitListUpstreamsNeedingFetch( upstreamName ) );  // Add promise
+                    }
+                    last = upstreamName;
+                }
+            };
+        
+        }catch(err){
+            console.log('Error in updateBranchListWithUpstream()');
+            console.log(err);
+        }
+
+        // Check upstreams in parallel
+        await Promise.all( promises )
+        
+    }
+        async function gitListUpstreamsNeedingFetch(branchName){
+            // Sets upstreamAhead flag
+            
+            let RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName + " 2>&1 ";
+            RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName;
+        
+            let child = await exec( RUN , 
+                (error, stdout, stderr) => { 
+        
+                    // Typical response (or totally empty if fetch is not needed) :
+                    //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
+                            //276f6e7..1c89d32  main       -> upstream/main
+                    //`
+        
+                    // Parse response and update  cachedBranchList.branches.upstreamAhead 
+                    let returnedRemotes = [];
+        
+                    let rows = stderr.split('\n'); 
+                    for (var i = 0; i < rows.length; ++i) {
+                        
+                        let columns = rows[i].split('->'); 
+                        let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
+                        
+                        if ( remoteBranchShortName.startsWith(branchName) ){
+                            let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
+                            
+                            //cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                            cachedBranchList.branches[remoteBranchLongName] =
+                                {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true};
+                            
+                            if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
+                                cachedBranchList.all.push(remoteBranchLongName);
+                            }
+                        }
+                    }
+             
+                }  // end callback handler
+            );  // End exec
+            
+        }
+
+async function cacheRemoteOrigins(){
+    
+    let promises = [];
+    var newCachedRemoteOrigins = {};
+    cachedRemoteOrigins.names = new Array(state.repos.length).fill(null);
+    cachedRemoteOrigins.URLs = new Array(state.repos.length).fill(null);
+    cachedRemoteOrigins.folders = new Array(state.repos.length).fill(null);
+    
+    for (var i = 0; i < state.repos.length; ++i) {
+        promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); // Add promise
+    }
+    
+    await Promise.all( promises )
+    
+    
+    
+    async function getRemoteOrigin( repoNumber, folder){
+        
+        await simpleGitLog( folder ).remote( [ '-v'], onRemote);
+        function onRemote(err, result) {
+            
+            let rows = result.split('\n');
+            
+            for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
+                
+                // Split 'test9	https://github.com/pragma-git/issue7715.git (push)'
+                let upstreamName = rows[j].split('\t')[0];
+                let upstreamURL = rows[j].split('\t')[1].split(' ')[0];
+                let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];
+
+                // Only store if remote origin
+                if ( upstreamName == 'origin'){       
+                    cachedRemoteOrigins.names[repoNumber] = upstreamName;
+                    cachedRemoteOrigins.URLs[repoNumber] = upstreamURL;
+                    cachedRemoteOrigins.folders[repoNumber] = folder;
+                    
+                    state.repos[repoNumber].remoteURL = upstreamURL;
+                    
+                    console.warn(repoNumber);
+
+                    return
+                }
+            }
+            
+        };
+ 
+    }
+
+}
+
+    
+function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helper for branchClicked, mergeClicked, clickedCherryPick
         // menu is a nw.Menu
         // currentBranch is a string
         // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
+        
+            const ONLY_AHEAD_UPSTREAMS = true; // true = show; false = show all upstreams
         
             
             workaround_store_submenus = []; // Clear submenu-item references to avoid premature Windows10 garbage collection
@@ -4111,6 +4449,9 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let submenu = new gui.Menu(); // Prepare an empty submenu for future use
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
             
+            let isRemoteUpstreamAhead = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
+            const UPSTREAM_AHEAD_MARKER = '!  ';
+            
             for (var i = 0; i < branchNames.length; ++i) {
                 
                 // Populate utility variables 
@@ -4123,22 +4464,50 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 let requireNewSubMenu = (firstPart !== cachedFirstPart);
 
                 let isRemoteBranch = (firstPart === 'remotes');
+                let isOrigin = secondPart.startsWith('origin');
                 let isLocalBranch = !isRemoteBranch;
                 let showRemote = branchList.branches[ branchNames[i] ].show; 
                 
                 let isCurrentBranch = ( currentBranch === branchNames[i] );
                 
-                // Don't show remote if merge-menu (because merge requires local branch)
-                // Don't show remote if cherry-pick-menu (because cherry-pick requires local branch)
-                if ( 
-                        (firstPart == "remotes") && ( 
-                            ( callbackName === "clickedMergeContextualMenu") || 
-                            ( callbackName === "clickedCherryPickContextualMenu") 
-                        )
-                    ){ 
-                    continue 
+                // 1) Branch menu :
+                //     only show remote/origin  and   locals (skip remotes/xxx except origin)
+                //
+                // 2) Merge menu : 
+                //     show all remotes except remote/origin (skip remotes/origin)
+                //     (remote/origin can't be merged, but use local branch instead.
+                //      remote/xxx    can be merged because it is an upstream branch which is fetched and merged from this menu)
+                //
+                // 3) Cherrypick menu : 
+                //     only show locals (nothing starting with remotes)
+                //
+                // 4) Merge detached head menu : 
+                //     only show locals (nothing starting with remotes)
+                
+                
+                // 1) Branch menu
+                if (  isRemoteBranch &&  ( !isOrigin ) && ( callbackName === "clickedBranchContextualMenu")  ) {
+                    continue
                 }
-                 
+
+                
+                // 2) Merge menu
+                if ( isRemoteBranch && ( isOrigin ) && ( callbackName === "clickedMergeContextualMenu")  ){
+                    continue
+                }
+
+                                
+                // 3) Cherrypick menu
+                if ( isRemoteBranch && ( callbackName === "clickedCherryPickContextualMenu")  ){
+                    continue
+                }
+                
+                // 4) Merge detached head menu
+                if ( ( isRemoteBranch && ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu") )
+                    || ( ( callbackName === "clickedDetachedMergeSelectBranchContextualMenu") && isCurrentBranch ) ){
+                    continue
+                }                
+                
                  
                 // Add finished submenu to menu
                 if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
@@ -4152,6 +4521,18 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchNames[i]) ){
                     console.log(`Hidden branch = ${branchNames[i]}`);
                     numberOfHiddenBranches++; 
+                    continue;
+                }
+                
+                        
+                // If upstream ahead -- add hint
+                if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
+                    secondPart = UPSTREAM_AHEAD_MARKER + secondPart;
+                    isRemoteUpstreamAhead = true;
+                }
+                                                         
+                // Skip upstream not needing fetch
+                if ( ONLY_AHEAD_UPSTREAMS && isRemoteBranch && !isOrigin & !isRemoteUpstreamAhead){
                     continue;
                 }
                 
@@ -4171,13 +4552,14 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 if ( isSubMenuItem ){
                     //console.log( `Branch : ${firstPart}/${secondPart}`);
                    
-                    // Special case for remote
-                    if (isRemoteBranch){    
+                    // Special case for remote origin
+                    if (isRemoteBranch && isOrigin ){    
                         myEvent.selectedBranch = secondPart.substring( myEvent.selectedBranch.indexOf('/') ); // Shorten to look like a local branch in callback
                     }
                     
                     // Add to submenu
                     if ( (isRemoteBranch && showRemote) || isLocalBranch ) {
+
                         
                         let tempSubMenu = new gui.MenuItem( { 
                                 label: secondPart,
@@ -4210,6 +4592,10 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             // Add remotes to menu
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
+                if (isRemoteUpstreamAhead){
+                    cachedFirstPart = UPSTREAM_AHEAD_MARKER + cachedFirstPart;
+                }
+
                 menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
             }
                  
@@ -4232,6 +4618,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 
 // Utility functions
+
 function getMode(){
     return localState.mode;
 }
@@ -4436,7 +4823,9 @@ function getDownloadsDir(){
     
 }
 
+
 // Logging to file
+
 function pragmaLog(message){
     message = message.toString();
     
@@ -4522,6 +4911,7 @@ function stackInfo( level ){
 
 
 // Update other windows
+
 async function updateGraphWindow(){
     
     await _update();
@@ -5471,7 +5861,7 @@ function loadSettings(settingsFile){
                     
                     // LocalFolder and URLs
                     state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
-                    state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' );
+                    //state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
                     state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );
                     
                     // Local author info

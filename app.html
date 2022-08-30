@@ -674,24 +674,51 @@
     <!-- Detached head dialog -->   
   
     <dialog id="detachedHeadDialog"  class="error">  
+        
+        <!-- Warning text -->  
         <b>WARNING -- detached HEAD !</b><br>
             You've created work in an old revision. <br>
-            1) Keep work : a temporary branch will be created<br>
-            2) Delete : drop work done on old revision<br>
-            <br>
+
+        <label for="tempBranch">
+            <input type="radio" id="tempBranch" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('tempBranch').checked = true;" onmouseup="_callback('updateDetachedBranchDialog)" value="Temp Branch" checked>
+            Temp branch : keep work in a temporary branch
+        </label>
+
+        <!-- Radio-buttons -->  
+        <label for="mergeWithBranch">
+            <input type="radio" id="mergeWithBranch" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('mergeWithBranch').checked = true;" onmouseup="_callback('updateDetachedBranchDialog')"  value="Merge">
+            Merge : keep work and merge with 
+            
+            <!-- This select is just used to indicate that it is a drop-down -- menu is displayed another way (so therefore mouse-down is disabled) --> 
+            <select name="mergeWithDetachedBranchLink" id="mergeWithDetachedBranchLink" onmousedown="_callback('clicked-detachedMergeSelectBranch-button')" onmouseup="(function(e){ e.preventDefault();})(event, this)">
+                <option id="detachedBranchDialogMergeWith"  value="anything">select branch</option>
+            </select>
+            
+        </label>
         
-        <button id="tempBranchDetachedDialog" value="Temp_Branch"
-            onclick="document.getElementById('detachedHeadDialog').close();document.getElementById('branchNameInputDialog').showModal();"> <!-- Call html-dialog for branch selection -->
-            1) Temp Branch
+        <label for="deleteDetachedHead">
+            <input type="radio" id="deleteDetachedHead" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('deleteDetachedHead').checked = true;" onmouseup="_callback('updateDetachedBranchDialog')" value="Delete">
+            Delete : drop work done after checkout of old revision
+        </label>
+
+        <!-- OK / Cancel buttons-->  
+        <br style = "line-height: 0.4em;">
+        
+        <button id="detachedBranchDialogOK" value="OK"
+            onclick="
+                document.getElementById('detachedHeadDialog').close();
+                let selectedRadioButton = document.querySelector('input[name=\'detachedBranchRadiobuttonGroup\']:checked').value;
+                _callback('detachedHeadDialog', selectedRadioButton );
+                this.click()
+            "> <!-- Call html-dialog for branch selection -->
+            OK
         </button>   
-        <button id="deleteDetachedDialog" value="Delete"
-            onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog', this.value);">
-            2) Delete
-        </button>     
+         
         <button id="cancelDetachedDialog" value="Cancel"
             onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog', this.value);">
             Cancel
         </button>  
+        
     </dialog>  
 
 
