@@ -24,7 +24,7 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 var win;
 
 // Remember state
-var panes = 2;
+var panes = global.state.pragmaMerge.mergePanes;
 var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
@@ -782,6 +782,7 @@ function closeWindowNicely(exitCode){
     // Store gui mode settings
     global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
     global.state.pragmaMerge.align = document.getElementById('align').checked;
+    global.state.pragmaMerge.mergePanes = panes;
     
     
     // Remove from menu

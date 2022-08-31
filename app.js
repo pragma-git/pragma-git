@@ -5838,6 +5838,7 @@ function loadSettings(settingsFile){
             state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
             state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
+            state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
             
         // Graph window
             state.graph = setting( state_in.graph, {} );
