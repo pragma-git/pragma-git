@@ -1649,6 +1649,7 @@ async function _callback( name, event){
                     // Committed change in detached HEAD -- throw dialog
                     console.log('Commits on detached HEAD.  Show dialog');
                     pragmaLog('show modal dialog = detachedHeadDialog' );
+                    cacheBranchList();
                     document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
                 }
                 
