@@ -109,7 +109,62 @@
         }
 
     </style>
-
+                       
+                         
+    <style>
+        .visibleText {
+          display: block; 
+        }
+        .hiddenText {
+          display: none; 
+        }
+        
+        p, .indent, .visibleText, .visibleTextLink, .hiddenTextLink{
+          position: relative;
+          left: 20px;
+        }
+        .visibleTextLink{
+            text-decoration: underline; 
+            background-color: grey;
+        }
+        .hiddenTextLink{
+            text-decoration: unset;
+            background-color: unset;
+        }
+    
+        img{
+            vertical-align: middle;
+        }
+    </style>
+        
+    <script>
+        function showClickedText( clickedId, linkClassName) {
+            
+            let elements = document.getElementsByClassName(linkClassName);  // Find from textLinks, then derive text id's from textLink id's
+            
+            // Reset all views
+            for (var i = 0; i < elements.length; i++) {
+    
+                // Set all links to hidden
+                elements[i].classList.remove('visibleTextLink');
+                elements[i].classList.add('hiddenTextLink');
+                
+                // Set all texts to unused
+                let viewId = elements[i].id + '_div';
+                document.getElementById(viewId).classList.remove('visibleText');
+                document.getElementById(viewId).classList.add('hiddenText');
+            }
+            
+            // Set this textlink to visible
+            document.getElementById(clickedId).classList.remove('hiddenTextLink');
+            document.getElementById(clickedId).classList.add('visibleTextLink');
+            
+            // Set this text to visible
+            let thisViewId = clickedId + '_div';
+            document.getElementById(thisViewId).classList.remove('hiddenText');
+            document.getElementById(thisViewId).classList.add('visibleText');
+        } 
+    </script> 
     
 <body class='light'> 
     
@@ -121,6 +176,8 @@
         window.document.body.style.zoom = global.state.zoom;
     </script>    
     
+
+   
       
 <div id="content">
     
@@ -142,33 +199,34 @@
     
         <hr>
         
- <!-------------------------------------------------------------------------------------------->                                  
-        <h3>Git started</h3>   
-        <hr>  
-
- <!-------------------------------------------------------------------------------------------->         
+    <!-------------------------------------------------------------------------------------------->                                  
+    <h3>Git started</h3>   
+    <!-------------------------------------------------------------------------------------------->                                  
+    <hr>           
         
+        <!-------------------------------------------------------------------------------------------->             
         <h4>Intro</h4>
                                
             <p>Pragma-git aims to be a user-friendly revision control software. 
-                It fits people working on their own projects, or that find git overwhelming. 
+                It fits people working on their own projects, in groups, or those who find git overwhelming. 
             </p>
                                
             <p> The app uses "git" behind the scene, and is therefore fully compatible and 
-                can be used interchangeably together with other git softwares. It requires set-up of git (see <a href="#INSTALLATION">Installation</a>).
+                can be used interchangeably with other git softwares. It requires set-up of git (see <a href="#INSTALLATION">Installation</a>).
             </p>  
-        <hr>          
+            <hr>          
 
- <!-------------------------------------------------------------------------------------------->             
+        <!-------------------------------------------------------------------------------------------->             
         <h4>Help</h4>
                                
             <p>Help is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
-            This icon also appears in many opened windows.
+            This icon appears in most windows, giving help specific to that window.
             </p>
 
-        <hr>          
+            <hr>          
 
- <!-------------------------------------------------------------------------------------------->             
+
+        <!-------------------------------------------------------------------------------------------->             
          <h4>Start working</h4>           
             
             <ul>
@@ -176,15 +234,14 @@
                 <li>If the folder is not already prepared (as a git repository), please allow the program to initialize the folder for git. </li> 
             </ul>
             
-            
             <p>Alternatively, if you want to work on a cloned project, cloning is performed from the settings menu.
             </p>              
+            <hr>  
+                  
+         <!-------------------------------------------------------------------------------------------->             
+         <h4>Beginner's workflow (steps 1 - 4 in next section)</h4>
          
-        <hr>        
-        
- <!-------------------------------------------------------------------------------------------->             
-         <h4>Beginner's workflow</h4>
-             <p>For git first-timers, the workflow would simply be: 
+            <p>For git first-timers, the workflow would simply be: 
              <ul>
                 <li>Work on your files</li>
                 <li>When finished with some task: write a description in the text area, and press the <button>Store</button> button to store a snapshot of your files</li>
@@ -194,289 +251,444 @@
              </ul>  
             </p>    
              
-            <p>The beauty of the revision control is, that you may go back to any snapshot later
+            <p>The beauty of a revision control software is, that you may check out an old version later
             </p>          
-        <hr>          
-  <!-------------------------------------------------------------------------------------------->  
-        <h4>How it works</h4>       
+            <hr>  
+            
+            
+         <!-------------------------------------------------------------------------------------------->             
+         <h4>Some git terminology</h4>
+         
+            <p>For git first-timers, the following definitions may be useful to know:
+            
+            <ol>
+                <li>You work on a <u>project</u> in a <u>folder</u>   
+                </li><li>That folder can be made into a <u>repository</u> (which tracks different versions of the files) <br>
+                In pragma-git, just drop the folder on the program window to make it a repository.
+                </li><li>A <u>revision</u> (sometimes called a <u>commit</u>) is a snapshot in time, which you may go back to, or inspect.
+                </li><li>A revision is created by making a <u>commit</u> (<button>Store</button> button), adding a descriptive <u>message</u> (such as "Fixed bug xyz")
+                </li><li>Files that are commited are safe, and the project folder can always be recovered to the state of that point in time
+                
+                <br><br>
+                
+                </li><li>A <u>branch</u> is simply a way to organize your work, so that work is grouped together in a logical fashion (by state of the code, by subproject, etc).  
+                </li><li>It is considered good practice to have at least two branches, where for instance working code is stored in the "main" branch, 
+                and code being worked on is stored in another branch (for instance "develop")
+                </li><li><u>Switching</u> (changing) branch modifies the files in the project folder to the latest revision within that branch
+                </li><li>Changes in files from one branch (for instance "develop") can be <u>merged</u> into another branch, for instance the "main" branch
+                
+                <br><br>
+                
+                </li><li>A repository can also have a <u>remote</u> counterpart.  This can be used as a cloud <u>backup</u> (for instance on github.com)
+                Other use cases includes to keep folders on multiple computers in sync, or as a means to collaborate between more than one developer
+                </li><li>If a remote repository has chaged, the changes may be <u>pulled</u> to the project folder of the local computer (and changes merged with the local files)
+                </li><li>If the same place in a file has been changed in different ways (local/remote, or when merging two local branches), this is called a <u>conflict</u>
+                </li><li>A conflict is <u>resolved</u> by the user telling the software which of the two versions to keep
+                
+                <br><br>
+                
+                </li><li><u>Pragma-git</u> helps with all above, and also supports a number of more git operations
+                    
+                </li>
+                </li>
+            </ol>
+                    
+            
+            
+            </p>     
+            
+            
+            <h4>Extensive git dictionary</h4>  
+                
+            <p>     
+                Click below, to view a more extensive dictionary of terms used in git, and also how they can be understood in Pragma-git
+            </p>
+                
+            <button class="collapsible indent" style="background-color: var(--body-background); color: var(--header-color);" id="repoSettings">&nbsp; (click to view / hide) </button> 
+
+             <div  class="content indent">
+    
+                  <p>Here follows a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control : </p>
+                  
+                  <table>
+                    <tr> <th>Word</th> <th>Meaning</th></hr>
+                    <tbody>
+                        <tr>
+                            <td>Git </td>
+                            <td>The <i>de facto </i> standard for software revision control </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Snapshot </td> 
+                            <td>A version of all your project files, freezed to exactly this state forever</td>
+                        </tr>
+                                                   
+                         <tr>
+                            <td>Project folder </td> 
+                            <td>A location for storing the files. See "Repository" below</td>
+                        </tr>
+                                                          
+                        <tr>
+                            <td>Repository </td> 
+                            <td>A location for storing the files. See "Project folder" above</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Local repository</td>
+                            <td>A folder on your computer which has been assigned for version control.  In Pragma-git, you drop the folder onto the main window.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Remote repository</td>
+                            <td>A location normally on another computer.  Git can send data to (push) and retrieve data from (pull) the remote repository</td>
+                        </tr>
+                                                                       
+                         <tr>
+                            <td>Initialize</td> 
+                            <td>A project folder has to be initialized to become a git repository. 
+                            This places a hidden folder ".git" in your project folder, which keeps track of all revisions.  Do not delete this folder!!</td>
+                        </tr>
+                                
+                                                                        
+                         <tr>
+                            <td>Clone</td> 
+                            <td>This means making a copy of a remote repository on your local computer.  You can then work with this, as your own. 
+                            One good use case, is if you work on more than one computer.  
+                            Then, you can clone from a remote repository to your second computer, to get a copy of your complete remote repository.  
+                            Cloning is only done once, after that you work with Commit, Push, Pull operations, or in Pragma-git, with the "Store"-button and Pull.
+                            </td>
+                        </tr>
+                                                  
+                        <tr>
+                            <td>Commit</td>
+                            <td>The "git" word for storing a snaphshot of your work, with a descriptive name.</td>
+                        </tr>
+                                           
+                        <tr>
+                            <td>Add, Commit</td>
+                            <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above. 
+                            The <button>Commit</button> button in Pragma-git does this.
+                            This mode, not auto-pushing, is configured in the settings menu of Pragma-git.
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Add, Commit, Push </td>
+                            <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. 
+                            The  <button>Store</button> button in Pragma-git does this.
+                            See "Store" below
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Store</td>
+                            <td>The "Pragma-git" way to (with one click) store a snapshot of the files at this time-point in a repository, <i>and</i> 
+                            to send a copy to the remote repository.
+                            
+                            This mode, auto-pushing, is default in Pragma-git, and is configured in the settings menu of Pragma-git.
+                            
+                            </td>
+                        </tr>
+     
+                         
+                        <tr>
+                            <td>Branch</td>
+                            <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
+                            performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
+                            You can create a new branch from where you are, or from a historical snapshot (see section "Log, History", below). 
+                            You cannot create a new branch if you have changed files that are not stored.  
+                            If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
+                        </tr>  
+                         
+                        <tr>
+                            <td>Merge</td>
+                            <td>Incorporating changes from one branch into another branch. Git does this very cleverly, so that changes that do not overlap will be combined from both branches.
+                            If you are unlucky, the same line of text has been changed differently in both branches.  Then, git needs your help to resolve which version you wish to keep
+                            -- called to resolve a merge conflict</td>
+                        </tr>   
+                        
+                        <tr>
+                            <td>Conflict</td>
+                            <td>See above. A conflict can occur when merging two snapshots from for instance two branches, but also between a remote and a local repository.
+                            There are two different types of conflicts: 1) a file was deleted in one of the two places, and 2) a file was changed in the same place on both places.
+                            For both this cases, git needs your help to decide on what you wish to do.  This process is called "resolving a conflict", and in Pragma-git there is a tool
+                            that aids you in doing this</td>
+                        </tr>           
+    
+                        <tr>
+                            <td>Pull</td>
+                            <td>Retrieving the latest snapshot from the remote repository, and merging that with your local project folder.  
+                            If you work on multiple computers, or are many people in the team, some work may have been performed and stored on the remote repository.
+                            "Pull" is a way to update your local project folder to the latest state. It is good practice to do this before you start working on your local project.</td>
+                        </tr>          
+    
+                        <tr>
+                            <td>Push</td>
+                            <td>Send a copy of your snapshots to the remote repository.  
+                            In Pragma-git, the default is to do a "push" when pressing the  <button>Store</button> button.  
+                            This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
+                            In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
+                        </tr>    
+                        <tr>
+                            <td>Stash</td>
+                            <td>Like a clipboard copy, where you can "cut" (and  remember) the file changes since the last stored snapshot.  
+                            A stash takes you back to a clean last-snapshot, and keeps the changes in memory. Sometimes this can be useful. 
+                            One such occasion is if you forgot to "pull" from the remote repository,
+                            before starting to work in your local folder.  Doing a "stash", then "pull", and then "stash-pop" would be a workflow to solve such problem.
+                            In Pragma-git "stash" works  as the computer clipboard's copy command, and can hold only one stash. </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Stash-pop</td>
+                            <td>Like a clipboard "paste", where you retrieve the stashed (see above) changed files. 
+                            In Pragma-git "stash" works  as the computer clipboard's cut and paste command, and can hold only one stash at a time </td>
+                        </tr>
+                         
+                        <tr>
+                            <td>Log, History</td>
+                            <td>The log (History) shows all stored snapshots.  In Pragma-git, you walk down in history with the arrow buttons.  
+                            You can set your project folder to any snapshot from the history, by doing a "checkout"   </td>
+                        </tr>
+                                
+                        <tr>
+                            <td>Checkout</td>
+                            <td>This command sets your project folder to the state it was in at the point in time of the snapshot.  
+                            You may play with the project in that state, but should be careful not to make any changes. </td>
+                        </tr>
+                            
+                        <tr>
+                            <td>Detached HEAD</td>
+                            <td>A checkout of a snapshot is in  a state called "detached HEAD".  That means that it does not belong to any branch, and if you make changes,
+                            they will be dangling without being easy to retrieve.  Pragma-git advice you if this happens.  The best way is to create a new branch from the checkout
+                            and work from there, and end your work by merging it to another branch.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Tag</td>
+                            <td>An alias for a commit.  This is often used for version numbering of softwares, but can be used for anything. You may view it as a sort of permanent bookmark</td>
+                        </tr>
+                                                   
+                    </tbody>
+                  </table>
+            </div>
+                
+            
+            
+                 
+            <hr>  
+                    
+    <!-------------------------------------------------------------------------------------------->  
+    <h3>The basic use</h3>   
+    <!--------------------------------------------------------------------------------------------> 
+        <hr>    
+
         <p>
             <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet.png" width="80%">
         </p>
-        <br>
-        <hr>           
-    <!-------------------------------------------------------------------------------------------->  
-        <h4>Advanced usage</h4>        
-        <p>
-            <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet-advanced.png" width="80%">
-        </p>
-        <br>
-        <hr>           
-                      
- <!-------------------------------------------------------------------------------------------->                                  
-        <h3>Learn more</h3>   
-        <hr>  
-
- <!-------------------------------------------------------------------------------------------->         
-          <h4>Clickable icons</h4>
+        
             
-             <dl>
-              <dt>Most things can be clicked :</dt>
-                <dd>&nbsp;</dd>
-                
-                <dt><i>These buttons are always visible :</i></dt>
-                    <dd>&nbsp;</dd>
-                    
-                <dd> <img src="images/questionmark_black.png"  height="17" width="17"> help   </dd>
-                    <dd>&nbsp;</dd>
-                    
-                <dd> <img src="images/folder_black.png"  height="17" width="17"> Show project folder</dd>
-                <dd> <img src="images/terminal_black.png"  height="17" width="17"> Open terminal in project folder</dd>
-                <dd> <img src="images/settings_black.png"  height="17" width="17"> Settings dialog</dd>
-                <dd> <img src="images/notes_black.png"  height="17" width="17"> Project notes. Here you can make notes for the project.<a href="#NOTES">Learn more.</a></dd>
-                    <dd>&nbsp;</dd>
-                    
-                <dd> <img src="images/down-arrow_hover.png"  height="17" width="17"> Steps through the history of older revisions </dd>
-                <dd> <img src="images/up-arrow_hover.png"  height="17" width="17"> Steps towards newer revisions   </dd>
-                <dd> <img src="images/find_black.png"  height="17" width="17"> Search the history of current branch. <a href="#SEARCH">Learn more.</a></dd>    
-                <dd> <img src="images/more_black.png"  height="17" width="17"> Shows a graphical view of the commit history   </dd>
-                    <dd>&nbsp;</dd>
-                    
-                <dd>  <button>Store</button> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a></dd>
-                    <dd>&nbsp;</dd>
-                    
-                    
-                    
-                <dt><i>These buttons are used when working with active files (visible only when they can be used) :</i></dt>
-                
-                    <dd>&nbsp;</dd>
-                <dd> <img src="images/branch_black.png"  height="17" width="17"> Create a new branch from your position </dd>
-                <dd> <img src="images/merge_black.png"  height="17" width="17"> Merge branch selected from dropdown menu, into current branch. </dd>
-                <dd> <img src="images/pull_black.png"  height="17" width="17"> Manual updates available to be pulled from remote repository. Please click.</dd>
-                <dd> <img src="images/push_black.png"  height="17" width="17"> Manual push to remote repository (if auto-push disabled in settings) </dd>
-                <dd> <img src="images/tag_black.png"  height="17" width="17"> Create a "tag", an alias referring to the revision you see in the message window</dd>
-                    <dd>&nbsp;</dd>                    
-                <dd> <img src="images/stash_black.png"  height="17" width="17"> "Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history</dd>
-                <dd> <img src="images/stash_pop_black.png"  height="17" width="17"> "Stash pop" (retrieve) your stashed files into our working folder</dd>
-                    <dd>&nbsp;</dd>              
-   
-                <dt><i>These buttons are active when browsing history :</i></dt>   
-                    <dd>&nbsp;</dd>   
-                           
-                <dd>  <span style='font-size: 15pt;'> &#x25B2;</span>  Button to get out of history browsing (shown beside branch name in history mode) </dd>   
-                    <dd>&nbsp;</dd>   
-                    
-                <dd> <img src="images/revert_black.png"  height="17" width="17"> "Revert" (undo changes) introduced in this commit. Commit these changes or keep editing</dd>                                    
-                <dd> <img src="images/cherry-pick_black.png"  height="17" width="17"> "Cherry-pick" (copy changes) introduced in this commit to branch selected from dropdown menu. Commit these changes or keep editing</dd>
-                    <dd>&nbsp;</dd>  
-                     
-                <dd> <img src="images/pinned_disabled_black.png"  height="17" width="17"> Not marked, means that history is compared with previous commit </dd>
-                <dd><img src="images/pinned_enabled_black.png"  height="17" width="17"> Marked checkbox, means that other commits are compared to the marked commit</dd>
-
-                    <dd>&nbsp;</dd>   
-                    
-                    
-                <dd>  <button>Checkout</button> Check out an older revison (shown when browsing history)</dd>
-                    <dd>&nbsp;</dd>
-                </dd>
-              
-
-            </dl>           
             
-        <hr>    
-                 
- <!-------------------------------------------------------------------------------------------->                           
-         <h4>A little git dictionary</h4>
-         
-         Here follows a dictionary of a number  of terms used in git, and also how they can be understood in Pragma-git :
-         <button class="collapsible" style="background-color: var(--body-background); color: var(--body-text);" id="repoSettings">&nbsp; (click to view / hide) </button> 
-         <div  class="content">
+                          
+        <!-------------------------------------------------------------------------------------------->                                  
+         <h4>Title (top) and status bar (bottom)</h4>
 
-              <p>There are a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control</p>
-              
-              <table>
-                <tr> <th>Word</th> <th>Meaning</th></hr>
-                <tbody>
-                    <tr>
-                        <td>Git </td>
-                        <td>The <i>de facto </i> standard for software revision control </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Snapshot </td> 
-                        <td>A version of all your project files, freezed to exactly this state forever</td>
-                    </tr>
-                                               
-                     <tr>
-                        <td>Project folder </td> 
-                        <td>A location for storing the files. See "Repository" below</td>
-                    </tr>
-                                                      
-                    <tr>
-                        <td>Repository </td> 
-                        <td>A location for storing the files. See "Project folder" above</td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Local repository</td>
-                        <td>A folder on your computer which has been assigned for version control.  In Pragma-git, you drop the folder onto the main window.</td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Remote repository</td>
-                        <td>A location normally on another computer.  Git can send data to (push) and retrieve data from (pull) the remote repository</td>
-                    </tr>
-                                                                   
-                     <tr>
-                        <td>Initialize</td> 
-                        <td>A project folder has to be initialized to become a git repository. 
-                        This places a hidden folder ".git" in your project folder, which keeps track of all revisions.  Do not delete this folder!!</td>
-                    </tr>
-                            
-                                                                    
-                     <tr>
-                        <td>Clone</td> 
-                        <td>This means making a copy of a remote repository on your local computer.  You can then work with this, as your own. 
-                        One good use case, is if you work on more than one computer.  
-                        Then, you can clone from a remote repository to your second computer, to get a copy of your complete remote repository.  
-                        Cloning is only done once, after that you work with Commit, Push, Pull operations, or in Pragma-git, with the "Store"-button and Pull.
-                        </td>
-                    </tr>
-                                              
-                    <tr>
-                        <td>Commit</td>
-                        <td>The "git" word for storing a snaphshot of your work, with a descriptive name.</td>
-                    </tr>
-                                       
-                    <tr>
-                        <td>Add, Commit</td>
-                        <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above. 
-                        The <button>Commit</button> button in Pragma-git does this.
-                        This mode, not auto-pushing, is configured in the settings menu of Pragma-git.
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Add, Commit, Push </td>
-                        <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. 
-                        The  <button>Store</button> button in Pragma-git does this.
-                        See "Store" below
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Store</td>
-                        <td>The "Pragma-git" way to (with one click) store a snapshot of the files at this time-point in a repository, <i>and</i> 
-                        to send a copy to the remote repository.
-                        
-                        This mode, auto-pushing, is default in Pragma-git, and is configured in the settings menu of Pragma-git.
-                        
-                        </td>
-                    </tr>
- 
-                     
-                    <tr>
-                        <td>Branch</td>
-                        <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
-                        performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
-                        You can create a new branch from where you are, or from a historical snapshot (see section "Log, History", below). 
-                        You cannot create a new branch if you have changed files that are not stored.  
-                        If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
-                    </tr>  
-                     
-                    <tr>
-                        <td>Merge</td>
-                        <td>Incorporating changes from one branch into another branch. Git does this very cleverly, so that changes that do not overlap will be combined from both branches.
-                        If you are unlucky, the same line of text has been changed differently in both branches.  Then, git needs your help to resolve which version you wish to keep
-                        -- called to resolve a merge conflict</td>
-                    </tr>   
-                    
-                    <tr>
-                        <td>Conflict</td>
-                        <td>See above. A conflict can occur when merging two snapshots from for instance two branches, but also between a remote and a local repository.
-                        There are two different types of conflicts: 1) a file was deleted in one of the two places, and 2) a file was changed in the same place on both places.
-                        For both this cases, git needs your help to decide on what you wish to do.  This process is called "resolving a conflict", and in Pragma-git there is a tool
-                        that aids you in doing this</td>
-                    </tr>           
-
-                    <tr>
-                        <td>Pull</td>
-                        <td>Retrieving the latest snapshot from the remote repository, and merging that with your local project folder.  
-                        If you work on multiple computers, or are many people in the team, some work may have been performed and stored on the remote repository.
-                        "Pull" is a way to update your local project folder to the latest state. It is good practice to do this before you start working on your local project.</td>
-                    </tr>          
-
-                    <tr>
-                        <td>Push</td>
-                        <td>Send a copy of your snapshots to the remote repository.  
-                        In Pragma-git, the default is to do a "push" when pressing the  <button>Store</button> button.  
-                        This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
-                        In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
-                    </tr>    
-                    <tr>
-                        <td>Stash</td>
-                        <td>Like a clipboard copy, where you can "cut" (and  remember) the file changes since the last stored snapshot.  
-                        A stash takes you back to a clean last-snapshot, and keeps the changes in memory. Sometimes this can be useful. 
-                        One such occasion is if you forgot to "pull" from the remote repository,
-                        before starting to work in your local folder.  Doing a "stash", then "pull", and then "stash-pop" would be a workflow to solve such problem.
-                        In Pragma-git "stash" works  as the computer clipboard's copy command, and can hold only one stash. </td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Stash-pop</td>
-                        <td>Like a clipboard "paste", where you retrieve the stashed (see above) changed files. 
-                        In Pragma-git "stash" works  as the computer clipboard's cut and paste command, and can hold only one stash at a time </td>
-                    </tr>
-                     
-                    <tr>
-                        <td>Log, History</td>
-                        <td>The log (History) shows all stored snapshots.  In Pragma-git, you walk down in history with the arrow buttons.  
-                        You can set your project folder to any snapshot from the history, by doing a "checkout"   </td>
-                    </tr>
-                            
-                    <tr>
-                        <td>Checkout</td>
-                        <td>This command sets your project folder to the state it was in at the point in time of the snapshot.  
-                        You may play with the project in that state, but should be careful not to make any changes. </td>
-                    </tr>
-                        
-                    <tr>
-                        <td>Detached HEAD</td>
-                        <td>A checkout of a snapshot is in  a state called "detached HEAD".  That means that it does not belong to any branch, and if you make changes,
-                        they will be dangling without being easy to retrieve.  Pragma-git advice you if this happens.  The best way is to create a new branch from the checkout
-                        and work from there, and end your work by merging it to another branch.</td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Tag</td>
-                        <td>An alias for a commit.  This is often used for version numbering of softwares, but can be used for anything. You may view it as a sort of permanent bookmark</td>
-                    </tr>
-                                               
-                </tbody>
-              </table>
-        </div>
-        <hr>    
-                 
- <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Title and status bars</h4>
-
-            <p> <img style='vertical-align:middle;' src="images/top-title-bar.png"  height="24"> (the top title bar)<br>
-            displays the name of your current repository (in this example "MyFolder"), and the name of the current branch (in this case "master").
-            Both the repository, and the branch names can be clicked to cycle through your repositories and branches, respectively.
+            <p class="indent"> <img style='vertical-align:middle;' src="images/top-title-bar.png"  height="24"> (the top title bar)<br>
+            displays the name of your current repository (in this example "MyFolder"), and the name of the current branch (in this case "master"). In case you have more than one repository or branch, 
+            the arrow next to the name can be clicked to select another repository or branch.  Clicking on name will change into the next repository and branch.
             </p>
                         
-            <p> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
+            <p class="indent"> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
             shows the number of modified files. In normal mode, it is the difference since the last Store operation.  In history mode, it is the change from the previous revision in history.
             Clicking on this area opens a list of modified files in a new window.
-            In this new window, you can see if a file was added, modified or deleted.  You may also investigate how the files were changed viewing the differences, and in the normal mode also delete or restore the changed file.
+            In this new window, you can see if a file was added, modified or deleted. In the normal mode (before the "Store"-button is pressed) you can delete or restore a modified file.
+            You may also investigate how the files were changed clicking the "diff" link, which works both in normal mode, and when viewing historical revisions.
             </p>
                                    
-            <p> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
+            <p class="indent"> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
             can show up instead of above status of changed files. 
             This may happen under special circumstances after a "merge", "pull" or "stash retrieve" action.  
-            What it means is that Pragma-git needs your help to clarify what is your intention with files changed in different ways in two different locations.
-            Click on this area to open a "conflict resolution window", that guides you through this process.
+            What it means is that Pragma-git needs your help to clarify what is your intention with files that have been changed in different ways in two different revisions.
+            Click on this text to open a "conflict resolution window", that guides you through this process.
             </p>    
-        <hr>      
+
+         <h4>The Store button</h4>
+         
+            <p class="indent">
+                <button>Store</button> Stores the current state of your work as a revision. <a href="#STORE">Learn more.</a>
+            <p/>      
+            
+            <hr>
+            
+        <!-------------------------------------------------------------------------------------------->  
+        <h3 id="ADVANCED_USE">Advanced use</h3>   
+        <!--------------------------------------------------------------------------------------------> 
+            <hr>           
+            <p>
+                <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet-advanced.png" width="80%">
+            </p>
+            
+            <h4>Title bar / top icons (click icon for explanation):</h4> 
+            <br>
+    
+            <span id="notes"  class="textLink visibleTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/notes_black.png"   height="17" width="17"> notes,  </span> 
+            <span id="branch" class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/branch_black.png"   height="17" width="17"> branch, </span>
+            <span id="merge"  class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/merge_black.png"    height="17" width="17"> merge, </span> 
+            <span id="pull"   class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/pull_black.png"     height="17" width="17"> pull, </span> 
+            <span id="push"   class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/push_black.png"     height="17" width="17"> push, </span> 
+            <span id="tag"    class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/tag_black.png"      height="17" width="17"> tag </span>
+            
+            <br>
+            <br>
+            
+            <i style="left:20px">
+                <div id="notes_div" class="visibleText" >
+                    Keep personal project notes here.  Notes can be written either in rich text or markdown. Notes are stored in .Pragma-git/Notes folder
+                </div>
+                
+                <div id="branch_div" class="hiddenText" >
+                    Create a new branch from your position
+                </div>
+                 
+                <div id="merge_div" class="hiddenText" >
+                    Merge branch selected from dropdown menu, into current branch
+                </div>
+                 
+                <div id="pull_div" class="hiddenText">
+                    Manual updates are available to be pulled from remote repository. Click to pull (download) from remote repository
+                </div>
+                 
+                 
+                <div id="push_div" class="hiddenText">
+                    Manual push to remote repository.  This is only visible if auto-push is disabled in settings.
+                </div>
+                 
+                 
+                <div id="tag_div" class="hiddenText">
+                    Create a "tag" from this commit.  A tag is a named alias that refers to the current revision
+                </div>
+            </i>
+     
+            <br> 
+     
+           
+           
+            <h4>Status bar / lower icons (click icon for explanation):</h4> 
+            <br>
+            
+            <span id="folder"   class="textLink2 visibleTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/folder_black.png"     height="17" width="17"> folder, </span>
+            <span id="terminal"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/terminal_black.png"      height="17" width="17"> terminal, </span>
+             
+            <span id="graph"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')">  <img src="images/more_black.png"  height="17" width="17"> graph, </span>
+            <span id="pinned"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')">  <img src="images/pinned_enabled_black.png"  height="17" width="17"> marked, </span>
+     
+            <span id="revert" class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/revert_black.png"   height="17" width="17"> revert,</span> 
+            <span id="cherry" class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/cherry-pick_black.png"   height="17" width="17"> cherry-pick, </span>
+            <span id="stash"  class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/stash_black.png"    height="17" width="17"> stash, </span> 
+            <span id="stash_pop"   class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/stash_pop_black.png"     height="17" width="17"> stash-pop, </span>
+             
+            <span id="settings"   class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/settings_black.png"     height="17" width="17"> settings </span> 
+          
+            <br>
+            <br>
+        
+            <i> 
+                
+                <div id="folder_div" class="visibleText" >
+                    Show project folder
+                </div>
+                 
+                <div id="terminal_div" class="hiddenText" >
+                    Open terminal in project folder
+                </div>
+                 
+                 
+                <div id="graph_div" class="hiddenText" >
+                    Shows a graphical view of the commit history
+                </div>
+                
+                <div id="pinned_div" class="hiddenText" >
+                    <img src="images/pinned_disabled_black.png"  height="17" width="17">
+                    Not marked, means that history is compared with previous commit. 
+                    <img src="images/pinned_enabled_black.png"  height="17" width="17">
+                    Marked checkbox, means that other commits are compared to the marked commit            
+                </div>
+                    
+                
+                <div id="revert_div" class="hiddenText" >
+                    "Revert" (undo changes) introduced in this commit. Commit these changes or keep editing
+                </div>
+                 
+                <div id="cherry_div" class="hiddenText" >
+                    "Cherry-pick" (copy changes) introduced in this commit to branch selected from dropdown menu. Commit these changes or keep editing
+                </div>
+            
+                 
+                <div id="stash_div" class="hiddenText">
+                    Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history
+                </div>
+                 
+                 
+                <div id="stash_pop_div" class="hiddenText">
+                    "Stash pop" (retrieve) your stashed files into our working folder
+                </div>
+                 
+                <div id="settings_div" class="hiddenText">
+                    Settings dialog.  Here you can manage repositories, branches, software settings etc
+                </div>
+                
+            </i>
+            <br>
+            
+            
+            
+            
+                      
+            <h4>History browsing / left icons (click icon for explanation):</h4> 
+            <br>
+            
+            <span id="downHistory"    class="textLink3 visibleTextLink" onclick="showClickedText(this.id, 'textLink3')"> <img src="images/down-arrow_hover.png" height="17" width="17"> older, </span> 
+            <span id="upHistory"      class="textLink3 hiddenTextLink" onclick="showClickedText(this.id, 'textLink3')"> <img src="images/up-arrow_hover.png"    height="17" width="17"> newer, </span>
+            <span id="seachHistory"   class="textLink3 hiddenTextLink" onclick="showClickedText(this.id, 'textLink3')">  <img src="images/find_black.png"       height="17" width="17"> find   </span>
+            <br>
+            <br>
+        
+            <i> 
+                
+                <div id="downHistory_div" class="visibleText" >
+                    Show older historical commit
+                </div>
+                 
+                <div id="upHistory_div" class="hiddenText" >
+                    Show newer historical commit
+                </div>
+                 
+                <div id="seachHistory_div" class="hiddenText" >
+                    Enables a search dialog for historical commits
+                </div>
+          
+                
+            </i>
+            <br>
+            
+         <h4>The Checkout button</h4>
+            <div>
+  
+            <p class="indent"> 
+                <button>Checkout</button> Check out an older revison (shown when browsing history with the 
+                <img src="images/down-arrow_hover.png"  height="17" width="17">, <img src="images/up-arrow_hover.png"  height="17" width="17"> buttons; see <a href="#ADVANCED_USE">advanced use</a>)
+            </p>              
+            </div>
+            
+            
+         
+            <hr>
+        
+        <!-------------------------------------------------------------------------------------------->                                  
+        <h3>Learn more</h3>   
+        <!--------------------------------------------------------------------------------------------> 
+        <hr>  
+       
+ 
 
  <!-------------------------------------------------------------------------------------------->                                  
          <h4 id="STORE">Store version with short description </h4>
@@ -675,6 +887,7 @@
         <hr>             
  <!-------------------------------------------------------------------------------------------->                                  
         <h2>Credits</h2>
+        <hr>  
             
             <dl>
               <dt>This program could not have been written without the following libraries </dt>
@@ -693,7 +906,7 @@
         <br>   <!--  empty row at bottom  -->
 
     </div>
-</div>
+
 
  <!-------------------------------------------------------------------------------------------->                                  
 
