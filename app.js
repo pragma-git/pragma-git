@@ -3094,10 +3094,15 @@ async function gitIsInstalled(){
             if (err == undefined){
                 isInstalled = true;
                 localState.gitVersion = result
+            }else{
+                displayLongAlert('Git error', err, 'error')
+                throw 'error testing git version'
             }
         }; 
     }catch(err){
+        // Bail out
         console.log(err); 
+        return isInstalled;
     }
 
     // Alert dialog if not installed
@@ -3108,7 +3113,6 @@ async function gitIsInstalled(){
     }
     
     state.git = isInstalled;
-
     return isInstalled;
 
 }
