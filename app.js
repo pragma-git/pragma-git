@@ -550,11 +550,12 @@ async function _callback( name, event){
       }
       case 'clicked-find': {
         let delta = Math.round( 40 * state.zoomMain); 
-        let fix = -1; // One pixel move settles visibility somehow
+        let fix = 0; // One pixel move settles visibility somehow
         
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             // Show find
             document.getElementById('output_row').style.visibility = 'visible';
+            document.getElementById('grid-container').style.gridTemplateRows = "31px auto max-content 31px";
             win.resizeTo(win.width, win.height + fix);
             win.resizeTo(win.width, win.height + delta);
             
@@ -564,6 +565,7 @@ async function _callback( name, event){
         }else{
             // Hide find
             document.getElementById('output_row').style.visibility = 'collapse';
+            document.getElementById('grid-container').style.gridTemplateRows = "31px auto 0px 31px";
             win.resizeTo(win.width, win.height - delta);
             win.resizeTo(win.width, win.height - fix);
             
@@ -5474,6 +5476,9 @@ function updateContentStyle() {
     // zoom factor
     var zoom = state.zoomMain;
     window.document.body.style.zoom = zoom;
+    
+    return
+    // TODO : remove rest
 
     // Window size is in screen coordinates
     // Scale to window coordinates :

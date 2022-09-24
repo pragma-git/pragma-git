@@ -51,469 +51,377 @@
     </script>
     
     
-    
-    <!-- Top titlebar -->    
-    
-    <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);">
-                
-        <!-- Icon About  --> 
-        <div class="about-icon"> 
-            <img id="about-icon"    height="17" width="17"  
-                onclick="updateImageUrl('about-icon', 'images/questionmark.png');
-                        _callback('clicked-about');" 
-                onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
-                onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
-                src="images/questionmark.png">
+    <div id="grid-container" style="
+        height: 100%; 
+        display: grid; 
+        grid-template-columns: 31px auto 60px; 
+        grid-template-rows: 31px auto 0px 31px;
+        align-items: center;"
+    >
 
-        </div>
-            
-
-        <div id="top-titlebar-text" class="top-titlebar-text">
-            
-            <!-- Text Repo  --> 
-            <div class="tooltip-bottom-left" data-tooltip="Repositories" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
-    
-                &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
-                    onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
-                            _callback('clicked-repo', 'menu')" 
-                    onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
-                    >&#x25BE;</div>
+        
+        <!-- Top titlebar -->    
+        
+        <div id="top-titlebar" class="top-titlebar" style="background-color: rgb(122, 124, 124);"  style="grid-column-start: 1; grid-column-end: 4;">
                     
-                <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                    onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
-                    onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+            <!-- Icon About  --> 
+            <div class="about-icon"> 
+                <img id="about-icon"    height="17" width="17"  
+                    onclick="updateImageUrl('about-icon', 'images/questionmark.png');
+                            _callback('clicked-about');" 
+                    onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                    onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                    src="images/questionmark.png">
+    
+            </div>
+                
+    
+            <div id="top-titlebar-text" class="top-titlebar-text">
+                
+                <!-- Text Repo  --> 
+                <div class="tooltip-bottom-left" data-tooltip="Repositories" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+        
+                    &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
+                        onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
+                                _callback('clicked-repo', 'menu')" 
+                        onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
+                        onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
+                        >&#x25BE;</div>
+                        
+                    <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
+                        onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
+                        onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
+                        onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Text Branch  --> 
-            <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
-            
-                &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
-                    onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
-                             _callback('clicked-branch', 'menu')" 
-                    onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
-                    >&#x25BE;</div>
-                    
-                    <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
-                    onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
-                             _callback('clicked-branch', 'cycle')" 
-                    onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-                </div>)
-            </div>
-            
-            &nbsp;
-             
-            <!-- Icon Notes  -->                             
-            <div class="top-titlebar-notes-icon tooltip-bottom " data-tooltip="Personal notes">
-                <img id="top-titlebar-notes-icon" height="17" width="17" 
-                    onclick="updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');
-                             _callback('clicked-notes')"
-                    onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
-                    onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
-                    src="images/notes.png">
-            </div> 
-            
-            
- 
-        </div>     
-        
-        
-                    
-
-
-
-        <!-- NOTE : set absolute positions in style.css -->
- 
-
- 
-        <!-- Icon Branch  -->                             
-        <div class="top-titlebar-branch-icon tooltip-bottom " data-tooltip="Create branch">
-            <img id="top-titlebar-branch-icon" height="17" width="17" 
-                onclick="updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');
-                         document.getElementById('branchNameInputDialog').showModal();" 
-                onmouseover="updateImageUrl('top-titlebar-branch-icon', 'images/branch_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');" 
-                src="images/branch.png">
-        </div> 
                 
-                                                 
-        <!-- Icon Merge  -->                             
-        <div class="top-titlebar-merge-icon tooltip-bottom " data-tooltip="Merge">
-            <img id="top-titlebar-merge-icon" height="17" width="17" 
-                onclick="updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');
-                         _callback('clicked-merge-button')" 
-                onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
-                src="images/merge.png">
-        </div> 
+                <!-- Text Branch  --> 
+                <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
                 
+                    &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
+                        onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
+                                 _callback('clicked-branch', 'menu')" 
+                        onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
+                        onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
+                        >&#x25BE;</div>
                         
-        <!-- Icon Pull  --> 
-        <div class="top-titlebar-pull-icon tooltip-bottom-right " data-tooltip="Pull from remote">
-            <img id="top-titlebar-pull-icon" height="17" width="17" 
-                onclick="_callback('clicked-pull-button')" 
-                onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-pull-icon', 'images/pull.png');" 
-                src="images/pull.png">
-        </div>   
-
-                   
-        <!-- Icon Push  -->         
-        <div class="top-titlebar-push-icon tooltip-bottom-right " data-tooltip="Push to remote">
-            <img id="top-titlebar-push-icon" height="17" width="17" 
-                onclick="updateImageUrl('top-titlebar-push-icon', 'images/push.png');
-                         _callback('clicked-push-button')" 
-                onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
-                src="images/push.png">
-        </div> 
-    
-                        
-        <!-- Icon Tag  -->                             
-        <div class="top-titlebar-tag-icon tooltip-bottom-right " data-tooltip="Tag">
-            <img id="top-titlebar-tag-icon" height="17" width="auto" 
-                onclick="updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');
-                         _callback('clicked-tag-button');" 
-                onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');" 
-                src="images/tag.png">
-        </div> 
-                        
-        
-        <!-- Top right icons  -->           
-        <div class="top-titlebar-close-field">  
-                    
-            <!-- Icon Minimize  -->                     
-            <img id="top-titlebar-minimize-icon" height="17" width="17" 
-                onclick="_callback('clicked-minimize-button')" 
-                onmouseover="updateImageUrl('top-titlebar-minimize-icon', 'images/minimize_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-minimize-icon', 'images/minimize.png');" 
-                src="images/minimize.png">
- 
-            
-            <!-- Icon Close  -->              
-            <img id="top-titlebar-close-icon" 
-                onclick="_callback('clicked-close-button')" 
-                onmouseover="updateImageUrl('top-titlebar-close-icon', 'images/button_close_hover.png');" 
-                onmouseout= "updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
-                src="images/button_close.png">
-        </div>
-        
-          
-        <div class="top-titlebar-divider"></div> 
-        
-    </div>
-
-
-
-    <!-- Content -->      
-
-    <div id="content">
-        <div id="inner-content">
-                    
-            <table id="outer_table">
-                <tr>
-                    <!-- History arrows  --> 
-                    <td id='left-column'>
-                        <table id="arrow_table">  
-                        <tr height="12px">
-                            <td> 
-
-                            </td> 
-                        </tr>      
-         
-                        <tr height="17px">
-                            <td>
-                                <img id="up-arrow"  height="17" width="17" 
-                                    onclick="_callback( 'clicked-up-arrow')" 
-                                    onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
-                                    onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
-                                    src="images/up-arrow.png">
-                            </td> 
-                        </tr>            
-                        <tr height="17px">
-                            <td>
-                                <img id="down-arrow"  height="17" width="17" 
-                                    onclick="_callback( 'clicked-down-arrow')"  
-                                    onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
-                                    onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
-                                    src="images/down-arrow.png">
-                            </td> 
-                        </tr> 
-                        <tr height="8px">
-                            <td> 
-                            </td> 
-                        </tr>       
-                         <!-- Icon Find  -->   
-                        <tr height="auto"  style="height: fit-content">
-                            <td>
-                                <img id="bottom-titlebar-find-icon" height="15" width="15"  style="padding-left: 3px"
-                                    onclick="updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');
-                                             _callback('clicked-find');updateContentStyle();"
-                                    onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
-                                    onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
-                                    src="images/find.png">
-                            </td> 
-                        </tr>   
-
-                        </table>
-                    </td>
-                    
-                    <!-- Message textarea  --> 
-                    <td class="message_column">
-                        <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
-                    </td>
-                    <!-- Store button  --> 
-                    <td>
-                        <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
-                    </td>
-                </tr>
-                
-                <!-- Collapsable html output  --> 
-                <tr id="output_row" style="visibility:collapse">
-                    <td>
-                
-                    </td>
-                    <td class="message_column">
-                        <div id="output_text">
-                                                        
-                            <div class="group">
-                                <label for="findTextInput">  <span id="mess_text" style="color: var(--text);">message</span> &nbsp;
-                                    <label class="switch">
-                                        <input id="message_code_switch" type="checkbox" class="slider round" onclick="colorSwitchTexts();find_button.click()">
-                                        <span class="slider round"></span> 
-                                    </label>
-                                    &nbsp; <span id="code_text" style="color: var(--dim-text);">code-change</span> 
-                                </label>
-                                <input id="findTextInput" type="text" placeholder="text"  size="25" onkeydown="clickFind()"/> 
-                            </div>
-                            
-                            &nbsp;&nbsp;
-                            
-                             
-                            <div class="group">
-                                <label for="findFileInput"> file</label>
-                                <input id="findFileInput" type="text" placeholder="file name"  size="25" onkeydown="clickFind()"/>
-                            </div>
-                            
-                            
-                            &nbsp;&nbsp;
-                                                       
-                            <div class="group">
-                                <label for="findDateInputAfter"> since (oldest)</label>
-                                <input id="findDateInputAfter" type="text" placeholder="YYYY-MM-DD"  size="12" onkeydown="clickFind()"/> 
-                            </div>
-                            
-                            -
-                            
-                            <div class="group">
-                                <label for="findDateInputBefore"> until (newest)</label>
-                                <input id="findDateInputBefore" type="text" placeholder="YYYY-MM-DD" value="0 days" size="12" onkeydown="clickFind()"/>
-                            </div>
-                            
-                            &nbsp;
-
-                            <img id="about-icon-find"   height="17" width="17"  
-                                onclick="_callback('help-on-find')" 
-                                onmouseover="updateImageUrl('about-icon-find', 'images/questionmark_black.png');" 
-                                onmouseout= "updateImageUrl('about-icon-find', 'images/questionmark_hover.png');" 
-                                src="images/questionmark_hover.png">
-                        </div>
-                        
-                    </td>
-                    <td style='text-align:center' >
-                            <button id="find_button"   style='vertical-align:bottom;'  onclick="_callback('clicked-find-button')" >Find</button>
-                            
-                    </td>
-                </tr>
-            </table>
-            <script>
-                function clickFind() {
-                    if (event.keyCode == 13) {
-                        find_button.click();
-                    } 
-                }
-                function colorSwitchTexts(){
-                    if ( document.getElementById("message_code_switch").checked ){
-                        document.getElementById('code_text').setAttribute('style','color: var(--text)');
-                        document.getElementById('mess_text').setAttribute('style','color: var(--dim-text)');
-                    }else{
-                        document.getElementById('code_text').setAttribute('style','color: var(--dim-text)');
-                        document.getElementById('mess_text').setAttribute('style','color: var(--text)');
-                    }
-                }
-            </script>    
-
-
-        </div>
-    </div>
-
-
-
-    <!-- Bottom titlebar -->    
-    
-    <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124);">
-        
-        <!-- Icon Folder  -->  
-        <div class="bottom-titlebar-folder-icon tooltip-top-left " data-tooltip="Repository folder">
-            <img id="bottom-titlebar-folder-icon"  height="17" width="17"
-                onclick="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');
-                         _callback('clicked-folder')" 
-                onmouseover="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder_hover.png');" 
-                onmouseout="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');" 
-                src="images/folder.png">
-            </div>
-
-        <!-- Icon Terminal  -->  
-        <div class="bottom-titlebar-terminal-icon tooltip-top-left " data-tooltip="Command line">
-            <img id="bottom-titlebar-terminal-icon"  height="17" width="17"
-                onclick="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal.png');
-                         _callback('clicked-terminal')" 
-                onmouseover="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal_hover.png');" 
-                onmouseout="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal.png');" 
-                src="images/terminal.png">
-            </div>            
- 
-         <!-- Text Status and pinned icon  -->     
-
-       <div id="bottom-titlebar-div" class="bottom-titlebar-text">
-    
-    
-            <!-- Text status  -->  
-            <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
-                    onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
-                             _callback('clicked-status-text')"
-                             
-                    onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
-                    onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >           
-
-                <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" >
+                        <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                        onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
+                                 _callback('clicked-branch', 'cycle')" 
+                        onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
+                        onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
+                    </div>)
                 </div>
-            </div>
-            &nbsp;
+                
+                &nbsp;
+                 
+                <!-- Icon Notes  -->                             
+                <div class="top-titlebar-notes-icon tooltip-bottom " data-tooltip="Personal notes">
+                    <img id="top-titlebar-notes-icon" height="17" width="17" 
+                        onclick="updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');
+                                 _callback('clicked-notes')"
+                        onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
+                        onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
+                        src="images/notes.png">
+                </div> 
+                
+                
+     
+            </div>     
             
             
-            <!-- Icon Graph  --> 
-             <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
-                <img id="more" style="vertical-align:middle;" height="17" width="17" 
-                                    onclick="_callback( 'clicked-graph')" 
-                                    onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
-                                    onmouseout="updateImageUrl('more', 'images/more.png');" 
-                                    src="images/more.png">
+                        
+    
+    
+    
+            <!-- NOTE : set absolute positions in style.css -->
+     
+    
+     
+            <!-- Icon Branch  -->                             
+            <div class="top-titlebar-branch-icon tooltip-bottom " data-tooltip="Create branch">
+                <img id="top-titlebar-branch-icon" height="17" width="17" 
+                    onclick="updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');
+                             document.getElementById('branchNameInputDialog').showModal();" 
+                    onmouseover="updateImageUrl('top-titlebar-branch-icon', 'images/branch_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-branch-icon', 'images/branch.png');" 
+                    src="images/branch.png">
             </div> 
-            &nbsp;
+                    
+                                                     
+            <!-- Icon Merge  -->                             
+            <div class="top-titlebar-merge-icon tooltip-bottom " data-tooltip="Merge">
+                <img id="top-titlebar-merge-icon" height="17" width="17" 
+                    onclick="updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');
+                             _callback('clicked-merge-button')" 
+                    onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
+                    src="images/merge.png">
+            </div> 
+                    
+                            
+            <!-- Icon Pull  --> 
+            <div class="top-titlebar-pull-icon tooltip-bottom-right " data-tooltip="Pull from remote">
+                <img id="top-titlebar-pull-icon" height="17" width="17" 
+                    onclick="_callback('clicked-pull-button')" 
+                    onmouseover="updateImageUrl('top-titlebar-pull-icon', 'images/pull_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-pull-icon', 'images/pull.png');" 
+                    src="images/pull.png">
+            </div>   
+    
+                       
+            <!-- Icon Push  -->         
+            <div class="top-titlebar-push-icon tooltip-bottom-right " data-tooltip="Push to remote">
+                <img id="top-titlebar-push-icon" height="17" width="17" 
+                    onclick="updateImageUrl('top-titlebar-push-icon', 'images/push.png');
+                             _callback('clicked-push-button')" 
+                    onmouseover="updateImageUrl('top-titlebar-push-icon', 'images/push_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-push-icon', 'images/push.png');" 
+                    src="images/push.png">
+            </div> 
+        
+                            
+            <!-- Icon Tag  -->                             
+            <div class="top-titlebar-tag-icon tooltip-bottom-right " data-tooltip="Tag">
+                <img id="top-titlebar-tag-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');
+                             _callback('clicked-tag-button');" 
+                    onmouseover="updateImageUrl('top-titlebar-tag-icon', 'images/tag_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-tag-icon', 'images/tag.png');" 
+                    src="images/tag.png">
+            </div> 
+                            
+            
+            <!-- Top right icons  -->           
+            <div class="top-titlebar-close-field">  
+                        
+                <!-- Icon Minimize  -->                     
+                <img id="top-titlebar-minimize-icon" height="17" width="17" 
+                    onclick="_callback('clicked-minimize-button')" 
+                    onmouseover="updateImageUrl('top-titlebar-minimize-icon', 'images/minimize_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-minimize-icon', 'images/minimize.png');" 
+                    src="images/minimize.png">
+     
+                
+                <!-- Icon Close  -->              
+                <img id="top-titlebar-close-icon" 
+                    onclick="_callback('clicked-close-button')" 
+                    onmouseover="updateImageUrl('top-titlebar-close-icon', 'images/button_close_hover.png');" 
+                    onmouseout= "updateImageUrl('top-titlebar-close-icon', 'images/button_close.png');" 
+                    src="images/button_close.png">
+            </div>
+            
+              
+            <div class="top-titlebar-divider"></div> 
+            
+        </div>
+
+
+        <!-- Content -->   
+        
+        <div class="left" style="grid-row: 2 ; grid-column: 1">  
+
+
+            <img id="up-arrow"  height="17" width="17" 
+                onclick="_callback( 'clicked-up-arrow')" 
+                onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
+                onmouseout="updateImageUrl('up-arrow', 'images/up-arrow.png');" 
+                src="images/up-arrow.png">  <br>
                          
-            <!-- Icon Pinned  -->                             
-            <div class="top-titlebar-pinned-icon tooltip-top-left " data-tooltip="Fixed commit to compare with">
-                <img id="top-titlebar-pinned-icon" height="17" width="17" 
-                    onclick=" wasPinned = (localState.pinnedCommit !== ''); 
-                              isPinned = !wasPinned;
-                              _callback('clicked-pinned-icon',isPinned)"                     
+        
+            <img id="down-arrow"  height="17" width="17" 
+                onclick="_callback( 'clicked-down-arrow')"  
+                onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
+                onmouseout="updateImageUrl('down-arrow', 'images/down-arrow.png');" 
+                src="images/down-arrow.png"><br>
                     
-                             
-                    onmouseover="if (localState.pinnedCommit === ''){ 
-                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
-                                 } else {
-                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
-                                 }" 
-                                 
-                    onmouseout="if (localState.pinnedCommit === ''){ 
-                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
-                                 } else {
-                                    updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled.png');
-                                 }" 
-                                 
-                    src="images/pinned_disabled.png">
-            </div> 
-            &nbsp;
+             <img id="bottom-titlebar-find-icon" height="15" width="15"  style="padding-left: 3px"
+                onclick="updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');
+                         _callback('clicked-find');updateContentStyle();"
+                onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
+                onmouseout= "updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');" 
+                src="images/find.png">
+
+        </div>
+        
+
+        <div class="row1" style="grid-row: 2 ; grid-column: 2;  background-color: green; "> 
+            <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
+        </div>
+        
+        <div class="right" style="grid-row: 2; grid-column: 3"> 
+            <button id="store-button" onclick="_callback('clicked-store-button')"  disabled >Store</button>
+        </div>
+
+
+        <!-- Foldable search-Content --> 
+                  
+        <div id="output_row"   class="row2"  style="grid-row: 3; grid-column: 1/3;  visibility:collapse;"> ROW 2 </div>
+        
+        
+        <!-- Bottom titlebar -->    
+        
+        <div id="bottom-titlebar" class="bottom-titlebar" style="background-color: rgb(122, 124, 124); grid-row: 4; grid-column: 1/3">
             
-                
-            <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
-                    <!-- Note : tooltip changes in app/drawPinImage depending of pin checkbox --> 
-            <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
-                
-                <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
-                    onclick="if (localState.pinnedCommit !== ''){
-                                document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
-                                _callback('clicked-pinned-hash');
-                            }else{
-                                // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
-                                navigator.clipboard.writeText(localState.historyHash);
-                            }"
-                            
-                    onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');"       
-                    onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+            <!-- Icon Folder  -->  
+            <div class="bottom-titlebar-folder-icon tooltip-top-left " data-tooltip="Repository folder">
+                <img id="bottom-titlebar-folder-icon"  height="17" width="17"
+                    onclick="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');
+                             _callback('clicked-folder')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder_hover.png');" 
+                    onmouseout="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');" 
+                    src="images/folder.png">
                 </div>
-            </div>
-        </div>     
-
-
-            
-                                               
-        <!-- Icon Revert  -->                             
-        <div class="bottom-titlebar-revert-icon tooltip-top-right " data-tooltip="Revert (undo) changes in this commit">
-            <img id="bottom-titlebar-revert-icon" height="17" width="auto" 
-                onclick="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');
-                         _callback('clicked-revert-button')" 
-                onmouseover="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert_hover.png');" 
-                onmouseout= "updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');" 
-                src="images/revert.png">
-        </div> 
-            
-                                               
-        <!-- Icon Cherry-pick  -->                             
-        <div class="bottom-titlebar-cherry-pick-icon tooltip-top-right " data-tooltip="cherry-pick this commit (to other branch)">
-            <img id="bottom-titlebar-cherry-pick-icon" height="17" width="auto" 
-                onclick="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');
-                         _callback('clicked-cherry-pick-button')" 
-                onmouseover="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick_hover.png');" 
-                onmouseout= "updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');" 
-                src="images/cherry-pick.png">
-        </div> 
-            
-                                               
-        <!-- Icon Stash  -->                             
-        <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
-            <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
-                onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
-                         _callback('clicked-stash-button')" 
-                onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
-                onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
-                src="images/stash.png">
-        </div> 
-        
-                                             
-        <!-- Icon Stash pop  -->                             
-        <div class="bottom-titlebar-stash_pop-icon tooltip-top-right " data-tooltip="Retrieve latest stash">
-            <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
-                onclick="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');
-                         _callback('clicked-stash_pop-button')" 
-                onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
-                onmouseout= "updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');" 
-                src="images/stash_pop.png">
-        </div>    
-            
-            
-            
-            
-
-        <!-- Icon Settings  -->  
-        <div class="bottom-titlebar-settings-field tooltip-top-right " data-tooltip="Settings">
-            <img id="bottom-titlebar-settings-icon"  height="17" width="17"
-                onclick="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');
-                         _callback('clicked-settings')"
-                onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 
-                onmouseout="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');" 
-                src="images/settings.png">
-            </div>
-        
-        <div class="bottom-titlebar-divider"></div>
-    </div>
     
+            <!-- Icon Terminal  -->  
+            <div class="bottom-titlebar-terminal-icon tooltip-top-left " data-tooltip="Command line">
+                <img id="bottom-titlebar-terminal-icon"  height="17" width="17"
+                    onclick="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal.png');
+                             _callback('clicked-terminal')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal_hover.png');" 
+                    onmouseout="updateImageUrl('bottom-titlebar-terminal-icon', 'images/terminal.png');" 
+                    src="images/terminal.png">
+                </div>            
+     
+             <!-- Text Status and pinned icon  -->     
+    
+           <div id="bottom-titlebar-div" class="bottom-titlebar-text">
+        
+        
+                <!-- Text status  -->  
+                <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
+                        onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
+                                 _callback('clicked-status-text')"
+                                 
+                        onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
+                        onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >           
+    
+                    <div id="bottom-titlebar-text" class="bottom-titlebar-status-text" >
+                    </div>
+                </div>
+                &nbsp;
+                
+                
+                <!-- Icon Graph  --> 
+                 <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
+                    <img id="more" style="vertical-align:middle;" height="17" width="17" 
+                                        onclick="_callback( 'clicked-graph')" 
+                                        onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
+                                        onmouseout="updateImageUrl('more', 'images/more.png');" 
+                                        src="images/more.png">
+                </div> 
+                &nbsp;
+                             
+                <!-- Icon Pinned  -->                             
+                <div class="top-titlebar-pinned-icon tooltip-top-left " data-tooltip="Fixed commit to compare with">
+                    <img id="top-titlebar-pinned-icon" height="17" width="17" 
+                        onclick=" wasPinned = (localState.pinnedCommit !== ''); 
+                                  isPinned = !wasPinned;
+                                  _callback('clicked-pinned-icon',isPinned)"                     
+                        
+                                 
+                        onmouseover="if (localState.pinnedCommit === ''){ 
+                                        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled_hover.png');
+                                     } else {
+                                        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled_hover.png');
+                                     }" 
+                                     
+                        onmouseout="if (localState.pinnedCommit === ''){ 
+                                        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
+                                     } else {
+                                        updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_enabled.png');
+                                     }" 
+                                     
+                        src="images/pinned_disabled.png">
+                </div> 
+                &nbsp;
+                
+                    
+                <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
+                        <!-- Note : tooltip changes in app/drawPinImage depending of pin checkbox --> 
+                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                    
+                    <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
+                        onclick="if (localState.pinnedCommit !== ''){
+                                    document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');
+                                    _callback('clicked-pinned-hash');
+                                }else{
+                                    // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
+                                    navigator.clipboard.writeText(localState.historyHash);
+                                }"
+                                
+                        onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');"       
+                        onmouseout="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #ffffff');" > 
+                    </div>
+                </div>
+            </div>     
+    
+    
+                
+                                                   
+            <!-- Icon Revert  -->                             
+            <div class="bottom-titlebar-revert-icon tooltip-top-right " data-tooltip="Revert (undo) changes in this commit">
+                <img id="bottom-titlebar-revert-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');
+                             _callback('clicked-revert-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-revert-icon', 'images/revert_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-revert-icon', 'images/revert.png');" 
+                    src="images/revert.png">
+            </div> 
+                
+                                                   
+            <!-- Icon Cherry-pick  -->                             
+            <div class="bottom-titlebar-cherry-pick-icon tooltip-top-right " data-tooltip="cherry-pick this commit (to other branch)">
+                <img id="bottom-titlebar-cherry-pick-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');
+                             _callback('clicked-cherry-pick-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-cherry-pick-icon', 'images/cherry-pick.png');" 
+                    src="images/cherry-pick.png">
+            </div> 
+                
+                                                   
+            <!-- Icon Stash  -->                             
+            <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
+                <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
+                             _callback('clicked-stash-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
+                    src="images/stash.png">
+            </div> 
+            
+                                                 
+            <!-- Icon Stash pop  -->                             
+            <div class="bottom-titlebar-stash_pop-icon tooltip-top-right " data-tooltip="Retrieve latest stash">
+                <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');
+                             _callback('clicked-stash_pop-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');" 
+                    src="images/stash_pop.png">
+            </div>    
+                
+                
+                
+                
+    
+            <!-- Icon Settings  -->  
+            <div class="bottom-titlebar-settings-field tooltip-top-right " data-tooltip="Settings">
+                <img id="bottom-titlebar-settings-icon"  height="17" width="17"
+                    onclick="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');
+                             _callback('clicked-settings')"
+                    onmouseover="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings_hover.png');" 
+                    onmouseout="updateImageUrl('bottom-titlebar-settings-icon', 'images/settings.png');" 
+                    src="images/settings.png">
+                </div>
+            
+            <div class="bottom-titlebar-divider"></div>
+        </div>
+
+
+    </div>
+     
     
 <!--          -->    
 <!-- Dialogs  -->   
