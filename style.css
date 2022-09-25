@@ -95,7 +95,21 @@ td {
 
 
 #up-arrow, #down-arrow, #bottom-titlebar-find-icon{
-  filter: brightness( var(--history-icon-brightness)) 
+  filter: brightness( var(--history-icon-brightness));
+  position: fixed;
+  left: 5px;
+}
+
+#up-arrow{
+  bottom: calc( 50% + 10px);
+}
+#down-arrow{
+  bottom: calc( 50% - 10px);
+}
+
+#bottom-titlebar-find-icon{
+  bottom: 38px;
+  left: 8px;
 }
 
 
