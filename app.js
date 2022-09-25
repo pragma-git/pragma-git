@@ -555,6 +555,7 @@ async function _callback( name, event){
         if (document.getElementById('output_row').style.visibility == 'collapse' ){
             // Show find
             document.getElementById('output_row').style.visibility = 'visible';
+            document.getElementById('output_row').style.display = 'block';
             document.getElementById('find_button_div').style.visibility = 'visible';
             document.getElementById('grid-container').style.gridTemplateRows = "31px auto max-content 31px";
             win.resizeTo(win.width, win.height + fix);
@@ -565,6 +566,7 @@ async function _callback( name, event){
             }
         }else{
             // Hide find
+            document.getElementById('output_row').style.display = 'none';
             document.getElementById('output_row').style.visibility = 'collapse';
             document.getElementById('find_button_div').style.visibility = 'collapse';
             document.getElementById('grid-container').style.gridTemplateRows = "31px auto 0px 31px";
