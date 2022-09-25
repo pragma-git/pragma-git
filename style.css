@@ -46,6 +46,9 @@ textarea{
 .group{
     display: inline-block;
     text-align: left;
+    float: left;
+    padding: 4px;
+    padding-left: 0px;
 }
 
 
