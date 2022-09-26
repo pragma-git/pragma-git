@@ -1392,7 +1392,7 @@ async function _callback( name, event){
         
         // Popup as context menu
         let pos = document.getElementById('mergeWithDetachedBranchLink').getBoundingClientRect();
-        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, Math.trunc( pos.top * state.zoomMain  + 24) );
           
         break;
       }
@@ -4204,7 +4204,7 @@ return configList
 
 async function gitIsMergeCommit(commit){
     
-    if ( commit == '' ){ // HEAD with modified files 
+    if ( commit == undefined || commit == ''){ // HEAD with modified files 
         return false;
     }
     
