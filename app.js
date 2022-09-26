@@ -372,6 +372,22 @@ async function _callback( name, event){
         pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
         pragmaLog(' ');
         
+        // Check if repo
+        if (fs.existsSync(state.repos[state.repoNumber].localFolder )) {
+            // If folder exists, I am allowed to check if repo
+            
+            // Check if repository 
+            var isRepo;
+            await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo(onCheckIsRepo);
+            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+            if (!isRepo) {
+                displayLongAlert('Repository Error', 'Repository missing', 'error'); 
+            }
+        }else{    
+            // localFolder missiong 
+            displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
+        }
+    
         
         gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
         
@@ -5482,30 +5498,6 @@ function updateContentStyle() {
     window.document.body.style.zoom = zoom;
     
     return
-    // TODO : remove rest
-
-    // Window size is in screen coordinates
-    // Scale to window coordinates :
-    var height = window.outerHeight / zoom;
-    var width = window.outerWidth / zoom;
-    
-    // Element heights adding up to Window size
-    var tb_height = document.getElementById("top-titlebar").offsetHeight; // In same coordinates as window
-    var arrow_buttons_height = document.getElementById('arrow_table').offsetHeight;
-    var outputRowHeight = document.getElementById('output_row').offsetHeight; // Search folds out here
-       
-    // Translate to zoomed in-window coordinates
-    var content_height = ( height  - 2 * tb_height ) - 6;
-
-    
-    // Set content size
-    var top = tb_height + 3;
-    var contentStyle = "position: absolute; ";
-    contentStyle += "left: 0px; ";
-    contentStyle += "top: " + top + "px; ";
-    contentStyle += "height: " + content_height  + "px; ";
-    document.getElementById('content').setAttribute("style", contentStyle);;
-
 }
 
 
