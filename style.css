@@ -46,6 +46,9 @@ textarea{
 .group{
     display: inline-block;
     text-align: left;
+    float: left;
+    padding: 4px;
+    padding-left: 0px;
 }
 
 
@@ -70,24 +73,6 @@ div#inner-content {
 }
 
 
-
-table#outer_table {
-  width: auto;
-  height: inherit;
-  background-color: var(--main-background);
-  border-color: var(--main-background);
-}
-
-tr#output_row {
-  width: auto;
-  height: fit-content;
-}
-
-td {
-  width: auto;
-  height: auto;
-}
-
 .settingsActionCell{
   text-align: center;
 }
@@ -95,7 +80,21 @@ td {
 
 
 #up-arrow, #down-arrow, #bottom-titlebar-find-icon{
-  filter: brightness( var(--history-icon-brightness)) 
+  filter: brightness( var(--history-icon-brightness));
+  position: absolute;
+  left: 5px;
+}
+
+#up-arrow{
+  bottom: calc( 50% + 10px);
+}
+#down-arrow{
+  bottom: calc( 50% - 10px);
+}
+
+#bottom-titlebar-find-icon{
+  bottom: 5px;
+  left: 8px;
 }
 
 
@@ -117,13 +116,6 @@ td {
 #arrow_table{
   height: inherit; 
 }
-
-
-
-.store-button{
-  float: right; 
-}
-
 
 
 .top-titlebar {
