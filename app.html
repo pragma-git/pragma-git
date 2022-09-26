@@ -647,25 +647,91 @@
         
     </dialog>      
 
+    <!-- Simple Detached head dialog (unsaved work)-->  
+    
+    
+                <!-- Icon Stash  -->                             
+            <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
+                <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
+                             _callback('clicked-stash-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
+                    src="images/stash.png">
+            </div> 
+            
+                                                 
+            <!-- Icon Stash pop  -->                             
+            <div class="bottom-titlebar-stash_pop-icon tooltip-top-right " data-tooltip="Retrieve latest stash">
+                <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" 
+                    onclick="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');
+                             _callback('clicked-stash_pop-button')" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop_hover.png');" 
+                    onmouseout= "updateImageUrl('bottom-titlebar-stash_pop-icon', 'images/stash_pop.png');" 
+                    src="images/stash_pop.png">
+            </div>    
+    
+    
+    
+    
+     
+  
+    <dialog id="detachedHeadUnsavedWorkDialog"  class="error">  
+        
+        <!-- Warning text -->  
+        <b>WARNING -- unsaved work !</b><br>
+            You have created files in a detached HEAD <br>
 
+        <label for="stashHEAD">
+            <input type="radio" id="stashHEAD" name="detachedHeadRadiobuttonGroup" value="Stash" checked>
+            Stash : stash work  <img id="bottom-titlebar-stash-icon" height="17" width="auto"src="images/stash.png">. 
+            Recall work with 
+            <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" src="images/stash_pop.png"> 
+            after changing to other branch
+        </label>
+        
+        <label for="deleteUnsavedHead">
+            <input type="radio" id="deleteUnsavedHead" name="detachedHeadRadiobuttonGroup" value="Delete">
+            Delete : discard unsaved work 
+        </label>
 
-    <!-- Detached head dialog -->   
+        <!-- OK / Cancel buttons-->  
+        <br style = "line-height: 0.4em;">
+        
+        <button id="detachedBranchDialogOK" value="OK"
+            onclick="
+                document.getElementById('detachedHeadUnsavedWorkDialog').close();
+                let selectedRadioButton = document.querySelector('input[name=\'detachedHeadRadiobuttonGroup\']:checked').value;
+                _callback('detachedHeadUnsavedWorkDialog', selectedRadioButton );
+                this.click()
+            "> <!-- Call html-dialog for branch selection -->
+            OK
+        </button>   
+         
+        <button id="cancelDetachedDialog" value="Cancel"
+            onclick="document.getElementById('detachedHeadUnsavedWorkDialog').close();">
+            Cancel
+        </button>  
+        
+    </dialog>  
+
+    <!-- Detached head dialog (stored work) -->   
   
     <dialog id="detachedHeadDialog"  class="error" style="overflow: unset">  
         
         <!-- Warning text -->  
         <b>WARNING -- detached HEAD !</b><br>
-            You've created work in an old revision. <br>
+            You've stored new work beginning at an old commit (detached HEAD) <br>
 
         <label for="tempBranch">
             <input type="radio" id="tempBranch" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('tempBranch').checked = true;" onmouseup="_callback('updateDetachedBranchDialog)" value="Temp Branch" checked>
-            Temp branch : keep work in a temporary branch
+            Temp branch : move work to a temporary branch
         </label>
 
         <!-- Radio-buttons -->  
         <label for="mergeWithBranch">
             <input type="radio" id="mergeWithBranch" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('mergeWithBranch').checked = true;" onmouseup="_callback('updateDetachedBranchDialog')"  value="Merge">
-            Merge : keep work and merge with 
+            Merge : merge work into branch 
             
             <!-- This select is just used to indicate that it is a drop-down -- menu is displayed another way (so therefore mouse-down is disabled) --> 
             <select name="mergeWithDetachedBranchLink" id="mergeWithDetachedBranchLink" onmousedown="_callback('clicked-detachedMergeSelectBranch-button')" onmouseup="(function(e){ e.preventDefault();})(event, this)">
@@ -676,7 +742,7 @@
         
         <label for="deleteDetachedHead">
             <input type="radio" id="deleteDetachedHead" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('deleteDetachedHead').checked = true;" onmouseup="_callback('updateDetachedBranchDialog')" value="Delete">
-            Delete : drop work done after checkout of old revision
+            Delete : discard work saved to detached HEAD
         </label>
 
         <!-- OK / Cancel buttons-->  
