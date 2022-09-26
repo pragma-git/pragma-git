@@ -81,7 +81,7 @@ div#inner-content {
 
 #up-arrow, #down-arrow, #bottom-titlebar-find-icon{
   filter: brightness( var(--history-icon-brightness));
-  position: fixed;
+  position: absolute;
   left: 5px;
 }
 
@@ -93,7 +93,7 @@ div#inner-content {
 }
 
 #bottom-titlebar-find-icon{
-  bottom: 38px;
+  bottom: 5px;
   left: 8px;
 }
 

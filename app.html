@@ -220,7 +220,8 @@
 
         <!-- Content -->   
         
-        <div style="grid-row: 2 ; grid-column: 1">  
+        <div style="grid-row: 2 ; grid-column: 1; height: 100%; position:relative;">   <!-- Left -->   
+            
             <img id="up-arrow"  height="17" width="17" 
                 onclick="_callback( 'clicked-up-arrow')" 
                 onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
@@ -243,11 +244,11 @@
                 src="images/find.png">
         </div>
 
-        <div style="grid-row: 2 ; grid-column: 2;"> 
+        <div style="grid-row: 2 ; grid-column: 2;"> <!-- Middle -->   
             <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
         </div>
         
-        <div style="grid-row: 2; grid-column: 3; padding: 0px"> 
+        <div style="grid-row: 2; grid-column: 3; padding: 0px"> <!-- Right -->   
             <button id="store-button" onclick="_callback('clicked-store-button')" style="margin: 6px;"  disabled >Store</button>
         </div>
 
