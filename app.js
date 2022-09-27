@@ -5907,7 +5907,7 @@ function loadSettings(settingsFile){
                     // LocalFolder and URLs
                     state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
                     //state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
-                    state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );
+                    state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );  // Note : this is not used, but see it as a way to document the original upstream from a Fork operation
                     
                     // Local author info
                     state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
