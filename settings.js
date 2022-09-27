@@ -1289,6 +1289,9 @@ async function injectIntoSettingsJs(document) {
         // Set tab from setting
         let tab = 1; // Repository tab
         tabButton[ tab ].click();
+        
+        // Set default branch-name
+        await opener.registerDefaultBranch(document);
     }
 
 

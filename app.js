@@ -4237,7 +4237,20 @@ try{
 }
 return configList
 }
-
+async function registerDefaultBranch(document){
+    
+    let defBranch = await simpleGit().getConfig( 'init.defaultBranch'); 
+    let defBranchName = defBranch.value;
+    
+    // null 
+    if ( defBranchName == null){
+        document.getElementById('defaultBranchName').innerHTML = 'master';  // Assume default
+        return
+    }
+    
+    // Display in document from in-parameter
+    document.getElementById('defaultBranchName').innerText = defBranchName;
+}
 async function gitIsMergeCommit(commit){
     
     if ( commit == undefined || commit == ''){ // HEAD with modified files 
