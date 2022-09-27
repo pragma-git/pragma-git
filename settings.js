@@ -1289,9 +1289,8 @@ async function injectIntoSettingsJs(document) {
         // Set tab from setting
         let tab = 1; // Repository tab
         tabButton[ tab ].click();
-        
-        // Set default branch-name
-        await opener.registerDefaultBranch(document);
+
+
     }
 
 
@@ -1492,6 +1491,10 @@ async function createHtmlTable(document){
     console.log('Settings - createHtmlTable entered');
     console.log('Settings - document :');
     console.log(document)
+    
+            
+    // Set default branch-name
+    await opener.registerDefaultBranch(document);
     
             
     // branch table is generated inside generateRepoTable

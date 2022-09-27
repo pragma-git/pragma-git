@@ -921,6 +921,10 @@
             
             // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
             window.ondrop = function(e) { e.preventDefault(); return false };
+            
+                        
+            // Set default branch-name
+            opener.registerDefaultBranch(document);
 
         });
     </script>
