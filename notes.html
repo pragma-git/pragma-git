@@ -102,10 +102,10 @@
    
                     <div class="toastui-editor-button-container" style="text-align: center; margin: 0px">
                         <span class="notes-popup-text">Version: </span><br>
-                        <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
                         <button id="forward" class="myButton" onClick="newerVersion();">Newer</button><br>
+                        <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
                         
-                        <div id="info" class="notes-popup-text" style="text-align: center;" > latest <br> </div><br>
+                        <div id="info" class="notes-popup-text" style="text-align: center;" > newest <br> </div><br>
                         
                         <button id="original" class="myButton" onClick="resetHistory();">Original</button>
                     </div>
@@ -147,7 +147,7 @@
                     document.getElementById("iframe").contentWindow.editor.moveCursorToStart();
                     
                     // Set menu text
-                    document.getElementById('info').innerHTML = 'latest' + '<br>';
+                    document.getElementById('info').innerHTML = 'newest' + '<br>';
                     
                     // Set button visibility
                     historyButtonVisibility();
