@@ -172,7 +172,7 @@
         
         code{
             color: var(--code-text); 
-            font-size: 11pt;  
+            font-size: inherit;  
         }
         a{
             color: var(--link-color);
