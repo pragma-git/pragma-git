@@ -6074,32 +6074,49 @@ function updateWithNewSettings(){
 
             for (let i = 0; i < windows.length; i++) {
                 
-                // windows 
-                let win_handle =  windows[i];
-                win_handle.window.document.body.classList.remove('light');
-                win_handle.window.document.body.classList.remove('dark');
+                // window 
                 
-                // windows iframe
-                let iframe_handle = win_handle.window.document.getElementById('iframe');
-                if ( iframe_handle != null ){ 
-                   iframe_handle.contentWindow.document.body.classList.remove('light');
-                   iframe_handle.contentWindow.document.body.classList.remove('dark');
-                }  
-                
-                if (localState.dark){
-                    win_handle.window.document.body.classList.add('dark');
+                    let win_handle =  windows[i];
                     
+                    
+                // Dark / light mode
+                
+                    win_handle.window.document.body.classList.remove('light');
+                    win_handle.window.document.body.classList.remove('dark');
+                    
+                    // windows iframe
+                    let iframe_handle = win_handle.window.document.getElementById('iframe');
                     if ( iframe_handle != null ){ 
-                        iframe_handle.contentWindow.document.body.classList.add('dark');
+                       iframe_handle.contentWindow.document.body.classList.remove('light');
+                       iframe_handle.contentWindow.document.body.classList.remove('dark');
+                    }  
+                    
+                    if (localState.dark){
+                        win_handle.window.document.body.classList.add('dark');
+                        
+                        if ( iframe_handle != null ){ 
+                            iframe_handle.contentWindow.document.body.classList.add('dark');
+                        }
+                    }else{
+                        win_handle.window.document.body.classList.add('light');
+                        
+                        if ( iframe_handle != null ){ 
+                           iframe_handle.contentWindow.document.body.classList.add('light');
+                        }                
                     }
-                }else{
-                    win_handle.window.document.body.classList.add('light');
                     
-                    if ( iframe_handle != null ){ 
-                       iframe_handle.contentWindow.document.body.classList.add('light');
-                    }                
-                }
+                                    
                 
+                // Zoom level
+                
+                    if (win_handle.title == 'Notes'){
+                        let iframe_handle_root = win_handle.window.document.getElementById('iframe').contentWindow.document.documentElement;
+                        iframe_handle_root.style.setProperty('--windowScaling', global.state.zoom);
+                    }
+                    else if (win_handle.title !== 'Pragma-git'){
+                        win_handle.window.document.body.style.zoom = state.zoom;
+                    }
+                    
             }    
         } 
     );

@@ -224,7 +224,8 @@
                     Window scaling : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
-                        onchange="global.state.zoomMain = this.value;
+                        onchange="
+                            global.state.zoomMain = this.value;
                             opener.saveSettings();
                             opener.win.reload()"
                         />&nbsp;
@@ -232,7 +233,8 @@
                     
                     <br> 
                     
-                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" onchange="global.state.zoom = this.value;"/>&nbsp;
+                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" 
+                        onchange=" _callback('zoomChanged',this)"/>&nbsp;
                     <label for="zoom"> Other windows</label>
     
                     <br>

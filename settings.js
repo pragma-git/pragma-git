@@ -80,9 +80,24 @@ async function _callback( name, event){
             console.log('visualModeChanged');
             console.log(event);
             global.state.darkmode = id;
-            opener.pragmaLog('   settings radiobutton ' + id + ' = ' + value);
+            opener.pragmaLog('   settings ' + id + ' = ' + value);
             
             // Reload main if Dark mode change
+            opener.updateWithNewSettings();
+            opener.saveSettings();
+            
+            break;
+        } 
+        case 'zoomChanged': {
+            value = document.getElementById(id).value;
+            
+            console.log('zoomChanged');
+            console.log(event);
+            opener.pragmaLog('   settings ' + id + ' = ' + value);
+            
+            global.state.zoom = value;
+            
+            // Reload zoom change
             opener.updateWithNewSettings();
             opener.saveSettings();
             
