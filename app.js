@@ -6110,8 +6110,10 @@ function updateWithNewSettings(){
                 // Zoom level
                 
                     if (win_handle.title == 'Notes'){
-                        let iframe_handle_root = win_handle.window.document.getElementById('iframe').contentWindow.document.documentElement;
-                        iframe_handle_root.style.setProperty('--windowScaling', global.state.zoom);
+                        let root = win_handle.window.document.documentElement;
+                        root.style.setProperty('--windowScaling', global.state.zoom);
+                        root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
+                        root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
                     }
                     else if (win_handle.title !== 'Pragma-git'){
                         win_handle.window.document.body.style.zoom = state.zoom;
