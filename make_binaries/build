@@ -160,7 +160,6 @@
 # Clean old builds
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win32
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win64
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/linux64
     
@@ -272,7 +271,6 @@
     
     WIN_EXIT=0
     
-    rm -r ../dist/win64
     mkdir ../dist/win64
 
     DIR=$(ls -1 ../dist/|grep  'win-x64')
