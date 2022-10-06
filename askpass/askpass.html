@@ -193,6 +193,9 @@
     let hx = window.outerWidth - window.innerWidth;
     let hy = window.outerHeight - window.innerHeight;
     window.resizeTo(dx + hx + 2 * padding , dy + hy + padding + 16);
+    
+    // Set ontop
+    nw.Window.get().setAlwaysOnTop( true );
    
     </script>
     
