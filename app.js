@@ -5497,8 +5497,15 @@ function closeSelectedWindow(){
         function allWindowsCallback( windows) {
             for (let i = 0; i < windows.length; i++) {
                 let win_handle =  windows[i];
-                if ( win_handle.window.document.hasFocus() ){
-                    win_handle.close();
+                
+                // Always allow closing of child-windows
+                if ( win_handle.window.document.hasFocus() && ( win_handle.title !== 'Pragma-git') ){
+                   win_handle.close();
+                }
+                
+                // Only close main window if its the last window
+                if ( win_handle.window.document.hasFocus() && ( win_handle.title == 'Pragma-git') && ( windows.length == 1 ) ){
+                   win_handle.close();
                 }
             }    
         } 
