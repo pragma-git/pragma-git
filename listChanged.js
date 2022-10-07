@@ -124,7 +124,6 @@ async function _callback( name, event, event2){
             }
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
-            closeWindow();
             break;
         }         
         case 'applyRestoreAllButton': {
@@ -560,6 +559,9 @@ async function _callback( name, event, event2){
 // ================= END CALLBACK =================  
 }
 function closeWindow(){
+    
+    // This used to be a button in listChanged.html, no apply selected files when closing window instead
+    _callback('applySelectedFilesButton',this);  
 
     // Return
     
