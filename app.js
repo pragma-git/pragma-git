@@ -465,11 +465,21 @@ async function _callback( name, event){
             try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
             return
         }
+        
+        // Default opening Notes (when event = undefined)
         let fileName = document.getElementById('top-titlebar-repo-text').innerText;
         fileName = path.basename( state.repos[state.repoNumber].localFolder );
         let filePath = notesDir + pathsep + fileName + '.md';
-        global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
+        
+        // Override default -- open editor with file path in event
+        if (event !== undefined){  // Defaults 
+            filePath = state.repos[state.repoNumber].localFolder + pathsep + event;  // Note : filepath is relative top of folder
+            title = filePath;
+        }
+        
+        // Open
+        global.arguments = [ filePath ];  // send through global.arguments
         gui.Window.open('notes.html',
             {
                 id: 'notesWindowId',
