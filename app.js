@@ -1143,16 +1143,7 @@ async function _callback( name, event){
         //await gitAddCommitAndPush( 'First commit');
 
         topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-        
-        // Initial commit
-        setStatusBar( 'Initial commit');
-        let outputData;
-        await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Created Repository'] , onCommit);
-        function onCommit(err, result) {};
-        
-        await waitTime( 1000);
-        console.log(outputData);
-        
+
         if ( event.firstBranch == 'develop'){
             // Create and move to develop branch
             let commands = [ 'checkout', '-b', 'develop'];
@@ -1161,7 +1152,16 @@ async function _callback( name, event){
         }else{
             // Do not create develop 
         }
+         
+        // Initial commit
+        setStatusBar( 'Initial commit');
+        let outputData;
+        await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Created Repository'] , onCommit);
+        function onCommit(err, result) {};
         
+        await waitTime( 1000);
+        console.log(outputData);
+               
         
         
         // add repo to program
