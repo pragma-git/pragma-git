@@ -663,7 +663,10 @@
                         </div>
                         
                         
-                        Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
+                        Or use Github wizard : 
+                        <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'}, win=>win.on('loaded', () => {opener.fixNwjsBug7973(win);} ) );">
+                            GitHub
+                        </button> 
                         
                       
                     </div>
@@ -672,7 +675,9 @@
                     <!--  Add Gitignore TAB -->    
                     <div class="tool-content " id="gitIgnoreDiv" > 
                          <p>
-                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'}  );" >  Edit .gitignore</button> 
+                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'}, win=>win.on('loaded', () => {opener.fixNwjsBug7973(win);} ) );" >  
+                                 Edit .gitignore
+                            </button> 
                          </p>
                          <br>
                          
