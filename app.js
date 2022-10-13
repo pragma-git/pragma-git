@@ -476,10 +476,9 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 600,
-                title: title,
-                show: false
+                title: title
             },
-            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win'); win.resizeBy(0,-28);win.show=true; win.focus()} )
+            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');} )
             )  
         
         localState.notesWindow.open = true;
