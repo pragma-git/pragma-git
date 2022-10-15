@@ -476,10 +476,9 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 600,
-                title: title,
-                show: false
+                title: title
             },
-            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');fixNwjsBug7973(win);} )
+            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');} )
             )  
         
         localState.notesWindow.open = true;
@@ -637,12 +636,8 @@ async function _callback( name, event){
             {   id: 'aboutSearchWindowId3',
                 position: 'center',
                 width: 600,
-                height: 600,
-                show: false
-            }
-            ,
-            win=>win.on('loaded', () => {fixNwjsBug7973(win);} )
-            )          
+                height: 600
+            });         
         break;
       }
 
@@ -736,11 +731,10 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 600,
-                title: title,
-                show: false
+                title: title
             }
             ,
-            win=>win.on('loaded', () => {graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');fixNwjsBug7973(win);} )
+            win=>win.on('loaded', () => {graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');} )
             )  
             
         localState.graphWindow = true;
@@ -1455,7 +1449,7 @@ async function _callback( name, event){
         let text = fs.readFileSync(fileName);
         let title = 'Help on ' + event.name;
                         
-        // Update text in already open window          
+        // Update text            
         if ( localState.helpWindow == true ){
             
             // Delete menu for old help window
@@ -1487,8 +1481,7 @@ async function _callback( name, event){
                 {   id: 'helpId',
                     position: 'center',
                     width: 600,
-                    height: 700,
-                    show: false
+                    height: 700   
                 },
                 function(cWindows){ 
                     cWindows.on('closed', 
@@ -1508,7 +1501,6 @@ async function _callback( name, event){
                             help_win = cWindows.window;
                             updateText( event.name, title, text);
                             addWindowMenu( title, 'help_win');
-                            fixNwjsBug7973(help_win);
                             
                         }
                     )
@@ -1851,8 +1843,7 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: title,
-                show: false   
+                title: title   
             },
             function(cWindows){ 
                 cWindows.on('closed', 
@@ -1871,7 +1862,6 @@ async function _callback( name, event){
                         }
                         about_win = nw.Window.get(cWindows.window);
                         addWindowMenu( title, 'about_win');
-                        fixNwjsBug7973(about_win);
                     }
                 );
 
@@ -2335,10 +2325,9 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: title,
-                show: false
+                title: title
             },
-            win=>win.on('loaded', () => {settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');fixNwjsBug7973(win);} )
+            win=>win.on('loaded', () => {settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');} )
             ); 
         console.log(settings_win);
         localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
@@ -2359,10 +2348,9 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: title,
-                show: false
+                title: title
             },
-                win=>win.on('loaded', () => {resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');fixNwjsBug7973(win);} )
+                win=>win.on('loaded', () => {resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');} )
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
@@ -2377,8 +2365,7 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 700,
-                title: title,
-                show: false
+                title: title
             },
                 win=>win.on('loaded', 
                     () => {
@@ -2388,8 +2375,7 @@ async function _callback( name, event){
                         }
                         list_win = nw.Window.get(win.window);
                         addWindowMenu( title, 'list_win');
-                        
-                        fixNwjsBug7973(win);
+                        //list_win.showDevTools(); // Auto-open Dev-tools for this window
                     }
                 )
             
@@ -3078,10 +3064,9 @@ function startPragmaMerge(){
             position: 'center',
             width: 600,
             height: 700,
-            title: title,
-            show: false
+            title: title
         },
-            win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');fixNwjsBug7973(win);} )
+            win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
     ); 
     
 
@@ -3101,6 +3086,7 @@ function startPragmaAskPass(){
             win=>win.on('loaded', () => {} )
     ); 
     
+    //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
     
 }
 
@@ -5030,13 +5016,7 @@ async function updateSettingsWindow(){
     
     win.focus();
 }
-function fixNwjsBug7973( win){
-    // Nwjs but 7973 is related to windows growing by 28 pixels each time they are opened
-    // The windows should be opened with "show: false" option
-    win.resizeBy(0,-28);
-    win.show=true; 
-    win.focus()
-}
+
 
 // Dialogs
 async function tag_list_dialog(){
