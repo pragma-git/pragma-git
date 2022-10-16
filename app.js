@@ -895,7 +895,7 @@ async function _callback( name, event){
         
         // Popup as context menu
         let pos = document.getElementById('bottom-titlebar-cherry-pick-icon').getBoundingClientRect();
-        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, pos.top * state.zoomMain  + 24);
+        cachedBranchMenu.popup( Math.trunc(pos.left * state.zoomMain ) - 10, Math.trunc(pos.top * state.zoomMain  + 24) );
           
         break;
       }
