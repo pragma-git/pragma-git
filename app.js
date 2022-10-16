@@ -477,9 +477,15 @@ async function _callback( name, event){
                 width: 600,
                 height: 600,
                 title: title
-            },
-            win=>win.on('loaded', () => {notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');} )
-            )  
+            },  
+            win=>win.on('loaded', () => {
+                notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');
+                win.on('close', function() { fixNwjsBug7973( win)} );
+            })
+  
+        )
+
+                    
         
         localState.notesWindow.open = true;
         break;
@@ -637,7 +643,10 @@ async function _callback( name, event){
                 position: 'center',
                 width: 600,
                 height: 600
-            });         
+            },  
+            win=>win.on('loaded', () => {
+                win.on('close', function() { fixNwjsBug7973( win)} ); 
+            }) );   
         break;
       }
 
@@ -734,8 +743,11 @@ async function _callback( name, event){
                 title: title
             }
             ,
-            win=>win.on('loaded', () => {graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');} )
-            )  
+            win=>win.on('loaded', () => {
+                graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');
+                win.on('close', function() { fixNwjsBug7973( win)} );
+            } )
+        )  
             
         localState.graphWindow = true;
         
@@ -1502,6 +1514,8 @@ async function _callback( name, event){
                             updateText( event.name, title, text);
                             addWindowMenu( title, 'help_win');
                             
+                            cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
+                            
                         }
                     )
                 }
@@ -1862,6 +1876,9 @@ async function _callback( name, event){
                         }
                         about_win = nw.Window.get(cWindows.window);
                         addWindowMenu( title, 'about_win');
+                        
+                        
+                        cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
                     }
                 );
 
@@ -2327,8 +2344,11 @@ async function _callback( name, event){
                 height: 700,
                 title: title
             },
-            win=>win.on('loaded', () => {settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');} )
-            ); 
+            win=>win.on('loaded', () => {
+                settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');
+                win.on('close', function() { fixNwjsBug7973( win)} );
+            } )
+        ); 
         console.log(settings_win);
         localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
      return   
@@ -2350,7 +2370,10 @@ async function _callback( name, event){
                 height: 700,
                 title: title
             },
-                win=>win.on('loaded', () => {resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');} )
+                win=>win.on('loaded', () => {
+                    resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');
+                    win.on('close', function() { fixNwjsBug7973( win)} );
+                } )
             ); 
         console.log(resolve_win);
         localState.conflictsWindow = true;  // Signals that Conflicts window is open -- set to false when window closes
@@ -2359,29 +2382,34 @@ async function _callback( name, event){
         
         let title = "Changed Files";
         
-        gui.Window.open('listChanged.html#/new_page' ,
-            {
-                id: 'listChangedId',
-                position: 'center',
-                width: 600,
-                height: 700,
-                title: title
-            },
-                win=>win.on('loaded', 
-                    () => {
-                        try{ 
-                            list_win.close(); // Close prior list_win if exists
-                        }catch(err){ 
-                        }
-                        list_win = nw.Window.get(win.window);
-                        addWindowMenu( title, 'list_win');
-                        //list_win.showDevTools(); // Auto-open Dev-tools for this window
-                    }
-                )
+        try{ 
+            // Update in open window
+            changed_win.window.injectIntoJs(changed_win.window.document); 
             
+        }catch(err){        
+            // Make new window
+            gui.Window.open('listChanged.html#/new_page' ,
+                {
+                    id: 'listChangedId',
+                    position: 'center',
+                    width: 600,
+                    height: 700,
+                    title: title
+                },
+                    win=>win.on('loaded', 
+                        () => {
+
+                        changed_win = nw.Window.get(win.window);
+                        addWindowMenu( title, 'changed_win');
+                        
+                        win.on('close', function() { 
+                            fixNwjsBug7973( win)
+                        } );
+                    })
             ); 
-        console.log(settings_win);        
-    };
+        }
+
+    }
    // ================= END CALLBACK ================= 
 } 
 
@@ -3066,7 +3094,10 @@ function startPragmaMerge(){
             height: 700,
             title: title
         },
-            win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
+            win=>win.on('loaded', () => {
+                merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');
+                win.on('close', function() { fixNwjsBug7973( win)} );
+            } )
     ); 
     
 
@@ -4989,6 +5020,27 @@ function stackInfo( level ){
 
 
 // Update other windows
+        
+function fixNwjsBug7973( win){
+    // This function should be called after intercepting 'close' event for a spawned window
+    // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
+    
+    // Hide and resize
+    win.hide();
+    resizeHeightBy = win.window.outerHeight - win.window.innerHeight;
+    win.resizeBy(0,-resizeHeightBy);
+    
+    // Remove 'close' event handler, and then close window
+    win.removeAllListeners('close');
+    win.close()
+}
+function closeChildWindow( win){
+    // Nwjs but 7973 is related to windows growing by 28 pixels each time they are opened
+    // To override this, I hide and shrink the window before closing
+    this.hide();
+    this.resizeBy(0,-28);
+    this.close(true)
+}
 
 async function updateGraphWindow(){
     
