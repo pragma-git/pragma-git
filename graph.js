@@ -516,8 +516,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : <BR><BR>
-                 <div> 
+            html += `     <div> 
                      <p>&nbsp; 
                         <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                         <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
@@ -529,10 +528,10 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += `<div style="width: -webkit-fill-available;"> &nbsp;&nbsp; ${commit.hash} </div><BR>`
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; ${commit.hash} </div><BR>`
             
-            html += `<div style="width: -webkit-fill-available;"> &nbsp;&nbsp; Author : <i> ${author} </i> </div><BR>
-                       <div style="width: -webkit-fill-available;"> &nbsp;&nbsp; Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; Author : <i> ${author} </i> </div><BR>
+                       <div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
                      </div><BR><BR>`;
             
             html += '<BR><HR><BR>' 
@@ -544,7 +543,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Parents   
-            html += `<B><U> ${ParentHeader} : </U></B> <BR><BR>` 
+            html += `<B> ${ParentHeader}: </B> <BR><BR>` 
             
             for (let i = 0; i < parentHashes.length; i++){
                 
@@ -573,7 +572,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 
             }
             
-            html +='<BR><div>';
+            html +='<BR><div class="lightInfo">';
             
             
             // HTML Parent Hashes
