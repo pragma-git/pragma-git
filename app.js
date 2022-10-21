@@ -4535,7 +4535,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
         // branchList is a struct where branchList.all is an array of branch names
         // callbackName is a string
         
-            const ONLY_AHEAD_UPSTREAMS = true; // true = show; false = show all upstreams
+            const ONLY_AHEAD_UPSTREAMS = false; // true = show; false = show all upstreams
         
             
             workaround_store_submenus = []; // Clear submenu-item references to avoid premature Windows10 garbage collection
