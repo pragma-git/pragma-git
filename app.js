@@ -3968,7 +3968,7 @@ function gitFetch( longUpstreamBranch){ // Fetch
         if ( longUpstreamBranch == undefined){
             
             // Fetch from default (origin)
-            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch);
+            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch, ['origin']);
             function onFetch(err, result) {
             };
             
