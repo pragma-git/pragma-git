@@ -351,7 +351,10 @@ async function _callback( name, event){
             createHtmlTable(document);
             
             // Switch to Remote  tab
-            document.getElementById('gitHubTab').click()
+            document.getElementById('gitHubTab').click()                
+            
+            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
             
             // Update store
             remoteRepos.fetch.names[index] = alias;
