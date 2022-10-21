@@ -88,6 +88,9 @@ async function injectIntoJs(document) {
             //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
         //}
     }
+    
+    
+    win.focus();
 
 
 };
