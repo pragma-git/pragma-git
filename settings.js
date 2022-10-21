@@ -302,6 +302,9 @@ async function _callback( name, event){
             
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()
+            
+            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
             break;
         }   
@@ -400,6 +403,10 @@ async function _callback( name, event){
             
             // Update cached branch list
             opener.cacheBranchList();
+            
+            
+            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
         
             break;
@@ -415,6 +422,9 @@ async function _callback( name, event){
                 // Replace table 
                 document.getElementById("settingsTableBody").innerHTML = ""; 
                 createHtmlTable(document);
+                
+                // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+                _callback('repoRadiobuttonChanged', {id: state.repoNumber});
             }catch(error){
                 console.log(error);
             }
