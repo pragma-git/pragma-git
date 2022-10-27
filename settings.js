@@ -249,7 +249,8 @@ async function _callback( name, event){
                 } 
                 
                 document.getElementById('addFolder').innerText=folder;
-                document.getElementById('cloneFolder').innerText = folder;               
+                document.getElementById('cloneFolder').innerText = folder;
+                document.getElementById('forkFolder').innerText = folder;                
             }catch(err){
                 
             }
@@ -258,6 +259,7 @@ async function _callback( name, event){
             // Remove hover class
             document.getElementById('addFolder').className = '';
             document.getElementById('cloneFolder').className = '';
+            document.getElementById('forkFolder').className = '';
                                     
             break;
         }
