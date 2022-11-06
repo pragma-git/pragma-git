@@ -46,6 +46,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>  
 <!-------------------------------------------------------------------------------------------->  
@@ -86,21 +87,25 @@
     <!--------------------------------------------------------------------------------------------> 
     <h2>The Repository Tools tabs</h2>  
      
-    <div class="indent">
+    <div class="indent" id ="softwareSection">
 
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
         <br>
+            
            
         <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small active " style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
+        
+                
         
 
         <p>This tab handles settings that are specific for the currently selected repository.  </p>
@@ -159,15 +164,16 @@
         <br>
         
         
-       <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+       <div class="toolWrapper" id="gitIgnoreSection"> 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small active" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
     
         
@@ -185,14 +191,15 @@
             <br>
             <br>
     
-            <div class="toolWrapper" > 
+            <div class="toolWrapper" id="cloneSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
                          
@@ -200,7 +207,7 @@
             <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
          
         
-        <dt><h4>Cloning </h4></dt> 
+        <dt><h4 id="cloneSection">Cloning </h4></dt> 
         <br> 
             <dd>
             When cloning from a remote repository to a local folder, the url (remote repository) and the path to a local folder is needed. 
@@ -234,8 +241,7 @@
                 <ol>  
                     <li>Input the remote repository address (url)   
                     <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
-                    <li>The second text field displays the selected folder path   
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
                     <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
                 </ol>   
             </dd>
@@ -244,14 +250,15 @@
      
             
             <br> 
-           <div class="toolWrapper" > 
+           <div class="toolWrapper"  id="forkSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
                          
@@ -288,8 +295,7 @@
                 <ol>  
                     <li>Input the remote repository address (url)   
                     <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
-                    <li>The second text field displays the selected folder path   
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
                     <li><button>Fork</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
                 </ol>   
             </dd>
@@ -299,15 +305,16 @@
             
             <br>               
         
-        <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+        <div class="toolWrapper"  id="addSection"> 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
         
         
@@ -335,14 +342,15 @@
             <br>
                    
             
-            <div class="toolWrapper" > 
+            <div class="toolWrapper" id="remoteSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                      <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small active style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
         
@@ -494,6 +502,7 @@
                       <button class="tab-button active " data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>    
 <!-------------------------------------------------------------------------------------------->  
@@ -524,6 +533,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button active" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>   
 <!--------------------------------------------------------------------------------------------> 
@@ -646,6 +656,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  
