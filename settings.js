@@ -1332,12 +1332,25 @@ async function injectIntoSettingsJs(document) {
 function getRemoteRepoInfo() { // Reads data for current repo
 
     // Read and put 'origin' first
-    let  input = { names: opener.cachedBranchList.remoteRepos.fetch.names, URLs: opener.cachedBranchList.remoteRepos.fetch.URLs } ;
+    let  input = { names: [], URLs: [] } ;
+
+    try {
+        input = { names: opener.cachedBranchList.remoteRepos.fetch.names, URLs: opener.cachedBranchList.remoteRepos.fetch.URLs } ;
+    }catch (err) {
+    }
+    
     setOriginFirst( input );
     remoteRepos.fetch.names = input['names'];
     remoteRepos.fetch.URLs  = input['URLs'];
     
-    input = { names: opener.cachedBranchList.remoteRepos.push.names, URLs: opener.cachedBranchList.remoteRepos.push.URLs } ;
+    
+    input = { names: [], URLs: [] } ;
+
+    try {
+        input = { names: opener.cachedBranchList.remoteRepos.push.names, URLs: opener.cachedBranchList.remoteRepos.push.URLs } ;
+    }catch (err) {
+    }
+    
     input = setOriginFirst( input );
     remoteRepos.push.names = input['names'];
     remoteRepos.push.URLs  = input['URLs'];   
@@ -1660,11 +1673,14 @@ async function generateRepoTable(document, table, data) {
                 if (!isRepo) {
                     label.style.color = 'red';
                     label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
+                    radiobox.setAttribute("disabled", "true");
                 }
+                
             }else{    
                 // localFolder missiong -- make red 
                 label.style.color = 'red';
                 label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
+                radiobox.setAttribute("disabled", "true");
             }
             
       
