@@ -1673,14 +1673,16 @@ async function generateRepoTable(document, table, data) {
                 if (!isRepo) {
                     label.style.color = 'red';
                     label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
-                    radiobox.setAttribute("disabled", "true");
+                    
+                    radiobox.style.visibility = "hidden";
                 }
                 
             }else{    
                 // localFolder missiong -- make red 
                 label.style.color = 'red';
                 label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
-                radiobox.setAttribute("disabled", "true");
+                
+                radiobox.style.visibility = "hidden";
             }
             
       
