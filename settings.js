@@ -1080,6 +1080,7 @@ async function gitClone( folderName, repoURL){
         opener.pragmaLog(err);
         
         //displayAlert('Failed cloning', err)
+        displayAlert('Clone failed', err)
         return
     }
         
