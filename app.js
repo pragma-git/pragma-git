@@ -298,7 +298,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         cachedRemoteOrigins.folders= [];
 
             
-  // Cache remote urls
+  // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
   cacheRemoteOrigins();
     
 // ---------
@@ -4516,7 +4516,7 @@ async function cacheRemoteOrigins(){
                     
                     state.repos[repoNumber].remoteURL = upstreamURL;
                     
-                    console.warn(repoNumber);
+                    console.log(repoNumber);
 
                     return
                 }

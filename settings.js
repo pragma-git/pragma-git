@@ -442,7 +442,8 @@ async function _callback( name, event){
             // 1) User clicks radiobutton in settings window_menu_handles_mapping
             // 2) User selects repository in main window, which initiates this callback
             
-            
+
+                
             console.log('repoRadiobuttonChanged');
             console.log(event);
                 
@@ -465,6 +466,9 @@ async function _callback( name, event){
                 // Update remote repos dialog
                 getRemoteRepoInfo();
                 updateRemoteRepos();
+                
+                await opener.cacheRemoteOrigins();
+                document.getElementById( 10000 + Number(id) ).value = state.repos[id].remoteURL;
                 
                                 
                 drawBranchTab(document);
@@ -1250,6 +1254,10 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
+    
+        
+    // Update remote branch list 
+    await opener.cacheRemoteOrigins();
 
  
     // For systems that have multiple workspaces (virtual screens)
