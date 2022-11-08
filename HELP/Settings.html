@@ -223,11 +223,22 @@
             </dd>
             <br>
             
-            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   — <br> <br>
-                <i>This checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).</i>
+            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   
+            <br>
+            <br>
+                                
+            <dd><button>Clone</button> 
+            </dd>
+            
+            <br>
+            <br>
+
+            
+           <dd>
+                The checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).
             </dd>
             <br>
-            <br>
+
             
             <dd> The <button>Clone</button> initiates the cloning operation.     
             </dd>
@@ -263,13 +274,25 @@
             </div>
                          
     
-            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning), but make it your own copied project.  This is called "forking".</p>
          
         
         <dt><h4>Forking </h4></dt> 
         <br> 
             <dd>
-            Forking a remote repository is the same as cloning, but you disconnect from the remote repository.  The point is to develop on this forked project, and not push back to the cloned original project.
+            Forking a remote repository is the same as cloning, but you disconnect from the remote repository.  This original remote repository is referred to as "upstream".
+            The point is to develop on this forked project, and not push back to the cloned original project.
+            
+            <br>
+            <br>
+            You still have the opportunity to update your repository with new additions from the "upstream" repository.  
+            This is done using the main window merge button ( <img src="../images/merge_black.png"    height="17" width="17"> ).
+            The upstream changes are found under the <img src="../images/merge_black.png"    height="17" width="17"> button and the submenu "remotes".  
+            Changes that have not been merged, are indicated by an " ! " mark.
+            
+            <br>
+            <br>
+            More about working with multiple remote repositories can be found below (<a href="#multipleRepoSection">multiple remotes section </a>)
         
             </dd>
             <br>
@@ -279,12 +302,16 @@
             <br>
                                          
             <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            </dd>  
+            <br>
+                                
+            <dd><button>Fork</button> 
             </dd>
 
             <br>
             <br>
             
-            <dd> The <button>Fork</button> initiates the forking operation.     
+            <dd> The <button>Fork</button> button initiates the forking operation.     
             </dd>
      
      
@@ -297,6 +324,8 @@
                     <li>Check that you have access with the <button>Test URL</button> button  
                     <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
                     <li><button>Fork</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                    <li>After forking the "Remote" tab is opened. This to remind you, that there is no active remote repository set up, and you are now only working locally. <br>
+                    Please fill in a new remote repository to keep your work safe.
                 </ol>   
             </dd>
             <br>       
@@ -349,7 +378,7 @@
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
                       <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small active style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
@@ -359,6 +388,43 @@
         <dt><h4>Adding a remote repository manually </h4></dt>  
             
             <dd>
+                
+                
+                <p>
+                    Fill in the fields in the following form.  Use the <button>Set</button> to make the remote active. 
+                </p>
+                <p>    
+                    Please ignore the <button>Add</button>, which is described below
+                </p>   
+            
+            
+                
+                <table class="toolTable">
+                    <tbody>
+    
+                        <tr class="tool">
+                            <td style="width: 20%">
+                                <textarea id="newRepoAliasTextarea" placeholder="repo alias" onkeyup="_callback('newRepoAliasKeyUp', this);" readonly="" class="readonly">origin</textarea>
+                            </td>
+                            
+                            <td style="width: 60%">
+                                <textarea id="additionalRemoteURL" placeholder="URL for remote repository"></textarea>
+                            </td>
+                            
+                            <td class="toolButtonField">
+                                <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">Add</button>
+                                <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)" style="display: none;">Remove</button>
+                            </td>
+                        </tr>
+    
+                        
+                    </tbody>
+                </table>
+                
+                
+            
+     
                  
                 <!-- Same as in settings.html -->
                 <p>
@@ -422,6 +488,96 @@
                 
                 
             </dd> 
+            
+            
+            
+                    
+            
+        <dt><h4 id="multipleRepoSection">Working with multiple remotes</h4></dt>  
+            
+            <dd>         
+                 
+                <p>Apart from the fields described above, to set the remote repository for "origin" (the remote repository you typically push and pull from),
+                you may have additional remote repositories.  Typically, if you "fork" a remote repository, you will have two remotes: "origin" which is the one you work with,
+                and "upstream" which is the original repository (which probably is continuously being worked on by others).  The point of keeping track of this original "upstream", is
+                that things happen that you wish to include in your own repository.
+                </p>
+            
+                <p>When you have more than one remote, you can use the arrow buttons (◀ and ▶)to switch between the remotes.  In this example I have forked the "imlook4d" repository
+                (which is a research tool for medical images), and I have pressed the ▶ button once to see the original "upstream" path.  
+                </p>
+
+                <br>
+                
+                
+                <div id="additionalRemotesDiv" style="display: block; visibility: visible;">   
+                   Remote repositories : &nbsp;&nbsp;&nbsp;
+                   
+                   
+                    <!-- remote dialog range buttons -->
+                    <div id="fileRange" style="display:block">
+                        <span id="remoteReposDown" style="cursor:pointer; zoom: 0.8;" onclick="
+                                remoteRepos.fetch.pos = Math.max( 1, remoteRepos.fetch.pos - 1); 
+                                updateRemoteRepos()
+                                document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"> ◀</span> 
+                        
+                        <span id="remoteReposCurrentPos">2</span>  of <span id="remoteReposMax">2</span>
+                        
+                        <span id="remoteReposUp" style="cursor:pointer; zoom: 0.8;" onclick="
+                                remoteRepos.fetch.pos = Math.min( remoteRepos.fetch.max, remoteRepos.fetch.pos + 1); 
+                                updateRemoteRepos();
+                                document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"> ▶</span> 
+         
+                    </div>
+                   
+                   
+                   <!-- remote dialog textareas-->
+                   
+                    <table class="toolTable">
+                        <tbody>
+
+                            <tr class="tool">
+                                <td style="width: 20%">
+                                    <textarea id="newRepoAliasTextarea" placeholder="repo alias" onkeyup="_callback('newRepoAliasKeyUp', this);" class="readonly" readonly="">upstream</textarea>
+                                </td>
+                                
+                                <td style="width: 60%">
+                                    <textarea id="additionalRemoteURL" placeholder="URL for remote repository">https://github.com/JanAxelsson/imlook4d.git</textarea>
+                                </td>
+                                
+                                <td class="toolButtonField">
+                                    <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                    <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">Add</button>
+                                    <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)" style="display: none;">Remove</button>
+                                </td>
+                            </tr>
+
+                            
+                        </tbody>
+                    </table>                    
+                </div>
+                
+                <br>
+                        
+                 
+                <p>If you want, you can use the <button>Add</button> to add more remote repositories.  As is, you can pull from these using the 
+                <img src="../images/merge_black.png"    height="17" width="17"> button as  described 
+                above (<a href="#forkSection">fork section</a>),
+                but in the future also pushing to additional remote repositories may be implemented.
+                </p>
+                
+                 
+                <p><img height="15" width="15" style="filter: invert(0%)" src="../images/warning.png"> Note, that if you merge from a remote upstream repository (with the exception of "origin") you are allowed to pick any remote branch
+                to merge into the current local branch.  This may be useful, but is also a possible source for doing some unintentional.  For "origin" 
+                the "push" and "pull" operations work directly with the corresponding local and remote branch, and the technicalities are hidden  from the user.
+                </p>
+                
+                                       
+                        
+                
+            </dd>    
+            
+         
         <hr>  
     
         <!--------------------------------------------------------------------------------------------> 
