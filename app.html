@@ -719,6 +719,20 @@
   
     <dialog id="detachedHeadDialog"  class="error" style="overflow: unset">  
         
+        <!-- Make it easier to hit buttons -->  
+        <style>
+            .ur-small-element { 
+                position:relative; 
+            }
+            .ur-small-element:after {
+                content:'';
+                position:absolute;
+                top:-3px; bottom:-3px; 
+                left:-8px; right:-8px; 
+            }
+        </style>
+        
+        
         <!-- Warning text -->  
         <b>WARNING -- detached HEAD !</b><br>
             You've stored new work beginning at an old commit (detached HEAD) <br>
@@ -748,7 +762,7 @@
         <!-- OK / Cancel buttons-->  
         <br style = "line-height: 0.4em;">
         
-        <button id="detachedBranchDialogOK" value="OK"
+        <button id="detachedBranchDialogOK" value="OK" class="ur-small-element"
             onclick="
                 document.getElementById('detachedHeadDialog').close();
                 let selectedRadioButton = document.querySelector('input[name=\'detachedBranchRadiobuttonGroup\']:checked').value;
@@ -758,7 +772,7 @@
             OK
         </button>   
          
-        <button id="cancelDetachedDialog" value="Cancel"
+        <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
             onclick="document.getElementById('detachedHeadDialog').close();_callback('detachedHeadDialog', this.value);">
             Cancel
         </button>  
