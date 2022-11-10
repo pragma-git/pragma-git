@@ -2168,7 +2168,12 @@ async function _callback( name, event){
             status_data = await gitShowHistorical();
             await setStatusBar( fileStatusString( status_data));
             
-            selectInGraph(localState.historyHash);
+            try{
+                selectInGraph(localState.historyHash);
+            }catch (err){
+                
+            }
+            
             
 
         }catch(err){       
@@ -2848,6 +2853,7 @@ async function _setMode( inputModeName){
     console.log('setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')');
     
     var HEAD_title;    
+    var HEAD_refs;
            
     // Get current message
     var history;
@@ -2856,6 +2862,7 @@ async function _setMode( inputModeName){
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
             HEAD_title = result.latest.message;
+            HEAD_refs = result.latest.refs;
             } 
             
     }catch(err){        
@@ -2972,7 +2979,25 @@ async function _setMode( inputModeName){
             if (HEAD_title == undefined){
                 textOutput.placeholder = "No modified files"  ;
             }
+            
+            if (HEAD_refs ==  'HEAD' ){
+
+                textOutput.value = "";
+                textOutput.placeholder = 
+                    "NOTE : " + os.EOL + os.EOL + 
+                    "- You are in 'detached HEAD' state. You can look around and make experimental changes" + os.EOL + 
+                    "- You should be aware that modifying files here becomes a bit messy, when leaving." + os.EOL + 
+                    "  In that case, Pragma-git will ask if you want to discard / save changes";   
+                     
+                textOutput.readOnly = false;
+                writeTextOutput(textOutput);
+                    
+                return
+            };
+                
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            
+            
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
