@@ -1369,7 +1369,7 @@ async function _callback( name, event){
                         }
       
                         // Switch branch
-                        gitSwitchBranch( selectedBranch);
+                        await gitSwitchBranch( selectedBranch);
                       
                     //
                     // 2) git merge --no-commit HASH
@@ -1401,7 +1401,8 @@ async function _callback( name, event){
                         
                         // Write suggested message
                         await _setMode('CHANGED_FILES_TEXT_ENTERED');  
-                        let newMessage = 'Merge "' + oldMessage + '" (from branch detached branch with hash = "' + hash + '")';
+                        //let newMessage = 'Merge "' + oldMessage + '" (from branch detached branch with hash = "' + hash + '")';
+                        let newMessage = 'Merge "' + oldMessage + '" (from detached branch with hash = "' + hash + '")';
                         pragmaLog('   suggest message            = ' + newMessage );
                         writeTextOutput( { value: newMessage } );   
                       
