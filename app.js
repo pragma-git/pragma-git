@@ -3009,10 +3009,10 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description and press Store"  ;
+            textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description here, and press Store"  ;
             // Alternative message if no previous commit
             if (HEAD_title == undefined){
-                textOutput.placeholder = "There are modified files - type description and press Store"  ;
+                textOutput.placeholder = "There are modified files - type description here,  and press Store"  ;
             }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
@@ -3057,8 +3057,7 @@ async function _setMode( inputModeName){
             textOutput.value = "";
             textOutput.placeholder = 
                 "You are in settings mode." + os.EOL + 
-                "- Unfold a settings section ..." + os.EOL + 
-                "- Close window when done";    
+                "- Close settings window to work";    
             textOutput.readOnly = true;
             writeTextOutput(textOutput);
             break;
@@ -4238,7 +4237,7 @@ async function gitMerge( currentBranchName, selectedBranchName){
     
     textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
     textOutput.readOnly = false;
-    //textOutput.placeholder = 'Write description of Merge, and press Store';
+    //textOutput.placeholder = 'Write description of Merge here, and press Store';
     writeTextOutput( textOutput);
 }
     
