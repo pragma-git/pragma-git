@@ -5636,8 +5636,10 @@ function updateContentStyle() {
 
 // Message
 function writeTextOutput(textOutputStruct){
-    document.getElementById('message').value = textOutputStruct.value;
-    document.getElementById('message').placeholder = textOutputStruct.placeholder;  
+    //document.getElementById('message').value = textOutputStruct.value;
+    document.getElementById('message').innerHTML= textOutputStruct.value
+    //document.getElementById('message').placeholder = textOutputStruct.placeholder;  
+    document.getElementById('messagePlaceHolder').innerText = textOutputStruct.placeholder;  
     document.getElementById('message').readOnly = textOutputStruct.readOnly; 
     textOutput = textOutputStruct;
 }
@@ -5673,7 +5675,7 @@ async function writeTimedTextOutput(textOutputStruct, time){
 function readMessage(){
     // returns message text ( which consists of a title row, OPTIONALLY followed by an empty line and a long multi-line message)
     try{
-        let message = document.getElementById('message').value;
+        let message = document.getElementById('message').innerText;
         return message;
     }catch(err){
         console.log(err);
