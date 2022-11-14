@@ -5636,9 +5636,22 @@ function updateContentStyle() {
 
 // Message
 function writeTextOutput(textOutputStruct){
+<<<<<<< Updated upstream
     document.getElementById('message').value = textOutputStruct.value;
     document.getElementById('message').placeholder = textOutputStruct.placeholder;  
     document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+=======
+    //document.getElementById('message').value = textOutputStruct.value;
+    document.getElementById('message').innerHTML= textOutputStruct.value
+    
+    //document.getElementById('message').placeholder = textOutputStruct.placeholder;  
+    document.getElementById('messagePlaceHolder').innerText = textOutputStruct.placeholder;  
+    
+    //document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    let isEditable = !textOutputStruct.readOnly;
+    document.getElementById('message').setAttribute('contenteditable', isEditable);
+    
+>>>>>>> Stashed changes
     textOutput = textOutputStruct;
 }
 async function writeTimedTextOutput(textOutputStruct, time){
