@@ -2507,7 +2507,7 @@ async function _update2(){
     
 
     // Run 
-    await Promise.all( promises )
+    await Promise.allSettled( promises )
 
     //
     // Process
@@ -3327,7 +3327,7 @@ async function gitStatus(){
         const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
         function onStatus(err, result ){  status_data = result; console.log('gitStatus promise2 done'); }
         
-        await Promise.all( [ promise1, promise2]);
+        await Promise.allSettled( [ promise1, promise2]);
          
         
         if (status_data2.length == 0){
@@ -4459,7 +4459,7 @@ async function cacheBranchList(){
         }
 
         // Check upstreams in parallel
-        await Promise.all( promises )
+        await Promise.allSettled( promises )
         
     }
         async function gitListUpstreamsNeedingFetch(branchName){
@@ -4515,7 +4515,7 @@ async function cacheRemoteOrigins(){
         promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); // Add promise
     }
     
-    await Promise.all( promises )
+    await Promise.allSettled( promises )
     
     
     
