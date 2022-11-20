@@ -2862,6 +2862,7 @@ async function _setMode( inputModeName){
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
             HEAD_title = result.latest.message;
+            HEAD_short_title = HEAD_title.substr(0,50) + '...';
             HEAD_refs = result.latest.refs;
             } 
             
@@ -2984,10 +2985,10 @@ async function _setMode( inputModeName){
 
                 textOutput.value = "";
                 textOutput.placeholder = 
-                    "NOTE : " + os.EOL + os.EOL + 
+                    'Checked out : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
                     "- You are in 'detached HEAD' state. You can look around and make experimental changes" + os.EOL + 
-                    "- You should be aware that modifying files here becomes a bit messy, when leaving." + os.EOL + 
-                    "  In that case, Pragma-git will ask if you want to discard / save changes";   
+                    "- Storing modified files here is not recommended." + os.EOL + 
+                    "  If you do, Pragma-git will guide you on how to discard / save changes";   
                      
                 textOutput.readOnly = false;
                 writeTextOutput(textOutput);
@@ -3009,7 +3010,21 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            textOutput.placeholder = '"' + HEAD_title + '"' + os.EOL + "- is MODIFIED" + os.EOL + "- type description here, and press Store"  ;
+            
+            textOutput.placeholder = 
+                'Commit : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
+                "- is MODIFIED" + os.EOL + 
+                "- type description here, and press Store";   
+                
+            if (HEAD_refs ==  'HEAD' ){
+                 textOutput.placeholder = 
+                    'Detached HEAD : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
+                    "- is MODIFIED!  You have two options : " + os.EOL + 
+                    "- 1) click modified-files counters, and 'Restore All' (avoid problems)" + os.EOL + 
+                    "- 2) type description here, and press Store (solve problems later)";                 
+            }
+                
+
             // Alternative message if no previous commit
             if (HEAD_title == undefined){
                 textOutput.placeholder = "There are modified files - type description here,  and press Store"  ;
