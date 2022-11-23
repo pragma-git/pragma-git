@@ -470,6 +470,8 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // HTML 
             let html =``
+            // DEV : Displays where branch name info comes from (uncomment to use)
+            // html = commit.branchNameFromNote  + '  ' + commit.branchNameFromDecoration  + '<br>';
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
@@ -829,6 +831,10 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.branchName = "";  // Default (hidden or unknown)
                 thisCommit.messageBody = messageBody;
                 thisCommit.date = longDate;
+          
+          		// DEV : Track where branch name info comes from 
+                thisCommit.branchNameFromNote = noteInThisRow;  // Remember what notes think is the branch name (not used)
+                thisCommit.branchNameFromDecoration = '';       // Remember what decoration think is the branch name (not used)
                 
                 
             // Get branchName
@@ -849,6 +855,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                             }
                         } 
                     )      
+                    thisCommit.branchNameFromDecoration = branchName;
                 }  
                 
                 // is topmost commit on a branch
