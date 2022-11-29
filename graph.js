@@ -168,7 +168,11 @@ async function injectIntoJs(document){
          
         // Show all log command 
         if (state.graph.showall){
-            commands = [ 'log',  '--branches', '--tags',  '--date-order', '--oneline',  '--pretty',  messageFormat];
+            // Show all commits 
+            // --exclude :  --exclude=refs/notes/*  excludes my 'refs/notes/branchname'  from next  '--all' command
+            //           :  --exclude=refs/stash    excludes stashes
+            // --all :  shows all in 'refs' = local branches + HEAD
+            commands = [ 'log',  '--exclude=refs/notes/*', '--exclude=refs/stash','--all', '--tags',  '--date-order', '--oneline',  '--pretty',  messageFormat];
         }
         
 
