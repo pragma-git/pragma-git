@@ -475,7 +475,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML 
             let html =``
             // DEV : Displays where branch name info comes from (uncomment to use)
-            // html = commit.branchNameFromNote  + '  ' + commit.branchNameFromDecoration  + '<br>';
+            html = 'branch name :  1) from note = ' + commit.branchNameFromNote  + '  2) from decoration = ' + commit.branchNameFromDecoration  + '<br>';
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
@@ -837,7 +837,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.notFoundInSearch = notFoundInSearch;
                 thisCommit.message = thisRow;
                 thisCommit.decoration = decoration;
-                thisCommit.branchName = "";  // Default (hidden or unknown)
+                thisCommit.branchName = thisCommit.hash;   // Default (hidden or unknown)
                 thisCommit.messageBody = messageBody;
                 thisCommit.date = longDate;
           

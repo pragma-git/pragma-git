@@ -3859,6 +3859,11 @@ async function gitRememberBranch( hash, name){
     // for instance
     //  git notes --ref branchname show HEAD
     
+    // If name of current branch is HEAD, then it is a detached HEAD, and the name should be stored as unknown
+    if (name == 'HEAD'){
+        name = '';
+    }
+    
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
