@@ -1405,6 +1405,7 @@ async function _callback( name, event){
                         let newMessage = 'Merge "' + oldMessage + '" (from detached branch with hash = "' + hash + '")';
                         pragmaLog('   suggest message            = ' + newMessage );
                         writeTextOutput( { value: newMessage } );   
+                        document.getElementById('store-button').disabled = false; // Force enable Store button
                       
                 
                 }
