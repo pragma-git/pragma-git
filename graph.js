@@ -777,6 +777,11 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Disect git-log row into useful parts
             [ longDate, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
             
+            if (noteInThisRow == 'HEAD') {
+                noteInThisRow = "";
+            }
+            
+            
             let date =  longDate.substring(0,10);  // Short date
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
