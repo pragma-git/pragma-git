@@ -1722,8 +1722,16 @@ async function _callback( name, event){
                 }else{
                     // Committed change in detached HEAD -- throw dialog
                     console.log('Commits on detached HEAD.  Show dialog');
-                    pragmaLog('show modal dialog = detachedHeadDialog' );
                     cacheBranchList();
+                    
+                    // Prepare for opening dialog and set branch that was detached from as default
+                    try{
+                        document.getElementById('detachedBranchDialogMergeWith').innerText = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
+                    }catch (err){
+                    }                    
+                    
+                    // Show dialog
+                    pragmaLog('show modal dialog = detachedHeadDialog' );
                     document.getElementById('detachedHeadDialog').showModal(); // Show modal dialog : [Temp Branch] [Delete] [Cancel]
                 }
                 
