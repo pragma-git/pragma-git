@@ -2863,7 +2863,7 @@ async function _setMode( inputModeName){
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
             HEAD_title = result.latest.message;
-            HEAD_short_title = HEAD_title.substr(0,50) + '...';
+            HEAD_short_title = HEAD_title.substr(0,60) + '...';
             HEAD_refs = result.latest.refs;
             } 
             
@@ -2900,11 +2900,6 @@ async function _setMode( inputModeName){
                     status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
                 }
 
-                // Log sources to determine mode
-                //console.log(status_data);  
-                //console.log(messageLength);
-                //console.log(numberOfRepos);
-                //console.log(historyNumberPointer);
                 
                 // Clean values that destroy working-out mode
                 if (currentMode == 'HISTORY'){
@@ -2994,7 +2989,7 @@ async function _setMode( inputModeName){
                 textOutput.readOnly = false;
                 writeTextOutput(textOutput);
                     
-                return
+                //return
             };
                 
             if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
