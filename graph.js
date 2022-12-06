@@ -475,7 +475,9 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML 
             let html =``
             // DEV : Displays where branch name info comes from (uncomment to use)
-            html = 'branch name :  1) from note = ' + commit.branchNameFromNote  + '  2) from decoration = ' + commit.branchNameFromDecoration  + '<br>';
+            if (DEBUG) {
+                html = 'branch name :  1) from note = ' + commit.branchNameFromNote  + '  2) from decoration = ' + commit.branchNameFromDecoration  + '<br>';
+            }
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
@@ -1102,11 +1104,11 @@ async function drawGraph( document, splitted, branchHistory, history){
     
                 }
 
-                //if (DEBUG) {
+                if (DEBUG) {
                     
-                    //commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
-                        //`${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
-                //}
+                    commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
+                        `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                }
                 
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
