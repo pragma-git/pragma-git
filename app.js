@@ -1704,6 +1704,17 @@ async function _callback( name, event){
                         let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
                         await gitSwitchBranch(branchName);
                         
+                        // TODO !
+                        //
+                        // NOTE: above can get locked, if 
+                        // state.repos[state.repoNumber].detachedBranch.detachedBranchName == currentBranchObject.commit
+                        // 
+                        // Then, a solution would be to find the branch name with :
+                        //    git name-rev --name-only --refs="refs/heads/*" HEAD
+                        // which gives a result like "develop~7".  Get branchName, by removing ~7
+                        
+                        
+                        
                         
                         //await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
                         
