@@ -4920,7 +4920,7 @@ function closeAllChildWindows( inputWin){
 function setButtonText(){  // Store or Commit, depending on setting for autopush
     
     // Do nothing if no repos are defined
-    if (state.repoNumber < 1){
+    if (state.repoNumber < 0){
         return  
     }
     
