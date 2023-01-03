@@ -367,6 +367,7 @@ async function _callback( name, event){
         console.log('Selected repo = ' + event.selectedRepoNumber);
         pragmaLog('   reponame = ' + event.selectedRepo);
         
+        let origRepoNumber = state.repoNumber ;
         state.repoNumber = event.selectedRepoNumber;
         pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder );
         pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
@@ -384,8 +385,10 @@ async function _callback( name, event){
                 displayLongAlert('Repository Error', 'Repository missing', 'error'); 
             }
         }else{    
-            // localFolder missiong 
+            // localFolder missing -- dialog, and reset repo
             displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
+            state.repoNumber = origRepoNumber;  
+            return
         }
     
         
