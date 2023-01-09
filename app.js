@@ -1572,31 +1572,26 @@ async function _callback( name, event){
                 myEvent.selectedRepoNumber = i;
                 myEvent.currentRepo = currentRepo;
                 repoNames.push(myEvent.selectedRepo);
-                    
-                if (state.repoNumber != i ){
-                    cachedRepoMenu.append(
-                        new gui.MenuItem(
-                            { 
-                                label: myEvent.selectedRepo, 
-                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
-                            } 
-                        )
-                    );
-                    console.log(repoNames[i]);
-                }else{
-                    
-                     cachedRepoMenu.append(
-                        new gui.MenuItem(
-                            { 
-                                label: myEvent.selectedRepo, 
-                                type: 'checkbox',
-                                checked : true,
-                                enabled: true,
-                                click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
-                            } 
-                        )
-                    );                   
+                
+                // Skip missing folder
+                if ( !fs.existsSync(state.repos[i].localFolder ) ) {
+                    continue;
                 }
+                 
+                // Add to menu
+                let isCurrentRepo =  (state.repoNumber == i );
+
+                cachedRepoMenu.append(
+                    new gui.MenuItem(
+                        { 
+                            label: myEvent.selectedRepo, 
+                            type: 'checkbox',
+                            checked : isCurrentRepo,
+                            enabled: true,
+                            click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
+                        } 
+                    )
+                ); 
     
             }
 
