@@ -6060,77 +6060,95 @@ function loadSettings(settingsFile){
                 console.warn('Failed reading individual repos');
             }
             
-    
-    pragmaLog('Starts post-processing settings' );
-            
+  
     //
     // Post-process state
     //
-
-    // Sanity check on repoNumber
-    if ( state.repoNumber >= state.repos.length ){
-        state.repoNumber = 0;
-    }        
-    
-    // Sanity check on repoNumber
-    if ( state.repos.length == 0){
-        state.repoNumber = -1;
-    }
-
+        pragmaLog('Starts post-processing settings' );
         
-    // Clean duplicate in state.repos based on name "localFolder"
-    state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
-    console.log('State after cleaning duplicates');
-    console.log(state);
+        // If missing repo-folder, find another repo
+        try {
+            if ( !fs.existsSync(state.repos[ state.repoNumber ].localFolder ) ) {
+                // Look for first existing repo-folder
+                let i = 0;
+                while  ( ( i < (state.repos.length - 1) ) && !fs.existsSync(state.repos[ i ].localFolder ) ){
+                    i++;
+                }
+                state.repoNumber = i;
+                
+                // Didn't find any
+                if ( state.repoNumber == (state.repos.length - 1) ){
+                    state.repoNumber = -1;
+                } 
+            }
+        }catch(err){
+            console.warn('Failed finding an existing repo folder, state.repoNumber = ' + state.repoNumber );
+        }
     
-    if ( state.repoNumber > state.repos.length ){
-        state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
-    }
-    
-    
-    // Scale minimum window size to zoom level
-    win = gui.Window.get();
+        // Sanity check on repoNumber
+        if ( state.repoNumber >= state.repos.length ){
+            state.repoNumber = 0;
+        }        
         
-    let manifest = require('./package.json');
-    let min_width =  Math.round( manifest.window.min_width * state.zoomMain );
-    let min_height = Math.round( manifest.window.min_height * state.zoomMain);
-    win.setMinimumSize( min_width, min_height);
-
-    // Position window
-    try{
-        // Validate position on screen
-        if ( (state.position.x + state.position.width) > screen.width ) {
-            state.position.x = screen.availLeft;
+        // Sanity check on repoNumber
+        if ( state.repos.length == 0){
+            state.repoNumber = -1;
+        }
+    
+            
+        // Clean duplicate in state.repos based on name "localFolder"
+        state.repos = util.cleanDuplicates( state.repos, 'localFolder' );
+        console.log('State after cleaning duplicates');
+        console.log(state);
+        
+        if ( state.repoNumber > state.repos.length ){
+            state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
         }
         
-        if ( (state.position.y + state.position.height) > screen.height ){
-            state.position.y = screen.availTop;
-        }
         
-        // Position and size from saved setting 
-        win.moveTo( state.position.x, state.position.y);
-        win.resizeTo( state.position.width, state.position.height );
- 
-      
-    }catch(err){
-        console.log('Error setting window position and size');
-        console.log(err);
-    }
-
-
-    // Update using same functions as when leaving settings window
-    updateWithNewSettings();
+        // Scale minimum window size to zoom level
+        win = gui.Window.get();
+            
+        let manifest = require('./package.json');
+        let min_width =  Math.round( manifest.window.min_width * state.zoomMain );
+        let min_height = Math.round( manifest.window.min_height * state.zoomMain);
+        win.setMinimumSize( min_width, min_height);
     
-
-    cacheBranchList();
+        // Position window
+        try{
+            // Validate position on screen
+            if ( (state.position.x + state.position.width) > screen.width ) {
+                state.position.x = screen.availLeft;
+            }
+            
+            if ( (state.position.y + state.position.height) > screen.height ){
+                state.position.y = screen.availTop;
+            }
+            
+            // Position and size from saved setting 
+            win.moveTo( state.position.x, state.position.y);
+            win.resizeTo( state.position.width, state.position.height );
+     
+          
+        }catch(err){
+            console.log('Error setting window position and size');
+            console.log(err);
+        }
     
-    console.log('END LOAD SETTINGS');
-    console.log('localState:');
-    console.log(localState);
-    console.log('state:');
-    console.log(state);
     
-    pragmaLog('Done post-processing settings' );
+        // Update using same functions as when leaving settings window
+        updateWithNewSettings();
+        
+    
+        cacheBranchList();
+        
+        console.log('END LOAD SETTINGS');
+        console.log('localState:');
+        console.log(localState);
+        console.log('state:');
+        console.log(state);
+        
+        pragmaLog('Done post-processing settings' );
     
     return state;
 }
