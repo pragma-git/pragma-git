@@ -676,11 +676,12 @@
     
      
   
-    <dialog id="detachedHeadUnsavedWorkDialog"  class="error">  
+    <dialog id="detachedHeadUnsavedWorkDialog"  class="error"> 
         
         <!-- Warning text -->  
         <b>WARNING -- unsaved work !</b><br>
             You have created files in a detached HEAD <br>
+
 
         <label for="stashHEAD">
             <input type="radio" id="stashHEAD" name="detachedHeadRadiobuttonGroup" value="Stash" checked>
@@ -695,6 +696,15 @@
             Delete : discard unsaved work 
         </label>
 
+        
+         <!-- help -->             
+         <img id="about-icon"  style="float:right;"  height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Detached HEAD';parent.window._callback('help',evt);" 
+                    onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                    onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                    src="images/questionmark.png"> 
+                    
+                    
         <!-- OK / Cancel buttons-->  
         <br style = "line-height: 0.4em;">
         
@@ -758,7 +768,17 @@
             <input type="radio" id="deleteDetachedHead" name="detachedBranchRadiobuttonGroup" onmousedown="document.getElementById('deleteDetachedHead').checked = true;" onmouseup="_callback('updateDetachedBranchDialog')" value="Delete">
             Delete : discard work saved to detached HEAD
         </label>
-
+        
+        
+         <!-- help -->             
+         <img id="about-icon"  style="float:right;"  height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Stored Detached HEAD';parent.window._callback('help',evt);" 
+                    onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                    onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                    src="images/questionmark.png"> 
+                    
+                  
+                  
         <!-- OK / Cancel buttons-->  
         <br style = "line-height: 0.4em;">
         
