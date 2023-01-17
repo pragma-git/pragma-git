@@ -1007,8 +1007,8 @@ async function drawGraph( document, splitted, branchHistory, history){
                     if ( !branchNames.has(commit.branchName)){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
-                        // Lane for unknown branch should land compressed, instead of to far right
-                        let bestLane = getFreeLane(commit, true); 
+                        // Lane for unknown branch should land on first free
+                        let bestLane = getFreeLane(commit, false); 
                         
                         branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
