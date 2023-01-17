@@ -532,10 +532,10 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; ${commit.hash} </div><BR>`
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${commit.hash} </div><BR>`
             
-            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; Author : <i> ${author} </i> </div><BR>
-                       <div  class="lightInfo" style="width: -webkit-fill-available;"> &nbsp;&nbsp; Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> Author : <i> ${author} </i> </div><BR>
+                       <div  class="lightInfo" style="width: -webkit-fill-available;"> Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
                      </div><BR><BR>`;
             
             html += '<BR><HR><BR>' 
@@ -576,16 +576,19 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 
             }
             
-            html +='<BR><div class="lightInfo">';
+            
             
             
             // HTML Parent Hashes
             for (let i = 0; i < parentHashes.length; i++){
-                html +=  '&nbsp; ' + parentHashes[i]   + '<BR>';
+                html +='<BR><div class="lightInfo">';
+                html +=  parentHashes[i];
+                html +='</div>';
             }
             
-            
             html +='</div><BR><BR>';
+            
+            
                 
             
             // Display HTML 
