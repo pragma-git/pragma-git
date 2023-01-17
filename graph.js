@@ -706,7 +706,6 @@ async function drawGraph( document, splitted, branchHistory, history){
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
             //branchNames.set(branchName, branchNames.size);
             
-            
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
             mapVisibleBranchToTopCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
@@ -1662,7 +1661,10 @@ async function drawGraph( document, splitted, branchHistory, history){
            
          
            1) A free lane must be available from the child that is furthest up, called lowestY down to the commit. 
-           2) Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)  
+           2) Best lane is the next lane to the right,  which is 
+              A) not occupied (in the whole range of rows examined) , or 
+              B) not on reaching below the start of one of the known branches
+              
               An unknown branch can not be placed on the swim-lane of a known branch 
 
               Lane 0 is reserved for unknown first-parents
@@ -1701,7 +1703,8 @@ async function drawGraph( document, splitted, branchHistory, history){
                 // Find next occupied column      
                 let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
                 while ( col < c.length ){
-                    if ( row < c[col] ){
+                    if ( row < c[col] ){  // Either A) occupied down, or B) not reaching below start of branch on this column
+                    //if ( ( row < c[col] ) || isOlderThanStartOfKnownBranch( col, commit.y) ){  // Either A) occupied down, or B) not reaching below start of branch on this column
                         highestOccupiedCol = col + 1;
                     }else{
                         // Here is the first non-occupied lane at this row
@@ -1713,13 +1716,48 @@ async function drawGraph( document, splitted, branchHistory, history){
               
                                   
                 // Mark occupied if commit is on an active swimlane
-                if ( ( MODE == 'swim-lanes' ) &&  isOnActiveSwimlane(col, commit) ){ 
+                while ( ( MODE == 'swim-lanes' ) &&  isOnActiveSwimlane(highestOccupiedCol, commit) ){ 
                     highestOccupiedCol = highestOccupiedCol + 1;
                 }
                 
             }
             
         return highestOccupiedCol
+        
+/*    Disabled : code for reverse lookup, and check if going below start of a known branch           
+                         
+
+ 
+        
+        
+        // Internal function
+        function isOlderThanStartOfKnownBranch(column, rowOfCommit){
+            
+            // Internal function -- reverse key value map 
+            //  modified from URL: http://xahlee.info/js/js_map_reverse_key_val.html  Version 2020-04-21 2022-09-17
+            const xah_inverse_map = ((xmap) => {
+              const xm2 = new Map();
+              xmap.forEach((vv, kk) => {
+                // Only update if not already stored (makes sure first value will be used as key, if duplicate values)
+                if(!xm2.has(vv)){
+                  xm2.set(vv, kk);  
+                }
+                
+              });
+              return xm2;
+            });      
+            
+            
+            // Determine top-commit of branch, in current column
+            let knownBranchName = xah_inverse_map(branchNames).get(column);
+            let hashOfTopCommitOfBranch = mapVisibleBranchToTopCommit.get( knownBranchName );
+            let topCommitOfBranch = nodeMap.get( hashOfTopCommitOfBranch ); 
+            
+            return (topCommitOfBranch.y < rowOfCommit)  // Returns true if
+            
+
+        };
+*/
         
     };
     function isOnActiveSwimlane(lane, commit){
