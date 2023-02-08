@@ -1,3 +1,6 @@
+[init]
+    defaultbranch=main
+
 [mergetool "pragma-git"]
     cmd = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    
