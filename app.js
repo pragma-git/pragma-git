@@ -170,7 +170,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
       
     // Files & folders
         const STARTDIR = process.cwd(); // Folder where this file was started
-        const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInMergeTool()
+        const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
         mkdir( settingsDir);
@@ -274,7 +274,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
               
     // Initiate pragma-git as default diff and merge tool
-        gitDefineBuiltInMergeTool();
+        gitDefineBuiltInTools();
 
     
     // Mac-menu
@@ -1153,16 +1153,8 @@ async function _callback( name, event){
 
         topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
 
-        if ( event.firstBranch == 'develop'){
-            // Create and move to develop branch
-            let commands = [ 'checkout', '-b', 'develop'];
-            await simpleGitLog( folder).raw(  commands, onCreateBranch);
-            function onCreateBranch(err, result ){};
-        }else{
-            // Do not create develop 
-        }
          
-        // Initial commit
+        // Initial commit ( I think this looks good for beginners, so lets do that)
         setStatusBar( 'Initial commit');
         let outputData;
         await simpleGitLog( folder ).raw( [  'commit', '--all' , '--allow-empty', '-m', 'Created Repository'] , onCommit);
@@ -1170,8 +1162,22 @@ async function _callback( name, event){
         
         await waitTime( 1000);
         console.log(outputData);
-               
         
+               
+        // Add develop branch, if that option selected
+        if ( event.firstBranch == 'develop'){
+            // Create a "main" branch
+            //await simpleGitLog( folder).raw( "branch", "main");
+            
+            // Create and move to develop branch
+            let commands = [ 'checkout', '-b', 'develop'];
+            await simpleGitLog( folder).raw(  commands, onCreateBranch);
+            function onCreateBranch(err, result ){};
+            
+        }else{
+            // Do not create develop 
+        }
+               
         
         // add repo to program
         try {
@@ -3258,13 +3264,17 @@ async function gitIsInstalled(){
     return isInstalled;
 
 }
-async function gitDefineBuiltInMergeTool(){
+async function gitDefineBuiltInTools(){
     // Command git config --global --replace-all  include.path ~/.Pragma-git/pragma-git-config .*pragma-git.*
     // where the include files are named "pragma-git-config_XXX" (XXX=mac,win, linux)
     // The paths are relative installed Pragma-git
     //
+    // Installs pragma-merge, and askpass
+    //
     // Note that the internal diff tool is called pragma-git from a user's perspective
     // but the name is really pragma-merge (but the user doesn't know about this, since pragma-merge is a built-in part of Pragma-git)
+    //
+    // 
     
     
     // Set up signalling folder  +  remove files that may interfere if left after a crash
