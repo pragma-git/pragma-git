@@ -129,9 +129,14 @@
                   
         img[src="images/stash_pop.png"],
         img[src="images/stash_pop_black.png"],
-        img[src="images/stash_pop_hover.png"] 
+        img[src="images/stash_pop_hover.png"]
         {
             filter: var(--stash-icon-filter);
+        }
+        
+        img[src="images/github-mark.png"] 
+        {
+            filter: none;
         }
         
                
@@ -669,7 +674,10 @@
                             win=>win.on('loaded', () => {
                                 win.on('close', function() { opener.fixNwjsBug7973( win)} );
                             } ));
-                        ">GitHub</button> 
+                            ">
+                            <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
+                            GitHub
+                        </button> 
                         
                       
                     </div>
