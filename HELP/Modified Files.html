@@ -45,7 +45,8 @@
                   
                 <p>Apart from selecting files to skip, there are a number of actions to perform on the file:</p>
                 <p><a>(diff)</a> opens the diff viewer, and shows the change between the file you work on, compared to the last Store operation</p>
-                <p><a>(restore)</a> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
+                <p><a>(edit)</a> opens an editor, with the contents of a new file </p>
+               <p><a>(restore)</a> restores the file to the state last Stored <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
                 <p><a>(delete)</a> deletes the file <br>(a warning dialog will pop up, since this will loose the changes you have made to the file)</p>
                 <p><a>(ignore)</a> ignores tracking a new file by listing it in the repository's .gitignore-file.  <br>(A warning dialog will pop up, telling how to revert this).<br>
                     The ignore operation can be un-done using the Settings/Repository/git-ignore editor.</p>
@@ -94,6 +95,9 @@
                         
             <p><a>(diff)</a> opens the diff viewer, and shows how the file changed between this and previous revision.  
             Uses the built-in diff viewer, or an external viewer defined in settings</p>
+            
+            
+            <p><a>(view)</a> opens a viewer, with the contents of a file created at this revision</p>
     
     
         </div>      
