@@ -3188,8 +3188,17 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
     //pragmaLog( 'line = ' + global.__line); 
     pragmaLog( 'CODE       : ' + stackInfoSimpleGitLogger() ); 
     
-
-    return simpleGit(pwd).outputHandler( sendGitOutputToFile() );
+    if (state.debug){
+        GIT_TRACE = 1
+        GIT_TRACE_REFS = 1 
+        GIT_CURL_VERBOSE = 1 
+        return simpleGit(pwd)
+            .env({ ...process.env, GIT_TRACE, GIT_TRACE_REFS, GIT_CURL_VERBOSE })
+            .outputHandler( sendGitOutputToFile() );  
+    }else{
+        return simpleGit(pwd)
+            .outputHandler( sendGitOutputToFile() );
+    }
     
                 
     // Log line number of calling function
@@ -5982,12 +5991,11 @@ function loadSettings(settingsFile){
         // Git
             console.log('- setting git settings');
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
-            //state.autoPushToRemote = setting( state_in.autoPushToRemote, true);
-            //state.NoFF_merge = setting( state_in.NoFF_merge, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             state.StashPop = setting( state_in.StashPop, true);
-            
-            
+         
+         // Debug   
+            state.debug  = setting( state_in.debug, false );  // Note, set by editing settings.json
             
         // External tools (three levels -- state.tools.difftool )
             console.log('- setting external tools ');
