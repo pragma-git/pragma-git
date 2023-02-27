@@ -668,16 +668,17 @@
                         </div>
                         
                         
-                        Or use Github wizard : 
-                        <button onclick="
-                            nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
-                            win=>win.on('loaded', () => {
-                                win.on('close', function() { opener.fixNwjsBug7973( win)} );
-                            } ));
-                            ">
-                            <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
-                            GitHub
-                        </button> 
+                        <div id="Github-button">Or use Github wizard : 
+                            <button onclick="
+                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
+                                win=>win.on('loaded', () => {
+                                    win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                } ));
+                                ">
+                                <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
+                                GitHub
+                            </button> 
+                        </div>
                         
                       
                     </div>
