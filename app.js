@@ -659,48 +659,70 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-terminal': {
-        const terminalTab = require('terminal-tab');
 
-        const options = {
-          cwd: null,
-          env: null,
-          encoding: 'utf8'
-        }
-        
-        // Mac and linux
         let folder = state.repos[ state.repoNumber].localFolder;
-        let command = 'cd "' + folder + '";' + 'clear';
-        
-        // Windows  Note : called win32 also for 64-bit
-        if (process.platform === 'win32') {  
-            folder = path.normalize(folder);
-            command = 'cd /d "' + folder + '" && ' + 'cls';
-            
-            var isUncPath = require('is-unc-path');
-            if ( isUncPath(folder) ){
-                command = 'pushd "' + folder + '" & ' + 'cls & echo NOTE : OPEN UNC PATH = ' + folder + ' (TEMPORARY MOUNT POINT)';
+         
+        //
+        // Mac specific solution
+        //
                 
-                // TODO, make a script to find network maopped pahts; run : 
-                // powershell -Command "& {Get-WmiObject Win32_MappedLogicalDisk |  select Name, ProviderName}"
-                // 
-                /*  Get output in the form:
-                  Name ProviderName
-                  ---- ------------
-                  G:   \\vll.se\gemensam
-                  H:   \\vll.se\users\HJ\jaax02
-                  K:   \\vll.se\data
-                  P:   \\vll.se\program
-                 */
-                 // Find the mapped name (G: etc) and replace path with part matching ProviderName
-
+            // Mac Ventura and later (terminal-tab does not work)
+            if (process.platform === 'darwin') {  
+                const { spawn } = require('child_process');
+                const child = spawn('open', [folder, '-a', 'Terminal.app']);
+                break; // Get out of switch statement
             }
+        
+        
+        //
+        // Windows and Linux  solution
+        //
             
-        }
-
- 
-        
-        
-        terminalTab.open( command, options)
+            // Using terminal-tab
+            const terminalTab = require('terminal-tab');
+    
+            const options = {
+              cwd: null,
+              env: null,
+              encoding: 'utf8'
+            }
+    
+            
+            
+            // Linux
+            let command = 'cd "' + folder + '";' + 'clear';
+    
+            
+            // Windows  Note : named win32 also for 64-bit
+            if (process.platform === 'win32') {  
+                folder = path.normalize(folder);
+                command = 'cd /d "' + folder + '" && ' + 'cls';
+                
+                var isUncPath = require('is-unc-path');
+                if ( isUncPath(folder) ){
+                    command = 'pushd "' + folder + '" & ' + 'cls & echo NOTE : OPEN UNC PATH = ' + folder + ' (TEMPORARY MOUNT POINT)';
+                    
+                    // TODO, make a script to find network maopped pahts; run : 
+                    // powershell -Command "& {Get-WmiObject Win32_MappedLogicalDisk |  select Name, ProviderName}"
+                    // 
+                    /*  Get output in the form:
+                      Name ProviderName
+                      ---- ------------
+                      G:   \\vll.se\gemensam
+                      H:   \\vll.se\users\HJ\jaax02
+                      K:   \\vll.se\data
+                      P:   \\vll.se\program
+                     */
+                     // Find the mapped name (G: etc) and replace path with part matching ProviderName
+    
+                }
+                
+            }
+    
+     
+            
+            
+            terminalTab.open( command, options)
         
         break;
       }     
