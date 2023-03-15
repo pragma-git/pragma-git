@@ -13,6 +13,7 @@
             text-align:left;
         }
         
+            background-color: #444;
      
         th{
             background-color: #444;
@@ -382,6 +383,7 @@
                     <!--  This-repo settings TAB -->
                     
                     <div class="tool-content " id="thisRepoDiv" >  
+                        (For selected repository) <br><br>
                         
                         <!--  Author info -->
                         <table>            
@@ -428,6 +430,7 @@
                     <!--  Clone TAB -->
                     
                     <div class="tool-content " id="cloneDiv" >  
+                        (Add repository to list) <br><br> 
                         Clone a remote repository to this computer :
                         <table class="toolTable">
                             <tbody>
@@ -485,6 +488,7 @@
                     
                     
                     <div class="tool-content " id="forkDiv" >  
+                        (Add repository to list) <br><br> 
                         Fork a remote repository to this computer :
                         <table class="toolTable">
                             <tbody>
@@ -533,8 +537,9 @@
                     
                      <!--  Add TAB -->
                     
-                    <div class="tool-content " id="addDiv" >   
-                       Add a local repository from this computer :
+                    <div class="tool-content " id="addDiv" >  
+                        (Add repository to list) <br><br> 
+                        Add local repository from folder on this computer :
                         <table class="toolTable">
                             <tbody>
   
@@ -566,6 +571,9 @@
                     <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 
+                        
+                        
+                         (For selected repository) <br><br>
 
                          <!--  Remotes handling dialog -->
                         <div id="additionalRemotesDiv" style="display: block; visibility: visible;">   
@@ -686,6 +694,7 @@
                     
                     <!--  Add Gitignore TAB -->    
                     <div class="tool-content " id="gitIgnoreDiv" > 
+                         (For selected repository) 
                          <p>
                              <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
                             win=>win.on('loaded', () => {
@@ -693,9 +702,8 @@
                             }  )) ; 
                             ">  Edit .gitignore</button> 
                          </p>
-                         <br>
-                         
-                         <b>.gitignore file : </b> <br><br>
+                         <hr>
+                         <b>The current .gitignore file : </b> <br><br>
                          <code id="gitignoreText">test</code>
                           
                     </div>
