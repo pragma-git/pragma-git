@@ -52,6 +52,7 @@
 
 -  # If install files becomes very large -- then the problem is that  ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches is included in install.
    # Solution: softlink ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches -> 
+   rm -rf ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
    ln -s  /Users/jan/Downloads/caches-nwjs-builder-phoenix ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
    
    
@@ -90,11 +91,11 @@
     echo '============================'
     tput sgr0
 
-    # Run newer version of fpm
-    export PATH="/usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin:$PATH"
-    export PATH="/usr/local/Cellar/ruby/3.0.0_1/bin:$PATH"
-    which ruby
-    which fpm
+    ## Run newer version of fpm
+    #export PATH="/usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin:$PATH"
+    #export PATH="/usr/local/Cellar/ruby/3.0.0_1/bin:$PATH"
+    #which ruby
+    #which fpm
 
     
 #
@@ -160,6 +161,7 @@
 # Clean old builds
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac
+    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac_arm64
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win64
     rm -r /Users/jan/Documents/Projects/Pragma-git/dist/linux64
     
@@ -170,9 +172,9 @@
 # Build dists into : "/Users/jan/Documents/Projects/Pragma-git/dist"
 #
     tput setaf $COLOR; echo ' '
-    echo '=========================='
-    echo 'BUILDING FOR ALL PLATFORMS'
-    echo '=========================='
+    echo '=============================='
+    echo 'BUILDING FOR ALL x86 PLATFORMS'
+    echo '=============================='
     tput sgr0
     
     cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries
@@ -198,24 +200,22 @@
 
     echo ' '
     echo $(formatReturn $BUILD_EXIT) Building
-
 #
 # Build Mac installer
 #
     tput setaf $COLOR; echo ' '
-    echo '======================'
-    echo 'INSTALLER MACOS 64-BIT'
-    echo '======================'
+    echo '============================'
+    echo 'INSTALLER MACOS 64-BIT INTEL'
+    echo '============================'
     tput sgr0
     
     MAC_EXIT=0
 
 
-    # Move .app to temporary folder
+    # Copy .app to temporary folder (keep original, to use for apple silicon)
     mkdir ../dist/temp-macos
-    mv "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/" ../dist/temp-macos
-
     DIR=$(ls -1 ../dist/|grep  'mac-x64')
+    cp -R "../dist/$DIR/Pragma-git.app" ../dist/temp-macos
     echo "$DIR.dmg" 
     
     # About dialog -- edit plist
@@ -225,7 +225,7 @@
     plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist || MAC_EXIT=$?
 
     
-    # Work in destination folder (dist/mac) 
+    # Make installer in destination folder (dist/mac) 
     mkdir ../dist/mac
     cd ../dist/mac
 
@@ -249,17 +249,109 @@
       "../temp-macos/" \
     || MAC_EXIT=$?
     
+
     # Clean up 
     cd -
-    mv ../dist/temp-macos/Pragma-git.app "../dist/$(ls -1 ../dist/|grep 'mac-x64')/"
-    rm -r ../dist/temp-macos
+    mv ../dist/temp-macos/Pragma-git.app "../dist/$DIR/"
 
     pwd
     
     echo ' '
     echo $(formatReturn $MAC_EXIT) Creating Mac installer
-
+    
+    
+    
 #
+# Build for Apple silicon, and make installer
+#    
+    
+    tput setaf $COLOR; echo ' '
+    echo '============================='
+    echo 'RE-BUILDING FOR APPLE SILICON'
+    echo '============================='
+    tput sgr0
+ 
+    #
+    # Use ARM build, and copy files from MacOS-build 
+    #  
+    # Location of arm nwjs.app  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases )
+    NWJS_ARM='/Users/jan/Downloads/caches-nwjs-builder-phoenix/nwjs-v0.70.0-osx-arm64/nwjs.app'  
+
+
+    # Build apple silicon .app in temporary folder (pick stuff from original x86 app)
+    mkdir ../dist/temp-macos-arm64
+
+    # Create folder
+    DIR_x64=$(ls -1 ../dist/|grep  'mac-x64')  # This is the template to pick files from (created for x86 above)
+    DIR=$(echo $DIR_x64 | sed 's/x64/arm64/g')   # New dir replacing x64 with 'arm'
+    mkdir "../dist/$DIR"
+    echo "$DIR.dmg" 
+    
+    
+    # Start with arm distribution -- put into /Pragma-git-x.x.x-mac-arm64 
+    cp -R "$NWJS_ARM" "../dist/$DIR/"
+    
+    # Copy files from intel to apple silicon (maybe some files compiled for intel ???)
+    cp -R "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/app.nw" "../dist/$DIR/nwjs.app/Contents/Resources/app.nw"
+    
+    
+    
+    # Modify nwjs distribution -- Copy individual files according to  "https://docs.nwjs.io/en/latest/For%20Users/Package%20and%20Distribute/#mac-os-x" 
+    #    
+  
+        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/app.icns" "../../dist/$DIR/nwjs.app/Contents/Resources/app.icns"
+        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Info.plist" "../dist/$DIR/nwjs.app/Contents/Info.plist" 
+        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/en.lproj/InfoPlist.strings" "../dist/$DIR/nwjs.app/Contents/Resources/en.lproj/InfoPlist.strings" 
+     
+        # Rename inside app
+        mv "../dist/$DIR/nwjs.app/Contents/MacOS/nwjs" "../dist/$DIR/nwjs.app/Contents/MacOS/Pragma-git"
+           
+        # Rename app name
+        mv "../dist/$DIR/nwjs.app" "../dist/$DIR/Pragma-git.app"  # Rename to Pragma-git.app
+        
+
+    cp -R "../dist/$DIR/Pragma-git.app" ../dist/temp-macos-arm64
+
+    
+    # Make installer in destination folder (dist/mac_arm64) 
+    mkdir ../dist/mac_arm64
+    cd ../dist/mac_arm64
+        
+    
+    
+    MAC_EXIT_ARM=0   
+   
+     
+    # Make .dmg in ../dist/temp-macos
+    test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
+    create-dmg \
+      --volname "Mac-Pragma-git-Installer-arm" \
+      --volicon "../../Pragma-git/images/icon_installer.icns" \
+      --window-pos 200 120 \
+      --window-size 500 520 \
+      --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
+      --icon-size 80 \
+      --icon "Pragma-git.app"  125 175 \
+      --hide-extension "Pragma-git.app" \
+      --app-drop-link 375 175 \
+      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
+      --icon ".fseventsd"  1000 190 \
+      --icon ".VolumeIcon.icns"  1000 190 \
+      "$(echo "$DIR.dmg")" \
+      "../temp-macos-arm64/" \
+    || MAC_EXIT_ARM=$?
+    
+
+    # Clean up 
+    cd -
+    #mv ../dist/temp-macos/Pragma-git.app "../dist/$(ls -1 ../dist/|grep 'mac-x64')/"
+    #rm -r ../dist/temp-macos
+    
+    pwd
+    
+    echo ' '
+    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (apple silicon)"
+
 # Build Windows installers
 #
 
@@ -376,7 +468,22 @@
     # For a fresh centos 7 install, do  : sudo yum erase libXScrnSaver libatomic pragma-git
     # For centos7 install from file, do : sudo yum localinstall /mnt/Pragma-git/linux64/Pragma-git- (tab)
  
+ 
+ 
+    tput setaf $COLOR; echo ' '
+    echo '========================== ' 
+    echo 'Clean up temporary folders '
+    echo '========================== ' 
+    tput sgr0  
+     
+    # Temporary folders for MacOS builds
+    rm -r ../dist/temp-macos
+    rm -r ../dist/temp-macos-arm64
+    rm -r ../dist/Pragma-git-*
     
+    ls -la ../dist
+    
+       
 #
 # DONE
 #
@@ -392,6 +499,7 @@
     echo 'Summary : '
     echo $(formatReturn $BUILD_EXIT) Building
     echo $(formatReturn $MAC_EXIT) Creating Mac installer
+    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (Apple silicon)"
     echo $(formatReturn $WIN_EXIT) Creating Windows installer
     echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
     echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
