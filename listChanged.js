@@ -338,8 +338,16 @@ async function _callback( name, event, event2){
                 
                 let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
                 let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                let COMMAND = CD + RUN;
                 
-                exec( CD + RUN, 
+                if (process.platform === 'win32') {
+	                //"%PROGRAMFILES%\Git\bin\sh.exe" -c "cd 'C:\\Users\jaax02\Downloads\pragma-git\pragma-git\pragma-merge'; ./pragma-merge 'hejsan.txt' --edit --rw"
+	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
+	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ./pragma-merge '${file}' --edit --rw "`;
+	                COMMAND = EXE + RUNWIN;
+				}
+                
+                exec( COMMAND, 
                     (error, stdout, stderr) => {
                       // catch err, stdout, stderr
                         if (error) {
