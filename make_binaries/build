@@ -403,6 +403,7 @@
     --input-type dir \
     --output-type deb \
     --name 'pragma-git' \
+    --architecture 'amd64' \
     --maintainer 'axelsson.jan@gmail.com' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
@@ -449,6 +450,7 @@
     --input-type dir \
     --output-type rpm \
     --name 'pragma-git' \
+    --architecture 'amd64' \
     --maintainer 'axelsson.jan@gmail.com' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
