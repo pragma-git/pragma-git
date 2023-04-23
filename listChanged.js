@@ -338,7 +338,7 @@ async function _callback( name, event, event2){
                 
                 // Mac or Linux
                 let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
-                let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                let RUN = opener.CWD_INIT + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
                 let COMMAND = CD + RUN;
                 
                 // Windows
