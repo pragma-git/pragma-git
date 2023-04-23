@@ -336,14 +336,17 @@ async function _callback( name, event, event2){
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 
+                // Mac or Linux
                 let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
                 let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
                 let COMMAND = CD + RUN;
                 
+                // Windows
                 if (process.platform === 'win32') {
-	                //"%PROGRAMFILES%\Git\bin\sh.exe" -c "cd 'C:\\Users\jaax02\Downloads\pragma-git\pragma-git\pragma-merge'; ./pragma-merge 'hejsan.txt' --edit --rw"
+                    let PRAGMA_MERGE = `${opener.CWD_INIT}/pragma-merge`
+					//"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " cd 'C:/Users/jan/menu-test2'; 'C:\\Users\\jan\\test-clone\\pragma-git\\pragma-merge ' 'New folder/tjena.txt.txt' --edit --rw "
 	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
-	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ./pragma-merge '${file}' --edit --rw "`;
+	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}' --edit --rw "`;
 	                COMMAND = EXE + RUNWIN;
 				}
                 

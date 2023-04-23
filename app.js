@@ -156,6 +156,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
+        const CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
         
     // Handles to windows
         var main_win;
@@ -300,6 +301,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
   // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
   cacheRemoteOrigins();
+  
+
     
 // ---------
 // FUNCTIONS 
