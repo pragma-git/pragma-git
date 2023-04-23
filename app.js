@@ -5122,7 +5122,7 @@ function stackInfo( level ){
 
 
 // Update other windows
-        
+ 
 function fixNwjsBug7973( win){
     // This function should be called after intercepting 'close' event for a spawned window
     // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
@@ -5134,14 +5134,7 @@ function fixNwjsBug7973( win){
     
     // Remove 'close' event handler, and then close window
     win.removeAllListeners('close');
-    win.close()
-}
-function closeChildWindow( win){
-    // Nwjs but 7973 is related to windows growing by 28 pixels each time they are opened
-    // To override this, I hide and shrink the window before closing
-    this.hide();
-    this.resizeBy(0,-28);
-    this.close(true)
+    win.close(true)
 }
 
 async function updateGraphWindow(){
@@ -6422,7 +6415,9 @@ window.onload = async function() {
 
 };
 async function closeWindow(a){
-    console.log('Close argument = ' + a);  
+  
+    win.hide(); // Close to make it swifter
+    closeAllWindows();  // Close all except main window
     
     // Commit settings
     try{
@@ -6448,20 +6443,9 @@ async function closeWindow(a){
     state.position.width = gui.Window.get().width;
     
     saveSettings();
-    gui.App.closeAllWindows();
-      
-    // Hide the window to give user the feeling of closing immediately
-    this.hide();
-
-
-
-    // If the new window is still open then close it.
-    if (win !== null) {
-      win.close(true)
-    }
 
     // After closing the new window, close the main window.
-    this.close(true);
+    win.close(true);
 } 
 
 
