@@ -88,7 +88,8 @@ div#inner-content {
 }
 
 
-#up-arrow, #down-arrow, #bottom-titlebar-find-icon{
+#up-arrow, #down-arrow, #bottom-titlebar-find-icon
+{
   filter: invert( var(--history-image-invert) );
   position: absolute;
   left: 5px;
@@ -104,6 +105,11 @@ div#inner-content {
 #bottom-titlebar-find-icon{
   bottom: 5px;
   left: 8px;
+}
+
+
+#about-icon-find{
+  filter: invert( var(--history-image-invert) );
 }
 
 
