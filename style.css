@@ -84,7 +84,7 @@ div#inner-content {
   width: auto;
 }
 #top-titlebar-branch-arrow {
-  margin-left: -4px;
+  margin-left: -2px;
 }
 
 
@@ -256,6 +256,10 @@ div#inner-content {
   font-size: 11pt;
   color: #ffffff;
   -webkit-app-region: no-drag;
+}
+
+.top-titlebar-branch-text{
+    font-style: italic;
 }
 
 .top-titlebar-tag-icon

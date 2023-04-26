@@ -112,7 +112,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.69313941"
-     inkscape:cx="526.58959"
+     inkscape:cx="403.23778"
      inkscape:cy="714.14205"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -124,7 +124,7 @@
      inkscape:window-width="2760"
      inkscape:window-height="1582"
      inkscape:window-x="144"
-     inkscape:window-y="32"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
@@ -1456,7 +1456,7 @@
        height="54.589321"
        width="38.175484"
        id="rect950-06-9-1-2"
-       style="fill:none;stroke:#b3b3b3;stroke-width:0.309004"
+       style="fill:none;stroke:none;stroke-width:0.309004"
        inkscape:export-filename="drowdown-arrow_black.png" />
     <rect
        inkscape:export-ydpi="96"
@@ -1530,8 +1530,23 @@
        id="path2512-3-9" />
     <path
        id="rect620"
-       style="stroke:#030303;stroke-width:0.613216;stroke-linecap:round;stroke-linejoin:round"
+       style="stroke:none;stroke-width:0.613216;stroke-linecap:round;stroke-linejoin:round"
        d="m 442.38449,246.56353 h 35.16978 l -17.58489,23.23321 z"
+       sodipodi:nodetypes="cccc" />
+    <rect
+       inkscape:export-ydpi="32"
+       inkscape:export-xdpi="32"
+       y="295.26831"
+       x="442.80206"
+       height="54.565681"
+       width="44.259319"
+       id="rect950-06-9-1-2-7"
+       style="fill:none;stroke:none;stroke-width:0.332644"
+       inkscape:export-filename="top-of-branch-arrow_black.png" />
+    <path
+       id="rect620-9"
+       style="stroke:#030303;stroke-width:0.816797;stroke-linecap:round;stroke-linejoin:round"
+       d="m 485.46855,339.74011 h -40.69198 l 20.34599,-35.62632 z"
        sodipodi:nodetypes="cccc" />
   </g>
 </svg>

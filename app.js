@@ -2680,14 +2680,46 @@ async function _update2(){
         
                
     // Show if in history mode / Hide otherwise
+    
+    
+        function replaceAttribute( id, attributeName, newText){ 
+            // Replace an attribute in element with known id
+            // Start with node : <img id="idA" src="images/dropdown-arrow.png">
+            // replaceAttribute( 'idA' , 'src', 'images/abc.png')
+            // gives
+            // <img id="idA" src="images/abc.png">
+            
+            let node = document.getElementById( id);  
+            node.setAttribute( attributeName, newText);
+        }
+        
+        function replacePartOfAttribute( id, attributeName, subString, newSubString){ 
+            // Replace substring of an attribute, in element with known id
+            // Start with node : <img id="idA" onclick="updateImageUrl('top-titlebar-branch-arrow', 'images/dropdown-arrow_hover.png');>
+            // replaceAttribute( 'idA' , 'src', 'dropdown-arrow_hover', 'dropdown-arrow_hover-big')
+            // gives
+            // <img id="idA" onclick="updateImageUrl('top-titlebar-branch-arrow', 'images/dropdown-arrow_hover-big.png');>
+            
+            let node = document.getElementById( id);  
+            let oldString = node.getAttribute( attributeName);
+            let newString = oldString.replaceAll( subString, newSubString);
+            
+            node.setAttribute( attributeName, newString);
+        }        
+    
         try{
             if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
 
-                
-                document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
-                
+                // Replace icon with image = ▲ 
+                //document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
+                id = 'top-titlebar-branch-arrow'
+                replacePartOfAttribute( id, 'src', 'dropdown-arrow', 'top-of-branch-arrow');
+                replacePartOfAttribute( id, 'onclick', 'dropdown-arrow', 'top-of-branch-arrow');
+                replacePartOfAttribute( id, 'onmouseover', 'dropdown-arrow', 'top-of-branch-arrow');
+                replacePartOfAttribute( id, 'onmouseout', 'dropdown-arrow', 'top-of-branch-arrow');
+           
                 
                 let isMergeCommit = await gitIsMergeCommit( localState.historyHash );
                 
@@ -2706,7 +2738,15 @@ async function _update2(){
                 document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
-                document.getElementById('top-titlebar-branch-arrow').innerHTML = '&#x25BE;';  // ▾
+                
+                // Replace icon with original image = ▾
+                id = 'top-titlebar-branch-arrow';
+                replacePartOfAttribute( id, 'src', 'top-of-branch-arrow', 'dropdown-arrow');
+                replacePartOfAttribute( id, 'onclick', 'top-of-branch-arrow', 'dropdown-arrow');
+                replacePartOfAttribute( id, 'onmouseover', 'top-of-branch-arrow', 'dropdown-arrow');
+                replacePartOfAttribute( id, 'onmouseout', 'top-of-branch-arrow', 'dropdown-arrow');
+                
+                
             }
         }catch(err){  
             console.log(err);
