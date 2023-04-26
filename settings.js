@@ -8,6 +8,7 @@ var fs = require('fs');
 var util = require('./util_module.js'); // Pragma-git common functions
 const pathsep = require('path').sep;  // Os-dependent path separator
 const path = require('path');
+const { execSync } = require('child_process');
 
 let simpleGit = require('simple-git');
 //function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
@@ -1498,6 +1499,12 @@ async function drawSoftwareTab(document){
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
+    
+    // Figure out platform
+    if (os.platform().startsWith('darwin') ){
+        let platform = os.machine();  
+        document.getElementById('platform').innerText = document.getElementById('platform').innerText  + '(' + platform + ')';
+    }
     
     
     document.getElementById('gitVersion').innerText = localState.gitVersion;
