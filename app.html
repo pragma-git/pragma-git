@@ -81,13 +81,15 @@
                 
                 <!-- Text Repo  --> 
                 <div class="tooltip-bottom-left" data-tooltip="Repositories" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
-        
-                    &nbsp;<div id="top-titlebar-repo-arrow" class="top-titlebar-branch-arrow" 
-                        onclick="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');
-                                _callback('clicked-repo', 'menu')" 
-                        onmouseover="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #aaaaaa');" 
-                        onmouseout="document.getElementById('top-titlebar-repo-arrow').setAttribute('style','color: #ffffff');" 
-                        >&#x25BE;</div>
+                       
+                    <div class="top-titlebar-repo-text">
+                        <img id="top-titlebar-repo-arrow" 
+                            onclick="updateImageUrl('top-titlebar-repo-arrow', 'images/dropdown-arrow_hover.png');
+                                     _callback('clicked-repo', 'menu')"
+                            onmouseover="updateImageUrl('top-titlebar-repo-arrow', 'images/dropdown-arrow_hover.png');" 
+                            onmouseout= "updateImageUrl('top-titlebar-repo-arrow', 'images/dropdown-arrow.png');" 
+                            src="images/dropdown-arrow.png">
+                    </div>  
                         
                     <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
                         onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
@@ -96,24 +98,32 @@
                     </div>
                 </div>
                 
-                <!-- Text Branch  --> 
-                <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                &nbsp;
                 
-                    &nbsp;(<div id="top-titlebar-branch-arrow" class="top-titlebar-branch-arrow" 
-                        onclick="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');
-                                 _callback('clicked-branch', 'menu')" 
-                        onmouseover="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #aaaaaa');" 
-                        onmouseout="document.getElementById('top-titlebar-branch-arrow').setAttribute('style','color: #ffffff');" 
-                        >&#x25BE;</div>
+                <!-- Text Branch  --> 
+                (
+                <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+
+                    
+                   <div class="top-titlebar-branch-text">
+                           
+                        <img id="top-titlebar-branch-arrow" 
+                            onclick="updateImageUrl('top-titlebar-branch-arrow', 'images/dropdowndown-arrow_hover.png');
+                                     _callback('clicked-branch', 'menu')"
+                            onmouseover="updateImageUrl('top-titlebar-branch-arrow', 'images/dropdown-arrow_hover.png');" 
+                            onmouseout= "updateImageUrl('top-titlebar-branch-arrow', 'images/dropdown-arrow.png');" 
+                            src="images/dropdown-arrow.png">
+                    </div>  
                         
-                        <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
+                        
+                    <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
                         onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
                                  _callback('clicked-branch', 'cycle')" 
                         onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                         onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
-                    </div>)
+                    </div> 
                 </div>
-                
+                )
                 &nbsp;
                  
                 <!-- Icon Notes  -->                             
@@ -124,9 +134,7 @@
                         onmouseover="updateImageUrl('top-titlebar-notes-icon', 'images/notes_hover.png');" 
                         onmouseout= "updateImageUrl('top-titlebar-notes-icon', 'images/notes.png');" 
                         src="images/notes.png">
-                </div> 
-                
-                
+                </div>             
      
             </div>     
             

@@ -111,9 +111,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98024716"
-     inkscape:cx="1244.074"
-     inkscape:cy="429.99359"
+     inkscape:zoom="0.69313941"
+     inkscape:cx="526.58959"
+     inkscape:cy="714.14205"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -121,10 +121,10 @@
      inkscape:lockguides="true"
      showguides="false"
      inkscape:guide-bbox="true"
-     inkscape:window-width="1622"
-     inkscape:window-height="997"
-     inkscape:window-x="58"
-     inkscape:window-y="25"
+     inkscape:window-width="2760"
+     inkscape:window-height="1582"
+     inkscape:window-x="144"
+     inkscape:window-y="32"
      inkscape:window-maximized="0"
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
@@ -1031,8 +1031,8 @@
        r="10.856904"
        style="fill:#d40000;stroke:none;stroke-width:0.216373"
        id="circle2078"
-       cx="500.12396"
-       cy="286.87906" />
+       cx="515.77435"
+       cy="291.07797" />
     <circle
        cy="286.87906"
        cx="548.77026"
@@ -1050,7 +1050,8 @@
     <g
        inkscape:export-ydpi="78.642052"
        inkscape:export-xdpi="78.642052"
-       id="g1089">
+       id="g1089"
+       transform="translate(-6.4891948,11.069803)">
       <rect
          y="218.11334"
          x="314.53998"
@@ -1074,7 +1075,8 @@
     <g
        inkscape:export-ydpi="78.642052"
        inkscape:export-xdpi="78.642052"
-       id="g1101">
+       id="g1101"
+       transform="translate(-3.8171734,2.6720214)">
       <rect
          inkscape:export-ydpi="78.642052"
          inkscape:export-xdpi="78.642052"
@@ -1447,6 +1449,16 @@
        id="rect950-06-9-1"
        style="fill:#b3b3b3;stroke:#b3b3b3;stroke-width:0.371671" />
     <rect
+       inkscape:export-ydpi="32"
+       inkscape:export-xdpi="32"
+       y="229.41022"
+       x="440.49994"
+       height="54.589321"
+       width="38.175484"
+       id="rect950-06-9-1-2"
+       style="fill:none;stroke:#b3b3b3;stroke-width:0.309004"
+       inkscape:export-filename="drowdown-arrow_black.png" />
+    <rect
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        y="28.058969"
@@ -1516,5 +1528,10 @@
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="m 341.49022,64.230204 -7.65331,-6.998693 v 0 0"
        id="path2512-3-9" />
+    <path
+       id="rect620"
+       style="stroke:#030303;stroke-width:0.613216;stroke-linecap:round;stroke-linejoin:round"
+       d="m 442.38449,246.56353 h 35.16978 l -17.58489,23.23321 z"
+       sodipodi:nodetypes="cccc" />
   </g>
 </svg>

@@ -78,9 +78,17 @@ div#inner-content {
 }
 
 
+#top-titlebar-repo-arrow, #top-titlebar-branch-arrow {
+  vertical-align: middle;
+  height: 16px;
+  width: auto;
+}
+#top-titlebar-branch-arrow {
+  margin-left: -4px;
+}
+
 
 #up-arrow, #down-arrow, #bottom-titlebar-find-icon{
-  filter: brightness( var(--history-icon-brightness));
   position: absolute;
   left: 5px;
 }
@@ -149,7 +157,7 @@ div#inner-content {
 
 .about-icon, .bottom-titlebar-folder-icon{
   position: absolute;
-  left: 6px;
+  left: 7px;
   margin-top: 6px;
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
@@ -221,7 +229,7 @@ div#inner-content {
 }
 .top-titlebar-text{
   position: absolute;
-  left: 28px;
+  left: 32px;
   width: 80%;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -234,7 +242,6 @@ div#inner-content {
 
 .top-titlebar-repo-text,
 .top-titlebar-branch-text,
-.top-titlebar-branch-arrow,
 .bottom-titlebar-status-text{
   position: relative;
   display:inline-block;
