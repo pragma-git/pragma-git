@@ -1500,10 +1500,12 @@ async function drawSoftwareTab(document){
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
     
-    // Figure out platform
+    // MacOS -- figure out code-platform and cpu-info
     if (os.platform().startsWith('darwin') ){
+        
+        let cpu = execSync('sysctl -n machdep.cpu.brand_string ').toString();  
         let platform = os.machine();  
-        document.getElementById('platform').innerText = document.getElementById('platform').innerText  + '(' + platform + ')';
+        document.getElementById('platform').innerText = document.getElementById('platform').innerText  + '(' + platform + '),  ' + cpu;
     }
     
     
