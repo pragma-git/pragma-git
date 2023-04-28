@@ -61,6 +61,19 @@
 
 ////
 
+    #
+    # CONSTANTS
+    #
+
+
+    # MACOS ARM RELEASE (downloaded to "/Users/jan/Downloads/caches-nwjs-builder-phoenix")
+    NWJS_ARM_NAME='nwjs-sdk-v0.75.0-osx-arm64'  # UPDATE NAME HERE  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases)
+
+
+
+    #
+    # START OF SCRIPT
+    #
     
     # Declare formatting function (return "[OK] - " or "[XX] - ")
     
@@ -274,9 +287,11 @@
     #
     # Use ARM build, and copy files from MacOS-build 
     #  
-    # Location of arm nwjs.app  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases, and set variable NWJS_ARM_NAME )
-    NWJS_ARM_NAME='nwjs-sdk-v0.70.0-osx-arm64'  # UPDATE NAME HERE
+    
+    # Location of arm nwjs.app  
     NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    
+    xattr -r -d com.apple.quarantine "$NWJS_ARM"  # clear the Apple quarantine flag
     
     # Is this latest release
     lastMacArmRelease=$( curl --silent -L \
