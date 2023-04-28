@@ -274,8 +274,18 @@
     #
     # Use ARM build, and copy files from MacOS-build 
     #  
-    # Location of arm nwjs.app  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases )
-    NWJS_ARM='/Users/jan/Downloads/caches-nwjs-builder-phoenix/nwjs-v0.70.0-osx-arm64/nwjs.app'  
+    # Location of arm nwjs.app  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases, and set variable NWJS_ARM_NAME )
+    NWJS_ARM_NAME='nwjs-sdk-v0.70.0-osx-arm64'  # UPDATE NAME HERE
+    NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    
+    # Is this latest release
+    lastMacArmRelease=$( curl --silent -L \
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
+      https://api.github.com/repos/corwin-of-amber/nw.js/releases \
+      | grep osx-arm64.zip | grep 'sdk-v' | grep name | cut -d\" -f4 | head -1 )  # nwjs-sdk-v0.75.0-osx-arm64.zip 
+    
+    IS_LATEST_MAC_ARM_RELEASE=$( [ "$lastMacArmRelease" = "$NWJS_ARM_NAME.zip" ]; echo $? )
 
 
     # Build apple silicon .app in temporary folder (pick stuff from original x86 app)
@@ -499,12 +509,21 @@
     
     # Output summary
     echo 'Summary : '
-    echo $(formatReturn $BUILD_EXIT) Building
+    echo $(formatReturn $BUILD_EXIT) Building Intel versions
     echo $(formatReturn $MAC_EXIT) Creating Mac installer
-    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (Apple silicon)"
+    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (Apple silicon) $ARM_INFO_TEXT"
     echo $(formatReturn $WIN_EXIT) Creating Windows installer
     echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
     echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
     echo ' '
-
+    
+    if [ $IS_LATEST_MAC_ARM_RELEASE -eq 1 ]; then
+        echo 'Info : '
+        echo ' '
+        tput setaf 5 # Magenta
+        echo "MacOS ARM -- Not latest version (ctrl-click https://github.com/corwin-of-amber/nw.js/releases/latest to download)"
+        tput sgr0 
+        echo ' '
+    fi
+    
     read -n 1 -s -r -p "DONE : Press any key to continue" && tput setaf $COLOR; echo ' '
