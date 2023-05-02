@@ -1,38 +1,62 @@
 #!/bin/bash
+#
+# This script builds a github release. 
+#
+# Requires 
+#   0) Tag for pragma-git repo matches version from package.json
+#   1) Run ./build on checked out tag
+#   2) Modify the text in CHANGES below
 
-# FIRST : Run make_binaries/build on checked out tag
+# Changes section :
 
-# SECOND, MODIFY  Release Notes (edit first part before "### About ...")
+read -r -d '' CHANGES << ---
+* Main -- dialog for commiting when in detached branch. Options to merge immediately to branch, delete, or make temporary branch ( TODO: fix help)
+* Main -- add dialog for unsaved changes on detached HEAD (options to stash or delete)
+* Main -- fix bug where manual push failed when auto-push setting was off
+* Main -- debug of git commands can be enabled manually in settings.json
+* Settings -- dark/light mode, and window scaling, are updated immediately
+* Settings -- edit global author info
+* Settings -- add multiple remotes (can merge from multiple remotes, for instance when forking)
+* Notes -- button to go back to earlier versions of personal notes
+* Notes -- theme for input dialogs updated
+* Graph -- fix that info window could not be shown on parent of selected node
+* Graph -- fix positioning of info window (so it does not overlap a parent node)
+* Graph -- info window improved coloring
+* List of modified files --removed apply-button
+* Help -- improved Settings-help page (navigation through tabs)
+* Help -- help on dialogs when leaving detached HEAD
+* Default branch on init is now "main"
+* Fixed multiple minor issues
+* Add MIT License
+* Apple silicon 
+---
+
+#
+# --------------------------------------------------------------------------------------------
+#
+
+#
+# Release text
+#
+
+# Tag to use for this Release (from package.json)
+TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
+echo "TAG = $TAG"
+
+# Release Title from Tag
+RELEASE_TITLE="Release $TAG"
+echo "RELEASE_TITLE = $RELEASE_TITLE"
+
+# Generate release text
 read -r -d '' RELEASE_NOTES << ---
 
-Changes :
+### Downloads
 
-* Pragma-merge -- dialog to warn about binary files
-* Pragma-merge -- fixed color-theme bug
-* Pragma-merge -- add viewing of new files from status list of changed files
-* Pragma-merge -- Improve merge color scheme for better readibility
-* Conflict resolution -- allow skipping files temporarily (you need to go back later)
-* Conflict resolution -- improve functionality for [Undo Merge] button
-* Graph-window -- fix bug in selection of found commit
-* Select off-branch commit in Graph window now displays correct message in main window
-* Settings-window -- speedup
-* Settings-window -- add Fork dialog
-* Main-window -- speedup
-* Main-window -- allow huge number of uncommitted files (some other git clients crashes)
-* Bug fix -- MacOS menu item is now removed for closed Notes window
-* Log improved for developers. Log code line-numbers for main-window callbacks, and for git-commands
-
-
-___
-### About Pragma-git
-The aim with Pragma-git is to be
-- ”pragmatic” — aiming to be the opposite to how many beginners perceive git
-- easy to start — and something to grow in for daily programming tasks
-- friendly — guiding you through risks of data loss with pop-up warnings and instructions
-
-Read more on the home page : https://pragma-git.github.io
-
-### Quick Install
+[Windows](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-win-x64.exe)
+[Mac - Intel or Rosetta](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-x64.dmg)
+[Mac - Apple silicon (M1, M2)](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-arm64.dmg)
+[Linux deb](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.deb)
+[Linux rpm](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.rpm)
 
 Or download the *one* installer that matches your system from the "__*assets*__" link below.
 
