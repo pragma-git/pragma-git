@@ -1230,8 +1230,16 @@ async function _callback( name, event){
                 switch (process.platform ){
                     
                     case 'darwin' :
+                        // Asume Intel version
                         url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
-                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;
+                        fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;  
+                        
+                        // Apple silicon (arm64)
+                        let cpu = execSync('sysctl -n machdep.cpu.brand_string ').toString();
+                        if (cpu == 'arm64'){
+                            fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-arm64.dmg`;
+                            url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-arm64.dmg`;
+                        }
                         
                         downloadUsingAnchorElement(url, fileName);
                         gui.Shell.openItem( path.resolve( getDownloadsDir() ));
