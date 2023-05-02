@@ -13,6 +13,7 @@
             text-align:left;
         }
         
+            background-color: #444;
      
         th{
             background-color: #444;
@@ -129,9 +130,14 @@
                   
         img[src="images/stash_pop.png"],
         img[src="images/stash_pop_black.png"],
-        img[src="images/stash_pop_hover.png"] 
+        img[src="images/stash_pop_hover.png"]
         {
             filter: var(--stash-icon-filter);
+        }
+        
+        img[src="images/github-mark.png"] 
+        {
+            filter: none;
         }
         
                
@@ -147,11 +153,11 @@
     <!-- Border for dropping folder-->
 
     <style>
-        #addFolder, #cloneFolder { 
+        #addFolder, #cloneFolder, #forkFolder { 
             border-style:  solid;  
             border-width: thin;
         }
-        #addFolder.hover,  #cloneFolder.hover  { 
+        #addFolder.hover,  #cloneFolder.hover,  #forkFolder.hover  { 
             border-style:  dashed;  
             border-width: medium;
         }
@@ -224,7 +230,8 @@
                     Window scaling : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
-                        onchange="global.state.zoomMain = this.value;
+                        onchange="
+                            global.state.zoomMain = this.value;
                             opener.saveSettings();
                             opener.win.reload()"
                         />&nbsp;
@@ -232,7 +239,8 @@
                     
                     <br> 
                     
-                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" onchange="global.state.zoom = this.value;"/>&nbsp;
+                    <input id="zoom" type="text" style="margin-top: 3px"  size="4" 
+                        onchange=" _callback('zoomChanged',this)"/>&nbsp;
                     <label for="zoom"> Other windows</label>
     
                     <br>
@@ -246,11 +254,11 @@
                       <tr style="border: none;">
                             <td>
                                 <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
-                                <input id="authorName" type="text" size="30"/>
+                                <input id="authorName" type="text" size="30"  oninput="_callback('globalAuthorNameChanged',this)"/>
                             </td>
                             <td>                
                                 <label for="authorEmail"> <sup class="footnoteText">*</sup>Author's email  :</label><br>
-                                <input id="authorEmail" type="text" size="30"/>
+                                <input id="authorEmail" type="text" size="30"  oninput="_callback('globalAuthorEmailChanged',this)"/>
                             </td>
                         </tr>
                     </table>  
@@ -341,7 +349,7 @@
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
                         <th class="localFolder">Local folder</th>
-                        <th class="remoteURL">Remote repository</th>
+                        <th class="remoteURL">Remote repository ("origin")</th>
                         <th class="testURL"  style="text-align: center">Remote</th>
                         <th class="repoAction"  style="text-align: center">Action</th>
                     </tr></thead>
@@ -375,6 +383,7 @@
                     <!--  This-repo settings TAB -->
                     
                     <div class="tool-content " id="thisRepoDiv" >  
+                        (For selected repository) <br><br>
                         
                         <!--  Author info -->
                         <table>            
@@ -421,6 +430,7 @@
                     <!--  Clone TAB -->
                     
                     <div class="tool-content " id="cloneDiv" >  
+                        (Add repository to list) <br><br> 
                         Clone a remote repository to this computer :
                         <table class="toolTable">
                             <tbody>
@@ -437,7 +447,7 @@
                                 
                                 <tr class="tool">
                                     <td>
-                                        <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) :" 
+                                        <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " 
                                             ondrop="_callback('droppedFolder',event)" 
                                             ondragover = "this.className = 'hover'; return false; "
                                             ondragleave = "this.className = ''; return false; "
@@ -478,6 +488,7 @@
                     
                     
                     <div class="tool-content " id="forkDiv" >  
+                        (Add repository to list) <br><br> 
                         Fork a remote repository to this computer :
                         <table class="toolTable">
                             <tbody>
@@ -494,7 +505,7 @@
                                 
                                 <tr class="tool">
                                     <td>
-                                        <textarea id="forkFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" 
+                                        <textarea id="forkFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " 
                                             ondrop="_callback('droppedFolder',event)" 
                                             ondragover = "this.className = 'hover'; return false; "
                                             ondragleave = "this.className = ''; return false; "
@@ -526,8 +537,9 @@
                     
                      <!--  Add TAB -->
                     
-                    <div class="tool-content " id="addDiv" >   
-                       Add a local repository from this computer :
+                    <div class="tool-content " id="addDiv" >  
+                        (Add repository to list) <br><br> 
+                        Add local repository from folder on this computer :
                         <table class="toolTable">
                             <tbody>
   
@@ -560,28 +572,90 @@
                                    
                     <div class="tool-content " id="gitHubDiv" > 
                         
-                        Add URL in "Remote repository" field, for selected repository above <sup>*</sup>  <br>
+                        
+                         (For selected repository) <br><br>
 
-                         <hr>
+                         <!--  Remotes handling dialog -->
+                        <div id="additionalRemotesDiv" style="display: block; visibility: visible;">   
+                           Remote repositories : &nbsp;&nbsp;&nbsp;
+                           
+                           
+                            <!-- remote dialog range buttons -->
+                            <div id="fileRange" style="display:block">
+                                <span id='remoteReposDown' style="cursor:pointer; zoom: 0.8;" 
+                                    onclick="
+                                        remoteRepos.fetch.pos = Math.max( 1, remoteRepos.fetch.pos - 1); 
+                                        updateRemoteRepos()
+                                        document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"
+                                > &#x25C0;</span> 
+                                
+                                <span id="remoteReposCurrentPos">1</span>  of <span id="remoteReposMax">1</span>
+                                
+                                <span id='remoteReposUp'   style="cursor:pointer; zoom: 0.8;" 
+                                    onclick="
+                                        remoteRepos.fetch.pos = Math.min( remoteRepos.fetch.max, remoteRepos.fetch.pos + 1); 
+                                        updateRemoteRepos();
+                                        document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"
+                                > &#x25B6;</span> 
+                 
+                            </div>
+                           
+                           
+                           <!-- remote dialog textareas-->
+                           
+                            <table class="toolTable">
+                                <tbody>
+      
+                                    <tr class="tool">
+                                        <td  style="width: 20%">
+                                            <textarea id="newRepoAliasTextarea" 
+                                                placeholder="repo alias" 
+                                                onkeyup="_callback('newRepoAliasKeyUp', this);"></textarea>
+                                        </td>
+                                        
+                                        <td style="width: 60%">
+                                            <textarea id="additionalRemoteURL" placeholder="URL for remote repository"></textarea>
+                                        </td>
+                                        
+                                        <td class="toolButtonField">
+                                            <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                            <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">Add</button>
+                                            <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)">Remove</button>
+                                        </td>
+                                    </tr>
+
+                                    
+                                </tbody>
+                            </table>                    
+                        </div>
+                        
+                        
+
        
                          <!--  Allow push to remote -->
-                        <input type="checkbox" id="allowPushToRemote" 
-                            onchange="_callback('localCheckboxChanged',this)
-                                        if (this.checked){
-                                            document.getElementById('autoPushDiv').style.visibility = 'visible';
-                                        }else{
-                                            document.getElementById('autoPushDiv').style.visibility = 'collapse';
-                                        } 
-                            " 
-                            >
-                        <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access (for instance a cloned public repo)</label><br>
-                            
-      
-                         <!--  Auto-push to remote -->
-                        <div id = 'autoPushDiv'>
-                            <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
-                            <label for="autoPushToRemote"> Auto-push to remote, when Store clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+                        <div id="allowToPushDiv">
+                            <div id="allowPushDiv">
+                                <input type="checkbox" id="allowPushToRemote" 
+                                    onchange="_callback('localCheckboxChanged',this)
+                                                if (this.checked){
+                                                    document.getElementById('autoPushDiv').style.visibility = 'visible';
+                                                }else{
+                                                    document.getElementById('autoPushDiv').style.visibility = 'collapse';
+                                                } 
+                                    " 
+                                    >
+                                <label for="allowPushToRemote"> Allow <code>git push</code>. Disable if you don't have write access</label><br>
+                            </div>
+                                                    
+          
+                             <!--  Auto-push to remote -->
+                            <div id = 'autoPushDiv'>
+                                <input type="checkbox" id="autoPushToRemote" name="name" value="true"  onchange = "_callback('localCheckboxChanged',this);" checked>
+                                <label for="autoPushToRemote"> Auto-push to remote, when Store-button clicked (<code>git commit; git push</code>). Deselect to only commit (<code>git commit</code>)</label><br>
+        
+                            </div>
                         </div>
+   
     
                                               
                         <hr>
@@ -602,23 +676,34 @@
                         </div>
                         
                         
-                        Or use Github wizard : <button onclick="nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'} );">GitHub</button> 
+                        <div id="Github-button">Or use Github wizard : 
+                            <button onclick="
+                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
+                                win=>win.on('loaded', () => {
+                                    win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                } ));
+                                ">
+                                <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
+                                GitHub
+                            </button> 
+                        </div>
                         
-   
-                         
-  
-                          
+                      
                     </div>
                                         
                     
                     <!--  Add Gitignore TAB -->    
                     <div class="tool-content " id="gitIgnoreDiv" > 
+                         (For selected repository) 
                          <p>
-                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'}  );" >  Edit .gitignore</button> 
+                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
+                            win=>win.on('loaded', () => {
+                                win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                            }  )) ; 
+                            ">  Edit .gitignore</button> 
                          </p>
-                         <br>
-                         
-                         <b>.gitignore file : </b> <br><br>
+                         <hr>
+                         <b>The current .gitignore file : </b> <br><br>
                          <code id="gitignoreText">test</code>
                           
                     </div>
@@ -737,7 +822,7 @@
             
         Start working in branch &nbsp; 
         <select id="firstBranchToWorkOn" name="firstBranchToWorkOn" >
-            <option value="master">master</option>
+            <option  id="defaultBranchName" value="master">master_</option>
             <option value="develop" selected>develop</option>
         </select> <br>
             <br>
@@ -865,6 +950,10 @@
             
             // NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!!
             window.ondrop = function(e) { e.preventDefault(); return false };
+            
+                        
+            // Set default branch-name
+            opener.registerDefaultBranch(document);
 
         });
     </script>

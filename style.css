@@ -46,6 +46,9 @@ textarea{
 .group{
     display: inline-block;
     text-align: left;
+    float: left;
+    padding: 4px;
+    padding-left: 0px;
 }
 
 
@@ -70,32 +73,43 @@ div#inner-content {
 }
 
 
-
-table#outer_table {
-  width: auto;
-  height: inherit;
-  background-color: var(--main-background);
-  border-color: var(--main-background);
-}
-
-tr#output_row {
-  width: auto;
-  height: fit-content;
-}
-
-td {
-  width: auto;
-  height: auto;
-}
-
 .settingsActionCell{
   text-align: center;
 }
 
 
+#top-titlebar-repo-arrow, #top-titlebar-branch-arrow {
+  vertical-align: middle;
+  height: 16px;
+  width: auto;
+}
+#top-titlebar-branch-arrow {
+  margin-left: -2px;
+}
 
-#up-arrow, #down-arrow, #bottom-titlebar-find-icon{
-  filter: brightness( var(--history-icon-brightness)) 
+
+#up-arrow, #down-arrow, #bottom-titlebar-find-icon
+{
+  filter: invert( var(--history-image-invert) );
+  position: absolute;
+  left: 5px;
+}
+
+#up-arrow{
+  bottom: calc( 50% + 10px);
+}
+#down-arrow{
+  bottom: calc( 50% - 10px);
+}
+
+#bottom-titlebar-find-icon{
+  bottom: 5px;
+  left: 8px;
+}
+
+
+#about-icon-find{
+  filter: invert( var(--history-image-invert) );
 }
 
 
@@ -117,13 +131,6 @@ td {
 #arrow_table{
   height: inherit; 
 }
-
-
-
-.store-button{
-  float: right; 
-}
-
 
 
 .top-titlebar {
@@ -157,7 +164,7 @@ td {
 
 .about-icon, .bottom-titlebar-folder-icon{
   position: absolute;
-  left: 6px;
+  left: 7px;
   margin-top: 6px;
   margin-bottom: 6px;
   -webkit-app-region: no-drag;
@@ -229,7 +236,7 @@ td {
 }
 .top-titlebar-text{
   position: absolute;
-  left: 28px;
+  left: 32px;
   width: 80%;
   margin-top: 6px;
   margin-bottom: 6px;
@@ -242,7 +249,6 @@ td {
 
 .top-titlebar-repo-text,
 .top-titlebar-branch-text,
-.top-titlebar-branch-arrow,
 .bottom-titlebar-status-text{
   position: relative;
   display:inline-block;
@@ -250,6 +256,10 @@ td {
   font-size: 11pt;
   color: #ffffff;
   -webkit-app-region: no-drag;
+}
+
+.top-titlebar-branch-text{
+    font-style: italic;
 }
 
 .top-titlebar-tag-icon

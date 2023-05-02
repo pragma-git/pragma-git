@@ -88,6 +88,9 @@ async function injectIntoJs(document) {
             //document.getElementById('listFiles').innerHTML = '&nbsp;  Files changed since previous revision :';  
         //}
     }
+    
+    
+    win.focus();
 
 
 };
@@ -124,7 +127,6 @@ async function _callback( name, event, event2){
             }
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
-            closeWindow();
             break;
         }         
         case 'applyRestoreAllButton': {
@@ -334,10 +336,21 @@ async function _callback( name, event, event2){
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 
+                // Mac or Linux
                 let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
-                let RUN = process.env.INIT_CWD + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                let RUN = opener.CWD_INIT + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
+                let COMMAND = CD + RUN;
                 
-                exec( CD + RUN, 
+                // Windows
+                if (process.platform === 'win32') {
+                    let PRAGMA_MERGE = `${opener.CWD_INIT}/pragma-merge`
+					//"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " cd 'C:/Users/jan/menu-test2'; 'C:\\Users\\jan\\test-clone\\pragma-git\\pragma-merge ' 'New folder/tjena.txt.txt' --edit --rw "
+	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
+	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}' --edit --rw "`;
+	                COMMAND = EXE + RUNWIN;
+				}
+                
+                exec( COMMAND, 
                     (error, stdout, stderr) => {
                       // catch err, stdout, stderr
                         if (error) {
@@ -560,6 +573,9 @@ async function _callback( name, event, event2){
 // ================= END CALLBACK =================  
 }
 function closeWindow(){
+    
+    // This used to be a button in listChanged.html, no apply selected files when closing window instead
+    _callback('applySelectedFilesButton',this);  
 
     // Return
     

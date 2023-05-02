@@ -1,0 +1,69 @@
+ <style>
+     /* Settings : images */  
+                  
+        img[src="../images/stash_pop.png"],
+        img[src="../images/stash.png"]
+        {
+            filter: var(--stash-icon-filter);
+        }
+        
+               
+        .stashImg{
+            position: relative;
+            top: 2px;
+        }
+        
+        .indent{
+            margin-left: 20;
+        }
+</style>
+
+
+  <h4>What is Detached HEAD?</h4>       
+    <p>
+    If you go back in history, and checkout a commit, you are recommended only to look around, and make experimental changes.
+    If you have made a change, and want to return to the top of your working branch, your work may be lost.
+    </p> 
+         
+
+  <h4>What to do?</h4>           
+         
+         
+    <p>
+    In above situation, Pragma-git gives you a chance to save your work as a stash, or delete.  
+    If you stash your work, it can be recalled in any branch, by the stash pop command 
+    <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" src="../images/stash_pop.png">.
+    </p>  
+     
+    <p>
+    To stash, you select this radiobutton:     
+    </p>  
+
+
+     
+    <p class="indent">
+        <label for="stashHEAD">
+            <input type="radio" id="stashHEAD" name="detachedHeadRadiobuttonGroup1" value="Stash" checked="">
+            Stash : stash work  <img id="bottom-titlebar-stash-icon" height="17" width="auto" src="../images/stash.png">. 
+            Recall work with
+            <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" src="../images/stash_pop.png"> 
+            after changing to other branch
+        </label>
+ 
+    </p>  
+
+
+     
+    <p>
+    To delete, you select this radiobutton:     
+    </p>  
+
+
+     
+    <p class="indent">
+        <label for="deleteUnsavedHead">
+            <input type="radio" id="deleteUnsavedHead" name="detachedHeadRadiobuttonGroup2" value="Delete" checked="">
+            Delete : discard unsaved work 
+        </label>
+ 
+    </p>  

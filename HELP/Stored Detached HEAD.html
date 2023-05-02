@@ -1,0 +1,95 @@
+ <style>
+     /* Settings : images */  
+
+        
+        .indent{
+            margin-left: 20;
+        }
+</style>
+
+
+  <h4>What is a Stored Detached HEAD?</h4>       
+    <p>
+    If you go back in history, and checkout a commit, you are recommended only to look around, and make experimental changes.
+    If you have stored (commited) one or more change, and want to return to the top of your working branch, your work may be lost.
+    </p> 
+         
+
+  <h4>What to do?</h4>           
+         
+         
+    <p>
+    In above situation, Pragma-git gives you a chance to either delete, or to save your work 
+    (in a new branch, or merge it to an existing branch).  
+    </p>  
+     
+    <p>
+    1) To create and save into a new branch, you select this radiobutton:     
+    </p>  
+
+
+     
+    <p class="indent">
+        <label for="tempBranch">
+            <input type="radio" id="tempBranch" name="detachedBranchRadiobuttonGroup1" value="Temp Branch" checked="">
+            Temp branch : move work to a temporary branch
+        </label>
+ 
+    </p>  
+
+
+     
+    <p>
+    2) To merge into an existing branch, you select this radiobutton:     </p>  
+
+
+     
+    <p class="indent">
+        <label for="mergeWithBranch">
+            <input type="radio" id="mergeWithBranch" name="detachedBranchRadiobuttonGroup2" value="Merge" checked="">
+            Merge : merge work into branch 
+            
+            <!-- This select is just used to indicate that it is a drop-down -- menu is displayed another way (so therefore mouse-down is disabled) --> 
+            <select name="mergeWithDetachedBranchLink" id="mergeWithDetachedBranchLink" >
+                <option id="detachedBranchDialogMergeWith" value="anything">main</option>
+            </select>
+            
+        </label>
+        
+    </p>  
+
+
+     
+    <p class="indent">
+        The default branch is the one you checked out from, but you may change to any other branch with the dropdown menu 
+            <select name="mergeWithDetachedBranchLink" id="mergeWithDetachedBranchLink" >
+                <option id="detachedBranchDialogMergeWith" value="anything">...</option>
+            </select>
+ 
+    </p>  
+
+     
+    <p>
+    3) To delete the work performed after the checkout, you select this radiobutton:    
+    </p>  
+
+
+     
+    <p class="indent">
+        <label for="deleteDetachedHead">
+            <input type="radio" id="deleteDetachedHead" name="detachedBranchRadiobuttonGroup3" value="Delete" checked="">
+            Delete : discard work saved to detached HEAD
+        </label>
+ 
+    </p>  
+
+     
+    <p>
+    After pressing <button>OK</button>, the selected action is performed, and you are back to the top of the previous branch
+    (or if you selected another branch in 2), to the top of that branch)
+    </p>  
+     
+    <p>
+    If the option 2 (merge into an existing branch) was selected, it is as with any merge a risk of a merge conflict.
+    Pragma-git will guide you on how to resolve such a conflict.
+    </p> 

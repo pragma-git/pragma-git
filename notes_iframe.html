@@ -24,9 +24,13 @@
         width: 100%;
         height: 100%;
     }  
+    
+    
+    body {
+        zoom: calc(var(--windowScaling));
+    }  
 
-    
-    
+
 
     
     
@@ -127,6 +131,7 @@
         {
             background-color: var(--code-background);
             color: var(--notes-code-text);
+            font-size: inherit;
         }
         
     
@@ -183,6 +188,7 @@
         
         .ProseMirror{
             color: var(--body-text);
+            font-size: inherit;
         }
     
         .task-list-item.checked::before {
@@ -211,10 +217,11 @@
          
         #toastuiLinkTextInput, #toastuiLinkUrlInput, 
         #toastui-editor-file-name, #toastuiImageUrlInput, #toastuiAltTextInput{
-            color: var(--text);
+            color: var(--notes-input-text);
+            background-color: var(--notes-input-background) !important;
         }
         .toastui-editor-popup-add-image .toastui-editor-file-name.has-file{
-            color: var(--text);
+            color: var(--notes-input-text);
         }
         
         .toastui-editor-context-menu {
@@ -222,7 +229,8 @@
         }
         
         .toastui-editor-file-name{
-            background-color: var(--input-background) !important;
+            color: var(--notes-input-text);
+            background-color: var(--notes-input-background) !important;
         }
         
     
@@ -355,11 +363,15 @@
                 }
             );
     
-            // Override click-link event - open in browser window
+            // Override document-click
+            // - click link -> open link in browser window
+            // - history-button -> open/close history-menu
+            // - document-click -> close history-menu (if open)
             document.onclick = function (e) {
                 e = e ||  window.event;
                 var element = e.target || e.srcElement;
 
+                // http link open in browser
                 if (element.tagName == 'A') {
                     
                     if (element.href.startsWith('http') ){
@@ -373,6 +385,28 @@
                     }
 
                     return false; // prevent default action and stop event propagation
+                }
+                
+                // Show/hide history button (clicked button)
+                if ( e.composedPath()[1].id == 'history-icon'){
+                    if ( parent.document.getElementById("historyMenu").style.display == 'block'){
+                        parent.document.getElementById("historyMenu").style.display = 'none';
+                    }else{
+                        save();  // Has to be done before opening history menu (which blocks save)
+                        parent.opener.commitSettingsDir();  // Commit saved file
+                        
+                        getHistory();  // Update history with above commit
+                        
+                        parent.document.getElementById("iframe").contentWindow.historyNumber = -1;  // always open as non-historical
+                        
+                        parent.document.getElementById("historyMenu").style.display = 'block';  // Open history menu
+                        parent.historyButtonVisibility();
+                    }
+                }
+                
+                // Close history menu when clicking outside menu
+                if ( e.composedPath()[1].id!= 'history-icon' && parent.document.getElementById("historyMenu").style.display == 'block'){
+                    parent.document.getElementById("historyMenu").style.display = 'none'
                 }
             };            
             

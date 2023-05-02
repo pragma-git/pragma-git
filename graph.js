@@ -379,11 +379,9 @@ function toggleDate( show){
     if (show){
           document.getElementById('datesSwimLane').style.visibility = 'visible';  
           document.getElementById('datesSwimLane').style.width = 'fit-content'; 
-          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width'];  
     }else{
           document.getElementById('datesSwimLane').style.visibility = 'hidden';  
           document.getElementById('datesSwimLane').style.width = '0'; 
-          //document.getElementById('graphContent').style.marginLeft =  document.getElementById('datesSwimLane').getBoundingClientRect()['width']; 
     }
     document.getElementById('graphContent').style.left = document.getElementById('mySvg').getBoundingClientRect()['x'] + document.getElementById('mySvg').getBoundingClientRect()['width'];
 
@@ -394,6 +392,7 @@ function updateImageUrl(image_id, new_image_url) {
     image.src = new_image_url;
 }
  
+// Info popup functionality
 function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover commit circles
 
     // Add mouse events for each circle ( mouse out event is created when overlay image is done)
@@ -402,29 +401,66 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         arrElem[i].onmouseenter = mouseOverNodeCallback;
     }
 }       
+    // State variables
+    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
+    var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
+    var currentImageNode = '';
+    // callbacks
     async function mouseOverNodeCallback(e) {
+        
+        resetNodeSize(); // Clear previously resized nodes
+                    
+        // Set mouse position
+        isMouseOverCommitCircle = true;
+        
+        // Lock window (stays open)
+        lockedNodeInfoWindow = true;
             
-            // Clear old window if entering new one
-            if (lockedNodeInfoWindow == true){
-                closeInfoBox();
-            }
-            lockedNodeInfoWindow = true;
-            
-            // Set mouse position
-            isMouseOverCommitCircle = true;
-            
-            resetNodeSize(); // Clear previously resized nodes
-            
-            console.log(e);
-            let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+        let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
+        await makePopupWindow(e, hash);
+    }
+    function mouseOverExistingNodeCallback(hash){
+        console.log('mouseOverExistingNodeCallback');
+        let id = 'img_' + hash;
+        
+        if (currentImageNode == id){
+            return
+        }
+        currentImageNode = id;
+        
+        let e = {};
+        e.toElement = {};
+        e.toElement.id = id;
+        
+        e.target = {};
+        e.target.href = {};
+        e.target.href.baseVal = 'img_' + hash;
+        e.target.href.baseVal = document.getElementById(id).href.baseVal;
+        
+        mouseOverNodeCallback(e);
+    }
+    function mouseLeavingNodeCallback(){
+        isMouseOverCommitCircle = false;
+        if (lockedNodeInfoWindow == true){
+            return
+        }
+        closeInfoBox();
+        return
+    };
+    // utility functions
+    async function makePopupWindow(e, hash){
+
+            let imageSrc = e.target.href.baseVal;
+      
             let commit = nodeMap.get(hash);
+            
+            let maxColumn = commit.x;
             
             // Get git author
             let author = await gitCommitAuthor(hash);
               
             console.log( 'commit : ' + commit.message );
             
-            let imageSrc = e.target.href.baseVal;
             
             // Parents      
             let parentHashes = commit.parents;
@@ -434,10 +470,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             // HTML 
             let html =``
+            // DEV : Displays where branch name info comes from (uncomment to use)
+            if (DEBUG) {
+                html = 'branch name :  1) from note = ' + commit.branchNameFromNote  + '  2) from decoration = ' + commit.branchNameFromDecoration  + '<br>';
+            }
             
             // Close button
             html += `<img id="close-icon" style="width: 17px; float: right;"
-                onclick="lockedNodeInfoWindow = false; mouseLeavingNodeCallback()" 
+                onclick="lockedNodeInfoWindow = false; mouseLeavingNodeCallback();closeInfoBox()" 
                 onmouseover="updateImageUrl('close-icon', 'images/button_close_hover.png');" 
                 onmouseout= "updateImageUrl('close-icon', 'images/button_close_black.png');" 
                 src="images/button_close_black.png">`
@@ -480,8 +520,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                     '<br>';
             
             
-            html += `<B><U>Commit </U></B> : &nbsp;&nbsp; <div style="float:right"> <i>${author}</i> </div><BR><BR> 
-                 <div> 
+            html += `     <div> 
                      <p>&nbsp; 
                         <img class="node" src="${imageSrc}" style="display:inline; position : unset" > &nbsp;
                         <b><span style = "left: 30 px; position: relative"> ${commit.message}</span></b>
@@ -493,12 +532,14 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += ` &nbsp; ${commit.hash} <BR><BR>`
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${commit.hash} </div><BR>`
             
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> Author : <i> ${author} </i> </div><BR>
+                       <div  class="lightInfo" style="width: -webkit-fill-available;"> Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
+                     </div><BR><BR>`;
             
+            html += '<BR><HR><BR>' 
             
-            
-            html += '<HR><BR>' 
             
              // Change commit node size
             sizeNodes( hash, IMG_H + 6);
@@ -506,7 +547,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             
             
             // HTML Parents   
-            html += `<B><U> ${ParentHeader} : </U></B> <BR><BR>` 
+            html += `<B> ${ParentHeader}: </B> <BR><BR>` 
             
             for (let i = 0; i < parentHashes.length; i++){
                 
@@ -527,18 +568,27 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 sizeNodes( parentHashes[i], IMG_H + 6); 
                 
                 infoNodes.push(parentHashes[i]); // Remember hash of resized node
+                
+                // Column
+                let commit = nodeMap.get(parentHashes[i]);
+                if ( commit.x > maxColumn)
+                    maxColumn = commit.x;
+                
             }
             
-            html +='<BR><div>';
+            
             
             
             // HTML Parent Hashes
             for (let i = 0; i < parentHashes.length; i++){
-                html +=  '&nbsp; ' + parentHashes[i]   + '<BR>';
+                html +='<BR><div class="lightInfo">';
+                html +=  parentHashes[i];
+                html +='</div>';
             }
             
-            
             html +='</div><BR><BR>';
+            
+            
                 
             
             // Display HTML 
@@ -548,9 +598,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').style.visibility = 'visible';
             
             // Set x to the right of lane
-            let x = getFreeLane(commit, false);
-            if (commit.x > x )
-                x = commit.x;
+            x = maxColumn;    
 
             let X0 = LEFT_OFFSET + (x + 1) * COL_WIDTH;
             document.getElementById('displayedMouseOver').style.left = e.clientX + X0 + 20;
@@ -561,19 +609,9 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
                 top = e.clientY - 15;
 
             document.getElementById('displayedMouseOver').style.top = top;
+            
+            console.log( 'maxColumn : ' + maxColumn);
         }; 
-
-    var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
-    var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
-    function mouseLeavingNodeCallback(){
-        isMouseOverCommitCircle = false;
-        if (lockedNodeInfoWindow == true){
-            return
-        }
-        closeInfoBox();
-        return
-    };
-    // utility functions
     function sizeNodes( hash, size){    // Make large node overlay image
         
         
@@ -595,8 +633,11 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         img.style.position='absolute'; 
         img.src = node.href.baseVal; 
         img.setAttribute('onmouseleave', 'mouseLeavingNodeCallback()');
+        
         img.id='selectedImage_' + hash;
         
+        img.setAttribute('onmouseenter', 'console.log("ENTER");mouseOverExistingNodeCallback( "' + hash + '" )' );
+
         document.getElementById('mySvg').appendChild(img);
     }
     function resetNodeSize(){           // Reset node overlay image
@@ -668,7 +709,6 @@ async function drawGraph( document, splitted, branchHistory, history){
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
             //branchNames.set(branchName, branchNames.size);
             
-            
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
             mapVisibleBranchToTopCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
@@ -737,6 +777,11 @@ async function drawGraph( document, splitted, branchHistory, history){
             // Disect git-log row into useful parts
             [ longDate, hashInThisRow, thisRow, decoration, noteInThisRow, parents, messageBody] = splitGitLogRow( splitted[row] );
             
+            if (noteInThisRow == 'HEAD') {
+                noteInThisRow = "";
+            }
+            
+            
             let date =  longDate.substring(0,10);  // Short date
             
             console.log(row + ' -- ' + noteInThisRow + '   ' + thisRow);
@@ -792,9 +837,13 @@ async function drawGraph( document, splitted, branchHistory, history){
                 thisCommit.notFoundInSearch = notFoundInSearch;
                 thisCommit.message = thisRow;
                 thisCommit.decoration = decoration;
-                thisCommit.branchName = "";  // Default (hidden or unknown)
+                thisCommit.branchName = thisCommit.hash;   // Default (hidden or unknown)
                 thisCommit.messageBody = messageBody;
                 thisCommit.date = longDate;
+          
+          		// DEV : Track where branch name info comes from 
+                thisCommit.branchNameFromNote = noteInThisRow;  // Remember what notes think is the branch name (not used)
+                thisCommit.branchNameFromDecoration = '';       // Remember what decoration think is the branch name (not used)
                 
                 
             // Get branchName
@@ -806,11 +855,16 @@ async function drawGraph( document, splitted, branchHistory, history){
                 if (decoration !== ''){
                     sortedLocalBranchList.forEach( 
                         (entry) => { 
+                            if ( entry.startsWith( 'remotes') ){
+                                entry = entry.substr(8);  // sortedLocalBranchList have long names -- remove 'remotes/'
+                            }
+                            
                             if (decoration.includes(entry)  ) {  
                                 branchName = entry;
                             }
                         } 
                     )      
+                    thisCommit.branchNameFromDecoration = branchName;
                 }  
                 
                 // is topmost commit on a branch
@@ -955,8 +1009,8 @@ async function drawGraph( document, splitted, branchHistory, history){
                     if ( !branchNames.has(commit.branchName)){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
-                        // Lane for unknown branch should land compressed, instead of to far right
-                        let bestLane = getFreeLane(commit, true); 
+                        // Lane for unknown branch should land on first free
+                        let bestLane = getFreeLane(commit, false); 
                         
                         branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
@@ -1048,11 +1102,11 @@ async function drawGraph( document, splitted, branchHistory, history){
     
                 }
 
-                //if (DEBUG) {
+                if (DEBUG) {
                     
-                    //commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
-                        //`${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
-                //}
+                    commit.message = `( U=${commit.unknownBranchName}  H=${commit.hiddenBranchName} )   ` + 
+                        `${commit.message}      (branchName=${commit.branchName.substring(0,12)})     [${columnOccupiedStateArray.toString()}]       lane=${commit.x}` // DEBUG : Write out columnOccupiedStateArray
+                }
                 
                 if (commit.x > HIGHEST_LANE){
                     HIGHEST_LANE = commit.x;
@@ -1610,7 +1664,10 @@ async function drawGraph( document, splitted, branchHistory, history){
            
          
            1) A free lane must be available from the child that is furthest up, called lowestY down to the commit. 
-           2) Best lane is the next lane to the right,  which is not occupied (in the whole range of rows examined)  
+           2) Best lane is the next lane to the right,  which is 
+              A) not occupied (in the whole range of rows examined) , or 
+              B) not on reaching below the start of one of the known branches
+              
               An unknown branch can not be placed on the swim-lane of a known branch 
 
               Lane 0 is reserved for unknown first-parents
@@ -1649,7 +1706,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                 // Find next occupied column      
                 let col = highestOccupiedCol; // Start value  (I know that array never becomes shorter with higher row)          
                 while ( col < c.length ){
-                    if ( row < c[col] ){
+                    if ( row < c[col] ){  // Either A) occupied down, or B) not reaching below start of branch on this column
                         highestOccupiedCol = col + 1;
                     }else{
                         // Here is the first non-occupied lane at this row
@@ -1661,13 +1718,14 @@ async function drawGraph( document, splitted, branchHistory, history){
               
                                   
                 // Mark occupied if commit is on an active swimlane
-                if ( ( MODE == 'swim-lanes' ) &&  isOnActiveSwimlane(col, commit) ){ 
+                while ( ( MODE == 'swim-lanes' ) &&  isOnActiveSwimlane(highestOccupiedCol, commit) ){ 
                     highestOccupiedCol = highestOccupiedCol + 1;
                 }
                 
             }
             
         return highestOccupiedCol
+
         
     };
     function isOnActiveSwimlane(lane, commit){
@@ -1809,7 +1867,7 @@ async function drawGraph( document, splitted, branchHistory, history){
                     let lane = lastOfSegment[i].x;      
                     columnOccupiedStateArray[ lane ] = lane; // This could be anything less than row, but for debugging purposes I set it to the same as lane
                     
-                    if (lane == 0) { // Block column until next parent   
+                    if ( (lane == 0) && ( parents[0] !== "") ){ // Block column until next parent   
                         columnOccupiedStateArray[ lane ] =  nodeMap.get( commit.parents[0] ).y;  
                     }
                     

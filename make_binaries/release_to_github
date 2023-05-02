@@ -34,23 +34,29 @@ Read more on the home page : https://pragma-git.github.io
 
 ### Quick Install
 
-Download the *one* installer that matches your system from the "__*assets*__" link below: 
-- __win-x64.exe__ (Windows 64 bit) 
-- __mac-x64.dmg__ (Mac 64 bit)
-- __linux-x64.deb__ (Linux 64 bit for Ubuntu, Linux Mint, Debian, ...)
-- __linux-x64.rpm__ (Linux 64 bit RedHat, Fedora, CentOS, openSUSE, ...)
+Or download the *one* installer that matches your system from the "__*assets*__" link below.
 
-[Install instructions](https://pragma-git.github.io#installation)
+___
+### Install
+
+Windows : just run installer.
+MacOS : ***Important*** -- follow "README.txt" on disk image. 
+Linux - [read instructions](https://pragma-git.github.io#installation)
+
+___
+### Changes
+$CHANGES
+___
+### About Pragma-git
+The aim with Pragma-git is to be
+- ”pragmatic” — aiming to be the opposite to how many beginners perceive git
+- easy to start — and something to grow in for daily programming tasks
+- friendly — guiding you through risks of data loss with pop-up warnings and instructions
+
+Read more on the home page : https://pragma-git.github.io
+
 ---
 
-
-# Tag to use for this Release (from package.json)
-TAG=$(cat ../package.json | grep 'version' | cut -d'"' -f4)
-echo "TAG = $TAG"
-
-# Release Title from Tag
-RELEASE_TITLE="Release $TAG"
-echo "RELEASE_TITLE = $RELEASE_TITLE"
 
 
 
@@ -79,16 +85,24 @@ REPO=pragma-git/pragma-git
       --notes "$RELEASE_NOTES" \
       --title "$RELEASE_TITLE"
       
+#    exit 0 # Stop here to test without uploading files
+      
     # Upload binaries  
     echo 'UPLOAD BINARIES'
     cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 
-    echo 'UPLOAD MAC'
+    echo 'UPLOAD MAC (INTEL)'
     gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
-    echo 'UPLOAD WIN64'
+    
+    echo 'UPLOAD MAC (ARM)'
+    gh release upload  $TAG  --repo "$REPO"  "$(ls mac_arm64/Pragma-git*.dmg)" 
+    
+    echo 'UPLOAD WINDOWS'
     gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
+    
     echo 'UPLOAD LINUX DEB'
     gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.deb)" 
+    
     echo 'UPLOAD LINUX RPM'
     gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.rpm)" 
 

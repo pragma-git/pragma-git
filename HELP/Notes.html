@@ -20,7 +20,7 @@
     <p>
     The Notes sheet is saved in the pragma-git settings folder, on the local computer. 
     The location of the settings folder for this computer can be found from the section System Info, in the Settings ( <img style='vertical-align:middle;' src="../images/settings_black.png"  height="14" width="14"> )
-    The file will be the same as for the repository folder, so if that folder is renamed also the notes file has to be renamed.
+    The file name will be the same as for the repository folder (but with an extension of <code>.md</code>), so if that folder is renamed also the notes file has to be renamed.
     </p>  
 
  
@@ -49,6 +49,7 @@
     
     <p>
     There is also a search function ( <img style='vertical-align:middle;' src="../images/find_black.png"  height="14" width="14"> )
+    and a way to go back to earlier saved versions  ( <img style='vertical-align:middle;' src="../images/history_black.png"  height="14" width="14"> )
     </p>  
 
 <br>
@@ -77,13 +78,58 @@
 <br>
 <h4>Get back old version of Notes</h4>  
     <p>
-    Notes are also saved incrementally with a time stamp, when the Notes window is closed. 
+    Notes are also saved incrementally with a time stamp. Saving happens when the Notes window is closed. 
     This is achieved by letting the settings folder be its own local git repository.
     </p>
     
     
     <p>
-    To find an older version of a file, add the settings folder to the repository list. This is done just as for adding any repository; 
-    through settings, or by drag and drop onto main window.  Then navigate
-    to an older version the same way as for other repositories.     
+    To find an older version of a file click the <img style='vertical-align:middle;' src="../images/history_black.png"  height="14" width="14"> 
+    icon, and a navigation menu for old versions appears :   
+
+    </p>
+    
+    <style>
+        .myButton {
+            margin: 10px;
+            font-size: 13px;
+            border: 1px solid #dadde6;
+            padding: 5px;
+        }
+        
+        .notes-popup-text {
+            color: var(--notes-popup-text);
+            font-weight: 600;
+        }
+        
+        .toastui-editor-popup-body {
+            background-color: white;
+            width: fit-content;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+
+    <div class="toastui-editor-popup-body">
+        <div aria-label="Previous versions of this file">
+    
+            <div class="toastui-editor-button-container" style="text-align: center; margin: 0px">
+                <span class="notes-popup-text">Version: </span><br>
+                <button id="forward" class="myButton" onClick="newerVersion();">Newer</button><br>
+                <button id="back" class="myButton" onClick="olderVersion();">Older</button><br>
+                
+                <div id="info" class="notes-popup-text" style="text-align: center;" > newest <br> </div><br>
+                
+                <button id="original" class="myButton" onClick="resetHistory();">Original</button>
+            </div>
+        </div>
+    </div>
+    
+    <p> The menu is closed by clicking the <img style='vertical-align:middle;' src="../images/history_black.png"  height="14" width="14"> 
+    icon again, or by clicking outside the menu.
+    </p>
+    
+    <p> 
+    When you close the menu the text seen in the window becomes the current, and thus overwrite what you had previously written.
+    The previous state of the window is stored in the history.
     </p>

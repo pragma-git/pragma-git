@@ -32,12 +32,15 @@
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
     --notes-code-text: var(--code-text);
+    --notes-popup-text: #555555;
     --notes-checkbox-filter: none;
     --table-header-color: #DDDDDD;              /* (text ) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     --notes-tooltip-background: #333;
     --notes-tooltip-text: white;
+    --notes-input-background: white;
+    --notes-input-text: var( --notes-popup-text);
     
     /* Main */
     --main-background: var(--body-background); 
@@ -45,6 +48,7 @@
     --message-color: #0033FF;
     --message-placeholder: var(--text);
     --history-icon-brightness: 1;     /* keep original */
+    --history-image-invert: 20%;
 }
  
 .dark {
@@ -79,12 +83,15 @@
     /* Notes */
     --code-background: #505050;
     --notes-code-text: #d6b51d;
+    --notes-popup-text: #555555;
     --notes-checkbox-filter: invert() brightness(0.75);
     --table-header-color: var(--text);           /* (White text and line) */
     --table-line-color: var(--text);            /* (line ) */
     --table-header-background-color: #555;      /* (same background as in toastui markdown preview) */
     --notes-tooltip-background:  #333;
     --notes-tooltip-text: white;
+    --notes-input-background: white;
+    --notes-input-text: var( --notes-popup-text);
     
     /* Merge */
     --merge-color: black;
@@ -97,6 +104,7 @@
     --message-color: #efc918;                     /* message field: history and edit color (mustard yellow) */
     --message-placeholder: var(--text);           /* message field: other texts */
     --history-icon-brightness: 10;                 /* make white */
+    --history-image-invert: 100%;
 }   
 
 
@@ -127,6 +135,10 @@
         color: var(--body-text);
         border-width: thin;
         background-color: var(--input-background);
+    }
+    
+    .readonly{
+        filter: opacity(0.5);
     }
 
 
@@ -162,7 +174,7 @@
         
         code{
             color: var(--code-text); 
-            font-size: 11pt;  
+            font-size: inherit;  
         }
         a{
             color: var(--link-color);
@@ -237,4 +249,7 @@
         }
 
 
+        li{
+            margin-bottom: 4px;
+        }
     

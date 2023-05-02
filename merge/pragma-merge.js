@@ -24,7 +24,7 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 var win;
 
 // Remember state
-var panes = 2;
+var panes = global.state.pragmaMerge.mergePanes;
 var lastPaneNumber = panes; // Updates every InitUI
 var cachedFile = {};  // Struct to store content from files loaded
 
@@ -78,7 +78,14 @@ process.chdir( ROOT);  // Now all relative paths works
 const HTML_TITLE = 'File    =   ' + MERGED;
         
 // Define help icon
-const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
+//const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
+
+const helpIcon =     `  <!-- Help icon --> 
+                <img id="help-icon" style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  
+                    onclick="parent.opener._callback('help',{name: 'Merge Window'})"  
+                    onmouseover="document.getElementById('help-icon').src='../images/questionmark_hover.png' " 
+                    onmouseout="document.getElementById('help-icon').src='../images/questionmark_black.png' " 
+                    src="../images/questionmark_black.png" >`;
 
 // Modified from GUI
 var connect = null; // null or "align"
@@ -636,7 +643,7 @@ function addSearch(headerId, editorId){
     `  <!-- Search button --> 
                 <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
                     onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBoxPragmaMerge()" 
-                    onmouseover="document.getElementById('${searchIconElementId}').src='../images/find.png' " 
+                    onmouseover="document.getElementById('${searchIconElementId}').src='../images/find_hover.png' " 
                     onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
                     src="../images/find_black.png" >`;
 }
@@ -782,6 +789,7 @@ function closeWindowNicely(exitCode){
     // Store gui mode settings
     global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
     global.state.pragmaMerge.align = document.getElementById('align').checked;
+    global.state.pragmaMerge.mergePanes = panes;
     
     
     // Remove from menu

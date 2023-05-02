@@ -598,16 +598,16 @@
     <!--  Dialog for Diff of Binary files -->       
                 
     <dialog id="isBinaryDiff"   class="warning">  
-        <b>WARNING</b> -- Looks like a binary file 
+        <b>WARNING</b> -- Looks like a binary file <br><br>(Cancel is the best option)
              
-        <br><br>
-            <button  onclick = "document.getElementById('isBinaryDiff').close(); injectIntoJs(document); " > 
-                View binary 
+        <br><br>  
+            <button style="float: right"  onclick = "parent.window.close();"> 
+                Cancel
             </button>    
             
-            <button style="float: right"  onclick = "parent.window.close();"> 
-                Cancel 
-            </button>    
+            <button  onclick = "document.getElementById('isBinaryDiff').close(); injectIntoJs(document); " > 
+                View binary 
+            </button>  
     </dialog>  
     
        
@@ -616,16 +616,16 @@
     <!--  Dialog for View/edit Binary files -->       
                 
     <dialog id="isBinaryEditor"   class="warning">  
-        <b>WARNING</b> -- Looks like a binary file 
+        <b>WARNING</b> -- Looks like a binary file <br><br> (Cancel is the best option)
              
-        <br><br>
-            <button  onclick = "document.getElementById('isBinaryEditor').close(); injectIntoJs(document); " > 
-                View binary 
-            </button>    
-            
+        <br><br> 
             <button style="float: right"  onclick = "parent.window.close();"> 
                 Cancel 
             </button>    
+            
+            <button  onclick = "document.getElementById('isBinaryEditor').close(); injectIntoJs(document); " > 
+                View binary 
+            </button>   
     </dialog> 
 </body>    
 </html>

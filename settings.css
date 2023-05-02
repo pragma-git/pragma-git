@@ -104,6 +104,12 @@ button:hover {
     background-color: var(--tab-selected);
 }
 
+.tab-click-text{
+    float: right;
+    left: 20px;
+    position: relative;
+}
+
 .tool-content{
     margin-top: 12;
     display: block;

@@ -1,16 +1,16 @@
 TESTS
 -----
- 
- 
+
 ### Create empty github repository
 
 **setup :** create_empty_github.command
 
-**TODO :  **
+**TODO :**
 
-**Pragma-git :** 
+**Pragma-git :**
 
-**Expected :** /tmp/clonedRemote_branch_test_repo is an empty repo cloned from github
+**Expected :** /tmp/clonedRemote_branch_test_repo is an empty repo cloned from
+github
 
  
 
@@ -62,3 +62,16 @@ remote =
 
 "second” and ”third” should be on remote only. Select them from branch dropdown
 remote submenu, and they should appear at menu top level
+
+ 
+
+### Make detached branch
+
+**setup :** make_detached_head.bash
+
+**Command-line :** Stand in repo folder
+
+`~/Documents/Projects/Pragma-git/pragma-git/test_scripts/make_detached_head.bash`
+
+**Expected :**  Checks out commit being two commits before current HEAD, and
+creates two commits called `new3` and `new4`

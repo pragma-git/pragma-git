@@ -6,7 +6,8 @@
                   
         img[src="../images/stash_pop.png"],
         img[src="../images/stash_pop_black.png"],
-        img[src="../images/stash_pop_hover.png"] 
+        img[src="../images/stash_pop_hover.png"],
+        img[src="../images/github-mark.png"]
         {
             filter: var(--stash-icon-filter);
         }
@@ -46,6 +47,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>  
 <!-------------------------------------------------------------------------------------------->  
@@ -86,21 +88,25 @@
     <!--------------------------------------------------------------------------------------------> 
     <h2>The Repository Tools tabs</h2>  
      
-    <div class="indent">
+    <div class="indent" id ="softwareSection">
 
         <p>Different tools can be used to work on repositories. They are selected from the tool tabs.</p>
         <br>
+            
            
         <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small active " style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
+        
+                
         
 
         <p>This tab handles settings that are specific for the currently selected repository.  </p>
@@ -159,15 +165,16 @@
         <br>
         
         
-       <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small active " data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small " data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+       <div class="toolWrapper" id="gitIgnoreSection"> 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small active" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
     
         
@@ -175,7 +182,7 @@
      
             <dd>
     
-            <p>This tab shows the .gitignore file, which is used to stop new files (matching a pattern) from being added to the repository.  
+            <p>This tab shows the .gitignore file, which is used to stop new files (matching a pattern) from being added to the selected repository.  
             It can be viewed as a filter against files that change by theirselves when you develop.  This could
             for instance be compiled files, log files, or automatically generated backup files</p>
             
@@ -185,26 +192,27 @@
             <br>
             <br>
     
-            <div class="toolWrapper" > 
+            <div class="toolWrapper" id="cloneSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
                          
     
-            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+            <p>Instead of starting with a local folder, you may copy from an existing remote repository (this process is called cloning).</p>
          
         
-        <dt><h4>Cloning </h4></dt> 
+        <dt><h4 id="cloneSection">Cloning </h4></dt> 
         <br> 
             <dd>
             When cloning from a remote repository to a local folder, the url (remote repository) and the path to a local folder is needed. 
-            In addition, information if the remote repository is writeable is needed. These settings are specified in the following inputs:
+            In addition, information if the remote repository is writeable can be defined. These settings are specified in the following inputs:
             </dd>
             <br>
                                            
@@ -212,15 +220,26 @@
             </dd>
             <br>
                                          
-            <dd><textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            <dd><textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
             </dd>
             <br>
             
-            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   — <br> <br>
-                <i>This checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).</i>
+            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   
+            <br>
+            <br>
+                                
+            <dd><button>Clone</button> 
+            </dd>
+            
+            <br>
+            <br>
+
+            
+           <dd>
+                The checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).
             </dd>
             <br>
-            <br>
+
             
             <dd> The <button>Clone</button> initiates the cloning operation.     
             </dd>
@@ -234,8 +253,7 @@
                 <ol>  
                     <li>Input the remote repository address (url)   
                     <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
-                    <li>The second text field displays the selected folder path   
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
                     <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
                 </ol>   
             </dd>
@@ -244,26 +262,40 @@
      
             
             <br> 
-           <div class="toolWrapper" > 
+           <div class="toolWrapper"  id="forkSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
                          
     
-            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning).</p>
+            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning), but make it your own copied project.  This is called "forking".</p>
          
         
         <dt><h4>Forking </h4></dt> 
         <br> 
             <dd>
-            Forking a remote repository is the same as cloning, but you disconnect from the remote repository.  The point is to develop on this forked project, and not push back to the cloned original project.
-        
+            Forking a remote repository is the same as copying an existing remote repository, and making it your own.  
+            This original remote repository is referred to as "upstream".  
+            The point is to develop on your own (forked) project instead of (somebody elses) repository.
+            <br>
+            <br>
+            Forking can be achieved either directly from your github account's web page, or from pragma-git. 
+              The alternative ways are : <br><br>
+            1) This is the alternative if you prefer the github way of forking. Login to the github web page, and fork a repository. Then 
+            clone the (newly created) remote repository with pragma-git's clone tab (<a href="#cloneSection">read here</a>).
+            If this is your preferred method, you can stop reading about forking now and use the github workflow for "syncing" and "pull requests"<br><br>
+            2) If you wish to use the pragma-git way, you can sync directly from pragma-git.  "Pull requests" still needs to be done from the github web page. 
+              In the fork-tab in pragma-git, you fill in the address URL of the original repository, and where you want to store your local copy, using this dialog :
+            <br>
+            <br>
+            
             </dd>
             <br>
                                            
@@ -271,15 +303,26 @@
             </dd>
             <br>
                                          
-            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) :" style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+            </dd>  
+            <br>
+                                
+            <dd><button>Fork</button> 
             </dd>
 
             <br>
             <br>
             
-            <dd> The <button>Fork</button> initiates the forking operation.     
+            <dd> The <button>Fork</button> button initiates the forking operation.     
             </dd>
-     
+  
+      
+            <br>
+      		<dd> 
+      		You should then complete this by adding a remote repository, under the 'origin' in the Remote-tab.
+        	</dd>     
+        	<br>
+            <br>   
      
             <dt><h4>Workflow </h4></dt>   
             <br>      
@@ -288,26 +331,55 @@
                 <ol>  
                     <li>Input the remote repository address (url)   
                     <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto textarea.  Or type path. 
-                    <li>The second text field displays the selected folder path   
-                    <li><button>Fork</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
+                    <li><button>Fork</button> makes a copy of the "upstream" repository inside the selected folder, 
+                    and connects your local copy to the remote "upstream" repository
+                    <li>After forking the "Remote" tab is opened. 
+                    This to remind you, that there is no active remote repository set up, and you are now only working locally.
+                    Please fill in a new remote repository to keep your work safe (see NOTE, if you work with github).
                 </ol>   
+                <u> NOTE </u> : if you work with github repositories, create a new remote repository using the 
+                <button><img style='vertical-align:bottom;' height="17" width="17" src="../images/github-mark.png" > GitHub</button> button.
+                This creates the forked remote repository the github way, linking the "upstream" repository with your own remote repository. 
+                This way, important functionality such as "syncing", and performing "pull requests" will work on the github web page.
             </dd>
-            <br>       
+            <br>     
             
+    
+            <dt><h4>More about forked repositories </h4></dt>   
+            <br>      
+                    
+                <dd> 
+                Sometimes, you want to transfer code you have developed in your forked repository back to "upstream". 
+                This is done through something called a "pull request" or "merge request".  
+                Typically this is done on your remote repository's (github, gitlab, ...) web page.
+                
+                <br>
+                <br>
+                You still have the opportunity to update your repository with new additions from the "upstream" repository.  
+                This is done using the main window merge button ( <img src="../images/merge_black.png"    height="17" width="17"> ).
+                The upstream changes are found under the <img src="../images/merge_black.png"    height="17" width="17"> button and the submenu "remotes".  
+                Changes that have not been merged, are indicated by an " ! " mark.
+                
+                <br>
+                <br>
+                More about working with multiple remote repositories can be found below (<a href="#multipleRepoSection">multiple remotes section </a>)
+              
+            </dd> 
      
             
             <br>               
         
-        <div class="toolWrapper" > 
-            <div class="buttonWrapper">
-                  <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                  <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                  <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                  <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                  <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button>
-                  <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
-            </div>
+        <div class="toolWrapper"  id="addSection"> 
+                <div class="buttonWrapper">
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
+                </div>
         </div>
         
         
@@ -335,14 +407,15 @@
             <br>
                    
             
-            <div class="toolWrapper" > 
+            <div class="toolWrapper" id="remoteSection"> 
                 <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                      <button id="forkTab" class="tab-button-small " data-id="forkDiv">Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small active " style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
+                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
+                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
+                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
+                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>
         
@@ -351,6 +424,43 @@
         <dt><h4>Adding a remote repository manually </h4></dt>  
             
             <dd>
+                
+                
+                <p>
+                    Fill in the fields in the following form.  Use the <button>Set</button> to make the remote active. 
+                </p>
+                <p>    
+                    Please ignore the <button>Add</button>, which is described below
+                </p>   
+            
+            
+                
+                <table class="toolTable">
+                    <tbody>
+    
+                        <tr class="tool">
+                            <td style="width: 20%">
+                                <textarea id="newRepoAliasTextarea" placeholder="repo alias" onkeyup="_callback('newRepoAliasKeyUp', this);" readonly="" class="readonly">origin</textarea>
+                            </td>
+                            
+                            <td style="width: 60%">
+                                <textarea id="additionalRemoteURL" placeholder="URL for remote repository"></textarea>
+                            </td>
+                            
+                            <td class="toolButtonField">
+                                <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">Add</button>
+                                <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)" style="display: none;">Remove</button>
+                            </td>
+                        </tr>
+    
+                        
+                    </tbody>
+                </table>
+                
+                
+            
+     
                  
                 <!-- Same as in settings.html -->
                 <p>
@@ -378,7 +488,8 @@
                 allowing for creation of access tokens, or to create a new repository.
                 </p>
             
-                <p><button>Github</button> button launches a Github dialog.  It has a separate help function
+                <p><button><img style='vertical-align:bottom;' height="17" width="17" src="../images/github-mark.png" > GitHub</button> 
+                 button launches a Github dialog.  It has a separate help function
                 </p>
                 
                 <br>
@@ -414,6 +525,96 @@
                 
                 
             </dd> 
+            
+            
+            
+                    
+            
+        <dt><h4 id="multipleRepoSection">Working with multiple remotes</h4></dt>  
+            
+            <dd>         
+                 
+                <p>Apart from the fields described above, to set the remote repository for "origin" (the remote repository you typically push and pull from),
+                you may have additional remote repositories.  Typically, if you "fork" a remote repository, you will have two remotes: "origin" which is the one you work with,
+                and "upstream" which is the original repository (which probably is continuously being worked on by others).  The point of keeping track of this original "upstream", is
+                that things happen that you wish to include in your own repository.
+                </p>
+            
+                <p>When you have more than one remote, you can use the arrow buttons (◀ and ▶)to switch between the remotes.  In this example I have forked the "imlook4d" repository
+                (which is a research tool for medical images), and I have pressed the ▶ button once to see the original "upstream" path.  
+                </p>
+
+                <br>
+                
+                
+                <div id="additionalRemotesDiv" style="display: block; visibility: visible;">   
+                   Remote repositories : &nbsp;&nbsp;&nbsp;
+                   
+                   
+                    <!-- remote dialog range buttons -->
+                    <div id="fileRange" style="display:block">
+                        <span id="remoteReposDown" style="cursor:pointer; zoom: 0.8;" onclick="
+                                remoteRepos.fetch.pos = Math.max( 1, remoteRepos.fetch.pos - 1); 
+                                updateRemoteRepos()
+                                document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"> ◀</span> 
+                        
+                        <span id="remoteReposCurrentPos">2</span>  of <span id="remoteReposMax">2</span>
+                        
+                        <span id="remoteReposUp" style="cursor:pointer; zoom: 0.8;" onclick="
+                                remoteRepos.fetch.pos = Math.min( remoteRepos.fetch.max, remoteRepos.fetch.pos + 1); 
+                                updateRemoteRepos();
+                                document.getElementById('remoteReposCurrentPos').innerText = remoteRepos.fetch.pos ;"> ▶</span> 
+         
+                    </div>
+                   
+                   
+                   <!-- remote dialog textareas-->
+                   
+                    <table class="toolTable">
+                        <tbody>
+
+                            <tr class="tool">
+                                <td style="width: 20%">
+                                    <textarea id="newRepoAliasTextarea" placeholder="repo alias" onkeyup="_callback('newRepoAliasKeyUp', this);" class="readonly" readonly="">upstream</textarea>
+                                </td>
+                                
+                                <td style="width: 60%">
+                                    <textarea id="additionalRemoteURL" placeholder="URL for remote repository">https://github.com/JanAxelsson/imlook4d.git</textarea>
+                                </td>
+                                
+                                <td class="toolButtonField">
+                                    <button id="setRemoteURLButton" class="toolButton" onclick="_callback('setRemoteRepoButton',this)">Set</button>
+                                    <button id="newRemoteURLButton" class="toolButton" onclick="_callback('newRemoteRepoButton',this)">Add</button>
+                                    <button id="forgetRemoteURLButton" class="toolButton" onclick="_callback('removeRemoteRepoButton',this)" style="display: none;">Remove</button>
+                                </td>
+                            </tr>
+
+                            
+                        </tbody>
+                    </table>                    
+                </div>
+                
+                <br>
+                        
+                 
+                <p>If you want, you can use the <button>Add</button> to add more remote repositories.  As is, you can pull from these using the 
+                <img src="../images/merge_black.png"    height="17" width="17"> button as  described 
+                above (<a href="#forkSection">fork section</a>),
+                but in the future also pushing to additional remote repositories may be implemented.
+                </p>
+                
+                 
+                <p><img height="15" width="15" style="filter: invert(0%)" src="../images/warning.png"> Note, that if you merge from a remote upstream repository (with the exception of "origin") you are allowed to pick any remote branch
+                to merge into the current local branch.  This may be useful, but is also a possible source for doing some unintentional.  For "origin" 
+                the "push" and "pull" operations work directly with the corresponding local and remote branch, and the technicalities are hidden  from the user.
+                </p>
+                
+                                       
+                        
+                
+            </dd>    
+            
+         
         <hr>  
     
         <!--------------------------------------------------------------------------------------------> 
@@ -494,6 +695,7 @@
                       <button class="tab-button active " data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>    
 <!-------------------------------------------------------------------------------------------->  
@@ -524,6 +726,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button active" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>   
 <!--------------------------------------------------------------------------------------------> 
@@ -646,6 +849,7 @@
                       <button class="tab-button" data-id="foldableDiv4" onClick="window.location.href='#BranchTab' ">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2" onClick="window.location.href='#SoftwareTab' ">Software</button>
                       <button class="tab-button active" style="border-top-right-radius: 10px;" data-id="foldableDiv3" onClick="window.location.href='#SystemInfoTab' ">System Info</button>
+                      <div class="tab-click-text"> (click on tab)</div>  
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  

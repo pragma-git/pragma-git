@@ -73,7 +73,7 @@
             
         <div id="inner-content">
                 
-            <h2 id="header_Settings">Github Remote Repository 
+            <h2 id="header_Settings"> <img style='vertical-align:baseline;' height="22" width="22" src="images/github-mark.png" > Github Remote Repository 
         
 <!-- HELP HERE -->
             <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
@@ -301,29 +301,46 @@
      <script>
         // Create Repo
         async function createRepo(){
-                  
+            //
+            // Assume just creating a remote repo
+            //                  
             let NEW_REPO = document.getElementById('newRepoName').value;
             let TOKEN = document.getElementById('token').value;
             let DESCRIPTION = document.getElementById('repoDescription').value;
             let PRIVATE = document.getElementById('privateRepo').checked;
-            
-            //let JSON={
-                //'name' :  'aaa',
-                //'private' : 'true',
-                //'description' : 'Created with Pragma-git'
-                //}; 
-                
-            let headers = { 
-                'Authorization' : `token ${TOKEN}`
-            }
+
+            let headers = {  'Authorization' : `token ${TOKEN}` };
             console.log(headers);
             
             let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
-
+            let URL = 'https://api.github.com/user/repos';
             
+            //
+            // Override to create a github-forked remote repo (which allows pull requests in github-web)
+            //
+            let upstreamUrl = state.repos[state.repoNumber].forkedFromURL;  // For instance 'https://github.com/git/git-scm.com.git'
+            if ( upstreamUrl !=='' ){
+                // 'https://github.com/git/git-scm.com.git'
+                //         |              |           |
+                //         N3             N1          N2
+                N1 = upstreamUrl.lastIndexOf('/');    
+                N2 = upstreamUrl.lastIndexOf('.git'); 
+                let REPO_NAME_UPSTREAM = upstreamUrl.substring(N1+1,N2);  // git-scm.com
+                
+                N3 = upstreamUrl.lastIndexOf('github.com'); 
+                let USERNAME_UPSTREAM = upstreamUrl.substring(N3+11,N1);   // git
+                
+                let OWNER = document.getElementById('accountName').value;
+                body = `{"owner":"${OWNER}","name":"${NEW_REPO}","default_branch_only":true}`;
+                URL = `https://api.github.com/repos/${USERNAME_UPSTREAM}/${REPO_NAME_UPSTREAM}/forks`;
+            }
+
+            //
+            // Do repo creation through API
+            //           
             try {
                 
-                const res = await fetch('https://api.github.com/user/repos', {
+                const res = await fetch(URL, {
                     method: 'POST',
                     headers: headers,
                     body: body
