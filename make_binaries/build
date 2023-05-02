@@ -290,8 +290,7 @@
     
     # Location of arm nwjs.app  
     NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
-    
-    xattr -r -d com.apple.quarantine "$NWJS_ARM"  # clear the Apple quarantine flag
+
     
     # Is this latest release
     lastMacArmRelease=$( curl --silent -L \
@@ -316,7 +315,7 @@
     # Start with arm distribution -- put into /Pragma-git-x.x.x-mac-arm64 
     cp -R "$NWJS_ARM" "../dist/$DIR/"
     
-    # Copy files from intel to apple silicon (maybe some files compiled for intel ???)
+    # Copy all files from intel to arm distribution 
     cp -R "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/app.nw" "../dist/$DIR/nwjs.app/Contents/Resources/app.nw"
     
     
@@ -359,7 +358,7 @@
       --icon "Pragma-git.app"  125 175 \
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
-      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
+      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README-arm.txt" 375 335 \
       --icon ".fseventsd"  1000 190 \
       --icon ".VolumeIcon.icns"  1000 190 \
       "$(echo "$DIR.dmg")" \
