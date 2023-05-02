@@ -1,0 +1,51 @@
+name: Feature Request
+description: File a bug report
+title: "[enhancement]: "
+labels: ["enhancement"]
+assignees:
+  - jan
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: A clear and concise description of why you wish this feature. Ex. I'm always frustrated when [...]
+      placeholder: The problem now is ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: The solution
+      description: Describe the solution you wish to see 
+      placeholder: I wish ...
+    validations:
+      required: true     
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: A clear and concise description of any alternative solutions or features you have considered.
+      placeholder: An alternative way that could also work is ....
+    validations:
+      required: true
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Additional information
+      description: Add any other context or screenshots about the feature request here.
+      placeholder: Additional info 
+    validations:
+      required: false 
