@@ -109,7 +109,9 @@ REPO=pragma-git/pragma-git
       --notes "$RELEASE_NOTES" \
       --title "$RELEASE_TITLE"
       
-#    exit 0 # Stop here to test without uploading files
+    sleep 2  
+      
+    #exit 0 # Stop here to test without uploading files
       
     # Upload binaries  
     echo 'UPLOAD BINARIES'
