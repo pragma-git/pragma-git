@@ -1235,8 +1235,10 @@ async function _callback( name, event){
                         fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-x64.dmg`;  
                         
                         // Apple silicon (arm64)
-                        let cpu = execSync('sysctl -n machdep.cpu.brand_string ').toString();
-                        if (cpu == 'arm64'){
+                        let platform = os.machine();
+                        pragmaLog('platform = ' + platform);
+                        if (platform == 'arm64'){
+                            pragmaLog('Download arm64');
                             fileName = `Pragma-git-${localState.LATEST_RELEASE}-mac-arm64.dmg`;
                             url = `https://github.com/pragma-git/pragma-git/releases/download/${localState.LATEST_RELEASE}/Pragma-git-${localState.LATEST_RELEASE}-mac-arm64.dmg`;
                         }
