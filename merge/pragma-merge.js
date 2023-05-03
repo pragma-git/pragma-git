@@ -386,6 +386,15 @@ async function gitCheckout(options){
     } 
     
 }
+function addAllButtonClicked( clickedButtonName){
+    if (clickedButtonName =='right'){
+        dv.editor().setValue( options.orig);
+    }
+    if (clickedButtonName =='left'){
+        dv.editor().setValue( options.origLeft);
+    }
+    
+}
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -461,18 +470,12 @@ function initUI() {
         // content
         options.origLeft = cachedFile.LOCAL;
         
-        if ( dv.panes == panes ){ 
-            // 1) dv.editor().getValue() if not changed from 2-pane
-            try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
-            }catch(err){
-                // Lands here on open when dv not fully defined
-                options.value = cachedFile.BASE;
-            }
-        }else{ 
-            // 2) cachedFile.BASE if changed from 2-pane
+        try{
+            options.value = dv.editor().getValue();  // Use content, in case it has been edited
+        }catch(err){
+            // Lands here on open when dv not fully defined
             options.value = cachedFile.BASE;
-        } 
+        }
         
         options.orig = cachedFile.REMOTE; 
         
@@ -484,6 +487,8 @@ function initUI() {
         document.getElementById('Headers2').style.visibility = 'collapse';
         document.getElementById('Headers3').style.visibility = 'visible';
         
+        document.getElementById('right2_all').style.visibility = 'collapse';  // The one for 2 panes should be collapsed when 3 panes
+        
         disable2('two-way');
         enable2('three-way');
       }  
@@ -493,6 +498,9 @@ function initUI() {
         
         let editorLabel;
         let rightViewerLabel;
+        
+                
+        document.getElementById('right2_all').style.visibility = 'collapse';  // Add-all button -- guess collapsed, correct if MERGE or UNCOMMITTED_DIFF
         
         // Set mode-dependent params
         switch (getMode() ){
@@ -504,6 +512,8 @@ function initUI() {
             }catch(err){
                 options.value = loadFile(REMOTE);
             }
+            
+            document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
             options.orig = cachedFile.LOCAL;
             break; 
@@ -526,19 +536,14 @@ function initUI() {
             editorLabel = 'this'; 
             rightViewerLabel = 'other'; 
             
-            if ( dv.panes == panes ){ // Not changed number of panes
-                // 1) dv.editor().getValue() if not changed from 3-pane
-                try{
-                    options.value = dv.editor().getValue();  // Use content, in case it has been edited
-                }catch(err){
-                    // Lands here on open when dv not fully defined
-                    options.value = cachedFile.LOCAL;
-                }
-            }else{
-                // 2) cachedFile.LOCAL if changed from 3-pane
-                options.value = cachedFile.LOCAL;
+            try{
+                options.value = dv.editor().getValue();  // Use content, in case it has been edited
+            }catch(err){
+                // Lands here on open when dv not fully defined
+                options.value = cachedFile.BASE;
             }
             
+            document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
             options.orig = cachedFile.REMOTE
             break;
@@ -671,7 +676,7 @@ function changeToEditor(){
  
     document.getElementById('up').style.display = 'none';
     document.getElementById('down').style.display = 'none';
-}
+} 
 
 // Show button states
 function enable(id){

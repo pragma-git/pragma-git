@@ -223,6 +223,8 @@
           float: left;
           display: block;
           margin-right: 2px;
+          position: relative;
+          right: 12px;
         }
         
                 
@@ -276,6 +278,18 @@
             border:none;
         }
         
+        #left3, #right3, #right2 {
+            display:inline;
+        }
+        
+        #left3_all {
+            float:right;
+        }
+        
+        #right3_all, #right2_all {
+            float:left;
+        }
+    
 
         .CodeMirror-linenumber{
             padding-right: 5px !important;
@@ -332,22 +346,36 @@
         
         
     </script>
+    
 
 
     <div class="outer-content">
         <table id="Headers3" style="width:100%; visibility: collapse;">
             <tr>
-                <td id="left3" style="width:33%; text-align: center;">left</td>
-                <td id="editor3" style="width:33%; text-align: center;">center</td>
-                <td id="right3" style="width:33%; text-align: center;">right</td>
+                <td id="left3_" style="width:33%; text-align: center;">
+                    <div id="left3">left</div> 
+                    <button id="left3_all" onclick="addAllButtonClicked('left'); initUI()" >all ⇝</button>
+                </td>
+                <td id="editor3" style="width:33%; text-align: center;">
+                    center
+                </td>
+                <td id="right3_" style="width:33%; text-align: center;">
+                    <div id="right3">right</div> 
+                    <button id="right3_all" onclick="addAllButtonClicked('right'); initUI()">⇜ all</button>
+                </td>
             </tr>
         </table>
         
         
         <table id="Headers2" style="width:100%; visibility: collapse;">
             <tr>
-                <td id="editor2" style="width:50%; text-align: center;">left</td>
-                <td id="right2" style="width:50%; text-align: center;">right</td>
+                <td id="editor2" style="width:50%; text-align: center;">
+                    left
+                </td>
+                <td id="right2_" style="width:50%; text-align: center;">
+                    <div id="right2">right</div> 
+                    <button id="right2_all"  onclick="addAllButtonClicked('right'); initUI()">⇜ all</button>
+                </td>
             </tr>
         </table>
 
