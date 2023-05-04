@@ -395,6 +395,10 @@ function addAllButtonClicked( clickedButtonName){
     }
     
 }
+function reload(){
+    const reset = true;
+    initUI( reset);
+}
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -421,8 +425,27 @@ function resize() {
 }
 
 // Redraw 
-function initUI() {
-    
+function initUI(reset) {
+    /*
+     * initUI is called when window opened, and when clicking in the GUI that changes the appearance
+     * (Change 2-3 panes, "align" and "hide unchanged" checkboxes, "all"-buttons (MERGE and UNCOMMITTED_DIFF mode), 
+     * 
+     * Pragma-merge has the following  modes :
+     * MERGE              2/3 panes R/W
+     * UNCOMMITTED_DIFF   2 panes R/W
+     * HISTORICAL_DIFF    2 panes R/O
+     * EDITOR             1 pane  R/W or R/O
+     * 
+     * Opening in 3-pane mode (MERGE mode) the middle pane becomes empty for lines that are different in left and right panes.
+     * Opening in 2-pane mode (MERGE mode) the left pane shows the whole local file, and the right pane the whole "remote" file.
+     * 
+     * The expected behavior switching between 3 and 2 pane mode would be the same as opening the file directly (above description)
+     * 
+     * Switching from 3 to 2 panes (MERGE mode) the value from the middle pane is put into the left pane in 2-pane view.
+     * The best behavior may be to discard changes done in 3-pane mode, and make 2-pane view show the same as when opened
+     * 
+     * 
+    */
     // New start
     options = optionsTemplate;
     
@@ -464,19 +487,28 @@ function initUI() {
           document.getElementById('three-way').style.visibility = 'collapse';
           document.getElementById('three-way').style.width = '0px';
       }
-    
+
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
         options.origLeft = cachedFile.LOCAL;
+
         
-        try{
-            options.value = dv.editor().getValue();  // Use content, in case it has been edited
-        }catch(err){
-            // Lands here on open when dv not fully defined
+                
+        // Reload functionality
+        if (reset){
             options.value = cachedFile.BASE;
+        }else{
+                    
+            try{
+                options.value = dv.editor().getValue();  // Use content, in case it has been edited
+            }catch(err){
+                // Lands here on open when dv not fully defined
+                options.value = cachedFile.BASE;
+            }
         }
         
+
         options.orig = cachedFile.REMOTE; 
         
         // html
@@ -537,10 +569,16 @@ function initUI() {
             rightViewerLabel = 'other'; 
             
             try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
+                if (reset){
+                    options.value = cachedFile.LOCAL;
+                }else{
+                    options.value = dv.editor().getValue();  // Use content, in case it has been edited
+                }
+                
             }catch(err){
                 // Lands here on open when dv not fully defined
                 options.value = cachedFile.BASE;
+                options.value = cachedFile.LOCAL;
             }
             
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
