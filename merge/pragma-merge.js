@@ -393,11 +393,8 @@ function addAllButtonClicked( clickedButtonName){
     if (clickedButtonName =='left'){
         dv.editor().setValue( options.origLeft);
     }
+    initUI( true); // do not reload original files, but keep changes
     
-}
-function reload(){
-    const reset = true;
-    initUI( reset);
 }
 
 // Standard CodeMirror
@@ -425,7 +422,7 @@ function resize() {
 }
 
 // Redraw 
-function initUI(reset) {
+function initUI( keep) {
     /*
      * initUI is called when window opened, and when clicking in the GUI that changes the appearance
      * (Change 2-3 panes, "align" and "hide unchanged" checkboxes, "all"-buttons (MERGE and UNCOMMITTED_DIFF mode), 
@@ -441,11 +438,12 @@ function initUI(reset) {
      * 
      * The expected behavior switching between 3 and 2 pane mode would be the same as opening the file directly (above description)
      * 
-     * Switching from 3 to 2 panes (MERGE mode) the value from the middle pane is put into the left pane in 2-pane view.
-     * The best behavior may be to discard changes done in 3-pane mode, and make 2-pane view show the same as when opened
+     * Switching from 3 to 2 panes (MERGE mode) therefore shows the files as they were when first opened -- thus discarding any changes made in Pragma-merge
      * 
      * 
     */
+
+    
     // New start
     options = optionsTemplate;
     
@@ -493,20 +491,12 @@ function initUI(reset) {
         // content
         options.origLeft = cachedFile.LOCAL;
 
-        
-                
-        // Reload functionality
-        if (reset){
-            options.value = cachedFile.BASE;
+        if (keep){
+            options.value = dv.editor().getValue();
         }else{
-                    
-            try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
-            }catch(err){
-                // Lands here on open when dv not fully defined
-                options.value = cachedFile.BASE;
-            }
+            options.value = cachedFile.BASE;
         }
+        
         
 
         options.orig = cachedFile.REMOTE; 
@@ -539,9 +529,10 @@ function initUI(reset) {
           case 'UNCOMMITTED_DIFF': { 
             editorLabel = 'new'; 
             rightViewerLabel = 'stored';
-            try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
-            }catch(err){
+
+            if (keep){
+                options.value = dv.editor().getValue();
+            }else{
                 options.value = loadFile(REMOTE);
             }
             
@@ -568,16 +559,9 @@ function initUI(reset) {
             editorLabel = 'this'; 
             rightViewerLabel = 'other'; 
             
-            try{
-                if (reset){
-                    options.value = cachedFile.LOCAL;
-                }else{
-                    options.value = dv.editor().getValue();  // Use content, in case it has been edited
-                }
-                
-            }catch(err){
-                // Lands here on open when dv not fully defined
-                options.value = cachedFile.BASE;
+            if (keep){
+                options.value = dv.editor().getValue();
+            }else{
                 options.value = cachedFile.LOCAL;
             }
             
