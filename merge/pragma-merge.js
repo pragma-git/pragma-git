@@ -387,14 +387,41 @@ async function gitCheckout(options){
     
 }
 function addAllButtonClicked( clickedButtonName){
+
+    // Identify side
     if (clickedButtonName =='right'){
-        dv.editor().setValue( options.orig);
+        codeMirror = dv.right.orig;
+        diffView = dv.right;
+        mergeAll( codeMirror, diffView);
     }
     if (clickedButtonName =='left'){
-        dv.editor().setValue( options.origLeft);
+        codeMirror = dv.left.orig;
+        diffView = dv.left;
+        mergeAll( codeMirror, diffView);
     }
-    initUI( true); // do not reload original files, but keep changes
     
+
+   function mergeAll( pane, diffView){
+        let chunks = diffView.chunks;
+        console.log('Found ' + chunks.length + ' elements');
+        for (let i = chunks.length -1; i >= 0 ; i--) {  // Replace from end to top, so character positions are not destroyed before using them
+            copyChunk(dv, dv.edit, pane, chunks[i]);
+        }
+        chunks = diffView.chunks;
+    }
+
+     // Copied from merge.js -- and modified
+     function copyChunk(dv, to, from, chunk) {
+        let Pos = CodeMirror.Pos;  // Import function from CodeMirror
+        
+        if (dv.diffOutOfDate) return;
+        var origStart = chunk.origTo > from.lastLine() ? Pos(chunk.origFrom - 1) : Pos(chunk.origFrom, 0)
+        var origEnd = Pos(chunk.origTo, 0)
+        var editStart = chunk.editTo > to.lastLine() ? Pos(chunk.editFrom - 1) : Pos(chunk.editFrom, 0)
+        var editEnd = Pos(chunk.editTo, 0)
+        to.replaceRange(from.getRange(origStart, origEnd), editStart, editEnd); 
+     }
+
 }
 
 // Standard CodeMirror
