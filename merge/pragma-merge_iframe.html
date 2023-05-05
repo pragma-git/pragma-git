@@ -393,14 +393,14 @@
     
     <p style="margin-right: 10 px;"> 
         <div>
-            <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
-            <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
+            <span id='two-way'    class=clicky onclick="panes = 2; initUI(true)">two-way</span>
+            <span id='three-way'  class=clicky onclick="panes = 3; initUI(true)">three-way</span>
 
     
             <span class=checkbox>
                 <input type="checkbox" id='align' class=clicky 
                     onclick="connect = connect ? null : 'align'; 
-                        initUI();
+                        initUI(true);
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
@@ -408,7 +408,7 @@
                     
                 <input type="checkbox" id='hide-unchanged'  class=clicky  
                     onclick="collapse = !collapse; 
-                        initUI();
+                        initUI(true);
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
