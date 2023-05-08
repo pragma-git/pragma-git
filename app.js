@@ -148,7 +148,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
         
-        const simpleGit = require('simple-git');  // npm install simple-git
+        const simpleGitDefault = require('simple-git');  // npm install simple-git
+        
+        function simpleGit(pwd){
+            lastGitPwd = pwd;
+            return simpleGitDefault(pwd)
+        }
+        
         
 
     
@@ -208,6 +214,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         lastKnown.branch;
     
         var localState = [];
+        localState.lastSimpleGitFolder = '';  // Set last known folder path used calling simpleGit;
         localState.historyNumber = -1;
         localState.historyLength = 0;  // Number available in history or search 
         localState.branchNumber = 0;   // Used only when changing to next branch -- otherwise branch as in current repository TODO : Update value when changing Repo
@@ -5298,6 +5305,8 @@ function displayLongAlert(title, message, type){
          * OK button does nothing more than closing the dialog
          * 
          * Multiline messages have /n end of lines, which are converted to <br>
+         * 
+         * If there is a suggested git command starting the line, a "run"-link is added
          */
          
             // Harden, if message is object
@@ -5305,7 +5314,8 @@ function displayLongAlert(title, message, type){
                 message = message.toString();
             }
             
-            let messageHtmlFormat = '<code>' + message.replaceAll('\n', '<br>') + '</code>';
+            let messageHtmlFormat = '<code>' + message.replaceAll('\n', '<br>')+ '</code>';
+            messageHtmlFormat = makeGitCommandRunnable( messageHtmlFormat);
             
             console.log('win.cWindow.left = ' + win.cWindow.left);
             console.log('win.cWindow.top = ' + win.cWindow.top);
@@ -5340,12 +5350,15 @@ function displayLongAlert(title, message, type){
                                                    
                             // Set initial dialog dimensions 
                             let dialogHeight = cWindows.window.document.body.offsetHeight;
-                            const dialogWidth = 600;
+                            const dialogWidth = 1000;
                             
                             // Position centered in x, aligned near top
                             let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
                             const offsetY = 28;  // slightly below main window
-                            cWindows.moveTo( Math.round(pMidx - 0.5 * dialogWidth) , gui.Window.get().y + offsetY);
+                            let x = pMidx - 0.5 * dialogWidth;
+                            if (x <0)
+                                x = 0;
+                            cWindows.moveTo( Math.round(x) , gui.Window.get().y + offsetY);
                             
                             // So far the messageDiv increase in size with text        
                             // Lets now correct, so if the size is too large, we fix messageDiv and window height
@@ -5368,7 +5381,52 @@ function displayLongAlert(title, message, type){
                     );
     
                 }
+
             );
+            
+            function makeGitCommandRunnable(messageHtmlFormat){
+                    // The purpose of this function is to make any git command in the html text clickable
+                    
+                    // Example input : messageHtmlFormat = "<code>Error: fatal: detected dubious ownership in repository at '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br>To add an exception for this directory, call:<br><br>\tgit config --global --add safe.directory '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br></code>"
+                    lines = messageHtmlFormat.split('<br>')
+                    
+                    //let CD = `cd '${state.repos[state.repoNumber].localFolder}';`;  // TODO : This is a problem if creation of repo didn't work. Add a folder argument to function, and use if not undefined.  Have this trickle down from displayLongAlert
+                    let CD = `cd '${localState.lastSimpleGitFolder}';`;  
+                    
+                    let a = '';
+                    for (let line of lines) {
+                        
+                        if (line.trim().startsWith('git') ){
+                            let inputline = line;
+                            
+                            let CMD = `const { execSync } = require('child_process'); let out = execSync( \`${line}\` ); console.log(out.toString());`
+                            line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
+                            line = `${line} </code><a  href="javascript:void(0);" onclick="${CMD}">[run]</a><code> `;
+                            console.log(CMD);
+                        
+                            //// Mac or Linux
+                            //let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
+                            //let RUN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ${inputline} "`;
+
+                            //// Windows
+                            //if (process.platform === 'win32') {
+                                //let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
+                                //let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ${inputline} "`;
+                                //RUN = EXE + RUNWIN;
+                            //}
+                            //
+                            //CMD = CD + RUN;
+                            //line = `${inputline} </code><a  href="javascript:void(0);" onclick="${CMD}">[run]</a><code> `;
+                        }        
+                        
+
+                                                
+                        a += line + '<br>'
+                    }
+
+                    return a;
+                
+                }
             
     
     }
