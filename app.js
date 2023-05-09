@@ -150,8 +150,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const simpleGitDefault = require('simple-git');  // npm install simple-git
         
+        // Modify so that simpleGit logs last pwd
         function simpleGit(pwd){
-            lastGitPwd = pwd;
+            localState.lastSimpleGitFolder = pwd;
             return simpleGitDefault(pwd)
         }
         
@@ -5390,8 +5391,7 @@ function displayLongAlert(title, message, type){
                     // Example input : messageHtmlFormat = "<code>Error: fatal: detected dubious ownership in repository at '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br>To add an exception for this directory, call:<br><br>\tgit config --global --add safe.directory '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br></code>"
                     lines = messageHtmlFormat.split('<br>')
                     
-                    //let CD = `cd '${state.repos[state.repoNumber].localFolder}';`;  // TODO : This is a problem if creation of repo didn't work. Add a folder argument to function, and use if not undefined.  Have this trickle down from displayLongAlert
-                    let CD = `cd '${localState.lastSimpleGitFolder}';`;  
+                    let CD = `cd '${localState.lastSimpleGitFolder}'`;  
                     
                     let a = '';
                     for (let line of lines) {
@@ -5399,24 +5399,12 @@ function displayLongAlert(title, message, type){
                         if (line.trim().startsWith('git') ){
                             let inputline = line;
                             
-                            let CMD = `const { execSync } = require('child_process'); let out = execSync( \`${line}\` ); console.log(out.toString());`
+                            // NOTE : multiPlatformExecSync is defined in externalDialog.html, where this link is used
+                            let CMD = `let out = multiPlatformExecSync( \`${CD} ; ${line}\` );`  // Works also if CD fails (runs second command without a cd)
                             line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
                             line = `${line} </code><a  href="javascript:void(0);" onclick="${CMD}">[run]</a><code> `;
                             console.log(CMD);
-                        
-                            //// Mac or Linux
-                            //let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
-                            //let RUN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ${inputline} "`;
 
-                            //// Windows
-                            //if (process.platform === 'win32') {
-                                //let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
-                                //let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; ${inputline} "`;
-                                //RUN = EXE + RUNWIN;
-                            //}
-                            //
-                            //CMD = CD + RUN;
-                            //line = `${inputline} </code><a  href="javascript:void(0);" onclick="${CMD}">[run]</a><code> `;
                         }        
                         
 

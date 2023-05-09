@@ -97,6 +97,19 @@
         </style>
     
     </head>
+    
+    <script>
+		const { execSync } = require('child_process');
+		
+		// Define function so that Windows, Linux, and Mac run command using bash (git-bash for Windows, normal for others)
+	    function multiPlatformExecSync(arg){
+			if (process.platform === 'win32') {
+				return  execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${arg} "` )
+			}else{
+				return  execSync( arg)
+			}
+		}
+    </script>
 
     
 <body class='light dialog' style="position: relative;">
@@ -109,7 +122,6 @@
                 document.body.classList.remove('light');
                 document.body.classList.add('dark');
             }
-
         </script>
     
         
