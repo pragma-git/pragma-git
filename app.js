@@ -5396,24 +5396,33 @@ function displayLongAlert(title, message, type){
                     let a = '';
                     for (let line of lines) {
                         
-                        if (line.trim().startsWith('git') ){
+                        if (line.trim().startsWith('git') ){  //Work with line starting with "git"
                             let inputline = line;
                             
                             // NOTE : multiPlatformExecSync is defined in externalDialog.html, where this link is used
                             let CMD = `let out = multiPlatformExecSync( \`${CD} ; ${line}\` );`  // Works also if CD fails (runs second command without a cd)
                             line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
-                            line = `${line} </code><a  href="javascript:void(0);" onclick="${CMD}">[run]</a><code> `;
+                            line = `${line} </code>
+                                <a  href="javascript:void(0);"  onclick="
+                                    try{ 
+                                        ${CMD}
+                                        document.getElementById('onRunExitStatus').style.color='var(--green-text)';
+                                        document.getElementById('onRunExitStatus').innerText = ' -- DONE!';
+                                    }catch(err){
+                                        document.getElementById('onRunExitStatus').style.color='var(--red-text)'
+                                        document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                    }
+                                    "
+                                >[run]</a>
+                                <span id="onRunExitStatus"></span>
+                            <code> `;  // Replace output line
+                            
                             console.log(CMD);
 
-                        }        
-                        
-
-                                                
-                        a += line + '<br>'
+                        }                                 
+                        a += line + '<br>';  // Build modified text
                     }
-
                     return a;
-                
                 }
             
     
