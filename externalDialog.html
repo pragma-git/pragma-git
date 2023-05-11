@@ -1,16 +1,13 @@
-<html>
-    
-<!--
+<html><!--
     Test run from app.js by calling : 
     showInfoDialogInOwnWindow( 'My title',  'Hej this /n is long /n and spans mult/n iple rows',  'error');  // Type can be 'warning' (yellow) or 'error' (red border)
       or
     displayLongAlert('My title', 'Hej this /n is long /n and spans mult/n iple rows');
     
--->
-    <head>
+--><head>
       <title>Dialog</title>
 
-        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="color_styles.css">
         
         <style>
             html {
@@ -19,17 +16,16 @@
             }
             
             body {
-                margin: 0px;
-                padding: 0px;
-                overflow: auto;
-                color:  var(--body-text);
-                background-color: var(--body-background);
-                font-size: 14px;
-                border: none;
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                display: grid;
+                grid-template-rows: 1fr auto;
                 border: 5px solid;
-                height: max-content;
                 font-family: Arial;
                 font-size: 11pt;
+                height: auto;
+                overflow: auto;
             }
             
             label {
@@ -51,52 +47,44 @@
               display: none;
             }
             
+            div#outerContent {
+                app-region: drag;
+                z-index: 100;
+            }
             
-            div#outer-content {
-                width: -webkit-fill-available;
-                /* height: -webkit-fill-available; */
+            div#content {
+                overflow-y: auto;           /* add scroll bars if content exceeds div size */
+                overflow-wrap: anywhere;
+                height: fit-content;
+                top: 20px;
+                position: absolute;
+                left: 30px;
+                z-index: 200;
+                app-region: no-drag;
+                margin-right: 20px;/
             }
             
             #titleDiv {
                 height: 20px;
                 overflow: auto;
-                /* padding-bottom: 20px; */
             }
+            
             #messageDiv {
-                overflow: auto;
                 height: auto;
                 margin-bottom: 15px;
                 margin-top: 10px;
             }
-            #messageText{
-                overflow: hidden;
-            }
-            
+
             #buttonDiv{
-                height: 30px
+                position: fixed;
                 bottom: 20px;
-                height: fit-content;
                 right: 20px;
+                margin-right: 20px;
             }
-            
-            div#inner-content {
-                overflow: hidden;
-                /* width: 90%; *//* width: 90%; */
-                /* height: -webkit-fill-available; */
-                margin-left: 10px;
-                margin-right: 10px;
-            }
-                
-            
-            
-            .OK-button{
-              float: Right;
-              /* bottom: 10px; */
-            }
+
+
         
         </style>
-    
-    </head>
     
     <script>
 		const { execSync } = require('child_process');
@@ -109,43 +97,43 @@
 				return  execSync( arg)
 			}
 		}
-    </script>
-
+    </script></head>
     
-<body class='light dialog' style="position: relative;">
     
 
-    <div id="outer-content">       
-        <!-- Dark mode on/off--> 
-        <script>
-            if (global.localState.dark){
-                document.body.classList.remove('light');
-                document.body.classList.add('dark');
-            }
-        </script>
     
+<body class="dialog dark error" style="position: relative;">
+    
+    <div id="outerContent">     
+        <div id="content">       
+            <!-- Dark mode on/off--> 
+            <script>
+                if (global.localState.dark){
+                    document.body.classList.remove('light');
+                    document.body.classList.add('dark');
+                }
+            </script>
         
-        <div id="inner-content">
+            
+    
+                <div id="titleDiv">
+                    <b><div id="title">title</div></b>
+                </div> 
+                 
+                <div id="messageDiv">
+                    <div id="messageText"><code><br>            console.log('win.cWindow.left = ' + win.cWindow.left);<br>            console.log('win.cWindow.top = ' + win.cWindow.top);<br>        <br>            console.log(gui.Window.get());<br>        <br>            // Open new window -- and create closed-callback<br>            gui.Window.open(<br>                'externalDialog.html#/new_page', <br>                {   id: 'aboutWindowId',<br>                    position: 'center',<br>                    frame: false,<br>                    show: false<br>                },<br>                function(cWindows){ <br>                    <br>                    cWindows.on('loaded', <br>                        function(){<br>                            <br>                            // Set Class<br>                            cWindows.window.document.body.classList.add(type)<br>                             <br>                            // Set HTML<br>                            cWindows.window.document.getElementById('title').innerHTML = title;<br>                            cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;<br>                            cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;<br>                            <br>                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');<br>                            console.log(title);<br>                            console.log(messageHtmlFormat);<br>                            console.log(buttonsHtml);<br>                                                   <br>                            // Set initial dialog dimensions <br>                            //let dialogHeight = cWindows.window.document.body.offset <br>            console.log('win.cWindow.left = ' + win.cWindow.left);<br>            console.log('win.cWindow.top = ' + win.cWindow.top);<br>        <br>            console.log(gui.Window.get());<br>        <br>            // Open new window -- and create closed-callback<br>            gui.Window.open(<br>                'externalDialog.html#/new_page', <br>                {   id: 'aboutWindowId',<br>                    position: 'center',<br>                    frame: false,<br>                    show: false<br>                },<br>                function(cWindows){ <br>                    <br>                    cWindows.on('loaded', <br>                        function(){<br>                            <br>                            // Set Class<br>                            cWindows.window.document.body.classList.add(type)<br>                             <br>                            // Set HTML<br>                            cWindows.window.document.getElementById('title').innerHTML = title;<br>                            cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;<br>                            cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;<br>                            <br>                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');<br>                            console.log(title);<br>                            console.log(messageHtmlFormat);<br>                            console.log(buttonsHtml);<br>                                                   <br>                            // Set initial dialog dimensions <br>                            //let dialogHeight = cWindows.window.document.body.offset <br>            console.log('win.cWindow.left = ' + win.cWindow.left);<br>            console.log('win.cWindow.top = ' + win.cWindow.top);<br>        <br>            console.log(gui.Window.get());<br>        <br>            // Open new window -- and create closed-callback<br>            gui.Window.open(<br>                'externalDialog.html#/new_page', <br>                {   id: 'aboutWindowId',<br>                    position: 'center',<br>                    frame: false,<br>                    show: false<br>                },<br>                function(cWindows){ <br>                    <br>                    cWindows.on('loaded', <br>                        function(){<br>                            <br>                            // Set Class<br>                            cWindows.window.document.body.classList.add(type)<br>                             <br>                            // Set HTML<br>                            cWindows.window.document.getElementById('title').innerHTML = title;<br>                            cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;<br>                            cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;<br>                            <br>                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');<br>                            console.log(title);<br>                            console.log(messageHtmlFormat);<br>                            console.log(buttonsHtml);<br>                                                   <br>                            // Set initial dialog dimensions <br>                            //let dialogHeight = cWindows.window.document.body.offset  cWindows.window.document.getElementById('title').innerHTML.cWindows.window.document.getElementById('title').innerHTML.cWindows.window.document.getElementById('title').innerHTML = tit.cWindows.window.document.getElementById('title').innerHTML = tit</code><br></div>
+                    
+                </div> 
      
-            <div id='titleDiv'>
-                <b><div id='title'>test-title</div></b>
-            </div> 
-             
-            <div id='messageDiv'>
-                <div id='messageText'>test message</div>
-                
-            </div> 
- 
-            <div id="buttonDiv">       
-<!--
-                <button class="OK-button" onclick="window.close();"> OK  </button> 
--->
-            </div>  
-        
+                <div id="buttonDiv"><button class="OK-button" onclick="window.close();"> OK  </button> </div>  
+            
+    
         </div> 
     </div> 
 
 
   
-</body>
-</html>
+
+
+
+</body></html>

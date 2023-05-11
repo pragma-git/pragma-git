@@ -5291,7 +5291,7 @@ function displayLongAlert(title, message, type){
          message);
 
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
-    showDialogInOwnWindow(title, message, buttonHtml, 260, type);
+    showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
 }
     function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
@@ -5326,9 +5326,8 @@ function displayLongAlert(title, message, type){
             // Open new window -- and create closed-callback
             gui.Window.open(
                 'externalDialog.html#/new_page', 
-                {   id: 'aboutWindowId',
-                    position: 'center',
-                    frame: false,
+                {   position: 'center',
+                    frame: true,
                     show: false
                 },
                 function(cWindows){ 
@@ -5343,33 +5342,24 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('title').innerHTML = title;
                             cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
-                            
-                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');
-                            console.log(title);
-                            console.log(messageHtmlFormat);
-                            console.log(buttonsHtml);
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.body.offsetHeight;
-                            const dialogWidth = 1000;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 70;
+                            let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
                             let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
-                            const offsetY = 28;  // slightly below main window
+                            const offsetY = 48;  // slightly below main window
                             let x = pMidx - 0.5 * dialogWidth;
                             if (x <0)
                                 x = 0;
                             cWindows.moveTo( Math.round(x) , gui.Window.get().y + offsetY);
+
                             
-                            // So far the messageDiv increase in size with text        
-                            // Lets now correct, so if the size is too large, we fix messageDiv and window height
-                            if ( (maxHeight !== 'auto')&&(dialogHeight > maxHeight) ){
-                                dialogHeight = maxHeight + 10;
-                                
-                                let messageDivHeight = '144px';  // TODO : make dynamic (now matches maxHeight = 260)
-                                cWindows.window.document.getElementById('messageDiv').style.height = messageDivHeight;
-                                
-                                cWindows.window.document.getElementById('messageDiv').style.overflow = 'auto'
+                            // Handle too 'auto' when dialog becomes too high
+                            MAXHEIGHT = 800;
+                            if ( (maxHeight == 'auto')&&(dialogHeight > MAXHEIGHT) ){
+                                dialogHeight = MAXHEIGHT;
                             }
       
                             // Set window size and show
@@ -5378,6 +5368,9 @@ function displayLongAlert(title, message, type){
                             
                             // Workaround so it is not hidden by windows
                             cWindows.setAlwaysOnTop(true); 
+                            
+                            // Set window title-bar text
+                            cWindows.window.document.title = type;
                         }
                     );
     
