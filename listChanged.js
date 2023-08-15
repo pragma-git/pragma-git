@@ -12,7 +12,8 @@ var fs = require('fs');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
-const simpleGit = require('simple-git');  
+//const simpleGit = require('simple-git');  
+simpleGit = opener.simpleGit;
 
 const STARTDIR = process.cwd(); // Folder where this file was started
 

@@ -150,10 +150,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         const simpleGitDefault = require('simple-git');  // npm install simple-git
         
-        // Modify so that simpleGit logs last pwd
+        const STARTDIR = process.cwd(); // Folder where this file was started
+        const pathsep = require('path').sep;  // Os-dependent path separator
+        
+        // Modify so that simpleGit logs last pwd, AND that external git client is used
         function simpleGit(pwd){
             localState.lastSimpleGitFolder = pwd;
-            return simpleGitDefault(pwd)
+            return simpleGitDefault({ binary: STARTDIR + pathsep + 'ssh-git-client' })
         }
         
         
@@ -161,7 +164,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
-        const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
         var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
         
@@ -177,7 +179,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
       
     // Files & folders
-        const STARTDIR = process.cwd(); // Folder where this file was started
+        //const STARTDIR = process.cwd(); // Folder where this file was started
         const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 

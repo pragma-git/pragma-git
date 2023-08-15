@@ -32,6 +32,7 @@
     var os = require('os');
     var fs = require('fs');
     const simpleGit = require('simple-git');  
+    //var simpleGit = opener.simpleGit;
     var util = require('./util_module.js'); // Pragma-git common functions
            
     const pathsep = require('path').sep;  // Os-dependent path separator
