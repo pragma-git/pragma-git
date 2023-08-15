@@ -1,4 +1,5 @@
 #!/bin/bash
+# TEST hardcoded paths and server 
 echo git $@ >> /Users/jan/.Pragma-git/.tmp/pragma-git-log.txt
 ssh jan@linus "cd /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP; git $@"
 #git $@
