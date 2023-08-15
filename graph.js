@@ -707,7 +707,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             
             // Add current branchName as first branch (will be to left)
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-            //branchNames.set(branchName, branchNames.size);
+            branchNames.set(branchName, branchNames.size);
             
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
@@ -1009,8 +1009,8 @@ async function drawGraph( document, splitted, branchHistory, history){
                     if ( !branchNames.has(commit.branchName)){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
-                        // Lane for unknown branch should land on first free
-                        let bestLane = getFreeLane(commit, false); 
+                        // Lane for unknown branch should land compressed, instead of to far right
+                        let bestLane = getFreeLane(commit, true); 
                         
                         branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 
@@ -1476,29 +1476,29 @@ async function drawGraph( document, splitted, branchHistory, history){
                 }
                 
                 // Parents : Separate log row from parents(at end now when Notes removed)
-                let startOfMessageBody = gitLogRow.indexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
+                let startOfMessageBody = gitLogRow.lastIndexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
                 let messageBodyInThisRow = gitLogRow.substring(startOfMessageBody + 2, startOfNote - 1); // Skip B=
                 
                 // Parents : Separate log row from parents(at end now when Notes removed)
-                let startOfParents = gitLogRow.indexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
+                let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
                 let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfMessageBody - 1); // Skip H=
                 
                 // Hash : Separate log row from long hash (at end now when Parents removed)
-                let startOfHash = gitLogRow.indexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+                let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
                 let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
                 
                 // Decoration : Separate log row from decorate (at end now when hash removed)
-                let startOfDecore = gitLogRow.indexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+                let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
                 let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
                 decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
                  
                 // Date : Separate log row from date (at end now when decorate removed)
-                let startOfDate = gitLogRow.indexOf('T=');  // From git log pretty format .... T=%d (ends in date)
+                let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
                 let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
                 //date = date.substring(0,10);
                   
                 // Message : Separate log row from message (at end now when date removed)
-                let startOfMessage = gitLogRow.indexOf('S=');  // From git log pretty format .... S=%s (ends in message)
+                let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
                 let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
 
                                 
