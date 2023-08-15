@@ -707,7 +707,8 @@ async function drawGraph( document, splitted, branchHistory, history){
             
             // Add current branchName as first branch (will be to left)
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
-            branchNames.set(branchName, branchNames.size);
+            //branchNames.set(branchName, branchNames.size);
+            
             
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
