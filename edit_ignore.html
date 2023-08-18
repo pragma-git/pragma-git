@@ -35,6 +35,7 @@
         }
         
         input, label {
+            font-size: 9pt; 
             display:block;
         }
 
@@ -89,7 +90,7 @@
                 
                 <!--  .ignore file editor  --> 
                 <div>
-                    <label for="ignoreFile"> .gitignore file </label>
+                    <label for="ignoreFile"> .gitignore file:</label>
                     <textarea id="ignoreFile" placeholder="Github account name" style="height:300px; font-family:monospace" oninput="displayIgnoreList()"></textarea><br><br>
                     
                     <!--  Button row -->                
@@ -113,6 +114,10 @@
                     </div>
 
                     </div>
+                    <BR>
+                    <a href="https://github.com/github/gitignore" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
+                    Click for .gitignore inspiration
+                    </a>
                     
                 </div>
                 <br><br>
