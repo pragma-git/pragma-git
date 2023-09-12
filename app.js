@@ -6129,7 +6129,7 @@ function loadSettings(settingsFile){
         
         // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
             state.settingsWindow = setting( state_in.settingsWindow, {} );
-            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, [] );
+            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, 0 );
             
             // Remove historical settings (used when folding instead of tabs)
             delete state.settingsWindow.unfolded;
@@ -6498,9 +6498,14 @@ window.onload = async function() {
     } 
        
    
-  // Map of stashes    
-    await gitStashMap( state.repos[state.repoNumber].localFolder );
-    
+  // Map of stashes        
+    try{
+        if (state.repos[state.repoNumber] !== undefined) {
+            await gitStashMap( state.repos[state.repoNumber].localFolder );
+        }
+     }catch(err){
+        console.error('Could not get local folder (maybe not a repo?)');
+    }    
     
   // Mac Menu  
   initializeWindowMenu();

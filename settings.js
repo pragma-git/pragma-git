@@ -302,6 +302,7 @@ async function _callback( name, event){
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
+            drawBranchTab(document);
             
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()
@@ -355,6 +356,7 @@ async function _callback( name, event){
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
+            drawBranchTab(document);
             
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()                
@@ -1036,6 +1038,9 @@ async function closeWindow(){
     await fixEmptyLocalAuthors();
     await opener.saveSettings();
     
+    // Fix stashMap which may not have been populated
+    await opener.gitStashMap( state.repos[state.repoNumber].localFolder )
+    
     opener.deleteWindowMenu('Settings')
     
  
@@ -1327,7 +1332,7 @@ async function injectIntoSettingsJs(document) {
         );
         
         // Set tab from setting
-        let tab = 1; // Repository tab
+        let tab = 0; // Repository tab
         tabButton[ tab ].click();
 
 
@@ -1477,12 +1482,14 @@ function updateRemoteRepos(){ // Displays current data in GUI
 
 // Draw
 async function drawBranchTab(document){
-    let myLocalFolder = state.repos[state.repoNumber].localFolder;
-    
-    document.getElementById("branchesTableBody").innerHTML = ""; 
-    table = document.getElementById("branchesTableBody");
-    let branchList = await gitBranchList( myLocalFolder);
-    generateBranchTable(document, table, branchList); 
+    if (state.repos[state.repoNumber] !== undefined) {
+        let myLocalFolder = state.repos[state.repoNumber].localFolder;
+        
+        document.getElementById("branchesTableBody").innerHTML = ""; 
+        table = document.getElementById("branchesTableBody");
+        let branchList = await gitBranchList( myLocalFolder);
+        generateBranchTable(document, table, branchList); 
+    }
 }
 async function drawRepoTab(document){
     
