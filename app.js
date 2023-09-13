@@ -148,7 +148,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
         
-        const simpleGit = require('simple-git');  // npm install simple-git
+        const simpleGitDefault = require('simple-git');  // npm install simple-git
+        
+        // Modify so that simpleGit logs last pwd
+        function simpleGit(pwd){
+            localState.lastSimpleGitFolder = pwd;
+            return simpleGitDefault(pwd)
+        }
+        
         
 
     
@@ -208,6 +215,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         lastKnown.branch;
     
         var localState = [];
+        localState.lastSimpleGitFolder = '';  // Set last known folder path used calling simpleGit;
         localState.historyNumber = -1;
         localState.historyLength = 0;  // Number available in history or search 
         localState.branchNumber = 0;   // Used only when changing to next branch -- otherwise branch as in current repository TODO : Update value when changing Repo
@@ -5283,7 +5291,7 @@ function displayLongAlert(title, message, type){
          message);
 
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
-    showDialogInOwnWindow(title, message, buttonHtml, 260, type);
+    showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
 }
     function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
@@ -5298,6 +5306,8 @@ function displayLongAlert(title, message, type){
          * OK button does nothing more than closing the dialog
          * 
          * Multiline messages have /n end of lines, which are converted to <br>
+         * 
+         * If there is a suggested git command starting the line, a "run"-link is added
          */
          
             // Harden, if message is object
@@ -5305,7 +5315,8 @@ function displayLongAlert(title, message, type){
                 message = message.toString();
             }
             
-            let messageHtmlFormat = '<code>' + message.replaceAll('\n', '<br>') + '</code>';
+            let messageHtmlFormat = '<code>' + message.replaceAll('\n', '<br>')+ '</code>';
+            messageHtmlFormat = makeGitCommandRunnable( messageHtmlFormat);
             
             console.log('win.cWindow.left = ' + win.cWindow.left);
             console.log('win.cWindow.top = ' + win.cWindow.top);
@@ -5315,9 +5326,8 @@ function displayLongAlert(title, message, type){
             // Open new window -- and create closed-callback
             gui.Window.open(
                 'externalDialog.html#/new_page', 
-                {   id: 'aboutWindowId',
-                    position: 'center',
-                    frame: false,
+                {   position: 'center',
+                    frame: true,
                     show: false
                 },
                 function(cWindows){ 
@@ -5332,30 +5342,24 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('title').innerHTML = title;
                             cWindows.window.document.getElementById('messageText').innerHTML = messageHtmlFormat;
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
-                            
-                            console.log('Call showDialogInOwnWindow (title, message, buttonsHtml) : ');
-                            console.log(title);
-                            console.log(messageHtmlFormat);
-                            console.log(buttonsHtml);
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.body.offsetHeight;
-                            const dialogWidth = 600;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 70;
+                            let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
                             let pMidx = gui.Window.get().x + 0.5 * gui.Window.get().width;
-                            const offsetY = 28;  // slightly below main window
-                            cWindows.moveTo( Math.round(pMidx - 0.5 * dialogWidth) , gui.Window.get().y + offsetY);
+                            const offsetY = 48;  // slightly below main window
+                            let x = pMidx - 0.5 * dialogWidth;
+                            if (x <0)
+                                x = 0;
+                            cWindows.moveTo( Math.round(x) , gui.Window.get().y + offsetY);
+
                             
-                            // So far the messageDiv increase in size with text        
-                            // Lets now correct, so if the size is too large, we fix messageDiv and window height
-                            if ( (maxHeight !== 'auto')&&(dialogHeight > maxHeight) ){
-                                dialogHeight = maxHeight + 10;
-                                
-                                let messageDivHeight = '144px';  // TODO : make dynamic (now matches maxHeight = 260)
-                                cWindows.window.document.getElementById('messageDiv').style.height = messageDivHeight;
-                                
-                                cWindows.window.document.getElementById('messageDiv').style.overflow = 'auto'
+                            // Handle too 'auto' when dialog becomes too high
+                            MAXHEIGHT = 800;
+                            if ( (maxHeight == 'auto')&&(dialogHeight > MAXHEIGHT) ){
+                                dialogHeight = MAXHEIGHT;
                             }
       
                             // Set window size and show
@@ -5364,11 +5368,55 @@ function displayLongAlert(title, message, type){
                             
                             // Workaround so it is not hidden by windows
                             cWindows.setAlwaysOnTop(true); 
+                            
+                            // Set window title-bar text
+                            cWindows.window.document.title = type;
                         }
                     );
     
                 }
+
             );
+            
+            function makeGitCommandRunnable(messageHtmlFormat){
+                    // The purpose of this function is to make any git command in the html text clickable
+                    
+                    // Example input : messageHtmlFormat = "<code>Error: fatal: detected dubious ownership in repository at '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br>To add an exception for this directory, call:<br><br>\tgit config --global --add safe.directory '/mnt/Data/Projects/PETALGORITHMS/Code Master'<br></code>"
+                    lines = messageHtmlFormat.split('<br>')
+                    
+                    let CD = `cd '${localState.lastSimpleGitFolder}'`;  
+                    
+                    let a = '';
+                    for (let line of lines) {
+                        
+                        if (line.trim().startsWith('git') ){  //Work with line starting with "git"
+                            let inputline = line;
+                            
+                            // NOTE : multiPlatformExecSync is defined in externalDialog.html, where this link is used
+                            let CMD = `let out = multiPlatformExecSync( \`${CD} ; ${line}\` );`  // Works also if CD fails (runs second command without a cd)
+                            line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
+                            line = `${line} </code>
+                                <a  href="javascript:void(0);"  onclick="
+                                    try{ 
+                                        ${CMD}
+                                        document.getElementById('onRunExitStatus').style.color='var(--green-text)';
+                                        document.getElementById('onRunExitStatus').innerText = ' -- DONE!';
+                                    }catch(err){
+                                        document.getElementById('onRunExitStatus').style.color='var(--red-text)'
+                                        document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                    }
+                                    "
+                                >[run]</a>
+                                <span id="onRunExitStatus"></span>
+                            <code> `;  // Replace output line
+                            
+                            console.log(CMD);
+
+                        }                                 
+                        a += line + '<br>';  // Build modified text
+                    }
+                    return a;
+                }
             
     
     }
@@ -5405,7 +5453,7 @@ function displayLongAlert(title, message, type){
         }
         
         
-        const title = 'Missing Author information';
+        const title = 'Git needs Author information';
         
         let message = `    
                     <table>            
@@ -6081,7 +6129,7 @@ function loadSettings(settingsFile){
         
         // Settings window folding  (four levels -- state.settingsWindow.unfolded.repoSettings )
             state.settingsWindow = setting( state_in.settingsWindow, {} );
-            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, [] );
+            state.settingsWindow.selectedTab = setting( state_in.settingsWindow.selectedTab, 0 );
             
             // Remove historical settings (used when folding instead of tabs)
             delete state.settingsWindow.unfolded;
@@ -6450,9 +6498,14 @@ window.onload = async function() {
     } 
        
    
-  // Map of stashes    
-    await gitStashMap( state.repos[state.repoNumber].localFolder );
-    
+  // Map of stashes        
+    try{
+        if (state.repos[state.repoNumber] !== undefined) {
+            await gitStashMap( state.repos[state.repoNumber].localFolder );
+        }
+     }catch(err){
+        console.error('Could not get local folder (maybe not a repo?)');
+    }    
     
   // Mac Menu  
   initializeWindowMenu();

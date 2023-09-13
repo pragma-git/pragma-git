@@ -709,6 +709,7 @@ async function drawGraph( document, splitted, branchHistory, history){
             let branchName = opener.window.document.getElementById('top-titlebar-branch-text').innerText;
             //branchNames.set(branchName, branchNames.size);
             
+            
             childMap = new Map();  // List of children for commits
             nodeMap = new Map();  // Map of commit nodes
             mapVisibleBranchToTopCommit = new Map();  // Map of branchName to commit hash of first commit on branch (used for clickable branch names)
@@ -1009,8 +1010,8 @@ async function drawGraph( document, splitted, branchHistory, history){
                     if ( !branchNames.has(commit.branchName)){
                         commit.branchName = commit.hash;  // Name of branch = hash of latest commit
                         
-                        // Lane for unknown branch should land on first free
-                        let bestLane = getFreeLane(commit, false); 
+                        // Lane for unknown branch should land compressed, instead of to far right
+                        let bestLane = getFreeLane(commit, true); 
                         
                         branchNames.set( commit.branchName, bestLane ); // Add unknown or hidden branch as hash
                         NUMBER_OF_BRANCHES = branchNames.size +1; 

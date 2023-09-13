@@ -214,7 +214,6 @@
 
         span.clicky {
           cursor: pointer;
-          color: black;
           padding: 0 3px;
           border-style: solid;
           border-width: 1px;
@@ -223,14 +222,21 @@
           float: left;
           display: block;
           margin-right: 2px;
+          position: relative;
+        }
+        
+        #two-way{
+            margin-left: 12px;
         }
         
                 
         .enabled{
-            background: lightgreen;
+            background: white;
+            color: black;
         }
         .disabled{
             background: white;
+            color: gray;
         }
         
         
@@ -244,6 +250,10 @@
           border-color: var( --body-text);
         }
         
+         #align{
+          margin-left:20px;
+        }  
+             
         .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
             height: calc(100vh / 0.5 - 86px ); 
         }
@@ -276,6 +286,18 @@
             border:none;
         }
         
+        #left3, #right3, #right2 {
+            display:inline;
+        }
+        
+        #left3_all {
+            float:right;
+        }
+        
+        #right3_all, #right2_all {
+            float:left;
+        }
+    
 
         .CodeMirror-linenumber{
             padding-right: 5px !important;
@@ -332,22 +354,36 @@
         
         
     </script>
+    
 
 
     <div class="outer-content">
         <table id="Headers3" style="width:100%; visibility: collapse;">
             <tr>
-                <td id="left3" style="width:33%; text-align: center;">left</td>
-                <td id="editor3" style="width:33%; text-align: center;">center</td>
-                <td id="right3" style="width:33%; text-align: center;">right</td>
+                <td id="left3_" style="width:33%; text-align: center;">
+                    <div id="left3">left</div> 
+                    <button id="left3_all" onclick="addAllButtonClicked('left');" >all ⇝</button>
+                </td>
+                <td id="editor3" style="width:33%; text-align: center;">
+                    center
+                </td>
+                <td id="right3_" style="width:33%; text-align: center;">
+                    <div id="right3">right</div> 
+                    <button id="right3_all" onclick="addAllButtonClicked('right');">⇜ all</button>
+                </td>
             </tr>
         </table>
         
         
         <table id="Headers2" style="width:100%; visibility: collapse;">
             <tr>
-                <td id="editor2" style="width:50%; text-align: center;">left</td>
-                <td id="right2" style="width:50%; text-align: center;">right</td>
+                <td id="editor2" style="width:50%; text-align: center;">
+                    left
+                </td>
+                <td id="right2_" style="width:50%; text-align: center;">
+                    <div id="right2">right</div> 
+                    <button id="right2_all"  onclick="addAllButtonClicked('right');">⇜ all</button>
+                </td>
             </tr>
         </table>
 
@@ -357,14 +393,14 @@
     
     <p style="margin-right: 10 px;"> 
         <div>
-            <span id='two-way'    class=clicky onclick="panes = 2; initUI()">two-way</span>
-            <span id='three-way'  class=clicky onclick="panes = 3; initUI()">three-way</span>
+            <span id='two-way'    class=clicky onclick="panes = 2; initUI(true)">two-way</span>
+            <span id='three-way'  class=clicky onclick="panes = 3; initUI(true)">three-way</span>
 
     
             <span class=checkbox>
                 <input type="checkbox" id='align' class=clicky 
                     onclick="connect = connect ? null : 'align'; 
-                        initUI();
+                        initUI(true);
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
@@ -372,7 +408,7 @@
                     
                 <input type="checkbox" id='hide-unchanged'  class=clicky  
                     onclick="collapse = !collapse; 
-                        initUI();
+                        initUI(true);
                         obj = document.getElementById('theme-select');
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
@@ -464,7 +500,7 @@
             Close
         </button>
         
-               
+
         <button id="save" 
             onclick="finish('save');" 
             style="float: right;margin-right: 10px;">
@@ -477,6 +513,14 @@
             style="float: right;margin-right: 10px;">
             Cancel
         </button>
+        
+                       
+        <button id="reload" 
+            onclick="initUI();" 
+            style="float: right;margin-right: 10px;">
+            Reload
+        </button>
+               
         
     </p>
 

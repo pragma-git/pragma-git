@@ -386,6 +386,43 @@ async function gitCheckout(options){
     } 
     
 }
+function addAllButtonClicked( clickedButtonName){
+
+    // Identify side
+    if (clickedButtonName =='right'){
+        codeMirror = dv.right.orig;
+        diffView = dv.right;
+        mergeAll( codeMirror, diffView);
+    }
+    if (clickedButtonName =='left'){
+        codeMirror = dv.left.orig;
+        diffView = dv.left;
+        mergeAll( codeMirror, diffView);
+    }
+    
+
+   function mergeAll( pane, diffView){
+        let chunks = diffView.chunks;
+        console.log('Found ' + chunks.length + ' elements');
+        for (let i = chunks.length -1; i >= 0 ; i--) {  // Replace from end to top, so character positions are not destroyed before using them
+            copyChunk(dv, dv.edit, pane, chunks[i]);
+        }
+        chunks = diffView.chunks;
+    }
+
+     // Copied from merge.js -- and modified
+     function copyChunk(dv, to, from, chunk) {
+        let Pos = CodeMirror.Pos;  // Import function from CodeMirror
+        
+        if (dv.diffOutOfDate) return;
+        var origStart = chunk.origTo > from.lastLine() ? Pos(chunk.origFrom - 1) : Pos(chunk.origFrom, 0)
+        var origEnd = Pos(chunk.origTo, 0)
+        var editStart = chunk.editTo > to.lastLine() ? Pos(chunk.editFrom - 1) : Pos(chunk.editFrom, 0)
+        var editEnd = Pos(chunk.editTo, 0)
+        to.replaceRange(from.getRange(origStart, origEnd), editStart, editEnd); 
+     }
+
+}
 
 // Standard CodeMirror
 function toggleDifferences() {
@@ -412,7 +449,27 @@ function resize() {
 }
 
 // Redraw 
-function initUI() {
+function initUI( keep) {
+    /*
+     * initUI is called when window opened, and when clicking in the GUI that changes the appearance
+     * (Change 2-3 panes, "align" and "hide unchanged" checkboxes, "all"-buttons (MERGE and UNCOMMITTED_DIFF mode), 
+     * 
+     * Pragma-merge has the following  modes :
+     * MERGE              2/3 panes R/W
+     * UNCOMMITTED_DIFF   2 panes R/W
+     * HISTORICAL_DIFF    2 panes R/O
+     * EDITOR             1 pane  R/W or R/O
+     * 
+     * Opening in 3-pane mode (MERGE mode) the middle pane becomes empty for lines that are different in left and right panes.
+     * Opening in 2-pane mode (MERGE mode) the left pane shows the whole local file, and the right pane the whole "remote" file.
+     * 
+     * The expected behavior switching between 3 and 2 pane mode would be the same as opening the file directly (above description)
+     * 
+     * Switching from 3 to 2 panes (MERGE mode) therefore shows the files as they were when first opened -- thus discarding any changes made in Pragma-merge
+     * 
+     * 
+    */
+
     
     // New start
     options = optionsTemplate;
@@ -455,25 +512,20 @@ function initUI() {
           document.getElementById('three-way').style.visibility = 'collapse';
           document.getElementById('three-way').style.width = '0px';
       }
-    
+
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
         options.origLeft = cachedFile.LOCAL;
-        
-        if ( dv.panes == panes ){ 
-            // 1) dv.editor().getValue() if not changed from 2-pane
-            try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
-            }catch(err){
-                // Lands here on open when dv not fully defined
-                options.value = cachedFile.BASE;
-            }
-        }else{ 
-            // 2) cachedFile.BASE if changed from 2-pane
+
+        if (keep){
+            options.value = dv.editor().getValue();
+        }else{
             options.value = cachedFile.BASE;
-        } 
+        }
         
+        
+
         options.orig = cachedFile.REMOTE; 
         
         // html
@@ -483,6 +535,8 @@ function initUI() {
         
         document.getElementById('Headers2').style.visibility = 'collapse';
         document.getElementById('Headers3').style.visibility = 'visible';
+        
+        document.getElementById('right2_all').style.visibility = 'collapse';  // The one for 2 panes should be collapsed when 3 panes
         
         disable2('two-way');
         enable2('three-way');
@@ -494,16 +548,22 @@ function initUI() {
         let editorLabel;
         let rightViewerLabel;
         
+                
+        document.getElementById('right2_all').style.visibility = 'collapse';  // Add-all button -- guess collapsed, correct if MERGE or UNCOMMITTED_DIFF
+        
         // Set mode-dependent params
         switch (getMode() ){
           case 'UNCOMMITTED_DIFF': { 
             editorLabel = 'new'; 
             rightViewerLabel = 'stored';
-            try{
-                options.value = dv.editor().getValue();  // Use content, in case it has been edited
-            }catch(err){
+
+            if (keep){
+                options.value = dv.editor().getValue();
+            }else{
                 options.value = loadFile(REMOTE);
             }
+            
+            document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
             options.orig = cachedFile.LOCAL;
             break; 
@@ -526,19 +586,13 @@ function initUI() {
             editorLabel = 'this'; 
             rightViewerLabel = 'other'; 
             
-            if ( dv.panes == panes ){ // Not changed number of panes
-                // 1) dv.editor().getValue() if not changed from 3-pane
-                try{
-                    options.value = dv.editor().getValue();  // Use content, in case it has been edited
-                }catch(err){
-                    // Lands here on open when dv not fully defined
-                    options.value = cachedFile.LOCAL;
-                }
+            if (keep){
+                options.value = dv.editor().getValue();
             }else{
-                // 2) cachedFile.LOCAL if changed from 3-pane
                 options.value = cachedFile.LOCAL;
             }
             
+            document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
             options.orig = cachedFile.REMOTE
             break;
@@ -671,7 +725,7 @@ function changeToEditor(){
  
     document.getElementById('up').style.display = 'none';
     document.getElementById('down').style.display = 'none';
-}
+} 
 
 // Show button states
 function enable(id){
