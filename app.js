@@ -5453,7 +5453,7 @@ function displayLongAlert(title, message, type){
         }
         
         
-        const title = 'Missing Author information';
+        const title = 'Git needs Author information';
         
         let message = `    
                     <table>            
