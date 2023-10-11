@@ -684,25 +684,30 @@ async function _callback( name, event){
                 break; // Get out of switch statement
             }
         
-        
         //
-        // Windows and Linux  solution
+        // Common Linux and Windows
         //
-            
-            // Using terminal-tab
-            const terminalTab = require('terminal-tab');
-    
-            const options = {
+			let command;
+			// Using terminal-tab
+	        const terminalTab = require('terminal-tab');
+	        const options = {
               cwd: null,
               env: null,
               encoding: 'utf8'
             }
-    
-            
-            
-            // Linux
-            let command = 'cd "' + folder + '";' + 'clear';
-    
+        
+        //
+        // Linux  solution
+        //
+            if (process.platform === 'linux') { 
+				// Implement workaround so path with spaces works
+	            options.cwd = folder;
+	            command = 'pwd'; // Dummy command
+			}
+        
+        //
+        // Windows solution
+        //    
             
             // Windows  Note : named win32 also for 64-bit
             if (process.platform === 'win32') {  
