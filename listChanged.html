@@ -258,6 +258,20 @@
     </button>  
 </dialog>  
 
+ 
+<!--  Warning dialog for restore-renamed  --> 
+
+<dialog id="restoreRenameDialog"  class="error">   
+    <p>This will undo the rename, and restore the file to its stored state.  Do your really want to restore the renaming? </p>  
+    <button id="yes" 
+        onclick="document.getElementById('restoreRenameDialog').close();_callback('restoreRenameLink',selectedFile);">
+        Yes
+    </button>   
+    <button id="no"
+        onclick="document.getElementById('restoreRenameDialog').close();selectedFile='';">
+        No
+    </button>  
+</dialog>  
 
 
 <!--  Warning dialog for delete  --> 
