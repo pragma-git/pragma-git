@@ -721,7 +721,26 @@ function createFileTable(status_data) {
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
                     
                     if ( substrings.length <= 1){
-                        filetext = file;
+                        
+                        // Figure out "status_data.renamed.from" by matching "file" with "status_data.renamed.to"
+                        let renamedStatusData = getRenameInfo( status_data.renamed, file);  // status_data.renamed[i] where "i" is containing the correct file in .to-field
+                        if ( renamedStatusData.to == ''){
+                            filetext = file;
+                        }else{
+                            filetext = renamedStatusData.from + ' -> ' + renamedStatusData.to;
+                        }
+                        
+                        
+                        // Local function -- returns the renamed-struct matching file
+                        function getRenameInfo( renamedArray, file){
+                            for ( let renamedItem of renamedArray){
+                                if ( renamedItem.to === file){
+                                    return renamedItem;
+                                }
+                            }
+                            return {from: '', to: 'Dockerize_defacing/dev/README-dev.txt'}
+                        }
+                        
                     }else{
                         filetext = substrings[1] + ' -> ' + substrings[2];
                     }
