@@ -147,23 +147,32 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
-        
         const simpleGitDefault = require('simple-git');  // npm install simple-git
         
-        // Modify so that simpleGit logs last pwd
-        function simpleGit(pwd){
-            localState.lastSimpleGitFolder = pwd;
-            return simpleGitDefault(pwd)
-        }
-        
-        
 
-    
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
         var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
+        var configFile;  // Path to Pragma-git special version of .gitconfig
+
+    // Modify simpleGit function
+
+        // Modify so that simpleGit:
+        //   1) stores last pwd
+        //   2) includes pragam-git's special include for .gitignore 
+        function simpleGit(pwd){
+            // get pragma-git .gitconfig-include
+            if (configFile === undefined){
+                configFile = configFilePath();
+            }
+            
+            localState.lastSimpleGitFolder = pwd;
+            return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
+        }
+        
+
         
     // Handles to windows
         var main_win;
@@ -3386,7 +3395,8 @@ async function gitDefineBuiltInTools(){
     
     util.rm(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
     util.rm(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
-    
+}
+function configFilePath(){    
     
     // Find config file
     let configfile = "";
@@ -3412,31 +3422,9 @@ async function gitDefineBuiltInTools(){
       }
     }
     console.log('Config file = ' + configfile);
+    pragmaLog('Config file = ' + configfile);
       
-    // Git command
-    let regex = '.*pragma-git.*'
-    command = [  
-        'config',  
-        '--global',
-        '--replace-all',
-        'include.path',
-        configfile,
-        regex
-    ];  
-      
-    // Set in global git .config file
-    try{
-        await simpleGitLog(  ).raw( command , onConfig);
-    }catch(err){
-        console.log('Failed setting internal merge tool');
-        console.log(err);
-    }  
-    function onConfig(err, result) { 
-        //console.log(result); console.log(err); 
-        
-    };
-
-    
+    return configfile;
 }
 async function gitStatus(){
     // Determine if changed files (from git status)
