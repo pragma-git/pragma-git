@@ -1482,13 +1482,17 @@ function updateRemoteRepos(){ // Displays current data in GUI
 
 // Draw
 async function drawBranchTab(document){
-    if (state.repos[state.repoNumber] !== undefined) {
-        let myLocalFolder = state.repos[state.repoNumber].localFolder;
-        
-        document.getElementById("branchesTableBody").innerHTML = ""; 
-        table = document.getElementById("branchesTableBody");
-        let branchList = await gitBranchList( myLocalFolder);
-        generateBranchTable(document, table, branchList); 
+    try{
+        if (state.repos[state.repoNumber] !== undefined) {
+            let myLocalFolder = state.repos[state.repoNumber].localFolder;
+            
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            table = document.getElementById("branchesTableBody");
+            let branchList = await gitBranchList( myLocalFolder);
+            generateBranchTable(document, table, branchList); 
+        }
+    }catch(err){
+        console.error(err);
     }
 }
 async function drawRepoTab(document){
