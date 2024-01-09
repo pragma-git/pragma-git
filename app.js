@@ -5089,6 +5089,11 @@ function getDownloadsDir(){
 // Logging to file
 
 function pragmaLog(message){
+    
+    if ( message == undefined){
+        message = 'undefined';
+    }
+    
     message = message.toString();
     
 
