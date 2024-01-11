@@ -170,6 +170,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             localState.lastSimpleGitFolder = pwd;
             return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
+            //return simpleGitDefault(pwd)
         }
         
 
