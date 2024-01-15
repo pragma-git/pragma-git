@@ -3269,9 +3269,10 @@ function startPragmaAskPass(){
             position: 'center',
             width: 300,
             height: 400,
-            title: title
+            title: title,
+            show: false
         },
-            win=>win.on('loaded', () => {} )
+            win=>win.on('loaded', (cWin) => { cWin.hide();} )
     ); 
     
     //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )

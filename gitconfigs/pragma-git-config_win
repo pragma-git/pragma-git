@@ -6,9 +6,11 @@
 	trustExitCode = true 
        
 [core]
-    #askPass = "C:/Program Files/Pragma-git/pragma-askpass"   # Use the default manager from Windows git instead (since ask pass does not do credentials by itself)
+    askPass = "C:/Program Files/Pragma-git/pragma-askpass"   # Use the default manager from Windows git instead (since ask pass does not do credentials by itself)
     quotepath = false  # Stop UTF-8 characters to be transcribed.  Solves swedish characters etc
     
 
 [credential]
     useHttpPath = true
+    interactive = 0    # Turns of default manager from Windows git
+    

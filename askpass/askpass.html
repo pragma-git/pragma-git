@@ -62,6 +62,8 @@
             ></textarea>
         <br>
         <br>
+        <div id=repoName style="font-size: 0.8em"></div>
+        <br>
         
 
 
@@ -73,6 +75,7 @@
     
     <!--  Init and Functions  --> 
     <script>
+		//nw.Window.get().hide();
          
         var fs = require('fs');
         var os = require('os');
@@ -84,12 +87,16 @@
         const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
         const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
         
-        const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`);
-        document.getElementById('pwdlabel').innerText = ARG1;
+        const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`); // "Username for 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':\n"
+        [type, , url] = ARG1.split(' '); url.substring(1, url.length -3); // 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git'
+		url_parts = url.split('/'); 
+		repoName = url_parts[ url_parts.length - 1].split('.')[0];
+
         
         
         <!-- FIRST DIALOG -->
         if ( ARG1.startsWith('Username') ){
+			nw.Window.get().show();
             document.getElementById('pwdlabel').innerHTML= 'Username / Token name <br>';
             
             <!-- simplify message if known to have ACCESS TOKEN -->
@@ -106,6 +113,8 @@
             <!-- empty password if known to have ACCESS TOKEN in Username dialog-->
             if ( ARG1.includes('github.com') ){
                 document.getElementById('pwd').placeholder='Leave empty for github'
+                ExitMessage( ''); // Empty password 
+				Exit( 0);
             }
         }
 
@@ -173,6 +182,8 @@
        
     <!--  Onload, call javascript file  --> 
     <script>
+		
+		document.getElementById('repoName').innerHTML= '(for repository : "' + repoName + '" )';
 
         window.addEventListener(
             'unload', 
@@ -184,6 +195,7 @@
     </script>
     
     <script>
+		
             
     // Set size to match content
     let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
