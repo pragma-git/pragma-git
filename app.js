@@ -6378,7 +6378,10 @@ function updateWithNewSettings(){
                 
                 // Zoom level
                 
-                    if (win_handle.title == 'Notes'){
+                    if ( (win_handle.title == notes_win.title) || (win_handle.title == merge_win.title) ){
+                    //if ( (win_handle.title == 'Notes') || win_handle.title.startsWith('File') ) {
+                        
+                        console.warn(win_handle);
                         let root = win_handle.window.document.documentElement;
                         root.style.setProperty('--windowScaling', global.state.zoom);
                         root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
