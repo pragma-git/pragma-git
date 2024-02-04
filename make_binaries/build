@@ -67,7 +67,7 @@
 
 
     # MACOS ARM RELEASE (downloaded to "/Users/jan/Downloads/caches-nwjs-builder-phoenix")
-    NWJS_ARM_NAME='nwjs-sdk-v0.75.0-osx-arm64'  # UPDATE NAME HERE  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases)
+    NWJS_ARM_NAME='nwjs-sdk-v0.83.0-osx-arm64'  # UPDATE NAME HERE  (Download from  https://nwjs.io/downloads/)
 
 
 
@@ -503,9 +503,9 @@
     tput sgr0  
      
     # Temporary folders for MacOS builds
-    rm -r ../dist/temp-macos
-    rm -r ../dist/temp-macos-arm64
-    rm -r ../dist/Pragma-git-*
+    rm -rf ../dist/temp-macos
+    rm -rf ../dist/temp-macos-arm64
+    rm -rf ../dist/Pragma-git-*
     
     ls -la ../dist
     
