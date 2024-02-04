@@ -6380,7 +6380,6 @@ function updateWithNewSettings(){
                 
                     if ( (win_handle.title == 'Notes') || win_handle.title.startsWith('File') ) {
                         
-                        console.warn(win_handle);
                         let root = win_handle.window.document.documentElement;
                         root.style.setProperty('--windowScaling', global.state.zoom);
                         root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
