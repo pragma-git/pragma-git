@@ -290,6 +290,7 @@
     
     # Location of arm nwjs.app  
     NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    xattr -c "$NWJS_ARM"
 
     
     # Is this latest release
