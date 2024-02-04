@@ -75,7 +75,6 @@
     
     <!--  Init and Functions  --> 
     <script>
-		//nw.Window.get().hide();
          
         var fs = require('fs');
         var os = require('os');
@@ -89,33 +88,28 @@
         
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`); // "Username for 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':\n"
         [type, , url] = ARG1.split(' '); url.substring(1, url.length -3); // 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git'
-		url_parts = url.split('/'); 
+		url_parts = url.split('/');  // ["'https:", '', 'github.com', 'JanAxelssonTest', "Remote_branch_test_repo.git':\n"]
 		repoName = url_parts[ url_parts.length - 1].split('.')[0];
-
         
         
         <!-- FIRST DIALOG -->
         if ( ARG1.startsWith('Username') ){
 			nw.Window.get().show();
-            document.getElementById('pwdlabel').innerHTML= 'Username / Token name <br>';
+            document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';
             
-            <!-- simplify message if known to have ACCESS TOKEN -->
+            <!-- Github -- gues userName -->
             if ( ARG1.includes('github.com') ){
-                document.getElementById('pwdlabel').innerHTML= 'Access Token  <br>';
+                userName = url_parts[ 3];
+                document.getElementById('pwd').value = userName;
             }
         }
         
         
         <!-- SECOND DIALOG -->
         if ( ARG1.startsWith('Password') ){
-            document.getElementById('pwdlabel').innerHTML = 'Password / Access Token <br>';
-                        
-            <!-- empty password if known to have ACCESS TOKEN in Username dialog-->
-            if ( ARG1.includes('github.com') ){
-                document.getElementById('pwd').placeholder='Leave empty for github'
-                ExitMessage( ''); // Empty password 
-				Exit( 0);
-            }
+			nw.Window.get().show();
+            document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';
+
         }
 
 
