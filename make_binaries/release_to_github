@@ -10,30 +10,17 @@
 # Changes section :
 
 read -r -d '' CHANGES << ---
-* Main -- dialog for commiting when in detached branch. Options to merge immediately to branch, delete, or make temporary branch ( TODO: fix help)
-* Main -- add dialog for unsaved changes on detached HEAD (options to stash or delete)
-* Main -- fix bug where manual push failed when auto-push setting was off
-* Main -- debug of git commands can be enabled manually in settings.json ( debug : true)
-* Main -- error message makes git's suggested git commands to run on click of hyperlink
-* Settings -- dark/light mode, and window scaling, are updated immediately
-* Settings -- edit global author info
-* Settings -- add multiple remotes (can merge from multiple remotes, for instance when forking)
-* Settings -- add link to templates in gitignore editor
-* Notes -- button to go back to earlier versions of personal notes
-* Notes -- theme for input dialogs updated
-* Graph -- fix that info window could not be shown on parent of selected node
-* Graph -- fix positioning of info window (so it does not overlap a parent node)
-* Graph -- info window improved coloring
-* List of modified files --removed apply-button
-* Pragma-Merge viewer -- an "all" button to merge all changes
-* Pragma-Merge viewer -- a "Reload" button to start over
-* Help -- improved Settings-help page (navigation through tabs)
-* Help -- help on dialogs when leaving detached HEAD
-* Default branch on init is now "main"
-* Fixed multiple minor issues
-* Add MIT License
-* Support for native Apple silicon
-* Fix bugs opening first time
+* Update to nwjs 0.83.0
+* Fix credentials store on Windows using pragma-git's askpass 
+* Fix -- frameless window (main window) cannot be moved in nwjs 0.83.0 
+* Merge and Notes windows --  fix correct resize behavior
+* Fix issue #4 (https://github.com/pragma-git/pragma-git/issues/4). Make git config modifications local to pragma-git 
+*  Make .gitignore include specific to pragma-git (so command-line git isn't affected) 
+* Diff-view -- jump to first diff when opened 
+* List modified files : restore link for renamed files 
+* List modified files : Renamed files displayed as renamed 
+* Fix linux terminal-button with repo-paths having spaces 
+* Fix git-ignore editor display
 ---
 
 #
