@@ -14,8 +14,8 @@ var fs = require('fs');
 const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
-const simpleGit = require('simple-git');  // npm install simple-git
 
+const simpleGit = parent.opener.simpleGit;         // Defined in app.js
 const pragmaLog = parent.opener.pragmaLog;         // Defined in app.js
 const simpleGitLog = parent.opener.simpleGitLog;   // Defined in app.js
 
