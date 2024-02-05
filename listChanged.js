@@ -12,7 +12,7 @@ var fs = require('fs');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
-const simpleGit = require('simple-git');  
+const simpleGit = opener.simpleGitLog;
 
 const STARTDIR = process.cwd(); // Folder where this file was started
 
@@ -417,6 +417,49 @@ async function _callback( name, event, event2){
             origFiles = createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }
+        case 'restoreRenameLink': {
+            console.log('restoreRenameLink');
+            console.log(event);
+            
+            files = event;  // Is on formaton {from: 'frompath', to: 'topath'} 
+            file = event.to;
+            try{
+                
+                //// Unstage (may not be needed, but no harm)
+                 //await simpleGit( state.repos[state.repoNumber].localFolder )
+                    //.raw( [  'reset', '--', file ] , onReset); 
+                    //function onReset(err, result) {console.log(result) }
+             
+                // Checkout, to discard changes
+                await simpleGit( state.repos[state.repoNumber].localFolder)
+                    .mv(files.to, files.from, onGitRestoreRenamed );
+                    function onGitRestoreRenamed(err, result){ console.log(result); console.log(err);  };
+
+                
+            }catch(err){
+                console.log('discardLink -- caught error ');
+                console.log(err);
+            }
+                
+    
+            // Git Status
+            let status_data;
+            try{
+                if (localState.mode == 'HISTORY'){
+                    status_data = await opener.gitShowHistorical();  
+                }else{
+                    status_data = await listGitStatus();
+                }
+            }catch(err){
+                console.log("discardLink -- Error " );
+                console.log(err);
+                return
+            }
+            
+
+            origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
+            break;
+        }
         case 'deleteLink': {
             console.log('deleteLink');
             console.log(event);
@@ -609,6 +652,8 @@ function createFileTable(status_data) {
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
+    
+    let renamedStatusData;
 
         
     // Old tbody
@@ -713,6 +758,7 @@ function createFileTable(status_data) {
             
             }
             
+            
             switch (X) {
                 case "R" :
                     label.setAttribute("class","renamed"); // 
@@ -721,7 +767,26 @@ function createFileTable(status_data) {
                     let substrings = file.split(String.fromCharCode(9)); // ["100", "imlook4d/HELP/Abdomen window.txt", "imlook4d/HELP/CT Abdomen window.txt"]
                     
                     if ( substrings.length <= 1){
-                        filetext = file;
+                        
+                        // Figure out "status_data.renamed.from" by matching "file" with "status_data.renamed.to"
+                        renamedStatusData = getRenameInfo( status_data.renamed, file);  // status_data.renamed[i] where "i" is containing the correct file in .to-field
+                        if ( renamedStatusData.to == ''){
+                            filetext = file;
+                        }else{
+                            filetext = renamedStatusData.from + ' -> ' + renamedStatusData.to;
+                        }
+                        
+                        
+                        // Local function -- returns the renamed-struct matching file
+                        function getRenameInfo( renamedArray, file){
+                            for ( let renamedItem of renamedArray){
+                                if ( renamedItem.to === file){
+                                    return renamedItem;
+                                }
+                            }
+                            return {from: '', to: 'Dockerize_defacing/dev/README-dev.txt'}
+                        }
+                        
                     }else{
                         filetext = substrings[1] + ' -> ' + substrings[2];
                     }
@@ -794,7 +859,19 @@ function createFileTable(status_data) {
                         "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
                     discardLink.textContent=" (delete)";
                     cell.appendChild(discardLink);         
-                }                    
+                } 
+                
+                
+                // Make renamed link 
+                if (typeOfChanged == 'renamed' ){  
+                    var discardLink = document.createElement('span');
+                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('onclick',
+                        "selectedFile = {from: '" + renamedStatusData.from + "', to: '" + renamedStatusData.to +  "' };" + 
+                        "document.getElementById('restoreRenameDialog').showModal();" );  // Opens dialog from html-page
+                    discardLink.textContent=" (restore)";
+                    cell.appendChild(discardLink);         
+                }                     
             }
             // Internal functions
 

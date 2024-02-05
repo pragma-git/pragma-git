@@ -1463,44 +1463,59 @@ async function drawGraph( document, splitted, branchHistory, history){
             
             // gitLogRow -  is a full row from log
             
-                // Example row format :
-                // | * S=Removed edge from questionmark buttons T=2021-05-12T14:56:13+02:00 D= H=d02f9251ba8bb00750052398b799c9105f84beda P=c3a3f0a65aba567c525ad1df0e324c028e4c185e N=feature/main_window_zoom
+                // Example row format (all in one row) :
+                // 'S=First running plugin 
+                //  T=2023-11-03T17:59:28+01:00 
+                //  D= 
+                //  H=18083623b1647ad5df8a51829790bdb417885bd1 
+                //  P=b1b7becd31b8445d9a1aea7283f879ea03851292 
+                //  B=TO FIX : Now writes a defaced copy in same folder\nQUEUEPLUGIN=true -> lookup.txt\nPLUGINSCRIPT='/Users/jan/Documents/Projects/Dicom2usb2019-/Dicom2usb/Docker/deface_pluginscript' -> .env-proj1\n 
+                //  N=develop\n'
          
          
                 // Pick row apart from back to start
+                
+                let rest = gitLogRow;  // Remainder of strin to process om next step 
          
                 // Notes : Separate log row from Notes at end
-                let startOfNote = gitLogRow.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
-                let noteInThisRow = gitLogRow.substring(startOfNote + 2) ; // Skip N=  
+                let startOfNote = rest.lastIndexOf('N=');  // From git log pretty format .... H=%H (ends in long hash)
+                let noteInThisRow = rest.substring(startOfNote + 2) ; // Skip N=  
                 if ( (startOfNote !==-1) && ( noteInThisRow.length > 0) ){
-                    noteInThisRow = getLastBranchInNote( gitLogRow.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
+                    noteInThisRow = getLastBranchInNote( rest.substring(startOfNote + 2) ); // Get if Note has multiple historical rows
                 }
+                rest = rest.substring(0, startOfNote + 2) ;
                 
-                // Parents : Separate log row from parents(at end now when Notes removed)
-                let startOfMessageBody = gitLogRow.lastIndexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
-                let messageBodyInThisRow = gitLogRow.substring(startOfMessageBody + 2, startOfNote - 1); // Skip B=
+                // Parents : Separate log row from body (at end now when Notes removed)
+                let startOfMessageBody = rest.lastIndexOf('B=');  // From git log pretty format .... B=%B (ends in Notes)
+                let messageBodyInThisRow = rest.substring(startOfMessageBody + 2, startOfNote - 1); // Skip B=
+                rest = rest.substring(0, startOfMessageBody + 2) ;
                 
-                // Parents : Separate log row from parents(at end now when Notes removed)
-                let startOfParents = gitLogRow.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
-                let parentInThisRow = gitLogRow.substring(startOfParents + 2, startOfMessageBody - 1); // Skip H=
+                // Parents : Separate log row from parents(at end now when Body removed)
+                let startOfParents = rest.lastIndexOf('P=');  // From git log pretty format .... H=%H (ends in long hash)
+                let parentInThisRow = rest.substring(startOfParents + 2, startOfMessageBody - 1); // Skip H=
+                rest = rest.substring(0, startOfParents + 2) ;
                 
                 // Hash : Separate log row from long hash (at end now when Parents removed)
-                let startOfHash = gitLogRow.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
-                let hashInThisRow = gitLogRow.substring(startOfHash + 2, startOfParents - 1); // Skip H=
+                let startOfHash = rest.lastIndexOf('H=');  // From git log pretty format .... H=%H (ends in long hash)
+                let hashInThisRow = rest.substring(startOfHash + 2, startOfParents - 1); // Skip H=
+                rest = rest.substring(0, startOfHash + 2) ;
                 
                 // Decoration : Separate log row from decorate (at end now when hash removed)
-                let startOfDecore = gitLogRow.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
-                let decoration = gitLogRow.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
+                let startOfDecore = rest.lastIndexOf('D=');  // From git log pretty format .... D=%d (ends in decoration)
+                let decoration = rest.substring(startOfDecore + 2, startOfHash - 1); // Skip D=
                 decoration = decoration.replace(/->/g, '&#10142;'); // Make arrow if '->'
+                rest = rest.substring(0, startOfDecore + 2) ;
                  
                 // Date : Separate log row from date (at end now when decorate removed)
-                let startOfDate = gitLogRow.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
-                let date = gitLogRow.substring(startOfDate + 2, startOfDecore -1); // Skip T=
+                let startOfDate = rest.lastIndexOf('T=');  // From git log pretty format .... T=%d (ends in date)
+                let date = rest.substring(startOfDate + 2, startOfDecore -1); // Skip T=
                 //date = date.substring(0,10);
+                rest = rest.substring(0, startOfDate + 2) ;
                   
                 // Message : Separate log row from message (at end now when date removed)
-                let startOfMessage = gitLogRow.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
-                let message = gitLogRow.substring(startOfMessage + 2, startOfDate -1); // Skip S=
+                let startOfMessage = rest.lastIndexOf('S=');  // From git log pretty format .... S=%s (ends in message)
+                let message = rest.substring(startOfMessage + 2, startOfDate -1); // Skip S=
+                rest = rest.substring(0, startOfMessage + 2) ;
 
                                 
                 if (startOfDate == -1){

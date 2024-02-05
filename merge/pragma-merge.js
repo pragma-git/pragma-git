@@ -234,6 +234,8 @@ async function injectIntoJs(document) {
     if (isBinaryFile()){
         dv.edit.refresh();  // Force redraw -- makes binary show scroll bars
     }
+    
+    document.getElementById('down').click()
 
 };
 

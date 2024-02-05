@@ -10,8 +10,8 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 const path = require('path');
 const { execSync } = require('child_process');
 
-let simpleGit = require('simple-git');
-//function simpleGitLog(pwd) {  return simpleGit(pwd).outputHandler( opener.sendGitOutputToFile() ) } // Use as with simpleGit, but this one logs through pragmaLog
+//let simpleGit = require('simple-git');
+let simpleGit = opener.simpleGit; 
 let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
 
@@ -1482,13 +1482,17 @@ function updateRemoteRepos(){ // Displays current data in GUI
 
 // Draw
 async function drawBranchTab(document){
-    if (state.repos[state.repoNumber] !== undefined) {
-        let myLocalFolder = state.repos[state.repoNumber].localFolder;
-        
-        document.getElementById("branchesTableBody").innerHTML = ""; 
-        table = document.getElementById("branchesTableBody");
-        let branchList = await gitBranchList( myLocalFolder);
-        generateBranchTable(document, table, branchList); 
+    try{
+        if (state.repos[state.repoNumber] !== undefined) {
+            let myLocalFolder = state.repos[state.repoNumber].localFolder;
+            
+            document.getElementById("branchesTableBody").innerHTML = ""; 
+            table = document.getElementById("branchesTableBody");
+            let branchList = await gitBranchList( myLocalFolder);
+            generateBranchTable(document, table, branchList); 
+        }
+    }catch(err){
+        console.error(err);
     }
 }
 async function drawRepoTab(document){
@@ -1674,7 +1678,8 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(button);
                        
             // Run test
-            //_callback('setButtonClicked',{id: index + 20000, type: 'no_askpass'}); // this.type='no_askpass';
+            
+            // Note: this place ignores askpass dialog, since multiple dialogs would be opened if more than one row did not have credentials.
             testURL(index + 10000, {type: 'no_askpass', id: index + 20000});
                           
             // Into table cell :  button

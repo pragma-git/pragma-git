@@ -1,5 +1,5 @@
 {
-  "version": "0.9.10",
+  "version": "0.9.11",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
@@ -38,7 +38,7 @@
   },
   "build": {
     "nwFlavor": "sdk",
-    "nwVersion": "v0.75.0",
+    "nwVersion": "v0.83.0",
     "mac": {
       "displayName": "Pragma-git",
       "copyright": "©Jan Axelsson",

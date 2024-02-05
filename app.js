@@ -147,23 +147,33 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
-        
         const simpleGitDefault = require('simple-git');  // npm install simple-git
         
-        // Modify so that simpleGit logs last pwd
-        function simpleGit(pwd){
-            localState.lastSimpleGitFolder = pwd;
-            return simpleGitDefault(pwd)
-        }
-        
-        
 
-    
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
         var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
+        var configFile;  // Path to Pragma-git special version of .gitconfig
+
+    // Modify simpleGit function
+
+        // Modify so that simpleGit:
+        //   1) stores last pwd
+        //   2) includes pragam-git's special include for .gitignore 
+        function simpleGit(pwd){
+            // get pragma-git .gitconfig-include
+            if (configFile === undefined){
+                configFile = configFilePath();
+            }
+            
+            localState.lastSimpleGitFolder = pwd;
+            return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
+            //return simpleGitDefault(pwd)
+        }
+        
+
         
     // Handles to windows
         var main_win;
@@ -684,25 +694,30 @@ async function _callback( name, event){
                 break; // Get out of switch statement
             }
         
-        
         //
-        // Windows and Linux  solution
+        // Common Linux and Windows
         //
-            
-            // Using terminal-tab
-            const terminalTab = require('terminal-tab');
-    
-            const options = {
+			let command;
+			// Using terminal-tab
+	        const terminalTab = require('terminal-tab');
+	        const options = {
               cwd: null,
               env: null,
               encoding: 'utf8'
             }
-    
-            
-            
-            // Linux
-            let command = 'cd "' + folder + '";' + 'clear';
-    
+        
+        //
+        // Linux  solution
+        //
+            if (process.platform === 'linux') { 
+				// Implement workaround so path with spaces works
+	            options.cwd = folder;
+	            command = 'pwd'; // Dummy command
+			}
+        
+        //
+        // Windows solution
+        //    
             
             // Windows  Note : named win32 also for 64-bit
             if (process.platform === 'win32') {  
@@ -3254,9 +3269,10 @@ function startPragmaAskPass(){
             position: 'center',
             width: 300,
             height: 400,
-            title: title
+            title: title,
+            show: false
         },
-            win=>win.on('loaded', () => {} )
+            win=>win.on('loaded', (cWin) => { cWin.hide();} )
     ); 
     
     //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
@@ -3381,7 +3397,8 @@ async function gitDefineBuiltInTools(){
     
     util.rm(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
     util.rm(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
-    
+}
+function configFilePath(){    
     
     // Find config file
     let configfile = "";
@@ -3407,31 +3424,9 @@ async function gitDefineBuiltInTools(){
       }
     }
     console.log('Config file = ' + configfile);
+    pragmaLog('Config file = ' + configfile);
       
-    // Git command
-    let regex = '.*pragma-git.*'
-    command = [  
-        'config',  
-        '--global',
-        '--replace-all',
-        'include.path',
-        configfile,
-        regex
-    ];  
-      
-    // Set in global git .config file
-    try{
-        await simpleGitLog(  ).raw( command , onConfig);
-    }catch(err){
-        console.log('Failed setting internal merge tool');
-        console.log(err);
-    }  
-    function onConfig(err, result) { 
-        //console.log(result); console.log(err); 
-        
-    };
-
-    
+    return configfile;
 }
 async function gitStatus(){
     // Determine if changed files (from git status)
@@ -5096,6 +5091,11 @@ function getDownloadsDir(){
 // Logging to file
 
 function pragmaLog(message){
+    
+    if ( message == undefined){
+        message = 'undefined';
+    }
+    
     message = message.toString();
     
 
@@ -6378,7 +6378,8 @@ function updateWithNewSettings(){
                 
                 // Zoom level
                 
-                    if (win_handle.title == 'Notes'){
+                    if ( (win_handle.title == 'Notes') || win_handle.title.startsWith('File') ) {
+                        
                         let root = win_handle.window.document.documentElement;
                         root.style.setProperty('--windowScaling', global.state.zoom);
                         root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
@@ -6450,7 +6451,29 @@ window.onload = async function() {
   
   var win = nw.Window.get();
   main_win = win;
+  
+  // Workaround to move frameless windows (see https://github.com/nwjs/nw.js/issues/6462)
+  var nwWin = nw.Window.get();
+  
+  var isDragging = false;
+  var dragOrigin = {x:0, y:0};
+  
+  document.onmousedown = (e) => {
+	  isDragging = true;
+	  dragOrigin.x = e.x;
+	  dragOrigin.y = e.y;
+  }
+  
+  document.mouseleave = (_) => isDragging = false;
+  document.onmouseup = (_) => isDragging = false;
+  
+  document.onmousemove = (e) => {
+	  if (isDragging) {
+	  nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
+	  }
+  }
 
+  // Initialize
   
   console.log('PATH= ' + process.env.PATH);
   defaultPath = process.env.PATH;

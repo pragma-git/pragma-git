@@ -67,7 +67,7 @@
 
 
     # MACOS ARM RELEASE (downloaded to "/Users/jan/Downloads/caches-nwjs-builder-phoenix")
-    NWJS_ARM_NAME='nwjs-sdk-v0.75.0-osx-arm64'  # UPDATE NAME HERE  (downloaded from  https://github.com/corwin-of-amber/nw.js/releases)
+    NWJS_ARM_NAME='nwjs-sdk-v0.83.0-osx-arm64'  # UPDATE NAME HERE  (Download from  https://nwjs.io/downloads/)
 
 
 
@@ -290,16 +290,7 @@
     
     # Location of arm nwjs.app  
     NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
-
-    
-    # Is this latest release
-    lastMacArmRelease=$( curl --silent -L \
-      -H "Accept: application/vnd.github+json" \
-      -H "X-GitHub-Api-Version: 2022-11-28" \
-      https://api.github.com/repos/corwin-of-amber/nw.js/releases \
-      | grep osx-arm64.zip | grep 'sdk-v' | grep name | cut -d\" -f4 | head -1 )  # nwjs-sdk-v0.75.0-osx-arm64.zip 
-    
-    IS_LATEST_MAC_ARM_RELEASE=$( [ "$lastMacArmRelease" = "$NWJS_ARM_NAME.zip" ]; echo $? )
+    xattr -c "$NWJS_ARM"
 
 
     # Build apple silicon .app in temporary folder (pick stuff from original x86 app)
@@ -503,9 +494,9 @@
     tput sgr0  
      
     # Temporary folders for MacOS builds
-    rm -r ../dist/temp-macos
-    rm -r ../dist/temp-macos-arm64
-    rm -r ../dist/Pragma-git-*
+    rm -rf ../dist/temp-macos
+    rm -rf ../dist/temp-macos-arm64
+    rm -rf ../dist/Pragma-git-*
     
     ls -la ../dist
     
@@ -530,14 +521,6 @@
     echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
     echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
     echo ' '
-    
-    if [ $IS_LATEST_MAC_ARM_RELEASE -eq 1 ]; then
-        echo 'Info : '
-        echo ' '
-        tput setaf 5 # Magenta
-        echo "MacOS ARM -- Not latest version (ctrl-click https://github.com/corwin-of-amber/nw.js/releases/latest to download)"
-        tput sgr0 
-        echo ' '
-    fi
+
     
     read -n 1 -s -r -p "DONE : Press any key to continue" && tput setaf $COLOR; echo ' '
