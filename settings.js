@@ -10,7 +10,6 @@ const pathsep = require('path').sep;  // Os-dependent path separator
 const path = require('path');
 const { execSync } = require('child_process');
 
-//let simpleGit = require('simple-git');
 let simpleGit = opener.simpleGit; 
 let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
