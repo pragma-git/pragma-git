@@ -3340,26 +3340,20 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
 
 async function gitIsInstalled(){
     var isInstalled = false;
-    var resultMessage = "";
-    try{
-        await simpleGitLog().raw([ 'version'], test );
-        function test(err, result){ 
-            console.log(result); 
-            resultMessage = result;
-            
-            if (err == undefined){
-                isInstalled = true;
-                localState.gitVersion = result
-            }else{
-                displayLongAlert('Git error', err, 'error')
-                throw 'error testing git version'
-            }
-        }; 
-    }catch(err){
-        // Bail out
-        console.log(err); 
-        return isInstalled;
-    }
+    
+    await simpleGitLog().raw([ 'version'], test );
+    
+    function test(err, result){ 
+        console.log(result); 
+        resultMessage = result;
+        
+        if (err == undefined){
+            isInstalled = true;
+            localState.gitVersion = result
+        }
+        
+    }; 
+
 
     // Alert dialog if not installed
     if ( !isInstalled){
