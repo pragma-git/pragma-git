@@ -3341,7 +3341,13 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
 async function gitIsInstalled(){
     var isInstalled = false;
     
-    await simpleGitLog().raw([ 'version'], test );
+    try{
+		await simpleGitLog().raw([ 'version'], test );
+	}catch(err){
+		state.git = isInstalled;
+		showGitNotInstalledDialog()
+		return isInstalled;
+	}
     
     function test(err, result){ 
         console.log(result); 
@@ -3352,17 +3358,21 @@ async function gitIsInstalled(){
             localState.gitVersion = result
         }
         
-    }; 
+    };
+    
+    function showGitNotInstalledDialog(){
+		pragmaLog('show modal dialog = gitNotInstalledAlert' );
+        document.getElementById('gitNotInstalledAlert').showModal();		
+	} 
 
+    state.git = isInstalled;
 
     // Alert dialog if not installed
     if ( !isInstalled){
-        pragmaLog('show modal dialog = gitNotInstalledAlert' );
-        document.getElementById('gitNotInstalledAlert').showModal();
-        return
+        showGitNotInstalledDialog()
+        return isInstalled
     }
     
-    state.git = isInstalled;
     return isInstalled;
 
 }
@@ -6486,10 +6496,7 @@ window.onload = async function() {
   
   _setMode('UNKNOWN');
   _update();
-  
-  // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
-  setTimeout(gitIsInstalled, 2000);
-  
+
   win.setAlwaysOnTop( state.alwaysOnTop );
 
   
@@ -6498,21 +6505,8 @@ window.onload = async function() {
   pragmaLog('Showing main app window');
 
   win.show();
-  
-  // New Release available
-    let releaseData = 'could not determine';
-    try{
-        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
-        localState.LATEST_RELEASE = await releaseData.tag_name;
-        console.log('Latest release = ' + localState.LATEST_RELEASE );
-        
-        localState.currentVersion = await require('./package.json').version;
-        if ( localState.LATEST_RELEASE > localState.currentVersion){
-           downloadNewVersionDialog(); // Ask about downloading if new version released
-        }
-    }catch(err){
-        console.error('Could not check Github for latest release');
-    } 
+
+
        
    
   // Map of stashes        
@@ -6527,9 +6521,30 @@ window.onload = async function() {
   // Mac Menu  
   initializeWindowMenu();
   
-  // Dialog if author's name is unknown
-  showUserDialog(true)
+  // Throws an alert dialog if git missing
+  await gitIsInstalled() // sets state.git = true / false
   
+    
+  // New Release available
+  if (state.git == true){
+    let releaseData = 'could not determine';
+    try{
+        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
+        localState.LATEST_RELEASE = await releaseData.tag_name;
+        console.log('Latest release = ' + localState.LATEST_RELEASE );
+        
+        localState.currentVersion = await require('./package.json').version;
+        if ( localState.LATEST_RELEASE > localState.currentVersion){
+           downloadNewVersionDialog(); // Ask about downloading if new version released
+        }
+    }catch(err){
+        console.error('Could not check Github for latest release');
+    } 
+  }
+  
+  // Dialog if author's name is unknown
+  showUserDialog(true)  // test = true, will show only if state.git == true
+ 
   pragmaLog('Done starting app');
   pragmaLog('');
 
