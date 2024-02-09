@@ -38,7 +38,7 @@
   },
   "build": {
     "nwFlavor": "sdk",
-    "nwVersion": "v0.83.0",
+    "nwVersion": "v0.64.1",
     "mac": {
       "displayName": "Pragma-git",
       "copyright": "©Jan Axelsson",
