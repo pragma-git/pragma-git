@@ -6462,7 +6462,8 @@ window.onload = async function() {
   var isDragging = false;
   var dragOrigin = {x:0, y:0};
   
-  document.onmousedown = (e) => {
+  document.getElementById('top-titlebar').onmousedown = (e) => {
+  //document.onmousedown = (e) => {
 	  isDragging = true;
 	  dragOrigin.x = e.x;
 	  dragOrigin.y = e.y;
@@ -6471,9 +6472,10 @@ window.onload = async function() {
   document.mouseleave = (_) => isDragging = false;
   document.onmouseup = (_) => isDragging = false;
   
+  //document.getElementById('top-titlebar').onmousemove = (e) => {
   document.onmousemove = (e) => {
 	  if (isDragging) {
-	  nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
+        nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
 	  }
   }
 
