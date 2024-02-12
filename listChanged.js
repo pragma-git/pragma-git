@@ -541,7 +541,11 @@ async function _callback( name, event, event2){
                     console.log(err);
                 }
                 
-    
+                
+             // This used to be a button in listChanged.html, no apply selected files 
+            await _callback('applySelectedFilesButton',this);  
+            
+               
             // Git Status
                 try{
                     if (localState.mode == 'HISTORY'){
@@ -554,6 +558,9 @@ async function _callback( name, event, event2){
                     console.log(err);
                     return
                 }
+
+
+            await injectIntoJs(document)
 
             // Finish
                 origFiles = createFileTable(status_data); // Redraw, and update origFiles;
