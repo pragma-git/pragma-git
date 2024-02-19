@@ -2991,6 +2991,13 @@ async function _setMode( inputModeName){
     }catch(err){        
         console.log(err);
     }
+    
+    // Hide amend links (below they will be visibible for certain cases)
+    document.getElementById('amend_commit_link').style.visibility='hidden';    
+    document.getElementById('edit_commit_message_link').style.visibility='hidden';
+           
+   // Amend mode
+    document.getElementById('amend_commit_checkbox').checked = false    
 
     
     switch(inputModeName) {  
@@ -3095,9 +3102,14 @@ async function _setMode( inputModeName){
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
             if (HEAD_title == undefined){
-                textOutput.placeholder = "No modified files"  ;
+                textOutput.placeholder = "No modified files" ;
+                
+                // Show git amend edit link in message-area
+                document.getElementById('amend_commit_link').style.visibility='hidden';    
+                document.getElementById('edit_commit_message_link').style.visibility='visible';
             }
             
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
 
                 textOutput.value = "";
@@ -3113,7 +3125,13 @@ async function _setMode( inputModeName){
                 //return
             };
                 
-            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            if (newModeName ==  'NO_FILES_TO_COMMIT') { 
+                // Show git amend edit link in message-area
+                document.getElementById('amend_commit_link').style.visibility='hidden';    
+                document.getElementById('edit_commit_message_link').style.visibility='visible';
+                
+                return
+            };
             
             
             setButtonText();// Set button
@@ -3133,12 +3151,22 @@ async function _setMode( inputModeName){
                 "- is MODIFIED" + os.EOL + 
                 "- type description here, and press Store";   
                 
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
                  textOutput.placeholder = 
                     'Detached HEAD : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
                     "- is MODIFIED!  You have two options : " + os.EOL + 
                     "- 1) click modified-files counters, and 'Restore All' (avoid problems)" + os.EOL + 
                     "- 2) type description here, and press Store (solve problems later)";                 
+            }else{
+                // Show git amend in message-area
+                document.getElementById('amend_commit_link').style.visibility='visible';    
+                document.getElementById('edit_commit_message_link').style.visibility='hidden';
+                
+                // Enable Store button if clicked to amend
+                if ( document.getElementById('amend_commit_checkbox').checked == true){
+                    document.getElementById('store-button').disabled = false;  
+                }
             }
                 
 
@@ -3937,8 +3965,17 @@ async function gitAddCommitAndPush( message){
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     try{
-        await simpleGitLog( state.repos[state.repoNumber].localFolder )
-        .commit( message, onCommit);    
+        
+        // Amend to latest commit
+        if (document.getElementById('amend_commit_checkbox').checked == true){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+        }
+        
+        // Normal commit 
+        if (document.getElementById('amend_commit_checkbox').checked == false){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
+        }       
+         
         function onCommit(err, result) {console.log(result);  };
     }catch(err){
         console.log('Error in gitAddCommitAndPush()');
@@ -4183,10 +4220,20 @@ async function gitPush(){
             }
             
             async function push(){
+                // This function knows from GUI if 'Normal push', or 'forced push'
+                
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
                 try{
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    // Force push, or normal push
+                    if (  document.getElementById('amend_commit_checkbox').checked == true ){
+                        // Force push
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin',['--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }else{
+                        //Normal push
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }
+                    
                 }catch(err){
                     displayLongAlert('Push Error' + attempt , err, 'error');
                 }

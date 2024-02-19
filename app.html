@@ -252,8 +252,52 @@
                 src="images/find_black.png">
         </div>
 
-        <div style="grid-row: 2 ; grid-column: 2;"> <!-- Middle -->   
-            <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" ></textarea>
+        
+        <div style="grid-row: 2 ; grid-column: 2; position:relative">     <!-- Middle -->  
+
+            
+             <!-- Message Textarea -->
+             
+            <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" 
+            placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;" readonly=""></textarea>  
+
+
+
+
+            <!-- Textarea pop-up for amend  -->  
+            
+            <div id="amend_commit_link" class="tooltip-top-right ">
+                <div>
+                    <input type="checkbox" id="amend_commit_checkbox" data-tooltip="Amend to last commit" /
+                    onClick="if (  document.getElementById('amend_commit_checkbox').checked == true ) {
+                            document.getElementById('amendDialog').showModal();         // Only show when click to check the box
+                        }else{
+                             document.getElementById('store-button').disabled = true;  // Disable Store button
+                        }"
+                    >
+                    <label for="amend_commit_checkbox"  style="display: inline; vertical-align: middle">Store in same </label>
+                </div>
+            </div>  
+
+
+            <!-- Textarea pop-up for  edit -->  
+
+            <div  id="edit_commit_message_link"  class="tooltip-top-right">
+
+
+                    <div id="edit_commit_message-text"  data-tooltip="Edit message"
+                        onclick="document.getElementById('edit_commit_message-text').setAttribute('style','color: var(--text)');
+                                 console.warn('clicked edit')"  >
+                        
+                        <span id="edit_link_text" class="link-text" 
+                                onmouseover="document.getElementById('edit_link_text').setAttribute('style','color: var(--dim-text)' );" 
+                                onmouseout="document.getElementById('edit_link_text').setAttribute('style','color: var(--text)' );" >
+                            Edit message
+                        </span>
+                    </div> 
+
+            </div>  
+
         </div>
         
         <div style="grid-row: 2; grid-column: 3; padding: 0px"> <!-- Right -->   
@@ -520,6 +564,36 @@
     </dialog>  
  
  
+    <!--  Amend alert dialog  --> 
+
+    <dialog id="amendDialog"  class="warning">  
+        <b><div id='amendAlertTitle'></div>Warning! -- this will modify remote</b><br> 
+            <br>
+        <div >
+            <span id='amendAlertMessage'>
+                The commit history will change for other developers, and may cause confusion.<br>
+                This is fine if you are a single developer
+            </span> 
+            
+            <br>
+            
+            <button id="no", style="float:right"
+                onclick="document.getElementById('amendDialog').close(); 
+                         document.getElementById('store-button').disabled = false;  // Enable Store button"
+            >
+                OK
+            </button>  
+            
+            <button id="no", style="float:right; margin-right: 5;"
+                onclick="document.getElementById('amendDialog').close(); document.getElementById('amend_commit_checkbox').checked = false">
+                Cancel
+            </button>  
+        
+        </div> 
+    </dialog>  
+    
+
+       
  
     <!--Download new version -->   
   
