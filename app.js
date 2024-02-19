@@ -4228,7 +4228,7 @@ async function gitPush(){
                     // Force push, or normal push
                     if (  document.getElementById('amend_commit_checkbox').checked == true ){
                         // Force push
-                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin',['--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
                     }else{
                         //Normal push
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
