@@ -87,7 +87,7 @@ div#inner-content {
   margin-left: -2px;
 }
 
-#edit_commit_message_link, #amend_commit_link{
+#edit_commit_message_link, #amend_commit_div{
   position: absolute;
   bottom: 5;
   right: 5;
@@ -127,12 +127,12 @@ div#inner-content {
   margin-right: 6px;
 }
 
-
 .message{
   width: 100%;
   height: 100%;
   color: var(--message-color);
 }
+
 .message::placeholder {
   color: var(--message-placeholder);
 }

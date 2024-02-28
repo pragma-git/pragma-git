@@ -2992,9 +2992,8 @@ async function _setMode( inputModeName){
         console.log(err);
     }
     
-    // Hide amend links (below they will be visibible for certain cases)
-    document.getElementById('amend_commit_link').style.visibility='hidden';    
-    document.getElementById('edit_commit_message_link').style.visibility='hidden';
+    // Hide amend checkobx (below they will be visibible for certain cases)
+    document.getElementById('amend_commit_div').style.visibility='hidden';    
            
    // Amend mode
     document.getElementById('amend_commit_checkbox').checked = false    
@@ -3101,12 +3100,12 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            textOutput.readOnly = false;
             if (HEAD_title == undefined){
                 textOutput.placeholder = "No modified files" ;
                 
-                // Show git amend edit link in message-area
-                document.getElementById('amend_commit_link').style.visibility='hidden';    
-                document.getElementById('edit_commit_message_link').style.visibility='visible';
+                // Hide amend checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
             }
             
             // Detached HEAD
@@ -3126,10 +3125,9 @@ async function _setMode( inputModeName){
             };
                 
             if (newModeName ==  'NO_FILES_TO_COMMIT') { 
-                // Show git amend edit link in message-area
-                document.getElementById('amend_commit_link').style.visibility='hidden';    
-                document.getElementById('edit_commit_message_link').style.visibility='visible';
-                
+                // Hide amend  checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
+                setButtonText()
                 return
             };
             
@@ -3137,7 +3135,7 @@ async function _setMode( inputModeName){
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
-            textOutput.readOnly = true;
+            textOutput.readOnly = false;
             writeTextOutput(textOutput);
             break;
         }
@@ -3145,11 +3143,11 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            
+
             textOutput.placeholder = 
-                'Commit : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
-                "- is MODIFIED" + os.EOL + 
-                "- type description here, and press Store";   
+                "Type description here ... and press Store" + os.EOL + os.EOL + 
+                'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
+                "- is MODIFIED";  
                 
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
@@ -3159,9 +3157,8 @@ async function _setMode( inputModeName){
                     "- 1) click modified-files counters, and 'Restore All' (avoid problems)" + os.EOL + 
                     "- 2) type description here, and press Store (solve problems later)";                 
             }else{
-                // Show git amend in message-area
-                document.getElementById('amend_commit_link').style.visibility='visible';    
-                document.getElementById('edit_commit_message_link').style.visibility='hidden';
+                // Show git amend checkbox in message-area
+                document.getElementById('amend_commit_div').style.visibility='visible';    
                 
                 // Enable Store button if clicked to amend
                 if ( document.getElementById('amend_commit_checkbox').checked == true){
@@ -3970,9 +3967,14 @@ async function gitAddCommitAndPush( message){
         if (document.getElementById('amend_commit_checkbox').checked == true){
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
         }
+
+        // Change message of last commit
+        if  ( ( getMode() == 'NO_FILES_TO_COMMIT') || (document.getElementById('amend_commit_checkbox').checked == false) ){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
+        }
         
         // Normal commit 
-        if (document.getElementById('amend_commit_checkbox').checked == false){
+        if ( ( getMode() !== 'NO_FILES_TO_COMMIT') || (document.getElementById('amend_commit_checkbox').checked == false) ) {
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
         }       
          
@@ -4000,6 +4002,7 @@ async function gitAddCommitAndPush( message){
     localState.unstaged = [];
     textOutput.value = '';
     writeTextOutput( textOutput);
+    _setMode('UNKNOWN');  
     _setMode('UNKNOWN');  
     await _update()
 }
@@ -5858,6 +5861,14 @@ function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
     document.getElementById('message').placeholder = textOutputStruct.placeholder;  
     document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    
+    // Set message color for edit or for history
+    if (textOutputStruct.readOnly){
+        document.getElementById('message').style.color='var(--message-color)';  // History
+    }else{
+        document.getElementById('message').style.color='var(--text)'; // Edit
+    }
+    
     textOutput = textOutputStruct;
 }
 async function writeTimedTextOutput(textOutputStruct, time){
