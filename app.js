@@ -3145,11 +3145,11 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            
+
             textOutput.placeholder = 
-                'Commit : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
-                "- is MODIFIED" + os.EOL + 
-                "- type description here, and press Store";   
+                "Type description here ... and press Store" + os.EOL + os.EOL + 
+                'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
+                "- is MODIFIED";  
                 
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
@@ -5858,6 +5858,14 @@ function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
     document.getElementById('message').placeholder = textOutputStruct.placeholder;  
     document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    
+    // Set message color for edit or for history
+    if (textOutputStruct.readOnly){
+        document.getElementById('message').style.color='var(--message-color)';  // History
+    }else{
+        document.getElementById('message').style.color='var(--text)'; // Edit
+    }
+    
     textOutput = textOutputStruct;
 }
 async function writeTimedTextOutput(textOutputStruct, time){
