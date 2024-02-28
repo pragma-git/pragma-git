@@ -3127,11 +3127,11 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            
+
             textOutput.placeholder = 
-                'Commit : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
-                "- is MODIFIED" + os.EOL + 
-                "- type description here, and press Store";   
+                "Type description here ... and press Store" + os.EOL + os.EOL + 
+                'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
+                "- is MODIFIED";  
                 
             if (HEAD_refs ==  'HEAD' ){
                  textOutput.placeholder = 
