@@ -6434,31 +6434,7 @@ window.onload = async function() {
   
   var win = nw.Window.get();
   main_win = win;
-  
-  // Workaround to move frameless windows (see https://github.com/nwjs/nw.js/issues/6462)
-  var nwWin = nw.Window.get();
-  
-  var isDragging = false;
-  var dragOrigin = {x:0, y:0};
-  
-  document.getElementById('top-titlebar').onmousedown = (e) => {
-  //document.onmousedown = (e) => {
-	  isDragging = true;
-	  dragOrigin.x = e.x;
-	  dragOrigin.y = e.y;
-  }
-  
-  document.mouseleave = (_) => isDragging = false;
-  document.onmouseup = (_) => isDragging = false;
-  
-  //document.getElementById('top-titlebar').onmousemove = (e) => {
-  document.onmousemove = (e) => {
-	  if (isDragging) {
-        nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
-	  }
-  }
 
-  // Initialize
   
   console.log('PATH= ' + process.env.PATH);
   defaultPath = process.env.PATH;
