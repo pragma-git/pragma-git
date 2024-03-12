@@ -2761,8 +2761,13 @@ async function _update2(){
                     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
                     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 }else{
-                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
-                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    if (currentBranch == 'HEAD'){
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
+                    }else{
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    }
                 }
              
             }else{
