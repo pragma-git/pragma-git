@@ -3986,7 +3986,7 @@ async function gitRememberBranch( hash, name){
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append' , '–allow-empty', '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err);  };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
