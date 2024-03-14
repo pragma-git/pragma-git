@@ -5307,11 +5307,11 @@ function displayLongAlert(title, message, type){
             gui.Window.open(
                 'externalDialog.html#/new_page', 
                 {   position: 'center',
-                    frame: true,
+                    frame: false,
                     show: false
                 },
                 function(cWindows){ 
-                    
+                     
                     cWindows.on('loaded', 
                         function(){
                             
