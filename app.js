@@ -3963,18 +3963,18 @@ async function gitAddCommitAndPush( message){
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     try{
         
-        // Amend to latest commit
+        // Amend to latest commit  (only occurs when checked checkbox')
         if (document.getElementById('amend_commit_checkbox').checked == true){
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
         }
 
-        // Change message of last commit
-        if  ( ( getMode() == 'NO_FILES_TO_COMMIT') || (document.getElementById('amend_commit_checkbox').checked == false) ){
+        // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
+        if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
         }
         
         // Normal commit 
-        if ( ( getMode() !== 'NO_FILES_TO_COMMIT') || (document.getElementById('amend_commit_checkbox').checked == false) ) {
+        if ( getMode() !== 'NO_FILES_TO_COMMIT'  ) {
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
         }       
          
