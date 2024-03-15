@@ -681,6 +681,27 @@
                                 nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
                                 win=>win.on('loaded', () => {
                                     win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                    
+                                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                                win.on('closed', function () {
+                                    win = null;
+                                  });
+                                
+                                  // Listen to main window's close event
+                                  nw.Window.get().on('close', function () {
+                                    // Hide the window to give user the feeling of closing immediately
+                                    this.hide();
+                                
+                                    // If the new window is still open then close it.
+                                    if (win !== null) {
+                                      win.close(true);
+                                    }
+                                
+                                    // After closing the new window, close the main window.
+                                    this.close(true);
+                                  });
+                                    
+                                    
                                 } ));
                                 ">
                                 <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
@@ -699,6 +720,27 @@
                              <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
                             win=>win.on('loaded', () => {
                                 win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                
+                                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                                win.on('closed', function () {
+                                    win = null;
+                                  });
+                                
+                                  // Listen to main window's close event
+                                  nw.Window.get().on('close', function () {
+                                    // Hide the window to give user the feeling of closing immediately
+                                    this.hide();
+                                
+                                    // If the new window is still open then close it.
+                                    if (win !== null) {
+                                      win.close(true);
+                                    }
+                                
+                                    // After closing the new window, close the main window.
+                                    this.close(true);
+                                  });
+                                
+                                
                             }  )) ; 
                             ">  Edit .gitignore</button> 
                          </p>
@@ -930,7 +972,6 @@
         );
         window.addEventListener('unload', (event) => {
             console.log('settings.html :DOM fully unloaded -- maybe window closed ');
-            opener.closeAllChildWindows( window);
             closeWindow(window);
             }
         );

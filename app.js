@@ -2761,8 +2761,13 @@ async function _update2(){
                     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
                     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 }else{
-                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
-                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    if (currentBranch == 'HEAD'){
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
+                    }else{
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    }
                 }
              
             }else{
@@ -4021,7 +4026,7 @@ async function gitRememberBranch( hash, name){
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append' , '–allow-empty', '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err);  };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
@@ -5036,36 +5041,7 @@ function selectInGraph(hash){
 function getSettingsDir(){
     return settingsDir;
 }
-function closeAllChildWindows( inputWin){
-    // This function loops all open windows.
-    // Window that have inputWin as parent = child window, and are closed.
-    // Windows are identified by their title
-    
-    let inputTitle = inputWin.window.document.title;
-    
-    // Loop all windows and close if child to parent
-    gui.Window.getAll( 
-    
-        function allWindowsCallback( windows) {
-            
-            // Loop all windows
-            for (let i = 0; i < windows.length; i++) {
-                
-                let win_handle =  windows[i];
-                try{   
-                    let parentTitle = win_handle.window.opener.document.title;
-                    // Close if child window (its parent has same title as inputWin)
-                    if (parentTitle == inputTitle){
-                        win_handle.close();
-                    }
-                }catch(err){
-                }
-            }    
-        } 
-    );    
-    
-    
-}
+
 function setButtonText(){  // Store or Commit, depending on setting for autopush
     
     // Do nothing if no repos are defined
@@ -5381,11 +5357,11 @@ function displayLongAlert(title, message, type){
             gui.Window.open(
                 'externalDialog.html#/new_page', 
                 {   position: 'center',
-                    frame: true,
+                    frame: false,
                     show: false
                 },
                 function(cWindows){ 
-                    
+                     
                     cWindows.on('loaded', 
                         function(){
                             
@@ -6513,31 +6489,7 @@ window.onload = async function() {
   
   var win = nw.Window.get();
   main_win = win;
-  
-  // Workaround to move frameless windows (see https://github.com/nwjs/nw.js/issues/6462)
-  var nwWin = nw.Window.get();
-  
-  var isDragging = false;
-  var dragOrigin = {x:0, y:0};
-  
-  document.getElementById('top-titlebar').onmousedown = (e) => {
-  //document.onmousedown = (e) => {
-	  isDragging = true;
-	  dragOrigin.x = e.x;
-	  dragOrigin.y = e.y;
-  }
-  
-  document.mouseleave = (_) => isDragging = false;
-  document.onmouseup = (_) => isDragging = false;
-  
-  //document.getElementById('top-titlebar').onmousemove = (e) => {
-  document.onmousemove = (e) => {
-	  if (isDragging) {
-        nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
-	  }
-  }
 
-  // Initialize
   
   console.log('PATH= ' + process.env.PATH);
   defaultPath = process.env.PATH;

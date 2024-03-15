@@ -146,12 +146,19 @@
     
     <!--  On Load event-->        
     window.addEventListener( 'DOMContentLoaded',  async (event) => { 
+        
+            // Always on top
+            win = gui.Window.get();
+            win.setAlwaysOnTop( state.alwaysOnTop );
+        
             console.log('Create_github_repository.html :DOM fully loaded and parsed');
             
             // Import modules  
+            simpleGit = require('simple-git');  // I am not sure why it did not work to use opener.simpleGit
+            
             const os = require('os');
             const util = require('./util_module.js'); // Pragma-git common functions
-            const simpleGit = require('simple-git');
+            
             const fs = require('fs');
             const pathsep = require('path').sep;  // Os-dependent path separator   
             
