@@ -4263,8 +4263,11 @@ async function gitPush(){
                 // Push commits and tags, and set upstream
                 try{
                     // Force push, or normal push
-                    if (  document.getElementById('amend_commit_checkbox').checked == true ){
-                        // Force push
+                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
+                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
+                    
+                    if (forcePush){
+                        // Force push because amend files to same commit, or because change message text
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
                     }else{
                         //Normal push
