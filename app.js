@@ -3982,26 +3982,30 @@ async function gitAddCommitAndPush( message){
         // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
         if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
 			
-
-			buttonPressed = await waitForModal('amendDialog');
-			if ( buttonPressed == 'Cancel'){
-				_setMode('NO_FILES_TO_COMMIT'); 
-				await _update()   
-				_setMode('UNKNOWN'); 
-				await _update() 
-				messageKeyUpEvent()
-				return
-			}
-			
-			async function waitForModal(elementName){
-				let dialog = document.getElementById(elementName);
-				dialog.showModal(); 
-				while (dialog.open){
-					await waitTime( 1000);
+			// Show dialog if remote is defined
+			let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+			if ( remoteDefined ){
+				buttonPressed = await waitForModal('amendDialog');
+				if ( buttonPressed == 'Cancel'){
+					_setMode('NO_FILES_TO_COMMIT'); 
+					await _update()   
+					_setMode('UNKNOWN'); 
+					await _update() 
+					messageKeyUpEvent()
+					return
 				}
-				return dialog.returnValue;		
+				
+				async function waitForModal(elementName){
+					let dialog = document.getElementById(elementName);
+					dialog.showModal(); 
+					while (dialog.open){
+						await waitTime( 1000);
+					}
+					return dialog.returnValue;		
+				}
 			}
 			
+			// Perform change-message
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
         }
         
@@ -4263,8 +4267,14 @@ async function gitPush(){
                 // Push commits and tags, and set upstream
                 try{
                     // Force push, or normal push
-                    if (  document.getElementById('amend_commit_checkbox').checked == true ){
-                        // Force push
+                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
+                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
+                    if (localState.settings){  // Do not force-push if settings window is opened
+						forcePush = false;
+					}
+                    
+                    if (forcePush){
+                        // Force push because amend files to same commit, or because change message text
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
                     }else{
                         //Normal push
@@ -5463,6 +5473,7 @@ function displayLongAlert(title, message, type){
                                     }catch(err){
                                         document.getElementById('onRunExitStatus').style.color='var(--red-text)'
                                         document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                        opener.displayLongAlert('Failed command', err, 'error')
                                     }
                                     "
                                 >[run]</a>
