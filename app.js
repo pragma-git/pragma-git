@@ -4269,6 +4269,9 @@ async function gitPush(){
                     // Force push, or normal push
                     let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
                     forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
+                    if (localState.settings){  // Do not force-push if settings window is opened
+						forcePush = false;
+					}
                     
                     if (forcePush){
                         // Force push because amend files to same commit, or because change message text
@@ -5470,6 +5473,7 @@ function displayLongAlert(title, message, type){
                                     }catch(err){
                                         document.getElementById('onRunExitStatus').style.color='var(--red-text)'
                                         document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                        opener.displayLongAlert('Failed command', err, 'error')
                                     }
                                     "
                                 >[run]</a>
