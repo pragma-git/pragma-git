@@ -3982,26 +3982,30 @@ async function gitAddCommitAndPush( message){
         // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
         if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
 			
-
-			buttonPressed = await waitForModal('amendDialog');
-			if ( buttonPressed == 'Cancel'){
-				_setMode('NO_FILES_TO_COMMIT'); 
-				await _update()   
-				_setMode('UNKNOWN'); 
-				await _update() 
-				messageKeyUpEvent()
-				return
-			}
-			
-			async function waitForModal(elementName){
-				let dialog = document.getElementById(elementName);
-				dialog.showModal(); 
-				while (dialog.open){
-					await waitTime( 1000);
+			// Show dialog if remote is defined
+			let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+			if ( remoteDefined ){
+				buttonPressed = await waitForModal('amendDialog');
+				if ( buttonPressed == 'Cancel'){
+					_setMode('NO_FILES_TO_COMMIT'); 
+					await _update()   
+					_setMode('UNKNOWN'); 
+					await _update() 
+					messageKeyUpEvent()
+					return
 				}
-				return dialog.returnValue;		
+				
+				async function waitForModal(elementName){
+					let dialog = document.getElementById(elementName);
+					dialog.showModal(); 
+					while (dialog.open){
+						await waitTime( 1000);
+					}
+					return dialog.returnValue;		
+				}
 			}
 			
+			// Perform change-message
             await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
         }
         
