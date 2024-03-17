@@ -208,6 +208,10 @@
             
         }
         
+        .fig_multiline{
+            text-align: left;
+        }
+        
         figcaption {
             margin-top: 20px;
         }
