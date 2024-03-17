@@ -85,6 +85,10 @@
             .OK-button {  
 
             }
+            
+            a{
+				app-region: no-drag;
+			}
 
         
         </style>
@@ -132,15 +136,5 @@
     
         </div> 
     </div> 
-
-
-	<script>
-	  for(let elem of document.querySelectorAll('*')) {
-	    elem.addEventListener("click", e => console.warn(`Capturing: ${elem.tagName}`), true);
-	    elem.addEventListener("click", e => console.warn(`Bubbling: ${elem.tagName}`));
-	  }
-	</script>  
-
-
 
 </body></html>

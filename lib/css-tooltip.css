@@ -12,6 +12,18 @@ body{
     --display_tooltip: 1;
 }
 
+/* 
+ * Stop clicking checkbox from locking tooltip
+ * https://github.com/alterebro/css-tooltip/issues/3 
+ */
+[data-tooltip]:focus:before,
+[data-tooltip]:focus:after,
+[data-tooltip]:active:before,
+[data-tooltip]:active:after {
+  opacity: 0 !important;
+}
+
+
 [data-tooltip] {
   /* position: relative; */
   display: inline-block;

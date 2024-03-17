@@ -2996,6 +2996,12 @@ async function _setMode( inputModeName){
     }catch(err){        
         console.log(err);
     }
+    
+    // Hide amend checkobx (below they will be visibible for certain cases)
+    document.getElementById('amend_commit_div').style.visibility='hidden';    
+           
+   // Amend mode
+    document.getElementById('amend_commit_checkbox').checked = false    
 
     
     switch(inputModeName) {  
@@ -3097,12 +3103,23 @@ async function _setMode( inputModeName){
             
         case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
+            
+            // Store button should be disabled if no text entered
+			if (textOutput.value.length == 0){
+				document.getElementById('store-button').disabled = true;
+			}
+            
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            textOutput.readOnly = false;
             if (HEAD_title == undefined){
-                textOutput.placeholder = "No modified files"  ;
+                textOutput.placeholder = "No modified files" ;
+                
+                // Hide amend checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
             }
             
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
 
                 textOutput.value = "";
@@ -3118,13 +3135,18 @@ async function _setMode( inputModeName){
                 //return
             };
                 
-            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            if (newModeName ==  'NO_FILES_TO_COMMIT') { 
+                // Hide amend  checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
+                setButtonText()
+                return
+            };
             
             
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
-            textOutput.readOnly = true;
+            textOutput.readOnly = false;
             writeTextOutput(textOutput);
             break;
         }
@@ -3138,12 +3160,21 @@ async function _setMode( inputModeName){
                 'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
                 "- is MODIFIED";  
                 
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
                  textOutput.placeholder = 
                     'Detached HEAD : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
                     "- is MODIFIED!  You have two options : " + os.EOL + 
                     "- 1) click modified-files counters, and 'Restore All' (avoid problems)" + os.EOL + 
                     "- 2) type description here, and press Store (solve problems later)";                 
+            }else{
+                // Show git amend checkbox in message-area
+                document.getElementById('amend_commit_div').style.visibility='visible';    
+                
+                // Enable Store button if clicked to amend
+                if ( document.getElementById('amend_commit_checkbox').checked == true){
+                    document.getElementById('store-button').disabled = false;  
+                }
             }
                 
 
@@ -3942,9 +3973,49 @@ async function gitAddCommitAndPush( message){
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     try{
-        await simpleGitLog( state.repos[state.repoNumber].localFolder )
-        .commit( message, onCommit);    
+        
+        // Amend to latest commit  (only occurs when checked checkbox')
+        if (document.getElementById('amend_commit_checkbox').checked == true){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+        }
+
+        // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
+        if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
+			
+			// Show dialog if remote is defined
+			let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+			if ( remoteDefined ){
+				buttonPressed = await waitForModal('amendDialog');
+				if ( buttonPressed == 'Cancel'){
+					_setMode('NO_FILES_TO_COMMIT'); 
+					await _update()   
+					_setMode('UNKNOWN'); 
+					await _update() 
+					messageKeyUpEvent()
+					return
+				}
+				
+				async function waitForModal(elementName){
+					let dialog = document.getElementById(elementName);
+					dialog.showModal(); 
+					while (dialog.open){
+						await waitTime( 1000);
+					}
+					return dialog.returnValue;		
+				}
+			}
+			
+			// Perform change-message
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
+        }
+        
+        // Normal commit 
+        if ( getMode() !== 'NO_FILES_TO_COMMIT'  ) {
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
+        }       
+         
         function onCommit(err, result) {console.log(result);  };
+        
     }catch(err){
         console.log('Error in gitAddCommitAndPush()');
         console.log(err);
@@ -3968,6 +4039,8 @@ async function gitAddCommitAndPush( message){
     localState.unstaged = [];
     textOutput.value = '';
     writeTextOutput( textOutput);
+    _setMode('UNKNOWN');  
+    await _update()
     _setMode('UNKNOWN');  
     await _update()
 }
@@ -4188,10 +4261,26 @@ async function gitPush(){
             }
             
             async function push(){
+                // This function knows from GUI if 'Normal push', or 'forced push'
+                
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
                 try{
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    // Force push, or normal push
+                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
+                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
+                    if (localState.settings){  // Do not force-push if settings window is opened
+						forcePush = false;
+					}
+                    
+                    if (forcePush){
+                        // Force push because amend files to same commit, or because change message text
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }else{
+                        //Normal push
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }
+                    
                 }catch(err){
                     displayLongAlert('Push Error' + attempt , err, 'error');
                 }
@@ -5384,6 +5473,7 @@ function displayLongAlert(title, message, type){
                                     }catch(err){
                                         document.getElementById('onRunExitStatus').style.color='var(--red-text)'
                                         document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                        opener.displayLongAlert('Failed command', err, 'error')
                                     }
                                     "
                                 >[run]</a>
