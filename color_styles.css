@@ -44,12 +44,13 @@
     --notes-input-text: var( --notes-popup-text);
     
     /* Main */
-    --main-background: var(--body-background); 
+    --main-background: var(--body-background);
     --dim-text: #777777;
     --message-color: #4444CC;                   /* message field: history  (mustard yellow) */
     --message-placeholder: var(--dim-text);
     --history-icon-brightness: 1;     /* keep original */
     --history-image-invert: 20%;
+    --middle-background: #CCCCCC; 
 }
  
 .dark {
@@ -106,6 +107,7 @@
     --message-placeholder: var(--dim-text);        /* message field: non-editable texts */
     --history-icon-brightness: 10;                 /* make white */
     --history-image-invert: 100%;
+    --middle-background: unset;
 }   
 
 
