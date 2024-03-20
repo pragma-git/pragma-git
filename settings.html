@@ -805,7 +805,8 @@
                  <br>          
                 
                 Log file:
-                <div><code><span id='logFile' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div><code><a href="#" id='logFile' style="font-size: 9pt;" onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </div><br>
+
                 
                  <script>
                      document.getElementById("logFile").innerHTML = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
@@ -821,7 +822,7 @@
                 
                 License:
                 
-                <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a>.</div>
+                <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
                 
 
             </div>
