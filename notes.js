@@ -56,9 +56,10 @@ async function injectIntoNotesJs(document) {
  
     // Add search button to toolbar
     button1 = document.createElement('button');
-    button1.style = "background-color: transparent; top: -2px; position: absolute; right: 60px";
+    button1.style = "top: -2px; position: absolute; right: 60px";
+    button1.classList.add('my-icon');
     button1.setAttribute("id", 'find-icon');
-    button1.innerHTML = '<img  height="17" width="17"  src="images/find.png" >';
+    button1.innerHTML = '<img class="my-img" height="17" width="17"  src="images/find_hover.png" >';
     button1struct = {  
             name: 'find',
             event: 'clickCustomButton1',
@@ -68,9 +69,10 @@ async function injectIntoNotesJs(document) {
  
     // Add help button to toolbar
     button2 = document.createElement('button');
-    button2.style = "background-color: transparent; top: -2px; position: absolute; right: 20px";
+    button2.style = "top: -2px; position: absolute; right: 20px; ";
+    button2.classList.add('my-icon');
     button2.setAttribute("id", 'help-icon');
-    button2.innerHTML = '<img height="17" width="17"  src="images/questionmark_hover.png" >';
+    button2.innerHTML = '<img class="my-img" height="17" width="17"  src="images/questionmark_hover.png" >';
     button2struct = {  
             name: 'help',
             event: 'clickCustomButton2',
@@ -80,9 +82,10 @@ async function injectIntoNotesJs(document) {
  
     // Add history button to toolbar
     button3 = document.createElement('button');
-    button3.style = "background-color: transparent; top: -2px; position: absolute; right: 120px";
+    button3.style = "top: -2px; position: absolute; right: 120px";
+    button3.classList.add('my-icon');
     button3.setAttribute("id", 'history-icon');
-    button3.innerHTML = '<img height="17" width="17"  src="images/history_hover.png" >';
+    button3.innerHTML = '<img class="my-img" height="17" width="17"  src="images/history_hover.png" >';
     button3struct = {  
             name: 'help',
             event: 'clickCustomButton3',

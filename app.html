@@ -268,7 +268,7 @@
             
             <div id="amend_commit_div" class="tooltip-top-right ">
                 <div>
-                    <input type="checkbox" id="amend_commit_checkbox" data-tooltip="Amend to last commit" /
+                    <input type="checkbox" id="amend_commit_checkbox" data-tooltip="Amend to last commit" 
                     onClick="
 						if (  document.getElementById('amend_commit_checkbox').checked == true ) {
 							document.getElementById('store-button').disabled = false;  // Enable Store button
@@ -286,24 +286,6 @@
                 </div>
             </div>  
 
-
-            <!-- Textarea pop-up for  edit -->  
-
-            <div  id="edit_commit_message_link"  class="tooltip-top-right">
-
-
-                    <div id="edit_commit_message-text"  data-tooltip="Edit message"
-                        onclick="document.getElementById('edit_commit_message-text').setAttribute('style','color: var(--text)');
-                                 console.warn('clicked edit')"  >
-                        
-                        <span id="edit_link_text" class="link-text" 
-                                onmouseover="document.getElementById('edit_link_text').setAttribute('style','color: var(--dim-text)' );" 
-                                onmouseout="document.getElementById('edit_link_text').setAttribute('style','color: var(--text)' );" >
-                            Edit message
-                        </span>
-                    </div> 
-
-            </div>  
 
         </div>
         
@@ -400,7 +382,7 @@
                     onmouseover="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder_hover.png');" 
                     onmouseout="updateImageUrl('bottom-titlebar-folder-icon', 'images/folder.png');" 
                     src="images/folder.png">
-                </div>
+            </div>
     
             <!-- Icon Terminal  -->  
             <div class="bottom-titlebar-terminal-icon tooltip-top-left " data-tooltip="Command line">

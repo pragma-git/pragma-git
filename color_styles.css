@@ -4,13 +4,14 @@
     /* General */
     --text:  #222222;
     --body-background: #FFFFFF;       /* in html windows  */
+    --body-background: #F5F5F5;       /* in html windows  */
     --link-color: blue;            /* in html windows */
     --link-pressed-color: red;
     --body-text: var(--text);
     --input-background: #EEEEEE;
     --input-placeholder: #777777;
     --image-invert: 0%;               /* do not invert black-transparent images to white  */
-    --header-color: #2F5496;
+    --header-color: #2F5496;        /* header */
     --warn-color: #d6b51d;          /* for instance border of dialogs */
     --err-color: #C0401A;           /* for instance border of dialogs */
     
@@ -25,13 +26,13 @@
     --green-text: green;
     --red-text: #D22;               /* Tailored to work well also in Windows 10 */
     --grey-text: var(--text);
-    --code-text: #c14d4d;
+    --code-text: var(--header-color); /* same as header color */
     --tab-selected: #888888;
     --tab-deselected: #CCCCCC;
     
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
-    --notes-code-text: var(--code-text);
+    --notes-code-text: var(--header-color);   /* same as header color */
     --notes-popup-text: #555555;
     --notes-checkbox-filter: none;
     --table-header-color: #DDDDDD;              /* (text ) */
