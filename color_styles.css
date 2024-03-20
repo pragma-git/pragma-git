@@ -257,4 +257,15 @@
         li{
             margin-bottom: 4px;
         }
+        
+        button{
+            
+        }
+        
+        button:not(:disabled):hover{
+            filter: brightness(95%);
+        }
     
+        button:not(:disabled):active{
+            filter: brightness(85%);
+        }
