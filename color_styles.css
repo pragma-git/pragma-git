@@ -263,9 +263,9 @@
         }
         
         button:not(:disabled):hover{
-            filter: brightness(95%);
+            filter: brightness(92%);
         }
     
         button:not(:disabled):active{
-            filter: brightness(85%);
+            filter: brightness(75%);
         }
