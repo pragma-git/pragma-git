@@ -46,7 +46,7 @@
     /* Main */
     --main-background: var(--body-background); 
     --dim-text: #777777;
-    --message-color: #0033FF;                   /* message field: history  (mustard yellow) */
+    --message-color: #4444CC;                   /* message field: history  (mustard yellow) */
     --message-placeholder: var(--dim-text);
     --history-icon-brightness: 1;     /* keep original */
     --history-image-invert: 20%;
