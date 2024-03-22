@@ -698,7 +698,7 @@ function addSearch(headerId, editorId){
     headerElement.innerHTML = headerElement.innerHTML + 
     `  <!-- Search button --> 
                 <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
-                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBoxPragmaMerge()" 
+                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; positionSearchBoxPragmaMerge()" 
                     onmouseover="document.getElementById('${searchIconElementId}').src='../images/find_hover.png' " 
                     onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
                     src="../images/find_black.png" >`;
