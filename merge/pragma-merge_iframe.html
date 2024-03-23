@@ -658,6 +658,8 @@
                 document.getElementById('find-in-nw-search-box').style.right = 'auto';
                 document.getElementById('find-in-nw-search-box').style.top = '-6px';
 
+                // Cursor in input field
+                document.getElementById('find-in-nw-input').focus();
                 
                 // New search
                 let query =  document.getElementById('find-in-nw-input').value;
@@ -804,6 +806,26 @@
                 document.getElementById("find-in-nw-current").innerText = countValue;  
                 document.getElementById("find-in-nw-count").innerText = resultCounter;
             }
+            
+            
+        // Key press in search-field   Pragma-merge -- Find input takes keys ∧ ∨ ESC 
+            function searchFormKeyDown(element, evt){
+                console.log('Pressed Key in Search = ' + evt.key + '   evt.keyCode = ' + evt.keyCode );
+                if (evt.keyCode == 13){
+                    let query = element.value;
+                    newSearch(query);
+                }
+                if ( evt.keyCode === 40 ){
+                    nextClicked();
+                }
+                if ( evt.keyCode === 38 ){
+                    prevClicked();
+                }            
+                if (evt.keyCode === 27) {
+                    closeSearchDialog();
+                }
+
+            }
 
         
     </script>
@@ -813,7 +835,7 @@
        
     <div id="find-in-nw-search-box" class="find-in-nw-search-box"  style="z-index: 1000000; left: 53px; right: auto; top: -6px;">
         
-        <input id="find-in-nw-input" class="find-in-nw-input" placeholder="Find" onchange="newSearch(this.value)">
+        <input id="find-in-nw-input" class="find-in-nw-input" placeholder="Find text ... [ENTER]"  onclick="newSearch(this.value)" onKeyDown="searchFormKeyDown(this, event)">
         
         <span id="find-in-nw-current" class="find-in-nw-current">0</span>
         <span id="find-in-nw-of" class="find-in-nw-of">/</span>
