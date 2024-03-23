@@ -698,7 +698,9 @@
          
         // Search 
             function newSearch( query){
-                console.log('newSearch, query = "' + query + '"');
+                caseInsensitive = true;
+                
+                
                 if (mark) {
                   mark.clear();
                 }
@@ -711,7 +713,8 @@
                 }
                 
                 // Search 1 -- Loop result
-                searchCursor = openEditor.getSearchCursor(query); 
+                searchCursor = openEditor.getSearchCursor(query, 0, caseInsensitive); 
+                
                 resultCounter = 0;
                 while (searchCursor.findNext()) {
                     resultCounter++; 
@@ -722,7 +725,7 @@
                 }
  
                 // Same search again -- use result
-                searchCursor = openEditor.getSearchCursor(query); 
+                searchCursor = openEditor.getSearchCursor(query, 0, caseInsensitive); 
                 
                 // Update display
                 count = -1;  
