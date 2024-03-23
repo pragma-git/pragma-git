@@ -607,9 +607,13 @@
     
      <!--CSS for marked text -->
     <style>
-        .cm-searching {
+        .cm-all {
           background-color: yellow; /* Change to your desired color */
-          color: black; /* Change to your desired text color */
+          color: black!important; /* Change to your desired text color */
+        }
+        .cm-searching {
+          background-color: #38d878; /* Change to your desired color */
+          color: black!important; /* Change to your desired text color */
         }
     </style>
     
@@ -622,6 +626,7 @@
             var searchCursor;
             var resultCounter = 0; // Number of found items
             var mark;           // Variable to store the MarkText object
+            var marks = [];
             var openEditor;     // Variable to store the editor 
             var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
         
@@ -656,6 +661,14 @@
                 if (mark) {
                   mark.clear();
                 }
+                
+                if (marks){
+                    for (var i = 0; i < marks.length; i++) { 
+                        marks[i].clear();
+                    }
+                    
+                }
+                
                 document.getElementById('find-in-nw-search-box').classList.remove('find-in-nw-search-box-visible');
                 document.getElementById('find-in-nw-input').value = ''; 
               
@@ -666,6 +679,10 @@
                 
                 // Clear query
                 query = '';
+                
+                // Clear selection, that remains at last mark
+                let cursorPos = openEditor.getCursor();
+                openEditor.setSelection({line: cursorPos.line, ch: 0});
             }
             
          
@@ -676,11 +693,22 @@
                   mark.clear();
                 }
                 
-                // Search 1 -- Count result
+                if (marks){
+                    for (var i = 0; i < marks.length; i++) { 
+                        marks[i].clear();
+                    }
+                    
+                }
+                
+                // Search 1 -- Loop result
                 searchCursor = openEditor.getSearchCursor(query); 
                 resultCounter = 0;
                 while (searchCursor.findNext()) {
                     resultCounter++; 
+                    
+                    // Mark all
+                    let mark = openEditor.markText(searchCursor.from(), searchCursor.to(), {className: "cm-all"});
+                    marks.push(mark);
                 }
  
                 // Same search again -- use result
