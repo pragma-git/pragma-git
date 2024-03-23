@@ -595,15 +595,17 @@
     <!--  Add Search  -->  
     <!--              -->    
 
+    <script src="node_modules/codemirror/addon/search/searchcursor.js"></script>
+<!--
     <link rel="stylesheet" href="node_modules/codemirror/addon/dialog/dialog.css">
     <link rel="stylesheet" href="node_modules/codemirror/addon/search/matchesonscrollbar.css">  
       
     <script src="node_modules/codemirror/addon/dialog/dialog.js"></script>
-    <script src="node_modules/codemirror/addon/search/searchcursor.js"></script>
-    <script src="node_modules/codemirror/addon/search/search.js"></script>  <!--Not used -->
+    <script src="node_modules/codemirror/addon/search/search.js"></script> 
     <script src="node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
     <script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
     <script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
+-->
     
      <!--CSS for marked text -->
     <style>
@@ -633,6 +635,14 @@
         // Open Search Dialog
             positionSearchBoxPragmaMerge = function (){
                 
+                // Clear selection that remains after previous searching
+                try{
+                    let cursorPos = openEditor.getCursor();
+                    openEditor.setSelection({line: cursorPos.line, ch: 0});
+                }catch (err){
+                    // There was no selection (maybe first search))
+                }
+                
                 // Clear count values
                 count = 0;
                 resultCounter = 0;
@@ -647,9 +657,9 @@
                 document.getElementById('find-in-nw-search-box').style.left = leftPos + 'px';
                 document.getElementById('find-in-nw-search-box').style.right = 'auto';
                 document.getElementById('find-in-nw-search-box').style.top = '-6px';
+
                 
-                console.warn(pragmaMergeSearchInEditorId)
-                
+                // New search
                 let query =  document.getElementById('find-in-nw-input').value;
                 newSearch( query)
             }
