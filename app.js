@@ -2397,6 +2397,7 @@ async function _callback( name, event){
     function resetHistoryPointer(){
         localState.historyNumber = -1; // Reset to current
         downArrowClicked(); 
+        upArrowClicked(); 
         
     }
     function clearFindFields(){
