@@ -677,7 +677,7 @@ function initUI( keep) {
         addSearch('right2', 'CodeMirror-merge-right');
     }
     if ( panes == 3){
-        addSearch('left3', 'CodeMirror-merge-left ');
+        addSearch('left3', 'CodeMirror-merge-left');
         addSearch('editor3', 'CodeMirror-merge-editor');
         addSearch('right3', 'CodeMirror-merge-right');
     }
