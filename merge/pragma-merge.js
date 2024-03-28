@@ -192,15 +192,16 @@ async function injectIntoJs(document) {
     console.log('Mime-modes : ');
     console.log(CodeMirror.mimeModes);
 
-    initUI();
     
     // Set theme
     themeSelected( global.state.pragmaMerge.codeTheme);
+    
     
     // Set theme-selection GUI to current
     document.getElementById('theme-select').selectedIndex = 
         util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     
+    initUI();
     
         
     
@@ -257,6 +258,8 @@ function findMimeFromExtension( extension){
     // My version below works better than this :
     //found = CodeMirror.findModeByFileName(extension);
     
+    console.log('Find mime-mode from extension (=' + extension + ')');
+    
     let found = undefined;
     
     modeInfo = CodeMirror.modeInfo;
@@ -281,7 +284,7 @@ function findMimeFromExtension( extension){
     }
     
     
-    console.log( found);
+    console.log( 'Found mime-mode = ' + found);
     
     if (found !== undefined){
         return  found.mime
