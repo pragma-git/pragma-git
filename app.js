@@ -4399,9 +4399,9 @@ async function gitPull(){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
 
         try{
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).pull( onPull);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', '--rebase'], onPull);
             function onPull(err, result) {
-                //console.log(result) ; 
+                console.warning(result) ; 
                 
             };
             
