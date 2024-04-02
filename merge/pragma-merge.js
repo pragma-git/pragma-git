@@ -192,19 +192,8 @@ async function injectIntoJs(document) {
     console.log('Mime-modes : ');
     console.log(CodeMirror.mimeModes);
 
-    
-    // Set theme
-    themeSelected( global.state.pragmaMerge.codeTheme);
-    
-    
-    // Set theme-selection GUI to current
-    document.getElementById('theme-select').selectedIndex = 
-        util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
-    
-    initUI();
-    
-        
-    
+    initUI();   
+
     // Set Read-Only for Editor-mode 
     if ( (SECOND == '--edit') ){
         if  (THIRD == '--ro'){
@@ -231,10 +220,24 @@ async function injectIntoJs(document) {
 
     }
     
+         
+    // Set theme
+    themeSelected( global.state.pragmaMerge.codeTheme);
+    
+    
+    // Set theme-selection GUI to current
+    document.getElementById('theme-select').selectedIndex = 
+        util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
+        
+    
+    
     // Force show binary scroll bar
     if (isBinaryFile()){
         dv.edit.refresh();  // Force redraw -- makes binary show scroll bars
     }
+    
+    
+    initUI( true); 
     
     document.getElementById('down').click()
 

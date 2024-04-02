@@ -145,6 +145,7 @@ async function _callback( name, event, event2){
 
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
+            opener.writeTextOutput( { value: '' } );  // Clean message
             closeWindow();
             break;
         }         
