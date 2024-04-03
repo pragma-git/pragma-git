@@ -420,7 +420,7 @@
                 <!-- option = default is hard coded in code-mirror.css -->
                 <!-- override by chunk-color, which specifies  alpha, or  html color -->
                 <select id="theme-select" style="position: relative; left: 20px" 
-                    onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
+                    onChange="themeSelected( this.options[this.selectedIndex].text);initUI();">
                     <option>default</option>
                     <option disabled>──────────</option>
                     <option chunk-color="0.25">zenburn</option>
