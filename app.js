@@ -381,6 +381,7 @@ async function _callback( name, event){
             await _update2();
         }
         
+        writeTextOutput( { value: '' } );  // Clean message
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -442,6 +443,8 @@ async function _callback( name, event){
             await _setMode('UNKNOWN');
             await _update2();
         //}
+        
+        writeTextOutput( { value: '' } );  // Clean message
        
         break;
       }
@@ -5876,8 +5879,14 @@ function updateContentStyle() {
 // Message
 function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
-    document.getElementById('message').placeholder = textOutputStruct.placeholder;  
-    document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    
+    if (textOutputStruct.placeholder !== undefined){
+        document.getElementById('message').placeholder = textOutputStruct.placeholder; 
+    }
+     
+    if (textOutputStruct.readOnly !== undefined){
+        document.getElementById('message').readOnly = textOutputStruct.readOnly;  
+    }    
     
     // Set message color for edit or for history
     if (textOutputStruct.readOnly){
