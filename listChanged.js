@@ -9,6 +9,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
+const util = require('util_module');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
@@ -654,14 +655,35 @@ async function listGitStatus(){
     
     return status_data;
 }
+async function getChangedSinceHEAD( ){
+    try{
+        let currentCommit = localState.historyHash;
+        return await simpleGit( state.repos[state.repoNumber].localFolder).diffSummary(['--name-only', currentCommit, 'HEAD'])
+    }catch (err){
+        // Gets here if not history mode
+        return [];
+    }
+}
+async function isFileChangedSinceHEAD( changedFilesSinceHeadStruct, filePath ){ 
+    let index = util.findObjectIndex( changedFilesSinceHeadStruct.files, 'file', filePath);
+    if ( isNaN(index) ){
+        return false; // File is not changed, because it is not present in changedFilesSinceHeadStruct
+    }else{
+        return true;
+    }
+}
 // Draw
-function createFileTable(status_data) {
+async function createFileTable(status_data) {
 
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
     
     let renamedStatusData;
+    
+    // This struct can be used to verify that HISTORY file is changed since HEAD :
+    let changedFilesSinceHeadStruct =  await getChangedSinceHEAD( );  
+    
 
         
     // Old tbody
@@ -689,6 +711,8 @@ function createFileTable(status_data) {
         i = Number(j) + lowRange - 1;
         let fileStruct = status_data.files[i];
         let file = fileStruct.path;
+        let fileIsChanged = await isFileChangedSinceHEAD( changedFilesSinceHeadStruct, file );  // False if file is same as in HEAD, true if file is changed since HEAD
+
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
         let filetext = file; // First guess is that text is file path (for rename, it will be different)
@@ -818,8 +842,12 @@ function createFileTable(status_data) {
             if (localState.mode == 'HISTORY'){
                 // diff-link for history vs previous history
                 let commit = localState.historyHash;
+                
                 cell.appendChild( diffLinkHistory( document, commit, file) );
-                cell.appendChild( fileCheckoutLink( document, commit, file) );
+                if ( fileIsChanged){  // Only show checkout if there is a difference to HEAD (confusing otherwise)
+                    //cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
+                }
+                cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
                 
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
@@ -883,9 +911,16 @@ function createFileTable(status_data) {
             }
             // Internal functions
 
-            function fileCheckoutLink(document, commit, file){
+            function fileCheckoutLink(document, commit, file, fileIsChanged){
+                
+                let fileCheckoutLink = document.createElement('span');
+                
+                if (!fileIsChanged){
+                    fileCheckoutLink.innerHTML="";
+                    return  fileCheckoutLink;
+                }
+                
                 // Make fileCheckout link (work_dir)
-                var fileCheckoutLink = document.createElement('span');
                 if ( (typeOfChanged == 'modified')||(typeOfChanged == 'added') ){ // allow this for added or modified
                     fileCheckoutLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
                     fileCheckoutLink.setAttribute('onclick', 
