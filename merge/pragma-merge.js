@@ -304,9 +304,14 @@ function themeSelected( themeName){
     }
     console.log(themeName);
     
-    // Load theme
+    // Load theme into iframe head
     let themeDir = 'node_modules/codemirror/theme/';
     let themeCssFile = themeDir + themeName + '.css';
+    loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
+    
+    // Load theme into iframe head -- Override CodeMirror theme catalog with own (will be a non-existing file reference if not exists -- and won't be used then)
+    themeDir = 'codeMirror_theme_override/'; 
+    themeCssFile = themeDir + themeName + '.css';
     loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
 
     // Replace selected theme
