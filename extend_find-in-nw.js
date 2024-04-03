@@ -205,6 +205,11 @@ function extendFindInNw( elementToSearch){
     
     findInNw.showSearchBox = function() {
         
+        // Remove modern button for case-sensitive
+        try{
+            document.getElementById('find-in-nw-case-sensitive').remove();
+        }catch (err){}
+        
         // Special for Notes window
         /**
          * Toastui is used in Notes window.  
