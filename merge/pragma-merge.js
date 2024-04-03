@@ -193,10 +193,6 @@ async function injectIntoJs(document) {
     console.log(CodeMirror.mimeModes);
 
     
-    // Set theme
-    themeSelected( global.state.pragmaMerge.codeTheme);
-    
-    
     // Set theme-selection GUI to current
     document.getElementById('theme-select').selectedIndex = 
         util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
@@ -688,6 +684,7 @@ function initUI( keep) {
         changeToEditor();
     }
 
+    themeSelected( global.state.pragmaMerge.codeTheme);
 
 
 }
