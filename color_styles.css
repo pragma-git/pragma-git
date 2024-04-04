@@ -51,6 +51,9 @@
     --history-icon-brightness: 1;     /* keep original */
     --history-image-invert: 20%;
     --middle-background: #CCCCCC; 
+    
+    /* Tables */
+    --tableHoverBrightness: brightness(92%)   
 }
  
 .dark {
@@ -108,6 +111,9 @@
     --history-icon-brightness: 10;                 /* make white */
     --history-image-invert: 100%;
     --middle-background: unset;
+    
+    /* Tables */
+    --tableHoverBrightness: brightness(155%) ;
 }   
 
 
@@ -270,4 +276,8 @@
     
         button:not(:disabled):active{
             filter: brightness(75%);
+        }
+        
+        tr:hover {
+            backdrop-filter: var(--tableHoverBrightness);
         }
