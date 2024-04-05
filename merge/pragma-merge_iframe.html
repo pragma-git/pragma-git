@@ -611,9 +611,20 @@
         }
 
         window.addEventListener("keydown", event => {
-            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){
+            console.log(event )
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){  // Ctrl, Cmd S
                 finish('save')
-            }
+            }                
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 70 ){  // Ctrl, Cmd F
+                pragmaMergeSearchInEditorId = 'CodeMirror-merge-editor'; 
+                positionSearchBoxPragmaMerge();
+            }                      
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 71 ){  // Ctrl, Cmd G
+                nextClicked(); 
+            }                   
+            if (event.keyCode === 27) {  // ESC
+                closeSearchDialog();
+            }            
         });
           
           
@@ -843,19 +854,22 @@
         // Key press in search-field   Pragma-merge -- Find input takes keys ∧ ∨ ESC 
             function searchFormKeyDown(element, evt){
                 console.log('Pressed Key in Search = ' + evt.key + '   evt.keyCode = ' + evt.keyCode );
-                if (evt.keyCode == 13){
+                if (evt.keyCode == 13){   // ENTER
                     let query = element.value;
                     newSearch(query);
                 }
-                if ( evt.keyCode === 40 ){
+                if ( evt.keyCode === 40 ){  // Arrow down
                     nextClicked();
                 }
-                if ( evt.keyCode === 38 ){
+                if ( evt.keyCode === 38 ){ // Arrow up
                     prevClicked();
                 }            
-                if (evt.keyCode === 27) {
+                if (evt.keyCode === 27) {  // ESC
                     closeSearchDialog();
-                }
+                }          
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 71 ){  // Ctrl, Cmd G
+                    nextClicked(); 
+                }     
 
             }
 
