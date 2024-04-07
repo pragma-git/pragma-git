@@ -221,7 +221,7 @@
           border-color: var( --body-text);
           float: left;
           display: block;
-          margin-right: 2px;
+          margin-right: 7px;
           position: relative;
         }
         
@@ -261,6 +261,10 @@
             border: 0px;
             margin-top: 3px;
             margin-bottom: 3px;
+        }
+        
+        span.clicky:hover{
+            filter: brightness(70%);
         }
         
         
@@ -362,7 +366,7 @@
 
 
         tr:hover {
-            backdrop-filter: none !important;
+            backdrop-filter: none;
         }
 
 
@@ -523,7 +527,7 @@
         </div>
         
         
-        <div id='jump' style="position: absolute; left: 50%; bottom: 20px"> 
+        <div id='jump' style="position: absolute; left: 50%; bottom: 10px; zoom:125% "> 
              <span id='down' class=clicky onclick="dv.edit.execCommand('goNextDiff');"> &#x25BC;</span> 
              <span id='up'   class=clicky onclick="dv.edit.execCommand('goPrevDiff');"> &#x25B2;</span> 
         </div>
@@ -789,7 +793,7 @@
                     editor = dv.right.orig;
                 }
                 if (pragmaMergeSearchInEditorId == 'CodeMirror-merge-left') {
-                    editor = dv.left.orig;
+                    editor = dv.left.orig;  
                 }
                 return editor
             }

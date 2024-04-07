@@ -279,5 +279,5 @@
         }
         
         tr:hover {
-            backdrop-filter: var(--tableHoverBrightness);  // override locally by   tr:hover {  backdrop-filter: none !important; }
+            backdrop-filter: var(--tableHoverBrightness);  // override locally by   tr:hover {  backdrop-filter: none; }
         }
