@@ -1119,7 +1119,7 @@ async function _callback( name, event){
         
         cacheBranchList();
 
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
 
         break;
@@ -1812,7 +1812,7 @@ async function _callback( name, event){
                 }
                 
                 // End checking out branch
-                _setMode('UNKNOWN');
+                await _setMode('UNKNOWN');
 
                 return
 
@@ -1920,7 +1920,7 @@ async function _callback( name, event){
     
         console.log(branchList);
      
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
        //await _update()
         
         // Reset some variables
@@ -2088,7 +2088,7 @@ async function _callback( name, event){
             
         }
         
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
     }
     async function deleteTag(tagName){
@@ -2133,7 +2133,7 @@ async function _callback( name, event){
             
         }
         
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
     } 
 
@@ -2159,7 +2159,7 @@ async function _callback( name, event){
                 localState.historyNumber = -1;
                 
                 // Leave history mode
-                _setMode('UNKNOWN');
+                await _setMode('UNKNOWN');
                     
             }catch(err){        
                 console.log(err);
