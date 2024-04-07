@@ -185,6 +185,8 @@
             color: var(--code-text); 
             font-size: inherit;  
         }
+        
+        
         a{
             color: var(--link-color);
             outline: none !important;  /* Dialogs have a problem showing blue outline when selected (tab between dialog elements) */
@@ -192,6 +194,22 @@
         a:active{ 
             color: var(--link-pressed-color) !important; 
         }
+        a:hover{ 
+            filter: brightness(75%); 
+        }
+        
+        
+        .linkLike{
+            color: var(--link-color) !important;
+            cursor: pointer !important;
+        }
+        .linkLike:active{
+            color: var(--link-pressed-color) !important;
+        }
+        .linkLike:hover{
+            filter: brightness(75%) !important;
+        }
+           
                 
         iframe{
             width: 100%;

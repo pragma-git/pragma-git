@@ -858,7 +858,7 @@ async function createFileTable(status_data) {
                                     
                 if (typeOfChanged == 'added'){  // two files to compare only in modified (only one file in added)
                     var addLink = document.createElement('span');
-                    addLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    addLink.setAttribute('class', "linkLike");
                     addLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--rw ') ");
                     addLink.textContent=" (edit)";
                     cell.appendChild(addLink);  
@@ -867,7 +867,7 @@ async function createFileTable(status_data) {
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('restoreDialog').showModal();" );  // Opens dialog from html-page
@@ -878,7 +878,7 @@ async function createFileTable(status_data) {
                 // Make ignore link (only if added) 
                 if ( typeOfChanged == 'added'){  
                     var ignoreLink = document.createElement('span');
-                    ignoreLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    ignoreLink.setAttribute('class', "linkLike");
                     ignoreLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('ignoreDialog').showModal();" );  // Opens dialog from html-page
@@ -889,7 +889,7 @@ async function createFileTable(status_data) {
                 // Make delete link (only if modified or added) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'added'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
@@ -901,7 +901,7 @@ async function createFileTable(status_data) {
                 // Make renamed link 
                 if (typeOfChanged == 'renamed' ){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = {from: '" + renamedStatusData.from + "', to: '" + renamedStatusData.to +  "' };" + 
                         "document.getElementById('restoreRenameDialog').showModal();" );  // Opens dialog from html-page
@@ -922,7 +922,7 @@ async function createFileTable(status_data) {
                 
                 // Make fileCheckout link (work_dir)
                 if ( (typeOfChanged == 'modified')||(typeOfChanged == 'added') ){ // allow this for added or modified
-                    fileCheckoutLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    fileCheckoutLink.setAttribute('class', "linkLike");
                     fileCheckoutLink.setAttribute('onclick', 
                         "_callback('fileCheckoutLink', "  + "'"  + commit + "', " + "'"  + file + "')" );
                     fileCheckoutLink.textContent=" (checkout)";
@@ -936,7 +936,7 @@ async function createFileTable(status_data) {
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');
                 if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
                     diffLink.textContent=" (diff)";
                     return  diffLink;
@@ -961,14 +961,14 @@ async function createFileTable(status_data) {
                         commit2 = commit + ":" + file;           
                     }  
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                 }
                     
                 if (typeOfChanged == 'added'){  // only one file in added
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--show ') ");
                     diffLink.textContent=" (view)";
                 }   
@@ -989,7 +989,7 @@ async function createFileTable(status_data) {
                     
                     
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                     
