@@ -112,8 +112,9 @@ div#inner-content {
 }
 
 #bottom-titlebar-find-icon{
-  bottom: 5px;
+  bottom: 40px;
   left: 8px;
+  position: fixed
 }
 
 

@@ -2143,9 +2143,31 @@ async function _callback( name, event){
         
         // Could be called for Store, or History Checkout 
         pragmaLog('   Mode = ' + getMode() );
+
         
         if ( getMode() == 'HISTORY' ){
-            // History
+            // History storeButton = 'CheckOut'
+            
+                    
+            // Determine status of local repository
+            var status_data;  
+            try{
+                status_data = await gitStatus();
+            }catch(err){
+                console.log('Error in unComittedFiles,  calling  _mainLoop()');
+                console.log(err);
+            }
+            
+            // Warn if uncommited files, when trying to Checkout
+            var uncommitedFiles = await status_data.changedFiles; // Determine if no files to commit
+            if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+                // Tell user to commit first (if that setting is enabled)
+                
+                displayAlert('Uncommitted files', 'Press &#x25B2;, add description and Store, before Checkout', 'warning')
+                return
+            }
+            
+          
             
             try{
                 rememberDetachedBranch();
