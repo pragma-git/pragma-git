@@ -3015,7 +3015,10 @@ async function _setMode( inputModeName){
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
             HEAD_title = result.latest.message;
-            HEAD_short_title = HEAD_title.substr(0,60) + '...';
+            HEAD_short_title = HEAD_title.substr(0,60);
+            if (HEAD_title.length > 60){
+                HEAD_short_title = HEAD_short_title + '...';
+            }
             HEAD_refs = result.latest.refs;
             } 
             
