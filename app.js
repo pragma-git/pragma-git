@@ -2858,7 +2858,7 @@ async function _update2(){
                 
                 // If not correct mode, fix :
                 if (status_data.changedFiles){
-                    _setMode('UNKNOWN');
+                    await _setMode('UNKNOWN');
                 }
                 break;
             }
@@ -3052,7 +3052,7 @@ async function _setMode( inputModeName){
                 try{
                     if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
                         newModeName = 'NO_FILES_TO_COMMIT'; 
-                        _setMode( newModeName);
+                        await _setMode( newModeName);
                         break;
                     }
                 }catch(err){
@@ -3065,7 +3065,7 @@ async function _setMode( inputModeName){
                 if ( status_data.changedFiles== true){   
                     if ( messageLength  > 0 ) { newModeName = 'CHANGED_FILES_TEXT_ENTERED' }
                     if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' } 
-                    _setMode( newModeName);
+                    await _setMode( newModeName);
                 }   
                 
                 break;
