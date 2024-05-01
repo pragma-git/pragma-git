@@ -1729,20 +1729,9 @@ async function _callback( name, event){
                     try{
                         
                         // TODO : set localState.historyNumber from  state.repos[state.repoNumber].detachedBranch.hash;
-                        
-                        
-                        
-                        // Warn if detached and not saved
-                        if ( status_data.changedFiles && status_data.detached ){
-                            //displayLongAlert('Unsaved files', 'You have created files in a detached HEAD \n1) Click "stash icon" or 2) "modified files" followed by "restore"', 'warning'); 
-                            //document.getElementById('detachedHeadUnsavedWorkDialog').showModal();
-                            displayAlert('Unsaved work', 'Files created in detached HEAD are left as uncommited', 'warning')
 
-                        }
-                        
-                        
                         let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
-                        await gitSwitchBranch(branchName);
+                        await gitSwitchBranch('-');
                         
                         // TODO !
                         //
@@ -1766,6 +1755,7 @@ async function _callback( name, event){
                         //gitShowHistorical();
                         
                     }catch(err){        
+                        
                         console.log(err);
                         gitCycleToNextBranch();
                     } 
@@ -3685,7 +3675,7 @@ async function gitSwitchBranch(branchName){
         await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
         function onCheckout(err, result){console.log(result); }                                  
     }catch (err){
-        //gitCycleToNextBranch();  // If error on switching branch, this will jump into infinite loop gitCycleToNextBranch -> gitSwitchBranchNumber -> gitSwitchBranch -> gitCycleToNextBranch ...
+        displayLongAlert('Switch branch error', err, 'error');
     }
     // Update info
     gitFetch();  
@@ -5417,7 +5407,7 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 70;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 10;
                             let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
