@@ -1344,33 +1344,6 @@ async function _callback( name, event){
         break;  
       }
 
-      case 'detachedHeadUnsavedWorkDialog': {
-        console.log('detachedHeadUnsavedWorkDialog -- returned ' + event);
-        pragmaLog('   clicked = ' + event );
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move back from "detached Head" wit unsaved changes
-                try{
-                    let folder = state.repos[state.repoNumber].localFolder;
-                    await simpleGitLog( folder ).raw( [  'switch', '-f' , '-'] , onSwitch);
-                    function onSwitch(err, result) {};
-                }catch (err){
-                    console.log(err); 
-                }
-                break;
-            }    
-            case  'Stash' : {
-                await gitStash();
-                gitSwitchBranch('-');  // Back to latest
-                document.getElementById('detachedHeadUnsavedWorkDialog').close();
-                break;
-            }           
-
-        }
-       
-      }
-
       case 'detachedHeadDialog': {
         console.log('detachedHeadDialog -- returned ' + event);
         pragmaLog('   clicked = ' + event );
@@ -1762,7 +1735,9 @@ async function _callback( name, event){
                         // Warn if detached and not saved
                         if ( status_data.changedFiles && status_data.detached ){
                             //displayLongAlert('Unsaved files', 'You have created files in a detached HEAD \n1) Click "stash icon" or 2) "modified files" followed by "restore"', 'warning'); 
-                            document.getElementById('detachedHeadUnsavedWorkDialog').showModal();
+                            //document.getElementById('detachedHeadUnsavedWorkDialog').showModal();
+                            displayAlert('Unsaved work', 'Files created in detached HEAD are left as uncommited', 'warning')
+
                         }
                         
                         
