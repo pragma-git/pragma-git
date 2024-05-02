@@ -681,6 +681,27 @@
                                 nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
                                 win=>win.on('loaded', () => {
                                     win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                    
+                                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                                win.on('closed', function () {
+                                    win = null;
+                                  });
+                                
+                                  // Listen to main window's close event
+                                  nw.Window.get().on('close', function () {
+                                    // Hide the window to give user the feeling of closing immediately
+                                    this.hide();
+                                
+                                    // If the new window is still open then close it.
+                                    if (win !== null) {
+                                      win.close(true);
+                                    }
+                                
+                                    // After closing the new window, close the main window.
+                                    this.close(true);
+                                  });
+                                    
+                                    
                                 } ));
                                 ">
                                 <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
@@ -699,6 +720,27 @@
                              <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
                             win=>win.on('loaded', () => {
                                 win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                
+                                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                                win.on('closed', function () {
+                                    win = null;
+                                  });
+                                
+                                  // Listen to main window's close event
+                                  nw.Window.get().on('close', function () {
+                                    // Hide the window to give user the feeling of closing immediately
+                                    this.hide();
+                                
+                                    // If the new window is still open then close it.
+                                    if (win !== null) {
+                                      win.close(true);
+                                    }
+                                
+                                    // After closing the new window, close the main window.
+                                    this.close(true);
+                                  });
+                                
+                                
                             }  )) ; 
                             ">  Edit .gitignore</button> 
                          </p>
@@ -763,7 +805,8 @@
                  <br>          
                 
                 Log file:
-                <div><code><span id='logFile' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div><code><a href="#" id='logFile' style="font-size: 9pt;" onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </div><br>
+
                 
                  <script>
                      document.getElementById("logFile").innerHTML = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
@@ -779,7 +822,7 @@
                 
                 License:
                 
-                <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a>.</div>
+                <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
                 
 
             </div>
@@ -930,7 +973,6 @@
         );
         window.addEventListener('unload', (event) => {
             console.log('settings.html :DOM fully unloaded -- maybe window closed ');
-            opener.closeAllChildWindows( window);
             closeWindow(window);
             }
         );

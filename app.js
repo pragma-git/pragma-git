@@ -381,6 +381,7 @@ async function _callback( name, event){
             await _update2();
         }
         
+        writeTextOutput( { value: '' } );  // Clean message
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -442,6 +443,8 @@ async function _callback( name, event){
             await _setMode('UNKNOWN');
             await _update2();
         //}
+        
+        writeTextOutput( { value: '' } );  // Clean message
        
         break;
       }
@@ -1116,7 +1119,7 @@ async function _callback( name, event){
         
         cacheBranchList();
 
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
 
         break;
@@ -1339,33 +1342,6 @@ async function _callback( name, event){
         
         document.getElementById('newVersionDetectedInputDialog').close();
         break;  
-      }
-
-      case 'detachedHeadUnsavedWorkDialog': {
-        console.log('detachedHeadUnsavedWorkDialog -- returned ' + event);
-        pragmaLog('   clicked = ' + event );
-        
-        switch (event) {
-            case  'Delete' : {
-                // Move back from "detached Head" wit unsaved changes
-                try{
-                    let folder = state.repos[state.repoNumber].localFolder;
-                    await simpleGitLog( folder ).raw( [  'switch', '-f' , '-'] , onSwitch);
-                    function onSwitch(err, result) {};
-                }catch (err){
-                    console.log(err); 
-                }
-                break;
-            }    
-            case  'Stash' : {
-                await gitStash();
-                gitSwitchBranch('-');  // Back to latest
-                document.getElementById('detachedHeadUnsavedWorkDialog').close();
-                break;
-            }           
-
-        }
-       
       }
 
       case 'detachedHeadDialog': {
@@ -1753,18 +1729,9 @@ async function _callback( name, event){
                     try{
                         
                         // TODO : set localState.historyNumber from  state.repos[state.repoNumber].detachedBranch.hash;
-                        
-                        
-                        
-                        // Warn if detached and not saved
-                        if ( status_data.changedFiles && status_data.detached ){
-                            //displayLongAlert('Unsaved files', 'You have created files in a detached HEAD \n1) Click "stash icon" or 2) "modified files" followed by "restore"', 'warning'); 
-                            document.getElementById('detachedHeadUnsavedWorkDialog').showModal();
-                        }
-                        
-                        
+
                         let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
-                        await gitSwitchBranch(branchName);
+                        await gitSwitchBranch('-');
                         
                         // TODO !
                         //
@@ -1788,6 +1755,7 @@ async function _callback( name, event){
                         //gitShowHistorical();
                         
                     }catch(err){        
+                        
                         console.log(err);
                         gitCycleToNextBranch();
                     } 
@@ -1809,7 +1777,7 @@ async function _callback( name, event){
                 }
                 
                 // End checking out branch
-                _setMode('UNKNOWN');
+                await _setMode('UNKNOWN');
 
                 return
 
@@ -1917,7 +1885,7 @@ async function _callback( name, event){
     
         console.log(branchList);
      
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
        //await _update()
         
         // Reset some variables
@@ -2085,7 +2053,7 @@ async function _callback( name, event){
             
         }
         
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
     }
     async function deleteTag(tagName){
@@ -2130,7 +2098,7 @@ async function _callback( name, event){
             
         }
         
-        _setMode('UNKNOWN');
+        await _setMode('UNKNOWN');
         
     } 
 
@@ -2140,9 +2108,31 @@ async function _callback( name, event){
         
         // Could be called for Store, or History Checkout 
         pragmaLog('   Mode = ' + getMode() );
+
         
         if ( getMode() == 'HISTORY' ){
-            // History
+            // History storeButton = 'CheckOut'
+            
+                    
+            // Determine status of local repository
+            var status_data;  
+            try{
+                status_data = await gitStatus();
+            }catch(err){
+                console.log('Error in unComittedFiles,  calling  _mainLoop()');
+                console.log(err);
+            }
+            
+            // Warn if uncommited files, when trying to Checkout
+            var uncommitedFiles = await status_data.changedFiles; // Determine if no files to commit
+            if ( uncommitedFiles && state.forceCommitBeforeBranchChange ){
+                // Tell user to commit first (if that setting is enabled)
+                
+                displayAlert('Uncommitted files', 'Press &#x25B2;, add description and Store, before Checkout', 'warning')
+                return
+            }
+            
+          
             
             try{
                 rememberDetachedBranch();
@@ -2156,7 +2146,7 @@ async function _callback( name, event){
                 localState.historyNumber = -1;
                 
                 // Leave history mode
-                _setMode('UNKNOWN');
+                await _setMode('UNKNOWN');
                     
             }catch(err){        
                 console.log(err);
@@ -2397,6 +2387,7 @@ async function _callback( name, event){
     function resetHistoryPointer(){
         localState.historyNumber = -1; // Reset to current
         downArrowClicked(); 
+        upArrowClicked(); 
         
     }
     function clearFindFields(){
@@ -2761,8 +2752,13 @@ async function _update2(){
                     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
                     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 }else{
-                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
-                    document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    if (currentBranch == 'HEAD'){
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
+                    }else{
+                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                        document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
+                    }
                 }
              
             }else{
@@ -2862,7 +2858,7 @@ async function _update2(){
                 
                 // If not correct mode, fix :
                 if (status_data.changedFiles){
-                    _setMode('UNKNOWN');
+                    await _setMode('UNKNOWN');
                 }
                 break;
             }
@@ -2984,13 +2980,22 @@ async function _setMode( inputModeName){
         function onCurrentMessage(err, result){
             // result.latest has following fields :  hash, date, message, refs, author_email, author_name
             HEAD_title = result.latest.message;
-            HEAD_short_title = HEAD_title.substr(0,60) + '...';
+            HEAD_short_title = HEAD_title.substr(0,60);
+            if (HEAD_title.length > 60){
+                HEAD_short_title = HEAD_short_title + '...';
+            }
             HEAD_refs = result.latest.refs;
             } 
             
     }catch(err){        
         console.log(err);
     }
+    
+    // Hide amend checkobx (below they will be visibible for certain cases)
+    document.getElementById('amend_commit_div').style.visibility='hidden';    
+           
+   // Amend mode
+    document.getElementById('amend_commit_checkbox').checked = false    
 
     
     switch(inputModeName) {  
@@ -3047,7 +3052,7 @@ async function _setMode( inputModeName){
                 try{
                     if ( ( numberOfRepos > 0 ) && ( status_data.changedFiles  == false) ){  
                         newModeName = 'NO_FILES_TO_COMMIT'; 
-                        _setMode( newModeName);
+                        await _setMode( newModeName);
                         break;
                     }
                 }catch(err){
@@ -3060,7 +3065,7 @@ async function _setMode( inputModeName){
                 if ( status_data.changedFiles== true){   
                     if ( messageLength  > 0 ) { newModeName = 'CHANGED_FILES_TEXT_ENTERED' }
                     if ( messageLength == 0 ) { newModeName = 'CHANGED_FILES' } 
-                    _setMode( newModeName);
+                    await _setMode( newModeName);
                 }   
                 
                 break;
@@ -3092,12 +3097,23 @@ async function _setMode( inputModeName){
             
         case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
+            
+            // Store button should be disabled if no text entered
+			if (textOutput.value.length == 0){
+				document.getElementById('store-button').disabled = true;
+			}
+            
             newModeName = 'NO_FILES_TO_COMMIT';
             textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            textOutput.readOnly = false;
             if (HEAD_title == undefined){
-                textOutput.placeholder = "No modified files"  ;
+                textOutput.placeholder = "No modified files" ;
+                
+                // Hide amend checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
             }
             
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
 
                 textOutput.value = "";
@@ -3113,13 +3129,18 @@ async function _setMode( inputModeName){
                 //return
             };
                 
-            if (currentMode ==  'NO_FILES_TO_COMMIT') { return};
+            if (newModeName ==  'NO_FILES_TO_COMMIT') { 
+                // Hide amend  checkbox
+                document.getElementById('amend_commit_div').style.visibility='hidden';    
+                setButtonText()
+                return
+            };
             
             
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
             textOutput.value = "";           
-            textOutput.readOnly = true;
+            textOutput.readOnly = false;
             writeTextOutput(textOutput);
             break;
         }
@@ -3127,18 +3148,27 @@ async function _setMode( inputModeName){
         case 'CHANGED_FILES': {
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
-            
+
             textOutput.placeholder = 
-                'Commit : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
-                "- is MODIFIED" + os.EOL + 
-                "- type description here, and press Store";   
+                "Type description here ... and press Store" + os.EOL + os.EOL + 
+                'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
+                "- is MODIFIED";  
                 
+            // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
                  textOutput.placeholder = 
                     'Detached HEAD : "' + HEAD_short_title + '"' + os.EOL + os.EOL + 
                     "- is MODIFIED!  You have two options : " + os.EOL + 
                     "- 1) click modified-files counters, and 'Restore All' (avoid problems)" + os.EOL + 
                     "- 2) type description here, and press Store (solve problems later)";                 
+            }else{
+                // Show git amend checkbox in message-area
+                document.getElementById('amend_commit_div').style.visibility='visible';    
+                
+                // Enable Store button if clicked to amend
+                if ( document.getElementById('amend_commit_checkbox').checked == true){
+                    document.getElementById('store-button').disabled = false;  
+                }
             }
                 
 
@@ -3340,35 +3370,39 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
 
 async function gitIsInstalled(){
     var isInstalled = false;
-    var resultMessage = "";
+    
     try{
-        await simpleGitLog().raw([ 'version'], test );
-        function test(err, result){ 
-            console.log(result); 
-            resultMessage = result;
-            
-            if (err == undefined){
-                isInstalled = true;
-                localState.gitVersion = result
-            }else{
-                displayLongAlert('Git error', err, 'error')
-                throw 'error testing git version'
-            }
-        }; 
-    }catch(err){
-        // Bail out
-        console.log(err); 
-        return isInstalled;
-    }
+		await simpleGitLog().raw([ 'version'], test );
+	}catch(err){
+		state.git = isInstalled;
+		showGitNotInstalledDialog()
+		return isInstalled;
+	}
+    
+    function test(err, result){ 
+        console.log(result); 
+        resultMessage = result;
+        
+        if (err == undefined){
+            isInstalled = true;
+            localState.gitVersion = result
+        }
+        
+    };
+    
+    function showGitNotInstalledDialog(){
+		pragmaLog('show modal dialog = gitNotInstalledAlert' );
+        document.getElementById('gitNotInstalledAlert').showModal();		
+	} 
+
+    state.git = isInstalled;
 
     // Alert dialog if not installed
     if ( !isInstalled){
-        pragmaLog('show modal dialog = gitNotInstalledAlert' );
-        document.getElementById('gitNotInstalledAlert').showModal();
-        return
+        showGitNotInstalledDialog()
+        return isInstalled
     }
     
-    state.git = isInstalled;
     return isInstalled;
 
 }
@@ -3641,7 +3675,7 @@ async function gitSwitchBranch(branchName){
         await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
         function onCheckout(err, result){console.log(result); }                                  
     }catch (err){
-        //gitCycleToNextBranch();  // If error on switching branch, this will jump into infinite loop gitCycleToNextBranch -> gitSwitchBranchNumber -> gitSwitchBranch -> gitCycleToNextBranch ...
+        displayLongAlert('Switch branch error', err, 'error');
     }
     // Update info
     gitFetch();  
@@ -3933,9 +3967,49 @@ async function gitAddCommitAndPush( message){
     // Commit 
     setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
     try{
-        await simpleGitLog( state.repos[state.repoNumber].localFolder )
-        .commit( message, onCommit);    
+        
+        // Amend to latest commit  (only occurs when checked checkbox')
+        if (document.getElementById('amend_commit_checkbox').checked == true){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+        }
+
+        // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
+        if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
+			
+			// Show dialog if remote is defined
+			let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+			if ( remoteDefined ){
+				buttonPressed = await waitForModal('amendDialog');
+				if ( buttonPressed == 'Cancel'){
+					_setMode('NO_FILES_TO_COMMIT'); 
+					await _update()   
+					_setMode('UNKNOWN'); 
+					await _update() 
+					messageKeyUpEvent()
+					return
+				}
+				
+				async function waitForModal(elementName){
+					let dialog = document.getElementById(elementName);
+					dialog.showModal(); 
+					while (dialog.open){
+						await waitTime( 1000);
+					}
+					return dialog.returnValue;		
+				}
+			}
+			
+			// Perform change-message
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
+        }
+        
+        // Normal commit 
+        if ( getMode() !== 'NO_FILES_TO_COMMIT'  ) {
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
+        }       
+         
         function onCommit(err, result) {console.log(result);  };
+        
     }catch(err){
         console.log('Error in gitAddCommitAndPush()');
         console.log(err);
@@ -3961,6 +4035,8 @@ async function gitAddCommitAndPush( message){
     writeTextOutput( textOutput);
     _setMode('UNKNOWN');  
     await _update()
+    _setMode('UNKNOWN');  
+    await _update()
 }
 async function gitRememberBranch( hash, name){
     
@@ -3977,7 +4053,7 @@ async function gitRememberBranch( hash, name){
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'append' , '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append' , '–allow-empty', '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err);  };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
@@ -4179,10 +4255,26 @@ async function gitPush(){
             }
             
             async function push(){
+                // This function knows from GUI if 'Normal push', or 'forced push'
+                
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
                 try{
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    // Force push, or normal push
+                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
+                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
+                    if (localState.settings){  // Do not force-push if settings window is opened
+						forcePush = false;
+					}
+                    
+                    if (forcePush){
+                        // Force push because amend files to same commit, or because change message text
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }else{
+                        //Normal push
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                    }
+                    
                 }catch(err){
                     displayLongAlert('Push Error' + attempt , err, 'error');
                 }
@@ -4300,9 +4392,9 @@ async function gitPull(){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
 
         try{
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).pull( onPull);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', '--rebase'], onPull);
             function onPull(err, result) {
-                //console.log(result) ; 
+                console.warning(result) ; 
                 
             };
             
@@ -4982,36 +5074,7 @@ function selectInGraph(hash){
 function getSettingsDir(){
     return settingsDir;
 }
-function closeAllChildWindows( inputWin){
-    // This function loops all open windows.
-    // Window that have inputWin as parent = child window, and are closed.
-    // Windows are identified by their title
-    
-    let inputTitle = inputWin.window.document.title;
-    
-    // Loop all windows and close if child to parent
-    gui.Window.getAll( 
-    
-        function allWindowsCallback( windows) {
-            
-            // Loop all windows
-            for (let i = 0; i < windows.length; i++) {
-                
-                let win_handle =  windows[i];
-                try{   
-                    let parentTitle = win_handle.window.opener.document.title;
-                    // Close if child window (its parent has same title as inputWin)
-                    if (parentTitle == inputTitle){
-                        win_handle.close();
-                    }
-                }catch(err){
-                }
-            }    
-        } 
-    );    
-    
-    
-}
+
 function setButtonText(){  // Store or Commit, depending on setting for autopush
     
     // Do nothing if no repos are defined
@@ -5327,11 +5390,11 @@ function displayLongAlert(title, message, type){
             gui.Window.open(
                 'externalDialog.html#/new_page', 
                 {   position: 'center',
-                    frame: true,
+                    frame: false,
                     show: false
                 },
                 function(cWindows){ 
-                    
+                     
                     cWindows.on('loaded', 
                         function(){
                             
@@ -5344,7 +5407,7 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 70;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 10;
                             let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
@@ -5404,6 +5467,7 @@ function displayLongAlert(title, message, type){
                                     }catch(err){
                                         document.getElementById('onRunExitStatus').style.color='var(--red-text)'
                                         document.getElementById('onRunExitStatus').innerText = ' -- FAIL!';
+                                        opener.displayLongAlert('Failed command', err, 'error')
                                     }
                                     "
                                 >[run]</a>
@@ -5805,8 +5869,22 @@ function updateContentStyle() {
 // Message
 function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
-    document.getElementById('message').placeholder = textOutputStruct.placeholder;  
-    document.getElementById('message').readOnly = textOutputStruct.readOnly; 
+    
+    if (textOutputStruct.placeholder !== undefined){
+        document.getElementById('message').placeholder = textOutputStruct.placeholder; 
+    }
+     
+    if (textOutputStruct.readOnly !== undefined){
+        document.getElementById('message').readOnly = textOutputStruct.readOnly;  
+    }    
+    
+    // Set message color for edit or for history
+    if (textOutputStruct.readOnly){
+        document.getElementById('message').style.color='var(--message-color)';  // History
+    }else{
+        document.getElementById('message').style.color='var(--text)'; // Edit
+    }
+    
     textOutput = textOutputStruct;
 }
 async function writeTimedTextOutput(textOutputStruct, time){
@@ -6451,29 +6529,7 @@ window.onload = async function() {
   
   var win = nw.Window.get();
   main_win = win;
-  
-  // Workaround to move frameless windows (see https://github.com/nwjs/nw.js/issues/6462)
-  var nwWin = nw.Window.get();
-  
-  var isDragging = false;
-  var dragOrigin = {x:0, y:0};
-  
-  document.onmousedown = (e) => {
-	  isDragging = true;
-	  dragOrigin.x = e.x;
-	  dragOrigin.y = e.y;
-  }
-  
-  document.mouseleave = (_) => isDragging = false;
-  document.onmouseup = (_) => isDragging = false;
-  
-  document.onmousemove = (e) => {
-	  if (isDragging) {
-	  nwWin.moveTo(e.screenX - dragOrigin.x, e.screenY - dragOrigin.y);
-	  }
-  }
 
-  // Initialize
   
   console.log('PATH= ' + process.env.PATH);
   defaultPath = process.env.PATH;
@@ -6492,10 +6548,7 @@ window.onload = async function() {
   
   _setMode('UNKNOWN');
   _update();
-  
-  // Throws an alert dialog if git missing (use setTimeout to allow drawing of gui to continue)
-  setTimeout(gitIsInstalled, 2000);
-  
+
   win.setAlwaysOnTop( state.alwaysOnTop );
 
   
@@ -6504,21 +6557,8 @@ window.onload = async function() {
   pragmaLog('Showing main app window');
 
   win.show();
-  
-  // New Release available
-    let releaseData = 'could not determine';
-    try{
-        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
-        localState.LATEST_RELEASE = await releaseData.tag_name;
-        console.log('Latest release = ' + localState.LATEST_RELEASE );
-        
-        localState.currentVersion = await require('./package.json').version;
-        if ( localState.LATEST_RELEASE > localState.currentVersion){
-           downloadNewVersionDialog(); // Ask about downloading if new version released
-        }
-    }catch(err){
-        console.error('Could not check Github for latest release');
-    } 
+
+
        
    
   // Map of stashes        
@@ -6533,9 +6573,30 @@ window.onload = async function() {
   // Mac Menu  
   initializeWindowMenu();
   
-  // Dialog if author's name is unknown
-  showUserDialog(true)
+  // Throws an alert dialog if git missing
+  await gitIsInstalled() // sets state.git = true / false
   
+    
+  // New Release available
+  if (state.git == true){
+    let releaseData = 'could not determine';
+    try{
+        let releaseData = await getLatestRelease( RELEASE_URL, state.allowPrerelease ); // second argument : false = prerelease,  true = normal release
+        localState.LATEST_RELEASE = await releaseData.tag_name;
+        console.log('Latest release = ' + localState.LATEST_RELEASE );
+        
+        localState.currentVersion = await require('./package.json').version;
+        if ( localState.LATEST_RELEASE > localState.currentVersion){
+           downloadNewVersionDialog(); // Ask about downloading if new version released
+        }
+    }catch(err){
+        console.error('Could not check Github for latest release');
+    } 
+  }
+  
+  // Dialog if author's name is unknown
+  showUserDialog(true)  // test = true, will show only if state.git == true
+ 
   pragmaLog('Done starting app');
   pragmaLog('');
 

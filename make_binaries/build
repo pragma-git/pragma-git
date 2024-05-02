@@ -64,17 +64,20 @@
     #
     # CONSTANTS
     #
-
-
+    
+    CACHE_DESTINATION='/Users/jan/Downloads/caches-nwjs-builder-phoenix'
+      
+    
     # MACOS ARM RELEASE (downloaded to "/Users/jan/Downloads/caches-nwjs-builder-phoenix")
-    NWJS_ARM_NAME='nwjs-sdk-v0.83.0-osx-arm64'  # UPDATE NAME HERE  (Download from  https://nwjs.io/downloads/)
-
+    # NWJS_ARM_NAME='nwjs-sdk-v0.83.0-osx-arm64'  # UPDATE NAME HERE  (Download from  https://nwjs.io/downloads/)
+    
 
 
     #
     # START OF SCRIPT
     #
-    
+
+
     # Declare formatting function (return "[OK] - " or "[XX] - ")
     
     formatReturn () {
@@ -283,13 +286,44 @@
     echo 'RE-BUILDING FOR APPLE SILICON'
     echo '============================='
     tput sgr0
+    
+    #
+    # Download ARM build for MacOS (works for nwjs > 0.78.0)
+    #
+  
+    
+    # Get version from package.json, and Download Macos arm64
+    nwVersion=$( cat ../package.json | grep nwVersion | cut -d\" -f 4)
+
+    NWJS_ARM_NAME="nwjs-sdk-${nwVersion}-osx-arm64"
+    CACHE_NWJS_ARM="$CACHE_DESTINATION/$NWJS_ARM_NAME"  # Folder name
+
+    
+    # Download and unzip
+    if [ ! -d "$CACHE_NWJS_ARM" ]; then
+        echo "Downloading ARM version = $NWJS_ARM_NAME"
+        
+        URL="https://dl.nwjs.io/${nwVersion}/${NWJS_ARM_NAME}.zip"   # Download from  https://nwjs.io/downloads/
+        echo "               from URL = $URL"
+
+        # Download
+        (cd "$CACHE_DESTINATION" && curl -O "$URL")
+        
+        # Unzip
+        echo "Unzipping  ${NWJS_ARM_NAME}.zip  to  $CACHE_DESTINATION"
+        (cd "$CACHE_DESTINATION" && unzip "${NWJS_ARM_NAME}.zip")
+    fi
+    
+    
+    # 
  
     #
     # Use ARM build, and copy files from MacOS-build 
     #  
     
     # Location of arm nwjs.app  
-    NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    NWJS_ARM="$CACHE_NWJS_ARM/nwjs.app"   # NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    
     xattr -c "$NWJS_ARM"
 
 

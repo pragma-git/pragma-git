@@ -16,8 +16,8 @@
     <script src="node_modules/codemirror/lib/codemirror.js"></script>
     <script src="node_modules/codemirror/mode/meta.js"></script>   <!-- Used to map file-extension to mime-->    
     <script src="node_modules/diff-match-patch/index.js"></script>
-    <script src="node_modules/codemirror/addon/merge/merge.js"></script>
-    
+    <script src="modified_codemirror_merge_addon.js"></script>
+     
     <script src="pragma-merge.js"></script>
     <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
 
@@ -221,22 +221,50 @@
           border-color: var( --body-text);
           float: left;
           display: block;
-          margin-right: 2px;
+          margin-right: 7px;
           position: relative;
         }
         
         #two-way{
             margin-left: 12px;
+            padding-top: 1px;
+            padding-bottom: 1px;
         }
         
-                
-        .enabled{
+        #two-way.enabled{
+            margin-left: 9px;
+        }
+        
+          
+        #three-way{
+            margin-left: 3px;
+            margin-right: 12px;
+            padding-top: 1px;
+            padding-bottom: 1px;
+        }
+        
+        #three-way.enabled{
+            margin-right: 9px;
+        }
+                      
+        span.clicky.enabled{
             background: white;
             color: black;
+            border: 3px solid;
+            margin-top: 0px;
+            margin-bottom: 0px;
         }
-        .disabled{
+        span.clicky.disabled{
             background: white;
-            color: gray;
+            color: #969aa5;  // Same as in notes_iframe.html
+            border: none;
+            border: 0px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+        
+        span.clicky:hover{
+            filter: brightness(70%);
         }
         
         
@@ -309,7 +337,8 @@
             color: var(--merge-arrow);
         }
         
-        .CodeMirror-merge-r-chunk
+        .CodeMirror-merge-r-chunk,
+        .CodeMirror-merge-l-chunk
         {
             background-color: antiquewhite;
             fill: antiquewhite;
@@ -317,7 +346,8 @@
         }  
         
         
-        .CodeMirror-merge-r-chunk
+        .CodeMirror-merge-r-chunk,
+        .CodeMirror-merge-l-chunk
         {
             background-color: var(--markerColor);
             fill: var(--markerColor);
@@ -325,12 +355,19 @@
         }     
         
         
-        .CodeMirror-merge-r-connect
+        .CodeMirror-merge-r-connect,
+        .CodeMirror-merge-l-connect
         {
             background: grey;
             fill: grey;
             stroke: grey;
-        }        
+        }    
+        
+
+
+        tr:hover {
+            backdrop-filter: none;
+        }
 
 
 
@@ -417,12 +454,13 @@
                 <!-- option = default is hard coded in code-mirror.css -->
                 <!-- override by chunk-color, which specifies  alpha, or  html color -->
                 <select id="theme-select" style="position: relative; left: 20px" 
-                    onChange="initUI();themeSelected( this.options[this.selectedIndex].text);">
+                    onChange="themeSelected( this.options[this.selectedIndex].text);initUI();">
                     <option>default</option>
                     <option disabled>──────────</option>
                     <option chunk-color="0.25">zenburn</option>
                     <option chunk-color="0.25">3024-day</option>
                     <option chunk-color="0.25">3024-night</option>
+                    <option chunk-color="0.25">abbott</option>
                     <option chunk-color="0.25">abcdef</option>
                     <option chunk-color="0.25">ambiance</option>
                     <option chunk-color="0.25">ayu-dark</option>
@@ -445,6 +483,7 @@
                     <option chunk-color="0.25">icecoder</option>
                     <option chunk-color="antiquewhite">idea</option>
                     <option chunk-color="0.25">isotope</option>
+                    <option chunk-color="0.25">juejin</option>
                     <option chunk-color="0.25">liquibyte</option>
                     <option chunk-color="0.25">lucario</option>
                     <option chunk-color="0.25">material-darker</option>
@@ -488,7 +527,7 @@
         </div>
         
         
-        <div id='jump' style="position: absolute; left: 50%; bottom: 20px"> 
+        <div id='jump' style="position: absolute; left: 50%; bottom: 10px; zoom:125% "> 
              <span id='down' class=clicky onclick="dv.edit.execCommand('goNextDiff');"> &#x25BC;</span> 
              <span id='up'   class=clicky onclick="dv.edit.execCommand('goPrevDiff');"> &#x25B2;</span> 
         </div>
@@ -582,27 +621,308 @@
         }
 
         window.addEventListener("keydown", event => {
-            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){
+            console.log(event )
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){  // Ctrl, Cmd S
                 finish('save')
-            }
+            }                
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 70 ){  // Ctrl, Cmd F
+                pragmaMergeSearchInEditorId = 'CodeMirror-merge-editor'; 
+                positionSearchBoxPragmaMerge();
+            }                      
+            if ( (event.ctrlKey || event.metaKey) && event.keyCode === 71 ){  // Ctrl, Cmd G
+                nextClicked(); 
+            }                   
+            if (event.keyCode === 27) {  // ESC
+                closeSearchDialog();
+            }            
         });
           
           
     </script>  
     
-    <!--  Add find  -->    
     
-    <script src="../node_modules/findinnw/dist/find-in-nw.js"></script>
-    <script src="../extend_find-in-nw.js"></script>
-    <script>
-        findInNw.initialize();
-        extendFindInNw(); // Make find-in-nw fit my purpose for graph and note and pragma-merge
+    <!--              -->     
+    <!--  Add Search  -->  
+    <!--              -->    
+
+    <script src="node_modules/codemirror/addon/search/searchcursor.js"></script>
+<!--
+    <link rel="stylesheet" href="node_modules/codemirror/addon/dialog/dialog.css">
+    <link rel="stylesheet" href="node_modules/codemirror/addon/search/matchesonscrollbar.css">  
+      
+    <script src="node_modules/codemirror/addon/dialog/dialog.js"></script>
+    <script src="node_modules/codemirror/addon/search/search.js"></script> 
+    <script src="node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
+    <script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
+    <script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
+-->
+    
+     <!--CSS for marked text -->
+    <style>
+        .cm-all {
+          background-color: yellow; /* Change to your desired color */
+          color: black!important; /* Change to your desired text color */
+        }
+        .cm-searching {
+          background-color: #38d878; /* Change to your desired color */
+          color: black!important; /* Change to your desired text color */
+        }
+    </style>
+    
+    
+    <script>        
         
-        var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
-    </script> 
+        // Variables
+            var count = 0;
+            
+            var searchCursor;
+            var resultCounter = 0; // Number of found items
+            var mark;           // Variable to store the MarkText object
+            var marks = [];
+            var openEditor;     // Variable to store the editor 
+            var pragmaMergeSearchInEditorId;  // This shows the active editor window to do the search in
+        
+        // Open Search Dialog
+            positionSearchBoxPragmaMerge = function (){
+                
+                // Clear selection that remains after previous searching
+                try{
+                    let cursorPos = openEditor.getCursor();
+                    openEditor.setSelection({line: cursorPos.line, ch: 0});
+                }catch (err){
+                    // There was no selection (maybe first search))
+                }
+                
+                // Clear count values
+                count = 0;
+                resultCounter = 0;
+                updateNumbers();
+                openEditor = getEditor(); 
+                
+                // Open empty searchbox
+                document.getElementById('find-in-nw-search-box').classList.add('find-in-nw-search-box-visible');
+                
+                // Set position getting editor from variable 'pragmaMergeSearchInEditorId' as defined on mouse click on search icon
+                let leftPos = document.getElementsByClassName(pragmaMergeSearchInEditorId)[0].getBoundingClientRect().x + 40;
+                document.getElementById('find-in-nw-search-box').style.left = leftPos + 'px';
+                document.getElementById('find-in-nw-search-box').style.right = 'auto';
+                document.getElementById('find-in-nw-search-box').style.top = '-6px';
+
+                // Cursor in input field
+                document.getElementById('find-in-nw-input').focus();
+                
+                // New search
+                let query =  document.getElementById('find-in-nw-input').value;
+                newSearch( query)
+            }
+     
+        // Close Search Dialog
+            function closeSearchDialog(){
+                // The search phrase remains if not closed (but opened searchbox for second editor -- this is a feature, not a bug)
+                
+                if (mark) {
+                  mark.clear();
+                }
+                
+                if (marks){
+                    for (var i = 0; i < marks.length; i++) { 
+                        marks[i].clear();
+                    }
+                    
+                }
+                
+                document.getElementById('find-in-nw-search-box').classList.remove('find-in-nw-search-box-visible');
+                document.getElementById('find-in-nw-input').value = ''; 
+              
+                // Clear count values
+                count = 0;
+                resultCounter = 0;
+                updateNumbers();
+                
+                // Clear query
+                query = '';
+                
+                // Clear selection, that remains at last mark
+                let cursorPos = openEditor.getCursor();
+                openEditor.setSelection({line: cursorPos.line, ch: 0});
+            }
+            
+         
+        // Search 
+            function newSearch( query){
+                caseInsensitive = true;
+                
+                
+                if (mark) {
+                  mark.clear();
+                }
+                
+                if (marks){
+                    for (var i = 0; i < marks.length; i++) { 
+                        marks[i].clear();
+                    }
+                    
+                }
+                
+                // Search 1 -- Loop result
+                searchCursor = openEditor.getSearchCursor(query, 0, caseInsensitive); 
+                
+                resultCounter = 0;
+                while (searchCursor.findNext()) {
+                    resultCounter++; 
+                    
+                    // Mark all
+                    let mark = openEditor.markText(searchCursor.from(), searchCursor.to(), {className: "cm-all"});
+                    marks.push(mark);
+                }
+ 
+                // Same search again -- use result
+                searchCursor = openEditor.getSearchCursor(query, 0, caseInsensitive); 
+                
+                // Update display
+                count = -1;  
+                nextClicked();
+                updateNumbers();
+
+            }
+        
+        // Set editor (to do search on)          
+            function getEditor(){
+                editor = dv.edit;
+                if (pragmaMergeSearchInEditorId == 'CodeMirror-merge-right') {
+                    editor = dv.right.orig;
+                }
+                if (pragmaMergeSearchInEditorId == 'CodeMirror-merge-left') {
+                    editor = dv.left.orig;  
+                }
+                return editor
+            }
+        
+        // Next result
+            function nextClicked() {
+                // Bail out if at last item
+                if ( ( count + 1 ) >= resultCounter ){
+                    return
+                }
+                
+                // Clear mark
+                if ( mark ) {
+                  mark.clear();
+                }
+                
+                // Go to next
+                if (searchCursor.findNext()) {
+                  count++;
+                  editor.setSelection(searchCursor.from(), searchCursor.to());
+                  mark = editor.markText(searchCursor.from(), searchCursor.to(), {className: "cm-searching"});
+                } 
+                
+                updateNumbers();
+            }
+            
+        // Previous result
+            function prevClicked() {
+                
+                // Bail out if at first item
+                if ( count <= 0  ){
+                    return
+                }
+                
+                // Clear mark
+                if ( mark ) {
+                  mark.clear();
+                }
+        
+                // Go to previous 
+                if (searchCursor.findPrevious()) {
+                  count--;
+                  editor.setSelection(searchCursor.from(), searchCursor.to());
+                  mark = editor.markText(searchCursor.from(), searchCursor.to(), {className: "cm-searching"});
+                } 
+                
+                updateNumbers();
+            }    
+        
+        // Update display
+            function updateNumbers(){
+                
+                // count is zero-based, make 1 lowest value
+                let countValue = count + 1;
+                
+                // If empty query -- display 0
+                let query =  document.getElementById('find-in-nw-input').value;
+                if (query == ''){
+                    countValue = 0;
+                }
+                
+                
+                document.getElementById("find-in-nw-current").innerText = countValue;  
+                document.getElementById("find-in-nw-count").innerText = resultCounter;
+            }
+            
+            
+        // Key press in search-field   Pragma-merge -- Find input takes keys ∧ ∨ ESC 
+            function searchFormKeyDown(element, evt){
+                console.log('Pressed Key in Search = ' + evt.key + '   evt.keyCode = ' + evt.keyCode );
+                if (evt.keyCode == 13){   // ENTER
+                    let query = element.value;
+                    newSearch(query);
+                }
+                if ( evt.keyCode === 40 ){  // Arrow down
+                    nextClicked();
+                }
+                if ( evt.keyCode === 38 ){ // Arrow up
+                    prevClicked();
+                }            
+                if (evt.keyCode === 27) {  // ESC
+                    closeSearchDialog();
+                }          
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 71 ){  // Ctrl, Cmd G
+                    nextClicked(); 
+                }     
+
+            }
 
         
+    </script>
+ 
+ 
+    <!-- Copied html from a window using findinnw-->
+       
+    <div id="find-in-nw-search-box" class="find-in-nw-search-box"  style="z-index: 1000000; left: 53px; right: auto; top: -6px;">
         
+        <input id="find-in-nw-input" class="find-in-nw-input" placeholder="Find text ... [ENTER]"  onclick="newSearch(this.value)" onKeyDown="searchFormKeyDown(this, event)">
+        
+        <span id="find-in-nw-current" class="find-in-nw-current">0</span>
+        <span id="find-in-nw-of" class="find-in-nw-of">/</span>
+        <span id="find-in-nw-count" class="find-in-nw-count">0</span>
+        
+        <button id="find-in-nw-previous" class="find-in-nw-previous" onclick="prevClicked()" >∧</button>
+        <button id="find-in-nw-next" class="find-in-nw-next" onclick="nextClicked()" >∨</button>
+        
+        <button id="find-in-nw-close" class="find-in-nw-close" onclick="closeSearchDialog()" >  × </button>
+    </div>
+    
+    
+    <!-- Copied html from a window using findinnw-->
+    
+    <style id="find-in-nw-style">
+        .find-in-nw-search-box{position:fixed;top:10px;right:10px;display:none;width:300px;background:#f1f1f1;border:1px solid #c1c1c1;border-radius:7px;margin:0px;padding:0px;box-shadow:1px 3px 9px rgba(0,0,0,.6)}
+        .find-in-nw-search-box-visible{display:flex;}
+        .find-in-nw-input{flex-grow:1;width:100%;background:transparent;border:0px;margin:0px;padding:0px 0px 0px 3px;font-size:16px}
+        .find-in-nw-previous,.find-in-nw-next,.find-in-nw-close{width:32px;background:transparent;border:0px;margin:0px 5px 0px 0px;padding:0px;font-size:32px;opacity:.5}
+        .find-in-nw-previous:hover,.find-in-nw-next:hover,.find-in-nw-close:hover{opacity:1}
+        .find-in-nw-search-box,.find-in-nw-input,.find-in-nw-count,.find-in-nw-previous,.find-in-nw-next,.find-in-nw-close{height:32px;color:#000;font-family:sans-serif;line-height:32px;vertical-align:top}
+        .find-in-nw-input:focus,.find-in-nw-previous:focus,.find-in-nw-next:focus,.find-in-nw-close:focus{opacity:1;outline:none}
+        .find-in-nw-previous,.find-in-nw-next{font-size:30px;transform:scale(1.5, 0.7)}
+        .find-in-nw-count{margin-right:8px}
+        .find-in-nw-token{background-color:#ff0}
+        .find-in-nw-current-token{background:#38d878;color:#fff}
+    </style>         
+         
+         
+         
+         
          
     <!--  Dialog for Merging Binary files -->  
             

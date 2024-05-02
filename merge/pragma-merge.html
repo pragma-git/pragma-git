@@ -69,6 +69,32 @@
             
                 }
             );  
+            
+            
+            window.addEventListener("keydown", event => {
+                
+                
+                // Work in iframe
+                let iframe = document.getElementById('iframe').contentWindow;
+                
+                console.log(event )
+                if ( (event.ctrlKey || event.metaKey) && event.keyCode === 83 ){  // Ctrl, Cmd S
+                    finish('save')
+                }                
+                if ( (event.ctrlKey || event.metaKey) && event.keyCode === 70 ){  // Ctrl, Cmd F
+                    iframe.pragmaMergeSearchInEditorId = 'CodeMirror-merge-editor'; 
+                    iframe.positionSearchBoxPragmaMerge();
+                }                      
+                if ( (event.ctrlKey || event.metaKey) && event.keyCode === 71 ){  // Ctrl, Cmd G
+                    iframe.contentWindow.nextClicked(); 
+                }                   
+                if (event.keyCode === 27) {  // ESC
+                    iframe.contentWindow.closeSearchDialog();
+                }            
+            });
+            
+            
+            
         </script>  
         
         

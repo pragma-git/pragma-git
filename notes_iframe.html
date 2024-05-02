@@ -106,19 +106,50 @@
  
        
     
-    /* Smaller icons and toolbar height */ 
+    /* ToastUI Smaller icons and toolbar height */ 
+    
+        :root {
+            --toolbarColor: #DDDDDD;
+            --buttonBorderColor : #AAAAAA;
+        }
     
         .toastui-editor-toolbar-icons{
             transform:scale(0.8); 
             transform-origin: top left;
-        }   
+            background-color: var(--toolbarColor)!important;
+        } 
         
         .toastui-editor-defaultUI-toolbar, .toastui-editor-toolbar{
             zoom: 1;
             height:38px;
+            background-color: var(--toolbarColor);
         }
+         
+        .toastui-editor-defaultUI-toolbar button{
+            transform:scale(0.8);
+            border: none;
+        }
+        
+        .toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
+            border-color: var(--buttonBorderColor)!important;
+        }
+        
+        
 
-
+        /* Own smaller icons and toolbar height */ 
+        
+            
+        .my-img  {
+            transform:scale(1.2);
+        }
+        
+        .my-icon{
+            background-color: var(--toolbarColor)!important;
+            transform:scale(0.8);
+            border-radius: 3px;
+        }
+        
+   
 
     /* modify toast-ui  code */ 
     
@@ -183,6 +214,7 @@
         
         .toastui-editor-md-code{
             color: var(--notes-code-text);
+            background: var(--code-background);
         }
     
         
@@ -290,6 +322,11 @@
             color: var(--body-text) !important;
         }
         
+    /* tab for markdown / wysiwyg */  
+        .tab-item.active {
+            border: 3px solid;
+            height: max-content;
+        }
  
  </style>
 

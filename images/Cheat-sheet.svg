@@ -1,96 +1,84 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="350.98904mm"
    height="170.86028mm"
    viewBox="0 0 350.98904 170.86025"
    version="1.1"
    id="svg8"
-   inkscape:version="1.0 (4035a4f, 2020-05-01)"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
    sodipodi:docname="Cheat-sheet.svg"
-   inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet.png"
+   inkscape:export-filename="../../Pragma-git/images/Cheat-sheet-advanced.png"
    inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96">
-  <defs
-     id="defs2">
-    <marker
+   inkscape:export-ydpi="96"
+   xml:space="preserve"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"><defs
+     id="defs2"><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker4154"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path4152"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker3818"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path3816" />
-    </marker>
-    <marker
+         id="path3816" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker3242"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path3240"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker2637"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"
+       viewBox="0 0 17.77385393 10.15648796"
+       markerWidth="17.77385393"
+       markerHeight="10.15648796"
+       preserveAspectRatio="xMidYMid"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2635" />
-    </marker>
-    <marker
+         id="path2635" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker2273"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2271"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -98,42 +86,33 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1575" />
-    </marker>
-    <marker
+         id="path1575" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1241"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1239" />
-    </marker>
-    <marker
+         id="path1239" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker3514"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path3512" />
-    </marker>
-    <marker
+         id="path3512" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
@@ -141,42 +120,33 @@
        id="marker3504"
        style="overflow:visible"
        inkscape:isstock="true"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          id="path3502"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker2739"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2737"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker2417"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2415" />
-    </marker>
-    <marker
+         id="path2415" /></marker><marker
        inkscape:collect="always"
        inkscape:stockid="Arrow1Lend"
        orient="auto"
@@ -184,71 +154,44 @@
        refX="0"
        id="marker2145"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2143"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
-       inkscape:collect="always"
-       inkscape:isstock="true"
-       style="overflow:visible"
-       id="marker1849"
-       refX="0"
-       refY="0"
-       orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
-         transform="matrix(-0.8,0,0,-0.8,-10,0)"
-         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1847" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker1242"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path1240"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1954"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1952" />
-    </marker>
-    <marker
+         id="path1952" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1848"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1846" />
-    </marker>
-    <marker
+         id="path1846" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -256,42 +199,33 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1836" />
-    </marker>
-    <marker
+         id="path1836" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker1130"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path1128"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1167"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1165" />
-    </marker>
-    <marker
+         id="path1165" /></marker><marker
        inkscape:collect="always"
        inkscape:stockid="Arrow1Lend"
        orient="auto"
@@ -299,42 +233,33 @@
        refX="0"
        id="marker5351"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path5349"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker4491"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path4489"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker4201"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path4199" />
-    </marker>
-    <marker
+         id="path4199" /></marker><marker
        inkscape:collect="always"
        inkscape:stockid="Arrow1Lend"
        orient="auto"
@@ -342,42 +267,33 @@
        refX="0"
        id="marker3795"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path3793"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker3595"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path3593"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker3331"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path3329"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker3171"
@@ -385,14 +301,11 @@
        refY="0"
        orient="auto"
        inkscape:stockid="Arrow1Lend"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path3169" />
-    </marker>
-    <marker
+         id="path3169" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -400,28 +313,22 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2991" />
-    </marker>
-    <marker
+         id="path2991" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker2803"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2801"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:collect="always"
        inkscape:stockid="Arrow1Lend"
        orient="auto"
@@ -429,14 +336,11 @@
        refX="0"
        id="marker2610"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2608"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -444,42 +348,33 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2598" />
-    </marker>
-    <marker
+         id="path2598" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker2436"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2434" />
-    </marker>
-    <marker
+         id="path2434" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
        refX="0"
        id="marker2426"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path2424"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -487,14 +382,11 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2294" />
-    </marker>
-    <marker
+         id="path2294" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker2184"
@@ -502,14 +394,11 @@
        refY="0"
        orient="auto"
        inkscape:stockid="Arrow1Lend"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2182" />
-    </marker>
-    <marker
+         id="path2182" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
@@ -517,14 +406,11 @@
        id="marker2090"
        style="overflow:visible"
        inkscape:isstock="true"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          id="path2088"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker2004"
@@ -532,28 +418,22 @@
        refY="0"
        orient="auto"
        inkscape:stockid="Arrow1Lend"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2002" />
-    </marker>
-    <marker
+         id="path2002" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1918"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1916" />
-    </marker>
-    <marker
+         id="path1916" /></marker><marker
        inkscape:collect="always"
        inkscape:stockid="Arrow1Lend"
        orient="auto"
@@ -561,14 +441,11 @@
        refX="0"
        id="marker1794"
        style="overflow:visible"
-       inkscape:isstock="true">
-      <path
+       inkscape:isstock="true"><path
          id="path1792"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1720"
@@ -576,43 +453,22 @@
        refY="0"
        orient="auto"
        inkscape:stockid="Arrow1Lend"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1718" />
-    </marker>
-    <marker
+         id="path1718" /></marker><marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker1648"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path1646" />
-    </marker>
-    <marker
-       inkscape:collect="always"
-       inkscape:stockid="Arrow1Lend"
-       orient="auto"
-       refY="0"
-       refX="0"
-       id="marker1848-7"
-       style="overflow:visible"
-       inkscape:isstock="true">
-      <path
-         id="path1846-7"
-         d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         id="path1646" /></marker><marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
        refY="0"
@@ -620,14 +476,11 @@
        id="marker2600-6"
        style="overflow:visible"
        inkscape:isstock="true"
-       inkscape:collect="always">
-      <path
+       inkscape:collect="always"><path
          id="path2598-5"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
-         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
-    </marker>
-    <marker
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
        inkscape:collect="always"
        inkscape:isstock="true"
        style="overflow:visible"
@@ -635,56 +488,104 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow1Lend">
-      <path
+       inkscape:stockid="Arrow1Lend"><path
          transform="matrix(-0.8,0,0,-0.8,-10,0)"
          style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
-         id="path2598-5-4" />
-    </marker>
-  </defs>
-  <sodipodi:namedview
+         id="path2598-5-4" /></marker><marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker3171-8"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:collect="always"><path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path3169-1" /></marker><marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker3171-8-0"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:collect="always"><path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path3169-1-4" /></marker><marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker3171-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:collect="always"><path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path3169-6" /></marker><marker
+       inkscape:collect="always"
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker2610-7"
+       style="overflow:visible"
+       inkscape:isstock="true"><path
+         id="path2608-5"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" /></marker><marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker3171-8-0-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:collect="always"><path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#808080;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path3169-1-4-6" /></marker></defs><sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.92259652"
-     inkscape:cx="759.64786"
-     inkscape:cy="240.16172"
+     inkscape:zoom="1.0967559"
+     inkscape:cx="645.08427"
+     inkscape:cy="269.88685"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer3"
      inkscape:document-rotation="0"
      showgrid="false"
-     inkscape:window-width="2683"
-     inkscape:window-height="1322"
-     inkscape:window-x="324"
-     inkscape:window-y="96"
-     inkscape:window-maximized="0"
+     inkscape:window-width="2960"
+     inkscape:window-height="1639"
+     inkscape:window-x="53"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
      fit-margin-top="4"
      fit-margin-left="4"
      fit-margin-right="4"
-     fit-margin-bottom="4" />
-  <metadata
-     id="metadata5">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <g
+     fit-margin-bottom="4"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" /><metadata
+     id="metadata5"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><g
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Advanced"
      transform="translate(37.970375,1.3479425)"
-     style="display:inline">
-    <image
+     style="display:inline"><image
        y="29.603033"
        x="13.949206"
        width="254.52916"
@@ -694,8 +595,7 @@
        id="image1340"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="text1704"
@@ -713,8 +613,25 @@
          y="26.785442"
          x="163.46066"
          sodipodi:role="line"
-         id="tspan1782">Branch</tspan></text>
-    <text
+         id="tspan1782">Branch</tspan></text><text
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
+       id="text1704-4"
+       y="44.606579"
+       x="261.59396"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         y="44.606579"
+         x="261.59396"
+         sodipodi:role="line"
+         id="tspan1782-8">Amend to latest</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         y="50.78019"
+         x="261.59396"
+         sodipodi:role="line"
+         id="tspan12">(pop-up checkbox)</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -737,8 +654,7 @@
          x="226.38922"
          y="31.557463"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan1992">     Tag</tspan></text>
-    <text
+         id="tspan1992">     Tag</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -766,8 +682,7 @@
          x="217.98503"
          y="125.64773"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan1799">Revert</tspan></text>
-    <text
+         id="tspan1799">Revert</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -784,104 +699,121 @@
          sodipodi:role="line"
          x="-33.970375"
          y="55.612007"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
          id="tspan3157">         newer</tspan><tspan
          sodipodi:role="line"
          x="-33.970375"
          y="63.549507"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
          id="tspan3159">          older</tspan><tspan
          id="tspan1387"
          sodipodi:role="line"
          x="-33.970375"
          y="71.487007"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">         search</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">         search</tspan><tspan
          sodipodi:role="line"
          x="-33.970375"
          y="79.424507"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan3547" /></text>
-    <path
+         id="tspan3547" /></text><path
        id="path1716"
        d="m 187.3715,25.362714 h 9.39133 v 11.56912"
-       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1720)"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.353;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1720)"
        sodipodi:nodetypes="ccc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        sodipodi:nodetypes="ccc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1794)"
        d="m 193.23588,16.366881 h 12.91828 v 20.564953"
        id="path1790"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path2000"
        d="M 225.63135,14.064716 H 214.48996 V 36.931834"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2004)"
        sodipodi:nodetypes="ccc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        sodipodi:nodetypes="ccc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2090)"
        d="m 229.86467,21.473051 h -7.66082 v 15.458783"
        id="path2086"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path2180"
        d="m 234.87961,28.881384 h -3.95665 v 8.05045"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2184)"
        sodipodi:nodetypes="ccc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        sodipodi:nodetypes="ccc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.368594;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2610)"
        d="m 236.38177,100.04613 h -6.78726 V 81.068723"
        id="path2594"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path2596"
        d="m 231.83073,107.34521 h -9.75446 V 80.430307"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.362947;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2600)"
        sodipodi:nodetypes="ccc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path3167"
-       d="M 9.2544368,54.392566 26.808434,54.87776"
+       d="M -0.87771723,54.392566 26.808434,54.87776"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3171)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
+       id="path3167-5"
+       d="M 262.05276,69.938776 251.38147,61.739267"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3171-3)"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
+       id="path3167-4"
+       d="M 16.950987,15.65169 43.913413,37.848643"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3171-8)"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
+       id="path3167-4-6"
+       d="M 38.917712,15.153261 65.880138,37.350214"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3171-8-0)"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
+       id="path3167-4-6-3"
+       d="M 78.48095,26.398121 69.01587,36.774227"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3171-8-0-3)"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker5351)"
-       d="M 8.9666668,61.34543 26.808434,59.64026"
+       d="M -0.92424546,62.069155 26.808434,59.64026"
        id="path5347"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path1163"
-       d="M 11.828139,67.25105 26.494906,66.075047"
+       d="M 0.97225969,69.663468 26.494906,66.075047"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1167)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <rect
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><rect
        style="display:inline;fill:none;stroke:#808080;stroke-width:1.15542;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect4438"
        width="183.07538"
@@ -890,8 +822,7 @@
        y="137.29909"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -914,27 +845,10 @@
          x="-12.470269"
          y="160.72807"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:1.165;stroke-miterlimit:4;stroke-dasharray:none"
-         id="tspan4431">   - &quot;Store&quot; changes to &quot;Checkout&quot; when viewing history</tspan></text>
-    <path
-       inkscape:export-ydpi="96"
-       inkscape:export-xdpi="96"
-       sodipodi:nodetypes="cc"
-       style="display:inline;fill:none;stroke:#000000;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1242)"
-       d="m 263.74427,68.289126 -8.65978,-8.161213"
-       id="path1238"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
-       inkscape:export-ydpi="96"
-       inkscape:export-xdpi="96"
-       sodipodi:nodetypes="cc"
-       style="display:inline;fill:none;stroke:#000000;stroke-width:0.35275;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1848-7)"
-       d="M 109.64171,24.870449 101.30097,36.79428"
-       id="path139-4"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+         id="tspan4431">   - &quot;Store&quot; changes to &quot;Checkout&quot; when viewing history</tspan></text><text
        id="text849-4"
-       y="7.4765692"
-       x="94.845001"
+       y="8.3369122"
+       x="79.645599"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"
        inkscape:export-xdpi="96"
@@ -942,60 +856,42 @@
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"><tspan
          id="tspan855-1"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="7.4765692"
-         x="94.845001"
+         y="8.3369122"
+         x="79.645599"
          sodipodi:role="line">Click to leave history</tspan><tspan
          id="tspan1834"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="15.414069"
-         x="94.845001"
+         y="16.274412"
+         x="79.645599"
          sodipodi:role="line">(change branch</tspan><tspan
          id="tspan1836"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="23.351568"
-         x="94.845001"
+         y="24.211912"
+         x="79.645599"
          sodipodi:role="line">if not in history)</tspan><tspan
          id="tspan851-5"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="31.289068"
-         x="94.845001"
-         sodipodi:role="line" /></text>
-    <path
-       id="path1844"
-       d="M 56.162383,14.78392 81.512999,36.919354"
-       style="display:inline;fill:none;stroke:#000000;stroke-width:0.35275;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1849)"
-       sodipodi:nodetypes="cc"
-       inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+         y="32.14941"
+         x="79.645599"
+         sodipodi:role="line" /></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="-12.250197"
+       x="-24.950201"
        y="12.519834"
        id="text2123"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"><tspan
          sodipodi:role="line"
-         x="-12.250197"
+         x="-24.950201"
          y="12.519834"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
          id="tspan2119">Menu for repo and branch</tspan><tspan
          sodipodi:role="line"
-         x="-12.250197"
+         x="-24.950201"
          y="20.457333"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan2121" /></text>
-    <path
-       inkscape:export-ydpi="96"
-       inkscape:export-xdpi="96"
-       sodipodi:nodetypes="cc"
-       style="display:inline;fill:none;stroke:#000000;stroke-width:0.35275;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2739)"
-       d="M 26.576183,15.377245 56.531787,37.341091"
-       id="path2735"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+         id="tspan2121" /></text><text
        id="text3830"
        y="107.94685"
        x="38.937241"
@@ -1018,8 +914,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:0;stroke-width:0.264583"
          y="123.82185"
          x="38.937241"
-         sodipodi:role="line">the files in fixed commit)</tspan></text>
-    <image
+         sodipodi:role="line">the files in fixed commit)</tspan></text><image
        id="image3850"
        xlink:href="data:image/png;base64,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 "
        preserveAspectRatio="none"
@@ -1029,12 +924,18 @@
        y="82.522675"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><path
+       id="path1573"
+       d="m 129.13916,104.87395 c 3.91966,-9.09726 7.72467,-17.740338 9.93811,-26.055442"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1577)"
+       sodipodi:nodetypes="cc"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="180.37857"
        y="147.70316"
        id="text4020"
@@ -1042,22 +943,13 @@
          sodipodi:role="line"
          x="180.37857"
          y="147.70316"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
          id="tspan4018">fixed commit;</tspan><tspan
          sodipodi:role="line"
          x="180.37857"
-         y="155.64066"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan1222">click to jump to fixed commit</tspan></text>
-    <path
-       id="path1573"
-       d="m 129.13916,104.87395 c 3.91966,-9.09726 7.72467,-17.740338 9.93811,-26.055442"
-       style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1577)"
-       sodipodi:nodetypes="cc"
-       inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+         y="153.87677"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         id="tspan1222">click to jump to fixed commit</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -1070,32 +962,28 @@
          x="8.8243513"
          y="91.089798"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         id="tspan2254">Show commit graph</tspan></text>
-    <path
+         id="tspan2254">Show commit graph</tspan></text><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        sodipodi:nodetypes="ccc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2273)"
        d="m 76.272353,89.662473 46.782487,-1.21535 8.89676,-9.014757"
        id="path2269"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        sodipodi:nodetypes="cc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3504)"
        d="M 180.01198,142.48936 161.74905,91.261683"
        id="path3500"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        sodipodi:nodetypes="cc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3242)"
        d="m 130.1975,104.87395 c 5.10103,-6.535485 7.5116,-8.923522 12.73695,-13.89139"
        id="path3238"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="text1227"
@@ -1106,14 +994,11 @@
        transform="translate(-25.332111,-7.2239508)"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"><tspan
          x="287.76831"
-         y="82.688667"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">Store &amp; </tspan><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">Push / </tspan></tspan><tspan
+         y="82.688667"
+         id="tspan13">Store &amp; Push / </tspan><tspan
          x="287.76831"
-         y="90.626168"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">Checkout </tspan><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583">(*)</tspan></tspan></text>
-    <rect
+         y="90.626168"
+         id="tspan14">Checkout (*)</tspan></text><rect
        y="49.279297"
        x="38.410385"
        height="19.833326"
@@ -1122,8 +1007,7 @@
        style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><text
        id="text3155"
        y="57.540348"
        x="77.027817"
@@ -1141,58 +1025,65 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
          y="64.595901"
          x="77.027817"
-         sodipodi:role="line">(click copies to clipboard)</tspan></text>
-    <path
+         sodipodi:role="line">(click copies to clipboard)</tspan></text><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="path2633"
        d="m 151.93731,60.813345 6.26537,9.12528"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2637)"
        sodipodi:nodetypes="cc"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <text
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><text
        id="text2097"
-       y="109.81254"
-       x="9.3358192"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       y="109.5713"
+       x="34.18372"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
        inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png"><tspan
          id="tspan2093"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="109.81254"
-         x="9.3358192"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         y="109.5713"
+         x="34.18372"
          sodipodi:role="line">Checkbox used to define fixed commit</tspan><tspan
          id="tspan2095"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
-         y="117.75004"
-         x="9.3358192"
-         sodipodi:role="line">(file diffs shown relative fixed commit)</tspan></text>
-    <path
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke-width:0.264583"
+         y="115.74491"
+         x="34.18372"
+         sodipodi:role="line">(file diffs shown relative fixed commit)</tspan></text><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        sodipodi:nodetypes="ccc"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.362947;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2600-6)"
        d="m 223.00334,114.37636 h -9.75446 V 80.58232"
        id="path2596-3"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-    <path
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
        id="path2596-3-0"
        d="m 215.99101,121.83087 h -9.75446 V 81.157687"
        style="display:inline;fill:none;stroke:#808080;stroke-width:0.362947;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2600-6-0)"
        sodipodi:nodetypes="ccc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"
-       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" />
-  </g>
-  <g
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><path
+       sodipodi:nodetypes="ccc"
+       style="display:inline;fill:none;stroke:#808080;stroke-width:0.368594;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2610-7)"
+       d="m 260.03425,47.012584 -36.46,5.066078 -13.75077,9.489121"
+       id="path2594-5"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:export-filename="/Users/jan/Documents/Projects/Pragma-git/Pragma-git/images/Cheat-sheet-advanced.png" /><image
+       width="24.540648"
+       height="5.0425987"
+       preserveAspectRatio="none"
+       xlink:href="data:image/png;base64,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&#10;SUVORK5CYII=&#10;"
+       id="image1-3"
+       x="205.66856"
+       y="62.954727" /></g><g
      transform="translate(23.294079,1.3479425)"
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Basic"
-     style="display:none">
-    <image
+     style="display:none"><image
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        style="fill:#808080;stroke:#808080"
@@ -1202,36 +1093,31 @@
        height="68.791664"
        width="234.68541"
        x="47.27113"
-       y="27.954672" />
-    <path
+       y="27.954672" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1954)"
        d="M 42.580005,35.546109 61.198339,40.72526"
        id="path1518"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3795)"
-       d="m 134.31636,24.639685 -8.89988,11.6263"
+       d="m 130.45649,24.639685 -8.89988,11.6263"
        id="path3791"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        id="path139"
-       d="m 106.49732,24.484738 8.82847,10.519078"
+       d="m 101.67248,24.243496 8.82847,10.519078"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1848)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1838)"
        d="m 75.390338,24.276173 8.828468,10.519078"
        id="path141"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -1253,8 +1139,7 @@
          x="55.321716"
          y="30.11677"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan851" /></text>
-    <text
+         id="tspan851" /></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="text1501"
@@ -1266,47 +1151,42 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
          y="36.215984"
          x="26.988581"
-         sodipodi:role="line">Help</tspan></text>
-    <text
+         sodipodi:role="line">Help</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="135.41895"
+       x="131.55908"
        y="13.739361"
        id="text1568"><tspan
          sodipodi:role="line"
-         x="135.41895"
+         x="131.55908"
          y="13.739361"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
          id="tspan1566">Notes for </tspan><tspan
          sodipodi:role="line"
-         x="135.41895"
+         x="131.55908"
          y="21.676861"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan1570">repository</tspan></text>
-    <path
+         id="tspan1570">repository</tspan></text><path
        id="path2292"
        d="m 277.0739,55.527723 -7.7698,2.51864"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2296)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2803)"
        d="M 250.08179,107.04982 262.35226,81.154144"
        id="path2799"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        id="path4197"
        d="m 275.20141,35.552747 -5.64487,3.798067"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4201)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="text2568-3"
@@ -1323,8 +1203,7 @@
          y="120.34914"
          x="226.4613"
          sodipodi:role="line"
-         id="tspan1380">(software and repository)</tspan></text>
-    <text
+         id="tspan1380">(software and repository)</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -1341,8 +1220,7 @@
          x="276.71704"
          y="37.364269"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan3977">Close</tspan></text>
-    <text
+         id="tspan3977">Close</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -1359,8 +1237,7 @@
          x="76.514099"
          y="100.44138"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan2975">(click to view diffs, delete or restore)</tspan></text>
-    <text
+         id="tspan2975">(click to view diffs, delete or restore)</tspan></text><text
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        xml:space="preserve"
@@ -1377,15 +1254,13 @@
          x="-3.0724204"
          y="89.718781"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan2981">in Explorer/Finder</tspan></text>
-    <path
+         id="tspan2981">in Explorer/Finder</tspan></text><path
        id="path2989"
        d="M 48.673578,78.255041 61.288363,74.820292"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2993)"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <image
+       inkscape:export-ydpi="96" /><image
        style="display:inline;opacity:0.485531;fill:#808080;fill-opacity:0.988235;stroke:#808080;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
        transform="rotate(-90)"
        id="image1154"
@@ -1396,8 +1271,7 @@
        x="-86.122543"
        y="77.296364"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <text
+       inkscape:export-ydpi="96" /><text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="231.4248"
@@ -1409,8 +1283,7 @@
          sodipodi:role="line"
          x="231.4248"
          y="150.95195"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583">(*) See advanced use</tspan></text>
-    <text
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583">(*) See advanced use</tspan></text><text
        transform="translate(-23.537884,-1.2682906)"
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
@@ -1420,41 +1293,35 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:51.2161;display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          x="301.55463"
-         y="57.921448"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583">Commit </tspan><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583">&amp; </tspan></tspan><tspan
+         y="57.921448"
+         id="tspan15">Commit &amp; </tspan><tspan
          x="301.55463"
-         y="65.858948"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583">Push(*)</tspan></tspan></text>
-    <path
+         y="65.858948"
+         id="tspan16">Push(*)</tspan></text><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="path2141"
        d="M 75.390338,24.276173 73.538953,36.575227"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2145)"
-       sodipodi:nodetypes="cc" />
-    <path
+       sodipodi:nodetypes="cc" /><path
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2417)"
-       d="m 104.38064,24.484739 -1.85138,12.299054"
+       d="m 99.555805,24.243497 -1.85138,12.299054"
        id="path2413"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
-    <path
+       inkscape:export-ydpi="96" /><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        id="path374"
        d="m 273.1589,27.768401 -15.76756,8.504626"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker3818)"
-       sodipodi:nodetypes="cc" />
-    <path
+       sodipodi:nodetypes="cc" /><path
        inkscape:export-ydpi="96"
        inkscape:export-xdpi="96"
        sodipodi:nodetypes="cc"
        style="display:inline;fill:#808080;stroke:#808080;stroke-width:0.352751;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4154)"
        d="M 53.096058,101.00995 70.870403,77.919733"
-       id="path4150" />
-    <text
+       id="path4150" /><text
        id="text4784"
        y="105.85923"
        x="3.0699129"
@@ -1471,8 +1338,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
          y="113.79673"
          x="3.0699129"
-         sodipodi:role="line">in Terminal</tspan></text>
-    <text
+         sodipodi:role="line">in Terminal</tspan></text><text
        id="text3571"
        y="55.221195"
        x="82.342682"
@@ -1484,8 +1350,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
          y="55.221195"
          x="82.342682"
-         sodipodi:role="line">&quot;Commit message area&quot; (type description here)</tspan></text>
-    <text
+         sodipodi:role="line">&quot;Commit message area&quot; (type description here)</tspan></text><text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="84.644852"
@@ -1497,19 +1362,28 @@
          x="84.644852"
          y="66.378822"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#808080;stroke:none;stroke-width:0.264583"
-         id="tspan6145">Drop folder here, adds repository</tspan></text>
-  </g>
-  <g
+         id="tspan6145">Drop folder here, adds repository</tspan></text></g><g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="temp"
+     style="display:none"><image
+       width="29.594202"
+       height="8.8401318"
+       preserveAspectRatio="none"
+       xlink:href="data:image/png;base64,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&#10;"
+       id="image1"
+       x="239.10985"
+       y="61.680176"
+       style="display:none" /></g><g
      inkscape:label="Instructions"
      id="layer1"
      inkscape:groupmode="layer"
      style="display:none"
-     transform="translate(19.324456)">
-    <text
+     transform="translate(19.324456)"><text
        id="text9570"
        y="-30.644102"
        x="39.901173"
-       style="font-size:10.5833px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:0.264583"
+       style="font-size:10.5833px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';display:inline;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="stroke-width:0.264583"
          y="-30.644102"
@@ -1580,6 +1454,4 @@
          style="stroke-width:0.264583"
          y="141.33452"
          x="39.901173"
-         sodipodi:role="line">BOTH: Export to PNG with only correct layer visible  </tspan></text>
-  </g>
-</svg>
+         sodipodi:role="line">BOTH: Export to PNG with only correct layer visible  </tspan></text></g></svg>

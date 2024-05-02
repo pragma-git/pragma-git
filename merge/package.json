@@ -15,9 +15,9 @@
     "icon": "../images/icon.png"
   },
   "dependencies": {
-    "codemirror": "^5.57.0",
+    "codemirror": "^5.65.16",
     "diff-match-patch": "^1.0.5",
-    "mime-types": "^2.1.27"
+    "mime-types": "^2.1.35"
   },
   "build": {
     "nwFlavor": "sdk",

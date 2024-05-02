@@ -192,15 +192,12 @@ async function injectIntoJs(document) {
     console.log('Mime-modes : ');
     console.log(CodeMirror.mimeModes);
 
-    initUI();
-    
-    // Set theme
-    themeSelected( global.state.pragmaMerge.codeTheme);
     
     // Set theme-selection GUI to current
     document.getElementById('theme-select').selectedIndex = 
         util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     
+    initUI();
     
         
     
@@ -257,6 +254,8 @@ function findMimeFromExtension( extension){
     // My version below works better than this :
     //found = CodeMirror.findModeByFileName(extension);
     
+    console.log('Find mime-mode from extension (=' + extension + ')');
+    
     let found = undefined;
     
     modeInfo = CodeMirror.modeInfo;
@@ -281,7 +280,7 @@ function findMimeFromExtension( extension){
     }
     
     
-    console.log( found);
+    console.log( 'Found mime-mode = ' + found);
     
     if (found !== undefined){
         return  found.mime
@@ -305,9 +304,14 @@ function themeSelected( themeName){
     }
     console.log(themeName);
     
-    // Load theme
+    // Load theme into iframe head
     let themeDir = 'node_modules/codemirror/theme/';
     let themeCssFile = themeDir + themeName + '.css';
+    loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
+    
+    // Load theme into iframe head -- Override CodeMirror theme catalog with own (will be a non-existing file reference if not exists -- and won't be used then)
+    themeDir = 'codeMirror_theme_override/'; 
+    themeCssFile = themeDir + themeName + '.css';
     loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
 
     // Replace selected theme
@@ -677,7 +681,7 @@ function initUI( keep) {
         addSearch('right2', 'CodeMirror-merge-right');
     }
     if ( panes == 3){
-        addSearch('left3', 'CodeMirror-merge-left ');
+        addSearch('left3', 'CodeMirror-merge-left');
         addSearch('editor3', 'CodeMirror-merge-editor');
         addSearch('right3', 'CodeMirror-merge-right');
     }
@@ -685,6 +689,7 @@ function initUI( keep) {
         changeToEditor();
     }
 
+    themeSelected( global.state.pragmaMerge.codeTheme);
 
 
 }
@@ -698,7 +703,7 @@ function addSearch(headerId, editorId){
     headerElement.innerHTML = headerElement.innerHTML + 
     `  <!-- Search button --> 
                 <img id="${searchIconElementId}" style='left:${leftPos}px;position: absolute' height="17" width="17"  
-                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; findInNw.positionSearchBoxPragmaMerge()" 
+                    onclick="pragmaMergeSearchInEditorId = '${editorId}'; positionSearchBoxPragmaMerge()" 
                     onmouseover="document.getElementById('${searchIconElementId}').src='../images/find_hover.png' " 
                     onmouseout="document.getElementById('${searchIconElementId}').src='../images/find_black.png' " 
                     src="../images/find_black.png" >`;

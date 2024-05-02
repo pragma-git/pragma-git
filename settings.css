@@ -53,7 +53,6 @@ table#outer_table {
     background-color: var(--body-background);
     z-index: 30;
     padding: 20;
-    margin-right: 20px;
 }
 
 .buttonWrapper {

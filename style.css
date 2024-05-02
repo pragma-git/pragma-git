@@ -19,7 +19,7 @@ body {
 
 
 img {
-    filter: invert(0%)
+    filter: invert(0%);
 }
 
 label {
@@ -87,6 +87,15 @@ div#inner-content {
   margin-left: -2px;
 }
 
+#edit_commit_message_link, #amend_commit_div{
+  position: absolute;
+  bottom: 5;
+  right: 5;
+  visibility: hidden; 
+}
+#edit_message_button, #amend_button{
+  filter: invert( var(--history-image-invert) );
+}
 
 #up-arrow, #down-arrow, #bottom-titlebar-find-icon
 {
@@ -103,8 +112,9 @@ div#inner-content {
 }
 
 #bottom-titlebar-find-icon{
-  bottom: 5px;
+  bottom: 40px;
   left: 8px;
+  position: fixed
 }
 
 
@@ -118,12 +128,12 @@ div#inner-content {
   margin-right: 6px;
 }
 
-
 .message{
   width: 100%;
   height: 100%;
   color: var(--message-color);
 }
+
 .message::placeholder {
   color: var(--message-placeholder);
 }
@@ -246,6 +256,14 @@ div#inner-content {
   text-align: left
 }
 
+.link-text{
+  text-decoration: underline;
+  font-size: 10pt;
+  position: relative;
+  display:inline-block;
+  color: #ffffff;
+  -webkit-app-region: no-drag;
+}
 
 .top-titlebar-repo-text,
 .top-titlebar-branch-text,
@@ -333,12 +351,16 @@ div#inner-content {
 }
 
 .top-titlebar-close-field,
-.bottom-titlebar-settings-field {
+.bottom-titlebar-settings-field{
   position: absolute;
   right: 11px;
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.edit_commit_message_link {
   -webkit-app-region: no-drag;
 }
 

@@ -9,6 +9,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 var gui = require("nw.gui"); // TODO : don't know if this will be needed
 var os = require('os');
 var fs = require('fs');
+const util = require('util_module');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
@@ -145,6 +146,7 @@ async function _callback( name, event, event2){
 
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
+            opener.writeTextOutput( { value: '' } );  // Clean message
             closeWindow();
             break;
         }         
@@ -541,7 +543,11 @@ async function _callback( name, event, event2){
                     console.log(err);
                 }
                 
-    
+                
+             // This used to be a button in listChanged.html, no apply selected files 
+            await _callback('applySelectedFilesButton',this);  
+            
+               
             // Git Status
                 try{
                     if (localState.mode == 'HISTORY'){
@@ -554,6 +560,9 @@ async function _callback( name, event, event2){
                     console.log(err);
                     return
                 }
+
+
+            await injectIntoJs(document)
 
             // Finish
                 origFiles = createFileTable(status_data); // Redraw, and update origFiles;
@@ -646,14 +655,35 @@ async function listGitStatus(){
     
     return status_data;
 }
+async function getChangedSinceHEAD( ){
+    try{
+        let currentCommit = localState.historyHash;
+        return await simpleGit( state.repos[state.repoNumber].localFolder).diffSummary(['--name-only', currentCommit, 'HEAD'])
+    }catch (err){
+        // Gets here if not history mode
+        return [];
+    }
+}
+async function isFileChangedSinceHEAD( changedFilesSinceHeadStruct, filePath ){ 
+    let index = util.findObjectIndex( changedFilesSinceHeadStruct.files, 'file', filePath);
+    if ( isNaN(index) ){
+        return false; // File is not changed, because it is not present in changedFilesSinceHeadStruct
+    }else{
+        return true;
+    }
+}
 // Draw
-function createFileTable(status_data) {
+async function createFileTable(status_data) {
 
     var index = 10000; // Checkbox id
     let cell, row;
     let foundFiles = [];
     
     let renamedStatusData;
+    
+    // This struct can be used to verify that HISTORY file is changed since HEAD :
+    let changedFilesSinceHeadStruct =  await getChangedSinceHEAD( );  
+    
 
         
     // Old tbody
@@ -681,6 +711,8 @@ function createFileTable(status_data) {
         i = Number(j) + lowRange - 1;
         let fileStruct = status_data.files[i];
         let file = fileStruct.path;
+        let fileIsChanged = await isFileChangedSinceHEAD( changedFilesSinceHeadStruct, file );  // False if file is same as in HEAD, true if file is changed since HEAD
+
         file = file.replace(/"/g,''); // Replace all "  -- solve git bug, sometimes giving extra "-characters
         
         let filetext = file; // First guess is that text is file path (for rename, it will be different)
@@ -810,8 +842,12 @@ function createFileTable(status_data) {
             if (localState.mode == 'HISTORY'){
                 // diff-link for history vs previous history
                 let commit = localState.historyHash;
+                
                 cell.appendChild( diffLinkHistory( document, commit, file) );
-                cell.appendChild( fileCheckoutLink( document, commit, file) );
+                if ( fileIsChanged){  // Only show checkout if there is a difference to HEAD (confusing otherwise)
+                    //cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
+                }
+                cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
                 
             }else{ // NOT HISTORY
                 // diff-link for working_dir and staged vs HEAD
@@ -822,7 +858,7 @@ function createFileTable(status_data) {
                                     
                 if (typeOfChanged == 'added'){  // two files to compare only in modified (only one file in added)
                     var addLink = document.createElement('span');
-                    addLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    addLink.setAttribute('class', "linkLike");
                     addLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--rw ') ");
                     addLink.textContent=" (edit)";
                     cell.appendChild(addLink);  
@@ -831,7 +867,7 @@ function createFileTable(status_data) {
                 // Make restore link (only if modified or deleted) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'deleted'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('restoreDialog').showModal();" );  // Opens dialog from html-page
@@ -842,7 +878,7 @@ function createFileTable(status_data) {
                 // Make ignore link (only if added) 
                 if ( typeOfChanged == 'added'){  
                     var ignoreLink = document.createElement('span');
-                    ignoreLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    ignoreLink.setAttribute('class', "linkLike");
                     ignoreLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('ignoreDialog').showModal();" );  // Opens dialog from html-page
@@ -853,7 +889,7 @@ function createFileTable(status_data) {
                 // Make delete link (only if modified or added) 
                 if (typeOfChanged == 'modified' || typeOfChanged == 'added'){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = '"  + file + "';" + 
                         "document.getElementById('deleteDialog').showModal();" );  // Opens dialog from html-page
@@ -865,7 +901,7 @@ function createFileTable(status_data) {
                 // Make renamed link 
                 if (typeOfChanged == 'renamed' ){  
                     var discardLink = document.createElement('span');
-                    discardLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    discardLink.setAttribute('class', "linkLike");
                     discardLink.setAttribute('onclick',
                         "selectedFile = {from: '" + renamedStatusData.from + "', to: '" + renamedStatusData.to +  "' };" + 
                         "document.getElementById('restoreRenameDialog').showModal();" );  // Opens dialog from html-page
@@ -875,11 +911,18 @@ function createFileTable(status_data) {
             }
             // Internal functions
 
-            function fileCheckoutLink(document, commit, file){
+            function fileCheckoutLink(document, commit, file, fileIsChanged){
+                
+                let fileCheckoutLink = document.createElement('span');
+                
+                if (!fileIsChanged){
+                    fileCheckoutLink.innerHTML="";
+                    return  fileCheckoutLink;
+                }
+                
                 // Make fileCheckout link (work_dir)
-                var fileCheckoutLink = document.createElement('span');
                 if ( (typeOfChanged == 'modified')||(typeOfChanged == 'added') ){ // allow this for added or modified
-                    fileCheckoutLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    fileCheckoutLink.setAttribute('class', "linkLike");
                     fileCheckoutLink.setAttribute('onclick', 
                         "_callback('fileCheckoutLink', "  + "'"  + commit + "', " + "'"  + file + "')" );
                     fileCheckoutLink.textContent=" (checkout)";
@@ -893,7 +936,7 @@ function createFileTable(status_data) {
                 // Make diff link (work_dir)
                 var diffLink = document.createElement('span');
                 if (typeOfChanged == 'modified'){ // two files to compare only in modified (only one file in deleted or added)
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLink'," + "'"  + file + "')");
                     diffLink.textContent=" (diff)";
                     return  diffLink;
@@ -918,14 +961,14 @@ function createFileTable(status_data) {
                         commit2 = commit + ":" + file;           
                     }  
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                 }
                     
                 if (typeOfChanged == 'added'){  // only one file in added
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('editLinkHistory', " + "'" + file + "' , '--show ') ");
                     diffLink.textContent=" (view)";
                 }   
@@ -946,7 +989,7 @@ function createFileTable(status_data) {
                     
                     
 
-                    diffLink.setAttribute('style', "color: var(--link-color); cursor: pointer");
+                    diffLink.setAttribute('class', "linkLike");
                     diffLink.setAttribute('onclick', "_callback('diffLinkHistory', " + "'" + commit1 + "', '" + commit2 + "') ");
                     diffLink.textContent=" (diff)";
                     
