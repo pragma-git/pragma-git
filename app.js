@@ -5422,7 +5422,7 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 10;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 50;
                             let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
