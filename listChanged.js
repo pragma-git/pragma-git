@@ -396,8 +396,8 @@ async function _callback( name, event, event2){
 
                 
             }catch(err){
-                console.log('discardLink -- caught error ');
-                console.log(err);
+                console.warn('discardLink -- caught error ');
+                console.warn(err);
             }
                 
     
@@ -412,7 +412,6 @@ async function _callback( name, event, event2){
             }catch(err){
                 console.log("discardLink -- Error " );
                 console.log(err);
-                return
             }
             
 
