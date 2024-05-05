@@ -573,6 +573,15 @@ async function _callback( name, event){
         messageKeyUpEvent();
         break;
       }
+      case 'message_focus': {
+        if ( getMode() == 'NO_FILES_TO_COMMIT'){ // Copy commit message to message area, to be able to edit from existing
+            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( ['-1']);
+            commitMessage = latestCommit.latest.message;
+            writeTextOutput( { value: commitMessage} ); 
+            document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+        }
+        break;
+      }
       case 'file-dropped': {
         dropFile( event); 
         break;
@@ -2992,7 +3001,10 @@ async function _setMode( inputModeName){
     }
     
     // Hide amend checkobx (below they will be visibible for certain cases)
-    document.getElementById('amend_commit_div').style.visibility='hidden';    
+    document.getElementById('amend_commit_div').style.visibility='hidden';   
+    
+    // Hide modify message text  (below they will be visibible for certain cases)
+    document.getElementById('edit_commit_text_div').style.visibility = 'hidden'; 
            
    // Amend mode
     document.getElementById('amend_commit_checkbox').checked = false    
@@ -3133,6 +3145,9 @@ async function _setMode( inputModeName){
                 // Hide amend  checkbox
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
                 setButtonText()
+                
+                // Show edit message text
+                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
                 return
             };
             

@@ -259,7 +259,9 @@
             
              <!-- Message Textarea -->
              
-            <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" 
+            <textarea style="resize: none;" class="message" id="message" 
+            onkeyup="_callback( 'message_key_up');"  
+            onfocus="_callback( 'message_focus');"
             placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;" readonly=""></textarea>  
 
 
@@ -287,6 +289,14 @@
                 </div>
             </div>  
 
+
+            <!-- Textarea pop-up edit text  -->  
+            
+            <div id="edit_commit_text_div" class="tooltip-top-right " style="color:var(--message-placeholder);  visibility: hidden;">
+                <div>
+                    (click to edit)
+                </div>
+            </div>  
 
         </div>
         

@@ -22,8 +22,8 @@ img {
     filter: invert(0%);
 }
 
-label {
-  font-size: 9pt; 
+label, #edit_commit_text_div {
+  font-size: 12px; 
   display: block;
 }
 input{
@@ -87,7 +87,7 @@ div#inner-content {
   margin-left: -2px;
 }
 
-#edit_commit_message_link, #amend_commit_div{
+#edit_commit_text_div, #amend_commit_div{
   position: absolute;
   bottom: 5;
   right: 5;
