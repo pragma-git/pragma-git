@@ -1630,7 +1630,6 @@ async function generateRepoTable(document, table, data) {
     
              //  Into table cell : Column Repo-path with radiobuttons
             cell = row.insertCell();
-            cell.setAttribute("class", 'localFolder');
             
     
             var radiobox = document.createElement('input');
@@ -1639,6 +1638,14 @@ async function generateRepoTable(document, table, data) {
             radiobox.type = 'radio';
             radiobox.id = index;
             radiobox.value = 'email';
+            radiobox.setAttribute("class", 'localFolderRadioButton');
+            
+            cell.appendChild(radiobox);
+            
+            
+            
+            cell = row.insertCell();
+            cell.setAttribute("class", 'localFolder');
             
             var label = document.createElement('label')
             label.htmlFor = index;
@@ -1647,7 +1654,6 @@ async function generateRepoTable(document, table, data) {
             
             var newline = document.createElement('br');
             
-            cell.appendChild(radiobox);
             cell.appendChild(label);
             cell.appendChild(newline);
             
