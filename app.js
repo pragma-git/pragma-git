@@ -1597,6 +1597,7 @@ async function _callback( name, event){
     // title-bar
     async function repoClicked( type){
         
+        
         //
         // Show menu
         //
@@ -1654,27 +1655,6 @@ async function _callback( name, event){
             // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
         }
         
-
-        //
-        // Cycle through stored repos
-        //
-        if (type == 'cycle'){
-            state.repoNumber = state.repoNumber + 1;
-            var numberOfRepos = state.repos.length;
-            if (state.repoNumber >= numberOfRepos){
-                state.repoNumber = 0;
-            }
-            
-            pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder);
-            pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL );
-            pragmaLog(' ');
-            gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
-                        
-			cacheBranchList();
-            
-			await updateGraphWindow();
-			await gitStashMap(state.repos[state.repoNumber].localFolder);
-        }
         
         // Update repo in settings_win (here, because not used when opening menu)
         try{
@@ -1688,6 +1668,7 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
     }
     async function branchClicked( detectDetachedBranch, type){
+        
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
 
         let branchList = cachedBranchList;
@@ -1823,7 +1804,7 @@ async function _callback( name, event){
 
 
             //
-            // Alt 1) Show branch menu
+            // Show branch menu
             //
             if (type == 'menu'){
 
@@ -1844,50 +1825,7 @@ async function _callback( name, event){
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
-
-            
-            //
-            // Alt 2) Cycle through local branches
-            //
-            if (type == 'cycle'){ 
-                
-                let branchName; 
-
-                // Get branch name (non-hidden)
-                do { 
-                    if (status_data.current === 'HEAD') { 
-                        
-                        // Keep branch number. Get that branch from branchList 
-                        if (branchList.detached){  // Detached branch is before all other branches
-                            localState.branchNumber++;
-                        }       
-                         
-                    }else {
-                        // Normal branch
-                        
-                        // Cycle branch number
-                        localState.branchNumber = localState.branchNumber + 1;
-                        if (localState.branchNumber >= branchList.local.length){
-                            localState.branchNumber = 0;
-                        }
-                        // Get branchname after cycling
-                        branchName = branchList.local[localState.branchNumber];
-                    }
-                    console.log(branchName);
-                    pragmaLog('   branchname = ' + branchName);
-                }
-                while ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchList.local[localState.branchNumber]) ); // Look until non-hidden branch. NOTE: This can lock if all branches are hidden!!
-        
-                // Checkout local branch
-                
-                try{
-                    gitSwitchBranch(branchName);
-                }catch(err){        
-                    console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
-                    console.log(err);
-                } 
-            } 
-            
+          
             cacheBranchList();
             
         } // End checking out branch
