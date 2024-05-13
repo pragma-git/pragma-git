@@ -229,23 +229,23 @@
 
         <!-- Content -->   
         
-        <div style="grid-row: 2 ; grid-column: 1; height: 100%; position:relative;">   <!-- Left -->   
+        <div  class="draggable" style="grid-row: 2 ; grid-column: 1; height: 100%; position:relative;">   <!-- Left -->   
             
-            <img id="up-arrow"  height="17" width="17" 
+            <img id="up-arrow" class="non-draggable" height="17" width="17" 
                 onclick="_callback( 'clicked-up-arrow')" 
                 onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
                 onmouseout="updateImageUrl('up-arrow', 'images/up-arrow_black.png');" 
                 src="images/up-arrow_black.png">
                          
         
-            <img id="down-arrow"  height="17" width="17" 
+            <img id="down-arrow" class="non-draggable"  height="17" width="17" 
                 onclick="_callback( 'clicked-down-arrow')"  
                 onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
                 onmouseout="updateImageUrl('down-arrow', 'images/down-arrow_black.png');" 
                 src="images/down-arrow_black.png">
                     
                     
-             <img id="bottom-titlebar-find-icon" height="15" width="15"
+             <img id="bottom-titlebar-find-icon" class="non-draggable" height="15" width="15"
                 onclick="updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');
                          _callback('clicked-find');updateContentStyle();"
                 onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
@@ -300,8 +300,8 @@
 
         </div>
         
-        <div style="grid-row: 2; grid-column: 3; padding: 0px"> <!-- Right -->   
-            <button id="store-button" onclick="_callback('clicked-store-button')" style="margin: 6px;"  disabled >Store</button>
+        <div  class="draggable"  style="grid-row: 2; grid-column: 3; padding: 0px; height: 100%;"> <!-- Right -->   
+            <button id="store-button" class="non-draggable"  onclick="_callback('clicked-store-button')" style="margin: 6px; position: relative; top: calc(50% - 17px);"  disabled >Store</button>
         </div>
 
 
