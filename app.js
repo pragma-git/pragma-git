@@ -518,7 +518,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-push-button': {
-        gitPush();  // TODO : Problem if a --force push is required after an amend and manual commit, gitPush does not know of this
+        gitPush( forcePush = false); 
         break;
       }
       case 'clicked-pull-button': {
@@ -3887,7 +3887,109 @@ async function gitLocalFolder(){
 }
 async function gitAddCommitAndPush( message){    
     
-    var status_data;     
+    var status_data; 
+    let forcePush = false;  // Default, if not git amend    
+
+    
+    //
+    // PREPARE
+    //
+
+        // Read current branch
+        try{
+            status_data = await gitStatus();
+        }catch(err){
+            console.log('Error in gitAddCommitAndPush()');
+            console.log(err);
+        }
+        var currentBranch = status_data.current;
+        var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    
+        
+        // Add all files to index
+        setStatusBar( 'Adding files');
+        var path = '.'; // Add all
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .add( path, onAdd );   
+        function onAdd(err, result) {console.log(result) }
+        
+        
+        // Remove localState.unstaged from index
+        for (var file of localState.unstaged) {
+             await simpleGit( state.repos[state.repoNumber].localFolder )
+            .raw( [  'reset', '--', file ] , onReset); 
+        }
+        function onReset(err, result) {console.log(result) }
+        
+        await waitTime( 1000);
+        
+    //
+    // COMMIT
+    //
+    
+        setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
+
+        try{
+
+        
+            // AMEND FILE-CHANGE        
+            if (document.getElementById('amend_commit_checkbox').checked == true){
+                if ( await warningChangeRemote() ){
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+                    forcePush = true;
+                }else{
+                    return
+                }
+            }
+        
+            
+            if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
+                // AMEND MESSAGE-CHANGE
+                if ( await warningChangeRemote() ){
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit);  
+                    forcePush = true;
+                }else{
+                    return
+                }
+            }else{
+                // NORMAL COMMIT
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit);
+            }
+
+        }catch(err){
+            console.log('Error in gitAddCommitAndPush()');
+            console.log(err);
+            
+            if ( err.toString().includes('empty ident name') ){
+                await showUserDialog();
+                return
+            }
+        }       
+      
+       
+    //
+    // FINISH
+    //
+            
+        // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
+        await gitRememberBranch( 'HEAD', currentBranch);
+        
+        // Push 
+        if ( state.repos[state.repoNumber].autoPushToRemote ){   
+            await waitTime( 1000);
+            await gitPush( forcePush);  
+        }
+        
+        // Finish up
+        localState.unstaged = [];
+        textOutput.value = '';
+        writeTextOutput( textOutput);
+        _setMode('UNKNOWN');  
+        await _update()
+        _setMode('UNKNOWN');  
+        await _update()
+        
+        return
     
     //    
     // Internal functions
@@ -3931,103 +4033,7 @@ async function gitAddCommitAndPush( message){
             }
         };
    
-    
-    
-    //
-    // PREPARE
-    //
-
-        // Read current branch
-        try{
-            status_data = await gitStatus();
-        }catch(err){
-            console.log('Error in gitAddCommitAndPush()');
-            console.log(err);
-        }
-        var currentBranch = status_data.current;
-        var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
-    
-        
-        // Add all files to index
-        setStatusBar( 'Adding files');
-        var path = '.'; // Add all
-        await simpleGit( state.repos[state.repoNumber].localFolder )
-            .add( path, onAdd );   
-        function onAdd(err, result) {console.log(result) }
-        
-        
-        // Remove localState.unstaged from index
-        for (var file of localState.unstaged) {
-             await simpleGit( state.repos[state.repoNumber].localFolder )
-            .raw( [  'reset', '--', file ] , onReset); 
-        }
-        function onReset(err, result) {console.log(result) }
-        
-        await waitTime( 1000);
-        
-    //
-    // COMMIT
-    //
-    
-        setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-
-        try{
             
-    
-            // NORMAL COMMIT
-            if ( getMode() !== 'NO_FILES_TO_COMMIT'  ) {
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
-            }       
-        
-        
-            // AMEND FILE-CHANGE        
-            if (document.getElementById('amend_commit_checkbox').checked == true){
-                if ( await warningChangeRemote() ){
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
-                }
-            }
-        
-        
-            // AMEND MESSAGE-CHANGE
-            if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
-                if ( await warningChangeRemote() ){
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
-                }
-            }
-
-        }catch(err){
-            console.log('Error in gitAddCommitAndPush()');
-            console.log(err);
-            
-            if ( err.toString().includes('empty ident name') ){
-                await showUserDialog();
-                return
-            }
-        }       
-      
-       
-    //
-    // FINISH
-    //
-            
-        // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-        await gitRememberBranch( 'HEAD', currentBranch);
-    
-        // Push 
-        if ( state.repos[state.repoNumber].autoPushToRemote ){   
-            await waitTime( 1000);
-            await gitPush();  // Knows mode --force push if amend 
-        }
-        
-        // Finish up
-        localState.unstaged = [];
-        textOutput.value = '';
-        writeTextOutput( textOutput);
-        _setMode('UNKNOWN');  
-        await _update()
-        _setMode('UNKNOWN');  
-        await _update()
-        
     
 }
 async function gitRememberBranch( hash, name){
@@ -4045,7 +4051,7 @@ async function gitRememberBranch( hash, name){
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'append' , '–allow-empty', '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append', '--allow-empty', '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err);  };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
@@ -4187,7 +4193,8 @@ async function gitStashMap( folder ){
 
 }     
 
-async function gitPush(){
+async function gitPush( forcePush){
+    // forcePush = true, means a --force push is used
     
     if ( state.repos[state.repoNumber].allowPushToRemote  == false ){ 
         pragmaLog('   not allowed to push, because setting allowPushToRemote = false');
@@ -4252,13 +4259,7 @@ async function gitPush(){
                 pragmaLog('push remembered branchname to remote');
                 // Push commits and tags, and set upstream
                 try{
-                    // Force push, or normal push
-                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
-                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
-                    if (localState.settings){  // Do not force-push if settings window is opened
-						forcePush = false;
-					}
-                    
+
                     if (forcePush){
                         // Force push because amend files to same commit, or because change message text
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
