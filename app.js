@@ -353,6 +353,8 @@ async function _callback( name, event){
         
     
     switch(name) {
+        
+      
 
       // Top title-bar
       case 'clicked-about': {
@@ -518,7 +520,14 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-push-button': {
-        gitPush( forcePush = false); 
+        let forcePush = false;
+        
+        // Here I can add more logic to detect force push, or normal push
+        if ( await isAmendCommit() ){
+            forcePush = true;
+        }
+        
+        gitPush( forcePush); 
         break;
       }
       case 'clicked-pull-button': {
@@ -4455,44 +4464,6 @@ async function gitMerge( currentBranchName, selectedBranchName){
     //textOutput.placeholder = 'Write description of Merge here, and press Store';
     writeTextOutput( textOutput);
 }
-    
-async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
-    // Checks if first parameter is older commit than second parameter
-    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
-    
-    // Cache functionality
-    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
-        await calculate(oldCommit, newCommit); // Sets all cached variables
-        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
-    }
-    
-    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
-        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
-    }else{
-        await calculate(oldCommit, newCommit);       // Sets cache variables
-        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
-    }
-
-    // Internal function - calculate true / false
-    async function calculate(oldCommit, newCommit){
-        
-        function onLog(err, result){ console.log(result); return result } 
-        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
-        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
-        
-        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
-        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
-        
-        // Remember cached inputs    
-        gitIsFirstCommitOldest.oldCommit = oldCommit;
-        gitIsFirstCommitOldest.newCommit = newCommit;
-        
-        // Remember cached output
-        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
-        
-        return;         
-    }
-}
 
 async function gitConfigList( localFolder ){
 let configList;
@@ -4521,23 +4492,6 @@ async function registerDefaultBranch(document){
     
     // Display in document from in-parameter
     document.getElementById('defaultBranchName').innerText = defBranchName;
-}
-async function gitIsMergeCommit(commit){
-    
-    if ( commit == undefined || commit == ''){ // HEAD with modified files 
-        return false;
-    }
-    
-    let returnValue = false;
-    try{
-        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
-        
-        returnValue = ( parentHashes.split(' ').length > 1 );
-    }catch(err){
-        console.error( err);
-    }
-    
-    return returnValue; // True if merge commit
 }
 
 function rememberDetachedBranch(){
@@ -4596,7 +4550,83 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
         }
     }
 }
+      
+// Information
+async function gitCurrentCommit(){
+        currentHash = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'rev-parse', 'HEAD' ]) )
+        .replaceAll('\n','')
+        
+        return currentHash
+}
+async function isAmendCommit(){             // true if current commit is an amend commit
+
+    currentHash = await gitCurrentCommit();
     
+    all_amend_commits = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( 
+        ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)']) ) 
+        .split('\n'); 
+    
+    firstOccuranceOfCurrentHash = all_amend_commits.find(element => element.includes( currentHash)) 
+    let isAmendCommit = ( firstOccuranceOfCurrentHash !== undefined )  // True if I found currentHash in list of all amend commits
+    
+    return isAmendCommit
+}
+async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+    // Checks if first parameter is older commit than second parameter
+    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
+    
+    // Cache functionality
+    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
+        await calculate(oldCommit, newCommit); // Sets all cached variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }
+    
+    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }else{
+        await calculate(oldCommit, newCommit);       // Sets cache variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
+    }
+
+    // Internal function - calculate true / false
+    async function calculate(oldCommit, newCommit){
+        
+        function onLog(err, result){ console.log(result); return result } 
+        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+        
+        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+        
+        // Remember cached inputs    
+        gitIsFirstCommitOldest.oldCommit = oldCommit;
+        gitIsFirstCommitOldest.newCommit = newCommit;
+        
+        // Remember cached output
+        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
+        
+        return;         
+    }
+}
+async function gitIsMergeCommit(commit){    // true if merge commit
+    
+    if ( commit == undefined || commit == ''){ // HEAD with modified files 
+        return false;
+    }
+    
+    let returnValue = false;
+    try{
+        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
+        
+        returnValue = ( parentHashes.split(' ').length > 1 );
+    }catch(err){
+        console.error( err);
+    }
+    
+    return returnValue; // True if merge commit
+}
+
+  
 
 // Branch-menu functions
 
