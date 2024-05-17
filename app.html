@@ -461,7 +461,7 @@
                     
                 <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
                         <!-- Note : tooltip changes in app/drawPinImage depending of pin checkbox --> 
-                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Hash, click to copy (shift click long hash) " style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
                     
                     <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
                         onclick="if (localState.pinnedCommit !== ''){
@@ -469,7 +469,13 @@
                                     _callback('clicked-pinned-hash');
                                 }else{
                                     // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
-                                    navigator.clipboard.writeText(localState.historyHash);
+                                    if (SHIFTPRESSED){
+                                        navigator.clipboard.writeText( localState.historyHash); // Long hash
+                                        console.warn( localState.historyHash ) 
+                                    }else{
+                                        navigator.clipboard.writeText( localState.historyHash.substring(1,8) ); // Short hash
+                                        console.warn( localState.historyHash.substring(1,8) ) 
+                                    }
                                 }"
                                 
                         onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');"       
@@ -861,6 +867,8 @@
     
     <!-- Drop folder initiate script-->    
     <script>
+        
+        var SHIFTPRESSED = false;
     
         //Same as $(document).ready();
         function ready(fn) {
@@ -891,7 +899,7 @@
             // Key events
             window.addEventListener("keydown", event => {
                 
-                console.warn(event.keyCode)
+                console.log(event.keyCode)
                     
                 // ESC
                 if (event.keyCode === 27) {  
@@ -917,6 +925,25 @@
                  // Down-arrow
                 if (event.keyCode === 40){
                     _callback( 'clicked-down-arrow')
+                }                 
+                
+                // SHIFT
+                if (event.keyCode === 16){
+                    console.warn('SHIFT DOWN')
+                    SHIFTPRESSED = true
+                }
+           
+            });
+            
+            
+            
+            window.addEventListener("keyup", event => {
+                
+                console.log(event.keyCode)
+                 // SHIFT
+                if (event.keyCode === 16){
+                    console.warn('SHIFT UP')
+                    SHIFTPRESSED = false
                 }
                 
                 
