@@ -91,7 +91,7 @@ async function injectIntoJs(document) {
     }
     
     
-    win.focus();
+    //win.focus();  // NOTE: I don't want this to focus, since the window is updated from main, and should stay below main
 
 
 };

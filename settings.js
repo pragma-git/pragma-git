@@ -452,7 +452,7 @@ async function _callback( name, event){
             try{                    
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
-                        
+                
                 // Replace table 
                 document.getElementById("branchesTableBody").innerHTML = ""; 
                 
@@ -525,6 +525,12 @@ async function _callback( name, event){
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
+            
+            
+            // Update Graph & changed list windows
+            await opener.updateGraphWindow();
+            await opener.updateChangedListWindow();
+                        
             
             break;
         }        

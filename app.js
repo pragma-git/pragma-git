@@ -368,14 +368,7 @@ async function _callback( name, event){
         // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         localState.pinnedCommit = ''; 
         updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
-        
-                
-        //// Update repo in settings_win 
-        //try{
-            //await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        //}catch(err){ 
-        //}
-        
+
 
         // HISTORY kept if menu -- don't update until menu-item selected
         if (getMode() !== 'HISTORY'){
@@ -384,6 +377,7 @@ async function _callback( name, event){
         }
         
         writeTextOutput( { value: '' } );  // Clean message
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -438,8 +432,6 @@ async function _callback( name, event){
         
         await gitStashMap(state.repos[state.repoNumber].localFolder);
 
-        await updateGraphWindow();
-        updateSettingsWindow();
         
         //if (getMode() !== 'HISTORY'){
             await _setMode('UNKNOWN');
@@ -447,15 +439,21 @@ async function _callback( name, event){
         //}
         
         writeTextOutput( { value: '' } );  // Clean message
+        
+        
+        await updateGraphWindow();
+        await updateSettingsWindow();
+        await updateChangedListWindow();
        
         break;
       }
       case 'clicked-branch': {
             
         // Update remote info immediately
-        gitFetch();  
+        await gitFetch();  
 
-        branchClicked(true, event); // 'menu' or 'cycle'
+        await branchClicked(true, event); // 'menu' or 'cycle'
+        await updateChangedListWindow();
         
         break;
       }
@@ -485,7 +483,10 @@ async function _callback( name, event){
         
         cacheBranchList();
         
-        gitSwitchBranch(branchName);
+        await gitSwitchBranch(branchName);
+        
+
+        await updateChangedListWindow();
         
         break;
       }
@@ -534,6 +535,7 @@ async function _callback( name, event){
         gitPull();
 
         await updateGraphWindow();
+        await updateChangedListWindow();
         
         break;
       }
@@ -608,11 +610,13 @@ async function _callback( name, event){
         
       // History
       case 'clicked-up-arrow': {
-        upArrowClicked();
+        await upArrowClicked();
+        await updateChangedListWindow();
         break;
       }
       case 'clicked-down-arrow': {
-        downArrowClicked();
+        await downArrowClicked();
+        await updateChangedListWindow();
         break;
       }
       case 'clicked-find': {
@@ -799,7 +803,7 @@ async function _callback( name, event){
         // If window open, redraw and bail out
         if ( localState.graphWindow == true ){
             graph_win.window.injectIntoJs(graph_win.window.document);
-            graph_win.focus();
+            // graph_win.focus();  // NOTE: Do not foucs if already open
             return
         }
         
@@ -1686,7 +1690,7 @@ async function _callback( name, event){
         // If HISTORY, reset history counter without changing branch
         if ( getMode() === 'HISTORY'){
             resetHistoryPointer(); 
-            upArrowClicked(); // Get out of history
+            await upArrowClicked(); // Get out of history
             return;
         }
         
@@ -1835,14 +1839,13 @@ async function _callback( name, event){
             }
 
           
-            cacheBranchList();
+            await cacheBranchList();
             
         } // End checking out branch
     
         console.log(branchList);
      
         await _setMode('UNKNOWN');
-       //await _update()
         
         // Reset some variables
         localState.historyNumber = -1;
@@ -3625,6 +3628,7 @@ async function gitSwitchToRepo(repoNumber){ // TODO : Does not seem to be used
 
     
     await updateGraphWindow();
+    await updateChangedListWindow();
 }
 
 async function gitSwitchBranch(branchName){
@@ -3644,6 +3648,7 @@ async function gitSwitchBranch(branchName){
     gitFetch();  
     cacheBranchList();
     await updateGraphWindow();
+    await updateChangedListWindow();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -4084,6 +4089,7 @@ async function gitStash(){
     
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
+    await updateChangedListWindow();
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -4118,6 +4124,7 @@ async function gitStashPop( stashRef){
     
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
+    await updateChangedListWindow();
          
 }
 async function gitStashMap( folder ){
@@ -5307,7 +5314,15 @@ async function updateSettingsWindow(){
     
     win.focus();
 }
+async function updateChangedListWindow(){
+    
+    //await _update();
+    if (localState.fileListWindow){
+        _callback('clicked-status-text')
+    }
 
+    win.focus();
+}
 
 // Dialogs
 async function tag_list_dialog(){
