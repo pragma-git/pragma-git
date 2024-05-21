@@ -586,8 +586,8 @@ async function _callback( name, event){
       }
       case 'message_focus': {
         if ( getMode() == 'NO_FILES_TO_COMMIT'){ // Copy commit message to message area, to be able to edit from existing
-            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( ['-1']);
-            commitMessage = latestCommit.latest.message;
+            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
+            commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
             writeTextOutput( { value: commitMessage} ); 
             document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
         }
