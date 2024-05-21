@@ -5406,7 +5406,7 @@ function displayLongAlert(title, message, type){
          * Dialog grows up to certain height, after which the message gets a scroll bar
          * OK button does nothing more than closing the dialog
          * 
-         * Multiline messages have /n end of lines, which are converted to <br>
+         * Multiline messages have \n end of lines, which are converted to <br>
          * 
          * If there is a suggested git command starting the line, a "run"-link is added
          */
@@ -5432,6 +5432,13 @@ function displayLongAlert(title, message, type){
                     show: false
                 },
                 function(cWindows){ 
+                    
+                    cWindows.on('closed', 
+                        function(){
+                            cWindows = null;  // dereference
+                        }
+                    );
+                
                      
                     cWindows.on('loaded', 
                         function(){
