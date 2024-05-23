@@ -164,11 +164,14 @@
             opacity: 0.9;
             padding: 15px;
             width: 450px;
+            width: max-content;
+            min-width: 550px;
         }
         
         .lightInfo {
             opacity: 0.5;
             left: 30px;
+            width: -webkit-fill-available;
         }
         
                 
@@ -338,6 +341,17 @@
                 }else{
                     document.getElementById('lanes').setAttribute('style','color: var(--dim-text)');
                     document.getElementById('git').setAttribute('style','color: var(--text)');
+                }
+                
+                try{  // Popup may not be open
+                    if ( document.getElementById("hash_length_switch").checked ){
+                        document.getElementById('longHash').setAttribute('style','color: var(--text)');
+                        document.getElementById('shortHash').setAttribute('style','color: var(--dim-text)');
+                    }else{
+                        document.getElementById('longHash').setAttribute('style','color: var(--dim-text)');
+                        document.getElementById('shortHash').setAttribute('style','color: var(--text)');
+                    }
+                }catch(err){
                 }
             }
             

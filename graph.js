@@ -538,7 +538,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${makeHtmlFromHash(commit.hash)} </div><BR>`
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${makeInnerHtmlFromHash(commit.hash)} </div><BR>`
             
             html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> Author : <i> ${author} </i> </div><BR>
                        <div  class="lightInfo" style="width: -webkit-fill-available;"> Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
@@ -588,7 +588,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Parent Hashes
             for (let i = 0; i < parentHashes.length; i++){
                 html +='<BR><div class="lightInfo">';
-                html +=  makeHtmlFromHash( parentHashes[i]);
+                html +=  makeInnerHtmlFromHash( parentHashes[i]);
                 html +='</div>';
             }
             
@@ -602,12 +602,12 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             }
             
            html += ` <span class="normal-text" style="display: inline;position: absolute; font-size: 11px; right: 20px; bottom: 10px;">             
-                        <span id="git" style="color: var(--dim-text)">short hash</span> 
+                        <span id="shortHash" style="color: var(--text)">short hash</span> 
                         <label class="switch">
                             <input id="hash_length_switch" type="checkbox" class="slider round" onclick="updateInfoWindow();" ${checked}>
                             <span class="slider round"></span> 
                         </label> 
-                        <span id="lanes" style="color: var(--text)">long hash</span> 
+                        <span id="longHash" style="color: var(--dim-text)">long hash</span> 
                 </span>`
             
                 
@@ -632,17 +632,19 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').style.top = top;
             
             console.log( 'maxColumn : ' + maxColumn);
+            
+            colorSwitchTexts()
         }; 
-        function makeHtmlFromHash( hash){  // Splits hash in two parts
+        function makeInnerHtmlFromHash( hash){  // Splits hash in two parts
             const hashLength = 6;
             let html = '';
             let startHash = hash.substring(0,hashLength);
 
             if (showLongHash){
                 // Make long
-                html +=  '<div>' + hash + '</div>';
+                html +=  '<span>' + hash + '</span>';
             }else{
-                html +=  '<div>' + startHash+ '</div>';
+                html +=  '<span>' + startHash+ '</span>';
             }
 
             return html
