@@ -1730,32 +1730,18 @@ async function _callback( name, event){
                 if ( currentBranchObject.name == currentBranchObject.commit){  // Works for checked-out commit. TODO : but not for checked-out tag!
 
                     try{
-                        
-                        // TODO : set localState.historyNumber from  state.repos[state.repoNumber].detachedBranch.hash;
-
-                        let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
-                        await gitSwitchBranch('-');
-                        
-                        // TODO !
-                        //
-                        // NOTE: above can get locked, if 
-                        // state.repos[state.repoNumber].detachedBranch.detachedBranchName == currentBranchObject.commit
-                        // 
-                        // Then, a solution would be to find the branch name with :
-                        //    git name-rev --name-only --refs="refs/heads/*" HEAD
-                        // which gives a result like "develop~7".  Get branchName, by removing ~7
-                        
-                        
-                        
-                        
-                        //await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
-                        
-                        //var history = await gitHistory();
-                        
-                        ////localState.historyHash = state.repos[state.repoNumber].detachedBranch.hash;
 
                         
-                        //gitShowHistorical();
+                        // Get branchname ( solution : https://stackoverflow.com/a/73720770 )
+                        const { execSync } = require('child_process');
+                        const getBranchName = () => {
+                          let branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+                          if (branch === 'HEAD') branch = execSync(`git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
+                          return branch;
+                        }
+                        branchName = getBranchName();
+                        await gitSwitchBranch(branchName);
+
                         
                     }catch(err){        
                         
