@@ -470,11 +470,11 @@
                                 }else{
                                     // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
                                     if (SHIFTPRESSED){
-                                        navigator.clipboard.writeText( localState.historyHash); // Long hash
+                                        navigator.clipboard.writeText( localState.historyHash); // Long hash 
                                         console.warn( localState.historyHash ) 
                                     }else{
-                                        navigator.clipboard.writeText( localState.historyHash.substring(1,8) ); // Short hash
-                                        console.warn( localState.historyHash.substring(1,8) ) 
+                                        navigator.clipboard.writeText( localState.historyHash.substring(0,6) ); // Short hash
+                                        console.warn( localState.historyHash.substring(0,6) ) 
                                     }
                                 }"
                                 
