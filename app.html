@@ -413,7 +413,7 @@
                 <!-- Text status  -->  
                 <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
                         onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
-                                 _callback('clicked-status-text')"
+                                 _callback('clicked-status-text'); changed_win.focus()"
                                  
                         onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
                         onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >           
@@ -427,7 +427,7 @@
                 <!-- Icon Graph  --> 
                  <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
                     <img id="more" style="vertical-align:middle;" height="17" width="17" 
-                                        onclick="_callback( 'clicked-graph')" 
+                                        onclick="_callback( 'clicked-graph'); graph_win.focus()" 
                                         onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
                                         onmouseout="updateImageUrl('more', 'images/more.png');" 
                                         src="images/more.png">
