@@ -92,7 +92,7 @@
     
     let firstRun = true; 
     
-    var showLongHash = false;               // Default display format within graph window (popup) 
+    var showLongHash =  state.graph.showLongHash;               // Default display format within graph window (popup) 
 
 //
 // Functions
@@ -369,6 +369,7 @@ function closeWindow(){
     state.graph.showall = document.getElementById('showAll').checked;
     state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if compressed view
     state.graph.showHiddenBranches = document.getElementById('showHidden').checked;
+    state.graph.showLongHash = showLongHash;  // Value changed in popup window (but stored in variable instead, since popup may not be open)
     opener.saveSettings();
 
     

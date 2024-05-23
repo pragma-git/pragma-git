@@ -6268,13 +6268,14 @@ function loadSettings(settingsFile){
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
             
-        // Graph window
+        // Graph window 
             state.graph = setting( state_in.graph, {} );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
             state.graph.showHiddenBranches = setting( state_in.graph.showHiddenBranches, true );
             state.graph.swimlanes  = setting( state_in.graph.swimlanes, false );
             state.graph.debug  = setting( state_in.graph.debug, false );  // Note, set by editing settings.json
+            state.graph.showLongHash = setting( state_in.graph.showLongHash, false );  
             
         
         // Repos (default is empty)
@@ -6410,15 +6411,16 @@ function loadSettings(settingsFile){
     return state;
 }
 function updateWithNewSettings(){
-    //Called when left settings window
+    //Called when left settings window (or directly from other windows that modify settings, for instance graph)
     //
     // NOTE : To implement a new setting that affects the gui, 
     // add code to these places :
     // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
     // - app.js/loadSettings                           -- applies when starting app.js
-    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form  
     // - settings.html                                 -- where the form element for the setting is shown
-    
+    //
+    // Two top rows if settings are modified outside settings-window
     
     localState.dark = state.darkmode;
     
