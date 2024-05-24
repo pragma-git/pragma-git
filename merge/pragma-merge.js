@@ -821,6 +821,7 @@ function finish( wayToFinish){
             break;
         }
     }
+    parent.opener.updateChangedListWindow();
     win.close();
 
 }
