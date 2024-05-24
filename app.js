@@ -3254,7 +3254,14 @@ function startPragmaAskPass(){
             title: title,
             show: false
         },
-            win=>win.on('loaded', (cWin) => { cWin.hide();} )
+            win=>win.on('loaded', () => { 
+                win.on('close', function() { 
+                    fixNwjsBug7973( win);
+                    //win.hide();
+                } );
+                
+            })
+            
     ); 
     
     //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
@@ -5263,6 +5270,7 @@ function stackInfo( level ){
 function fixNwjsBug7973( win){
     // This function should be called after intercepting 'close' event for a spawned window
     // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
+    // See : https://github.com/nwjs/nw.js/issues/7973
     
     // Hide and resize
     win.hide();
@@ -5418,12 +5426,12 @@ function displayLongAlert(title, message, type){
                     show: false
                 },
                 function(cWindows){ 
+
                     
-                    cWindows.on('closed', 
-                        function(){
-                            cWindows = null;  // dereference
-                        }
-                    );
+                    cWindows.on('close', function() { 
+                        fixNwjsBug7973( cWindows);
+                        //win.hide();
+                    } );
                 
                      
                     cWindows.on('loaded', 
