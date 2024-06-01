@@ -1733,13 +1733,18 @@ async function _callback( name, event){
 
                         
                         // Get branchname ( solution : https://stackoverflow.com/a/73720770 )
-                        const { execSync } = require('child_process');
-                        const getBranchName = () => {
-                          let branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-                          if (branch === 'HEAD') branch = execSync(`git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
-                          return branch;
+                        
+                        
+                        // Internal function
+                        async function getBranchName(){
+                            const { execSync } = require('child_process');
+                            let branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+                            if (branch === 'HEAD') {
+                                branch = execSync(`git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
+                            }
+                            return branch;
                         }
-                        branchName = getBranchName();
+                        branchName = await getBranchName();
                         await gitSwitchBranch(branchName);
 
                         
