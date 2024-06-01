@@ -2461,7 +2461,7 @@ async function _loopTimer( timerName, delayInMs){
 }
 async function _update(){ 
     if (updateIsRunning){
-        console.warn('skiped _update' );
+        console.log('skipped _update -- because was already running' );  // One option would be to try to queue updates, and skip if more than N updates
         return;
     }
     updateIsRunning = true;
@@ -2824,7 +2824,7 @@ async function _update2(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
+                //log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
 
                 break;
@@ -2898,7 +2898,7 @@ async function _update2(){
         }    
     // return
     
-        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
+        //log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
 
 
@@ -3440,15 +3440,21 @@ async function gitStatus(){
     
     // Handle normal status of uncommited
     try{
-        console.log('gitStatus start promises');
+        //console.log('gitStatus start promises');
         
         // Get untracked files
         const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
-        function onLsFiles(err, result ){ status_data2 = result; console.log('gitStatus promise1 done');}
+        function onLsFiles(err, result ){ 
+            status_data2 = result; 
+            //console.log('gitStatus promise1 done');
+        }
             
         // Get tracked files
         const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
-        function onStatus(err, result ){  status_data = result; console.log('gitStatus promise2 done'); }
+        function onStatus(err, result ){  
+            status_data = result; 
+            //console.log('gitStatus promise2 done'); 
+        }
         
         await Promise.allSettled( [ promise1, promise2]);
          
@@ -3485,7 +3491,7 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     
-    console.log('gitStatus done');
+    //console.log('gitStatus done');
     return status_data;
 
     //
