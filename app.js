@@ -1741,10 +1741,14 @@ async function _callback( name, event){
                         
                         // Internal function
                         async function getBranchName(){
+                            // Prepare to cd into correct folder
+                            let localFolder = state.repos[state.repoNumber].localFolder;
+                            let cmd = 'cd "' + localFolder + '"; '
+                            
                             const { execSync } = require('child_process');
-                            let branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+                            let branch = execSync( cmd + 'git rev-parse --abbrev-ref HEAD').toString().trim();
                             if (branch === 'HEAD') {
-                                branch = execSync(`git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
+                                branch = execSync( cmd +  `git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
                             }
                             return branch;
                         }
