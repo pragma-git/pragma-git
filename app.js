@@ -315,6 +315,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         cachedRemoteOrigins.names = [];
         cachedRemoteOrigins.URLs = [];
         cachedRemoteOrigins.folders= [];
+        
+        
+        var gitCounter = 0;  // For SimpleGitLog
 
             
   // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
@@ -347,7 +350,8 @@ async function _callback( name, event){
         if ( name.includes('key_up') || name.includes('-arrow') ){
             // Skip because annoyingly frequent when typing
         }else{
-            pragmaLog('_callback = ' + name + eventString + stackInfo(1) );
+            pragmaLog('***');
+            pragmaLog('*** callback = ' + name + eventString + stackInfo(1) + '  ***');
         }
     }
         
@@ -3276,10 +3280,16 @@ function startPragmaAskPass(){
 // Git commands
 
 function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs through pragmaLog
+    
+    
+    gitCounter = gitCounter + 1;
+    
     pragmaLog( ' ');
-    pragmaLog('REPOSITORY : ' + pwd + ''); 
+    //pragmaLog('   REPOSITORY : ' + pwd + ''); 
     //pragmaLog( 'line = ' + global.__line); 
-    pragmaLog( 'CODE       : ' + stackInfoSimpleGitLogger() ); 
+    //pragmaLog( '   CODE       : ' + stackInfoSimpleGitLogger() ); 
+    pragmaLog( `   CODE[${gitCounter}]    : ' ${stackInfoSimpleGitLogger()}' `); 
+     
     
     if (state.debug){
         GIT_TRACE = 1
@@ -3287,10 +3297,10 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
         GIT_CURL_VERBOSE = 1 
         return simpleGit(pwd)
             .env({ ...process.env, GIT_TRACE, GIT_TRACE_REFS, GIT_CURL_VERBOSE })
-            .outputHandler( sendGitOutputToFile() );  
+            .outputHandler( sendGitOutputToFile(gitCounter) );  
     }else{
         return simpleGit(pwd)
-            .outputHandler( sendGitOutputToFile() );
+            .outputHandler( sendGitOutputToFile( gitCounter) );
     }
     
                 
@@ -4276,7 +4286,7 @@ async function gitPush( forcePush){
             async function push(){
                 // This function knows from GUI if 'Normal push', or 'forced push'
                 
-                pragmaLog('push remembered branchname to remote');
+                pragmaLog('   Push remembered branchname to remote (forcePush = ' + forcePush + ')' );
                 // Push commits and tags, and set upstream
                 try{
 
@@ -5219,28 +5229,41 @@ function pragmaLog(message){
     let output = timeStamp + space + cleanedMessage + os.EOL;
     mainLogFileStream.write( output);
 }
-function sendGitOutputToFile() {
-  let counter = 0;
-
-  return (cmd, stdOut, stdErr, args) => {
-    const id = ++counter;
- 
-    pragmaLog( `COMMAND[${id}] : ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
-
-    stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ); pragmaLog( ' '); }); // End with blank line
-    stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() ) }); 
+function sendGitOutputToFile( id) {
     
-    
-    function separateLines( prefix, multiLineString){
-        // Add prefix before each row of message
-        let lines = multiLineString.split("\n");
-        for (var i = 0; i < lines.length; i++) {
-            pragmaLog( `  ${prefix} ${lines[i]}`);
+    return (cmd, stdOut, stdErr, args) => {
+        
+        //const id = gitCounter;
+        
+        // Simplify simpleGit command to normal git
+        filteredArgs = args.filter( e => { 
+            let found = false;
+            found = found || (e == '-c');
+            found = found ||  e.includes( 'include.path');
+            found = found ||  e.includes( 'porcelain');
+            return !found}
+        )
+         
+        pragmaLog( `   GIT [${id}]    : ${ ['git'].concat(filteredArgs).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
+        pragmaLog( `   GIT [${id}]    : ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
+
+        pragmaLog('');
+        
+        stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ); pragmaLog( ' '); }); // End with blank line
+        stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() ) }); 
+        
+        
+        function separateLines( prefix, multiLineString){
+            // Add prefix before each row of message
+            let lines = multiLineString.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                pragmaLog( `     ${prefix} ${lines[i]}`);
+            }
         }
+        
+        //pragmaLog( '\n\n');
+        
     }
-    
-    
-  }
 }
 function stackInfo( level ){
     //let stack = global.__stack;
@@ -5371,9 +5394,10 @@ function displayAlert(title, message){
     //
     // first argument is ignored
     
-    pragmaLog('   displayAlert : ' + os.EOL + 
-        'title   = ' + title + os.EOL + 
-        'message = ' + message + os.EOL );
+    pragmaLog('   displayAlert : ' );
+    pragmaLog('      title   = ' + title);
+    pragmaLog('      message = ' + message);
+    
 
     document.getElementById('alertTitle').innerHTML = title;
     document.getElementById('alertMessage').innerHTML = message;
@@ -5389,12 +5413,11 @@ function displayLongAlert(title, message, type){
      * message -- message text 
      * type -- 'warning' (yellow border) or 'error' (red border)
      */
-     
-    pragmaLog('   displayLongAlert :' + os.EOL + 
-        'type    = ' + type + os.EOL + 
-        'title   = ' + title + os.EOL + 
-        'message = ' + os.EOL + 
-         message);
+
+    pragmaLog('   displayLongAlert : ' );
+    pragmaLog('      type    = ' + type);
+    pragmaLog('      title   = ' + title);
+    pragmaLog('      message = ' + message);
 
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
