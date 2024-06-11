@@ -588,7 +588,7 @@ async function _callback( name, event){
         messageKeyUpEvent();
         break;
       }
-      case 'message_focus': {
+      case 'message_dblclick': {
         if ( getMode() == 'NO_FILES_TO_COMMIT'){ // Copy commit message to message area, to be able to edit from existing
             let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
             commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
