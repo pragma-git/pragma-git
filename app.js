@@ -2198,7 +2198,7 @@ async function _loopTimer( timerName, delayInMs){
 }
 async function _update(){ 
     if (updateIsRunning){
-        console.warn('skiped _update' );
+        console.log('skipped _update -- because was already running' );  // One option would be to try to queue updates, and skip if more than N updates
         return;
     }
     updateIsRunning = true;
@@ -2499,7 +2499,7 @@ async function _update2(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
+                //log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
@@ -2579,7 +2579,7 @@ async function _update2(){
         }    
     // return
     
-        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
+        //log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
 
 
@@ -3042,10 +3042,39 @@ async function gitStatus(){
     
     // Handle normal status of uncommited
     try{
+<<<<<<< HEAD
         await simpleGit( state.repos[state.repoNumber].localFolder)
             .status( options, onStatus);
         function onStatus(err, result ){  status_data = result }
         
+=======
+        //console.log('gitStatus start promises');
+        
+        // Get untracked files
+        const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
+        function onLsFiles(err, result ){ 
+            status_data2 = result; 
+            //console.log('gitStatus promise1 done');
+        }
+            
+        // Get tracked files
+        const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
+        function onStatus(err, result ){  
+            status_data = result; 
+            //console.log('gitStatus promise2 done'); 
+        }
+        
+        await Promise.allSettled( [ promise1, promise2]);
+         
+        
+        if (status_data2.length == 0){
+            status_data.not_added = [];
+        }else{
+            status_data.not_added = status_data2.split('\n');    // Make array of output from ls-files
+            status_data.not_added.pop();                         // Remove last line which is empty
+        }     
+          
+>>>>>>> 4f3c2bee (Main -- comment out all console.logs from timed _updates)
         // New files can be not_added (user created them) or created (git merge created them)
         status_data.changedFiles = ( 
             (status_data.modified.length 
@@ -3072,6 +3101,10 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     
+<<<<<<< HEAD
+=======
+    //console.log('gitStatus done');
+>>>>>>> 4f3c2bee (Main -- comment out all console.logs from timed _updates)
     return status_data;
 
     //
