@@ -232,7 +232,7 @@
                     <label for="displayToolTip" id="labelForDisplayToolTip"> Show tooltips in main window</label><br><br>  
     
      
-                    Window scaling : <br>   
+                    Window scaling (default = 1.0) : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
                         onchange="
@@ -339,7 +339,7 @@
                         
                         <tr style="border: none;">
                             <td colspan="2">
-                                <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See help icon top right) : </label><br>
+                                <label for="pathAddition"> Additions to path (add here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
                                 <input id="pathAddition" type="text" style="width: 100%;"/><br>
                             </td>
                         </tr>
@@ -414,7 +414,7 @@
                         
                         <!--  --no-ff merge (gitflow recommends this) -->
                         <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
-                        <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
+                        <label for="NoFF_merge"> Merge keeping history (<code>git merge --no-ff</code>). Deselect to use fast-forward when possible.</label><br>
                         
                         <br>
 
@@ -787,10 +787,12 @@
                 Pragma-git version:
                 <div><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
+                
                 Latest available version:
                 <div><code><span id='latestVersion' style="font-size: 9pt;"></span>  </code> 
                     <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
                 </div><br>
+                
                 
                 nwjs version:
                 <div><code><span id='nw-version' style="font-size: 9pt;"></span>  </code>  </div><br>
@@ -802,32 +804,31 @@
                 Git version:
                 <div><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
+                
                 Settings folder:
                 <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
-                
-                 <script>
-                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
-                 </script>    
+                <script>
+                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                </script>    
                  <br>          
                 
+                
+
                 Log file:
-                <div><code><a href="#" id='logFile' style="font-size: 9pt;" onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </div><br>
+                <div><code><a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </code></div>
+                <script>
+                     document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                </script>  
+                <br>  
+                       
 
                 
-                 <script>
-                     document.getElementById("logFile").innerHTML = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                 </script>    
-                           
-                <br>
-                
-                 Your system's path as seen by Pragma-git :<br>
+                Your system's path as seen by Pragma-git :
                 <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
-                  
-                           
                 <br>
+                  
                 
                 License:
-                
                 <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
                 
 
