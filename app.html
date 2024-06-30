@@ -93,7 +93,7 @@
                     </div>  
                         
                     <div id="top-titlebar-repo-text" class="top-titlebar-repo-text" 
-                        onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'cycle')" 
+                        onclick="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');_callback('clicked-repo', 'menu')" 
                         onmouseover="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #aaaaaa');" 
                         onmouseout="document.getElementById('top-titlebar-repo-text').setAttribute('style','color: #ffffff');" >
                     </div>
@@ -119,7 +119,7 @@
                         
                     <div id="top-titlebar-branch-text" class="top-titlebar-branch-text" 
                         onclick="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');
-                                 _callback('clicked-branch', 'cycle')" 
+                                 _callback('clicked-branch', 'menu')" 
                         onmouseover="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #aaaaaa');" 
                         onmouseout="document.getElementById('top-titlebar-branch-text').setAttribute('style','color: #ffffff');" >
                     </div> 
@@ -229,23 +229,23 @@
 
         <!-- Content -->   
         
-        <div style="grid-row: 2 ; grid-column: 1; height: 100%; position:relative;">   <!-- Left -->   
+        <div  class="draggable" style="grid-row: 2 ; grid-column: 1; height: 100%; position:relative;">   <!-- Left -->   
             
-            <img id="up-arrow"  height="17" width="17" 
+            <img id="up-arrow" class="non-draggable" height="17" width="17" 
                 onclick="_callback( 'clicked-up-arrow')" 
                 onmouseover="updateImageUrl('up-arrow', 'images/up-arrow_hover.png');" 
                 onmouseout="updateImageUrl('up-arrow', 'images/up-arrow_black.png');" 
                 src="images/up-arrow_black.png">
                          
         
-            <img id="down-arrow"  height="17" width="17" 
+            <img id="down-arrow" class="non-draggable"  height="17" width="17" 
                 onclick="_callback( 'clicked-down-arrow')"  
                 onmouseover="updateImageUrl('down-arrow', 'images/down-arrow_hover.png');" 
                 onmouseout="updateImageUrl('down-arrow', 'images/down-arrow_black.png');" 
                 src="images/down-arrow_black.png">
                     
                     
-             <img id="bottom-titlebar-find-icon" height="15" width="15"
+             <img id="bottom-titlebar-find-icon" class="non-draggable" height="15" width="15"
                 onclick="updateImageUrl('bottom-titlebar-find-icon', 'images/find.png');
                          _callback('clicked-find');updateContentStyle();"
                 onmouseover="updateImageUrl('bottom-titlebar-find-icon', 'images/find_hover.png');" 
@@ -259,7 +259,9 @@
             
              <!-- Message Textarea -->
              
-            <textarea style="resize: none;" class="message" id="message" onkeyup="_callback( 'message_key_up');" 
+            <textarea style="resize: none;" class="message" id="message" 
+            onkeyup="_callback( 'message_key_up');"  
+            ondblclick="_callback( 'message_dblclick');"
             placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;" readonly=""></textarea>  
 
 
@@ -275,7 +277,8 @@
 							document.getElementById('store-button').disabled = false;  // Enable Store button
 						
 							// Show dialog if remote defined
-							let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+							//let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+                            let remoteDefined = isRemoteDefined()
 							if (remoteDefined){
 								document.getElementById('amendDialog').showModal();         // Only show when click to check the box
 							}
@@ -288,10 +291,18 @@
             </div>  
 
 
+            <!-- Textarea pop-up edit text  -->  
+            
+            <div id="edit_commit_text_div" class="tooltip-top-right " style="color:var(--message-placeholder);  visibility: hidden;">
+                <div>
+                    (double-click to change)
+                </div>
+            </div>  
+
         </div>
         
-        <div style="grid-row: 2; grid-column: 3; padding: 0px"> <!-- Right -->   
-            <button id="store-button" onclick="_callback('clicked-store-button')" style="margin: 6px;"  disabled >Store</button>
+        <div  class="draggable"  style="grid-row: 2; grid-column: 3; padding: 0px; height: 100%;"> <!-- Right -->   
+            <button id="store-button" class="non-draggable"  onclick="_callback('clicked-store-button')" style="margin: 6px; position: relative; top: calc(50% - 17px);"  disabled >Store</button>
         </div>
 
 
@@ -403,7 +414,7 @@
                 <!-- Text status  -->  
                 <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
                         onclick="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');
-                                 _callback('clicked-status-text')"
+                                 _callback('clicked-status-text'); changed_win.focus()"
                                  
                         onmouseover="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #aaaaaa');" 
                         onmouseout="document.getElementById('bottom-titlebar-text').setAttribute('style','color: #ffffff');" >           
@@ -417,7 +428,7 @@
                 <!-- Icon Graph  --> 
                  <div class="bottom-titlebar-more-icon tooltip-top-left " data-tooltip="Commit graph" >         
                     <img id="more" style="vertical-align:middle;" height="17" width="17" 
-                                        onclick="_callback( 'clicked-graph')" 
+                                        onclick="_callback( 'clicked-graph'); graph_win.focus()" 
                                         onmouseover="updateImageUrl('more', 'images/more_hover.png');" 
                                         onmouseout="updateImageUrl('more', 'images/more.png');" 
                                         src="images/more.png">
@@ -451,7 +462,7 @@
                     
                 <!-- Text status  (used in HISTORY mode, to show pinned-commit or hash) -->  
                         <!-- Note : tooltip changes in app/drawPinImage depending of pin checkbox --> 
-                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Commit hash, click to copy" style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
+                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Hash, click to copy (shift click long hash) " style="font-size: var(--tooltip_font_size); position: relative;">  <!-- extra div to allow different font-size in tooltip-->
                     
                     <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text" 
                         onclick="if (localState.pinnedCommit !== ''){
@@ -459,7 +470,13 @@
                                     _callback('clicked-pinned-hash');
                                 }else{
                                     // Only copy when showing hash ( that is, not when showing 'compared to xxxx', which is does when a pinned commit) 
-                                    navigator.clipboard.writeText(localState.historyHash);
+                                    if (SHIFTPRESSED){
+                                        navigator.clipboard.writeText( localState.historyHash); // Long hash 
+                                        console.warn( localState.historyHash ) 
+                                    }else{
+                                        navigator.clipboard.writeText( localState.historyHash.substring(0,6) ); // Short hash
+                                        console.warn( localState.historyHash.substring(0,6) ) 
+                                    }
                                 }"
                                 
                         onmouseover="document.getElementById('bottom-titlebar-pinned-text').setAttribute('style','color: #aaaaaa');"       
@@ -575,7 +592,9 @@
             </button>  
             
             <button id="no" style="float:right; margin-right: 5;"
-                onclick="document.getElementById('amendDialog').close('Cancel'); document.getElementById('amend_commit_checkbox').checked = false">
+                onclick="document.getElementById('amendDialog').close('Cancel'); 
+                         document.getElementById('amend_commit_checkbox').checked = false"
+            >
                 Cancel
             </button>  
         
@@ -745,6 +764,76 @@
     
 
 
+    <!-- Force push, or pull dialog -->   
+  
+    <dialog id="forcePushOrPullPushDialog"  class="error" style="overflow: unset">  
+        
+        <!-- Make it easier to hit buttons -->  
+        <style>
+            .ur-small-element { 
+                position:relative; 
+            }
+            .ur-small-element:after {
+                content:'';
+                position:absolute;
+                top:-3px; bottom:-3px; 
+                left:-8px; right:-8px; 
+            }
+        </style>
+        
+        
+        <!-- Warning text -->  
+        <b>WARNING -- local branch behind remote branch !</b><br>
+             <br>
+
+        <label for="behindPull">
+            <input type="radio" id="behindPull" name="behindRemoteRadiobuttonGroup" value="Pull" checked>
+            Get remote, and push (pull --rebase, and push)
+        </label>
+
+        <!-- Radio-buttons -->  
+
+        
+        <label for="behindForcePush">
+            <input type="radio" id="behindForcePush" name="behindRemoteRadiobuttonGroup" value="ForcePush">
+            Force push -- overwrite remote commits (dangerous)
+        </label>
+        
+        
+         <!-- help -->             
+         <img id="about-icon"  style="float:right;"  height="17" width="17"  
+                    onclick="
+                        let evt = {}; 
+                        evt.name='Local Branch Behind';
+                        parent.window._callback('help',evt);
+                    " 
+                    onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                    onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                    src="images/questionmark.png"> 
+                    
+                  
+                  
+        <!-- OK / Cancel buttons-->  
+        <br style = "line-height: 0.4em;">
+        
+        <button id="detachedBranchDialogOK" value="OK" class="ur-small-element"
+            onclick="
+                document.getElementById('forcePushOrPullPushDialog').close();
+                let selectedRadioButton = document.querySelector('input[name=\'behindRemoteRadiobuttonGroup\']:checked').value;
+                _callback('clicked-forcePushOrPullPushDialog', selectedRadioButton );
+            "> <!-- Call html-dialog for branch selection -->
+            OK
+        </button>   
+         
+        <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
+            onclick="document.getElementById('forcePushOrPullPushDialog').close();">
+            Cancel
+        </button>  
+        
+    </dialog>  
+    
+    
+
     <!-- Detached head dialog (stored work) -->   
   
     <dialog id="detachedHeadDialog"  class="error" style="overflow: unset">  
@@ -851,6 +940,8 @@
     
     <!-- Drop folder initiate script-->    
     <script>
+        
+        var SHIFTPRESSED = false;
     
         //Same as $(document).ready();
         function ready(fn) {
@@ -877,6 +968,60 @@
             
             // Set default branch-name
             registerDefaultBranch(document);
+            
+            // Key events
+            window.addEventListener("keydown", event => {
+                
+                console.log(event.keyCode)
+                    
+                // ESC
+                if (event.keyCode === 27) {  
+                    
+                    // Hint text about edit commit message
+                    if (getMode() == 'NO_FILES_TO_COMMIT'){
+                        document.getElementById('message').blur();  // Unfocus
+                        document.getElementById('up-arrow').click();
+                        document.getElementById('edit_commit_text_div').style.visibility = 'visible';  // Show text
+                    }
+                    
+                    // Close find fields
+                    if (document.getElementById('output_row').style.visibility == 'visible' ){
+                        _callback('clicked-find');  
+                    }
+                }
+                
+                // Up-arrow
+                if (event.keyCode === 38) {  
+                    _callback( 'clicked-up-arrow')
+                }
+                
+                 // Down-arrow
+                if (event.keyCode === 40){
+                    _callback( 'clicked-down-arrow')
+                }                 
+                
+                // SHIFT
+                if (event.keyCode === 16){
+                    console.log('SHIFT DOWN')
+                    SHIFTPRESSED = true
+                }
+           
+            });
+            
+            
+            
+            window.addEventListener("keyup", event => {
+                
+                console.log(event.keyCode)
+                 // SHIFT
+                if (event.keyCode === 16){
+                    console.log('SHIFT UP')
+                    SHIFTPRESSED = false
+                }
+                
+                
+                            
+            });
         
         });
     </script>

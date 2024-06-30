@@ -4,6 +4,7 @@ html {
   overflow: hidden;
   background-color: var(--main-background);
   border-color: var(--main-background);
+  -webkit-user-select: none;
 }
 
 body {
@@ -18,12 +19,23 @@ body {
 }
 
 
-img {
-    filter: invert(0%);
+.draggable{
+    -webkit-app-region: drag;
 }
 
-label {
-  font-size: 9pt; 
+.non-draggable{
+    -webkit-app-region: none;
+}
+
+
+img{
+    filter: invert(0%);
+    -webkit-user-drag: none;
+}
+
+
+label, #edit_commit_text_div {
+  font-size: 12px; 
   display: block;
 }
 input{
@@ -87,7 +99,7 @@ div#inner-content {
   margin-left: -2px;
 }
 
-#edit_commit_message_link, #amend_commit_div{
+#edit_commit_text_div, #amend_commit_div{
   position: absolute;
   bottom: 5;
   right: 5;

@@ -1,0 +1,71 @@
+ <style>
+     /* Settings : images */  
+
+        
+        .indent{
+            margin-left: 20;
+        }
+</style>
+
+
+  <h4>Local and Remote branch out of sync</h4>       
+    <p>
+    This problem may occur when more than one developer work on the same branch.
+    The first developer may have pushed work to remote, while the second developer has made own changes. Thus remote and the local repository are out of sync.
+    </p> 
+    
+  
+    <p>
+    Another occurance is that if one user changes a commit (either editing the message, or amending more work to the same commit).  
+    Both these operations changes the remote, and as above, the other programmer's local repository becomes out of sync with remote.
+    </p> 
+         
+
+  <h4>What to do?</h4>           
+         
+         
+    <p>
+    In above situation, Pragma-git gives you two options: 
+    </p>  
+     
+    <p>
+    1) Best practice:  Combine a pull from remote (thus updating the local repository), with a push.  
+   
+    </p>  
+
+
+     
+    <p class="indent">
+        <label for="tempBranch">
+            <input type="radio" id="tempBranch" name="detachedBranchRadiobuttonGroup1" value="Temp Branch" checked="">
+            Get remote, and push (pull --rebase, and push)
+        </label>
+ 
+    </p>  
+
+
+     
+    <p>
+    2) Force push, overwriting the remote with the local repository.  
+    This is dangerous, because it deletes commits from remote that did not exist on local </p>  
+
+
+     
+    <p class="indent">
+        <label for="mergeWithBranch">
+            <input type="radio" id="mergeWithBranch" name="detachedBranchRadiobuttonGroup2" value="Merge" checked="">
+            Force push -- overwrite remote commits (dangerous)
+            
+
+            
+        </label>
+        
+    </p>  
+
+
+
+     
+    <p>
+    After pressing <button>OK</button>, the selected action is performed
+    </p>  
+

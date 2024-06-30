@@ -90,7 +90,9 @@
     var COMPRESS;
     const DEBUG = state.graph.debug;       // true = show debug info on commit messages
     
-    let firstRun = true;
+    let firstRun = true; 
+    
+    var showLongHash =  state.graph.showLongHash;               // Default display format within graph window (popup) 
 
 //
 // Functions
@@ -367,6 +369,7 @@ function closeWindow(){
     state.graph.showall = document.getElementById('showAll').checked;
     state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if compressed view
     state.graph.showHiddenBranches = document.getElementById('showHidden').checked;
+    state.graph.showLongHash = showLongHash;  // Value changed in popup window (but stored in variable instead, since popup may not be open)
     opener.saveSettings();
 
     
@@ -405,6 +408,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
     var isMouseOverCommitCircle = false;  // Used to stop infoBox from getting caught when leaving a commit circle before infoBox is drawn
     var lockedNodeInfoWindow = false;     // Used to keep node info window open until close-button pressed.
     var currentImageNode = '';
+    var currentHash = '';
     // callbacks
     async function mouseOverNodeCallback(e) {
         
@@ -419,14 +423,16 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         let hash = e.toElement.id.substring(4);  // Because element id starts with "img_" followed by hash
         await makePopupWindow(e, hash);
     }
-    function mouseOverExistingNodeCallback(hash){
+    function mouseOverExistingNodeCallback(hash, isCallbackFromImg ){
         console.log('mouseOverExistingNodeCallback');
         let id = 'img_' + hash;
         
-        if (currentImageNode == id){
+        
+        if ( (currentImageNode == id) && (isCallbackFromImg == true) ){
             return
         }
         currentImageNode = id;
+        currentHash = hash;
         
         let e = {};
         e.toElement = {};
@@ -532,7 +538,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Commit message body (if multiple lines in message)
             html += `<span> ${mBody}</span><BR>`
             
-            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${commit.hash} </div><BR>`
+            html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> ${makeInnerHtmlFromHash(commit.hash)} </div><BR>`
             
             html += `<div  class="lightInfo" style="width: -webkit-fill-available;"> Author : <i> ${author} </i> </div><BR>
                        <div  class="lightInfo" style="width: -webkit-fill-available;"> Time : &nbsp;&nbsp; <i> ${commit.date.substr(11,8)} &nbsp; ( ${commit.date.substr(0,10)} )</i> <BR><BR>
@@ -582,12 +588,27 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             // HTML Parent Hashes
             for (let i = 0; i < parentHashes.length; i++){
                 html +='<BR><div class="lightInfo">';
-                html +=  parentHashes[i];
+                html +=  makeInnerHtmlFromHash( parentHashes[i]);
                 html +='</div>';
             }
             
             html +='</div><BR><BR>';
             
+            
+            // Selector short / long hash
+            let checked = '';
+            if (showLongHash){
+               checked = 'checked';
+            }
+            
+           html += ` <span class="normal-text" style="display: inline;position: absolute; font-size: 11px; right: 20px; bottom: 10px;">             
+                        <span id="shortHash" style="color: var(--text)">short hash</span> 
+                        <label class="switch">
+                            <input id="hash_length_switch" type="checkbox" class="slider round" onclick="updateInfoWindow();" ${checked}>
+                            <span class="slider round"></span> 
+                        </label> 
+                        <span id="longHash" style="color: var(--dim-text)">long hash</span> 
+                </span>`
             
                 
             
@@ -611,7 +632,34 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
             document.getElementById('displayedMouseOver').style.top = top;
             
             console.log( 'maxColumn : ' + maxColumn);
+            
+            colorSwitchTexts()
         }; 
+        function makeInnerHtmlFromHash( hash){  // Splits hash in two parts
+            const hashLength = 6;
+            let html = '';
+            let startHash = hash.substring(0,hashLength);
+
+            if (showLongHash){
+                // Make long
+                html +=  '<span>' + hash + '</span>';
+            }else{
+                html +=  '<span>' + startHash+ '</span>';
+            }
+
+            return html
+        }
+    function updateInfoWindow(){
+        // Called when pressing shift in graph.html
+        try{
+            showLongHash = document.getElementById('hash_length_switch').checked;
+            mouseOverExistingNodeCallback(currentHash, false)  // false = means that it is not a callback from GUI
+        }catch(err){
+            
+        }
+
+    }
+    
     function sizeNodes( hash, size){    // Make large node overlay image
         
         
@@ -636,7 +684,7 @@ function makeMouseOverNodeCallbacks(){  // Callbacks to show info on mouseover c
         
         img.id='selectedImage_' + hash;
         
-        img.setAttribute('onmouseenter', 'console.log("ENTER");mouseOverExistingNodeCallback( "' + hash + '" )' );
+        img.setAttribute('onmouseenter', 'console.log("ENTER");mouseOverExistingNodeCallback( "' + hash + '", true )' );
 
         document.getElementById('mySvg').appendChild(img);
     }

@@ -10,15 +10,17 @@
 # Changes section :
 
 read -r -d '' CHANGES << ---
-* Fix error dialogs when git is not installed
-* Hide revert and cherrypick icons for Detached HEAD
-* nwjs 0.85.0
-* Amend to last commit, selected with checkbox (add modified files to last commit instead of new commit)
-* Change last commit-message (also using git amend)
-* Fix bug for find in merge window (didn't find all matches)
-* Clean started message text, when changing repository
-* Checkout individual files: remove checkout link if already latest version
-* Highlight table rows making it easier to match links, text etc in tables
+* Main bug fix -- git amend commit text failed on non-remote repo
+* Main -- remote ahead dialog to : 1) pull rebase + push  OR  2) force push
+* Main -- double-click to change message text, + hint text
+* Main -- clean up logging to pragma-git-log.txt
+* Main -- fix checking out from detached HEAD, giving wrong branchName
+* Pragma-merge -- modified files window updated when closing pragma-merge
+* Main -- fix askpass, and refix external dialog to close properly
+* Graph -- short/long hash selector in info window
+* Main -- hash clipboard, click on hash => 8 chars, shift-click => full hash
+* Main -- Key bindings for up/down arrow key, and ESC-key
+* Additional bug fixes
 ---
 
 #

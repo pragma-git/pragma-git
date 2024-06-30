@@ -315,6 +315,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         cachedRemoteOrigins.names = [];
         cachedRemoteOrigins.URLs = [];
         cachedRemoteOrigins.folders= [];
+        
+        
+        var gitCounter = 0;  // For SimpleGitLog
 
             
   // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
@@ -347,12 +350,15 @@ async function _callback( name, event){
         if ( name.includes('key_up') || name.includes('-arrow') ){
             // Skip because annoyingly frequent when typing
         }else{
-            pragmaLog('_callback = ' + name + eventString + stackInfo(1) );
+            pragmaLog('***');
+            pragmaLog('*** callback = ' + name + eventString + stackInfo(1) + '  ***');
         }
     }
         
     
     switch(name) {
+        
+      
 
       // Top title-bar
       case 'clicked-about': {
@@ -366,14 +372,7 @@ async function _callback( name, event){
         // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         localState.pinnedCommit = ''; 
         updateImageUrl('top-titlebar-pinned-icon', 'images/pinned_disabled.png');
-        
-                
-        //// Update repo in settings_win 
-        //try{
-            //await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        //}catch(err){ 
-        //}
-        
+
 
         // HISTORY kept if menu -- don't update until menu-item selected
         if (getMode() !== 'HISTORY'){
@@ -382,6 +381,7 @@ async function _callback( name, event){
         }
         
         writeTextOutput( { value: '' } );  // Clean message
+        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -436,8 +436,6 @@ async function _callback( name, event){
         
         await gitStashMap(state.repos[state.repoNumber].localFolder);
 
-        await updateGraphWindow();
-        updateSettingsWindow();
         
         //if (getMode() !== 'HISTORY'){
             await _setMode('UNKNOWN');
@@ -445,15 +443,21 @@ async function _callback( name, event){
         //}
         
         writeTextOutput( { value: '' } );  // Clean message
+        
+        
+        await updateGraphWindow();
+        await updateSettingsWindow();
+        await updateChangedListWindow();
        
         break;
       }
       case 'clicked-branch': {
             
         // Update remote info immediately
-        gitFetch();  
+        await gitFetch();  
 
-        branchClicked(true, event); // 'menu' or 'cycle'
+        await branchClicked(true, event); // 'menu' or 'cycle'
+        await updateChangedListWindow();
         
         break;
       }
@@ -483,7 +487,10 @@ async function _callback( name, event){
         
         cacheBranchList();
         
-        gitSwitchBranch(branchName);
+        await gitSwitchBranch(branchName);
+        
+
+        await updateChangedListWindow();
         
         break;
       }
@@ -518,13 +525,21 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-push-button': {
-        gitPush();
+        let forcePush = false;
+        
+        // Here I can add more logic to detect force push, or normal push
+        if ( await isAmendCommit() ){
+            forcePush = true;
+        }
+        
+        gitPush( forcePush); 
         break;
       }
       case 'clicked-pull-button': {
         gitPull();
 
         await updateGraphWindow();
+        await updateChangedListWindow();
         
         break;
       }
@@ -573,6 +588,15 @@ async function _callback( name, event){
         messageKeyUpEvent();
         break;
       }
+      case 'message_dblclick': {
+        if ( getMode() == 'NO_FILES_TO_COMMIT'){ // Copy commit message to message area, to be able to edit from existing
+            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
+            commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
+            writeTextOutput( { value: commitMessage} ); 
+            document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+        }
+        break;
+      }
       case 'file-dropped': {
         dropFile( event); 
         break;
@@ -590,11 +614,13 @@ async function _callback( name, event){
         
       // History
       case 'clicked-up-arrow': {
-        upArrowClicked();
+        await upArrowClicked();
+        await updateChangedListWindow();
         break;
       }
       case 'clicked-down-arrow': {
-        downArrowClicked();
+        await downArrowClicked();
+        await updateChangedListWindow();
         break;
       }
       case 'clicked-find': {
@@ -781,7 +807,7 @@ async function _callback( name, event){
         // If window open, redraw and bail out
         if ( localState.graphWindow == true ){
             graph_win.window.injectIntoJs(graph_win.window.document);
-            //graph_win.focus();
+            // graph_win.focus();  // NOTE: Do not foucs if already open
             return
         }
         
@@ -1496,6 +1522,24 @@ async function _callback( name, event){
 
         break;
       } 
+      case 'clicked-forcePushOrPullPushDialog': {
+          
+        console.log('clicked-forcePushOrPullPushDialog');
+          
+        if (event == 'Pull'){
+            await gitPull();
+            await gitPush( forcePush = false);
+
+            await updateGraphWindow();
+            await updateChangedListWindow();
+        }
+        
+        if (event == 'ForcePush'){
+            gitPush( forcePush = true); 
+        }
+        
+        break;
+      }
 
       // Help      
       case 'help': {
@@ -1588,6 +1632,7 @@ async function _callback( name, event){
     // title-bar
     async function repoClicked( type){
         
+        
         //
         // Show menu
         //
@@ -1645,27 +1690,6 @@ async function _callback( name, event){
             // Note :  _callback('clickedRepoContextualMenu',myEvent)  will be called when menu selection. localState.branchNumber is updated there
         }
         
-
-        //
-        // Cycle through stored repos
-        //
-        if (type == 'cycle'){
-            state.repoNumber = state.repoNumber + 1;
-            var numberOfRepos = state.repos.length;
-            if (state.repoNumber >= numberOfRepos){
-                state.repoNumber = 0;
-            }
-            
-            pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder);
-            pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL );
-            pragmaLog(' ');
-            gitSetLocalBranchNumber();  // Immediate update of localState.branchNumber
-                        
-			cacheBranchList();
-            
-			await updateGraphWindow();
-			await gitStashMap(state.repos[state.repoNumber].localFolder);
-        }
         
         // Update repo in settings_win (here, because not used when opening menu)
         try{
@@ -1679,6 +1703,7 @@ async function _callback( name, event){
         _setMode('UNKNOWN');
     }
     async function branchClicked( detectDetachedBranch, type){
+        
         // Input detectDetachedBranch : true if I want to detect. False if I want to override detection
 
         let branchList = cachedBranchList;
@@ -1687,7 +1712,7 @@ async function _callback( name, event){
         // If HISTORY, reset history counter without changing branch
         if ( getMode() === 'HISTORY'){
             resetHistoryPointer(); 
-            upArrowClicked(); // Get out of history
+            await upArrowClicked(); // Get out of history
             return;
         }
         
@@ -1727,32 +1752,27 @@ async function _callback( name, event){
                 if ( currentBranchObject.name == currentBranchObject.commit){  // Works for checked-out commit. TODO : but not for checked-out tag!
 
                     try{
-                        
-                        // TODO : set localState.historyNumber from  state.repos[state.repoNumber].detachedBranch.hash;
-
-                        let branchName = state.repos[state.repoNumber].detachedBranch.detachedBranchName;
-                        await gitSwitchBranch('-');
-                        
-                        // TODO !
-                        //
-                        // NOTE: above can get locked, if 
-                        // state.repos[state.repoNumber].detachedBranch.detachedBranchName == currentBranchObject.commit
-                        // 
-                        // Then, a solution would be to find the branch name with :
-                        //    git name-rev --name-only --refs="refs/heads/*" HEAD
-                        // which gives a result like "develop~7".  Get branchName, by removing ~7
-                        
-                        
-                        
-                        
-                        //await gitSwitchToRepo(state.repoNumber);  // Update (same as when changing repo)
-                        
-                        //var history = await gitHistory();
-                        
-                        ////localState.historyHash = state.repos[state.repoNumber].detachedBranch.hash;
 
                         
-                        //gitShowHistorical();
+                        // Get branchname ( solution : https://stackoverflow.com/a/73720770 )
+                        
+                        
+                        // Internal function
+                        async function getBranchName(){
+                            // Prepare to cd into correct folder
+                            let localFolder = state.repos[state.repoNumber].localFolder;
+                            let cmd = 'cd "' + localFolder + '"; '
+                            
+                            const { execSync } = require('child_process');
+                            let branch = execSync( cmd + 'git rev-parse --abbrev-ref HEAD').toString().trim();
+                            if (branch === 'HEAD') {
+                                branch = execSync( cmd +  `git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }'`).toString().trim();
+                            }
+                            return branch;
+                        }
+                        branchName = await getBranchName();
+                        await gitSwitchBranch(branchName);
+
                         
                     }catch(err){        
                         
@@ -1814,7 +1834,7 @@ async function _callback( name, event){
 
 
             //
-            // Alt 1) Show branch menu
+            // Show branch menu
             //
             if (type == 'menu'){
 
@@ -1835,58 +1855,14 @@ async function _callback( name, event){
                 return // BAIL OUT -- branch will be set from menu callback
             }
 
-
-            
-            //
-            // Alt 2) Cycle through local branches
-            //
-            if (type == 'cycle'){ 
-                
-                let branchName; 
-
-                // Get branch name (non-hidden)
-                do { 
-                    if (status_data.current === 'HEAD') { 
-                        
-                        // Keep branch number. Get that branch from branchList 
-                        if (branchList.detached){  // Detached branch is before all other branches
-                            localState.branchNumber++;
-                        }       
-                         
-                    }else {
-                        // Normal branch
-                        
-                        // Cycle branch number
-                        localState.branchNumber = localState.branchNumber + 1;
-                        if (localState.branchNumber >= branchList.local.length){
-                            localState.branchNumber = 0;
-                        }
-                        // Get branchname after cycling
-                        branchName = branchList.local[localState.branchNumber];
-                    }
-                    console.log(branchName);
-                    pragmaLog('   branchname = ' + branchName);
-                }
-                while ( util.isHiddenBranch( state.repos[ state.repoNumber].hiddenBranches, branchList.local[localState.branchNumber]) ); // Look until non-hidden branch. NOTE: This can lock if all branches are hidden!!
-        
-                // Checkout local branch
-                
-                try{
-                    gitSwitchBranch(branchName);
-                }catch(err){        
-                    console.log('Error checking out local branch, in branchClicked(). Trying to checkout of branch = ' + branchName);
-                    console.log(err);
-                } 
-            } 
-            
-            cacheBranchList();
+          
+            await cacheBranchList();
             
         } // End checking out branch
     
         console.log(branchList);
      
         await _setMode('UNKNOWN');
-       //await _update()
         
         // Reset some variables
         localState.historyNumber = -1;
@@ -1897,6 +1873,7 @@ async function _callback( name, event){
         let title = 'About';
                 
         if ( localState.aboutWindow == true ){
+            about_win.focus();
             return
         }
 
@@ -2510,7 +2487,7 @@ async function _loopTimer( timerName, delayInMs){
 }
 async function _update(){ 
     if (updateIsRunning){
-        console.warn('skiped _update' );
+        console.log('skipped _update -- because was already running' );  // One option would be to try to queue updates, and skip if more than N updates
         return;
     }
     updateIsRunning = true;
@@ -2873,7 +2850,7 @@ async function _update2(){
                     console.log('update --  case "CHANGED_FILES" caught error');
                     _setMode('UNKNOWN');
                 }
-                log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
+                //log(`_update took ${ performance.now() - startTime} ms (at CHANGED_FILES)`); 
                 return   
 
                 break;
@@ -2947,7 +2924,7 @@ async function _update2(){
         }    
     // return
     
-        log(`_update took ${ performance.now() - startTime} ms (at END)`); 
+        //log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
 
 
@@ -2992,7 +2969,10 @@ async function _setMode( inputModeName){
     }
     
     // Hide amend checkobx (below they will be visibible for certain cases)
-    document.getElementById('amend_commit_div').style.visibility='hidden';    
+    document.getElementById('amend_commit_div').style.visibility='hidden';   
+    
+    // Hide modify message text  (below they will be visibible for certain cases)
+    document.getElementById('edit_commit_text_div').style.visibility = 'hidden'; 
            
    // Amend mode
     document.getElementById('amend_commit_checkbox').checked = false    
@@ -3133,6 +3113,9 @@ async function _setMode( inputModeName){
                 // Hide amend  checkbox
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
                 setButtonText()
+                
+                // Show edit message text
+                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
                 return
             };
             
@@ -3302,7 +3285,14 @@ function startPragmaAskPass(){
             title: title,
             show: false
         },
-            win=>win.on('loaded', (cWin) => { cWin.hide();} )
+            win=>win.on('loaded', () => { 
+                win.on('close', function() { 
+                    fixNwjsBug7973( win);
+                    //win.hide();
+                } );
+                
+            })
+            
     ); 
     
     //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
@@ -3312,10 +3302,16 @@ function startPragmaAskPass(){
 // Git commands
 
 function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs through pragmaLog
+    
+    
+    gitCounter = gitCounter + 1;
+    
     pragmaLog( ' ');
-    pragmaLog('REPOSITORY : ' + pwd + ''); 
+    //pragmaLog('   REPOSITORY : ' + pwd + ''); 
     //pragmaLog( 'line = ' + global.__line); 
-    pragmaLog( 'CODE       : ' + stackInfoSimpleGitLogger() ); 
+    //pragmaLog( '   CODE       : ' + stackInfoSimpleGitLogger() ); 
+    pragmaLog( `   CODE[${gitCounter}]    : ' ${stackInfoSimpleGitLogger()}' `); 
+     
     
     if (state.debug){
         GIT_TRACE = 1
@@ -3323,10 +3319,10 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
         GIT_CURL_VERBOSE = 1 
         return simpleGit(pwd)
             .env({ ...process.env, GIT_TRACE, GIT_TRACE_REFS, GIT_CURL_VERBOSE })
-            .outputHandler( sendGitOutputToFile() );  
+            .outputHandler( sendGitOutputToFile(gitCounter) );  
     }else{
         return simpleGit(pwd)
-            .outputHandler( sendGitOutputToFile() );
+            .outputHandler( sendGitOutputToFile( gitCounter) );
     }
     
                 
@@ -3476,15 +3472,21 @@ async function gitStatus(){
     
     // Handle normal status of uncommited
     try{
-        console.log('gitStatus start promises');
+        //console.log('gitStatus start promises');
         
         // Get untracked files
         const promise1 =  simpleGit( state.repos[state.repoNumber].localFolder).raw(  [ 'ls-files', '--others', '--exclude-standard' ], onLsFiles);
-        function onLsFiles(err, result ){ status_data2 = result; console.log('gitStatus promise1 done');}
+        function onLsFiles(err, result ){ 
+            status_data2 = result; 
+            //console.log('gitStatus promise1 done');
+        }
             
         // Get tracked files
         const promise2 =simpleGit( state.repos[state.repoNumber].localFolder).status( [ '--untracked-files=no' ], onStatus);
-        function onStatus(err, result ){  status_data = result; console.log('gitStatus promise2 done'); }
+        function onStatus(err, result ){  
+            status_data = result; 
+            //console.log('gitStatus promise2 done'); 
+        }
         
         await Promise.allSettled( [ promise1, promise2]);
          
@@ -3521,7 +3523,7 @@ async function gitStatus(){
     //      modified, not_added, deleted (integers)
     //      conflicted; Array of files being in conflict (there is a conflict if length>0)
     
-    console.log('gitStatus done');
+    //console.log('gitStatus done');
     return status_data;
 
     //
@@ -3662,6 +3664,7 @@ async function gitSwitchToRepo(repoNumber){ // TODO : Does not seem to be used
 
     
     await updateGraphWindow();
+    await updateChangedListWindow();
 }
 
 async function gitSwitchBranch(branchName){
@@ -3681,6 +3684,7 @@ async function gitSwitchBranch(branchName){
     gitFetch();  
     cacheBranchList();
     await updateGraphWindow();
+    await updateChangedListWindow();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -3931,112 +3935,167 @@ async function gitLocalFolder(){
     return gitFolders;
     
 }
-async function gitAddCommitAndPush( message){
+async function gitAddCommitAndPush( message){    
     
-    var status_data;     
-    
-    
-    // Read current branch
-    try{
-        status_data = await gitStatus();
-    }catch(err){
-        console.log('Error in gitAddCommitAndPush()');
-        console.log(err);
-    }
-    var currentBranch = status_data.current;
-    var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+    var status_data; 
+    let forcePush = false;  // Default, if not git amend    
 
     
-    // Add all files to index
-    setStatusBar( 'Adding files');
-    var path = '.'; // Add all
-    await simpleGit( state.repos[state.repoNumber].localFolder )
-        .add( path, onAdd );   
-    function onAdd(err, result) {console.log(result) }
-    
-    
-    // Remove localState.unstaged from index
-    for (var file of localState.unstaged) {
-         await simpleGit( state.repos[state.repoNumber].localFolder )
-        .raw( [  'reset', '--', file ] , onReset); 
-    }
-    function onReset(err, result) {console.log(result) }
-    
-    await waitTime( 1000);
-    
-    // Commit 
-    setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
-    try{
-        
-        // Amend to latest commit  (only occurs when checked checkbox')
-        if (document.getElementById('amend_commit_checkbox').checked == true){
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
-        }
+    //
+    // PREPARE
+    //
 
-        // Change message of last commit (only occurs when 'NO_FILES_TO_COMMIT')
-        if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
-			
-			// Show dialog if remote is defined
-			let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
-			if ( remoteDefined ){
-				buttonPressed = await waitForModal('amendDialog');
-				if ( buttonPressed == 'Cancel'){
-					_setMode('NO_FILES_TO_COMMIT'); 
-					await _update()   
-					_setMode('UNKNOWN'); 
-					await _update() 
-					messageKeyUpEvent()
-					return
-				}
-				
-				async function waitForModal(elementName){
-					let dialog = document.getElementById(elementName);
-					dialog.showModal(); 
-					while (dialog.open){
-						await waitTime( 1000);
-					}
-					return dialog.returnValue;		
-				}
-			}
-			
-			// Perform change-message
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit); 
+        // Read current branch
+        try{
+            status_data = await gitStatus();
+        }catch(err){
+            console.log('Error in gitAddCommitAndPush()');
+            console.log(err);
         }
-        
-        // Normal commit 
-        if ( getMode() !== 'NO_FILES_TO_COMMIT'  ) {
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit); 
-        }       
-         
-        function onCommit(err, result) {console.log(result);  };
-        
-    }catch(err){
-        console.log('Error in gitAddCommitAndPush()');
-        console.log(err);
-        
-        if ( err.toString().includes('empty ident name') ){
-            await showUserDialog();
-            return
-        }
-    }
+        var currentBranch = status_data.current;
+        var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
     
-    // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
-    await gitRememberBranch( 'HEAD', currentBranch);
-
-    // Push 
-    if ( state.repos[state.repoNumber].autoPushToRemote ){   
+        
+        // Add all files to index
+        setStatusBar( 'Adding files');
+        var path = '.'; // Add all
+        await simpleGit( state.repos[state.repoNumber].localFolder )
+            .add( path, onAdd );   
+        function onAdd(err, result) {console.log(result) }
+        
+        
+        // Remove localState.unstaged from index
+        for (var file of localState.unstaged) {
+             await simpleGit( state.repos[state.repoNumber].localFolder )
+            .raw( [  'reset', '--', file ] , onReset); 
+        }
+        function onReset(err, result) {console.log(result) }
+        
         await waitTime( 1000);
-        await gitPush();
-    }
+        
+    //
+    // COMMIT
+    //
     
-    // Finish up
-    localState.unstaged = [];
-    textOutput.value = '';
-    writeTextOutput( textOutput);
-    _setMode('UNKNOWN');  
-    await _update()
-    _setMode('UNKNOWN');  
-    await _update()
+        setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
+
+        try{
+            
+            // Amend cases
+            // - No remote -- allow amend
+            // - Remote -- allow if dialog says yes
+
+        
+            // AMEND FILE-CHANGE        
+            if (document.getElementById('amend_commit_checkbox').checked == true){
+                if ( await warningChangeRemote() ){
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+                    forcePush = true;
+                }else{
+                    return
+                }
+            }
+        
+            
+            if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
+                // AMEND MESSAGE-CHANGE
+                if ( await warningChangeRemote() ){
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit);  
+                    forcePush = true;
+                }else{
+                    return
+                }
+            }else{
+                // NORMAL COMMIT
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).commit( message, onCommit);
+            }
+
+        }catch(err){
+            console.log('Error in gitAddCommitAndPush()');
+            console.log(err);
+            
+            if ( err.toString().includes('empty ident name') ){
+                await showUserDialog();
+                return
+            }
+        }       
+      
+       
+    //
+    // FINISH
+    //
+            
+        // Add branch in git notes (git notes --ref=branchname add -m 'name of branch')
+        await gitRememberBranch( 'HEAD', currentBranch);
+        
+        // Push 
+        if ( state.repos[state.repoNumber].autoPushToRemote ){   
+            await waitTime( 1000);
+            await gitPush( forcePush);  
+        }
+        
+        // Finish up
+        localState.unstaged = [];
+        textOutput.value = '';
+        writeTextOutput( textOutput);
+        _setMode('UNKNOWN');  
+        await _update()
+        _setMode('UNKNOWN');  
+        await _update()
+        
+        return
+    
+    //    
+    // Internal functions
+    //
+        function onCommit(err, result) {
+            console.log(result);  
+        };
+                
+        // Define function showing dialog warning about remote repo
+        //
+        // return true = allow commit and push
+        //        false= do not allow commit and push (Cancel pressed)
+        async function warningChangeRemote(){
+            
+            let remoteDefined = isRemoteDefined()
+            
+            // If local only -- always allow
+            if ( !remoteDefined ){
+                return true
+            }
+            
+            // Show dialog if remote is defined
+            if ( remoteDefined ){
+                buttonPressed = await waitForModal('amendDialog');
+                if ( buttonPressed == 'Cancel'){
+                    _setMode('NO_FILES_TO_COMMIT'); 
+                    await _update()   
+                    _setMode('UNKNOWN'); 
+                    await _update() 
+                    messageKeyUpEvent()
+                    
+                    return false
+                }else{
+                    return true
+                }
+                
+                
+                // Internal function
+                async function waitForModal(elementName){
+                    let dialog = document.getElementById(elementName);
+                    dialog.showModal(); 
+                    while (dialog.open){
+                        await waitTime( 1000);
+                    }
+                    return dialog.returnValue;		
+                }
+            }
+            
+        };
+   
+            
+    
 }
 async function gitRememberBranch( hash, name){
     
@@ -4053,7 +4112,7 @@ async function gitRememberBranch( hash, name){
     try{   
         // Add branch in git notes (git notes --ref=branchname append -m 'name of branch') 
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .raw( [  'notes', '--ref', 'branchname', 'append' , '–allow-empty', '-m', name, hash] , onNotes);
+            .raw( [  'notes', '--ref', 'branchname', 'append', '--allow-empty', '-m', name, hash] , onNotes);
         function onNotes(err, result) {console.log( `gitRememberBranch( ${hash}, ${name}) `);console.log(result);console.log(err);  };
     }catch(err){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
@@ -4077,6 +4136,7 @@ async function gitStash(){
     
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
+    await updateChangedListWindow();
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -4111,6 +4171,7 @@ async function gitStashPop( stashRef){
     
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
+    await updateChangedListWindow();
          
 }
 async function gitStashMap( folder ){
@@ -4195,7 +4256,8 @@ async function gitStashMap( folder ){
 
 }     
 
-async function gitPush(){
+async function gitPush( forcePush){
+    // forcePush = true, means a --force push is used
     
     if ( state.repos[state.repoNumber].allowPushToRemote  == false ){ 
         pragmaLog('   not allowed to push, because setting allowPushToRemote = false');
@@ -4248,25 +4310,21 @@ async function gitPush(){
                 attempt = ' - on second attempt';
                 console.warn('First push attempt failed, with error : ');
                 console.warn(err);
-                console.warn('wait for push 2');
-                console.warn(' ');
-                setTimeout( await push, 3000);
-                console.log('success push - second attempt');
+                //console.warn('wait for push 2');
+                //console.warn(' ');
+                //setTimeout( await push, 3000);
+                //console.log('success push - second attempt');
             }
             
             async function push(){
-                // This function knows from GUI if 'Normal push', or 'forced push'
+                // This internal function knows from calling function if 'Normal push', or 'forced push'
                 
-                pragmaLog('push remembered branchname to remote');
+                let ERR = false;
+                
+                pragmaLog('   Push (forcePush = ' + forcePush + ')' );
                 // Push commits and tags, and set upstream
                 try{
-                    // Force push, or normal push
-                    let forcePush = (  document.getElementById('amend_commit_checkbox').checked == true );  // Amend to current commit
-                    forcePush = forcePush || ( getMode() == 'NO_FILES_TO_COMMIT' ) ;						// Change message
-                    if (localState.settings){  // Do not force-push if settings window is opened
-						forcePush = false;
-					}
-                    
+
                     if (forcePush){
                         // Force push because amend files to same commit, or because change message text
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
@@ -4276,11 +4334,28 @@ async function gitPush(){
                     }
                     
                 }catch(err){
-                    displayLongAlert('Push Error' + attempt , err, 'error');
+                    ERR = true;
+                    
+                    // Helpful dialog if possible:
+                    if (
+                          ( (err.toString()).includes('tip of your current branch is behind') ) ||
+                          ( (err.toString()).includes('not have locally') )
+                        )
+                    {
+                        // Give options to 'pull' or 'push --force'
+                        document.getElementById('forcePushOrPullPushDialog').showModal();
+                    }else{
+                        // General error dialog
+                        displayLongAlert('Push Error' + attempt , err, 'error');
+                    }
                 }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);    
+                
+                if (ERR){
+                    throw 'Push Error';
+                }           
             }
 
         }
@@ -4392,7 +4467,8 @@ async function gitPull(){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
 
         try{
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', '--rebase'], onPull);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', 'origin', '--rebase'], onPull);
+            
             function onPull(err, result) {
                 console.warning(result) ; 
                 
@@ -4462,44 +4538,6 @@ async function gitMerge( currentBranchName, selectedBranchName){
     //textOutput.placeholder = 'Write description of Merge here, and press Store';
     writeTextOutput( textOutput);
 }
-    
-async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
-    // Checks if first parameter is older commit than second parameter
-    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
-    
-    // Cache functionality
-    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
-        await calculate(oldCommit, newCommit); // Sets all cached variables
-        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
-    }
-    
-    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
-        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
-    }else{
-        await calculate(oldCommit, newCommit);       // Sets cache variables
-        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
-    }
-
-    // Internal function - calculate true / false
-    async function calculate(oldCommit, newCommit){
-        
-        function onLog(err, result){ console.log(result); return result } 
-        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
-        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
-        
-        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
-        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
-        
-        // Remember cached inputs    
-        gitIsFirstCommitOldest.oldCommit = oldCommit;
-        gitIsFirstCommitOldest.newCommit = newCommit;
-        
-        // Remember cached output
-        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
-        
-        return;         
-    }
-}
 
 async function gitConfigList( localFolder ){
 let configList;
@@ -4528,23 +4566,6 @@ async function registerDefaultBranch(document){
     
     // Display in document from in-parameter
     document.getElementById('defaultBranchName').innerText = defBranchName;
-}
-async function gitIsMergeCommit(commit){
-    
-    if ( commit == undefined || commit == ''){ // HEAD with modified files 
-        return false;
-    }
-    
-    let returnValue = false;
-    try{
-        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
-        
-        returnValue = ( parentHashes.split(' ').length > 1 );
-    }catch(err){
-        console.error( err);
-    }
-    
-    return returnValue; // True if merge commit
 }
 
 function rememberDetachedBranch(){
@@ -4603,7 +4624,93 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
         }
     }
 }
+      
+// Information
+async function gitCurrentCommit(){
+        currentHash = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'rev-parse', 'HEAD' ]) )
+        .replaceAll('\n','')
+        
+        return currentHash
+}
+async function isAmendCommit(){             // true if current commit is an amend commit
+
+    currentHash = await gitCurrentCommit();
     
+    all_amend_commits = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( 
+        ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)']) ) 
+        .split('\n'); 
+    
+    firstOccuranceOfCurrentHash = all_amend_commits.find(element => element.includes( currentHash)) 
+    let isAmendCommit = ( firstOccuranceOfCurrentHash !== undefined )  // True if I found currentHash in list of all amend commits
+    
+    return isAmendCommit
+}
+async function gitIsFirstCommitOldest( oldCommit, newCommit){ 
+    // Checks if first parameter is older commit than second parameter
+    // Caching of oldCommit, newCommit, cachedResult in persistent struct gitIsFirstCommitOldest
+    
+    // Cache functionality
+    if( typeof gitIsFirstCommitOldest.oldCommit == 'undefined' ) {    
+        await calculate(oldCommit, newCommit); // Sets all cached variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }
+    
+    if ( ( oldCommit === gitIsFirstCommitOldest.oldCommit) && ( newCommit === gitIsFirstCommitOldest.newCommit) ){
+        return gitIsFirstCommitOldest.cachedResult;  // Returns cached result
+    }else{
+        await calculate(oldCommit, newCommit);       // Sets cache variables
+        return gitIsFirstCommitOldest.cachedResult;  // Returns new cached result
+    }
+
+    // Internal function - calculate true / false
+    async function calculate(oldCommit, newCommit){
+        
+        function onLog(err, result){ console.log(result); return result } 
+        let old = await simpleGit(state.repos[state.repoNumber].localFolder).log( [oldCommit], onLog);
+        let newest = await simpleGit(state.repos[state.repoNumber].localFolder).log( [newCommit], onLog);
+        
+        console.log('gitIsFirstCommitOldest --  old =' + old.latest.date + '  new = ' + newest.latest.date  );
+        console.log('gitIsFirstCommitOldest --  old < newest =' + (old.latest.date < newest.latest.date) );
+        
+        // Remember cached inputs    
+        gitIsFirstCommitOldest.oldCommit = oldCommit;
+        gitIsFirstCommitOldest.newCommit = newCommit;
+        
+        // Remember cached output
+        gitIsFirstCommitOldest.cachedResult = ( old.latest.date < newest.latest.date );
+        
+        return;         
+    }
+}
+async function gitIsMergeCommit(commit){    // true if merge commit
+    
+    if ( commit == undefined || commit == ''){ // HEAD with modified files 
+        return false;
+    }
+    
+    let returnValue = false;
+    try{
+        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
+        
+        returnValue = ( parentHashes.split(' ').length > 1 );
+    }catch(err){
+        console.error( err);
+    }
+    
+    return returnValue; // True if merge commit
+}
+function isRemoteDefined(){
+    
+    // No remote stored
+    if (state.repos[state.repoNumber].remoteURL == undefined){
+        return false
+    }
+    
+    // Check if http(s) protocol
+    let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+    return remoteDefined
+}
+  
 
 // Branch-menu functions
 
@@ -5185,28 +5292,41 @@ function pragmaLog(message){
     let output = timeStamp + space + cleanedMessage + os.EOL;
     mainLogFileStream.write( output);
 }
-function sendGitOutputToFile() {
-  let counter = 0;
-
-  return (cmd, stdOut, stdErr, args) => {
-    const id = ++counter;
- 
-    pragmaLog( `COMMAND[${id}] : ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
-
-    stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ); pragmaLog( ' '); }); // End with blank line
-    stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() ) }); 
+function sendGitOutputToFile( id) {
     
-    
-    function separateLines( prefix, multiLineString){
-        // Add prefix before each row of message
-        let lines = multiLineString.split("\n");
-        for (var i = 0; i < lines.length; i++) {
-            pragmaLog( `  ${prefix} ${lines[i]}`);
+    return (cmd, stdOut, stdErr, args) => {
+        
+        //const id = gitCounter;
+        
+        // Simplify simpleGit command to normal git
+        filteredArgs = args.filter( e => { 
+            let found = false;
+            found = found || (e == '-c');
+            found = found ||  e.includes( 'include.path');
+            found = found ||  e.includes( 'porcelain');
+            return !found}
+        )
+         
+        pragmaLog( `   GIT [${id}]    : ${ ['git'].concat(filteredArgs).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
+        pragmaLog( `   GIT [${id}]    : ${ ['git'].concat(args).join(' ') }`);  // Add 'git' to args, and make string with ' ' between array elements
+
+        pragmaLog('');
+        
+        stdOut.on('data', buffer => { separateLines( `STDOUT [${id}]` , buffer.toString() ); pragmaLog( ' '); }); // End with blank line
+        stdErr.on('data', buffer => { separateLines( `STDERR [${id}]` , buffer.toString() ) }); 
+        
+        
+        function separateLines( prefix, multiLineString){
+            // Add prefix before each row of message
+            let lines = multiLineString.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                pragmaLog( `     ${prefix} ${lines[i]}`);
+            }
         }
+        
+        //pragmaLog( '\n\n');
+        
     }
-    
-    
-  }
 }
 function stackInfo( level ){
     //let stack = global.__stack;
@@ -5247,6 +5367,7 @@ function stackInfo( level ){
 function fixNwjsBug7973( win){
     // This function should be called after intercepting 'close' event for a spawned window
     // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
+    // See : https://github.com/nwjs/nw.js/issues/7973
     
     // Hide and resize
     win.hide();
@@ -5284,7 +5405,15 @@ async function updateSettingsWindow(){
     
     win.focus();
 }
+async function updateChangedListWindow(){
+    
+    //await _update();
+    if (localState.fileListWindow){
+        _callback('clicked-status-text')
+    }
 
+    win.focus();
+}
 
 // Dialogs
 async function tag_list_dialog(){
@@ -5328,9 +5457,10 @@ function displayAlert(title, message){
     //
     // first argument is ignored
     
-    pragmaLog('   displayAlert : ' + os.EOL + 
-        'title   = ' + title + os.EOL + 
-        'message = ' + message + os.EOL );
+    pragmaLog('   displayAlert : ' );
+    pragmaLog('      title   = ' + title);
+    pragmaLog('      message = ' + message);
+    
 
     document.getElementById('alertTitle').innerHTML = title;
     document.getElementById('alertMessage').innerHTML = message;
@@ -5346,12 +5476,11 @@ function displayLongAlert(title, message, type){
      * message -- message text 
      * type -- 'warning' (yellow border) or 'error' (red border)
      */
-     
-    pragmaLog('   displayLongAlert :' + os.EOL + 
-        'type    = ' + type + os.EOL + 
-        'title   = ' + title + os.EOL + 
-        'message = ' + os.EOL + 
-         message);
+
+    pragmaLog('   displayLongAlert : ' );
+    pragmaLog('      type    = ' + type);
+    pragmaLog('      title   = ' + title);
+    pragmaLog('      message = ' + message);
 
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
@@ -5368,7 +5497,7 @@ function displayLongAlert(title, message, type){
          * Dialog grows up to certain height, after which the message gets a scroll bar
          * OK button does nothing more than closing the dialog
          * 
-         * Multiline messages have /n end of lines, which are converted to <br>
+         * Multiline messages have \n end of lines, which are converted to <br>
          * 
          * If there is a suggested git command starting the line, a "run"-link is added
          */
@@ -5394,6 +5523,13 @@ function displayLongAlert(title, message, type){
                     show: false
                 },
                 function(cWindows){ 
+
+                    
+                    cWindows.on('close', function() { 
+                        fixNwjsBug7973( cWindows);
+                        //win.hide();
+                    } );
+                
                      
                     cWindows.on('loaded', 
                         function(){
@@ -5407,7 +5543,7 @@ function displayLongAlert(title, message, type){
                             cWindows.window.document.getElementById('buttonDiv').innerHTML = buttonsHtml;
                                                    
                             // Set initial dialog dimensions 
-                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 10;
+                            let dialogHeight = cWindows.window.document.getElementById('content').scrollHeight + 50;
                             let dialogWidth = cWindows.window.document.getElementById('messageText').scrollWidth + 100;  // Add paddings etc which are used on parent elements
                             
                             // Position centered in x, aligned near top
@@ -6223,13 +6359,14 @@ function loadSettings(settingsFile){
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
             
-        // Graph window
+        // Graph window 
             state.graph = setting( state_in.graph, {} );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
             state.graph.showHiddenBranches = setting( state_in.graph.showHiddenBranches, true );
             state.graph.swimlanes  = setting( state_in.graph.swimlanes, false );
             state.graph.debug  = setting( state_in.graph.debug, false );  // Note, set by editing settings.json
+            state.graph.showLongHash = setting( state_in.graph.showLongHash, false );  
             
         
         // Repos (default is empty)
@@ -6365,15 +6502,16 @@ function loadSettings(settingsFile){
     return state;
 }
 function updateWithNewSettings(){
-    //Called when left settings window
+    //Called when left settings window (or directly from other windows that modify settings, for instance graph)
     //
     // NOTE : To implement a new setting that affects the gui, 
     // add code to these places :
     // - app.js/updateWithNewSettings (this function)  -- applies directly after settings window is left
     // - app.js/loadSettings                           -- applies when starting app.js
-    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form
+    // - settings.js/injectIntoSettingsJs              -- correctly sets the parameter in the settings.html form  
     // - settings.html                                 -- where the form element for the setting is shown
-    
+    //
+    // Two top rows if settings are modified outside settings-window
     
     localState.dark = state.darkmode;
     

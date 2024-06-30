@@ -91,7 +91,7 @@ async function injectIntoJs(document) {
     }
     
     
-    win.focus();
+    //win.focus();  // NOTE: I don't want this to focus, since the window is updated from main, and should stay below main
 
 
 };
@@ -396,8 +396,8 @@ async function _callback( name, event, event2){
 
                 
             }catch(err){
-                console.log('discardLink -- caught error ');
-                console.log(err);
+                console.warn('discardLink -- caught error ');
+                console.warn(err);
             }
                 
     
@@ -412,7 +412,6 @@ async function _callback( name, event, event2){
             }catch(err){
                 console.log("discardLink -- Error " );
                 console.log(err);
-                return
             }
             
 
