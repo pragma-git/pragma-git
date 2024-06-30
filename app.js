@@ -3980,6 +3980,10 @@ async function gitAddCommitAndPush( message){
         setStatusBar( 'Commiting files  (to ' + currentBranch + ')');
 
         try{
+            
+            // Amend cases
+            // - No remote -- allow amend
+            // - Remote -- allow if dialog says yes
 
         
             // AMEND FILE-CHANGE        
@@ -4054,8 +4058,14 @@ async function gitAddCommitAndPush( message){
         //        false= do not allow commit and push (Cancel pressed)
         async function warningChangeRemote(){
             
+            let remoteDefined = isRemoteDefined()
+            
+            // If local only -- always allow
+            if ( !remoteDefined ){
+                return true
+            }
+            
             // Show dialog if remote is defined
-            let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
             if ( remoteDefined ){
                 buttonPressed = await waitForModal('amendDialog');
                 if ( buttonPressed == 'Cancel'){
@@ -4081,6 +4091,7 @@ async function gitAddCommitAndPush( message){
                     return dialog.returnValue;		
                 }
             }
+            
         };
    
             
@@ -4310,7 +4321,7 @@ async function gitPush( forcePush){
                 
                 let ERR = false;
                 
-                pragmaLog('   Push remembered branchname  (forcePush = ' + forcePush + ')' );
+                pragmaLog('   Push (forcePush = ' + forcePush + ')' );
                 // Push commits and tags, and set upstream
                 try{
 
@@ -4688,7 +4699,17 @@ async function gitIsMergeCommit(commit){    // true if merge commit
     
     return returnValue; // True if merge commit
 }
-
+function isRemoteDefined(){
+    
+    // No remote stored
+    if (state.repos[state.repoNumber].remoteURL == undefined){
+        return false
+    }
+    
+    // Check if http(s) protocol
+    let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+    return remoteDefined
+}
   
 
 // Branch-menu functions

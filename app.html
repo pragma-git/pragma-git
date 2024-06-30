@@ -277,7 +277,8 @@
 							document.getElementById('store-button').disabled = false;  // Enable Store button
 						
 							// Show dialog if remote defined
-							let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+							//let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
+                            let remoteDefined = isRemoteDefined()
 							if (remoteDefined){
 								document.getElementById('amendDialog').showModal();         // Only show when click to check the box
 							}
