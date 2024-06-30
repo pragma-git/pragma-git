@@ -1522,6 +1522,24 @@ async function _callback( name, event){
 
         break;
       } 
+      case 'clicked-forcePushOrPullPushDialog': {
+          
+        console.log('clicked-forcePushOrPullPushDialog');
+          
+        if (event == 'Pull'){
+            await gitPull();
+            await gitPush( forcePush = false);
+
+            await updateGraphWindow();
+            await updateChangedListWindow();
+        }
+        
+        if (event == 'ForcePush'){
+            gitPush( forcePush = true); 
+        }
+        
+        break;
+      }
 
       // Help      
       case 'help': {
@@ -4281,16 +4299,18 @@ async function gitPush( forcePush){
                 attempt = ' - on second attempt';
                 console.warn('First push attempt failed, with error : ');
                 console.warn(err);
-                console.warn('wait for push 2');
-                console.warn(' ');
-                setTimeout( await push, 3000);
-                console.log('success push - second attempt');
+                //console.warn('wait for push 2');
+                //console.warn(' ');
+                //setTimeout( await push, 3000);
+                //console.log('success push - second attempt');
             }
             
             async function push(){
-                // This function knows from GUI if 'Normal push', or 'forced push'
+                // This internal function knows from calling function if 'Normal push', or 'forced push'
                 
-                pragmaLog('   Push remembered branchname to remote (forcePush = ' + forcePush + ')' );
+                let ERR = false;
+                
+                pragmaLog('   Push remembered branchname  (forcePush = ' + forcePush + ')' );
                 // Push commits and tags, and set upstream
                 try{
 
@@ -4303,11 +4323,28 @@ async function gitPush( forcePush){
                     }
                     
                 }catch(err){
-                    displayLongAlert('Push Error' + attempt , err, 'error');
+                    ERR = true;
+                    
+                    // Helpful dialog if possible:
+                    if (
+                          ( (err.toString()).includes('tip of your current branch is behind') ) ||
+                          ( (err.toString()).includes('not have locally') )
+                        )
+                    {
+                        // Give options to 'pull' or 'push --force'
+                        document.getElementById('forcePushOrPullPushDialog').showModal();
+                    }else{
+                        // General error dialog
+                        displayLongAlert('Push Error' + attempt , err, 'error');
+                    }
                 }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);               
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);    
+                
+                if (ERR){
+                    throw 'Push Error';
+                }           
             }
 
         }
@@ -4419,7 +4456,8 @@ async function gitPull(){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
 
         try{
-            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', '--rebase'], onPull);
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['pull', 'origin', '--rebase'], onPull);
+            
             function onPull(err, result) {
                 console.warning(result) ; 
                 

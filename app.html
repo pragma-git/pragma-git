@@ -763,6 +763,76 @@
     
 
 
+    <!-- Force push, or pull dialog -->   
+  
+    <dialog id="forcePushOrPullPushDialog"  class="error" style="overflow: unset">  
+        
+        <!-- Make it easier to hit buttons -->  
+        <style>
+            .ur-small-element { 
+                position:relative; 
+            }
+            .ur-small-element:after {
+                content:'';
+                position:absolute;
+                top:-3px; bottom:-3px; 
+                left:-8px; right:-8px; 
+            }
+        </style>
+        
+        
+        <!-- Warning text -->  
+        <b>WARNING -- local branch behind remote branch !</b><br>
+             <br>
+
+        <label for="behindPull">
+            <input type="radio" id="behindPull" name="behindRemoteRadiobuttonGroup" value="Pull" checked>
+            Get remote, and push (pull --rebase, and push)
+        </label>
+
+        <!-- Radio-buttons -->  
+
+        
+        <label for="behindForcePush">
+            <input type="radio" id="behindForcePush" name="behindRemoteRadiobuttonGroup" value="ForcePush">
+            Force push -- overwrite remote commits (dangerous)
+        </label>
+        
+        
+         <!-- help -->             
+         <img id="about-icon"  style="float:right;"  height="17" width="17"  
+                    onclick="
+                        let evt = {}; 
+                        evt.name='Local Branch Behind';
+                        parent.window._callback('help',evt);
+                    " 
+                    onmouseover="updateImageUrl('about-icon', 'images/questionmark_hover.png');" 
+                    onmouseout= "updateImageUrl('about-icon', 'images/questionmark.png');" 
+                    src="images/questionmark.png"> 
+                    
+                  
+                  
+        <!-- OK / Cancel buttons-->  
+        <br style = "line-height: 0.4em;">
+        
+        <button id="detachedBranchDialogOK" value="OK" class="ur-small-element"
+            onclick="
+                document.getElementById('forcePushOrPullPushDialog').close();
+                let selectedRadioButton = document.querySelector('input[name=\'behindRemoteRadiobuttonGroup\']:checked').value;
+                _callback('clicked-forcePushOrPullPushDialog', selectedRadioButton );
+            "> <!-- Call html-dialog for branch selection -->
+            OK
+        </button>   
+         
+        <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
+            onclick="document.getElementById('forcePushOrPullPushDialog').close();">
+            Cancel
+        </button>  
+        
+    </dialog>  
+    
+    
+
     <!-- Detached head dialog (stored work) -->   
   
     <dialog id="detachedHeadDialog"  class="error" style="overflow: unset">  
