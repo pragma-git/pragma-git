@@ -3222,7 +3222,10 @@ async function _setMode( inputModeName){
             
         case 'CONFLICT': {
             newModeName = 'CONFLICT';
-            if (currentMode ==  'CONFLICT') { return};
+            if (currentMode ==  'CONFLICT') {
+                document.getElementById('store-button').disabled = true;
+                return
+            };
             setButtonText();// Set button
             //document.getElementById('store-button').disabled = true;
             //textOutput.value = "";
