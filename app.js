@@ -1531,8 +1531,16 @@ async function _callback( name, event){
         console.log('clicked-forcePushOrPullPushDialog');
           
         if (event == 'Pull'){
-            await gitPull();
-            await gitPush( forcePush = false);
+            try{
+                await gitPull();
+            }catch(err){
+                if ( err.toString.includes('Conflict in pull error') ){
+                    // Ignore, because I have a conflict and do not want to create any further push error
+                }else{
+                    await gitPush( forcePush = false);
+                }
+                
+            }
 
             await updateGraphWindow();
             await updateChangedListWindow();
@@ -4485,10 +4493,16 @@ async function gitPull(){
             
         }catch(err){
             
-            displayLongAlert('Failed pulling remote file', err, 'error'); 
-            console.log('Error in gitPull()');
-            console.log(err);
-            error = err;
+            if (err.toString().includes('CONFLICT')){
+                // Ignore -- conflict will be marked in bottom bar
+                throw 'Conflict in pull error'
+            }else{            
+                displayLongAlert('Failed pulling remote file', err, 'error'); 
+                console.log('Error in gitPull()');
+                console.log(err);
+                error = err;
+            }
+
             
         }
         _setMode('UNKNOWN');
