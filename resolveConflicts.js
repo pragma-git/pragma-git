@@ -465,6 +465,13 @@ async function createConflictingFileTable(document, status_data) {
     // Replace old tbody content with new tbody
     old_tbody.parentNode.replaceChild(tbody, old_tbody);
     
+    // Hide 'Solve conflict button' if nothing to solve
+    if (status_data.conflicted.length > 0){
+        document.getElementById('resolveAllConflictsButton').disabled = false;
+    }else{
+        document.getElementById('resolveAllConflictsButton').disabled = true;
+    }
+    
     return foundFiles;
 }
 function createUnsureFileTable(document, status_data) {
