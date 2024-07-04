@@ -341,7 +341,12 @@ async function _callback( name, event){
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
-            await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            if ( isRebaseMerge() ){
+                await simpleGit( folder).rebase(['--abort'], onUndoMerge );
+            }else{
+                await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            }
+            
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
