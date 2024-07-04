@@ -532,6 +532,10 @@ async function _callback( name, event){
             forcePush = true;
         }
         
+        
+        // Update remote info immediately
+        await gitFetch();  
+        
         gitPush( forcePush); 
         break;
       }
@@ -4337,11 +4341,8 @@ async function gitPush( forcePush){
                     ERR = true;
                     
                     // Helpful dialog if possible:
-                    if (
-                          ( (err.toString()).includes('tip of your current branch is behind') ) ||
-                          ( (err.toString()).includes('not have locally') )
-                        )
-                    {
+                    if (  (err.toString()).includes('tip of your current branch is behind')   ||
+                          ( err.toString()).includes('not have locally')   ){
                         // Give options to 'pull' or 'push --force'
                         document.getElementById('forcePushOrPullPushDialog').showModal();
                     }else{
