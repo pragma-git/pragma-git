@@ -257,13 +257,11 @@ async function _callback( name, event){
                     
         // Rebase conflict
         if ( isRebaseMerge() ){
-            const EDITOR='true';  // Fool git that we have edited a commit message
-            await simpleGit( folder).env({ ...process.env, EDITOR }).rebase(['--continue'], rebaseContinue);  // Accept changes and commit under original commit message
-            function rebaseContinue(err, result){ console.log(result); console.log(err) };
+			opener.multiPlatformExecSync( folder, 'export GIT_EDITOR=true; git rebase --continue');
             return
         }
     
-        // Merge conflict
+        // Merge conflict 
             
         // Handle two scenarios : 
         // 1) no files were modified, 
@@ -420,7 +418,7 @@ async function createConflictingFileTable(document, status_data) {
     
     // Print current commit being rebased
     if ( isRebaseMerge() ){
-        let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1').toString().trim();  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
+        let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1');  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
         let thisCommit = thisPicked.trim().split(" ").slice(2).join(" ");              //'my first commit'
         document.getElementById('rebaseDetails').innerText = 'Rebase : ' + thisCommit;
     }

@@ -800,9 +800,10 @@ async function _callback( name, event){
             resolveConflicts(state.repos[state.repoNumber].localFolder);
         }else{
             listChanged();
+            localState.fileListWindow = true;
         }
         
-        localState.fileListWindow = true;
+        
         
         break;
       }
@@ -5275,14 +5276,14 @@ function getDownloadsDir(){
     
 }
 
-function multiPlatformExecSync( folder, arg){  // ExecSync runs on git bash on all platforms
-	console.log(arg.toString())
+function multiPlatformExecSync( folder, cmd){  // Run git bash in 'folder', on all platforms. 
+	 //Return string output without leading and trailing spaces
+	console.log(cmd.toString())
 	const { execSync } = require('child_process');
 	if (process.platform === 'win32') {
-		let out =  execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${arg} "`, {cwd: folder} )
-		return out
+		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).toString().trim();
 	}else{
-		return  execSync( arg, {cwd: folder} )
+		return  execSync( cmd, {cwd: folder} ).toString().trim();
 	}
 }
 
