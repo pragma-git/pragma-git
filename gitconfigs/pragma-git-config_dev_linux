@@ -1,0 +1,12 @@
+[init]
+    defaultbranch=main
+
+[mergetool "pragma-git"]
+    cmd = /home/jan/Desktop/Pragma-git-dev/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
+	trustExitCode = true    
+
+[core]
+    askpass = /home/jan/Desktop/Pragma-git-dev/pragma-askpass
+
+[credential]
+    useHttpPath = true

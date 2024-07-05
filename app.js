@@ -3461,11 +3461,21 @@ function configFilePath(){
       }
       case 'linux': {
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_linux';
+           
+        // Special DEV
+        if ( STARTDIR.startsWith('/home') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_linux';
+        }
         break;
       }
       case 'win32': {
         // Note : called win32 also for 64-bit  
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
+                   
+        // Special DEV
+        if ( STARTDIR.startsWith('C:\\Users') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_windows';
+        }
         break;
       }
     }
