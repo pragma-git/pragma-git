@@ -9,7 +9,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
-const { execSync } = require('child_process');
         
 const pathsep = require('path').sep;  // Os-dependent path separator
         
@@ -391,8 +390,8 @@ async function _update(){
         await simpleGit( folder).status( onStatus );
         function onStatus(err, result ){ 
             status_data = result; 
-            console.log(result); 
-            console.log(err);
+            //console.log(result); 
+            //console.log(err);
             createConflictingFileTable(document, status_data);
         };
     }catch(err){
@@ -412,7 +411,6 @@ async function closeWindow(){
     win.close();
     
 }
-
 // Draw
 async function createConflictingFileTable(document, status_data) {
     var index = 0; 
@@ -422,8 +420,7 @@ async function createConflictingFileTable(document, status_data) {
     
     // Print current commit being rebased
     if ( isRebaseMerge() ){
-        let cmd = 'cd "' + folder + '"; '  // Go to repo folder
-        let thisPicked = execSync( cmd + 'cat .git/rebase-merge/done | tail -1').toString().trim();  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
+        let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1').toString().trim();  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
         let thisCommit = thisPicked.trim().split(" ").slice(2).join(" ");              //'my first commit'
         document.getElementById('rebaseDetails').innerText = 'Rebase : ' + thisCommit;
     }

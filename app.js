@@ -1534,7 +1534,7 @@ async function _callback( name, event){
             try{
                 await gitPull();
             }catch(err){
-                if ( err.toString.includes('Conflict in pull error') ){
+                if ( err.toString().includes('Conflict in pull error') ){
                     // Ignore, because I have a conflict and do not want to create any further push error
                 }else{
                     await gitPush( forcePush = false);
@@ -2924,8 +2924,8 @@ async function _update2(){
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' ); 
                 setStatusBar( fileStatusString( status_data)); 
 
-                console.log('_update -- CONFLICT mode');
-                console.log(status);
+                //console.log('_update -- CONFLICT mode');
+                //console.log(status);
 
                 break;
             }
@@ -5275,6 +5275,16 @@ function getDownloadsDir(){
     
 }
 
+function multiPlatformExecSync( folder, arg){  // ExecSync runs on git bash on all platforms
+	console.log(arg.toString())
+	const { execSync } = require('child_process');
+	if (process.platform === 'win32') {
+		let out =  execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${arg} "`, {cwd: folder} )
+		return out
+	}else{
+		return  execSync( arg, {cwd: folder} )
+	}
+}
 
 // Logging to file
 
@@ -5609,7 +5619,7 @@ function displayLongAlert(title, message, type){
                         if (line.trim().startsWith('git') ){  //Work with line starting with "git"
                             let inputline = line;
                             
-                            // NOTE : multiPlatformExecSync is defined in externalDialog.html, where this link is used
+                            // NOTE : multiPlatformExecSync is ALSO defined in externalDialog.html, where this link is used
                             let CMD = `let out = multiPlatformExecSync( \`${CD} ; ${line}\` );`  // Works also if CD fails (runs second command without a cd)
                             line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
                             line = `${line} </code>
