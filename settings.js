@@ -519,6 +519,7 @@ async function _callback( name, event){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
 
+                await updateGitconfigs( );
          
 
                 
@@ -1292,7 +1293,7 @@ async function injectIntoSettingsJs(document) {
     }else{
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
-    
+      
     // Draw tabs
     await drawBranchTab(document);
     await drawRepoTab(document);
@@ -1525,6 +1526,9 @@ async function drawSoftwareTab(document){
         let platform = os.machine();  
         document.getElementById('platform').innerText = document.getElementById('platform').innerText  + '(' + platform + '),  ' + cpu;
     }
+    
+
+    updateGitconfigs(); // Write gitconfigs to System Info (TODO : update when changing repo)
     
     
     document.getElementById('gitVersion').innerText = localState.gitVersion;
@@ -1911,6 +1915,41 @@ async function updateLocalAuthorInfoView( globalSelected ){
     }   
             
 
+}
+async function updateGitconfigs( ){
+    gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']);    
+    let html = '';
+    let currentFileURI = '';
+    let rows = gitconfigString.split('\n');
+    for (let i = 0; i < rows.length; i++) {
+        row = rows[i].trim();
+        row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
+        row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
+        fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
+        configString = row.substring(row.indexOf(' ') + 1);
+        
+
+        if ( fileURI !== currentFileURI ){
+            currentFileURI = fileURI;
+            currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
+            
+            if ( fileURI == 'command' ){
+                currentFileName = 'Pragma-git internal';
+                configString = row.substring(row.indexOf(':') + 1);
+            }
+            
+            // File name
+            if ( fileURI !== '' ){
+                html+= `<div> ${currentFileName} :</div>`; 
+            }
+        }
+        
+        html += `<code>&nbsp; ${configString}</code> <br>`;
+    }
+    
+    document.getElementById('gitconfigs').innerHTML = await html;
+    
+    return html
 }
 
 function displayAlert(title, message){
