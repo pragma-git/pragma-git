@@ -983,7 +983,7 @@ function forgetButtonClicked(event){
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
 
-    
+    opener.cacheBranchList();
 
     console.log('Settings - updating table :');
     

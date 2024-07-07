@@ -2363,6 +2363,9 @@ async function _callback( name, event){
                 return
             } else {
                 await addExistingRepo( folder); 
+                
+                // Update settings repo table
+                updateSettingsRepoTable();
             }
         }catch(error){
             displayLongAlert('Failed adding repo', error, 'error'); 
@@ -2372,6 +2375,7 @@ async function _callback( name, event){
         // Update immediately
         await _setMode('UNKNOWN');
         await _update();
+        
 
     };
     function resetHistoryPointer(){
@@ -4018,7 +4022,7 @@ async function gitAddCommitAndPush( message){
                     await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
                     forcePush = true;
                 }else{
-                    return
+                    return  // Do not commit if dialog Canceled
                 }
             }
         
@@ -4029,7 +4033,7 @@ async function gitAddCommitAndPush( message){
                     await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit);  
                     forcePush = true;
                 }else{
-                    return
+                    return // Do not commit if dialog Canceled
                 }
             }else{
                 // NORMAL COMMIT
@@ -5170,6 +5174,8 @@ async function addExistingRepo( folder) {
         // Set global
         state.repos[state.repoNumber].localFolder = topFolder;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        await cacheBranchList();
 }    
 function setPath( additionalPath){
     
@@ -5427,7 +5433,7 @@ async function updateGraphWindow(){
 
     win.focus();
 }
-async function updateSettingsWindow(){
+async function updateSettingsWindow(){     // Update selected repo
 
     await _update();
 
@@ -5438,11 +5444,17 @@ async function updateSettingsWindow(){
         // Update repo in settings_win 
         try{
             await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+            
         }catch(err){ 
         }
     }
     
     win.focus();
+}
+async function updateSettingsRepoTable(){  // Only update Repo table
+    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
+    await settings_win.window.createHtmlTable(settings_win.window.document)
+    await updateSettingsWindow()
 }
 async function updateChangedListWindow(){
     
@@ -5453,6 +5465,7 @@ async function updateChangedListWindow(){
 
     win.focus();
 }
+
 
 // Dialogs
 async function tag_list_dialog(){
