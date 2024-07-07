@@ -1515,6 +1515,7 @@ async function drawSoftwareTab(document){
     
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
+    document.getElementById('node-version').innerText = process.version;
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
