@@ -878,28 +878,6 @@ async function _callback( name, event){
 
             break;
         }
-        case 'makeUrlButtonClicked': {
-            // For :
-            // - Build a url
-            
-            nw.Window.open('Create_github_repository.html', 
-                {},
-                function(cWindows){ 
-                    
-                    cWindows.on('loaded', 
-                        function(){
-                            cWindows.show();     
-                            
-                            // Workaround so it is not hidden by windows
-                            cWindows.setAlwaysOnTop(true); 
-                        }
-                    );
-    
-                }
-            );
-
-            break;
-        }
 
     } // End switch
     

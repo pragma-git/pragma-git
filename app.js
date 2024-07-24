@@ -505,20 +505,27 @@ async function _callback( name, event){
         global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
         gui.Window.open('notes.html',
-            {
+            {   
                 id: 'notesWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600,
                 title: title
             },  
-            win=>win.on('loaded', () => {
-                notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');
+            win=>win.on('loaded', async () => {
+          
+                notes_win = win;
+                addWindowMenu(title, 'notes_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+
                 win.on('close', function() { fixNwjsBug7973( win)} );
+
+
+                
             })
   
         )
-
                     
         
         localState.notesWindow.open = true;
@@ -694,15 +701,17 @@ async function _callback( name, event){
         break;
       }
       case 'help-on-find' :{
-        gui.Window.open(
-            'about_search.html#/new_page', 
-            {   id: 'aboutSearchWindowId3',
+        gui.Window.open('about_search.html#/new_page', 
+            {   id: 'aboutSearchWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600
             },  
             win=>win.on('loaded', () => {
-                win.on('close', function() { fixNwjsBug7973( win)} ); 
+                
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
             }) );   
         break;
       }
@@ -823,13 +832,18 @@ async function _callback( name, event){
             {
                 id: 'graphWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600,
                 title: title
             }
             ,
             win=>win.on('loaded', () => {
-                graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');
+                
+                graph_win = win;
+          		addWindowMenu( title, 'graph_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
         )  
@@ -1607,14 +1621,11 @@ async function _callback( name, event){
                     
                     cWindows.on('loaded', 
                         function(){
-                             // For systems that have multiple workspaces (virtual screens)
-                            if ( cWindows.canSetVisibleOnAllWorkspaces() ){
-                                cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-                                cWindows.setAlwaysOnTop(state.alwaysOnTop);
-                            }
                             help_win = cWindows.window;
                             updateText( event.name, title, text);
                             addWindowMenu( title, 'help_win');
+                            
+                            showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                             
                             cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
                             
@@ -1892,10 +1903,10 @@ async function _callback( name, event){
 
         
         // Open new window -- and create closed-callback
-        gui.Window.open(
-            'about.html#/new_page', 
+        gui.Window.open('about.html#/new_page', 
             {   id: 'aboutWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title   
@@ -1910,16 +1921,13 @@ async function _callback( name, event){
                 
                 cWindows.on('loaded', 
                     function(){
-                         // For systems that have multiple workspaces (virtual screens)
-                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
-                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
-                        }
-                        about_win = nw.Window.get(cWindows.window);
+                        //about_win = nw.Window.get(cWindows.window);
+                        about_win = cWindows;
                         addWindowMenu( title, 'about_win');
-                        
+                        showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                         
                         cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
+                        
                     }
                 );
 
@@ -2413,12 +2421,16 @@ async function _callback( name, event){
             {
                 id: 'settingsWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title
             },
             win=>win.on('loaded', () => {
-                settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');
+                
+                settings_win =win;addWindowMenu(title, 'settings_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
         ); 
@@ -2439,12 +2451,17 @@ async function _callback( name, event){
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title
             },
                 win=>win.on('loaded', () => {
-                    resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');
+                    
+                    resolve_win =win;
+          			addWindowMenu(title, 'resolve_win');
+                    showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                    
                     win.on('close', function() { fixNwjsBug7973( win)} );
                 } )
             ); 
@@ -2465,19 +2482,19 @@ async function _callback( name, event){
                 {
                     id: 'listChangedId',
                     position: 'center',
+                    show: false,
                     width: 600,
                     height: 700,
                     title: title
                 },
                     win=>win.on('loaded', 
                         () => {
-
-                        changed_win = nw.Window.get(win.window);
-                        addWindowMenu( title, 'changed_win');
                         
-                        win.on('close', function() { 
-                            fixNwjsBug7973( win)
-                        } );
+                        changed_win =win;
+                        addWindowMenu( title, 'changed_win');
+                        showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                        
+                        win.on('close', function() { fixNwjsBug7973( win)  } );
                     })
             ); 
         }
@@ -3280,12 +3297,17 @@ function startPragmaMerge(){
     gui.Window.open('merge/pragma-merge.html', { 
             id: 'mergeWindowId',
             position: 'center',
+            show: false,
             width: 600,
             height: 700,
             title: title
         },
             win=>win.on('loaded', () => {
-                merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');
+                
+                merge_win =win;
+      			addWindowMenu(title, 'merge_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
     ); 
@@ -3300,23 +3322,20 @@ function startPragmaAskPass(){
     gui.Window.open('askpass/askpass.html', { 
             id: 'askpassWindowId',
             position: 'center',
+            show: false,
             width: 300,
             height: 400,
             title: title,
             show: false
         },
-            win=>win.on('loaded', () => { 
-                win.on('close', function() { 
-                    fixNwjsBug7973( win);
-                    //win.hide();
-                } );
+            win=>win.on('loaded', () => {       
+                          
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
+                win.on('close', function() { fixNwjsBug7973( win);} );
             })
-            
     ); 
-    
-    //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
-    
+  
 }
 
 // Git commands
@@ -5408,7 +5427,27 @@ function stackInfo( level ){
 
 
 // Update other windows
- 
+async function showWindow(win){ // Show external window that was opened hidden
+    
+        // It seems that MacOS and Linux handles this differently (nwjs 0.85)
+        // MacOS needs to set multiple windows BEFORE show.  Linux is the opposite 
+        
+        if (process.platform === 'linux') { 
+            win.show();
+        }
+    
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            await win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+            await win.setAlwaysOnTop(state.alwaysOnTop);
+        }
+        
+        
+        if (process.platform === 'darwin') { 
+            win.show();
+        }
+
+} 
 function fixNwjsBug7973( win){
     // This function should be called after intercepting 'close' event for a spawned window
     // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
@@ -5487,8 +5526,7 @@ async function tag_list_dialog(){
             }
     
     
-            gui.Window.open(
-                'tagList.html#/new_page' ,
+            gui.Window.open('tagList.html#/new_page' ,
                 {
                     id: 'tagListWindowId',
                     position: 'center',
@@ -5527,6 +5565,9 @@ function displayLongAlert(title, message, type){
      * title   --message title 
      * message -- message text 
      * type -- 'warning' (yellow border) or 'error' (red border)
+     * 
+     * Example: 
+     *   displayLongAlert('test', 'test message text', 'warning')
      */
 
     pragmaLog('   displayLongAlert : ' );
@@ -5568,8 +5609,7 @@ function displayLongAlert(title, message, type){
             console.log(gui.Window.get());
         
             // Open new window -- and create closed-callback
-            gui.Window.open(
-                'externalDialog.html#/new_page', 
+            gui.Window.open('externalDialog.html#/new_page', 
                 {   position: 'center',
                     frame: false,
                     show: false
@@ -5579,7 +5619,6 @@ function displayLongAlert(title, message, type){
                     
                     cWindows.on('close', function() { 
                         fixNwjsBug7973( cWindows);
-                        //win.hide();
                     } );
                 
                      
@@ -5615,8 +5654,8 @@ function displayLongAlert(title, message, type){
       
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
-                            cWindows.show();     
-                            
+                            showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                             // Workaround so it is not hidden by windows
                             cWindows.setAlwaysOnTop(true); 
                             
@@ -6570,9 +6609,7 @@ function updateWithNewSettings(){
     win.setAlwaysOnTop( state.alwaysOnTop );
     
     // For systems that have multiple workspaces (virtual screens)
-    if ( win.canSetVisibleOnAllWorkspaces() ){
-        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    }
+    showWindow(win); 
     
     // Update path
     setPath( state.tools.addedPath);

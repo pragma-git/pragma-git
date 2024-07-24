@@ -689,8 +689,11 @@
                         
                         <div id="Github-button">Or use Github wizard : 
                             <button onclick="
-                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
+                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId', show: false},
                                 win=>win.on('loaded', () => {
+                                
+                                    opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+
                                     win.on('close', function() { opener.fixNwjsBug7973( win)} );
                                     
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
@@ -728,8 +731,11 @@
                     <div class="tool-content " id="gitIgnoreDiv" > 
                          (For selected repository) 
                          <p>
-                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
+                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
                             win=>win.on('loaded', () => {
+                            
+                                opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+
                                 win.on('close', function() { opener.fixNwjsBug7973( win)} );
                                 
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
