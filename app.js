@@ -134,6 +134,7 @@ var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
+
 // -----
 // INIT
 // -----
@@ -184,6 +185,20 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
+        
+        // List of start of window titles -- used to recreate MacOS windows after scale changes in Settings 
+        // ( used in recreateAllWindowsMenu() )
+        // Reason to use start of titles, is that merge_win has a dynamic title = 'File = xxx' (where xxx is the file name merged)
+        var windowNamesStartsWith = { 
+           'Main': 'main_win',       
+           'Settings': 'settings_win',   
+           'Notes': 'notes_win',      
+           'Changed': 'changed_win',    
+           'Resolve': 'resolve_win',    
+           'Commit': 'graph_win',      
+           'About': 'about_win',      
+           'File': 'merge_win'     
+        }
 
       
     // Files & folders
@@ -5826,14 +5841,14 @@ function initializeWindowMenu(){
     
     // Read localized Window name (using original Window menu)
     let mb0 = new gui.Menu({type: 'menubar'});
-    mb0.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb0.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
     
     let localWindowMenuName = mb0.items[mb0.items.length -1].label;
     
     
     // Replace with own Window Menu (use localized name from above)
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
 
     mb.append(
         new gui.MenuItem({
@@ -5933,6 +5948,7 @@ function addWindowMenu(title,winHandleNameAsString){
     winHandle = eval(winHandleNameAsString); // Convert from string to handle
     
     let click = `() => { ${winHandleNameAsString}.focus(); }`;
+
     
     // Add new menu to Windows with callback
     macWindowsMenu.append(new gui.MenuItem(
@@ -5980,6 +5996,34 @@ function showAllWindows(){
         } 
     );
 }
+function recreateAllWindowsMenu(){
+
+    gui.Window.getAll( 
+        
+        function allWindowsCallback( windows) {
+            for (let i = 0; i < windows.length; i++) {
+                let win_handle =  windows[i];
+                
+                // Get start of title, to use to lookup variable name
+                let title = win_handle.title;
+                let firstWordInTitle = title.split(' ')[0]
+                let windowHandleName = windowNamesStartsWith[firstWordInTitle];  // String
+                
+                // Set variable
+                eval( windowHandleName + ' = win_handle');         // Populate main_win, graph_win, ...
+                
+                console.log('running  = ' + title);
+                    
+                // Add to menu if not already existing
+                if ( isNaN( util.findObjectIndex( macWindowsMenu.items, 'label', title) ) ) {
+                    addWindowMenu( title, windowHandleName);    // Add menu
+                }
+                
+                
+            }    
+        } 
+    );
+}
 function hideAllWindows(){
 
         gui.Window.getAll( 
@@ -5987,7 +6031,7 @@ function hideAllWindows(){
             function allWindowsCallback( windows) {
                 for (let i = 0; i < windows.length; i++) {
                     let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Pragma-git'){
+                    if ( win_handle.title !== 'Main Window'){
                         win_handle.minimize();
                     }
                 }    
@@ -6002,7 +6046,7 @@ function closeAllWindows(){
             function allWindowsCallback( windows) {
                 for (let i = 0; i < windows.length; i++) {
                     let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Pragma-git'){
+                    if ( win_handle.title !== 'Main Window'){
                         win_handle.close();
                     }
                 }    
@@ -6035,12 +6079,12 @@ function closeSelectedWindow(){
                 let win_handle =  windows[i];
                 
                 // Always allow closing of child-windows
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title !== 'Pragma-git') ){
+                if ( win_handle.window.document.hasFocus() && ( win_handle.title !== 'Main Window') ){
                    win_handle.close();
                 }
                 
                 // Only close main window if its the last window
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title == 'Pragma-git') && ( windows.length == 1 ) ){
+                if ( win_handle.window.document.hasFocus() && ( win_handle.title == 'Main Window') && ( windows.length == 1 ) ){
                    win_handle.close();
                 }
             }    
@@ -6690,7 +6734,7 @@ function updateWithNewSettings(){
                         root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
                         root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
                     }
-                    else if (win_handle.title !== 'Pragma-git'){
+                    else if (win_handle.title !== 'Main Window'){
                         win_handle.window.document.body.style.zoom = state.zoom;
                     }
                     
@@ -6823,6 +6867,9 @@ window.onload = async function() {
   
   // Dialog if author's name is unknown
   showUserDialog(true)  // test = true, will show only if state.git == true
+  
+  // Update MacOS menu
+  recreateAllWindowsMenu()
  
   pragmaLog('Done starting app');
   pragmaLog('');
