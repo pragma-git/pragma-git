@@ -5486,6 +5486,10 @@ async function showWindow(win){ // Show external window that was opened hidden
         if (process.platform === 'darwin') { 
             win.show();
         }
+        
+        if (process.platform === 'win32') { 
+            win.show();
+        }
 
 } 
 function fixNwjsBug7973( win){
