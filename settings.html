@@ -689,12 +689,25 @@
                         
                         <div id="Github-button">Or use Github wizard : 
                             <button onclick="
+                            
+                                if (localState.githubWindow == true){
+                                    return
+                                }
+                                
                                 nw.Window.open('Create_github_repository.html', {id: 'githubWindowId', show: false},
                                 win=>win.on('loaded', () => {
                                 
+                                    opener.github_win = win;
+                                
                                     opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
-
-                                    win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                    opener.addWindowMenu( 'Create Github Repository', 'github_win');
+                                    localState.githubWindow = true;
+    
+                                    win.on('close', function() { 
+                                        localState.githubWindow = false;
+                                        opener.deleteWindowMenu('Create Github Repository');
+                                        opener.fixNwjsBug7973( win);
+                                    } );
                                     
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
                                 win.on('closed', function () {
@@ -731,12 +744,27 @@
                     <div class="tool-content " id="gitIgnoreDiv" > 
                          (For selected repository) 
                          <p>
-                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
+                             <button onclick="
+                             
+                             if (localState.gitignoreWindow == true){
+                                 return
+                             }
+                             
+                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
                             win=>win.on('loaded', () => {
                             
                                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                                
+                                opener.addWindowMenu( 'Git-ignore Editor', 'gitignore_win');
+                                opener.gitignore_win = win;
+                                
+                                localState.gitignoreWindow = true;
 
-                                win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                win.on('close', function() {  
+                                    
+                                    localState.gitignoreWindow = false;
+                                    opener.fixNwjsBug7973( win) 
+                                });
                                 
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
                                 win.on('closed', function () {
@@ -745,6 +773,9 @@
                                 
                                   // Listen to main window's close event
                                   nw.Window.get().on('close', function () {
+                                  
+                                    
+                                    
                                     // Hide the window to give user the feeling of closing immediately
                                     this.hide();
                                 

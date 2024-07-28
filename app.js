@@ -177,6 +177,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
         
     // Handles to windows
+    
+        // Windows opened from main
         var main_win;
         var settings_win;
         var notes_win;
@@ -185,6 +187,13 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
+        
+        // Windows opened from Settings
+        var gitignore_win;
+        var github_win;
+        
+        // General help window
+        var help_win;
         
         // List of start of window titles -- used to recreate MacOS windows after scale changes in Settings 
         // ( used in recreateAllWindowsMenu() )
@@ -197,7 +206,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'Resolve': 'resolve_win',    
            'Commit': 'graph_win',      
            'About': 'about_win',      
-           'File': 'merge_win'     
+           'File': 'merge_win',
+           'Git-ignore': 'gitignore_win' ,
+           'Create': 'github_win' ,
+           'Help': 'help_win'    
         }
 
       
@@ -247,6 +259,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
+        // Windows opened from Main
         localState.settings = false;        // True when settings window is open
         localState.conflictsWindow = false; // True when conflicts window is open
         localState.fileListWindow = false; // True when conflicts window is open
@@ -255,6 +268,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow.open = false; // True when notes window is open
         localState.graphWindow = false; // True when graph window is open
         localState.helpWindow = false; // True when help window is open
+        
+        // Windows opened from Settings
+        localState.gitignoreWindow = false; // True when Gitignore window is open
+        localState.githubWindow = false; // True when Gitignore window is open
+        
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
@@ -345,6 +363,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 
 // Main functions
+
 async function _callback( name, event){ 
     
     // Log event
@@ -1613,7 +1632,7 @@ async function _callback( name, event){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
             help_win.document.getElementById("title").innerText= title; // Set window title
             help_win.document.getElementById("name").innerText= name; // Set document first header  
-            help_win.focus();         
+            //help_win.focus();         
         };
                 
 
@@ -1622,6 +1641,7 @@ async function _callback( name, event){
             gui.Window.open(
                 'HELP' + pathsep + 'TEMPLATE_help.html',
                 {   id: 'helpId',
+                    show: false,
                     position: 'center',
                     width: 600,
                     height: 700   
@@ -1638,11 +1658,15 @@ async function _callback( name, event){
                         function(){
                             help_win = cWindows.window;
                             updateText( event.name, title, text);
-                            addWindowMenu( title, 'help_win');
                             
                             showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                             
-                            cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
+                            localState.helpWindow = true;
+                            addWindowMenu( title, 'help_win');
+                            
+                            cWindows.on('close', function() { 
+                                fixNwjsBug7973( cWindows);
+                            } );
                             
                         }
                     )
@@ -5442,6 +5466,7 @@ function stackInfo( level ){
 
 
 // Update other windows
+
 async function showWindow(win){ // Show external window that was opened hidden
     
         // It seems that MacOS and Linux handles this differently (nwjs 0.85)
@@ -5522,6 +5547,7 @@ async function updateChangedListWindow(){
 
 
 // Dialogs
+
 async function tag_list_dialog(){
             
             let tagList;
@@ -5831,6 +5857,7 @@ function downloadNewVersionDialog(){
 
 
 // MacOS Menu
+
 function initializeWindowMenu(){
     if (process.platform !== 'darwin'){
         return
@@ -5875,31 +5902,31 @@ function initializeWindowMenu(){
     //
    
      
-    // Menu : Minimize
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: "Minimize", 
-                key: 'M',
-                modifiers: "cmd",
-                click: () =>  minimizeWindow()
-            } 
-        )
-    );  
+    //// Menu : Minimize
+    //macWindowsMenu.append(new gui.MenuItem(
+            //{ 
+                //label: "Minimize", 
+                //key: 'M',
+                //modifiers: "cmd",
+                //click: () =>  minimizeWindow()
+            //} 
+        //)
+    //);  
      
-    // Menu : Close
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: "Close", 
-                key: 'W',
-                modifiers: "cmd",
-                click: () =>  closeSelectedWindow()
-            } 
-        )
-    );    
+    //// Menu : Close
+    //macWindowsMenu.append(new gui.MenuItem(
+            //{ 
+                //label: "Close", 
+                //key: 'W',
+                //modifiers: "cmd",
+                //click: () =>  closeSelectedWindow()
+            //} 
+        //)
+    //);    
  
  
-    // Add separator
-    macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+    //// Add separator
+    //macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
     
        
     // Menu : Show all
@@ -6056,44 +6083,9 @@ function closeAllWindows(){
         
         
 }
-function minimizeWindow(){
-
-    gui.Window.getAll( 
-        
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                if ( win_handle.window.document.hasFocus() ){
-                    win_handle.minimize();
-                }
-            }    
-        } 
-    ); 
-}
-function closeSelectedWindow(){
-
-    gui.Window.getAll( 
-        
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                
-                // Always allow closing of child-windows
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title !== 'Main Window') ){
-                   win_handle.close();
-                }
-                
-                // Only close main window if its the last window
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title == 'Main Window') && ( windows.length == 1 ) ){
-                   win_handle.close();
-                }
-            }    
-        } 
-    ); 
-}
-
 
 // Title bar
+
 function setTitleBar( id, text){
     if (text.length == 0){
         text = " ";
@@ -6138,6 +6130,7 @@ function updateContentStyle() {
 
 
 // Message
+
 function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
     
@@ -6246,6 +6239,7 @@ function formatHistoryMessage( longDate, message, body){
 
 
 // Output row (below message)
+
 function writeOutputRow( htmltext){
     document.getElementById("output_row").style.visibility = 'visible';
     document.getElementById("output_text").innerHTML = htmltext;
@@ -6257,6 +6251,7 @@ function clearOutputRow( ){
 
 
 // Statusbar
+
 function updateStatusBar( text){
     newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
     document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
@@ -6366,6 +6361,7 @@ function drawPinImage(isPinned){
 
 
 // Settings
+
 function saveSettings(){
     
     pragmaLog('' );
@@ -6756,6 +6752,7 @@ function updateWithNewSettings(){
 
 
 // Dev test
+
 function dev_show_all_icons(){
     isPaused = true;
     document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
@@ -6773,9 +6770,9 @@ function dev_show_all_icons(){
  
 }
 
-// -------------
+
 // WINDOW EVENTS
-// -------------
+
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
