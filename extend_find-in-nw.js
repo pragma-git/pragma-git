@@ -178,9 +178,10 @@ function extendFindInNw( elementToSearch){
         // Search for hash (element id in text class, in Graph)
         if (text.length >= 2){ // Only search for hash when string is 2 characters or more         
             try{
+                let hashText = text.toLowerCase();
                 let textElements = document.getElementsByClassName('text');
                 textElements.forEach(function (textElement) {
-                if (textElement.id.startsWith(text) ) {
+                if (textElement.id.startsWith( hashText  ) ) {
                     window.findAndReplaceDOMText(textElement, {
                         find: RegExp(textElement.innerText,'gi') ,
                         wrap: 'mark',
