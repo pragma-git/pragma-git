@@ -606,7 +606,7 @@ async function _callback( name, event){
         await gitFetch( event.selectedBranch); 
         await gitMerge( event.currentBranch, event.selectedBranch); 
         
-        break;
+        break; 
       }
       case 'tagSelected': { // Called from tagList.js
         switch (event.buttonText ){
