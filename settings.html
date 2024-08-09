@@ -1067,11 +1067,7 @@
         
     </script>
     <script>  <!--  Event listeners (load and unload of document  --> 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            console.log('settings.html :DOM fully loaded and parsed');
-            injectIntoSettingsJs(document);
-            }
-        );
+
         window.addEventListener('unload', (event) => {
             console.log('settings.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
@@ -1095,7 +1091,9 @@
         }
     
         //When the page has loaded, run this code
-        ready( function(){
+        ready( async function(){
+            
+            
             // prevent default behavior from changing page on dropped file
             window.ondragover = function(e) { e.preventDefault(); return false };
             
@@ -1105,6 +1103,11 @@
                         
             // Set default branch-name
             opener.registerDefaultBranch(document);
+            
+            
+            injectIntoSettingsJs(document)
+            opener.showWindow( win); 
+            
 
         });
     </script>

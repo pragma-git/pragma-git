@@ -1251,15 +1251,6 @@ async function injectIntoSettingsJs(document) {
     // Update remote branch list 
     await opener.cacheRemoteOrigins();
 
- 
-    // For systems that have multiple workspaces (virtual screens)
-    if ( win.canSetVisibleOnAllWorkspaces() ){
-        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    } 
-    
-    // Always on top
-    win.setAlwaysOnTop( state.alwaysOnTop );
-    
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
     console.log(global.state);
@@ -1548,12 +1539,7 @@ async function drawSoftwareTab(document){
     // Set Zoom
     document.getElementById('zoom').value = state.zoom;
     document.getElementById('zoomMain').value = state.zoomMain;
-    
-    // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
-    if ( ! win.canSetVisibleOnAllWorkspaces() ){
-        document.getElementById('onAllWorkspaces').disabled = true;
-    }
-    
+
 }
 
 async function createHtmlTable(document){

@@ -482,6 +482,7 @@ async function _callback( name, event){
         await updateGraphWindow();
         await updateSettingsWindow();
         await updateChangedListWindow();
+        win.focus();
        
         break;
       }
@@ -585,6 +586,7 @@ async function _callback( name, event){
 
         await updateGraphWindow();
         await updateChangedListWindow();
+        win.focus();
         
         break;
       }
@@ -1230,6 +1232,7 @@ async function _callback( name, event){
             waitTime( WAIT_TIME);  
         
             await updateGraphWindow();
+            win.focus();
         
            // Push tag to remote
             if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ){ 
@@ -1593,6 +1596,7 @@ async function _callback( name, event){
 
             await updateGraphWindow();
             await updateChangedListWindow();
+    		win.focus();
         }
         
         if (event == 'ForcePush'){
@@ -2468,13 +2472,15 @@ async function _callback( name, event){
             win=>win.on('loaded', () => {
                 
                 settings_win =win;addWindowMenu(title, 'settings_win');
-                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                //showWindow(settings_win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
+                localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
                 
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
         ); 
         console.log(settings_win);
-        localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
+        
      return   
     };
 
@@ -2673,17 +2679,6 @@ async function _update2(){
         folder = "(not a folder) " + nameOfFolder;
     }   
 
-
-    // If left settings window
-        if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
-
-            //localState.settings = false;
-            
-            updateWithNewSettings();
-                
-            // Remove from menu
-            deleteWindowMenu('Settings');
-        }
  
     //
     // SET ICON VISIBILITY 
@@ -3019,6 +3014,11 @@ async function _setMode( inputModeName){
     
     let currentMode = await getMode();
     console.log('setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')');
+    
+    // Overrid Mode if Settings Window open
+    if (localState.setting){
+        inputModeName = 'SETTINGS';
+    }
     
     var HEAD_title;    
     var HEAD_refs;
@@ -3753,6 +3753,7 @@ async function gitSwitchToRepo(repoNumber){ // TODO : Does not seem to be used
     
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
 }
 
 async function gitSwitchBranch(branchName){
@@ -3773,6 +3774,7 @@ async function gitSwitchBranch(branchName){
     cacheBranchList();
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -4225,6 +4227,7 @@ async function gitStash(){
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -4260,6 +4263,7 @@ async function gitStashPop( stashRef){
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
          
 }
 async function gitStashMap( folder ){
@@ -5514,7 +5518,7 @@ async function updateGraphWindow(){
         _callback( 'clicked-graph');
     }
 
-    win.focus();
+    //win.focus();
 }
 async function updateSettingsWindow(){     // Update selected repo
 
@@ -5546,7 +5550,7 @@ async function updateChangedListWindow(){
         _callback('clicked-status-text')
     }
 
-    win.focus();
+    //win.focus();
 }
 
 
@@ -6784,7 +6788,7 @@ window.onfocus = function() {
 window.onblur = function() { 
   console.log("blur");
  
-  // Do not blur if always on top
+  // Allow to blur if not alwaysOnTop
   if ( state.alwaysOnTop === false){
     focusTitlebars(false);  
   }
