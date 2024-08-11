@@ -5494,6 +5494,27 @@ async function showWindow(win){ // Show external window that was opened hidden
         if (process.platform === 'win32') { 
             win.show();
         }
+        
+                
+        // General event listeners for all windows (Add Ctrl W, Inhibit Ctrl Q)
+        //   NOTE: windows using  extended_find-in-nw  have its own closing of window
+        win.window.document.addEventListener("keydown", evt => { 
+            
+                // Add Ctrl W event listener for closing window (except Main, which should not be closed this way -- preventing closing before others)
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 87 ){
+                    if ( win.title !== 'Main Window'){
+                        win.close();
+                    }
+                }
+                console.log(evt.keyCode);
+                
+                // Inhibit Ctrl Q event listener for closing window
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 81 ){
+                    evt.preventDefault();
+                    
+                }
+            } 
+        )
 
 } 
 function fixNwjsBug7973( win){

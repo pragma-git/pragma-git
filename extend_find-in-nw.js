@@ -96,10 +96,27 @@ function extendFindInNw( elementToSearch){
     };  
     //-------------------------------------------------------------    
     
-    // Add MacOs Command to Shortcut-F
+    // Add Command to Shortcut-F  for all OS:es
     findInNw.keyBindings = function () {
         document.onkeydown = function (pressed) {
           console.log(pressed)
+          
+          // Check for `CTRL+W or Command+W`  (Need to implement because extended_find-in-nw overrides general window closing)
+          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 87 ){
+            console.log('Close window')
+            win.close();
+            return 
+          }
+          
+                          
+          // Inhibit Ctrl Q event listener for closing window
+          if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 81 ){
+              pressed.preventDefault();
+              
+          }
+        
+          
+          
           // Check for `CTRL+F or Command+F`
           if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 70 )
           {

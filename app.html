@@ -964,6 +964,11 @@
             window.addEventListener("keydown", event => {
                 
                 console.log(event.keyCode)
+                
+                if ( (event.ctrlKey || event.metaKey) && event.keyCode === 81 ){
+                    event.preventDefault();
+                    
+                }
                     
                 // ESC
                 if (event.keyCode === 27) {  
