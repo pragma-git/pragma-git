@@ -6521,6 +6521,7 @@ function loadSettings(settingsFile){
             
         // Graph window 
             state.graph = setting( state_in.graph, {} );
+            state.graph.zoom = setting( state_in.graph.zoom, 1 );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
             state.graph.showHiddenBranches = setting( state_in.graph.showHiddenBranches, true );
