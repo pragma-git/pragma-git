@@ -976,6 +976,8 @@ async function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    state.tools.terminal = document.getElementById('terminal').value;
+    state.tools.fileBrowser = document.getElementById('fileBrowser').value;
     state.tools.addedPath = document.getElementById('pathAddition').value;
     
     // Read collapsible into state
@@ -1520,6 +1522,8 @@ async function drawSoftwareTab(document){
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    document.getElementById('terminal').value = state.tools.terminal;
+    document.getElementById('fileBrowser').value = state.tools.fileBrowser;
     document.getElementById('pathAddition').value = state.tools.addedPath;
     
     // Set values according to git-config

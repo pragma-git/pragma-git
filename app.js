@@ -760,6 +760,21 @@ async function _callback( name, event){
       case 'clicked-terminal': {
 
         let folder = state.repos[ state.repoNumber].localFolder;
+        
+        //
+        // Override terminal command from settings
+        //       
+            
+            if ( state.tools.terminal.trim() !== '' ){
+                try{
+                    multiPlatformStartApp( folder, state.tools.terminal, append=false)
+                    break;  // End if success, otherwise continue with default
+                }catch (err){
+                    console.warn(err);
+                }
+            }
+                
+            
          
         //
         // Mac specific solution
@@ -822,9 +837,7 @@ async function _callback( name, event){
                 }
                 
             }
-    
-     
-            
+
             
             terminalTab.open( command, options)
         
@@ -2445,6 +2458,23 @@ async function _callback( name, event){
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
+        
+        let folder = state.repos[state.repoNumber].localFolder;
+         
+        // Override terminal command from settings
+        if ( state.tools.fileBrowser.trim() !== '' ){
+            try{
+                multiPlatformStartApp( folder, state.tools.fileBrowser, append=true)
+                
+                "${folder}"
+                return;
+            }catch (err){
+                console.warn(err);
+            }
+        }
+        
+        
+        
         //gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
         gui.Shell.openItem( path.resolve(state.repos[state.repoNumber].localFolder) ); // Required for unc paths to work in Windows
     }
@@ -5364,6 +5394,46 @@ function multiPlatformExecSync( folder, cmd){  // Run git bash in 'folder', on a
 		return  execSync( cmd, {cwd: folder} ).toString().trim();
 	}
 }
+function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
+    // append = true means that cmd and folder are appended after each other (good for fileBrowser, bad for opening terminal)
+    
+	 //Return string output without leading and trailing spaces
+	console.log(cmd.toString())
+	const { exec } = require('child_process');
+    
+    // Win Fix "/" to "\" 
+    if (process.platform === 'win32') {
+        folder = path.normalize(folder);
+    }
+    
+    let appendedCmd = cmd;
+    if (append){
+        appendedCmd = `"${cmd}" "${folder}"`;
+    }
+    
+    // Test if command starts from bash
+    try{
+        // Test if command is in bash path
+        multiPlatformExecSync( folder, `which "${cmd}" `);  // Fails if not in path
+        
+        // Run (and unref from pragma-git) if which command existed in path ( catch otherwise)
+        if (process.platform === 'win32') {
+            return exec( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).unref();
+        }else{
+            return  exec( appendedCmd, {cwd: folder} ).unref();
+        }
+        return
+    }catch (err){
+        console.log(err);
+    }
+    
+	if (process.platform === 'darwin') {
+		exec( `open -a ${cmd} "${folder}"`).unref();  // On MacOS you can always append
+	}else{
+		exec( `${appendedCmd}`, {cwd: folder} ).unref();   
+	}
+}
+
 
 // Logging to file
 
@@ -6493,6 +6563,8 @@ function loadSettings(settingsFile){
             state.tools = setting( state_in.tools, {} ); 
             state.tools.difftool = setting( state_in.tools.difftool, "");
             state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            state.tools.terminal = setting( state_in.tools.terminal, "");
+            state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
             
             console.log('State after amending non-existing with defaults ');

@@ -28,17 +28,25 @@
             border-bottom: 2px solid #ccc;
             font-size: 10pt;
         }
+        
 
         
         td{
             padding: 4px;
+            
+            padding-bottom: 8px 
         }
+
     
     
     /*                     */
     /* Style settings-page */
     /*                     */
     
+ 
+        .tools{
+            border: none;
+        }
  
         #outer-content{
             margin: 20px;
@@ -132,6 +140,8 @@
         
     
      /* Settings : images */  
+     
+
                   
         img[src="images/stash_pop.png"],
         img[src="images/stash_pop_black.png"],
@@ -140,11 +150,11 @@
             filter: var(--stash-icon-filter);
         }
         
-        img[src="images/github-mark.png"] 
+        img[src="images/github-mark.png"]
         {
             filter: none;
         }
-        
+                
                
         .stashImg{
             position: relative;
@@ -328,23 +338,49 @@
                     <br>
                  
                   
-                <h3>Git tools (built-in if empty)</h3>  
+                <h3>Git & system tools (built-in if empty)</h3>  
     
                     <table>
-                        <tr style="border: none;">
+                        <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
-                                <input id="gitDiffTool" type="text" size="30" />
-                            </td>
-                            <td>                
-                                <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                                <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
+                                <input id="gitDiffTool" type="text"  style="width: 100%;" />
                             </td>
                         </tr>
                         
-                        <tr style="border: none;">
-                            <td colspan="2">
-                                <label for="pathAddition"> Additions to path (add here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
+
+                        <tr class="tools">                          
+                             <td>                
+                                <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
+                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool"/>
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools"> 
+
+                            <td>                
+                                <label for="fileBrowser"> File browser (open when clicking 
+                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" > ) :
+                                </label><br>
+                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser">
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools">                     
+                             <td>                
+                                <label for="terminal"> Terminal (open when clicking                                    
+                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" > ) : 
+                                </label><br>
+                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"/>
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools">                    
+                             <td colspan="2">
+                                <label for="pathAddition"> Path (additions here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
                                 <input id="pathAddition" type="text" style="width: 100%;"/><br>
                             </td>
                         </tr>

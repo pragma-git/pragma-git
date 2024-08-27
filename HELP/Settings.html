@@ -807,16 +807,21 @@
                 <br>
                 
                 
-            <dt><h4>Git tools</h4></dt>
+            <dt><h4>Git & system tools (built-in if empty)</h4></dt>
                 <dd>
                 <p> Pragma-git has a built-in diff and merge tool.  
                 If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
                  If you have your favorite Diff and Merge tool it may be used instead. 
                  <br>
+                 
                 There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
                 are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
                 Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
                 The settings for external tools are :
+                 <br>
+                 
+                <p> Pragma-git can open the file browser or a terminal, in the path of the current repository.  </p>
+                 If you have your favorite file browser or terminal, you can add the path to it instead. 
                  <br>
                  </dd>
                 
@@ -824,6 +829,10 @@
                 <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                 <br>
                 <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
+                <br>
+                <dd><b>- File browser </b> , the path to preferred file browser (or empty for system default.    </dd>
+                <br>
+                <dd><b>- Terminal </b> , the path to preferred terminal (or empty for system default).   </dd>
                 <br>
                 <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
                     This can be fixed, by adding the path to the tools in this field.
