@@ -30,6 +30,7 @@ var timer = _loopTimer( 1000);
 // Storage of paths to backup files
 var origConflictingFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
 
+
 // ---------
 // FUNCTIONS
 // ---------    
@@ -72,7 +73,7 @@ async function injectIntoJs(document) {
         document.getElementById('resolveAllConflictsButton').disabled = false; // Second button is enabled if no conflicts
     }
     
-    let a = createConflictingFileTable(document, status_data);
+    let a = await createConflictingFileTable(document, status_data);
     document.getElementById('collapsibleConflict').click();  // Open collapsed section 2)
     
     if (a.length == 0){
@@ -94,15 +95,13 @@ async function _callback( name, event){
     console.log('_callback = ' + name);
     switch(name) {
         
-        
-        case 'resolveAllConflictsButton':
+        case 'resolveAllConflictsButton': {
             console.log('resolveAllConflictsButton');
             console.log(event);
             gitResolveConflicts( state.repos[state.repoNumber].localFolder);
             break;
-            
-        
-        case 'resolveAllUnsureButton':
+        }
+        case 'resolveAllUnsureButton': {
             console.log('resolveAllUnsureButton');
             console.log(event);
             gitResolveUnsureFiles( state.repos[state.repoNumber].localFolder);
@@ -114,22 +113,25 @@ async function _callback( name, event){
             document.getElementById('resolveAllUnsureButton').disabled = true;
             
             break;
-     
-        case 'conflictsResolvedButton':
+        }
+        case 'conflictsResolvedButton': {
             console.log('conflictsResolvedButton');
             console.log(event);
-            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
-            gitConflictsResolutionSolved( state.repos[state.repoNumber].localFolder);
+            await gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            await gitConflictsResolutionSolved( state.repos[state.repoNumber].localFolder);
+                    
+            // Close window
+            closeWindow();
             break;
-            
-        case 'undoMergeButton':
+        }      
+        case 'undoMergeButton': {
             console.log('undoMergeButton');
             console.log(event);
             await gitUndoMerge( state.repos[state.repoNumber].localFolder);
             
             opener.writeTextOutput( { value: '' } );  // Clean message
             break;
-
+        }
 
     } // End switch
     
@@ -251,6 +253,15 @@ async function _callback( name, event){
     async function gitConflictsResolutionSolved(folder){
         
         // Let git finish the conflict resolution
+        
+                    
+        // Rebase conflict
+        if ( isRebaseMerge() ){
+			opener.multiPlatformExecSync( folder, 'export GIT_EDITOR=true; git rebase --continue');
+            return
+        }
+    
+        // Merge conflict 
             
         // Handle two scenarios : 
         // 1) no files were modified, 
@@ -265,10 +276,10 @@ async function _callback( name, event){
             await opener.gitAddCommitAndPush( 'Conflict resolved without modifying files');
             
         }else {
-            // Case 2) most common : Files are modified, and Pragma-git will know that a commit is required
+            // Case 2) (merge) most common : Files are modified, and Pragma-git will know that a commit is required
             localState.mode = 'UNKNOWN';
             opener.writeTextOutput( { value: '' } );  // Clear
-            
+
         }
 
     }
@@ -319,9 +330,6 @@ async function _callback( name, event){
                 console.log(err)
             }
         }
-        
-        // Close window
-        closeWindow();
                
     }
     async function gitUndoMerge( folder){
@@ -330,7 +338,12 @@ async function _callback( name, event){
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
-            await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            if ( isRebaseMerge() ){
+                await simpleGit( folder).rebase(['--abort'], onUndoMerge );
+            }else{
+                await simpleGit( folder).merge(['--abort'], onUndoMerge );
+            }
+            
             function onUndoMerge(err, result){ console.log(result); console.log(err) };
             //await waitTime( 1000);
             
@@ -346,9 +359,7 @@ async function _callback( name, event){
             console.log('gitUndoMerge -- caught error ');
             console.log(err);
         }
-        
-        // Close window
-        closeWindow();
+
 
         
     }
@@ -377,8 +388,8 @@ async function _update(){
         await simpleGit( folder).status( onStatus );
         function onStatus(err, result ){ 
             status_data = result; 
-            console.log(result); 
-            console.log(err);
+            //console.log(result); 
+            //console.log(err);
             createConflictingFileTable(document, status_data);
         };
     }catch(err){
@@ -398,12 +409,19 @@ async function closeWindow(){
     win.close();
     
 }
-
 // Draw
-function createConflictingFileTable(document, status_data) {
+async function createConflictingFileTable(document, status_data) {
     var index = 0; 
     let cell, row;
     let foundFiles = [];
+    let folder = state.repos[state.repoNumber].localFolder;
+    
+    // Print current commit being rebased
+    if ( isRebaseMerge() ){
+        let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1');  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
+        let thisCommit = thisPicked.trim().split(" ").slice(2).join(" ");              //'my first commit'
+        document.getElementById('rebaseDetails').innerText = 'Rebase : ' + thisCommit;
+    }
     
     // Old tbody
     let old_tbody = document.getElementById('conflictingTableBody');
@@ -446,6 +464,13 @@ function createConflictingFileTable(document, status_data) {
     
     // Replace old tbody content with new tbody
     old_tbody.parentNode.replaceChild(tbody, old_tbody);
+    
+    // Hide 'Solve conflict button' if nothing to solve
+    if (status_data.conflicted.length > 0){
+        document.getElementById('resolveAllConflictsButton').disabled = false;
+    }else{
+        document.getElementById('resolveAllConflictsButton').disabled = true;
+    }
     
     return foundFiles;
 }
@@ -561,3 +586,8 @@ function createUnsureFileTable(document, status_data) {
     return foundFiles;
 }
 
+// Info
+function isRebaseMerge(){
+    let folder = state.repos[state.repoNumber].localFolder;
+    return fs.existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
+}

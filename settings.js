@@ -519,6 +519,7 @@ async function _callback( name, event){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
 
+                await updateGitconfigs( );
          
 
                 
@@ -877,28 +878,6 @@ async function _callback( name, event){
 
             break;
         }
-        case 'makeUrlButtonClicked': {
-            // For :
-            // - Build a url
-            
-            nw.Window.open('Create_github_repository.html', 
-                {},
-                function(cWindows){ 
-                    
-                    cWindows.on('loaded', 
-                        function(){
-                            cWindows.show();     
-                            
-                            // Workaround so it is not hidden by windows
-                            cWindows.setAlwaysOnTop(true); 
-                        }
-                    );
-    
-                }
-            );
-
-            break;
-        }
 
     } // End switch
     
@@ -983,7 +962,7 @@ function forgetButtonClicked(event){
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
 
-    
+    opener.cacheBranchList();
 
     console.log('Settings - updating table :');
     
@@ -997,6 +976,8 @@ async function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    state.tools.terminal = document.getElementById('terminal').value;
+    state.tools.fileBrowser = document.getElementById('fileBrowser').value;
     state.tools.addedPath = document.getElementById('pathAddition').value;
     
     // Read collapsible into state
@@ -1272,15 +1253,6 @@ async function injectIntoSettingsJs(document) {
     // Update remote branch list 
     await opener.cacheRemoteOrigins();
 
- 
-    // For systems that have multiple workspaces (virtual screens)
-    if ( win.canSetVisibleOnAllWorkspaces() ){
-        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    } 
-    
-    // Always on top
-    win.setAlwaysOnTop( state.alwaysOnTop );
-    
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
     console.log(global.state);
@@ -1292,7 +1264,7 @@ async function injectIntoSettingsJs(document) {
     }else{
         document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
     }
-    
+      
     // Draw tabs
     await drawBranchTab(document);
     await drawRepoTab(document);
@@ -1514,6 +1486,7 @@ async function drawSoftwareTab(document){
     
     let VERSION = require('./package.json').version;
     document.getElementById('version').innerText = VERSION;
+    document.getElementById('node-version').innerText = process.version;
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
@@ -1525,6 +1498,9 @@ async function drawSoftwareTab(document){
         let platform = os.machine();  
         document.getElementById('platform').innerText = document.getElementById('platform').innerText  + '(' + platform + '),  ' + cpu;
     }
+    
+
+    updateGitconfigs(); // Write gitconfigs to System Info (TODO : update when changing repo)
     
     
     document.getElementById('gitVersion').innerText = localState.gitVersion;
@@ -1546,6 +1522,8 @@ async function drawSoftwareTab(document){
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    document.getElementById('terminal').value = state.tools.terminal;
+    document.getElementById('fileBrowser').value = state.tools.fileBrowser;
     document.getElementById('pathAddition').value = state.tools.addedPath;
     
     // Set values according to git-config
@@ -1565,12 +1543,7 @@ async function drawSoftwareTab(document){
     // Set Zoom
     document.getElementById('zoom').value = state.zoom;
     document.getElementById('zoomMain').value = state.zoomMain;
-    
-    // Disable onAllWorkspaces, for systems that DO NOT support multiple workspaces (virtual screens)
-    if ( ! win.canSetVisibleOnAllWorkspaces() ){
-        document.getElementById('onAllWorkspaces').disabled = true;
-    }
-    
+
 }
 
 async function createHtmlTable(document){
@@ -1911,6 +1884,41 @@ async function updateLocalAuthorInfoView( globalSelected ){
     }   
             
 
+}
+async function updateGitconfigs( ){
+    gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']);    
+    let html = '';
+    let currentFileURI = '';
+    let rows = gitconfigString.split('\n');
+    for (let i = 0; i < rows.length; i++) {
+        row = rows[i].trim();
+        row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
+        row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
+        fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
+        configString = row.substring(row.indexOf(' ') + 1);
+        
+
+        if ( fileURI !== currentFileURI ){
+            currentFileURI = fileURI;
+            currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
+            
+            if ( fileURI == 'command' ){
+                currentFileName = 'Pragma-git internal';
+                configString = row.substring(row.indexOf(':') + 1);
+            }
+            
+            // File name
+            if ( fileURI !== '' ){
+                html+= `<div> ${currentFileName} :</div>`; 
+            }
+        }
+        
+        html += `<code>&nbsp; ${configString}</code> <br>`;
+    }
+    
+    document.getElementById('gitconfigs').innerHTML = await html;
+    
+    return html
 }
 
 function displayAlert(title, message){

@@ -134,6 +134,7 @@ var devTools = false;
 var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
+
 // -----
 // INIT
 // -----
@@ -176,6 +177,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
         
     // Handles to windows
+    
+        // Windows opened from main
         var main_win;
         var settings_win;
         var notes_win;
@@ -184,6 +187,30 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
+        
+        // Windows opened from Settings
+        var gitignore_win;
+        var github_win;
+        
+        // General help window
+        var help_win;
+        
+        // List of start of window titles -- used to recreate MacOS windows after scale changes in Settings 
+        // ( used in recreateAllWindowsMenu() )
+        // Reason to use start of titles, is that merge_win has a dynamic title = 'File = xxx' (where xxx is the file name merged)
+        var windowNamesStartsWith = { 
+           'Main': 'main_win',       
+           'Settings': 'settings_win',   
+           'Notes': 'notes_win',      
+           'Changed': 'changed_win',    
+           'Resolve': 'resolve_win',    
+           'Commit': 'graph_win',      
+           'About': 'about_win',      
+           'File': 'merge_win',
+           'Git-ignore': 'gitignore_win' ,
+           'Create': 'github_win' ,
+           'Help': 'help_win'    
+        }
 
       
     // Files & folders
@@ -232,6 +259,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
         
+        // Windows opened from Main
         localState.settings = false;        // True when settings window is open
         localState.conflictsWindow = false; // True when conflicts window is open
         localState.fileListWindow = false; // True when conflicts window is open
@@ -240,6 +268,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.notesWindow.open = false; // True when notes window is open
         localState.graphWindow = false; // True when graph window is open
         localState.helpWindow = false; // True when help window is open
+        
+        // Windows opened from Settings
+        localState.gitignoreWindow = false; // True when Gitignore window is open
+        localState.githubWindow = false; // True when Gitignore window is open
+        
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
         
@@ -330,6 +363,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 
 // Main functions
+
 async function _callback( name, event){ 
     
     // Log event
@@ -448,6 +482,7 @@ async function _callback( name, event){
         await updateGraphWindow();
         await updateSettingsWindow();
         await updateChangedListWindow();
+        win.focus();
        
         break;
       }
@@ -505,20 +540,27 @@ async function _callback( name, event){
         global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
         gui.Window.open('notes.html',
-            {
+            {   
                 id: 'notesWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600,
                 title: title
             },  
-            win=>win.on('loaded', () => {
-                notes_win = nw.Window.get(win.window);addWindowMenu(title, 'notes_win');
+            win=>win.on('loaded', async () => {
+          
+                notes_win = win;
+                addWindowMenu(title, 'notes_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+
                 win.on('close', function() { fixNwjsBug7973( win)} );
+
+
+                
             })
   
         )
-
                     
         
         localState.notesWindow.open = true;
@@ -532,6 +574,10 @@ async function _callback( name, event){
             forcePush = true;
         }
         
+        
+        // Update remote info immediately
+        await gitFetch();  
+        
         gitPush( forcePush); 
         break;
       }
@@ -540,6 +586,7 @@ async function _callback( name, event){
 
         await updateGraphWindow();
         await updateChangedListWindow();
+        win.focus();
         
         break;
       }
@@ -559,7 +606,7 @@ async function _callback( name, event){
         await gitFetch( event.selectedBranch); 
         await gitMerge( event.currentBranch, event.selectedBranch); 
         
-        break;
+        break; 
       }
       case 'tagSelected': { // Called from tagList.js
         switch (event.buttonText ){
@@ -690,15 +737,17 @@ async function _callback( name, event){
         break;
       }
       case 'help-on-find' :{
-        gui.Window.open(
-            'about_search.html#/new_page', 
-            {   id: 'aboutSearchWindowId3',
+        gui.Window.open('about_search.html#/new_page', 
+            {   id: 'aboutSearchWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600
             },  
             win=>win.on('loaded', () => {
-                win.on('close', function() { fixNwjsBug7973( win)} ); 
+                
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
             }) );   
         break;
       }
@@ -711,6 +760,21 @@ async function _callback( name, event){
       case 'clicked-terminal': {
 
         let folder = state.repos[ state.repoNumber].localFolder;
+        
+        //
+        // Override terminal command from settings
+        //       
+            
+            if ( state.tools.terminal.trim() !== '' ){
+                try{
+                    multiPlatformStartApp( folder, state.tools.terminal, append=false)
+                    break;  // End if success, otherwise continue with default
+                }catch (err){
+                    console.warn(err);
+                }
+            }
+                
+            
          
         //
         // Mac specific solution
@@ -773,9 +837,7 @@ async function _callback( name, event){
                 }
                 
             }
-    
-     
-            
+
             
             terminalTab.open( command, options)
         
@@ -796,9 +858,10 @@ async function _callback( name, event){
             resolveConflicts(state.repos[state.repoNumber].localFolder);
         }else{
             listChanged();
+            localState.fileListWindow = true;
         }
         
-        localState.fileListWindow = true;
+        
         
         break;
       }
@@ -818,13 +881,18 @@ async function _callback( name, event){
             {
                 id: 'graphWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 600,
                 title: title
             }
             ,
             win=>win.on('loaded', () => {
-                graph_win = nw.Window.get(win.window);addWindowMenu( title, 'graph_win');
+                
+                graph_win = win;
+          		addWindowMenu( title, 'graph_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
         )  
@@ -1177,6 +1245,7 @@ async function _callback( name, event){
             waitTime( WAIT_TIME);  
         
             await updateGraphWindow();
+            win.focus();
         
            // Push tag to remote
             if ( state.repos[state.repoNumber].autoPushToRemote && state.repos[state.repoNumber].allowPushToRemote ){ 
@@ -1527,11 +1596,20 @@ async function _callback( name, event){
         console.log('clicked-forcePushOrPullPushDialog');
           
         if (event == 'Pull'){
-            await gitPull();
-            await gitPush( forcePush = false);
+            try{
+                await gitPull();
+            }catch(err){
+                if ( err.toString().includes('Conflict in pull error') ){
+                    // Ignore, because I have a conflict and do not want to create any further push error
+                }else{
+                    await gitPush( forcePush = false);
+                }
+                
+            }
 
             await updateGraphWindow();
             await updateChangedListWindow();
+    		win.focus();
         }
         
         if (event == 'ForcePush'){
@@ -1571,7 +1649,7 @@ async function _callback( name, event){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
             help_win.document.getElementById("title").innerText= title; // Set window title
             help_win.document.getElementById("name").innerText= name; // Set document first header  
-            help_win.focus();         
+            //help_win.focus();         
         };
                 
 
@@ -1580,6 +1658,7 @@ async function _callback( name, event){
             gui.Window.open(
                 'HELP' + pathsep + 'TEMPLATE_help.html',
                 {   id: 'helpId',
+                    show: false,
                     position: 'center',
                     width: 600,
                     height: 700   
@@ -1594,16 +1673,17 @@ async function _callback( name, event){
                     
                     cWindows.on('loaded', 
                         function(){
-                             // For systems that have multiple workspaces (virtual screens)
-                            if ( cWindows.canSetVisibleOnAllWorkspaces() ){
-                                cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-                                cWindows.setAlwaysOnTop(state.alwaysOnTop);
-                            }
                             help_win = cWindows.window;
                             updateText( event.name, title, text);
+                            
+                            showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                            
+                            localState.helpWindow = true;
                             addWindowMenu( title, 'help_win');
                             
-                            cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
+                            cWindows.on('close', function() { 
+                                fixNwjsBug7973( cWindows);
+                            } );
                             
                         }
                     )
@@ -1879,10 +1959,10 @@ async function _callback( name, event){
 
         
         // Open new window -- and create closed-callback
-        gui.Window.open(
-            'about.html#/new_page', 
+        gui.Window.open('about.html#/new_page', 
             {   id: 'aboutWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title   
@@ -1897,16 +1977,13 @@ async function _callback( name, event){
                 
                 cWindows.on('loaded', 
                     function(){
-                         // For systems that have multiple workspaces (virtual screens)
-                        if ( cWindows.canSetVisibleOnAllWorkspaces() ){
-                            cWindows.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-                            cWindows.setAlwaysOnTop(state.alwaysOnTop);
-                        }
-                        about_win = nw.Window.get(cWindows.window);
+                        //about_win = nw.Window.get(cWindows.window);
+                        about_win = cWindows;
                         addWindowMenu( title, 'about_win');
-                        
+                        showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                         
                         cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
+                        
                     }
                 );
 
@@ -2350,6 +2427,9 @@ async function _callback( name, event){
                 return
             } else {
                 await addExistingRepo( folder); 
+                
+                // Update settings repo table
+                updateSettingsRepoTable();
             }
         }catch(error){
             displayLongAlert('Failed adding repo', error, 'error'); 
@@ -2359,6 +2439,7 @@ async function _callback( name, event){
         // Update immediately
         await _setMode('UNKNOWN');
         await _update();
+        
 
     };
     function resetHistoryPointer(){
@@ -2377,6 +2458,23 @@ async function _callback( name, event){
     // status-bar
     function folderClicked(){
         console.log('Folder clicked');
+        
+        let folder = state.repos[state.repoNumber].localFolder;
+         
+        // Override terminal command from settings
+        if ( state.tools.fileBrowser.trim() !== '' ){
+            try{
+                multiPlatformStartApp( folder, state.tools.fileBrowser, append=true)
+                
+                "${folder}"
+                return;
+            }catch (err){
+                console.warn(err);
+            }
+        }
+        
+        
+        
         //gui.Shell.openItem(state.repos[state.repoNumber].localFolder);
         gui.Shell.openItem( path.resolve(state.repos[state.repoNumber].localFolder) ); // Required for unc paths to work in Windows
     }
@@ -2396,17 +2494,23 @@ async function _callback( name, event){
             {
                 id: 'settingsWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title
             },
             win=>win.on('loaded', () => {
-                settings_win = nw.Window.get(win.window);addWindowMenu(title, 'settings_win');
+                
+                settings_win =win;addWindowMenu(title, 'settings_win');
+                //showWindow(settings_win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
+                localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
         ); 
         console.log(settings_win);
-        localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
+        
      return   
     };
 
@@ -2422,12 +2526,17 @@ async function _callback( name, event){
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
+                show: false,
                 width: 600,
                 height: 700,
                 title: title
             },
                 win=>win.on('loaded', () => {
-                    resolve_win = nw.Window.get(win.window);addWindowMenu(title, 'resolve_win');
+                    
+                    resolve_win =win;
+          			addWindowMenu(title, 'resolve_win');
+                    showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                    
                     win.on('close', function() { fixNwjsBug7973( win)} );
                 } )
             ); 
@@ -2448,19 +2557,19 @@ async function _callback( name, event){
                 {
                     id: 'listChangedId',
                     position: 'center',
+                    show: false,
                     width: 600,
                     height: 700,
                     title: title
                 },
                     win=>win.on('loaded', 
                         () => {
-
-                        changed_win = nw.Window.get(win.window);
-                        addWindowMenu( title, 'changed_win');
                         
-                        win.on('close', function() { 
-                            fixNwjsBug7973( win)
-                        } );
+                        changed_win =win;
+                        addWindowMenu( title, 'changed_win');
+                        showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                        
+                        win.on('close', function() { fixNwjsBug7973( win)  } );
                     })
             ); 
         }
@@ -2600,17 +2709,6 @@ async function _update2(){
         folder = "(not a folder) " + nameOfFolder;
     }   
 
-
-    // If left settings window
-        if ( localState.settings && (modeName != 'SETTINGS') ){  // mode is set to UNKNOWN, but localState.settings still true
-
-            //localState.settings = false;
-            
-            updateWithNewSettings();
-                
-            // Remove from menu
-            deleteWindowMenu('Settings');
-        }
  
     //
     // SET ICON VISIBILITY 
@@ -2912,8 +3010,8 @@ async function _update2(){
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' ); 
                 setStatusBar( fileStatusString( status_data)); 
 
-                console.log('_update -- CONFLICT mode');
-                console.log(status);
+                //console.log('_update -- CONFLICT mode');
+                //console.log(status);
 
                 break;
             }
@@ -2946,6 +3044,11 @@ async function _setMode( inputModeName){
     
     let currentMode = await getMode();
     console.log('setMode = ' + inputModeName + ' ( from current mode = ' + currentMode + ')');
+    
+    // Overrid Mode if Settings Window open
+    if (localState.setting){
+        inputModeName = 'SETTINGS';
+    }
     
     var HEAD_title;    
     var HEAD_refs;
@@ -3210,7 +3313,10 @@ async function _setMode( inputModeName){
             
         case 'CONFLICT': {
             newModeName = 'CONFLICT';
-            if (currentMode ==  'CONFLICT') { return};
+            if (currentMode ==  'CONFLICT') {
+                document.getElementById('store-button').disabled = true;
+                return
+            };
             setButtonText();// Set button
             //document.getElementById('store-button').disabled = true;
             //textOutput.value = "";
@@ -3260,12 +3366,17 @@ function startPragmaMerge(){
     gui.Window.open('merge/pragma-merge.html', { 
             id: 'mergeWindowId',
             position: 'center',
+            show: false,
             width: 600,
             height: 700,
             title: title
         },
             win=>win.on('loaded', () => {
-                merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');
+                
+                merge_win =win;
+      			addWindowMenu(title, 'merge_win');
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                 win.on('close', function() { fixNwjsBug7973( win)} );
             } )
     ); 
@@ -3280,23 +3391,20 @@ function startPragmaAskPass(){
     gui.Window.open('askpass/askpass.html', { 
             id: 'askpassWindowId',
             position: 'center',
+            show: false,
             width: 300,
             height: 400,
             title: title,
             show: false
         },
-            win=>win.on('loaded', () => { 
-                win.on('close', function() { 
-                    fixNwjsBug7973( win);
-                    //win.hide();
-                } );
+            win=>win.on('loaded', () => {       
+                          
+                showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
+                win.on('close', function() { fixNwjsBug7973( win);} );
             })
-            
     ); 
-    
-    //        win=>win.on('loaded', () => {merge_win = nw.Window.get(win.window);addWindowMenu(title, 'merge_win');} )
-    
+  
 }
 
 // Git commands
@@ -3445,11 +3553,21 @@ function configFilePath(){
       }
       case 'linux': {
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_linux';
+           
+        // Special DEV
+        if ( STARTDIR.startsWith('/home') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_linux';
+        }
         break;
       }
       case 'win32': {
         // Note : called win32 also for 64-bit  
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
+                   
+        // Special DEV
+        if ( STARTDIR.startsWith('C:\\Users') ){
+            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_windows';
+        }
         break;
       }
     }
@@ -3665,6 +3783,7 @@ async function gitSwitchToRepo(repoNumber){ // TODO : Does not seem to be used
     
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
 }
 
 async function gitSwitchBranch(branchName){
@@ -3685,6 +3804,7 @@ async function gitSwitchBranch(branchName){
     cacheBranchList();
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
     
 }
 async function gitSwitchBranchNumber(branchNumber){
@@ -3992,7 +4112,7 @@ async function gitAddCommitAndPush( message){
                     await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
                     forcePush = true;
                 }else{
-                    return
+                    return  // Do not commit if dialog Canceled
                 }
             }
         
@@ -4003,7 +4123,7 @@ async function gitAddCommitAndPush( message){
                     await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit);  
                     forcePush = true;
                 }else{
-                    return
+                    return // Do not commit if dialog Canceled
                 }
             }else{
                 // NORMAL COMMIT
@@ -4137,6 +4257,7 @@ async function gitStash(){
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
 }
 async function gitStashPop( stashRef){
     // If argument stashRef is empty, the lastest stash is applied using : ´stash pop´ or ´stash apply´ (depending on stage.StashPop, from settings dialog)
@@ -4172,6 +4293,7 @@ async function gitStashPop( stashRef){
     await gitStashMap(state.repos[state.repoNumber].localFolder);
     await updateGraphWindow();
     await updateChangedListWindow();
+    win.focus();
          
 }
 async function gitStashMap( folder ){
@@ -4337,11 +4459,8 @@ async function gitPush( forcePush){
                     ERR = true;
                     
                     // Helpful dialog if possible:
-                    if (
-                          ( (err.toString()).includes('tip of your current branch is behind') ) ||
-                          ( (err.toString()).includes('not have locally') )
-                        )
-                    {
+                    if (  (err.toString()).includes('tip of your current branch is behind')   ||
+                          ( err.toString()).includes('not have locally')   ){
                         // Give options to 'pull' or 'push --force'
                         document.getElementById('forcePushOrPullPushDialog').showModal();
                     }else{
@@ -4484,10 +4603,16 @@ async function gitPull(){
             
         }catch(err){
             
-            displayLongAlert('Failed pulling remote file', err, 'error'); 
-            console.log('Error in gitPull()');
-            console.log(err);
-            error = err;
+            if (err.toString().includes('CONFLICT')){
+                // Ignore -- conflict will be marked in bottom bar
+                throw 'Conflict in pull error'
+            }else{            
+                displayLongAlert('Failed pulling remote file', err, 'error'); 
+                console.log('Error in gitPull()');
+                console.log(err);
+                error = err;
+            }
+
             
         }
         _setMode('UNKNOWN');
@@ -5141,6 +5266,8 @@ async function addExistingRepo( folder) {
         // Set global
         state.repos[state.repoNumber].localFolder = topFolder;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        
+        await cacheBranchList();
 }    
 function setPath( additionalPath){
     
@@ -5257,6 +5384,56 @@ function getDownloadsDir(){
     
 }
 
+function multiPlatformExecSync( folder, cmd){  // Run git bash in 'folder', on all platforms. 
+	 //Return string output without leading and trailing spaces
+	console.log(cmd.toString())
+	const { execSync } = require('child_process');
+	if (process.platform === 'win32') {
+		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).toString().trim();
+	}else{
+		return  execSync( cmd, {cwd: folder} ).toString().trim();
+	}
+}
+function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
+    // append = true means that cmd and folder are appended after each other (good for fileBrowser, bad for opening terminal)
+    
+	 //Return string output without leading and trailing spaces
+	console.log(cmd.toString())
+	const { exec } = require('child_process');
+    
+    // Win Fix "/" to "\" 
+    if (process.platform === 'win32') {
+        folder = path.normalize(folder);
+    }
+    
+    let appendedCmd = cmd;
+    if (append){
+        appendedCmd = `"${cmd}" "${folder}"`;
+    }
+    
+    // Test if command starts from bash
+    try{
+        // Test if command is in bash path
+        multiPlatformExecSync( folder, `which "${cmd}" `);  // Fails if not in path
+        
+        // Run (and unref from pragma-git) if which command existed in path ( catch otherwise)
+        if (process.platform === 'win32') {
+            return exec( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).unref();
+        }else{
+            return  exec( appendedCmd, {cwd: folder} ).unref();
+        }
+        return
+    }catch (err){
+        console.log(err);
+    }
+    
+	if (process.platform === 'darwin') {
+		exec( `open -a ${cmd} "${folder}"`).unref();  // On MacOS you can always append
+	}else{
+		exec( `${appendedCmd}`, {cwd: folder} ).unref();   
+	}
+}
+
 
 // Logging to file
 
@@ -5363,7 +5540,53 @@ function stackInfo( level ){
 
 
 // Update other windows
- 
+
+async function showWindow(win){ // Show external window that was opened hidden
+    
+        // It seems that MacOS and Linux handles this differently (nwjs 0.85)
+        // MacOS needs to set multiple windows BEFORE show.  Linux is the opposite 
+        
+        if (process.platform === 'linux') { 
+            win.show();
+        }
+    
+        // For systems that have multiple workspaces (virtual screens)
+        if ( win.canSetVisibleOnAllWorkspaces() ){
+            await win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
+            await win.setAlwaysOnTop(state.alwaysOnTop);
+        }
+        
+        
+        if (process.platform === 'darwin') { 
+            win.show();
+        }
+        
+        if (process.platform === 'win32') { 
+            win.show();
+        }
+        
+                
+        // General event listeners for all windows (Add Ctrl W, Inhibit Ctrl Q)
+        //   NOTE: windows using  extended_find-in-nw  have its own closing of window
+        win.window.document.addEventListener("keydown", evt => { 
+            
+                // Add Ctrl W event listener for closing window (except Main, which should not be closed this way -- preventing closing before others)
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 87 ){
+                    if ( win.title !== 'Main Window'){
+                        win.close();
+                    }
+                }
+                console.log(evt.keyCode);
+                
+                // Inhibit Ctrl Q event listener for closing window
+                if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 81 ){
+                    evt.preventDefault();
+                    
+                }
+            } 
+        )
+
+} 
 function fixNwjsBug7973( win){
     // This function should be called after intercepting 'close' event for a spawned window
     // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
@@ -5386,9 +5609,9 @@ async function updateGraphWindow(){
         _callback( 'clicked-graph');
     }
 
-    win.focus();
+    //win.focus();
 }
-async function updateSettingsWindow(){
+async function updateSettingsWindow(){     // Update selected repo
 
     await _update();
 
@@ -5399,11 +5622,17 @@ async function updateSettingsWindow(){
         // Update repo in settings_win 
         try{
             await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
+            
         }catch(err){ 
         }
     }
     
     win.focus();
+}
+async function updateSettingsRepoTable(){  // Only update Repo table
+    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
+    await settings_win.window.createHtmlTable(settings_win.window.document)
+    await updateSettingsWindow()
 }
 async function updateChangedListWindow(){
     
@@ -5412,10 +5641,12 @@ async function updateChangedListWindow(){
         _callback('clicked-status-text')
     }
 
-    win.focus();
+    //win.focus();
 }
 
+
 // Dialogs
+
 async function tag_list_dialog(){
             
             let tagList;
@@ -5435,8 +5666,7 @@ async function tag_list_dialog(){
             }
     
     
-            gui.Window.open(
-                'tagList.html#/new_page' ,
+            gui.Window.open('tagList.html#/new_page' ,
                 {
                     id: 'tagListWindowId',
                     position: 'center',
@@ -5475,6 +5705,9 @@ function displayLongAlert(title, message, type){
      * title   --message title 
      * message -- message text 
      * type -- 'warning' (yellow border) or 'error' (red border)
+     * 
+     * Example: 
+     *   displayLongAlert('test', 'test message text', 'warning')
      */
 
     pragmaLog('   displayLongAlert : ' );
@@ -5516,8 +5749,7 @@ function displayLongAlert(title, message, type){
             console.log(gui.Window.get());
         
             // Open new window -- and create closed-callback
-            gui.Window.open(
-                'externalDialog.html#/new_page', 
+            gui.Window.open('externalDialog.html#/new_page', 
                 {   position: 'center',
                     frame: false,
                     show: false
@@ -5527,7 +5759,6 @@ function displayLongAlert(title, message, type){
                     
                     cWindows.on('close', function() { 
                         fixNwjsBug7973( cWindows);
-                        //win.hide();
                     } );
                 
                      
@@ -5563,8 +5794,8 @@ function displayLongAlert(title, message, type){
       
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
-                            cWindows.show();     
-                            
+                            showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                
                             // Workaround so it is not hidden by windows
                             cWindows.setAlwaysOnTop(true); 
                             
@@ -5591,7 +5822,7 @@ function displayLongAlert(title, message, type){
                         if (line.trim().startsWith('git') ){  //Work with line starting with "git"
                             let inputline = line;
                             
-                            // NOTE : multiPlatformExecSync is defined in externalDialog.html, where this link is used
+                            // NOTE : multiPlatformExecSync is ALSO defined in externalDialog.html, where this link is used
                             let CMD = `let out = multiPlatformExecSync( \`${CD} ; ${line}\` );`  // Works also if CD fails (runs second command without a cd)
                             line = inputline.replaceAll('\t','&nbsp;&nbsp;&nbsp;&nbsp;');  // Tabs
                             line = `${line} </code>
@@ -5725,6 +5956,7 @@ function downloadNewVersionDialog(){
 
 
 // MacOS Menu
+
 function initializeWindowMenu(){
     if (process.platform !== 'darwin'){
         return
@@ -5735,14 +5967,14 @@ function initializeWindowMenu(){
     
     // Read localized Window name (using original Window menu)
     let mb0 = new gui.Menu({type: 'menubar'});
-    mb0.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb0.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
     
     let localWindowMenuName = mb0.items[mb0.items.length -1].label;
     
     
     // Replace with own Window Menu (use localized name from above)
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Pragma-git',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
 
     mb.append(
         new gui.MenuItem({
@@ -5769,31 +6001,31 @@ function initializeWindowMenu(){
     //
    
      
-    // Menu : Minimize
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: "Minimize", 
-                key: 'M',
-                modifiers: "cmd",
-                click: () =>  minimizeWindow()
-            } 
-        )
-    );  
+    //// Menu : Minimize
+    //macWindowsMenu.append(new gui.MenuItem(
+            //{ 
+                //label: "Minimize", 
+                //key: 'M',
+                //modifiers: "cmd",
+                //click: () =>  minimizeWindow()
+            //} 
+        //)
+    //);  
      
-    // Menu : Close
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: "Close", 
-                key: 'W',
-                modifiers: "cmd",
-                click: () =>  closeSelectedWindow()
-            } 
-        )
-    );    
+    //// Menu : Close
+    //macWindowsMenu.append(new gui.MenuItem(
+            //{ 
+                //label: "Close", 
+                //key: 'W',
+                //modifiers: "cmd",
+                //click: () =>  closeSelectedWindow()
+            //} 
+        //)
+    //);    
  
  
-    // Add separator
-    macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+    //// Add separator
+    //macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
     
        
     // Menu : Show all
@@ -5842,6 +6074,7 @@ function addWindowMenu(title,winHandleNameAsString){
     winHandle = eval(winHandleNameAsString); // Convert from string to handle
     
     let click = `() => { ${winHandleNameAsString}.focus(); }`;
+
     
     // Add new menu to Windows with callback
     macWindowsMenu.append(new gui.MenuItem(
@@ -5889,6 +6122,34 @@ function showAllWindows(){
         } 
     );
 }
+function recreateAllWindowsMenu(){
+
+    gui.Window.getAll( 
+        
+        function allWindowsCallback( windows) {
+            for (let i = 0; i < windows.length; i++) {
+                let win_handle =  windows[i];
+                
+                // Get start of title, to use to lookup variable name
+                let title = win_handle.title;
+                let firstWordInTitle = title.split(' ')[0]
+                let windowHandleName = windowNamesStartsWith[firstWordInTitle];  // String
+                
+                // Set variable
+                eval( windowHandleName + ' = win_handle');         // Populate main_win, graph_win, ...
+                
+                console.log('running  = ' + title);
+                    
+                // Add to menu if not already existing
+                if ( isNaN( util.findObjectIndex( macWindowsMenu.items, 'label', title) ) ) {
+                    addWindowMenu( title, windowHandleName);    // Add menu
+                }
+                
+                
+            }    
+        } 
+    );
+}
 function hideAllWindows(){
 
         gui.Window.getAll( 
@@ -5896,7 +6157,7 @@ function hideAllWindows(){
             function allWindowsCallback( windows) {
                 for (let i = 0; i < windows.length; i++) {
                     let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Pragma-git'){
+                    if ( win_handle.title !== 'Main Window'){
                         win_handle.minimize();
                     }
                 }    
@@ -5911,7 +6172,7 @@ function closeAllWindows(){
             function allWindowsCallback( windows) {
                 for (let i = 0; i < windows.length; i++) {
                     let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Pragma-git'){
+                    if ( win_handle.title !== 'Main Window'){
                         win_handle.close();
                     }
                 }    
@@ -5921,44 +6182,9 @@ function closeAllWindows(){
         
         
 }
-function minimizeWindow(){
-
-    gui.Window.getAll( 
-        
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                if ( win_handle.window.document.hasFocus() ){
-                    win_handle.minimize();
-                }
-            }    
-        } 
-    ); 
-}
-function closeSelectedWindow(){
-
-    gui.Window.getAll( 
-        
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                
-                // Always allow closing of child-windows
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title !== 'Pragma-git') ){
-                   win_handle.close();
-                }
-                
-                // Only close main window if its the last window
-                if ( win_handle.window.document.hasFocus() && ( win_handle.title == 'Pragma-git') && ( windows.length == 1 ) ){
-                   win_handle.close();
-                }
-            }    
-        } 
-    ); 
-}
-
 
 // Title bar
+
 function setTitleBar( id, text){
     if (text.length == 0){
         text = " ";
@@ -6003,6 +6229,7 @@ function updateContentStyle() {
 
 
 // Message
+
 function writeTextOutput(textOutputStruct){
     document.getElementById('message').value = textOutputStruct.value;
     
@@ -6111,6 +6338,7 @@ function formatHistoryMessage( longDate, message, body){
 
 
 // Output row (below message)
+
 function writeOutputRow( htmltext){
     document.getElementById("output_row").style.visibility = 'visible';
     document.getElementById("output_text").innerHTML = htmltext;
@@ -6122,6 +6350,7 @@ function clearOutputRow( ){
 
 
 // Statusbar
+
 function updateStatusBar( text){
     newmessage = document.getElementById('bottom-titlebar-text').innerHTML + text;
     document.getElementById('bottom-titlebar-text').innerHTML = newmessage;
@@ -6231,6 +6460,7 @@ function drawPinImage(isPinned){
 
 
 // Settings
+
 function saveSettings(){
     
     pragmaLog('' );
@@ -6333,6 +6563,8 @@ function loadSettings(settingsFile){
             state.tools = setting( state_in.tools, {} ); 
             state.tools.difftool = setting( state_in.tools.difftool, "");
             state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            state.tools.terminal = setting( state_in.tools.terminal, "");
+            state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
             
             console.log('State after amending non-existing with defaults ');
@@ -6361,6 +6593,7 @@ function loadSettings(settingsFile){
             
         // Graph window 
             state.graph = setting( state_in.graph, {} );
+            state.graph.zoom = setting( state_in.graph.zoom, 1 );
             state.graph.showdate = setting( state_in.graph.showdate, false );
             state.graph.showall = setting( state_in.graph.showall, false );
             state.graph.showHiddenBranches = setting( state_in.graph.showHiddenBranches, true );
@@ -6518,9 +6751,7 @@ function updateWithNewSettings(){
     win.setAlwaysOnTop( state.alwaysOnTop );
     
     // For systems that have multiple workspaces (virtual screens)
-    if ( win.canSetVisibleOnAllWorkspaces() ){
-        win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
-    }
+    showWindow(win); 
     
     // Update path
     setPath( state.tools.addedPath);
@@ -6601,7 +6832,7 @@ function updateWithNewSettings(){
                         root.style.setProperty('--vw', Math.round( 100 * (1 / global.state.zoom ) ) + 'vw') ;
                         root.style.setProperty('--vh', Math.round( 100 * (1 / global.state.zoom ) ) + 'vh') ;
                     }
-                    else if (win_handle.title !== 'Pragma-git'){
+                    else if (win_handle.title !== 'Main Window'){
                         win_handle.window.document.body.style.zoom = state.zoom;
                     }
                     
@@ -6623,6 +6854,7 @@ function updateWithNewSettings(){
 
 
 // Dev test
+
 function dev_show_all_icons(){
     isPaused = true;
     document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'visible'
@@ -6640,9 +6872,9 @@ function dev_show_all_icons(){
  
 }
 
-// -------------
+
 // WINDOW EVENTS
-// -------------
+
 window.onfocus = function() { 
   console.log("focus");
   focusTitlebars(true);
@@ -6650,7 +6882,7 @@ window.onfocus = function() {
 window.onblur = function() { 
   console.log("blur");
  
-  // Do not blur if always on top
+  // Allow to blur if not alwaysOnTop
   if ( state.alwaysOnTop === false){
     focusTitlebars(false);  
   }
@@ -6734,6 +6966,9 @@ window.onload = async function() {
   
   // Dialog if author's name is unknown
   showUserDialog(true)  // test = true, will show only if state.git == true
+  
+  // Update MacOS menu
+  recreateAllWindowsMenu()
  
   pragmaLog('Done starting app');
   pragmaLog('');

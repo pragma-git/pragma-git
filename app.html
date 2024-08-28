@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Pragma-git</title>
+    <title>Main Window</title>
     
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
@@ -275,13 +275,6 @@
                     onClick="
 						if (  document.getElementById('amend_commit_checkbox').checked == true ) {
 							document.getElementById('store-button').disabled = false;  // Enable Store button
-						
-							// Show dialog if remote defined
-							//let remoteDefined = state.repos[state.repoNumber].remoteURL.includes('http');
-                            let remoteDefined = isRemoteDefined()
-							if (remoteDefined){
-								document.getElementById('amendDialog').showModal();         // Only show when click to check the box
-							}
                         }else{
                              document.getElementById('store-button').disabled = true;  // Disable Store button
                         }"
@@ -586,15 +579,13 @@
             
             <button id="no" style="float:right"
                 onclick="document.getElementById('amendDialog').close('OK'); 
-                         document.getElementById('store-button').disabled = false;  // Enable Store button"
-            >
+                         document.getElementById('store-button').disabled = false;  // Enable Store button" >
                 OK
             </button>  
             
             <button id="no" style="float:right; margin-right: 5;"
                 onclick="document.getElementById('amendDialog').close('Cancel'); 
-                         document.getElementById('amend_commit_checkbox').checked = false"
-            >
+                         document.getElementById('amend_commit_checkbox').checked = false">
                 Cancel
             </button>  
         
@@ -973,6 +964,11 @@
             window.addEventListener("keydown", event => {
                 
                 console.log(event.keyCode)
+                
+                if ( (event.ctrlKey || event.metaKey) && event.keyCode === 81 ){
+                    event.preventDefault();
+                    
+                }
                     
                 // ESC
                 if (event.keyCode === 27) {  
