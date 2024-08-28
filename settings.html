@@ -28,17 +28,25 @@
             border-bottom: 2px solid #ccc;
             font-size: 10pt;
         }
+        
 
         
         td{
             padding: 4px;
+            
+            padding-bottom: 8px 
         }
+
     
     
     /*                     */
     /* Style settings-page */
     /*                     */
     
+ 
+        .tools{
+            border: none;
+        }
  
         #outer-content{
             margin: 20px;
@@ -132,6 +140,8 @@
         
     
      /* Settings : images */  
+     
+
                   
         img[src="images/stash_pop.png"],
         img[src="images/stash_pop_black.png"],
@@ -140,15 +150,20 @@
             filter: var(--stash-icon-filter);
         }
         
-        img[src="images/github-mark.png"] 
+        img[src="images/github-mark.png"]
         {
             filter: none;
         }
-        
+                
                
         .stashImg{
             position: relative;
             top: 2px;
+        }
+        
+        .indent{
+            position: relative;
+            left: 10px;
         }
 
         
@@ -232,7 +247,7 @@
                     <label for="displayToolTip" id="labelForDisplayToolTip"> Show tooltips in main window</label><br><br>  
     
      
-                    Window scaling : <br>   
+                    Window scaling (default = 1.0) : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
                         onchange="
@@ -323,23 +338,49 @@
                     <br>
                  
                   
-                <h3>Git tools (built-in if empty)</h3>  
+                <h3>Git & system tools (built-in if empty)</h3>  
     
                     <table>
-                        <tr style="border: none;">
+                        <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
-                                <input id="gitDiffTool" type="text" size="30" />
-                            </td>
-                            <td>                
-                                <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                                <input id="gitMergeTool" type="text" size="30" placeholder="Name of merge tool"/>
+                                <input id="gitDiffTool" type="text"  style="width: 100%;" />
                             </td>
                         </tr>
                         
-                        <tr style="border: none;">
-                            <td colspan="2">
-                                <label for="pathAddition"> Addition to path (if diff & merge tool not in path. See help icon top right) : </label><br>
+
+                        <tr class="tools">                          
+                             <td>                
+                                <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
+                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool"/>
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools"> 
+
+                            <td>                
+                                <label for="fileBrowser"> File browser (open when clicking 
+                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" > ) :
+                                </label><br>
+                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser">
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools">                     
+                             <td>                
+                                <label for="terminal"> Terminal (open when clicking                                    
+                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" > ) : 
+                                </label><br>
+                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"/>
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools">                    
+                             <td colspan="2">
+                                <label for="pathAddition"> Path (additions here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
                                 <input id="pathAddition" type="text" style="width: 100%;"/><br>
                             </td>
                         </tr>
@@ -414,7 +455,7 @@
                         
                         <!--  --no-ff merge (gitflow recommends this) -->
                         <input type="checkbox" id="NoFF_merge" name="name" value="true" onchange="_callback('localCheckboxChanged',this)" checked>
-                        <label for="NoFF_merge"> Merge without fast-forward (<code>git merge --no-ff</code>). History is not rewritten.  Deselect to use fast-forward</label><br>
+                        <label for="NoFF_merge"> Merge keeping history (<code>git merge --no-ff</code>). Deselect to use fast-forward when possible.</label><br>
                         
                         <br>
 
@@ -537,6 +578,18 @@
                             
                             
                         </table>
+                        
+                        
+                        <hr> 
+                        <div class="footnoteText">                  
+                            <p>
+                            <sup>*</sup>      
+                                 NOTE: this is the old-fashioned git way to fork.  <br>
+                                 It may be simpler to fork in Github web page (or similar services), and then Clone from the repository you just created. <br>
+                                 The benefit is that pull requests will know about the upstream repository you forked from.
+                            </p> 
+                            
+                        </div>
                         
                     
                     </div>                  
@@ -684,9 +737,25 @@
                         
                         <div id="Github-button">Or use Github wizard : 
                             <button onclick="
-                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId'},
+                            
+                                if (localState.githubWindow == true){
+                                    return
+                                }
+                                
+                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId', show: false},
                                 win=>win.on('loaded', () => {
-                                    win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                                
+                                    opener.github_win = win;
+                                
+                                    opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                                    opener.addWindowMenu( 'Create Github Repository', 'github_win');
+                                    localState.githubWindow = true;
+    
+                                    win.on('close', function() { 
+                                        localState.githubWindow = false;
+                                        opener.deleteWindowMenu('Create Github Repository');
+                                        opener.fixNwjsBug7973( win);
+                                    } );
                                     
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
                                 win.on('closed', function () {
@@ -723,9 +792,27 @@
                     <div class="tool-content " id="gitIgnoreDiv" > 
                          (For selected repository) 
                          <p>
-                             <button onclick="nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId'},
+                             <button onclick="
+                             
+                             if (localState.gitignoreWindow == true){
+                                 return
+                             }
+                             
+                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
                             win=>win.on('loaded', () => {
-                                win.on('close', function() { opener.fixNwjsBug7973( win)} );
+                            
+                                opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                                
+                                opener.addWindowMenu( 'Git-ignore Editor', 'gitignore_win');
+                                opener.gitignore_win = win;
+                                
+                                localState.gitignoreWindow = true;
+
+                                win.on('close', function() {  
+                                    
+                                    localState.gitignoreWindow = false;
+                                    opener.fixNwjsBug7973( win) 
+                                });
                                 
                                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
                                 win.on('closed', function () {
@@ -734,6 +821,9 @@
                                 
                                   // Listen to main window's close event
                                   nw.Window.get().on('close', function () {
+                                  
+                                    
+                                    
                                     // Hide the window to give user the feeling of closing immediately
                                     this.hide();
                                 
@@ -783,52 +873,105 @@
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
                 <h3>Information </h3>
+
+
+
+                <div style='float:right; position: relative; top: 0px;'>
+ 
+                    <!--  Star button from GitHub -->
+                    Give Pragma-git a star : <br><br>
+                    <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
+                         <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
+                            <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"></path>
+                        </svg>
+                        Star
+                    </button>
+                    
+                    <br>
+
+                    <br><br>
+                    
+                    
+                    Feedback: 
+                    <br><br> 
+                    
+                    <!--  Report Issues GitHub -->  
+                    <a href='https://github.com/pragma-git/pragma-git/issues/new/choose' 
+                       style="padding: 10px; padding-left: 0px;"
+                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                       Report bugs / requests </a>
+
+                    
+                    <!--  List Issues GitHub -->  
+                    <br><br>
+                    <a href='https://github.com/pragma-git/pragma-git/issues' 
+                       style="padding: 10px; padding-left: 0px;"
+                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                       Known issues </a>
+
+
+                    <br><br> 
+
+                       
+                </div>
                 
                 Pragma-git version:
-                <div><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div class='indent'><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
                 
                 Latest available version:
-                <div><code><span id='latestVersion' style="font-size: 9pt;"></span>  </code> 
+                <div class='indent'><code><span id='latestVersion' style="font-size: 9pt;"></span>  </code> 
                     <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
                 </div><br>
                 
+                
                 nwjs version:
-                <div><code><span id='nw-version' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div class='indent'><code><span id='nw-version' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
+                
+                
+                node version:
+                <div class='indent'><code><span id='node-version' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
                 
                 Platform:
-                <div><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div class='indent'><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
 
                 Git version:
-                <div><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
+                <div class='indent'><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
+                
                 
                 Settings folder:
-                <div><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
-                
-                 <script>
-                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir();
-                 </script>    
+                <div class='indent'><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
+                <script>
+                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                </script>    
                  <br>          
                 
+                
+
                 Log file:
-                <div><code><a href="#" id='logFile' style="font-size: 9pt;" onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </div><br>
+                <div  class='indent'><code><a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </code></div>
+                <script>
+                     document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                </script>  
+                <br>  
+                       
 
                 
-                 <script>
-                     document.getElementById("logFile").innerHTML = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                 </script>    
-                           
+                Your system's path as seen by Pragma-git :
+                <div class='indent'><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>
-                
-                 Your system's path as seen by Pragma-git :<br>
-                <div><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                   
-                           
+
+                Your gitconfigs :
+                <div  class='indent'><div id='gitconfigs' style="font-size: 9pt"></div>  </div>
                 <br>
                 
+                                
                 License:
-                
-                <div><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
+                <div class='indent'><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
                 
 
             </div>
@@ -972,11 +1115,7 @@
         
     </script>
     <script>  <!--  Event listeners (load and unload of document  --> 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            console.log('settings.html :DOM fully loaded and parsed');
-            injectIntoSettingsJs(document);
-            }
-        );
+
         window.addEventListener('unload', (event) => {
             console.log('settings.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
@@ -1000,7 +1139,9 @@
         }
     
         //When the page has loaded, run this code
-        ready( function(){
+        ready( async function(){
+            
+            
             // prevent default behavior from changing page on dropped file
             window.ondragover = function(e) { e.preventDefault(); return false };
             
@@ -1010,6 +1151,11 @@
                         
             // Set default branch-name
             opener.registerDefaultBranch(document);
+            
+            
+            injectIntoSettingsJs(document)
+            opener.showWindow( win); 
+            
 
         });
     </script>

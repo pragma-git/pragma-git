@@ -105,6 +105,7 @@ async function injectIntoJs(document){
     //
     // Init
     //  
+        document.getElementById('zoombox').style.zoom = state.graph.zoom;
         document.getElementById('showDate').checked = state.graph.showdate;
         document.getElementById('showAll').checked = state.graph.showall;
         document.getElementById('showHidden').checked = state.graph.showHiddenBranches;
@@ -365,6 +366,7 @@ function closeWindow(){
     localState.graphWindow = false;  // Show to main program that window is closed
     
     // Store setting
+    state.graph.zoom = document.getElementById('zoombox').style.zoom;
     state.graph.showdate = document.getElementById('showDate').checked;
     state.graph.showall = document.getElementById('showAll').checked;
     state.graph.swimlanes = document.getElementById('graph_mode_switch').checked;  // True if swimlanes, false if compressed view

@@ -456,6 +456,16 @@
             }
         }
         
+       window.addEventListener(
+            'close', 
+            (event) => {
+
+        
+        // Delete MacOS menu
+        opener.opener.deleteWindowMenu( opener.opener.github_win.title);
+
+    })
+        
         // Set first tab as default
         toolTabButton[0].click()
                 

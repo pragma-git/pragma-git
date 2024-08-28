@@ -383,7 +383,7 @@
       --icon "Pragma-git.app"  125 175 \
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
-      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README-arm.txt" 375 335 \
+      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
       --icon ".fseventsd"  1000 190 \
       --icon ".VolumeIcon.icns"  1000 190 \
       "$(echo "$DIR.dmg")" \
