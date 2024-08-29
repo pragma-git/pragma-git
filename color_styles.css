@@ -144,7 +144,7 @@
         color: var(--body-text);
         border-width: thin;
         background-color: var(--input-background);
-        /* margin-top: 0px; */
+        app-region: no-drag
     }
     
     .readonly{
