@@ -1886,7 +1886,12 @@ async function updateLocalAuthorInfoView( globalSelected ){
 
 }
 async function updateGitconfigs( ){
-    gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']);    
+    if (state.repoNumber >= 0){
+        gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']); 
+    }else{
+        gitconfigString = await simpleGit().raw(['config', '--list', '--show-origin']); 
+    }
+       
     let html = '';
     let currentFileURI = '';
     let rows = gitconfigString.split('\n');
