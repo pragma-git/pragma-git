@@ -353,8 +353,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var gitCounter = 0;  // For SimpleGitLog
 
             
-  // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
-  cacheRemoteOrigins();
+        cacheRemoteOrigins();
   
 
     
@@ -4135,7 +4134,7 @@ async function gitAddCommitAndPush( message){
             console.log(err);
             
             if ( err.toString().includes('empty ident name') ){
-                await showUserDialog();
+                showUserDialog();
                 return
             }
         }       
@@ -4665,18 +4664,18 @@ async function gitMerge( currentBranchName, selectedBranchName){
 }
 
 async function gitConfigList( localFolder ){
-let configList;
-
-try{
-    await simpleGit(localFolder).listConfig(onConfigList);
-    function onConfigList(err, result ){console.log(result); configList = result.all};
-    console.log(configList);
+    let configList;
     
-}catch(err){        
-    console.log('Error determining remote URL, in gitConfigList');
-    console.log(err);
-}
-return configList
+    try{
+        await simpleGit(localFolder).listConfig(onConfigList);
+        function onConfigList(err, result ){console.log(result); configList = result.all};
+        console.log(configList);
+        
+    }catch(err){        
+        console.log('Error determining remote URL, in gitConfigList');
+        console.log(err);
+    }
+    return configList
 }
 async function registerDefaultBranch(document){
     
@@ -4745,7 +4744,7 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
         console.log(err);
         
         if ( err.toString().includes('empty ident name') ){
-            await showUserDialog();
+             showUserDialog();
         }
     }
 }
@@ -5576,7 +5575,7 @@ async function showWindow(win){ // Show external window that was opened hidden
                         win.close();
                     }
                 }
-                console.log(evt.keyCode);
+                //console.log(evt.keyCode);
                 
                 // Inhibit Ctrl Q event listener for closing window
                 if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 81 ){
@@ -5718,6 +5717,7 @@ function displayLongAlert(title, message, type){
     let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
 }
+  
     function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
          * title   --message title 
@@ -5756,12 +5756,7 @@ function displayLongAlert(title, message, type){
                 },
                 function(cWindows){ 
 
-                    
-                    cWindows.on('close', function() { 
-                        fixNwjsBug7973( cWindows);
-                    } );
-                
-                     
+
                     cWindows.on('loaded', 
                         function(){
                             
@@ -5791,7 +5786,12 @@ function displayLongAlert(title, message, type){
                             if ( (maxHeight == 'auto')&&(dialogHeight > MAXHEIGHT) ){
                                 dialogHeight = MAXHEIGHT;
                             }
-      
+                            
+                            // Zoom setting for windows (see Settings dialog)
+                            let windowZoom = global.state.zoom;
+                            dialogWidth = Math.round(dialogWidth * windowZoom);
+                            dialogHeight = Math.round(dialogHeight * windowZoom);
+
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
                             showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
@@ -5852,89 +5852,141 @@ function displayLongAlert(title, message, type){
     
     }
     async function showUserDialog(test){
+        // input: test -- if true, bail out when authorName is known
+        //
+        // Bails out if git is not installed
+        
         
         if (state.git == false){
             return    // Bail out if git is not installed -- no way to get author info without git
         }
-        
-        // test -- if true, bail out if author name is known 
+         
         
         // Get values according to git-config
         let authorName = '';
         let authorEmail = '';
-        let configList;
+     
+        let configList = await gitConfigList(); 
         
         try{
-            configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
             console.log(configList);
             authorName = configList['user.name'];
+            console.log('authorName = ' + authorName);
         }catch(err){
             console.log(err);
+            authorName = undefined;
         }
         
         try{
             console.log(configList);
             authorEmail = configList['user.email'];
+            console.log('authorEmail = ' + authorEmail);
         }catch(err){
             console.log(err);
+            authorEmail = undefined;
         }
         
-        if ( test && ( authorName !== '' ) ){
-            return // Bail out if test is asked for and authorname is known
+        let authorNameIsKnown = (  authorName !== undefined );
+        authorNameIsKnown = authorNameIsKnown && (  authorName.trim() !== '' ); // Add that it has to be non-empty string
+        if ( test &&  authorNameIsKnown){
+            return // Bail out if authorname-test is asked for, AND authorname is known
         }
         
         
+        // Make empty string for dialog
+        if (authorName == undefined){
+            authorName = '';
+        }       
+         
+        if (authorEmail == undefined){
+            authorEmail = '';
+        }
+
         const title = 'Git needs Author information';
         
-        let message = `    
-                    <table>            
-                      <tr style="border: none;">
-                            <td>
-                                <label for="authorName"> Author's name (required):</label> <br>
-                                <input id="authorName" type="text" size="80" value="${authorName}"/>
-                            </td>
-                      </tr>
-                      <tr>
-                            <td>                
-                                <label for="authorEmail"> Author's email :</label> <br>
-                                <input id="authorEmail" type="text" size="80" value="${authorEmail}"/>
-                            </td>
-                        </tr>
-                    </table>   
+        // Message text
+        let message =  
+        `
+            <dialog id="alertDialog"  class="warning">  
+                <b><div> Input missing </div></b>
+                <br> 
+                <div>
+                    Author's information cannot be empty &nbsp;&nbsp;&nbsp;
+                    <button style="float:right" onclick="document.getElementById('alertDialog').close();">
+                        OK
+                    </button>  
+                </div> 
+            </dialog>  
+
+            <p>
+                Required global author information (your user).
+            </p>
+            
+            <table>            
+              <tr style="border: none;">
+                    <td>
+                        <label for="authorName"> Author's name (required):</label> <br>
+                        <input id="authorName" type="text" size="80" value="${authorName}"/>
+                    </td>
+              </tr>
+              <tr>
+                    <td>                
+                        <label for="authorEmail"> Author's email :</label> <br>
+                        <input id="authorEmail" type="text" size="80" value="${authorEmail}"/>
+                    </td>
+                </tr>
+            </table>   
             `; 
         message = message.replaceAll('\n',' '); // Remove EOL from html formatting 
+
         
-        const buttonHtml = `
-            <button  id="okButton"
+        let buttonHtml = `
+            <button id="okButton"
                 onclick=" 
-                opener.setAuthorInfo( document.getElementById('authorName').value, document.getElementById('authorEmail').value );
-                window.close();">
+                    author = document.getElementById('authorName').value;
+                    email = document.getElementById('authorEmail').value;
+                    console.log(author)
+                    if ( author.trim() == ''){ 
+                        document.getElementById('alertDialog').show();
+                    }else{
+                        opener.setAuthorInfo( author, email );
+                        window.close();
+                    } "
+                    >
                 OK
-            </button> 
-                      
-            <button id="cancelButton"
-                onclick="window.close();">
-                Cancel
-            </button>  `;
+            </button>  
+            `;
+
         
+               
         showDialogInOwnWindow(title, message, buttonHtml, 'auto', 'warning');        
     }
-        function setAuthorInfo( authorName, authorEmail){
-            try{
-                commands = [ 'config', '--global', 'user.name', authorName];
-                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-                function onConfig(err, result ){ console.log(result); console.log(err);   }
-            }catch(err){
-                console.log('Failed storing git user.name');
-            }
+        async function setAuthorInfo( authorName, authorEmail){
+            if (authorName.trim() !== ''){
+                try{
+                    commands = [ 'config', '--global', 'user.name', authorName];
+                    console.log('set authorName = ' + authorName);
+                    await simpleGitLog().raw(commands ,onConfig);
+                    function onConfig(err, result ){ console.log(result); console.log(err);   }
+                }catch(err){
+                    console.log('Failed storing git user.name');
+                }
+            }else{
+                console.log('Skipped storing git user.name -- because empty');
+            }   
             
-            try{  
-                commands = [ 'config', '--global', 'user.email', authorEmail];
-                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-                function onConfig(err, result ){ console.log(result); console.log(err);   }
-            }catch(err){
-                console.log('Failed storing git user.email');
-            }
+            if (authorEmail.trim() !== ''){
+                try{  
+                    commands = [ 'config', '--global', 'user.email', authorEmail];
+                    console.log('set authorEmail = ' + authorEmail);
+                    await simpleGitLog().raw(commands ,onConfig);
+                    function onConfig(err, result ){ console.log(result); console.log(err);   }
+                }catch(err){
+                    console.log('Failed storing git user.email');
+                }
+            }else{
+                console.log('Skipped storing git user.email -- because empty');
+            }   
         }
     
 
@@ -6965,7 +7017,7 @@ window.onload = async function() {
   }
   
   // Dialog if author's name is unknown
-  showUserDialog(true)  // test = true, will show only if state.git == true
+  showUserDialog(true)  // test = true, will show only if author is unknown
   
   // Update MacOS menu
   recreateAllWindowsMenu()
@@ -7005,7 +7057,7 @@ async function closeWindow(a){
     saveSettings();
 
     // After closing the new window, close the main window.
-    win.close(true);
+    window.close(true);
 } 
 
 
