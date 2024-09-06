@@ -879,6 +879,30 @@ async function _callback( name, event){
             break;
         }
 
+        // Software input fields
+        case 'gitDiffTool': {
+            state.tools.difftool = event.value;
+            break;
+        }        
+        case 'gitMergeTool': {
+            state.tools.mergetool = event.value;
+            break;
+        }        
+        case 'fileBrowser': {
+            state.tools.fileBrowser = event.value;
+            break;
+        }        
+        case 'terminal': {
+            state.tools.terminal = event.value;
+            break;
+        }
+        case 'pathAddition': {
+            state.tools.addedPath = event.value;
+            opener.setPath(state.tools.addedPath);
+            drawPath();
+            break;
+        } 
+        
     } // End switch
     
 
@@ -1258,12 +1282,7 @@ async function injectIntoSettingsJs(document) {
     console.log(global.state);
     
     // Write path to System info 
-    if ( os.platform().startsWith('win') ){    
-        document.getElementById('path').innerHTML = process.env.PATH
-        .replace(/;\s*/g,';<br>'); // Replace semicolons
-    }else{
-        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
-    }
+    await drawPath()
       
     // Draw tabs
     await drawBranchTab(document);
@@ -1320,7 +1339,16 @@ async function injectIntoSettingsJs(document) {
 
 
 };
-
+function drawPath(){
+    // Write path to System info 
+    if ( os.platform().startsWith('win') ){    
+        document.getElementById('path').innerHTML = process.env.PATH
+        .replace(/;\s*/g,';<br>'); // Replace semicolons
+    }else{
+        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
+    }
+       
+}
 
 // Remote repos functionality
 function getRemoteRepoInfo() { // Reads data for current repo

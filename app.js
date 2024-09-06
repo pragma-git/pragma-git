@@ -6953,8 +6953,8 @@ window.onload = async function() {
   main_win = win;
 
   
-  console.log('PATH= ' + process.env.PATH);
-  defaultPath = process.env.PATH;
+  //console.log('PATH= ' + process.env.PATH);
+  //defaultPath = process.env.PATH;
 
 
   updateContentStyle(); 

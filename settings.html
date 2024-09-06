@@ -344,7 +344,7 @@
                         <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
-                                <input id="gitDiffTool" type="text"  style="width: 100%;" />
+                                <input id="gitDiffTool" type="text"  style="width: 100%;" onChange="_callback('gitDiffTool', this)" />
                             </td>
                         </tr>
                         
@@ -352,7 +352,7 @@
                         <tr class="tools">                          
                              <td>                
                                 <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool"/>
+                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool" onChange="_callback('gitMergeTool', this)" />
                             </td>
                         </tr>
                         
@@ -363,7 +363,7 @@
                                 <label for="fileBrowser"> File browser (open when clicking 
                                     <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" > ) :
                                 </label><br>
-                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser">
+                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser"  onChange="_callback('fileBrowser', this)" />
                             </td>
                         </tr>
                         
@@ -373,15 +373,15 @@
                                 <label for="terminal"> Terminal (open when clicking                                    
                                     <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" > ) : 
                                 </label><br>
-                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"/>
+                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"  onChange="_callback('terminal', this)" />
                             </td>
                         </tr>
                         
 
                         <tr class="tools">                    
-                             <td colspan="2">
+                             <td>
                                 <label for="pathAddition"> Path (additions here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
-                                <input id="pathAddition" type="text" style="width: 100%;"/><br>
+                                <input id="pathAddition" type="text" style="width: 100%;" onChange="_callback('pathAddition', this)" /><br>
                             </td>
                         </tr>
                     </table>
