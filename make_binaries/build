@@ -453,12 +453,16 @@
     --output-type deb \
     --name 'pragma-git' \
     --architecture 'amd64' \
-    --maintainer 'axelsson.jan@gmail.com' \
+    --maintainer 'Jan Axelsson <axelsson.jan@gmail.com>' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
+    --license "MIT"  \
+    --url "https://pragma-git.github.io"  \
     --deb-no-default-config-files \
     --chdir "$DIR" \
     --package "linux64/$DIR.deb" \
+    --depends libatomic1 \
+    --depends git \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git \
@@ -500,13 +504,15 @@
     --output-type rpm \
     --name 'pragma-git' \
     --architecture 'amd64' \
-    --maintainer 'axelsson.jan@gmail.com' \
+    --maintainer 'Jan Axelsson <axelsson.jan@gmail.com>' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
+    --license "MIT"  \
+    --url "https://pragma-git.github.io"  \
     --chdir "$DIR" \
     --package "linux64/$DIR.rpm" \
-    --depends libXScrnSaver \
-    --depends libatomic \
+    --depends libatomic1 \
+    --depends git \
     --rpm-os linux \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
