@@ -210,9 +210,13 @@
     # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
     
         
-    # Make pragma-merge helper script executable
+    # Make pragma-merge and pragma-askpass executable
+    echo ' '
     echo 'Make "pragma-merge" executable'
-    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge"
+    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge" || BUILD_EXIT=$?
+    
+    echo 'Make "pragma-askpass" executable'
+    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass" || BUILD_EXIT=$?
 
     echo ' '
     echo $(formatReturn $BUILD_EXIT) Building
