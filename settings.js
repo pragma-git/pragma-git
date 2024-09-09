@@ -1552,7 +1552,7 @@ async function drawSoftwareTab(document){
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
     document.getElementById('terminal').value = state.tools.terminal;
     document.getElementById('fileBrowser').value = state.tools.fileBrowser;
-    document.getElementById('pathAddition').value = state.tools.addedPath;
+    document.getElementById('pathAddition').innerText = state.tools.addedPath;
     
     // Set values according to git-config
     try{
