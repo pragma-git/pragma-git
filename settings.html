@@ -361,9 +361,9 @@
 
                             <td>                
                                 <label for="fileBrowser"> File browser (open when clicking 
-                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" > ) :
+                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" onClick="opener._callback('clicked-folder')"> ) :
                                 </label><br>
-                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser"  onChange="_callback('fileBrowser', this)" />
+                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Path to file browser"  onChange="_callback('fileBrowser', this)" />
                             </td>
                         </tr>
                         
@@ -371,9 +371,9 @@
                         <tr class="tools">                     
                              <td>                
                                 <label for="terminal"> Terminal (open when clicking                                    
-                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" > ) : 
+                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" onClick="opener._callback('clicked-terminal')"> ) : 
                                 </label><br>
-                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"  onChange="_callback('terminal', this)" />
+                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
                             </td>
                         </tr>
                         

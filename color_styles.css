@@ -179,7 +179,7 @@
         
         img{
            filter: invert( var(--image-invert) );
-            -webkit-user-drag: none;
+           -webkit-user-drag: none;
         }
 
         
