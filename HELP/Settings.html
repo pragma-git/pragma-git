@@ -812,18 +812,17 @@
                     <p> Pragma-git has a built-in diff and merge tool.  
                     If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.
                     
-                    If you have your favorite Diff and Merge tool installed on the computer, it may be used instead. 
                     </p>
                      
-                    <p> There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
-                    are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
-                    Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
-                    You can also tailor the gitconfig file for any non-standard tool (search internet on how to define difftool and mergetool cmd)
+                    <p> There are numerous alternative Diff and Merge tools to chose from (search internet for : Diff and Merge tool). 
+                    You can install one of these to your system, and use it easily if known to git.
+                    See a list from the command line: <br><code>git mergetool --tool-help</code>.  
                     </p>
+
                      
                     <p> Pragma-git can open the file browser or a terminal, in the path of the current repository.  
                     If you have your favorite file browser or terminal installed, you can add the path for it to be used instead of the system defaults (blank field).  </p>
-                    <br>
+                    </p>
                     
                     
                     The settings for external tools are :
@@ -834,16 +833,28 @@
                 <br>
                 <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
                 <br>
-                <dd><b>- File browser </b> , the path to preferred file browser (or empty for system default.    </dd>
+                <dd><b>- File browser </b> , the path to preferred file browser (or empty for system default).    </dd>
                 <br>
                 <dd><b>- Terminal </b> , the path to preferred terminal (or empty for system default).   </dd>
                 <br>
-                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
+                <dd><b>- Addition to path </b> , if the external tools do not open, their path may not be accessible to Pragma-git.  
                     This can be fixed, by adding the path to the tools in this field.
                     If you have different diff and merge tools, two paths may be needed.
                     The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
                 </dd>
                 <br>
+                <br>
+                
+                <dd><b>Note: </b> the external diff/merge tools are not opened through the git config files, but from Pragma-git settings. 
+                The <code>cmd</code> how to handle the diff/merge tools are however in the git config files, and should just work for one of the known tools.
+                </dd>
+                <br>
+                
+                <dd><b>Advanced: </b> The name specified in above diff and merge tool settings have an underlying command defined in git config files.  
+                    So, to use your own installed diff/merge software  (which is not known to git) the 
+                    <code>cmd</code> field has to be defined manually in one of the git config files. 
+                    After that, you can enter the defined name in the diff/merge tool fields.
+                </dd>
          </dl>     
     </p>
        
