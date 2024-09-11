@@ -1914,40 +1914,83 @@ async function updateLocalAuthorInfoView( globalSelected ){
 
 }
 async function updateGitconfigs( ){
-    if (state.repoNumber >= 0){
-        gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']); 
-    }else{
-        gitconfigString = await simpleGit().raw(['config', '--list', '--show-origin']); 
-    }
-       
+    
     let html = '';
-    let currentFileURI = '';
-    let rows = gitconfigString.split('\n');
-    for (let i = 0; i < rows.length; i++) {
-        row = rows[i].trim();
-        row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
-        row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
-        fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
-        configString = row.substring(row.indexOf(' ') + 1);
+    
+    // List config
+    if (state.repoNumber >= 0){
+        configList = await simpleGit(state.repos[state.repoNumber].localFolder).listConfig();
+    }else{
+        // No repo -- check global
+        if (process.platform === 'win32') {  
+            configList = await simpleGit('C:\\').listConfig();
+        } else{
+            configList = await simpleGit('/').listConfig();
+        }
+    }   
+    
+    // Build html, loop by file
+    let files = configList.files;
+    for (fileURI of files) {
         
-
-        if ( fileURI !== currentFileURI ){
-            currentFileURI = fileURI;
-            currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
-            
-            if ( fileURI == 'command' ){
-                currentFileName = 'Pragma-git internal';
-                configString = row.substring(row.indexOf(':') + 1);
-            }
-            
-            // File name
-            if ( fileURI !== '' ){
-                html+= `<div> ${currentFileName} :</div>`; 
-            }
+        // Title
+        let fileTitle = fileURI;
+        
+        if ( fileURI == 'command line:' ){
+            fileTitle = 'Pragma-git internal';
         }
         
-        html += `<code>&nbsp; ${configString}</code> <br>`;
+        if ( fileURI == '.git/config' ){
+            fileTitle = state.repos[state.repoNumber].localFolder + '/.git/config';
+        }        
+        
+        html+= `<br><div> ${fileTitle} :</div>`; 
+        
+        // Loop configs of current file
+        let values = configList.values[fileURI];
+        for (const key in values) {
+            if (values.hasOwnProperty(key)) {
+                configString = `${key}: ${values[key]}`;
+                html += `<code>&nbsp; ${configString}</code> <br>`
+            }
+        }
     }
+    
+    
+    //if (state.repoNumber >= 0){
+        //gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']); 
+    //}else{
+        //gitconfigString = await simpleGit().raw(['config', '--list', '--show-origin']); 
+    //}
+       
+    //let html = '';
+    //let currentFileURI = '';
+    //let rows = gitconfigString.split('\n');
+    //for (let i = 0; i < rows.length; i++) {
+        //row = rows[i].trim();
+        //row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
+        //row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
+        //fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
+        //configString = row.substring(row.indexOf(' ') + 1);
+        
+
+        //if ( fileURI !== currentFileURI ){
+            //currentFileURI = fileURI;
+            //currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
+            
+            //if ( fileURI == 'command' ){
+                //currentFileName = 'Pragma-git internal';
+                //configString = row.substring(row.indexOf(':') + 1);
+            //}
+            
+            //// File name
+            //if ( fileURI !== '' ){
+                //html+= `<div> ${currentFileName} :</div>`; 
+            //}
+        //}
+        
+        //html += `<code>&nbsp; ${configString}</code> <br>`;
+    //}
     
     document.getElementById('gitconfigs').innerHTML = await html;
     
