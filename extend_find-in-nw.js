@@ -81,7 +81,20 @@ function extendFindInNw( elementToSearch){
             // Not a Graph window
         }      
         
+          
         
+        // If Settings
+        try{
+            if (document.title == 'Settings'){
+                searchElement = document.getElementById( 'foldableDiv3');  
+            }
+            
+
+
+        }catch(err){
+            // Not a Settings window
+        }      
+               
                  
     
         // Find all elements
@@ -116,13 +129,12 @@ function extendFindInNw( elementToSearch){
           }
         
           
-          
           // Check for `CTRL+F or Command+F`
           if ( (pressed.ctrlKey || pressed.metaKey) && pressed.keyCode === 70 )
           {
             pressed.preventDefault();
             
-            // Special for Pragma-merge (default ctrl-F should bind to merge pane )
+            // Special case for Pragma-merge (default ctrl-F should bind to merge pane )
             if ( document.getElementsByClassName('CodeMirror-merge-editor')[0] !== undefined ){
                 let leftPos = document.getElementsByClassName('CodeMirror-merge-editor')[0].getBoundingClientRect().x;
                 document.getElementById('find-in-nw-search-box').style.left = (leftPos + 40 ).toFixed() +'px';
@@ -131,10 +143,20 @@ function extendFindInNw( elementToSearch){
                 pragmaMergeSearchInEditorId = 'searchElement'; findInNw.positionSearchBoxPragmaMerge()
                 return
             }
+            
+            // Special case for Settings (ctrl-F should only show if System info tab)
+            if (document.title == 'Settings'){
+                // Hide if System Info tab not shown
+                if (global.state.settingsWindow.selectedTab !== 3){
+                    return
+                }
+            }
 
-            // Normal
+            // Normal case
             this.showSearchBox();
             return false;
+            
+            
           // Check for `ESCAPE`
           } else if (pressed.keyCode === 27) {
             pressed.preventDefault();

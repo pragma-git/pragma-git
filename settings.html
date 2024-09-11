@@ -195,6 +195,18 @@
         }
         window.document.body.style.zoom = global.state.zoom;
     </script>
+  
+    
+    <!--  Add find  -->    
+    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); // Make find-in-nw fit my purpose 
+    </script> 
+
+    
+    
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>
     
@@ -873,6 +885,15 @@
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
                 <h3>Information </h3>
+                
+                <img id="find-icon" 
+                style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
+                height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                src="images/find_black.png" >
+
 
 
 
@@ -1059,11 +1080,15 @@
           cnt.style.display='none';
           cnt.style.visibility='none';
         });   
-        
+
         
         // Set TAB event listener
         tabs.onclick = e => {
-        
+             
+            // Hide nwFind search box
+            findInNw.hideSearchBox();
+            
+            // Tab click action
             const id = e.target.dataset.id;
             if (id) {
                 tabButton.forEach(btn => {
