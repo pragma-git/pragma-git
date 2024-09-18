@@ -3478,7 +3478,7 @@ async function gitIsInstalled(){
 		await simpleGitLog().raw([ 'version'], test );
 	}catch(err){
 		state.git = isInstalled;
-		showGitNotInstalledDialog()
+		showGitNotInstalledDialog( err) 
 		return isInstalled;
 	}
     
@@ -3493,7 +3493,17 @@ async function gitIsInstalled(){
         
     };
     
-    function showGitNotInstalledDialog(){
+    function showGitNotInstalledDialog( err){
+        
+        // XCode license (Get here if Xcode, implying git is installed but license not agreed on yet)
+        if ( err.toString().includes('Xcode') ){
+            pragmaLog('show external dialog for Xcode error ' );
+            displayLongAlert('Failed testing git', err, 'error'); 
+            state.git = isInstalled;
+            return isInstalled
+        }
+        
+        // General error
 		pragmaLog('show modal dialog = gitNotInstalledAlert' );
         document.getElementById('gitNotInstalledAlert').showModal();		
 	} 
