@@ -1265,8 +1265,19 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
     }
 }
 
-
-
+// Credentials
+async function getCredentials( url){  // Git credentials as struct. e
+    // Use as :
+    //   creds = await getCredentials('https://github.com/pragma-git/pragma-git.git')
+    // Read field :
+    //   creds['password'] 
+    //   creds.password
+    // Field names are : protocol, host, path, username, password
+    let folder = state.repos[ state.repoNumber].localFolder;
+    credentialFieldsString = opener.multiPlatformExecSync(folder, `echo url=${url} | git credential fill`);
+    creds = util.parseKeyValuePairsFromString(credentialFieldsString)
+    return creds
+}
             
 
 // Start initiated from settings.html

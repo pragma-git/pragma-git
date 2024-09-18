@@ -70,6 +70,25 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     return Number(foundIndex);
 }
 
+// Parse string containing multiple key value pairs 
+myModule.parseKeyValuePairsFromString = function (inputString) {
+    const result = {};
+    
+    // Split the input string by line breaks
+    const lines = inputString.split('\n');
+    
+    lines.forEach(line => {
+        // Split each line by the equal sign
+        const [key, value] = line.split('=').map(item => item.trim());
+        
+        // Only add if both key and value exist
+        if (key && value) {
+            result[key] = value;
+        }
+    });
+    
+    return result;
+}
 
 // Branch name filtered by allowed chars
 myModule.branchCharFilter = function ( string ){
