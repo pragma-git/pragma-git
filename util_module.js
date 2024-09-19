@@ -4,6 +4,20 @@ const myModule = {}
 
 var fs = require('fs');
 
+// String tests
+myModule.isEmptyString = function( str) { 
+    // True if string is: '', contains only spaces, undefined, or null
+    // False is string contains non-empty characters
+    if (str === undefined || str === "" | str === null ) {
+        return true;
+    }
+    if (str.trim() === ''){
+      return true;
+    }
+    return false;
+}
+
+
 // Work on array with fields
 myModule.cleanDuplicates = function ( myArray, objectField ){ 
     // Removes all elements in "myArray"  where the field "objectField" are duplicates

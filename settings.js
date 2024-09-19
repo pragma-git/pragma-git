@@ -1266,19 +1266,119 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 }
 
 // Credentials
-async function getCredentials( url){  // Git credentials as struct. e
+async function getCredentials( url){  // Git credentials as struct.  NOTE: NOT FINISHED!
     // Use as :
     //   creds = await getCredentials('https://github.com/pragma-git/pragma-git.git')
     // Read field :
     //   creds['password'] 
     //   creds.password
     // Field names are : protocol, host, path, username, password
+    
+    // TODO : Fails if credentials unknown -- does not open askpass
+    
     let folder = state.repos[ state.repoNumber].localFolder;
-    credentialFieldsString = opener.multiPlatformExecSync(folder, `echo url=${url} | git credential fill`);
-    creds = util.parseKeyValuePairsFromString(credentialFieldsString)
+    
+    // Use git credential
+    credentialFieldsString = await opener.multiPlatformExecSync(folder, `echo "url=${url}" | git credential fill`); //  GIT_TERMINAL_PROMPT=0 forces not to ask for credentials if misspelled
+    creds = util.parseKeyValuePairsFromString(credentialFieldsString);  // Parse text into struct
     return creds
 }
-            
+
+// Github API
+async function getRepoInfo( repoURL, TOKEN){  // Get repo info struct through API
+    // inputs:
+    //      repoURL     github URL
+    //      TOKEN       github TOKEN -- if empty, then lookup using git credential, assuming same TOKEN for github API, as for git
+    //
+    // The basis is to transform from repoURL to API URL, which looks like this:
+    // repoURL = https://github.com/JanAxelsson/imlook4d.git
+    // API URL = https://api.github.com/repos/JanAxelsson/imlook4d
+    //
+    //  Example public github repo
+    //      out = await getRepoInfo('https://github.com/JanAxelsson/imlook4d.git', null)    // Allowed to have TOKEN=null, but OK with TOKEN string too  
+    //  Example forked github repo
+    //      out = await getRepoInfo('https://github.com/pragma-git/git-scm.git', null)
+    //  Example private github repo
+    //      out = await getRepoInfo('https://github.com/JanAxelsson/dicom2usb', TOKEN)  // Exchange TOKEN with token-string
+    //  Example returned json:   
+    //      githubApiJSON = out.json;
+    
+    // API URL by transforming
+    //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
+    //  https://  api.github.com/repos  /JanAxelsson/imlook4d
+    // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
+    let url = repoURL.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')
+    console.log('REPO       URL = ' + repoURL);
+
+    
+    // Clean URL, if REST URL contains login info (not permitted)
+    if (url.includes('@') ){
+        // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
+        urlParts = new URL(url);
+        url = urlParts.origin + urlParts.pathname; 
+    }
+    
+    console.log('GITHUB API URL = ' + url);
+
+    
+    // Build fetch options -- public repo
+    let options = {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+        },
+    };
+
+    
+    // Build fetch options -- TOKEN known
+    if (!util.isEmptyString(TOKEN)){
+        options.headers.Authorization = `token ${TOKEN}`
+    }
+      
+    // Fetch
+    let json;  // Undefined if fetch fails
+    try {
+        response = await fetch( url, options);
+        
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.statusText}`);
+        }
+    
+        json = await response.json();
+        console.log('Repository Information:', json);
+      } catch (error) {
+        console.error('Error fetching repository info:', error.message);
+      }
+      
+
+    repoInfoStruct = { 
+        ok: response.ok, 
+        status: response.status,
+        json: json
+    }
+    
+    return repoInfoStruct
+}
+async function getRepoInfoValue( repoInfoStruct, parameterName){  // Get parameter from Github json struct
+    
+    switch(parameterName) {
+        
+        case 'fork-parent': {
+            out = repoInfoStruct.json.parent.clone_url;
+            break;
+        }
+        case 'list-parameter-names': {
+            out = [ 'fork-parent', 'list-parameter-names'];
+            break;
+        }        
+        
+        default: {
+             throw new Error(`getInfoValue error: 'unknown paramterName'`);
+        }
+    }
+      
+    return out
+}             
 
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {

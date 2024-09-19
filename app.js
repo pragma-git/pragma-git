@@ -648,7 +648,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-store-button': {
-        await storeButtonClicked();
+         storeButtonClicked();
           
         // Update graph
         await _update();
