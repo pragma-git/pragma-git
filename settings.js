@@ -24,7 +24,7 @@ var win
 // Counter for remote repos dialog    
 var remoteRepos ={};  // Struct containing counter for GUI of remote repos
 remoteRepos.fetch = {};
-remoteRepos.push = {};  // Prepare for having different data in push
+remoteRepos.push = {};  // Prepare for having different data in push.  NOTE: not implemented yet
 remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
 
 
@@ -303,6 +303,38 @@ async function _callback( name, event){
             createHtmlTable(document);
             drawBranchTab(document);
             
+            // Figure out if forked URL
+            try{
+                let out = await getRepoInfo( URL);  // Call without TOKEN, works for public 
+                let forkParentUrl = await getRepoInfoValue(out,'fork-parent')
+                
+                let index = 1; // One is for origin, 0 is free because this is just cloned at this moment
+                
+                remoteRepos.fetch.names[index] = 'upstream';
+                remoteRepos.fetch.URLs[index] = forkParentUrl;
+                remoteRepos.push.names[index] = 'upstream';
+                remoteRepos.push.URLs[index] = '';  
+                
+                // Set remote repo
+                commands = [ 'remote', 'add', remoteRepos.fetch.names[index] , remoteRepos.fetch.URLs[index]];
+                let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+                await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
+                function onSetRemoteUrl(err, result ){
+                    console.log(result);
+                    console.log(err);
+                };
+                
+                // Document fork parent in settings
+                state.repos[id].forkedFromURL = forkParentUrl;
+                
+                updateRemoteRepos();
+            }catch (err){
+                console.warn('Failed getting fork-parent URL :');
+                console.warn(err);
+            }
+
+            
+            
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()
             
@@ -557,7 +589,7 @@ async function _callback( name, event){
             
             let localFolder3 = state.repos[ state.repoNumber].localFolder; 
             
-            let index = remoteRepos.fetch.pos - 1;
+            let index = remoteRepos.fetch.pos - 1;  // pos is recorded in remoteRepos.fetch only (not in remoteRepos.push)
             
             let oldAlias = remoteRepos.fetch.names[index];
             let alias =  document.getElementById('newRepoAliasTextarea').value.trim();
@@ -578,10 +610,6 @@ async function _callback( name, event){
             }catch (err){
                 
             }
-            
-                        
-
-
 
             // Update store
             remoteRepos.fetch.names[index] = alias;
@@ -589,10 +617,13 @@ async function _callback( name, event){
             remoteRepos.push.names[index] = alias;
             remoteRepos.push.URLs[index] = newUrl;
             
+            if (index >1){
+                remoteRepos.push.URLs[index] = '';  // Push only on origin
+            }
+            
+            
             
             // Add remote url
-            
-
             try{
                 
                 // Add remote if url
@@ -921,8 +952,8 @@ async function testURL(textareaId, event){
     try{
             remoteURL = document.getElementById(textareaId).value;
         
-            console.log('textareaId = ' + textareaId);
-            console.log('remoteURL = ' + remoteURL);
+            //console.log('textareaId = ' + textareaId);
+            //console.log('remoteURL = ' + remoteURL);
     
              
             const commands = [ 'ls-remote', remoteURL];
