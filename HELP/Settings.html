@@ -99,7 +99,6 @@
                       <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -170,7 +169,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small active" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -197,7 +195,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -261,95 +258,26 @@
             
      
             
-            <br> 
-           <div class="toolWrapper"  id="forkSection"> 
-                <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
-                      <div class="tab-click-text"> (click on tab)</div>  
-                </div>
-            </div>
-                         
-    
-            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning), but make it your own copied project.  This is called "forking".</p>
+        
+            <dt><h4 id="forkSection">About forked repositories </h4></dt>   
+            <br>           
+                <dd>  
+                      
+                <p>Forking is the process of starting with somebody elses repository, and making it your own.
+                In Github and similar providers forking is performed from the web interface.  
+                
+                The fork process creates a copy in your own repository ,
+                and also remember where it came from.  
+                
+                The beauty of keeping the relation to the parent, is that you can update the changes from the parent to your own repository, 
+                as the parent evolves.
+                
+                The parent is called "upstream" and is a remote repository. Your own remote repository is called "origin". 
+                </p>
          
         
-        <dt><h4>Forking </h4></dt> 
-        <br> 
-            <dd>
-            Forking a remote repository is the same as copying an existing remote repository, and making it your own.  
-            This original remote repository is referred to as "upstream".  
-            The point is to develop on your own (forked) project instead of (somebody elses) repository.
-            <br>
-            <br>
-            Forking can be achieved either directly from your github account's web page, or from pragma-git. 
-              The alternative ways are : <br><br>
-            1) This is the alternative if you prefer the github way of forking. Login to the github web page, and fork a repository. Then 
-            clone the (newly created) remote repository with pragma-git's clone tab (<a href="#cloneSection">read here</a>).
-            If this is your preferred method, you can stop reading about forking now and use the github workflow for "syncing" and "pull requests"<br><br>
-            2) If you wish to use the pragma-git way, you can sync directly from pragma-git.  "Pull requests" still needs to be done from the github web page. 
-              In the fork-tab in pragma-git, you fill in the address URL of the original repository, and where you want to store your local copy, using this dialog :
-            <br>
-            <br>
-            
-            </dd>
-            <br>
-                                           
-            <dd><textarea id="urlToClone"  placeholder="URL to fork from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
-            </dd>
-            <br>
-                                         
-            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
-            </dd>  
-            <br>
-                                
-            <dd><button>Fork</button> 
-            </dd>
-
-            <br>
-            <br>
-            
-            <dd> The <button>Fork</button> button initiates the forking operation.     
-            </dd>
-  
-      
-            <br>
-      		<dd> 
-      		You should then complete this by adding a remote repository, under the 'origin' in the Remote-tab.
-        	</dd>     
-        	<br>
-            <br>   
-     
-            <dt><h4>Workflow </h4></dt>   
-            <br>      
-            
-            <dd> The workflow is from top to bottom :  
-                <ol>  
-                    <li>Input the remote repository address (url)   
-                    <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
-                    <li><button>Fork</button> makes a copy of the "upstream" repository inside the selected folder, 
-                    and connects your local copy to the remote "upstream" repository
-                    <li>After forking the "Remote" tab is opened. 
-                    This to remind you, that there is no active remote repository set up, and you are now only working locally.
-                    Please fill in a new remote repository to keep your work safe (see NOTE, if you work with github).
-                </ol>   
-                <u> NOTE </u> : if you work with github repositories, create a new remote repository using the 
-                <button><img style='vertical-align:bottom;' height="17" width="17" src="../images/github-mark.png" > GitHub</button> button.
-                This creates the forked remote repository the github way, linking the "upstream" repository with your own remote repository. 
-                This way, important functionality such as "syncing", and performing "pull requests" will work on the github web page.
-            </dd>
-            <br>     
-            
-    
-            <dt><h4>More about forked repositories </h4></dt>   
-            <br>      
                     
-                <dd> 
+
                 Sometimes, you want to transfer code you have developed in your forked repository back to "upstream". 
                 This is done through something called a "pull request" or "merge request".  
                 Typically this is done on your remote repository's (github, gitlab, ...) web page.
@@ -368,14 +296,14 @@
             </dd> 
      
             
-            <br>               
+                <br>
+                <br>           
         
         <div class="toolWrapper"  id="addSection"> 
                 <div class="buttonWrapper">
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -412,7 +340,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  

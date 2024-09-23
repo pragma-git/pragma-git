@@ -173,11 +173,11 @@
     <!-- Border for dropping folder-->
 
     <style>
-        #addFolder, #cloneFolder, #forkFolder { 
+        #addFolder, #cloneFolder { 
             border-style:  solid;  
             border-width: thin;
         }
-        #addFolder.hover,  #cloneFolder.hover,  #forkFolder.hover  { 
+        #addFolder.hover,  #cloneFolder.hover { 
             border-style:  dashed;  
             border-width: medium;
         }
@@ -432,7 +432,6 @@
                               <button id="SoftwareTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                              <button id="forkTab" class="tab-button-small" data-id="forkDiv">Fork</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
@@ -542,69 +541,6 @@
                         
                     
                     </div>
-
-                    <!--  Fork TAB -->
-                    
-                    
-                    <div class="tool-content " id="forkDiv" >  
-                        (Add repository to list) <br><br> 
-                        Fork a remote repository to this computer :
-                        <table class="toolTable">
-                            <tbody>
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <textarea id="urlTofork"  placeholder="URL to fork from"></textarea>
-                                    </td>
-                                    <td class="toolButtonField">
-                                        <button id="testforkUrl"  class="toolButton" onclick="testURL('urlTofork', {id: 'urlTofork', type: ''})">Test  &nbsp;URL</button>
-                                    </td>
-                                </tr>
-                                
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <textarea id="forkFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " 
-                                            ondrop="_callback('droppedFolder',event)" 
-                                            ondragover = "this.className = 'hover'; return false; "
-                                            ondragleave = "this.className = ''; return false; "
-                                        ></textarea>
-                                    </td>
-                                    <td class="toolButtonField">
-                                        <button id="forkFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
-                                    </td>
-                                </tr>
-                                
-                                
-
-                                
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <button id="forkButton"  onclick="_callback('forkButtonPressed',this)">Fork</button> &nbsp; <span id="forkStatus"></span>
-                                    </td>                                
-                                </tr>
-                            
-                                
-                            </tbody>
-                            
-                            
-                        </table>
-                        
-                        
-                        <hr> 
-                        <div class="footnoteText">                  
-                            <p>
-                            <sup>*</sup>      
-                                 NOTE: this is the old-fashioned git way to fork.  <br>
-                                 It may be simpler to fork in Github web page (or similar services), and then Clone from the repository you just created. <br>
-                                 The benefit is that pull requests will know about the upstream repository you forked from.
-                            </p> 
-                            
-                        </div>
-                        
-                    
-                    </div>                  
                     
                      <!--  Add TAB -->
                     

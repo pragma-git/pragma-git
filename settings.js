@@ -313,11 +313,19 @@ async function _callback( name, event){
                 remoteRepos.fetch.names[index] = 'upstream';
                 remoteRepos.fetch.URLs[index] = forkParentUrl;
                 remoteRepos.push.names[index] = 'upstream';
-                remoteRepos.push.URLs[index] = '';  
+                remoteRepos.push.URLs[index] = 'NO-PUSH';  
                 
                 // Set remote repo
                 commands = [ 'remote', 'add', remoteRepos.fetch.names[index] , remoteRepos.fetch.URLs[index]];
                 let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+                await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
+                function onAddemote(err, result ){
+                    console.log(result);
+                    console.log(err);
+                };
+                
+                // Modify push url (so it will be different from fetch url)
+                commands = [ 'remote', 'set-url', '--push', remoteRepos.push.names[index], remoteRepos.push.URLs[index]  ];                
                 await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
                 function onSetRemoteUrl(err, result ){
                     console.log(result);
@@ -1319,7 +1327,7 @@ async function getCredentials( url){  // Git credentials as struct.  NOTE: NOT F
 async function getRepoInfo( repoURL, TOKEN){  // Get repo info struct through API
     // inputs:
     //      repoURL     github URL
-    //      TOKEN       github TOKEN -- if empty, then lookup using git credential, assuming same TOKEN for github API, as for git
+    //      TOKEN       github TOKEN -- optional
     //
     // The basis is to transform from repoURL to API URL, which looks like this:
     // repoURL = https://github.com/JanAxelsson/imlook4d.git
