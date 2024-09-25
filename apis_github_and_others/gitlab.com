@@ -1,9 +1,9 @@
 /**
 Example use
-
-    a= require('apis_github_and_others/github.com');
+    TOKEN=....
+    a= require('apis_github_and_others/gitlab.com');
     
-    b = new a('https://github.com/JanAxelsson/Spoon-Knife.git');
+    b = new a('https://gitlab.com/JanAxelsson/gitlab-test.git', TOKEN);
     c = await b.getValue('fork-parent');
 
 **/
@@ -11,7 +11,7 @@ Example use
 // Parent class
 let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api.js');
 
-class github extends General_git_rest_api {
+class gitlab extends General_git_rest_api {
     
 
     constructor( giturl, TOKEN) {
@@ -27,14 +27,20 @@ class github extends General_git_rest_api {
 
         #apiUrl( giturl){               // Transform GIT-URL to PROVIDER-API-URL (Github etc)
             // API URL by transforming
-            //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
-            //  https://  api.github.com/repos  /JanAxelsson/imlook4d
-            
+            //  https://gitlab.com/             JanAxelsson/gitlab-test       .git  -> 
+            //  https://gitlab.com/api/v4/users/JanAxelsson/projects?search=gitlab-test
             // --- Provider-specific code :
                 
-                // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
-                let url = giturl.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')        
+                // Part 1 : remove .git at end, and add extra for api
+                let url = giturl.replace( '.git', '').replace( 'gitlab.com', 'gitlab.com/api/v4/users')    
                 
+                // Part 2 : replace last '/' with   'projects?search='
+                let begin = url.substring( 0, url.lastIndexOf('/') );
+                let ending = url.substring( url.lastIndexOf('/') + 1 );
+                
+                url = begin + '/projects?search=' + ending
+                
+
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){
                     // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
@@ -66,23 +72,19 @@ class github extends General_git_rest_api {
                 this.options = {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization' : `token ${this.TOKEN}`
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        "PRIVATE-TOKEN" : this.TOKEN,
                     },
                 };
-            
-                
-                // Remove options for unknown TOKEN 
-                if ( super.isEmptyString( this.TOKEN) ) {
-                    delete this.options.headers.Authorization 
-                }
+
                 
              // --- End Provider-specific code    
                      
             
             // Fetch through API into class variable
-            this.repoInfoStruct = await super.fetchWithApi( this.apiurl, this.options); 
-             
+            this.repoInfoStruct = await super.fetchWithApi( this.apiurl, this.options);  
+            
             return this.repoInfo;  // Useful for debuggin
         } 
         async getValue( parameterName){  // Get parameter from Github json struct
@@ -112,10 +114,11 @@ class github extends General_git_rest_api {
                     
                     case 'fork-parent': 
                         try{
-                            out = this.repoInfoStruct.json.parent.clone_url;
+                            out = this.repoInfoStruct.json[0].forked_from_project.http_url_to_repo; 
                         }catch (err){
                             // out is already undefined
                         }
+                           
                         break;     
     
                     default: 
@@ -129,4 +132,4 @@ class github extends General_git_rest_api {
 
 }
 
-module.exports = github;
+module.exports = gitlab;

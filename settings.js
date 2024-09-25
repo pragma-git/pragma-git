@@ -292,10 +292,10 @@ async function _callback( name, event){
             id = state.repos.length;
             
             let folder = document.getElementById('cloneFolder').value;  
-            let URL = document.getElementById('urlToClone').value; 
+            let url = document.getElementById('urlToClone').value; 
             
             document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
-            const dummy = await gitClone( folder, URL);
+            const dummy = await gitClone( folder, url);
             document.getElementById('cloneStatus').innerHTML = '';
             
             // Replace table 
@@ -305,8 +305,26 @@ async function _callback( name, event){
             
             // Figure out if forked URL
             try{
-                let out = await getRepoInfo( URL);  // Call without TOKEN, works for public 
-                let forkParentUrl = await getRepoInfoValue(out,'fork-parent')
+                //let out = await getRepoInfo( URL);  // Call without TOKEN, works for public 
+                //let forkParentUrl = await getRepoInfoValue(out,'fork-parent')
+                
+                let forkParentUrl;
+                
+                // Find host (github.com, gitlab.com, ...)
+                let urlParts = new URL(url);
+                let host = urlParts.host; 
+                
+                if (host == 'github.com'){
+                    let a= require('apis_github_and_others/' + host);
+                    let b = new a(url);
+                    forkParentUrl = await b.getValue('fork-parent');
+                }
+                
+                if (host == 'gitlab.com'){  // TODO: make sure to get TOKEN using askpass
+                    //let a= require('apis_github_and_others/' + host);
+                    //let b = new a(url, TOKEN);
+                    //forkParentUrl = await b.getValue('fork-parent');
+                }
                 
                 let index = 1; // One is for origin, 0 is free because this is just cloned at this moment
                 
