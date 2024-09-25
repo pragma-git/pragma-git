@@ -1,7 +1,7 @@
 /**
 Example use
 
-    a= require('apis_github_and_others/github.com.js');
+    a= require('apis_github_and_others/github.com');
     
     b = new a('https://github.com/JanAxelsson/Spoon-Knife.git');
     c = await b.getValue('fork-parent');
@@ -12,11 +12,15 @@ class git_rest_api {
     
     // Private properties
     #initialized;
+    
+    
+
         
     // Constructor
     constructor( giturl, TOKEN) {
         this.giturl = giturl;
         this.TOKEN = TOKEN;
+        this.apiurl = this.#apiUrl( giturl);
         this.#initialized = false;  // shows if init method has been called
     }
 
@@ -25,13 +29,15 @@ class git_rest_api {
     //
     // Private methods
     //
+
+    
         async #init(){  // Get repo info struct through API
             // Variables:
             //      this.giturl      github URL
             //      this.TOKEN       github TOKEN -- optional
             //
             // The basis is to transform from repoURL to API URL, which looks like this:
-            // repoURL = https://github.com/JanAxelsson/imlook4d.git
+            // repo URL = https://github.com/JanAxelsson/imlook4d.git
             // API URL = https://api.github.com/repos/JanAxelsson/imlook4d
             //
             //  Example public github repo
@@ -42,27 +48,7 @@ class git_rest_api {
             //      out = await getRepoInfo('https://github.com/JanAxelsson/dicom2usb', TOKEN)  // Exchange TOKEN with token-string
             //  Example returned json:   
             //      githubApiJSON = out.json;
-            
-            let repoURL = this.giturl;
-            let TOKEN = this.TOKEN;
-            
-            // API URL by transforming
-            //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
-            //  https://  api.github.com/repos  /JanAxelsson/imlook4d
-            // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
-            let url = repoURL.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')
-            console.log('REPO       URL = ' + repoURL);
-        
-            
-            // Clean URL, if REST URL contains login info (not permitted)
-            if (url.includes('@') ){
-                // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
-                urlParts = new URL(url);
-                url = urlParts.origin + urlParts.pathname; 
-            }
-            
-            console.log('GITHUB API URL = ' + url);
-        
+
             
             // Build fetch options -- public repo
             let options = {
@@ -75,8 +61,8 @@ class git_rest_api {
             
             // Build fetch options -- TOKEN known
             const util = require('util_module.js');
-            if (!util.isEmptyString(TOKEN)){
-                options.headers.Authorization = `token ${TOKEN}`
+            if (!util.isEmptyString(this.TOKEN)){
+                options.headers.Authorization = `token ${this.TOKEN}`
             }
             
             let response;
@@ -84,7 +70,7 @@ class git_rest_api {
             // Fetch
             let json;  // Undefined if fetch fails
             try {
-                response = await fetch( url, options);
+                response = await fetch( this.apiurl, options);
                 
                 if (!response.ok) {
                   throw new Error(`GitHub API error: ${response.statusText}`);
@@ -107,34 +93,53 @@ class git_rest_api {
             this.repoInfoStruct = repoInfoStruct;
             return repoInfoStruct;
         }
+ 
+         
+        #apiUrl( giturl){  // Transform GIT-URL to PROVIDER-API-URL (Github etc)
+            // API URL by transforming
+            //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
+            //  https://  api.github.com/repos  /JanAxelsson/imlook4d
+            // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
+            let url = giturl.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')        
+            
+            // Clean URL, if REST URL contains login info (not permitted)
+            if (url.includes('@') ){
+                // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
+                urlParts = new URL(url);
+                url = urlParts.origin + urlParts.pathname; 
+            }
+            
+            return url;
+        }
         
     //
     // Public methods
     //
         async getValue( parameterName){  // Get parameter from Github json struct
             
+            // Call #init if not initialized yet
             if ( this.#initialized == false){
-                await this.init();
-                this.#initialized == true;
+                await this.#init();
+                this.#initialized = true;
             }
-            
-            let repoInfoStruct = this.repoInfoStruct;
+
             let out;
             
             switch(parameterName) {
+                // Note use ' ' in case statements below:
                 
-                case 'fork-parent': {
-                    out = repoInfoStruct.json.parent.clone_url;
-                    break;
-                }
-                case 'list-parameter-names': {
-                    out = [ 'fork-parent', 'list-parameter-names'];
-                    break;
-                }        
+                case 'fork-parent': 
+                    out = this.repoInfoStruct.json.parent.clone_url;
+                    break;     
                 
-                default: {
+                case 'list-parameter-names': 
+                    // List possible values for argument to this function.  Look for rows starting with 'case' in this function's code
+                    out = this.getValue.toString().split('\n').filter(function (str) { return str.trim().startsWith('case'); });
+                    out.forEach( function(str, index) { out[index] = str.split("'")[1] } ); // Get what is inbetween ''
+                    break;
+                   
+                default: 
                      throw new Error(`getInfoValue error: 'unknown paramterName'`);
-                }
             }
               
             return out
