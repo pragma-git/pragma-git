@@ -1,9 +1,9 @@
 /**
 Example use
 
-    a= require('apis_github_and_others/github.com.js');
+    a= require('apis_github_and_others/bitbucket.org.js');
     
-    b = new a('https://github.com/JanAxelsson/Spoon-Knife.git');
+    b = new a('https://bitbucket.org/janaxelsson/git-bootcamp.git');
     c = await b.getValue('fork-parent');
 
 **/
@@ -11,7 +11,7 @@ Example use
 // Parent class
 let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api.js');
 
-class github extends General_git_rest_api {
+class bitbucket extends General_git_rest_api {
     
 
     constructor( giturl, TOKEN) {
@@ -27,13 +27,14 @@ class github extends General_git_rest_api {
 
         #apiUrl( giturl){               // Transform GIT-URL to PROVIDER-API-URL (Github etc)
             // API URL by transforming
-            //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
-            //  https://  api.github.com/repos  /JanAxelsson/imlook4d
+            //  https://bitbucket.org/janaxelsson/git-bootcamp-git-session.git  -> 
+            //  https://api.bitbucket.org/2.0/repositories/janaxelsson/git-bootcamp-git-session
+
             
             // --- Provider-specific code :
                 
-                // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
-                let url = giturl.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')        
+                // That is : replace "bitbucket.org" with "api.bitbucket.org//2.0/repositories", AND remove  ".git" at end
+                let url = giturl.replace( '.git', '').replace( 'bitbucket.org', 'api.bitbucket.org/2.0/repositories')        
                 
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){
@@ -66,8 +67,8 @@ class github extends General_git_rest_api {
                 this.options = {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization' : `token ${this.TOKEN}`
+                        'Content-Type': 'text/html; charset=UTF-8',
+                        'Accept': 'text/html',
                     },
                 };
             
@@ -112,7 +113,7 @@ class github extends General_git_rest_api {
                     
                     case 'fork-parent': 
                         try{
-                            out = this.repoInfoStruct.json.parent.clone_url;
+                            out = this.repoInfoStruct.json.parent.links.html.href + '.git'
                         }catch (err){
                             // out is already undefined
                         }
@@ -129,4 +130,4 @@ class github extends General_git_rest_api {
 
 }
 
-module.exports = github;
+module.exports = bitbucket;

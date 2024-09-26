@@ -1,7 +1,7 @@
 /**
 Example use
     TOKEN=....
-    a= require('apis_github_and_others/gitlab.com');
+    a= require('apis_github_and_others/gitlab.com.js');
     
     b = new a('https://gitlab.com/JanAxelsson/gitlab-test.git', TOKEN);
     c = await b.getValue('fork-parent');
