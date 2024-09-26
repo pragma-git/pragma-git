@@ -114,7 +114,24 @@ class gitlab extends General_git_rest_api {
                     
                     case 'fork-parent': 
                         try{
-                            out = this.repoInfoStruct.json[0].forked_from_project.http_url_to_repo; 
+                            //out = this.repoInfoStruct.json[0].forked_from_project.http_url_to_repo; // Only available if TOKEN is correct
+                            
+                            // Use the gitlab home page instead (same url as giturl):
+                            let options = {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'text/html; charset=UTF-8',
+                                    'Accept': 'text/html',
+                                },
+                            };
+                            
+                            let response = await fetch( this.giturl, options);
+                            let text = await response.text();
+                            let filtered = text.split(' ').filter(function (str) { return str.includes('data-source-path'); });  //   
+                            if (filtered.length > 0){ // out = undefined before this
+                                out = 'https://gitlab.com' + filtered[0].split('=')[1].replaceAll('"','') + '.git';
+                            }
+                            
                         }catch (err){
                             // out is already undefined
                         }

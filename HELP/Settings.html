@@ -262,12 +262,16 @@
             <dt><h4 id="forkSection">About forked repositories </h4></dt>   
             <br>           
                 <dd>  
+                    
+                <p>If you try to clone a 'forked' repository, Pragma-git tries to get the url for the original (parent) repository automatically,
+                and write the parent url as 'upstream' remote.
+                </p>
                       
                 <p>Forking is the process of starting with somebody elses repository, and making it your own.
                 In Github and similar providers forking is performed from the web interface.  
                 
-                The fork process creates a copy in your own repository ,
-                and also remember where it came from.  
+                The fork process then creates a copy in your own repository (called origin),
+                and also remember where it came from (upstream).  
                 
                 The beauty of keeping the relation to the parent, is that you can update the changes from the parent to your own repository, 
                 as the parent evolves.

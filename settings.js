@@ -303,62 +303,67 @@ async function _callback( name, event){
             createHtmlTable(document);
             drawBranchTab(document);
             
-            // Figure out if forked URL
+            
+            // Figure out URL of fork-parent (undefined if not a forked repo)
+            let forkParentUrl;
             try{
-                //let out = await getRepoInfo( URL);  // Call without TOKEN, works for public 
-                //let forkParentUrl = await getRepoInfoValue(out,'fork-parent')
-                
-                let forkParentUrl;
                 
                 // Find host (github.com, gitlab.com, ...)
                 let urlParts = new URL(url);
                 let host = urlParts.host; 
+                let scriptName  = `apis_github_and_others/${host}.js`;
                 
-                if (host == 'github.com'){
-                    let a= require('apis_github_and_others/' + host);
+                // Get upstream with provider-specific methods
+                if (fs.existsSync(scriptName) ) {
+                    let a= require(scriptName);
                     let b = new a(url);
                     forkParentUrl = await b.getValue('fork-parent');
                 }
+
                 
-                if (host == 'gitlab.com'){  // TODO: make sure to get TOKEN using askpass
-                    //let a= require('apis_github_and_others/' + host);
-                    //let b = new a(url, TOKEN);
-                    //forkParentUrl = await b.getValue('fork-parent');
-                }
-                
-                let index = 1; // One is for origin, 0 is free because this is just cloned at this moment
-                
-                remoteRepos.fetch.names[index] = 'upstream';
-                remoteRepos.fetch.URLs[index] = forkParentUrl;
-                remoteRepos.push.names[index] = 'upstream';
-                remoteRepos.push.URLs[index] = 'NO-PUSH';  
-                
-                // Set remote repo
-                commands = [ 'remote', 'add', remoteRepos.fetch.names[index] , remoteRepos.fetch.URLs[index]];
-                let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
-                await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
-                function onAddemote(err, result ){
-                    console.log(result);
-                    console.log(err);
-                };
-                
-                // Modify push url (so it will be different from fetch url)
-                commands = [ 'remote', 'set-url', '--push', remoteRepos.push.names[index], remoteRepos.push.URLs[index]  ];                
-                await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
-                function onSetRemoteUrl(err, result ){
-                    console.log(result);
-                    console.log(err);
-                };
-                
-                // Document fork parent in settings
-                state.repos[id].forkedFromURL = forkParentUrl;
-                
-                updateRemoteRepos();
             }catch (err){
                 console.warn('Failed getting fork-parent URL :');
                 console.warn(err);
             }
-
+            
+            // If forked -- set upstream
+            
+            if (forkParentUrl !== undefined) {
+                
+                try{
+                    let index = 1; // One is for origin, 0 is free because this is just cloned at this moment
+                    
+                    remoteRepos.fetch.names[index] = 'upstream';
+                    remoteRepos.fetch.URLs[index] = forkParentUrl;
+                    remoteRepos.push.names[index] = 'upstream';
+                    remoteRepos.push.URLs[index] = 'NO-PUSH';  
+                    
+                    // Set remote repo
+                    let commands = [ 'remote', 'add', remoteRepos.fetch.names[index] , remoteRepos.fetch.URLs[index]];
+                    let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+                    await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
+                    function onAddemote(err, result ){
+                        console.log(result);
+                        console.log(err);
+                    };
+                    
+                    // Modify push url (so it will be different from fetch url)
+                    commands = [ 'remote', 'set-url', '--push', remoteRepos.push.names[index], remoteRepos.push.URLs[index]  ];                
+                    await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
+                    function onSetRemoteUrl(err, result ){
+                        console.log(result);
+                        console.log(err);
+                    };
+                    
+                    // Document fork parent in settings
+                    state.repos[id].forkedFromURL = forkParentUrl;
+                    
+                    updateRemoteRepos();
+                }catch (err){
+                    console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
+                    console.warn(err);
+                }
+            }
             
             
             // Switch to Remote  tab
