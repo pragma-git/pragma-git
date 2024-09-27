@@ -374,66 +374,6 @@ async function _callback( name, event){
 
             break;
         }   
-        case 'forkButtonPressed' : {
-            console.log('forkButtonPressed');
-            
-            // I know that the last row has index same as length of number of repos
-            id = state.repos.length;
-            
-            let folder = document.getElementById('forkFolder').value;  
-            let URL = document.getElementById('urlTofork').value; 
-            
-            // Make a clone from fork-URL
-            document.getElementById('forkStatus').innerHTML = 'Fork in progress ';
-            const dummy = await gitClone( folder, URL);
-            document.getElementById('forkStatus').innerHTML = '';
-                 
-            // Combine URL and folder name => repo folder
-            let repoWithExtension = URL.replace(/^.*[\\\/]/, '');
-            let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
-            let topFolder = folder + pathsep + repoName;
-            topFolder = topFolder.replace(/[\\\/]$/, '')
-    
-            // Store forkedURL            
-            try{
-                const commands = [ 'remote', 'add','upstream', URL];
-                await simpleGitLog( state.repos[id].localFolder).raw(  commands, onSetRemoteUrl);
-                function onSetRemoteUrl(err, result ){
-                    console.log(result);
-                    console.log(err) ;
-                };
-                
-                // Set if change didn't cause error (doesn't matter if URL works)
-                state.repos[id].forkedFromURL = URL;
-            }catch(err){
-                console.log('Repository store fork-URL failed');
-                console.log(err);
-            } 
-            
-               
-            // Remove remote origin (makes it a fork -- remote/origin has to be defined manually)
-            await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
-            function onDeleteRemoteUrl(err, checkResult) { }
-                
-            // Replace table 
-            document.getElementById("settingsTableBody").innerHTML = ""; 
-            createHtmlTable(document);
-            drawBranchTab(document);
-            
-            // Switch to Remote  tab
-            document.getElementById('gitHubTab').click()                
-            
-            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
-            
-            // Update store
-            remoteRepos.fetch.names[index] = alias;
-            remoteRepos.fetch.URLs[index] = newUrl;
-            remoteRepos.push.names[index] = alias;
-            remoteRepos.push.URLs[index] = newUrl;
-
-            break;
-        } 
         case 'addRepoButtonPressed' : {
             // If folder is a repo -> add
             // If not a repo show dialog doYouWantToInitializeRepoDialog

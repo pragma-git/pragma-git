@@ -2209,7 +2209,7 @@ async function _callback( name, event){
             
         }else{
             // Store
-            await gitAddCommitAndPush( readMessage());
+            gitAddCommitAndPush( readMessage());
         }
         
 }  
