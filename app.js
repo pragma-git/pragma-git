@@ -5393,17 +5393,41 @@ function getDownloadsDir(){
     
 }
 
-function multiPlatformExecSync( folder, cmd){  // Run git bash in 'folder', on all platforms. 
-	 //Return string output without leading and trailing spaces
+function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
+	 // Run command line program as in terminal
+     //
+     // Inputs:
+     //    folder           folder to run command in
+     //    cmd              command to run in terminal
+     //
+     // Optional inputs:
+     //     mode            'timeout'
+     //     timeoutInMs     
+     //
+     // Output
+     //     string output of command, trimmed  (without leading and trailing spaces)
 	console.log(cmd.toString())
 	const { execSync } = require('child_process');
+    
+    let options = {cwd: folder};
+    
+    if (mode == 'timeout'){
+        // With time out of subprocess
+        options = {cwd: folder, timeout: timeoutInMs, detached: true};  
+        options = {cwd: folder, timeout: timeoutInMs, detached: true, stdio: ['ignore']};  // With time out of subprocess
+    }
+
+    //
+    
 	if (process.platform === 'win32') {
-		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).toString().trim();
+		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, options ).toString().trim();
 	}else{
-		return  execSync( cmd, {cwd: folder} ).toString().trim();
+		return  execSync( cmd, options ).toString().trim();
 	}
 }
 function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
+    // Start freerunning program (so it will not be attached to pragma-git anymore
+    //
     // append = true means that cmd and folder are appended after each other (good for fileBrowser, bad for opening terminal)
     
 	 //Return string output without leading and trailing spaces

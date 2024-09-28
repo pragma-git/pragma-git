@@ -937,7 +937,6 @@ async function testURL(textareaId, event){
 
                 const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
                 await opener.simpleGitLog() .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
-                
             }else{
                 await simpleGit().raw(  commands, onListRemote); // default askpass 
             }
@@ -1211,7 +1210,7 @@ async function gitReadConfigKey( repoNumber, key, scope){
             output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
         } 
         
-        console.log(output);
+        //console.log(output);
     }catch(err){ 
         console.error(err); 
         
@@ -1271,7 +1270,7 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 }
 
 // Credentials
-async function getCredentials( url){  // Git credentials as struct.  NOTE: NOT FINISHED!
+async function getCredentials( remoteUrl){  // Git credentials as struct.  NOTE: NOT FINISHED!
     // Use as :
     //   creds = await getCredentials('https://github.com/pragma-git/pragma-git.git')
     // Read field :
@@ -1279,13 +1278,40 @@ async function getCredentials( url){  // Git credentials as struct.  NOTE: NOT F
     //   creds.password
     // Field names are : protocol, host, path, username, password
     
-    // TODO : Fails if credentials unknown -- does not open askpass
+
     
     let folder = state.repos[ state.repoNumber].localFolder;
+
+  
+    let url
+    if (remoteUrl == undefined){
+        url = state.repos[ state.repoNumber].remoteURL;
+    }else{
+        url = remoteUrl;
+    }
+    console.log( 'Original  url = ' + url ); 
+    
+    let urlParts = new URL(url);
+    
+    
+    // Fix up 
+    if ( (urlParts.username.trim() == '') && (urlParts.password.trim() == '') ){  // https://github.com/... 
+        url = `${urlParts.protocol}//${urlParts.host}${urlParts.pathname}`;
+        
+    }else if (urlParts.password.trim() == '') { // https://ghp_q3jx@github.com/... -- looks like username, but is most likely Token
+        url = `${urlParts.protocol}//:${urlParts.username}@${urlParts.host}${urlParts.pathname}`;  // Write as empty username + token
+    }
+    
+   
+    console.log( 'Rewritten url = ' + url );
     
     // Use git credential
-    credentialFieldsString = await opener.multiPlatformExecSync(folder, `echo "url=${url}" | git credential fill`); //  GIT_TERMINAL_PROMPT=0 forces not to ask for credentials if misspelled
+    credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git credential fill`, mode = 'timeout', 1000); 
+    //const extra = `-c include.path=${opener.configFile} `
+    //credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git ${extra} credential fill`, mode = 'timeout', 1000); 
+
     creds = util.parseKeyValuePairsFromString(credentialFieldsString);  // Parse text into struct
+
     return creds
 }
 

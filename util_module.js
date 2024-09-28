@@ -94,11 +94,7 @@ myModule.parseKeyValuePairsFromString = function (inputString) {
     lines.forEach(line => {
         // Split each line by the equal sign
         const [key, value] = line.split('=').map(item => item.trim());
-        
-        // Only add if both key and value exist
-        if (key && value) {
-            result[key] = value;
-        }
+        result[key] = value; 
     });
     
     return result;
