@@ -934,7 +934,10 @@ async function testURL(textareaId, event){
                 document.getElementById(textareaId).classList.remove('green');
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.add('red'); 
-                await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
+
+                const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                await opener.simpleGitLog() .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
+                
             }else{
                 await simpleGit().raw(  commands, onListRemote); // default askpass 
             }
