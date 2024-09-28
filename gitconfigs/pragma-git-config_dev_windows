@@ -3,3 +3,7 @@
        
 [core]
     askPass = "C:/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"   
+  
+  
+[push]
+    autoSetupRemote = true

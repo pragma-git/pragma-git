@@ -4160,7 +4160,7 @@ async function gitAddCommitAndPush( message){
         // Push 
         if ( state.repos[state.repoNumber].autoPushToRemote ){   
             await waitTime( 1000);
-            await gitPush( forcePush);  
+            gitPush( forcePush);  
         }
         
         // Finish up
@@ -4434,7 +4434,7 @@ async function gitPush( forcePush){
             
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
             try{
-                await push();
+                push();
                 console.log('success push - first attempt');
             }catch(err){
                 // Try again

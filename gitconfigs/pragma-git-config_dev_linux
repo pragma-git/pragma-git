@@ -10,3 +10,7 @@
 
 [credential]
     useHttpPath = true
+  
+  
+[push]
+    autoSetupRemote = true
