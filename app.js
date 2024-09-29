@@ -5748,7 +5748,7 @@ function displayLongAlert(title, message, type){
     pragmaLog('      title   = ' + title);
     pragmaLog('      message = ' + message);
 
-    let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
+    let buttonHtml = `<button class="OK-button" onclick="window.close(true);"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
 }
   
@@ -5793,6 +5793,10 @@ function displayLongAlert(title, message, type){
 
                     cWindows.on('loaded', 
                         function(){
+                            
+                            cWindows.on('close', function() { 
+                                fixNwjsBug7973( cWindows);
+                            } );
                             
                             // Set Class
                             cWindows.window.document.body.classList.add(type)
