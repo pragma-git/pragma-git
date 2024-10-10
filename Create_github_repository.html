@@ -369,7 +369,7 @@
     <script>
         window.addEventListener(
             'DOMContentLoaded', 
-            (event) => {
+            async function (event){
                 console.log('Create_github_repository.html :DOM fully loaded and parsed');
                 
                 // Import modules
@@ -393,6 +393,9 @@
                 if ( token == 'github.com'){
                     token = '';
                 }
+                
+                let creds = await opener.getCredentials();
+                token = creds.password;
                 
                 document.getElementById('accountName').value = account;
                 document.getElementById('token').value = token;
