@@ -250,7 +250,6 @@ async function _callback( name, event){
                 
                 document.getElementById('addFolder').innerText=folder;
                 document.getElementById('cloneFolder').innerText = folder;
-                document.getElementById('forkFolder').innerText = folder;                
             }catch(err){
                 
             }
@@ -259,7 +258,6 @@ async function _callback( name, event){
             // Remove hover class
             document.getElementById('addFolder').className = '';
             document.getElementById('cloneFolder').className = '';
-            document.getElementById('forkFolder').className = '';
                                     
             break;
         }
@@ -280,7 +278,6 @@ async function _callback( name, event){
             
             // I know that the last row has index same as length of number of repos
             document.getElementById('cloneFolder').value = localFolder;
-            document.getElementById('forkFolder').value = localFolder;
             document.getElementById('addFolder').value = localFolder;
         
             break;
