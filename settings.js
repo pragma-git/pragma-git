@@ -1267,9 +1267,34 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 }
 
 // Credentials
-async function getCredentials( remoteUrl){  // Git credentials as struct.  NOTE: NOT FINISHED!
+async function getAllCredentials( ){  // Git credentials for all repos as struct.  NOTE: NOT FINISHED!
+    
+    let allCredentials = [];
+    
+    for (i = 0; i < state.repos.length; i++) {
+        
+        try{    
+            let remoteUrl = state.repos[ i].remoteURL;
+            let localFolder = state.repos[ i].localFolder;
+            
+            let creds = await getCredential( remoteUrl);
+            let password = creds.password;
+            console.log( localFolder.split('/').pop() +  ' -- ' + password  )
+            
+            allCredentials.push(creds);
+        }catch(err){
+            
+            allCredentials.push( [] );
+        }
+        
+    }
+    
+    return allCredentials
+}
+
+async function getCredential( remoteUrl){  // Git credentials as struct.  NOTE: NOT FINISHED!
     // Use as :
-    //   creds = await getCredentials('https://github.com/pragma-git/pragma-git.git')
+    //   creds = await getCredential('https://github.com/pragma-git/pragma-git.git')
     // Read field :
     //   creds['password'] 
     //   creds.password
@@ -1286,7 +1311,7 @@ async function getCredentials( remoteUrl){  // Git credentials as struct.  NOTE:
     }else{
         url = remoteUrl;
     }
-    console.log( 'Original  url = ' + url ); 
+    //console.log( 'Original  url = ' + url ); 
     
     let urlParts = new URL(url);
     
@@ -1300,14 +1325,25 @@ async function getCredentials( remoteUrl){  // Git credentials as struct.  NOTE:
     }
     
    
-    console.log( 'Rewritten url = ' + url );
+    //console.log( 'Rewritten url = ' + url );
     
     // Use git credential
-    credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git credential fill`, mode = 'timeout', 1000); 
-    //const extra = `-c include.path=${opener.configFile} `
-    //credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git ${extra} credential fill`, mode = 'timeout', 1000); 
-
-    creds = util.parseKeyValuePairsFromString(credentialFieldsString);  // Parse text into struct
+    try{
+        credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git credential fill`, mode = 'timeout', 1000); 
+        //const extra = `-c include.path=${opener.configFile} `
+        //credentialFieldsString = await opener.multiPlatformExecSync(folder, `export  GIT_ASKPASS=''; echo "url=${url}" | git ${extra} credential fill`, mode = 'timeout', 1000); 
+    
+        creds = util.parseKeyValuePairsFromString(credentialFieldsString);  // Parse text into struct
+    }catch(err){
+        creds = {
+            protocol: urlParts.protocol.slice(0,-1),  // https: -> https
+            host: urlParts.host, 
+            path: urlParts.pathname.slice(1),  //   /janaxelsson/test.git -> janaxelsson.test.git
+            host: urlParts.host, 
+            username: undefined, 
+            password: undefined
+        }
+    }
 
     return creds
 }

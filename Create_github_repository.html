@@ -394,7 +394,7 @@
                     token = '';
                 }
                 
-                let creds = await opener.getCredentials();
+                let creds = await opener.getCredential();
                 token = creds.password;
                 
                 document.getElementById('accountName').value = account;
