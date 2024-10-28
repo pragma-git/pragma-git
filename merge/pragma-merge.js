@@ -261,6 +261,10 @@ function findMimeFromExtension( extension){
     modeInfo = CodeMirror.modeInfo;
     
     
+    //
+    // Search extensions
+    //   
+    
     modeInfo.forEach( handleMode);
     
     function handleMode( row){
@@ -279,13 +283,44 @@ function findMimeFromExtension( extension){
         
     }
     
-    
     console.log( 'Found mime-mode = ' + found);
     
     if (found !== undefined){
         return  found.mime
     }
     
+    //
+    // Reach here if undefined -- search using shebang
+    //
+    let sheBang = cachedFile.BASE.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
+    console.log('Plan B) Find mime-mode from shebang (=' + sheBang + ')');
+    
+    modeInfo.forEach( handleShebang);
+    function handleShebang( row){
+        if (row.ext == undefined){
+            return;
+        }
+        
+        i = row.ext.length - 1;
+        while ( ( i >= 0 )  ){
+            if ( row.ext[i] == sheBang ){
+                found = row;
+            }
+            //console.log( row.ext[i] );
+            i--;
+        }
+        
+    }
+    
+    console.log( 'Found mime-mode = ' + found);
+    
+    if (found !== undefined){
+        return  found.mime
+    }  
+    
+    //
+    // End with false if nothing found
+    //   
     return false 
     
 }
