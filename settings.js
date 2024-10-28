@@ -1893,7 +1893,12 @@ async function generateBranchTable(document, table, branchlist) {
 async function updateLocalAuthorInfoView( globalSelected ){
     // The principle is that if local does not exist => checkbox will be selected to use global
     // BUT, if local is manually selected with checkbox, globalSelected is true/false (call with one argument)
-    // (if called without argument, globalSelected = undefined )
+    // (if called without argument, globalSelected = undefined , and pragma-git settings file is used)
+    
+    
+    if ( globalSelected == undefined){
+        document.getElementById('useGlobalAuthorInfo').checked = state.repos[state.repoNumber].useGlobalAuthorInfo;
+    }
     
     
      // Read local from git
