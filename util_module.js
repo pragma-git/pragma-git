@@ -92,8 +92,10 @@ myModule.parseKeyValuePairsFromString = function (inputString) {
     const lines = inputString.split('\n');
     
     lines.forEach(line => {
-        // Split each line by the equal sign
-        const [key, value] = line.split('=').map(item => item.trim());
+        // Split each line by the first equal sign
+        const key = line.split('=')[0];
+        const value = line.split('=').slice(1).join('=')
+        
         result[key] = value; 
     });
     
