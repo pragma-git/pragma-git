@@ -3,8 +3,18 @@ Example use
     TOKEN=....
     a= require('apis_github_and_others/gitlab.com.js');
     
-    b = new a('https://gitlab.com/JanAxelsson/gitlab-test.git');
+    b = new a('https://gitlab.com/JanAxelsson/gitlab-test.git', TOKEN);
     c = await b.getValue('fork-parent');
+    
+Example use
+    url='https://gitlab.com/JanAxelsson/gitlab-test.git'; 
+    host = new URL(url).host; 
+    scriptName  = `apis_github_and_others/${host}.js`; 
+    a= require(scriptName); 
+    creds = await getCredential(url); // From git credential helper
+    b = new a(url, creds.password );
+    
+    c = await b.getValue('is-private-repo')
 
 **/
 
@@ -100,9 +110,10 @@ class gitlab extends General_git_rest_api {
          
             // --- Required code :
                 // Initialize by calling #fetchThroughAPI (if not initialized already)           
-                if ( this.initialized == false)
+                if ( this.initialized == false){
                     await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
-                    
+                    this.initialized = true;
+                }    
                 let out;   
             // --- End required code
             
@@ -110,41 +121,28 @@ class gitlab extends General_git_rest_api {
                 
             // Provider-specific code
 
-                switch (parameterName) {
-                    
-                    case 'fork-parent': 
+                switch (parameterName) {  
+                    case 'fork-parent':     { // Returns URL from which current repo was forked
                         try{
-                            //out = this.repoInfoStruct.json[0].forked_from_project.http_url_to_repo; // Only available if TOKEN is correct
-                            
-                            // Use the gitlab home page instead (same url as giturl):
-                            let options = {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'text/html; charset=UTF-8',
-                                    'Accept': 'text/html',
-                                },
-                            };
-                            
-                            let response = await fetch( this.giturl, options);
-                            let text = await response.text();
-                            let filtered = text.split(' ').filter(function (str) { return str.includes('data-source-path'); });  //   
-                            if (filtered.length > 0){ // out = undefined before this
-                                out = 'https://gitlab.com' + filtered[0].split('=')[1].replaceAll('"','') + '.git';
-                            }
-                            
-                        }catch (err){
-                            // out is already undefined
-                        }
-                           
-                        break;     
-    
-                    default: 
+                            out = this.repoInfoStruct.json[0].forked_from_project.http_url_to_repo; // Only available if TOKEN is correct
+                        }catch (err){ console.error(err);}
+                        break; 
+                    }    
+                    case 'is-private-repo': { // Returns true, false
+                        try{                    
+                            let visibility = this.repoInfoStruct.json[0].visibility    
+                            out = (visibility == 'private');
+                        }catch (err){ console.error(err);}
+                        break;   
+                    }    
+                    default: {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
+                    }
                 }
                 
             // --- End Provider-specific code   
                   
-                return out  // return value for parameterName (from json)
+                return out  // return value for parameterName (from json), or undefined
         }             
 
 }

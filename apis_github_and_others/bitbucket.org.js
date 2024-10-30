@@ -39,7 +39,7 @@ class bitbucket extends General_git_rest_api {
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){
                     // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
-                    urlParts = new URL(url);
+                    let urlParts = new URL(url);
                     url = urlParts.origin + urlParts.pathname; 
                 }
             
@@ -67,8 +67,8 @@ class bitbucket extends General_git_rest_api {
                 this.options = {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'text/html; charset=UTF-8',
-                        'Accept': 'text/html',
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' + this.TOKEN,
                     },
                 };
             
@@ -77,6 +77,7 @@ class bitbucket extends General_git_rest_api {
                 if ( super.isEmptyString( this.TOKEN) ) {
                     delete this.options.headers.Authorization 
                 }
+            
                 
              // --- End Provider-specific code    
                      
@@ -99,8 +100,10 @@ class bitbucket extends General_git_rest_api {
          
             // --- Required code :
                 // Initialize by calling #fetchThroughAPI (if not initialized already)           
-                if ( this.initialized == false)
+                if ( this.initialized == false){
                     await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
+                    this.initialized = true;
+                }  
                     
                 let out;   
             // --- End required code
@@ -109,18 +112,22 @@ class bitbucket extends General_git_rest_api {
                 
             // Provider-specific code
 
-                switch (parameterName) {
-                    
-                    case 'fork-parent': 
+                switch (parameterName) { 
+                    case 'fork-parent':  { // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.parent.links.html.href + '.git'
-                        }catch (err){
-                            // out is already undefined
-                        }
-                        break;     
-    
-                    default: 
+                        }catch (err){ console.error(err);}
+                        break;  
+                    }
+                    case 'is-private-repo': { // Returns true, false
+                        try{                       
+                            out = this.repoInfoStruct.json.is_private
+                        }catch (err){ console.error(err);}
+                        break;   
+                    }    
+                    default:  {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
+                    }
                 }
                 
             // --- End Provider-specific code   

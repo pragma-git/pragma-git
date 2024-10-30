@@ -98,8 +98,10 @@ class github extends General_git_rest_api {
          
             // --- Required code :
                 // Initialize by calling #fetchThroughAPI (if not initialized already)           
-                if ( this.initialized == false)
-                    await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
+                if ( this.initialized == false){
+                    await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct                     
+                    this.initialized = true;
+                }  
                     
                 let out;   
             // --- End required code
@@ -109,17 +111,21 @@ class github extends General_git_rest_api {
             // Provider-specific code
 
                 switch (parameterName) {
-                    
-                    case 'fork-parent': 
+                    case 'fork-parent': {  // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.parent.clone_url;
-                        }catch (err){
-                            // out is already undefined
-                        }
+                        }catch (err){ console.error(err);}
                         break;     
-    
-                    default: 
+                    }
+                    case 'is-private-repo': { // Returns true, false
+                        try{                       
+                            out = this.repoInfoStruct.json.private
+                        }catch (err){ console.error(err);}
+                        break;   
+                    }    
+                    default:  {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
+                    }
                 }
                 
             // --- End Provider-specific code   
