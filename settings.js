@@ -304,20 +304,8 @@ async function _callback( name, event){
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
             try{
-                
-                // Find host (github.com, gitlab.com, ...)
-                let urlParts = new URL(url);
-                let host = urlParts.host; 
-                let scriptName  = `apis_github_and_others/${host}.js`;
-                
-                // Get upstream with provider-specific methods
-                if (fs.existsSync(scriptName) ) {
-                    let a= require(scriptName);
-                    let b = new a(url);
-                    forkParentUrl = await b.getValue('fork-parent');
-                }
-
-                
+                let provider = await gitProvider(url)
+                forkParentUrl = await provider.getValue('fork-parent');
             }catch (err){
                 console.warn('Failed getting fork-parent URL :');
                 console.warn(err);
@@ -1482,7 +1470,33 @@ function updateRemoteRepos(){ // Displays current data in GUI
     }       
 }
 
-
+// Git provider function
+async function gitProvider(giturl){
+    // Returns the provider class for giturl
+    
+    // Find host (github.com, gitlab.com, ...)
+    let urlParts = new URL(giturl);
+    let host = urlParts.host; 
+    let scriptName  = `${opener.CWD_INIT}/apis_github_and_others/${host}.js`;
+    
+    // Get upstream with provider-specific methods
+    if (fs.existsSync(scriptName) ) {
+        let a= require(scriptName);
+        let provider;
+        try{
+            let creds = await getCredential(giturl);
+            let TOKEN = creds.password;
+            provider = new a(giturl, TOKEN);
+        }catch (err){
+            provider = new a(giturl);
+        }
+        
+        return provider
+    }else{
+        throw new Error(`gitProvider error: 'unknown scriptName' = ${scriptName}`);
+    }
+    
+}
 
 // Draw
 async function drawBranchTab(document){
