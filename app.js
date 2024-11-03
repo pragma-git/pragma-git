@@ -6712,14 +6712,8 @@ function loadSettings(settingsFile){
                     state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );  // Note : this is not used, but see it as a way to document the original upstream from a Fork operation
                     
                     // Local author info
-                    state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
                     state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
                     state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
-                    
-                    // Default to global authorinfo if missing
-                    if ( state.repos[i].authorName.trim().length == 0 ){
-                        state.repos[i].useGlobalAuthorInfo = true;
-                    }
                     
                     // Local allowPushToRemote, autoPush, No-fast-forward
                     state.repos[i].allowPushToRemote = setting( state_in.repos[i].allowPushToRemote, true ); 
