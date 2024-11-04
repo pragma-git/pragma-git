@@ -159,11 +159,6 @@ async function _callback( name, event){
                     state.repos[state.repoNumber].authorEmail
                 );
             }
-
-            // Display in Settings.html
-            await updateGitconfigs();
-
-            
          
             break;
         }
@@ -202,7 +197,6 @@ async function _callback( name, event){
                 state.repos[state.repoNumber].authorName, 
                 state.repos[state.repoNumber].authorEmail
             );
-            updateGitconfigs();
          
             break;
         }
@@ -212,8 +206,6 @@ async function _callback( name, event){
 
             try{ await gitRemoveConfigKey( state.repoNumber, 'user.name', 'global'); }catch (err) {}
             try{ await gitWriteConfigKey( 'user.name', document.getElementById('authorName').value, 'global');   }catch (err) {}
-            
-            updateGitconfigs();
 
             break;
         }
@@ -224,8 +216,6 @@ async function _callback( name, event){
             try{ await gitRemoveConfigKey( state.repoNumber, 'user.email', 'global'); }catch (err) {}
             try{ await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global');   }catch (err) {}
 
-            updateGitconfigs();
-         
             break;
         }
 
@@ -454,7 +444,7 @@ async function _callback( name, event){
                 document.getElementById( 10000 + Number(id) ).value = state.repos[id].remoteURL;
                 
                                 
-                drawBranchTab(document);
+                await drawBranchTab(document);
 
                 
                     
@@ -495,10 +485,6 @@ async function _callback( name, event){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
 
-                await updateGitconfigs( );
-         
-
-                
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
@@ -1506,9 +1492,6 @@ async function drawSoftwareTab(document){
     }
     
 
-    await updateGitconfigs(); // Write gitconfigs to System Info (TODO : update when changing repo)
-    
-    
     document.getElementById('gitVersion').innerText = localState.gitVersion;
 
     
@@ -2021,42 +2004,6 @@ async function updateGitconfigs( ){
             }
         }
     }
-    
-    
-    //if (state.repoNumber >= 0){
-        //gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']); 
-    //}else{
-        //gitconfigString = await simpleGit().raw(['config', '--list', '--show-origin']); 
-    //}
-       
-    //let html = '';
-    //let currentFileURI = '';
-    //let rows = gitconfigString.split('\n');
-    //for (let i = 0; i < rows.length; i++) {
-        //row = rows[i].trim();
-        //row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
-        //row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
-        //fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
-        //configString = row.substring(row.indexOf(' ') + 1);
-        
-
-        //if ( fileURI !== currentFileURI ){
-            //currentFileURI = fileURI;
-            //currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
-            
-            //if ( fileURI == 'command' ){
-                //currentFileName = 'Pragma-git internal';
-                //configString = row.substring(row.indexOf(':') + 1);
-            //}
-            
-            //// File name
-            //if ( fileURI !== '' ){
-                //html+= `<div> ${currentFileName} :</div>`; 
-            //}
-        //}
-        
-        //html += `<code>&nbsp; ${configString}</code> <br>`;
-    //}
     
     document.getElementById('gitconfigs').innerHTML = await html;
     
