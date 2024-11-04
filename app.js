@@ -2428,7 +2428,7 @@ async function _callback( name, event){
                 await addExistingRepo( folder); 
                 
                 // Update settings repo table
-                updateSettingsRepoTable();
+                await updateSettingsRepoTable();
             }
         }catch(error){
             displayLongAlert('Failed adding repo', error, 'error'); 
@@ -4759,6 +4759,40 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
     }
 }
       
+               
+async function addUpstream( forkParentUrl){
+    
+    try{
+   
+        // Set remote repo
+        let commands = [ 'remote', 'add', 'upstream' , forkParentUrl];
+        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
+        function onAddemote(err, result ){
+            console.log(result);
+            console.log(err);
+        };
+        
+        // Modify push url (so it will be different from fetch url)
+        commands = [ 'remote', 'set-url', '--push', 'upstream', 'NO-PUSH'  ];                
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
+        function onSetRemoteUrl(err, result ){
+            console.log(result);
+            console.log(err);
+        };
+        
+        // Document fork parent in settings
+        state.repos[repoNumber].forkedFromURL = forkParentUrl;
+        
+        await cacheBranchList();
+        await updateRemoteRepos();
+    }catch (err){
+        console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
+        console.warn(err);
+    }      
+    
+}
+      
 // Information
 async function gitCurrentCommit(){
         currentHash = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'rev-parse', 'HEAD' ]) )
@@ -4966,7 +5000,7 @@ async function cacheBranchList(){
             
         }
 
-async function cacheRemoteOrigins(){
+async function cacheRemoteOrigins(){  //Fills in remote URLs for all repos
     
     let promises = [];
     var newCachedRemoteOrigins = {};
@@ -5252,12 +5286,29 @@ async function addExistingRepo( folder) {
             console.log(error);
         }
 
-
-        
         // Add folder last in  state array
         var index = state.repos.length;
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
+        
+        // Fill in state array
+        state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
+        await cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+
+        // Figure out URL of fork-parent (undefined if not a forked repo)
+        let forkParentUrl;
+        try{
+            let remoteurl = state.repos[index].remoteURL;
+            let provider = await gitProvider(remoteurl)
+            forkParentUrl = await provider.getValue('fork-parent');
+            
+            state.repos[index].forkedFromURL = forkParentUrl;
+            await opener.addUpstream( forkParentUrl);
+            
+        }catch (err){
+            console.warn('Failed getting fork-parent URL :');
+            console.warn(err);
+        }
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -5467,6 +5518,35 @@ function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder',
 	}
 }
 
+
+// Git provider function
+async function gitProvider(giturl){
+    // Returns the provider class for giturl
+    
+    // Find host (github.com, gitlab.com, ...)
+    let urlParts = new URL(giturl);
+    let host = urlParts.host; 
+    let scriptName  = `${CWD_INIT}/apis_github_and_others/${host}.js`;
+    
+    // Get upstream with provider-specific methods
+    if (fs.existsSync(scriptName) ) {
+        let a = require(scriptName);
+        let provider;
+        try{
+            let creds = await getCredential(giturl);
+            console.log(creds);
+            let TOKEN = creds.password;
+            provider = new a(giturl, TOKEN);
+        }catch (err){
+            provider = new a(giturl);
+        }
+        
+        return provider
+    }else{
+        throw new Error(`gitProvider error: 'unknown scriptName' = ${scriptName}`);
+    }
+    
+}
 
 // Logging to file
 
@@ -6599,16 +6679,6 @@ function loadSettings(settingsFile){
     //
     // Set from state_in, or default value if parameter missing
     //
-    
-        // Internal function (returns defaultValue if input undefined)
-        function setting( input, defaultValue){
-            if (input == undefined){
-                console.warn('Undefined, set defaultValue = ');
-                console.warn(defaultValue);
-                return defaultValue
-            }
-            return input;
-        }
         
         // 3) Make sure multiple struct levels exist in state_in
                             
@@ -6703,23 +6773,7 @@ function loadSettings(settingsFile){
             try {
                     
                 for (let i = 0; i < state_in.repos.length; i++){
-                    
-                    state.repos[i] = {};
-                    
-                    // LocalFolder and URLs
-                    state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
-                    //state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
-                    state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );  // Note : this is not used, but see it as a way to document the original upstream from a Fork operation
-                    
-                    // Local author info
-                    state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
-                    state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
-                    
-                    // Local allowPushToRemote, autoPush, No-fast-forward
-                    state.repos[i].allowPushToRemote = setting( state_in.repos[i].allowPushToRemote, true ); 
-                    state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
-                    state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
-        
+                    state.repos[i] = fixRepoSettingWithDefault(state_in.repos[i]);
                 }
                 
             }catch(err){
@@ -6818,7 +6872,36 @@ function loadSettings(settingsFile){
     
     return state;
 }
-function updateWithNewSettings(){
+    // Utility functions for loadSettings
+    function fixRepoSettingWithDefault(repoStateIn){    // Set repo's empty values to default values
+                        
+        repoState = {};
+        
+        // LocalFolder and URLs
+        repoState.localFolder = setting( repoStateIn.localFolder, '' );
+        //repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
+        repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
+        
+        // Local author info
+        repoState.authorName = setting( repoStateIn.authorName, '' );
+        repoState.authorEmail = setting( repoStateIn.authorEmail, '' );
+        
+        // Local allowPushToRemote, autoPush, No-fast-forward
+        repoState.allowPushToRemote = setting( repoStateIn.allowPushToRemote, true ); 
+        repoState.autoPushToRemote = setting( repoStateIn.autoPushToRemote, true );
+        repoState.NoFF_merge = setting( repoStateIn.NoFF_merge, true );
+        
+        return repoState;
+    }
+    function setting( input, defaultValue){             // Utility function to set a single undefined value to its default
+        if (input == undefined){
+            console.warn('Undefined, set defaultValue = ');
+            console.warn(defaultValue);
+            return defaultValue
+        }
+        return input;
+    }
+function updateWithNewSettings(){                   // Call from window that modifies setting
     //Called when left settings window (or directly from other windows that modify settings, for instance graph)
     //
     // NOTE : To implement a new setting that affects the gui, 

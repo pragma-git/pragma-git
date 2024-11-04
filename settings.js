@@ -327,7 +327,7 @@ async function _callback( name, event){
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
             try{
-                let provider = await gitProvider(url)
+                let provider = await opener.gitProvider(url)
                 forkParentUrl = await provider.getValue('fork-parent');
             }catch (err){
                 console.warn('Failed getting fork-parent URL :');
@@ -338,39 +338,9 @@ async function _callback( name, event){
             
             if (forkParentUrl !== undefined) {
                 
-                try{
-                    let index = 1; // One is for origin, 0 is free because this is just cloned at this moment
-                    
-                    remoteRepos.fetch.names[index] = 'upstream';
-                    remoteRepos.fetch.URLs[index] = forkParentUrl;
-                    remoteRepos.push.names[index] = 'upstream';
-                    remoteRepos.push.URLs[index] = 'NO-PUSH';  
-                    
-                    // Set remote repo
-                    let commands = [ 'remote', 'add', remoteRepos.fetch.names[index] , remoteRepos.fetch.URLs[index]];
-                    let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
-                    await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
-                    function onAddemote(err, result ){
-                        console.log(result);
-                        console.log(err);
-                    };
-                    
-                    // Modify push url (so it will be different from fetch url)
-                    commands = [ 'remote', 'set-url', '--push', remoteRepos.push.names[index], remoteRepos.push.URLs[index]  ];                
-                    await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
-                    function onSetRemoteUrl(err, result ){
-                        console.log(result);
-                        console.log(err);
-                    };
-                    
-                    // Document fork parent in settings
-                    state.repos[id].forkedFromURL = forkParentUrl;
-                    
-                    updateRemoteRepos();
-                }catch (err){
-                    console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
-                    console.warn(err);
-                }
+                await opener.addUpstream( forkParentUrl);
+                updateRemoteRepos();
+                
             }
             
             
@@ -417,11 +387,11 @@ async function _callback( name, event){
             }
             
             // Update cached branch list
-            opener.cacheBranchList();
+            await opener.cacheBranchList();
             
             
             // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
+            await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
         
             break;
@@ -965,7 +935,7 @@ async function testURL(textareaId, event){
     document.getElementById(textareaId).classList.remove('red');
     document.getElementById(textareaId).classList.add(outputColor);
  }
-function forgetButtonClicked(event){
+async function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
     console.log('Settings - event id = ' + index);
@@ -993,9 +963,12 @@ function forgetButtonClicked(event){
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
 
-    opener.cacheBranchList();
+    await opener.cacheBranchList();
 
     console.log('Settings - updating table :');
+    
+    // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+    await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
     
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
@@ -1121,6 +1094,10 @@ async function gitClone( folderName, repoURL){
         var index = state.repos.length;
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
+        
+        // Fill in state array
+        state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
+        await opener.cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -1486,34 +1463,6 @@ function updateRemoteRepos(){ // Displays current data in GUI
         document.getElementById('forgetRemoteURLButton').style.display = 'inline-block';
         
     }       
-}
-
-// Git provider function
-async function gitProvider(giturl){
-    // Returns the provider class for giturl
-    
-    // Find host (github.com, gitlab.com, ...)
-    let urlParts = new URL(giturl);
-    let host = urlParts.host; 
-    let scriptName  = `${opener.CWD_INIT}/apis_github_and_others/${host}.js`;
-    
-    // Get upstream with provider-specific methods
-    if (fs.existsSync(scriptName) ) {
-        let a= require(scriptName);
-        let provider;
-        try{
-            let creds = await getCredential(giturl);
-            let TOKEN = creds.password;
-            provider = new a(giturl, TOKEN);
-        }catch (err){
-            provider = new a(giturl);
-        }
-        
-        return provider
-    }else{
-        throw new Error(`gitProvider error: 'unknown scriptName' = ${scriptName}`);
-    }
-    
 }
 
 // Draw
