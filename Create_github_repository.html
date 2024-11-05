@@ -394,7 +394,7 @@
                     token = '';
                 }
                 
-                let creds = await opener.getCredential();
+                let creds = await opener.opener.getCredential(); // Read from pragma-git main
                 token = creds.password;
                 
                 document.getElementById('accountName').value = account;
