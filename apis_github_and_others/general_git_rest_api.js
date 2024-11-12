@@ -5,16 +5,18 @@ Base class for github, gitlab etc API calls
 class git_rest_api {
     
 
-
         
     // Constructor
     constructor( giturl, TOKEN) {
         this.giturl = giturl;
         this.TOKEN = TOKEN;
-        this.initialized = false;  // shows if init method has been called
-    }
+    }   
 
     // Public methods
+        async initialize(){
+            // Should always exist, in case some initialization has to be done after contructor
+        }
+    
         async fetchWithApi( apiurl, options){
             
             let response;
@@ -34,7 +36,7 @@ class git_rest_api {
                 console.error('Error fetching repository info:', error.message);
             }
 
-            
+            console.log(response);
             return { 
                 ok: response.ok, 
                 status: response.status,

@@ -1,9 +1,13 @@
 /**
-Example use
+ 
+Github specific code 
+ 
+Example use :
 
     a= require('apis_github_and_others/github.com.js');
     
-    b = new a('https://github.com/JanAxelsson/Spoon-Knife.git');
+    b = await new a('https://github.com/JanAxelsson/Spoon-Knife.git');
+    await b.initialize();
     c = await b.getValue('fork-parent');
 
 **/
@@ -15,12 +19,11 @@ class github extends General_git_rest_api {
     
 
     constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN,  this.initialized 
+        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
         this.apiurl = this.#apiUrl( giturl);  // Call provider-specific translation from git-url to api-url
+
     }
 
-
-        
     //
     // Define provider-specific methods (ADAPT THESE FOR NEW PROVIDER)
     //
@@ -83,7 +86,7 @@ class github extends General_git_rest_api {
             // Fetch through API into class variable
             this.repoInfoStruct = await super.fetchWithApi( this.apiurl, this.options); 
              
-            return this.repoInfo;  // Useful for debuggin
+            return this.repoInfoStruct;  // Useful for debuggin
         } 
         async getValue( parameterName){  // Get parameter from Github json struct
             // Uses:
@@ -97,12 +100,9 @@ class github extends General_git_rest_api {
             
          
             // --- Required code :
-                // Initialize by calling #fetchThroughAPI (if not initialized already)           
-                if ( this.initialized == false){
-                    await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct                     
-                    this.initialized = true;
-                }  
-                    
+
+                await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
+
                 let out;   
             // --- End required code
             
