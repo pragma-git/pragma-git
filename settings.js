@@ -1962,6 +1962,59 @@ async function displayLocalAuthorInfo(){ // Display based on git-config author i
   
 }
 
+async function updateRemoteInfo( ){
+    let html = '';
+    let creds = {};
+    
+    // Git credentials
+    html +='<br><div> Git credentials :</div>';
+    try{
+        creds = await opener.getCredential();
+        html += '<code><table class="keyValueTable">';
+        Object.keys(creds).forEach( 
+            (key)=> html +=  
+            `<tr> 
+                <td> &nbsp; ${key} : &nbsp; </td> 
+                <td> ${ creds[key]} </td>
+            </tr>` 
+        );
+        html += '</table></code>';       
+    }catch (err){
+        html += '<code>Error reading git credentials : <br>';
+        html += `${err}</code> <br>`
+    }
+
+    
+    // Provider specific remote info
+    html +='<br><div> Git remote info :</div>';
+    try{
+        let provider = await opener.gitProvider( creds.url)
+        let isPrivate = await provider.getValue('is-private-repo');
+        if (isPrivate){
+            visibility = 'private';
+        }else{
+            visibility = 'public';
+        }
+        let forkParentUrl = await provider.getValue('fork-parent');
+        if (forkParentUrl == undefined){
+            forkParentUrl = '(this is not a known fork)';
+        }
+
+        html += '<code> <table class="keyValueTable">';
+        html +=     `<tr><td> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` 
+        html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
+        html += '</table></code>';      
+    }catch (err){
+        html += '<code>Error reading git remote info : <br>';
+        html += `${err}</code> <br>`
+    }    
+ 
+    // Show html
+    document.getElementById('remoteInfo').innerHTML = await html;
+ 
+    return html   
+}
+
 async function updateGitconfigs( ){
     
     let html = '';

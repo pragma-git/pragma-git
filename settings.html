@@ -9,6 +9,8 @@
     
     <style> /* Style Tables   */
     
+        
+    
         table{
             border-collapse: collapse;
             text-align:left;
@@ -44,7 +46,18 @@
     /* Style settings-page */
     /*                     */
     
- 
+        .keyValueTable td {
+            font-size: 9pt;
+            font-weight: unset;
+            color: var(--code-text); 
+            padding: unset;
+        }
+    
+        .keyValueTable tr {
+            border-bottom: unset;
+        } 
+        
+        
         .tools{
             border: none;
         }
@@ -223,7 +236,7 @@
                       <button class="tab-button" data-id="foldableDiv1"  style="border-top-left-radius: 10px;">Repository</button>
                       <button class="tab-button" data-id="foldableDiv4">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3"  onclick="updateGitconfigs()">System Info</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3"  onclick="updateGitconfigs(); updateRemoteInfo( )">System Info</button>
                 </div>
             </div>
     </div> 
@@ -916,10 +929,14 @@
                 </script>  
                 <br>  
                        
+                  
 
+                Current Remote :
+                <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
+                <br>
                 
                 Your system's path as seen by Pragma-git :
-                <div class='indent'><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
+                <div class='indent'><code> <span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>
                   
 
