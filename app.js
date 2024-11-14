@@ -5734,6 +5734,7 @@ async function updateSettingsWindow(){     // Update selected repo
                 
         // Update repo in settings_win 
         try{
+            await settings_win.window._callback('systemInfoClicked', {id: state.repoNumber }); // Updates everything in System Info tab
             await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
             
         }catch(err){ 

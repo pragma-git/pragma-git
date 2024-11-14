@@ -840,6 +840,12 @@ async function _callback( name, event){
             break;
         }
 
+        case 'systemInfoClicked': {
+            updateGitconfigs(); 
+            updateRemoteInfo( )
+            break;
+        }
+
         // Software input fields
         case 'gitDiffTool': {
             state.tools.difftool = event.value;
