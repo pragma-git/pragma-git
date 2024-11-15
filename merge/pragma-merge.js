@@ -808,11 +808,11 @@ function readOnlyOption( readonly){
         options.readOnly = true; 
         parent.document.title = `${HTML_TITLE}    ( READ-ONLY VIEW )`;
         
-        // Hide Save and cancel buttons
+        // Hide Buttons
         document.getElementById('cancel').style.visibility = 'collapse';
         document.getElementById('save').style.visibility = 'collapse';
+        document.getElementById('reload').style.visibility = 'collapse';
 
-        
         // Show Close button
         document.getElementById('close').style.visibility = 'visible';
         document.getElementById('close').style.float = 'right';
