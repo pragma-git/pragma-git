@@ -615,6 +615,8 @@ async function initUI( keep) {
 
             if ( execBits.uncommitted !== execBits.HEAD ){
                 showExecutableBitDiffersState = 'visible';
+                editorLabel = `${editorLabel} <code>(x${execBits.uncommitted ? '+' : '-'})</code>`;
+                rightViewerLabel = `${rightViewerLabel} <code>(x${execBits.HEAD ? '+' : '-'})</code>`;
             }
             
             break; 
@@ -634,6 +636,8 @@ async function initUI( keep) {
             
             if ( execBits.previous !== execBits.selected ){
                 showExecutableBitDiffersState = 'visible';
+                editorLabel = `${editorLabel} <code>(x${execBits.selected ? '+' : '-'})</code>`;
+                rightViewerLabel = `${rightViewerLabel} <code>(x${execBits.previous ? '+' : '-'})</code>`;
             }
             
             break;
