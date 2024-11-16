@@ -5471,7 +5471,30 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
     //
     
 	if (process.platform === 'win32') {
-		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, options ).toString().trim();
+		
+		let out;
+
+		//Run using git bash
+		delete process.platform;
+		process.platform = 'linux';
+		
+		try{
+			out = execSync( cmd, {
+				env: { PATH: 'PATH:/mingw64/bin/' },
+				shell: 'C:\\Program Files\\git\\usr\\bin\\bash.exe'}, 
+				(err, stdout) => {
+					console.log(stdout);
+					console.log(err);
+				}
+			).toString().trim()
+		} catch (err){
+			process.platform = 'win32';
+			throw new Error( `multiPlatformExecSync error: = ${err}`);
+		}
+		process.platform = 'win32';
+		
+		return  out;
+
 	}else{
 		return  execSync( cmd, options ).toString().trim();
 	}
