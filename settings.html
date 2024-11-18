@@ -834,8 +834,6 @@
             </div>     
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
-                <h3>Information </h3>
-                
                 <img id="find-icon" 
                 style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
                 height="17" width="17"  
@@ -847,9 +845,14 @@
 
 
 
-                <div style='float:right; position: relative; top: 0px;'>
+                <div style='float:right; position: relative; top: 0px;
+                    border-style: solid;border-color: var(--header-color);border-radius: 10px;
+                    padding: 15px;padding-top: 3px;' >
+                    
+                    <h3>Participate :</h3>
  
                     <!--  Star button from GitHub -->
+                    
                     Give Pragma-git a star : <br><br>
                     <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
                          <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
@@ -885,68 +888,74 @@
 
                        
                 </div>
-                
-                Pragma-git version:
-                <div class='indent'><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                Latest available version:
-                <div class='indent'><code><span id='latestVersion' style="font-size: 9pt;"></span>  </code> 
-                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
-                </div><br>
-                
-                
-                nwjs version:
-                <div class='indent'><code><span id='nw-version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                
-                node version:
-                <div class='indent'><code><span id='node-version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                Platform:
-                <div class='indent'><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
 
-                Git version:
-                <div class='indent'><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
                 
-                
-                Settings folder:
-                <div class='indent'><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
-                <script>
-                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
-                </script>    
-                 <br>          
-                
-                
-
-                Log file:
-                <div  class='indent'><code><a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </code></div>
-                <script>
-                     document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                </script>  
-                <br>  
-                       
+                <h3>Pragma-git info:</h3>                
+                <code>
+                    <table class="keyValueTable">
+                        <tbody>
+                            <tr> 
+                                <td> &nbsp; Pragma-git version : &nbsp; </td> 
+                                <td> <span id='version' style="font-size: 9pt;"> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Latest version : &nbsp; </td> 
+                                <td> <span id='latestVersion' style="font-size: 9pt;"></span>
+                                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
+                                </td>
+                            </tr><tr> 
+                                <td> &nbsp; nwjs version : &nbsp; </td> 
+                                <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; node version : &nbsp; </td> 
+                                <td> <span id='node-version' style="font-size: 9pt;"></span>  </td>
+                            </tr><tr> 
+                                <td> &nbsp; Platform : &nbsp; </td> 
+                                <td> <span id='platform' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Git version : &nbsp; </td> 
+                                <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Settings folder : &nbsp; </td> 
+                                <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
+                                    <script>
+                                         document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                                    </script>   
+                                </td>
+                            </tr><tr> 
+                                <td> &nbsp; Log file : &nbsp; </td> 
+                                <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
+                                    <script>
+                                         document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                                    </script>  
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </code>
+                <br>                            
                   
 
-                Current Remote :
+                <h3>Current Remote :</h3>
                 <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
                 <br>
                 
-                Your system's path as seen by Pragma-git :
+                <h3>Your system's path as seen by Pragma-git :</h3>
                 <div class='indent'><code> <span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>
                   
 
-                Your gitconfigs :
+                <h3>Your gitconfigs :</h3>
                 <div  class='indent'><div id='gitconfigs' style="font-size: 9pt"></div>  </div>
                 <br>
                 
                                 
-                License:
-                <div class='indent'><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
+               <h3>License:</h3> 
+                <div class='indent' style="font-size:9pt">
+                    <code>MIT license  </code>
+                    <a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:9pt"  >
+                        [link]
+                    </a>
+                </div>
                 
 
             </div>
