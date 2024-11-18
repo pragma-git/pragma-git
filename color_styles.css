@@ -113,7 +113,7 @@
     --middle-background: unset;
     
     /* Tables */
-    --tableHoverBrightness: brightness(155%) ;
+    --tableHoverBrightness: brightness(120%);
 }   
 
 
@@ -299,5 +299,6 @@
         }
         
         tr:hover {
-            backdrop-filter: var(--tableHoverBrightness);  // override locally by   tr:hover {  backdrop-filter: none; }
+            backdrop-filter: var(--tableHoverBrightness);  //
+            override locally by   tr:hover {  backdrop-filter: none; }
         }
