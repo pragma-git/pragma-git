@@ -12,7 +12,9 @@
  
  <h4>Frames -- diff viewer/editor</h4>       
     <p>
-    In difference mode, 2 frames are shown.  They are labelled according to their function, but generally speaking the left frame displays the modified file and the right the already stored file.
+    In difference mode, 2 frames are shown.  
+    They are titled according to their function (new / stored / selected / previous). 
+    Generally speaking, the left frame displays the modified file and the right the already stored file.
     </p>  
     
     
@@ -61,11 +63,11 @@
  <h4>Display settings</h4>  
 
     <p>
-    <input type="checkbox" id="align"><label for="align"> align</label> - makes the same rows in the displayed files be aligned.
+    <input type="checkbox" id="align"checked ><label for="align"> align</label> - makes the same rows in the displayed files be aligned.
     </p> 
 
     <p>
-    <input type="checkbox" id="hide_unchanged"> <label for="hide_unchanged"> hide unchanged</label> - hides rows that are equal in the displayed files.
+    <input type="checkbox" id="hide_unchanged" checked> <label for="hide_unchanged"> hide unchanged</label> - hides rows that are equal in the displayed files.
     Hidden sections of the text are displayed as <code style="background:white; border-radius: 4px; zoom: 80%">(...)</code>
     </p> 
 
@@ -88,3 +90,16 @@
        &#x25B2; - go to previous modified text block
     </p>  
 
+
+ <h4>Message 
+    "<span id='showExecutableBitDiffers' style="border-bottom-style: solid">Note: executable bit differs</span>"
+</h4>       
+    <p>
+       This message indicates that the executable bit (chmod +x command on linux and MacOS) is different between the files.
+    </p>  
+    <p>
+       When executable bit differs between files, the title above the code panes 
+       (showing : new / stored / selected / previous) is amended showing the executable bit status.<br>
+       <code>(x+)</code> means that the file is executable.  <br>
+       <code>(x-)</code>  that it is non-executable.
+    </p>  

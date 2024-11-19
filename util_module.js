@@ -4,6 +4,20 @@ const myModule = {}
 
 var fs = require('fs');
 
+// String tests
+myModule.isEmptyString = function( str) { 
+    // True if string is: '', contains only spaces, undefined, or null
+    // False is string contains non-empty characters
+    if (str === undefined || str === "" | str === null ) {
+        return true;
+    }
+    if (str.trim() === ''){
+      return true;
+    }
+    return false;
+}
+
+
 // Work on array with fields
 myModule.cleanDuplicates = function ( myArray, objectField ){ 
     // Removes all elements in "myArray"  where the field "objectField" are duplicates
@@ -70,6 +84,23 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     return Number(foundIndex);
 }
 
+// Parse string containing multiple key value pairs 
+myModule.parseKeyValuePairsFromString = function (inputString) {
+    const result = {};
+    
+    // Split the input string by line breaks
+    const lines = inputString.split('\n');
+    
+    lines.forEach(line => {
+        // Split each line by the first equal sign
+        const key = line.split('=')[0];
+        const value = line.split('=').slice(1).join('=')
+        
+        result[key] = value; 
+    });
+    
+    return result;
+}
 
 // Branch name filtered by allowed chars
 myModule.branchCharFilter = function ( string ){

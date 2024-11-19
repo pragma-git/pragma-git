@@ -1,16 +1,9 @@
-[init]
-    defaultbranch=main
-
 [mergetool "pragma-git"]
-    cmd = "/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
-	trustExitCode = true 
+    cmd = "C:/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
        
 [core]
-    askPass = "/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"   
-    quotepath = false  # Stop UTF-8 characters to be transcribed.  Solves swedish characters etc
-    
-
-[credential]
-    useHttpPath = true  # Store different credentials for different repositories on same account
-    interactive = 0     # Turns of default manager for Windows git
-    
+    askPass = "C:/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"   
+  
+  
+[push]
+    autoSetupRemote = true

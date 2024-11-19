@@ -113,7 +113,7 @@
     --middle-background: unset;
     
     /* Tables */
-    --tableHoverBrightness: brightness(155%) ;
+    --tableHoverBrightness: brightness(120%);
 }   
 
 
@@ -144,7 +144,7 @@
         color: var(--body-text);
         border-width: thin;
         background-color: var(--input-background);
-        /* margin-top: 0px; */
+        app-region: no-drag
     }
     
     .readonly{
@@ -179,7 +179,7 @@
         
         img{
            filter: invert( var(--image-invert) );
-            -webkit-user-drag: none;
+           -webkit-user-drag: none;
         }
 
         
@@ -287,7 +287,7 @@
         }
         
         button{
-            
+            app-region: no-drag;
         }
         
         button:not(:disabled):hover{
@@ -299,5 +299,6 @@
         }
         
         tr:hover {
-            backdrop-filter: var(--tableHoverBrightness);  // override locally by   tr:hover {  backdrop-filter: none; }
+            backdrop-filter: var(--tableHoverBrightness);  //
+            override locally by   tr:hover {  backdrop-filter: none; }
         }

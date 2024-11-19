@@ -210,9 +210,13 @@
     # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
     
         
-    # Make pragma-merge helper script executable
+    # Make pragma-merge and pragma-askpass executable
+    echo ' '
     echo 'Make "pragma-merge" executable'
-    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge"
+    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge" || BUILD_EXIT=$?
+    
+    echo 'Make "pragma-askpass" executable'
+    chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass" || BUILD_EXIT=$?
 
     echo ' '
     echo $(formatReturn $BUILD_EXIT) Building
@@ -453,12 +457,16 @@
     --output-type deb \
     --name 'pragma-git' \
     --architecture 'amd64' \
-    --maintainer 'axelsson.jan@gmail.com' \
+    --maintainer 'Jan Axelsson <axelsson.jan@gmail.com>' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
+    --license "MIT"  \
+    --url "https://pragma-git.github.io"  \
     --deb-no-default-config-files \
     --chdir "$DIR" \
     --package "linux64/$DIR.deb" \
+    --depends libatomic1 \
+    --depends git \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git \
@@ -500,13 +508,15 @@
     --output-type rpm \
     --name 'pragma-git' \
     --architecture 'amd64' \
-    --maintainer 'axelsson.jan@gmail.com' \
+    --maintainer 'Jan Axelsson <axelsson.jan@gmail.com>' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
+    --license "MIT"  \
+    --url "https://pragma-git.github.io"  \
     --chdir "$DIR" \
     --package "linux64/$DIR.rpm" \
-    --depends libXScrnSaver \
-    --depends libatomic \
+    --depends libatomic1 \
+    --depends git \
     --rpm-os linux \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \

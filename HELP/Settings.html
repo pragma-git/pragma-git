@@ -99,7 +99,6 @@
                       <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -170,7 +169,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small active" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -197,7 +195,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -261,95 +258,30 @@
             
      
             
-            <br> 
-           <div class="toolWrapper"  id="forkSection"> 
-                <div class="buttonWrapper">
-                      <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
-                      <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
-                      <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small active" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
-                      <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
-                      <div class="tab-click-text"> (click on tab)</div>  
-                </div>
-            </div>
-                         
-    
-            <p>Instead of starting with a local folder, you may copy from an existing repository (this process is called cloning), but make it your own copied project.  This is called "forking".</p>
+        
+            <dt><h4 id="forkSection">About forked repositories </h4></dt>   
+            <br>           
+                <dd>  
+                    
+                <p>If you try to clone a 'forked' repository, Pragma-git tries to get the url for the original (parent) repository automatically,
+                and write the parent url as 'upstream' remote.
+                </p>
+                      
+                <p>Forking is the process of starting with somebody elses repository, and making it your own.
+                In Github and similar providers forking is performed from the web interface.  
+                
+                The fork process then creates a copy in your own repository (called origin),
+                and also remember where it came from (upstream).  
+                
+                The beauty of keeping the relation to the parent, is that you can update the changes from the parent to your own repository, 
+                as the parent evolves.
+                
+                The parent is called "upstream" and is a remote repository. Your own remote repository is called "origin". 
+                </p>
          
         
-        <dt><h4>Forking </h4></dt> 
-        <br> 
-            <dd>
-            Forking a remote repository is the same as copying an existing remote repository, and making it your own.  
-            This original remote repository is referred to as "upstream".  
-            The point is to develop on your own (forked) project instead of (somebody elses) repository.
-            <br>
-            <br>
-            Forking can be achieved either directly from your github account's web page, or from pragma-git. 
-              The alternative ways are : <br><br>
-            1) This is the alternative if you prefer the github way of forking. Login to the github web page, and fork a repository. Then 
-            clone the (newly created) remote repository with pragma-git's clone tab (<a href="#cloneSection">read here</a>).
-            If this is your preferred method, you can stop reading about forking now and use the github workflow for "syncing" and "pull requests"<br><br>
-            2) If you wish to use the pragma-git way, you can sync directly from pragma-git.  "Pull requests" still needs to be done from the github web page. 
-              In the fork-tab in pragma-git, you fill in the address URL of the original repository, and where you want to store your local copy, using this dialog :
-            <br>
-            <br>
-            
-            </dd>
-            <br>
-                                           
-            <dd><textarea id="urlToClone"  placeholder="URL to fork from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
-            </dd>
-            <br>
-                                         
-            <dd><textarea id="cloneFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
-            </dd>  
-            <br>
-                                
-            <dd><button>Fork</button> 
-            </dd>
-
-            <br>
-            <br>
-            
-            <dd> The <button>Fork</button> button initiates the forking operation.     
-            </dd>
-  
-      
-            <br>
-      		<dd> 
-      		You should then complete this by adding a remote repository, under the 'origin' in the Remote-tab.
-        	</dd>     
-        	<br>
-            <br>   
-     
-            <dt><h4>Workflow </h4></dt>   
-            <br>      
-            
-            <dd> The workflow is from top to bottom :  
-                <ol>  
-                    <li>Input the remote repository address (url)   
-                    <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
-                    <li><button>Fork</button> makes a copy of the "upstream" repository inside the selected folder, 
-                    and connects your local copy to the remote "upstream" repository
-                    <li>After forking the "Remote" tab is opened. 
-                    This to remind you, that there is no active remote repository set up, and you are now only working locally.
-                    Please fill in a new remote repository to keep your work safe (see NOTE, if you work with github).
-                </ol>   
-                <u> NOTE </u> : if you work with github repositories, create a new remote repository using the 
-                <button><img style='vertical-align:bottom;' height="17" width="17" src="../images/github-mark.png" > GitHub</button> button.
-                This creates the forked remote repository the github way, linking the "upstream" repository with your own remote repository. 
-                This way, important functionality such as "syncing", and performing "pull requests" will work on the github web page.
-            </dd>
-            <br>     
-            
-    
-            <dt><h4>More about forked repositories </h4></dt>   
-            <br>      
                     
-                <dd> 
+
                 Sometimes, you want to transfer code you have developed in your forked repository back to "upstream". 
                 This is done through something called a "pull request" or "merge request".  
                 Typically this is done on your remote repository's (github, gitlab, ...) web page.
@@ -368,14 +300,14 @@
             </dd> 
      
             
-            <br>               
+                <br>
+                <br>           
         
         <div class="toolWrapper"  id="addSection"> 
                 <div class="buttonWrapper">
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -412,7 +344,6 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="forkTab" class="tab-button-small" data-id="forkDiv" onclick="window.location.href='#forkSection'" >Fork</button>
                       <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
                       <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
@@ -809,37 +740,52 @@
                 
             <dt><h4>Git & system tools (built-in if empty)</h4></dt>
                 <dd>
-                <p> Pragma-git has a built-in diff and merge tool.  
-                If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.</p>
-                 If you have your favorite Diff and Merge tool it may be used instead. 
-                 <br>
-                 
-                There are numerous such tools to chose from (search internet for : Diff and Merge tool). Some that are listed in the git help
-                are : meld, kdiff3, kompare, tkdiff,  xxdiff, emerge, gvimdiff, ecmerge, diffuse, opendiff, p4merge and araxis.
-                Meld exists for Windows, Mac, and Linux, but there are many platform specific tools that may be equally good, or even suit you better.
-                The settings for external tools are :
-                 <br>
-                 
-                <p> Pragma-git can open the file browser or a terminal, in the path of the current repository.  </p>
-                 If you have your favorite file browser or terminal, you can add the path to it instead. 
-                 <br>
-                 </dd>
+                    <p> Pragma-git has a built-in diff and merge tool.  
+                    If the fields for external tools are left blank (or says <code>pragma-git</code>), the built-in tool will be used.
+                    
+                    </p>
+                     
+                    <p> There are numerous alternative Diff and Merge tools to chose from (search internet for : Diff and Merge tool). 
+                    You can install one of these to your system, and use it easily if known to git.
+                    See a list from the command line: <br><code>git mergetool --tool-help</code>.  
+                    </p>
+
+                     
+                    <p> Pragma-git can open the file browser or a terminal, in the path of the current repository.  
+                    If you have your favorite file browser or terminal installed, you can add the path for it to be used instead of the system defaults (blank field).  </p>
+                    </p>
+                    
+                    
+                    The settings for external tools are :
+                </dd>
                 
                 <br>
                 <dd><b>- Diff tool </b> , lets Pragma-git show you differences between different revisions. The diff-program must be installed separately.  One good diff program is "Meld", but there are tens of different programs to download </dd>
                 <br>
                 <dd><b>- Merge tool </b> , lets Pragma-git help you solve file conflicts where git cannot decide safely on its own (conflicts arising from Merges, or Pull from remote repository where work has been done in both places)  </dd>
                 <br>
-                <dd><b>- File browser </b> , the path to preferred file browser (or empty for system default.    </dd>
+                <dd><b>- File browser </b> , the path to preferred file browser (or empty for system default).    </dd>
                 <br>
                 <dd><b>- Terminal </b> , the path to preferred terminal (or empty for system default).   </dd>
                 <br>
-                <dd><b>- Addition to path </b> , if the external diff/merge tools do not open, their path may not be accessible to Pragma-git.  
+                <dd><b>- Addition to path </b> , if the external tools do not open, their path may not be accessible to Pragma-git.  
                     This can be fixed, by adding the path to the tools in this field.
                     If you have different diff and merge tools, two paths may be needed.
                     The two paths should then be separated by "<code>;</code>" for Windows, or "<code>:</code>" for Mac and Linux.
                 </dd>
                 <br>
+                <br>
+                
+                <dd><b>Note: </b> the external diff/merge tools are not opened through the git config files, but from Pragma-git settings. 
+                The <code>cmd</code> how to handle the diff/merge tools are however in the git config files, and should just work for one of the known tools.
+                </dd>
+                <br>
+                
+                <dd><b>Advanced: </b> The name specified in above diff and merge tool settings have an underlying command defined in git config files.  
+                    So, to use your own installed diff/merge software  (which is not known to git) the 
+                    <code>cmd</code> field has to be defined manually in one of the git config files. 
+                    After that, you can enter the defined name in the diff/merge tool fields.
+                </dd>
          </dl>     
     </p>
        
@@ -862,7 +808,29 @@
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  
-    <p>This shows information that can be used for problem solving </pp>
+    <p>This shows information that can be used for problem solving </p>
+    
+    <p>The help is split into sections about Pragma-git, the currently selected Remote Repo,
+    the system's path, and the gitconfig file hierarch.</p>
+    
+    <p>The credential information for the remote repository is shown as a convenience. 
+    The information is not stored by Pragma-git, but is found with the <code>git credential fill</code> command.</p>
+    
+    <p>A few pieces of information is harvested from the remote repository (if github, gitlab, or bitbucket),
+    and is shown under "Git remote info"</p>
+     
+    <p>To the right is a few links for bug reporting, or to give ideas for improvements.</p>
+       
+    <p>Please give a star to Pragma-git, by pressing the 
+        <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
+             <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
+                <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"></path>
+            </svg>
+            Star
+        </button>
+        button.
+     </p>
+    
     <br>
 
     <br>

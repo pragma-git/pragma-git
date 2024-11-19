@@ -13,4 +13,7 @@
 [credential]
     useHttpPath = true  # Store different credentials for different repositories on same account
     interactive = 0     # Turns of default manager for Windows git
-    
+  
+  
+[push]
+    autoSetupRemote = true

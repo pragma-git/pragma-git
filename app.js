@@ -353,8 +353,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var gitCounter = 0;  // For SimpleGitLog
 
             
-  // Cache remote urls ( sets state.repos.remoteURL from what is acctually set in repo -- instead of in file)
-  cacheRemoteOrigins();
+        cacheRemoteOrigins();
   
 
     
@@ -649,7 +648,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-store-button': {
-        await storeButtonClicked();
+         storeButtonClicked();
           
         // Update graph
         await _update();
@@ -2210,7 +2209,7 @@ async function _callback( name, event){
             
         }else{
             // Store
-            await gitAddCommitAndPush( readMessage());
+            gitAddCommitAndPush( readMessage());
         }
         
 }  
@@ -2429,7 +2428,7 @@ async function _callback( name, event){
                 await addExistingRepo( folder); 
                 
                 // Update settings repo table
-                updateSettingsRepoTable();
+                await updateSettingsRepoTable();
             }
         }catch(error){
             displayLongAlert('Failed adding repo', error, 'error'); 
@@ -3479,7 +3478,7 @@ async function gitIsInstalled(){
 		await simpleGitLog().raw([ 'version'], test );
 	}catch(err){
 		state.git = isInstalled;
-		showGitNotInstalledDialog()
+		showGitNotInstalledDialog( err) 
 		return isInstalled;
 	}
     
@@ -3494,7 +3493,17 @@ async function gitIsInstalled(){
         
     };
     
-    function showGitNotInstalledDialog(){
+    function showGitNotInstalledDialog( err){
+        
+        // XCode license (Get here if Xcode, implying git is installed but license not agreed on yet)
+        if ( err.toString().includes('Xcode') ){
+            pragmaLog('show external dialog for Xcode error ' );
+            displayLongAlert('Failed testing git', err, 'error'); 
+            state.git = isInstalled;
+            return isInstalled
+        }
+        
+        // General error
 		pragmaLog('show modal dialog = gitNotInstalledAlert' );
         document.getElementById('gitNotInstalledAlert').showModal();		
 	} 
@@ -4135,7 +4144,7 @@ async function gitAddCommitAndPush( message){
             console.log(err);
             
             if ( err.toString().includes('empty ident name') ){
-                await showUserDialog();
+                showUserDialog();
                 return
             }
         }       
@@ -4151,7 +4160,7 @@ async function gitAddCommitAndPush( message){
         // Push 
         if ( state.repos[state.repoNumber].autoPushToRemote ){   
             await waitTime( 1000);
-            await gitPush( forcePush);  
+            gitPush( forcePush);  
         }
         
         // Finish up
@@ -4425,7 +4434,7 @@ async function gitPush( forcePush){
             
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
             try{
-                await push();
+                push();
                 console.log('success push - first attempt');
             }catch(err){
                 // Try again
@@ -4665,18 +4674,18 @@ async function gitMerge( currentBranchName, selectedBranchName){
 }
 
 async function gitConfigList( localFolder ){
-let configList;
-
-try{
-    await simpleGit(localFolder).listConfig(onConfigList);
-    function onConfigList(err, result ){console.log(result); configList = result.all};
-    console.log(configList);
+    let configList;
     
-}catch(err){        
-    console.log('Error determining remote URL, in gitConfigList');
-    console.log(err);
-}
-return configList
+    try{
+        await simpleGit(localFolder).listConfig(onConfigList);
+        function onConfigList(err, result ){console.log(result); configList = result.all};
+        console.log(configList);
+        
+    }catch(err){        
+        console.log('Error determining remote URL, in gitConfigList');
+        console.log(err);
+    }
+    return configList
 }
 async function registerDefaultBranch(document){
     
@@ -4745,9 +4754,43 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
         console.log(err);
         
         if ( err.toString().includes('empty ident name') ){
-            await showUserDialog();
+             showUserDialog();
         }
     }
+}
+      
+               
+async function addUpstream( forkParentUrl){
+    
+    try{
+   
+        // Set remote repo
+        let commands = [ 'remote', 'add', 'upstream' , forkParentUrl];
+        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
+        function onAddemote(err, result ){
+            console.log(result);
+            console.log(err);
+        };
+        
+        // Modify push url (so it will be different from fetch url)
+        commands = [ 'remote', 'set-url', '--push', 'upstream', 'NO-PUSH'  ];                
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
+        function onSetRemoteUrl(err, result ){
+            console.log(result);
+            console.log(err);
+        };
+        
+        // Document fork parent in settings
+        state.repos[repoNumber].forkedFromURL = forkParentUrl;
+        
+        await cacheBranchList();
+        await updateRemoteRepos();
+    }catch (err){
+        console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
+        console.warn(err);
+    }      
+    
 }
       
 // Information
@@ -4957,7 +5000,7 @@ async function cacheBranchList(){
             
         }
 
-async function cacheRemoteOrigins(){
+async function cacheRemoteOrigins(){  //Fills in remote URLs for all repos
     
     let promises = [];
     var newCachedRemoteOrigins = {};
@@ -5243,12 +5286,29 @@ async function addExistingRepo( folder) {
             console.log(error);
         }
 
-
-        
         // Add folder last in  state array
         var index = state.repos.length;
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
+        
+        // Fill in state array
+        state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
+        await cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+
+        // Figure out URL of fork-parent (undefined if not a forked repo)
+        let forkParentUrl;
+        try{
+            let remoteurl = state.repos[index].remoteURL;
+            let provider = await gitProvider(remoteurl)
+            forkParentUrl = await provider.getValue('fork-parent');
+            
+            state.repos[index].forkedFromURL = forkParentUrl;
+            await opener.addUpstream( forkParentUrl);
+            
+        }catch (err){
+            console.warn('Failed getting fork-parent URL :');
+            console.warn(err);
+        }
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -5384,17 +5444,64 @@ function getDownloadsDir(){
     
 }
 
-function multiPlatformExecSync( folder, cmd){  // Run git bash in 'folder', on all platforms. 
-	 //Return string output without leading and trailing spaces
+function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
+	 // Run command line program as in terminal
+     //
+     // Inputs:
+     //    folder           folder to run command in
+     //    cmd              command to run in terminal
+     //
+     // Optional inputs:
+     //     mode            'timeout'
+     //     timeoutInMs     
+     //
+     // Output
+     //     string output of command, trimmed  (without leading and trailing spaces)
 	console.log(cmd.toString())
 	const { execSync } = require('child_process');
+    
+    let options = {cwd: folder};
+    
+    if (mode == 'timeout'){
+        // With time out of subprocess
+        options = {cwd: folder, timeout: timeoutInMs, detached: true};  
+        options = {cwd: folder, timeout: timeoutInMs, detached: true, stdio: ['ignore']};  // With time out of subprocess
+    }
+
+    //
+    
 	if (process.platform === 'win32') {
-		return execSync( `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " ${cmd} "`, {cwd: folder} ).toString().trim();
+		
+		let out;
+
+		//Run using git bash
+		delete process.platform;
+		process.platform = 'linux';
+		
+		try{
+			out = execSync( cmd, {
+				env: { PATH: 'PATH:/mingw64/bin/' },
+				shell: 'C:\\Program Files\\git\\usr\\bin\\bash.exe'}, 
+				(err, stdout) => {
+					console.log(stdout);
+					console.log(err);
+				}
+			).toString().trim()
+		} catch (err){
+			process.platform = 'win32';
+			throw new Error( `multiPlatformExecSync error: = ${err}`);
+		}
+		process.platform = 'win32';
+		
+		return  out;
+
 	}else{
-		return  execSync( cmd, {cwd: folder} ).toString().trim();
+		return  execSync( cmd, options ).toString().trim();
 	}
 }
 function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
+    // Start freerunning program (so it will not be attached to pragma-git anymore
+    //
     // append = true means that cmd and folder are appended after each other (good for fileBrowser, bad for opening terminal)
     
 	 //Return string output without leading and trailing spaces
@@ -5434,6 +5541,35 @@ function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder',
 	}
 }
 
+
+// Git provider function
+async function gitProvider(giturl){
+    // Returns the provider class for giturl
+    
+    // Find host (github.com, gitlab.com, ...)
+    let urlParts = new URL(giturl);
+    let host = urlParts.host; 
+    let scriptName  = `${CWD_INIT}/apis_github_and_others/${host}.js`;
+    
+    // Get upstream with provider-specific methods
+    if (fs.existsSync(scriptName) ) {
+        let a = require(scriptName);
+        let provider;
+        try{
+            let creds = await getCredential(giturl);
+            console.log(creds);
+            let TOKEN = creds.password;
+            provider = new a(giturl, TOKEN);
+        }catch (err){
+            provider = new a(giturl);
+        }
+        
+        return provider
+    }else{
+        throw new Error(`gitProvider error: 'unknown scriptName' = ${scriptName}`);
+    }
+    
+}
 
 // Logging to file
 
@@ -5576,7 +5712,7 @@ async function showWindow(win){ // Show external window that was opened hidden
                         win.close();
                     }
                 }
-                console.log(evt.keyCode);
+                //console.log(evt.keyCode);
                 
                 // Inhibit Ctrl Q event listener for closing window
                 if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 81 ){
@@ -5621,6 +5757,7 @@ async function updateSettingsWindow(){     // Update selected repo
                 
         // Update repo in settings_win 
         try{
+            await settings_win.window._callback('systemInfoClicked', {id: state.repoNumber }); // Updates everything in System Info tab
             await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
             
         }catch(err){ 
@@ -5715,9 +5852,10 @@ function displayLongAlert(title, message, type){
     pragmaLog('      title   = ' + title);
     pragmaLog('      message = ' + message);
 
-    let buttonHtml = `<button class="OK-button" onclick="window.close();"> OK  </button> `;
+    let buttonHtml = `<button class="OK-button" onclick="window.close(true);"> OK  </button> `;
     showDialogInOwnWindow(title, message, buttonHtml, 'auto', type);
 }
+  
     function showDialogInOwnWindow( title, message, buttonsHtml, maxHeight, type){  // External alert dialog
         /**
          * title   --message title 
@@ -5756,14 +5894,13 @@ function displayLongAlert(title, message, type){
                 },
                 function(cWindows){ 
 
-                    
-                    cWindows.on('close', function() { 
-                        fixNwjsBug7973( cWindows);
-                    } );
-                
-                     
+
                     cWindows.on('loaded', 
                         function(){
+                            
+                            cWindows.on('close', function() { 
+                                fixNwjsBug7973( cWindows);
+                            } );
                             
                             // Set Class
                             cWindows.window.document.body.classList.add(type)
@@ -5791,7 +5928,12 @@ function displayLongAlert(title, message, type){
                             if ( (maxHeight == 'auto')&&(dialogHeight > MAXHEIGHT) ){
                                 dialogHeight = MAXHEIGHT;
                             }
-      
+                            
+                            // Zoom setting for windows (see Settings dialog)
+                            let windowZoom = global.state.zoom;
+                            dialogWidth = Math.round(dialogWidth * windowZoom);
+                            dialogHeight = Math.round(dialogHeight * windowZoom);
+
                             // Set window size and show
                             cWindows.resizeTo( dialogWidth, dialogHeight)
                             showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
@@ -5852,89 +5994,141 @@ function displayLongAlert(title, message, type){
     
     }
     async function showUserDialog(test){
+        // input: test -- if true, bail out when authorName is known
+        //
+        // Bails out if git is not installed
+        
         
         if (state.git == false){
             return    // Bail out if git is not installed -- no way to get author info without git
         }
-        
-        // test -- if true, bail out if author name is known 
+         
         
         // Get values according to git-config
         let authorName = '';
         let authorEmail = '';
-        let configList;
+     
+        let configList = await gitConfigList(); 
         
         try{
-            configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
             console.log(configList);
             authorName = configList['user.name'];
+            console.log('authorName = ' + authorName);
         }catch(err){
             console.log(err);
+            authorName = undefined;
         }
         
         try{
             console.log(configList);
             authorEmail = configList['user.email'];
+            console.log('authorEmail = ' + authorEmail);
         }catch(err){
             console.log(err);
+            authorEmail = undefined;
         }
         
-        if ( test && ( authorName !== '' ) ){
-            return // Bail out if test is asked for and authorname is known
+        let authorNameIsKnown = (  authorName !== undefined );
+        authorNameIsKnown = authorNameIsKnown && (  authorName.trim() !== '' ); // Add that it has to be non-empty string
+        if ( test &&  authorNameIsKnown){
+            return // Bail out if authorname-test is asked for, AND authorname is known
         }
         
         
+        // Make empty string for dialog
+        if (authorName == undefined){
+            authorName = '';
+        }       
+         
+        if (authorEmail == undefined){
+            authorEmail = '';
+        }
+
         const title = 'Git needs Author information';
         
-        let message = `    
-                    <table>            
-                      <tr style="border: none;">
-                            <td>
-                                <label for="authorName"> Author's name (required):</label> <br>
-                                <input id="authorName" type="text" size="80" value="${authorName}"/>
-                            </td>
-                      </tr>
-                      <tr>
-                            <td>                
-                                <label for="authorEmail"> Author's email :</label> <br>
-                                <input id="authorEmail" type="text" size="80" value="${authorEmail}"/>
-                            </td>
-                        </tr>
-                    </table>   
+        // Message text
+        let message =  
+        `
+            <dialog id="alertDialog"  class="warning">  
+                <b><div> Input missing </div></b>
+                <br> 
+                <div>
+                    Author's information cannot be empty &nbsp;&nbsp;&nbsp;
+                    <button style="float:right" onclick="document.getElementById('alertDialog').close();">
+                        OK
+                    </button>  
+                </div> 
+            </dialog>  
+
+            <p>
+                Required global author information (your user).
+            </p>
+            
+            <table>            
+              <tr style="border: none;">
+                    <td>
+                        <label for="authorName"> Author's name (required):</label> <br>
+                        <input id="authorName" type="text" size="80" value="${authorName}"/>
+                    </td>
+              </tr>
+              <tr>
+                    <td>                
+                        <label for="authorEmail"> Author's email :</label> <br>
+                        <input id="authorEmail" type="text" size="80" value="${authorEmail}"/>
+                    </td>
+                </tr>
+            </table>   
             `; 
         message = message.replaceAll('\n',' '); // Remove EOL from html formatting 
+
         
-        const buttonHtml = `
-            <button  id="okButton"
+        let buttonHtml = `
+            <button id="okButton"
                 onclick=" 
-                opener.setAuthorInfo( document.getElementById('authorName').value, document.getElementById('authorEmail').value );
-                window.close();">
+                    author = document.getElementById('authorName').value;
+                    email = document.getElementById('authorEmail').value;
+                    console.log(author)
+                    if ( author.trim() == ''){ 
+                        document.getElementById('alertDialog').show();
+                    }else{
+                        opener.setAuthorInfo( author, email );
+                        window.close();
+                    } "
+                    >
                 OK
-            </button> 
-                      
-            <button id="cancelButton"
-                onclick="window.close();">
-                Cancel
-            </button>  `;
+            </button>  
+            `;
+
         
+               
         showDialogInOwnWindow(title, message, buttonHtml, 'auto', 'warning');        
     }
-        function setAuthorInfo( authorName, authorEmail){
-            try{
-                commands = [ 'config', '--global', 'user.name', authorName];
-                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-                function onConfig(err, result ){ console.log(result); console.log(err);   }
-            }catch(err){
-                console.log('Failed storing git user.name');
-            }
+        async function setAuthorInfo( authorName, authorEmail){
+            if (authorName.trim() !== ''){
+                try{
+                    commands = [ 'config', '--global', 'user.name', authorName];
+                    console.log('set authorName = ' + authorName);
+                    await simpleGitLog().raw(commands ,onConfig);
+                    function onConfig(err, result ){ console.log(result); console.log(err);   }
+                }catch(err){
+                    console.log('Failed storing git user.name');
+                }
+            }else{
+                console.log('Skipped storing git user.name -- because empty');
+            }   
             
-            try{  
-                commands = [ 'config', '--global', 'user.email', authorEmail];
-                simpleGitLog(  state.repos[ state.repoNumber].localFolder  ).raw(commands ,onConfig);
-                function onConfig(err, result ){ console.log(result); console.log(err);   }
-            }catch(err){
-                console.log('Failed storing git user.email');
-            }
+            if (authorEmail.trim() !== ''){
+                try{  
+                    commands = [ 'config', '--global', 'user.email', authorEmail];
+                    console.log('set authorEmail = ' + authorEmail);
+                    await simpleGitLog().raw(commands ,onConfig);
+                    function onConfig(err, result ){ console.log(result); console.log(err);   }
+                }catch(err){
+                    console.log('Failed storing git user.email');
+                }
+            }else{
+                console.log('Skipped storing git user.email -- because empty');
+            }   
         }
     
 
@@ -6509,16 +6703,6 @@ function loadSettings(settingsFile){
     //
     // Set from state_in, or default value if parameter missing
     //
-    
-        // Internal function (returns defaultValue if input undefined)
-        function setting( input, defaultValue){
-            if (input == undefined){
-                console.warn('Undefined, set defaultValue = ');
-                console.warn(defaultValue);
-                return defaultValue
-            }
-            return input;
-        }
         
         // 3) Make sure multiple struct levels exist in state_in
                             
@@ -6613,29 +6797,7 @@ function loadSettings(settingsFile){
             try {
                     
                 for (let i = 0; i < state_in.repos.length; i++){
-                    
-                    state.repos[i] = {};
-                    
-                    // LocalFolder and URLs
-                    state.repos[i].localFolder = setting( state_in.repos[i].localFolder, '' );
-                    //state.repos[i].remoteURL = setting( state_in.repos[i].remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
-                    state.repos[i].forkedFromURL = setting( state_in.repos[i].forkedFromURL, '' );  // Note : this is not used, but see it as a way to document the original upstream from a Fork operation
-                    
-                    // Local author info
-                    state.repos[i].useGlobalAuthorInfo = setting( state_in.repos[i].useGlobalAuthorInfo, true );
-                    state.repos[i].authorName = setting( state_in.repos[i].authorName, '' );
-                    state.repos[i].authorEmail = setting( state_in.repos[i].authorEmail, '' );
-                    
-                    // Default to global authorinfo if missing
-                    if ( state.repos[i].authorName.trim().length == 0 ){
-                        state.repos[i].useGlobalAuthorInfo = true;
-                    }
-                    
-                    // Local allowPushToRemote, autoPush, No-fast-forward
-                    state.repos[i].allowPushToRemote = setting( state_in.repos[i].allowPushToRemote, true ); 
-                    state.repos[i].autoPushToRemote = setting( state_in.repos[i].autoPushToRemote, true );
-                    state.repos[i].NoFF_merge = setting( state_in.repos[i].NoFF_merge, true );
-        
+                    state.repos[i] = fixRepoSettingWithDefault(state_in.repos[i]);
                 }
                 
             }catch(err){
@@ -6734,7 +6896,36 @@ function loadSettings(settingsFile){
     
     return state;
 }
-function updateWithNewSettings(){
+    // Utility functions for loadSettings
+    function fixRepoSettingWithDefault(repoStateIn){    // Set repo's empty values to default values
+                        
+        repoState = {};
+        
+        // LocalFolder and URLs
+        repoState.localFolder = setting( repoStateIn.localFolder, '' );
+        //repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
+        repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
+        
+        // Local author info
+        repoState.authorName = setting( repoStateIn.authorName, '' );
+        repoState.authorEmail = setting( repoStateIn.authorEmail, '' );
+        
+        // Local allowPushToRemote, autoPush, No-fast-forward
+        repoState.allowPushToRemote = setting( repoStateIn.allowPushToRemote, true ); 
+        repoState.autoPushToRemote = setting( repoStateIn.autoPushToRemote, true );
+        repoState.NoFF_merge = setting( repoStateIn.NoFF_merge, true );
+        
+        return repoState;
+    }
+    function setting( input, defaultValue){             // Utility function to set a single undefined value to its default
+        if (input == undefined){
+            console.warn('Undefined, set defaultValue = ');
+            console.warn(defaultValue);
+            return defaultValue
+        }
+        return input;
+    }
+function updateWithNewSettings(){                   // Call from window that modifies setting
     //Called when left settings window (or directly from other windows that modify settings, for instance graph)
     //
     // NOTE : To implement a new setting that affects the gui, 
@@ -6901,8 +7092,8 @@ window.onload = async function() {
   main_win = win;
 
   
-  console.log('PATH= ' + process.env.PATH);
-  defaultPath = process.env.PATH;
+  //console.log('PATH= ' + process.env.PATH);
+  //defaultPath = process.env.PATH;
 
 
   updateContentStyle(); 
@@ -6965,7 +7156,7 @@ window.onload = async function() {
   }
   
   // Dialog if author's name is unknown
-  showUserDialog(true)  // test = true, will show only if state.git == true
+  showUserDialog(true)  // test = true, will show only if author is unknown
   
   // Update MacOS menu
   recreateAllWindowsMenu()
@@ -7005,7 +7196,7 @@ async function closeWindow(a){
     saveSettings();
 
     // After closing the new window, close the main window.
-    win.close(true);
+    window.close(true);
 } 
 
 

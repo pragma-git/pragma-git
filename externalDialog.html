@@ -7,6 +7,7 @@
       <title>Dialog</title>
 
         <link rel="stylesheet" type="text/css" href="color_styles.css">
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
         
         <style>
             html {
@@ -22,14 +23,14 @@
                 grid-template-rows: 1fr auto;
                 border: 5px solid;
                 font-family: Arial;
-                font-size: 11px;
+                font-size: 14px;
                 height: auto;
                 overflow: auto;
             }
             
             label {
                 font-family: Arial;
-                font-size: 9px;   
+                font-size: 11px;   
             }
             
                     
@@ -109,6 +110,10 @@
     
 <body class="dark " style="position: relative;">
     
+    <script>
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
+    
     <div id="outerContent">     
         <div id="content">       
             <!-- Dark mode on/off--> 
@@ -126,7 +131,7 @@
                 </div> 
                  
                 <div id="messageDiv">
-                    <div id="messageText"><code><br> 
+                    <div id="messageText" style="app-region: no-drag" ><code><br> 
                 </div> 
                 
                 <div id="buttonDiv">  </div> 

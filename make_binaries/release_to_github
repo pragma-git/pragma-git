@@ -10,22 +10,15 @@
 # Changes section :
 
 read -r -d '' CHANGES << ---
-* Settings -- custom terminal and file-browser paths
-* Graph -- remember zoom setting for graph window  
-* Enable Ctrl+W closing of windows  
-* Settings -- Note-text about Forking using Github web page 
-* Graph -- search hash with both lower/upper case
-* Main -- store in same, show dialog only when pressing [Store]
-* Fix multiple workspaces for more windows. Remove MacOS menu 'close', 'minimize'
-* Handle multiple workspaces correctly
-* Settings -- Add links for Starring and Issues to System Info
-* Settings -- show node version in System Info
-* Settings -- list gitconfig in System Info
-* Fix -- conflict window 1) Accept on Windows, 2) wrongly set 'localState.fileListWindow = true'
-* General bash runner -- 'multiPlatformExecSync' defined in main
-* Conflicts -- Undo button works for both Merge and Rebase conflicts
-* Disable store-button if conflict
-* Resolve pull-rebase conflicts
+* Settings -- add more information in System Info tab
+* Pragma-merge -- show if executable bit differs(uncommitted, and history)
+* Settings -- get correct global author info checkbox when opening
+* Pragma-merge --  determine language from shebang, if unknown extension
+* Alerts -- fix bug closing alert
+* Settings -- clone getting upstream (of forked repo) using scripts in 'apis_github_and_others/'
+* Installer linux -- add dependencies:  libatomic1, git
+* Main -- starting first time, setting author and email dialog
+* Fix bug -- external dialog input fields could not be written
 ---
 
 #

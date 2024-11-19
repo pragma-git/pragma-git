@@ -3,10 +3,13 @@
 <head>
     <title>Settings</title>
     <script src="settings.js"></script>
+    
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="settings.css" />
     
     <style> /* Style Tables   */
+    
+        
     
         table{
             border-collapse: collapse;
@@ -43,7 +46,18 @@
     /* Style settings-page */
     /*                     */
     
- 
+        .keyValueTable td {
+            font-size: 9pt;
+            font-weight: unset;
+            color: var(--code-text); 
+            padding: unset;
+        }
+    
+        .keyValueTable tr {
+            border-bottom: unset;
+        } 
+        
+        
         .tools{
             border: none;
         }
@@ -173,11 +187,11 @@
     <!-- Border for dropping folder-->
 
     <style>
-        #addFolder, #cloneFolder, #forkFolder { 
+        #addFolder, #cloneFolder { 
             border-style:  solid;  
             border-width: thin;
         }
-        #addFolder.hover,  #cloneFolder.hover,  #forkFolder.hover  { 
+        #addFolder.hover,  #cloneFolder.hover { 
             border-style:  dashed;  
             border-width: medium;
         }
@@ -195,6 +209,18 @@
         }
         window.document.body.style.zoom = global.state.zoom;
     </script>
+  
+    
+    <!--  Add find  -->    
+    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); // Make find-in-nw fit my purpose 
+    </script> 
+
+    
+    
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>
     
@@ -210,7 +236,7 @@
                       <button class="tab-button" data-id="foldableDiv1"  style="border-top-left-radius: 10px;">Repository</button>
                       <button class="tab-button" data-id="foldableDiv4">Branch</button>
                       <button class="tab-button" data-id="foldableDiv2">Software</button>
-                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3">System Info</button>
+                      <button class="tab-button" style="border-top-right-radius: 10px;" data-id="foldableDiv3"  onclick="_callback('systemInfoClicked', {id: state.repoNumber } );">System Info</button>
                 </div>
             </div>
     </div> 
@@ -344,7 +370,7 @@
                         <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
-                                <input id="gitDiffTool" type="text"  style="width: 100%;" />
+                                <input id="gitDiffTool" type="text"  style="width: 100%;" onChange="_callback('gitDiffTool', this)" />
                             </td>
                         </tr>
                         
@@ -352,7 +378,7 @@
                         <tr class="tools">                          
                              <td>                
                                 <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
-                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool"/>
+                                <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool" onChange="_callback('gitMergeTool', this)" />
                             </td>
                         </tr>
                         
@@ -361,9 +387,9 @@
 
                             <td>                
                                 <label for="fileBrowser"> File browser (open when clicking 
-                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" > ) :
+                                    <img height="17" width="17" style="  vertical-align: middle;" src="images/folder_black.png" onClick="opener._callback('clicked-folder')"> ) :
                                 </label><br>
-                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Name of file browser">
+                                <input id="fileBrowser" type="text" style="width: 100%;" placeholder="Path to file browser"  onChange="_callback('fileBrowser', this)" />
                             </td>
                         </tr>
                         
@@ -371,17 +397,17 @@
                         <tr class="tools">                     
                              <td>                
                                 <label for="terminal"> Terminal (open when clicking                                    
-                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" > ) : 
+                                    <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" onClick="opener._callback('clicked-terminal')"> ) : 
                                 </label><br>
-                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Name of terminal"/>
+                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
                             </td>
                         </tr>
                         
 
                         <tr class="tools">                    
-                             <td colspan="2">
+                             <td>
                                 <label for="pathAddition"> Path (additions here, if diff, merge, git-lfs, etc are not in system path) : </label><br>
-                                <input id="pathAddition" type="text" style="width: 100%;"/><br>
+                                <textarea id="pathAddition" type="text" style="width: 100%;  height: 10em; font-family:unset" onChange="_callback('pathAddition', this)" /> </textarea><br>
                             </td>
                         </tr>
                     </table>
@@ -420,7 +446,6 @@
                               <button id="SoftwareTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                              <button id="forkTab" class="tab-button-small" data-id="forkDiv">Fork</button>
                               <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
@@ -437,11 +462,11 @@
                           <tr style="border: none;">
                                 <td>
                                     <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
-                                    <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorNameChanged',this)" />
+                                    <input id="thisRepoAuthorName" type="text" size="30" oninput="_callback('localAuthorInfoChanged',this)" />
                                 </td>
                                 <td>                
                                     <label for="thisRepoAuthorEmail"> <sup class="footnoteText">*</sup>Author's email :</label><br>
-                                    <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorEmailChanged',this)"/>
+                                    <input id="thisRepoAuthorEmail" type="text" size="30" oninput="_callback('localAuthorInfoChanged',this)"/>
                                     
                                     <input type="checkbox" id="useGlobalAuthorInfo" name="name" value="true" onchange="_callback('useGlobalAuthorInfoCheckboxChanged',this)" checked>
                                     <label for="useGlobalAuthorInfo"> Use global (from Software tab)</label><br>
@@ -449,7 +474,7 @@
                             </tr>
                         </table>  
                         
-                        <div id='warnThatLocalAuthorInfoMissing' class="red"> WARNING : Will use global Author's info because Author's name is missing</div>
+                        <div id='warnThatLocalAuthorInfoMissing' class="red" style='visibility: collapse'> WARNING : Will use global Author's info because Author's name is missing</div>
                         
 
                         
@@ -530,69 +555,6 @@
                         
                     
                     </div>
-
-                    <!--  Fork TAB -->
-                    
-                    
-                    <div class="tool-content " id="forkDiv" >  
-                        (Add repository to list) <br><br> 
-                        Fork a remote repository to this computer :
-                        <table class="toolTable">
-                            <tbody>
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <textarea id="urlTofork"  placeholder="URL to fork from"></textarea>
-                                    </td>
-                                    <td class="toolButtonField">
-                                        <button id="testforkUrl"  class="toolButton" onclick="testURL('urlTofork', {id: 'urlTofork', type: ''})">Test  &nbsp;URL</button>
-                                    </td>
-                                </tr>
-                                
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <textarea id="forkFolder" placeholder="Fork to local folder (type path, use button, or drop folder here) " 
-                                            ondrop="_callback('droppedFolder',event)" 
-                                            ondragover = "this.className = 'hover'; return false; "
-                                            ondragleave = "this.className = ''; return false; "
-                                        ></textarea>
-                                    </td>
-                                    <td class="toolButtonField">
-                                        <button id="forkFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
-                                    </td>
-                                </tr>
-                                
-                                
-
-                                
-                                
-                                <tr class="tool">
-                                    <td>
-                                        <button id="forkButton"  onclick="_callback('forkButtonPressed',this)">Fork</button> &nbsp; <span id="forkStatus"></span>
-                                    </td>                                
-                                </tr>
-                            
-                                
-                            </tbody>
-                            
-                            
-                        </table>
-                        
-                        
-                        <hr> 
-                        <div class="footnoteText">                  
-                            <p>
-                            <sup>*</sup>      
-                                 NOTE: this is the old-fashioned git way to fork.  <br>
-                                 It may be simpler to fork in Github web page (or similar services), and then Clone from the repository you just created. <br>
-                                 The benefit is that pull requests will know about the upstream repository you forked from.
-                            </p> 
-                            
-                        </div>
-                        
-                    
-                    </div>                  
                     
                      <!--  Add TAB -->
                     
@@ -872,13 +834,25 @@
             </div>     
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
-                <h3>Information </h3>
+                <img id="find-icon" 
+                style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
+                height="17" width="17"  
+                onclick="findInNw.showSearchBox();" 
+                onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                src="images/find_black.png" >
 
 
 
-                <div style='float:right; position: relative; top: 0px;'>
+
+                <div style='float:right; position: relative; top: 0px;
+                    border-style: solid;border-color: var(--header-color);border-radius: 10px;
+                    padding: 15px;padding-top: 3px;' >
+                    
+                    <h3>Participate :</h3>
  
                     <!--  Star button from GitHub -->
+                    
                     Give Pragma-git a star : <br><br>
                     <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
                          <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
@@ -892,7 +866,7 @@
                     <br><br>
                     
                     
-                    Feedback: 
+                    Feedback : 
                     <br><br> 
                     
                     <!--  Report Issues GitHub -->  
@@ -914,64 +888,74 @@
 
                        
                 </div>
-                
-                Pragma-git version:
-                <div class='indent'><code><span id='version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                Latest available version:
-                <div class='indent'><code><span id='latestVersion' style="font-size: 9pt;"></span>  </code> 
-                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
-                </div><br>
-                
-                
-                nwjs version:
-                <div class='indent'><code><span id='nw-version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                
-                node version:
-                <div class='indent'><code><span id='node-version' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                Platform:
-                <div class='indent'><code><span id='platform' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-
-                Git version:
-                <div class='indent'><code><span id='gitVersion' style="font-size: 9pt;"></span>  </code>  </div><br>
-                
-                
-                Settings folder:
-                <div class='indent'><code><span id='SettingsDir' style="font-size: 9pt;"></span>  </code>  </div>
-                <script>
-                     document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
-                </script>    
-                 <br>          
-                
-                
-
-                Log file:
-                <div  class='indent'><code><a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>  </code></div>
-                <script>
-                     document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                </script>  
-                <br>  
-                       
 
                 
-                Your system's path as seen by Pragma-git :
-                <div class='indent'><code><span id='path' style="font-size: 9pt;"></span>  </code>  </div>
+                <h3>Pragma-git info :</h3>                
+                <code>
+                    <table class="keyValueTable">
+                        <tbody>
+                            <tr> 
+                                <td> &nbsp; Pragma-git version : &nbsp; </td> 
+                                <td> <span id='version' style="font-size: 9pt;"> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Latest version : &nbsp; </td> 
+                                <td> <span id='latestVersion' style="font-size: 9pt;"></span>
+                                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
+                                </td>
+                            </tr><tr> 
+                                <td> &nbsp; nwjs version : &nbsp; </td> 
+                                <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; node version : &nbsp; </td> 
+                                <td> <span id='node-version' style="font-size: 9pt;"></span>  </td>
+                            </tr><tr> 
+                                <td> &nbsp; Platform : &nbsp; </td> 
+                                <td> <span id='platform' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Git version : &nbsp; </td> 
+                                <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Settings folder : &nbsp; </td> 
+                                <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
+                                    <script>
+                                         document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                                    </script>   
+                                </td>
+                            </tr><tr> 
+                                <td> &nbsp; Log file : &nbsp; </td> 
+                                <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
+                                    <script>
+                                         document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                                    </script>  
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </code>
+                <br>                            
+                  
+
+                <h3>Current Remote :</h3>
+                <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
+                <br>
+                
+                <h3>Your system's path as seen by Pragma-git :</h3>
+                <div class='indent'><code> <span id='path' style="font-size: 9pt;"></span>  </code>  </div>
                 <br>
                   
 
-                Your gitconfigs :
+                <h3>Your gitconfigs :</h3>
                 <div  class='indent'><div id='gitconfigs' style="font-size: 9pt"></div>  </div>
                 <br>
                 
                                 
-                License:
-                <div class='indent'><a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:11"  >MIT license</a></div>
+               <h3>License:</h3> 
+                <div class='indent' style="font-size:9pt">
+                    <code>MIT license  </code>
+                    <a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer;font-size:9pt"  >
+                        [link]
+                    </a>
+                </div>
                 
 
             </div>
@@ -1059,11 +1043,15 @@
           cnt.style.display='none';
           cnt.style.visibility='none';
         });   
-        
+
         
         // Set TAB event listener
         tabs.onclick = e => {
-        
+             
+            // Hide nwFind search box
+            findInNw.hideSearchBox();
+            
+            // Tab click action
             const id = e.target.dataset.id;
             if (id) {
                 tabButton.forEach(btn => {

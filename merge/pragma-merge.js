@@ -261,6 +261,10 @@ function findMimeFromExtension( extension){
     modeInfo = CodeMirror.modeInfo;
     
     
+    //
+    // Search extensions
+    //   
+    
     modeInfo.forEach( handleMode);
     
     function handleMode( row){
@@ -279,13 +283,44 @@ function findMimeFromExtension( extension){
         
     }
     
-    
     console.log( 'Found mime-mode = ' + found);
     
     if (found !== undefined){
         return  found.mime
     }
     
+    //
+    // Reach here if undefined -- search using shebang
+    //
+    let sheBang = cachedFile.BASE.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
+    console.log('Plan B) Find mime-mode from shebang (=' + sheBang + ')');
+    
+    modeInfo.forEach( handleShebang);
+    function handleShebang( row){
+        if (row.ext == undefined){
+            return;
+        }
+        
+        i = row.ext.length - 1;
+        while ( ( i >= 0 )  ){
+            if ( row.ext[i] == sheBang ){
+                found = row;
+            }
+            //console.log( row.ext[i] );
+            i--;
+        }
+        
+    }
+    
+    console.log( 'Found mime-mode = ' + found);
+    
+    if (found !== undefined){
+        return  found.mime
+    }  
+    
+    //
+    // End with false if nothing found
+    //   
     return false 
     
 }
@@ -455,7 +490,7 @@ function resize() {
 }
 
 // Redraw 
-function initUI( keep) {
+async function initUI( keep) {
     /*
      * initUI is called when window opened, and when clicking in the GUI that changes the appearance
      * (Change 2-3 panes, "align" and "hide unchanged" checkboxes, "all"-buttons (MERGE and UNCOMMITTED_DIFF mode), 
@@ -502,7 +537,12 @@ function initUI( keep) {
     // Set display of clicky-buttons
     document.getElementById("two-way").classList.add('enabled');
     document.getElementById("three-way").classList.remove('enabled');
+    
 
+    // Get executable bits 
+    let showExecutableBitDiffersState = 'collapse'; // May be changed to 'visible' if relevant bits differ
+    let execBits = await getExecutableFlags(BASE);
+  
     
      //
      // 2 or 3 panes
@@ -572,6 +612,13 @@ function initUI( keep) {
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
             options.orig = cachedFile.LOCAL;
+
+            if ( execBits.uncommitted !== execBits.HEAD ){
+                showExecutableBitDiffersState = 'visible';
+                editorLabel = `${editorLabel} <code>(x${execBits.uncommitted ? '+' : '-'})</code>`;
+                rightViewerLabel = `${rightViewerLabel} <code>(x${execBits.HEAD ? '+' : '-'})</code>`;
+            }
+            
             break; 
           }
           case 'HISTORY_DIFF':  { //
@@ -586,6 +633,13 @@ function initUI( keep) {
             options.orig = cachedFile.LOCAL;
             
             readOnlyOption(true); // Sets this mode to read only
+            
+            if ( execBits.previous !== execBits.selected ){
+                showExecutableBitDiffersState = 'visible';
+                editorLabel = `${editorLabel} <code>(x${execBits.selected ? '+' : '-'})</code>`;
+                rightViewerLabel = `${rightViewerLabel} <code>(x${execBits.previous ? '+' : '-'})</code>`;
+            }
+            
             break;
           }
           case 'MERGE':  { 
@@ -671,7 +725,7 @@ function initUI( keep) {
     }
     
     //
-    // Set size
+    // Set size, theme, and show search icons
     //
         
     resize();
@@ -690,7 +744,7 @@ function initUI( keep) {
     }
 
     themeSelected( global.state.pragmaMerge.codeTheme);
-
+    document.getElementById('showExecutableBitDiffers').style.visibility = showExecutableBitDiffersState;
 
 }
 function addSearch(headerId, editorId){
@@ -758,11 +812,11 @@ function readOnlyOption( readonly){
         options.readOnly = true; 
         parent.document.title = `${HTML_TITLE}    ( READ-ONLY VIEW )`;
         
-        // Hide Save and cancel buttons
+        // Hide Buttons
         document.getElementById('cancel').style.visibility = 'collapse';
         document.getElementById('save').style.visibility = 'collapse';
+        document.getElementById('reload').style.visibility = 'collapse';
 
-        
         // Show Close button
         document.getElementById('close').style.visibility = 'visible';
         document.getElementById('close').style.float = 'right';
@@ -784,6 +838,56 @@ function getMode( ){
     
     
     return 'MERGE'
+}
+
+// Get info
+async function getExecutableFlags( file){
+    let executableResults = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous:  undefined};
+
+    
+     // Uncommitted (check executable flag directly -- Windows does only check if file exists)
+    executableResults.uncommitted = !!(fs.statSync( BASE).mode & fs.constants.S_IXUSR)
+
+    
+    // HEAD
+    await simpleGit( ROOT ).raw(  [ 'ls-tree', '-r', 'HEAD', file ], onLsFilesHEAD);
+    function onLsFilesHEAD(err, result ){ 
+        let info = result.split(' ')[0];  // '100755 4828b6ff0081ff5c16b026877dd348e85a0bb28e 0	Dockerize_defacing/deface.bash' => '100755'
+        executableResults.HEAD = ( info == '100755');
+    } 
+
+    // HEAD~1
+    await simpleGit( ROOT ).raw(  [ 'ls-tree', '-r', 'HEAD~1', file ], onLsFilesHEAD_1);
+    function onLsFilesHEAD_1(err, result ){ 
+        let info = result.split(' ')[0];  // '100755 4828b6ff0081ff5c16b026877dd348e85a0bb28e 0	Dockerize_defacing/deface.bash' => '100755'
+        executableResults.HEAD_1 = ( info == '100755');
+    } 
+     
+     
+    // Bail out if not historical
+    let hash = global.localState.historyHash;
+    if ( (hash == undefined) || ( hash.trim() == '') ){
+        return executableResults;
+    }
+    
+    // selected (historical) 
+    await simpleGit( ROOT ).raw(  [ 'ls-tree', '-r', hash, file ], onLsFilesSelected);
+    function onLsFilesSelected(err, result ){ 
+        let info = result.split(' ')[0];  // '100755 4828b6ff0081ff5c16b026877dd348e85a0bb28e 0	Dockerize_defacing/deface.bash' => '100755'
+        executableResults.selected = ( info == '100755');
+    }    
+     
+    // previous (historical) 
+    await simpleGit( ROOT ).raw(  [ 'ls-tree', '-r', `${hash}~1`, file ], onLsFilesPrevious);
+    function onLsFilesPrevious(err, result ){ 
+        let info = result.split(' ')[0];  // '100755 4828b6ff0081ff5c16b026877dd348e85a0bb28e 0	Dockerize_defacing/deface.bash' => '100755'
+        executableResults.previous = ( info == '100755');
+    } 
+       
+    
+    
+    
+    return executableResults;
 }
 
 // Finishing

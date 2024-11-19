@@ -24,7 +24,7 @@ var win
 // Counter for remote repos dialog    
 var remoteRepos ={};  // Struct containing counter for GUI of remote repos
 remoteRepos.fetch = {};
-remoteRepos.push = {};  // Prepare for having different data in push
+remoteRepos.push = {};  // Prepare for having different data in push.  NOTE: not implemented yet
 remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
 
 
@@ -59,8 +59,6 @@ async function _callback( name, event){
         opener.pragmaLog('settings._callback = ' + name + eventString);
     }
         
-    
-    
     switch(name) {  
         case 'checkboxChanged': {
             console.log('checkboxChanged');
@@ -115,29 +113,56 @@ async function _callback( name, event){
 
         case 'useGlobalAuthorInfoCheckboxChanged': {
             console.log('useGlobalAuthorInfoCheckboxChanged');
-            console.log(event);
             value = event.checked;
             
-            if ( document.getElementById('useGlobalAuthorInfo').checked ){
-                // Remove from git config --local 
+            let globalIsSelected = await document.getElementById('useGlobalAuthorInfo').checked; // true if global checkbox is checked
+            let localIsSelected = ! globalIsSelected ;  // Local if not global checked
+ 
+            // Global -- remove local gitconfig
+            if ( globalIsSelected){
+                // Remove from git-config --local 
                 await gitRemoveConfigKey( state.repoNumber, 'user.name', 'local');
                 await gitRemoveConfigKey( state.repoNumber, 'user.email', 'local');
+                            
+                // Display in Settings.html using git-config info
+                await displayLocalAuthorInfo();  // Based on git-config info
             }
             
-            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
-                // Set git config --local from stored value
-                try{ await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');   }catch (err) {}
-                try{ await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local'); }catch (err) {}
+            
+            // Local
+            if ( localIsSelected){
+                
+                // Fix null / undefined
+                if ( (state.repos[ state.repoNumber ].authorName == null)||(state.repos[ state.repoNumber ].authorName == undefined) ) {
+                    state.repos[ state.repoNumber ].authorName = "";
+                }
+                
+                if ( (state.repos[ state.repoNumber ].authorEmail == null)||(state.repos[ state.repoNumber ].authorEmail == undefined) ){
+                    state.repos[ state.repoNumber ].authorEmail = "";
+                }
+                
+                // Non-empty user.name, use local
+                if ( state.repos[ state.repoNumber ].authorName.trim().length > 0 ){  
+                    await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');   
+                    await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local');  
+                }
+                
+                // Empty user.name -- Remove from local gitconfig, 
+                if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){  
+                    await gitRemoveConfigKey( state.repoNumber, 'user.name', 'local');
+                    await gitRemoveConfigKey( state.repoNumber, 'user.email', 'local');
+                }
+                
+                // Display in Settings.html based on stored info (entered by user in this session, or stored in settings.json) 
+                await directlyDisplayLocalAuthorInfo( 
+                    state.repos[state.repoNumber].authorName, 
+                    state.repos[state.repoNumber].authorEmail
+                );
             }
-            
-            state.repos[state.repoNumber].useGlobalAuthorInfo = document.getElementById('useGlobalAuthorInfo').checked;
-            
-            let globalSelected = document.getElementById('useGlobalAuthorInfo').checked; // global checkbox selected checked/unchecked 
-            await updateLocalAuthorInfoView( globalSelected ); 
          
             break;
         }
-        case 'localAuthorNameChanged': {
+        case 'localAuthorInfoChanged': {  // Common for user changes of user.name and user.email
             console.log('localAuthorNameChanged');
             console.log(event);
             value = event.checked;
@@ -146,24 +171,32 @@ async function _callback( name, event){
                 return
             }
             
-            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
-                // Set git config --local and store value  
+            // Local 
+            if ( ! document.getElementById('useGlobalAuthorInfo').checked ){
+                // Set git-config --local and store value  
                 state.repos[state.repoNumber].authorName = document.getElementById('thisRepoAuthorName').value;
-                try{ await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');   }catch (err) {}
+                state.repos[state.repoNumber].authorEmail = document.getElementById('thisRepoAuthorEmail').value;
+                try{ 
+                    await gitWriteConfigKey( 'user.name', state.repos[state.repoNumber].authorName, 'local');         
+                    await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local');            
+                }catch (err) {
+                    console.warn(err);
+                }
             }
             
-            // Make sure that blank authorname is not registered in git-config local
+            // Make sure that blank authorname does not register into git-config local
             if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){
-                state.repos[ state.repoNumber ].useGlobalAuthorInfo = true;
-                
-                document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'visible';
-                
-                // Remove from git config --local 
+                                
+                // Remove from git-config --local 
                 await gitRemoveConfigKey( state.repoNumber, 'user.name', 'local');
                 await gitRemoveConfigKey( state.repoNumber, 'user.email', 'local');
-            }else{
-                document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
             }
+            
+            // Display in Settings.html
+            directlyDisplayLocalAuthorInfo( 
+                state.repos[state.repoNumber].authorName, 
+                state.repos[state.repoNumber].authorEmail
+            );
          
             break;
         }
@@ -176,25 +209,6 @@ async function _callback( name, event){
 
             break;
         }
-        case 'localAuthorEmailChanged': {
-            console.log('localAuthorEmailChanged');
-            console.log(event);
-            value = event.checked;
-            
-            if ( document.getElementById('useGlobalAuthorInfo').checked ){
-                return
-            }
-            
-            if ( !document.getElementById('useGlobalAuthorInfo').checked ){
-                // Set git config --local and store value  
-                state.repos[state.repoNumber].authorEmail = document.getElementById('thisRepoAuthorEmail').value;
-                try{ await gitWriteConfigKey( 'user.email', state.repos[state.repoNumber].authorEmail, 'local');   }catch (err) {}
-            }
-
-            await updateLocalAuthorInfoView( ); 
-         
-            break;
-        }
         case 'globalAuthorEmailChanged': {
             console.log('localAuthorEmailChanged');
             console.log(event);
@@ -202,7 +216,6 @@ async function _callback( name, event){
             try{ await gitRemoveConfigKey( state.repoNumber, 'user.email', 'global'); }catch (err) {}
             try{ await gitWriteConfigKey( 'user.email', document.getElementById('authorEmail').value, 'global');   }catch (err) {}
 
-         
             break;
         }
 
@@ -250,7 +263,6 @@ async function _callback( name, event){
                 
                 document.getElementById('addFolder').innerText=folder;
                 document.getElementById('cloneFolder').innerText = folder;
-                document.getElementById('forkFolder').innerText = folder;                
             }catch(err){
                 
             }
@@ -259,7 +271,6 @@ async function _callback( name, event){
             // Remove hover class
             document.getElementById('addFolder').className = '';
             document.getElementById('cloneFolder').className = '';
-            document.getElementById('forkFolder').className = '';
                                     
             break;
         }
@@ -280,7 +291,6 @@ async function _callback( name, event){
             
             // I know that the last row has index same as length of number of repos
             document.getElementById('cloneFolder').value = localFolder;
-            document.getElementById('forkFolder').value = localFolder;
             document.getElementById('addFolder').value = localFolder;
         
             break;
@@ -292,16 +302,37 @@ async function _callback( name, event){
             id = state.repos.length;
             
             let folder = document.getElementById('cloneFolder').value;  
-            let URL = document.getElementById('urlToClone').value; 
+            let url = document.getElementById('urlToClone').value; 
             
             document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
-            const dummy = await gitClone( folder, URL);
+            const dummy = await gitClone( folder, url);
             document.getElementById('cloneStatus').innerHTML = '';
             
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             createHtmlTable(document);
             drawBranchTab(document);
+            
+            
+            // Figure out URL of fork-parent (undefined if not a forked repo)
+            let forkParentUrl;
+            try{
+                let provider = await opener.gitProvider(url)
+                forkParentUrl = await provider.getValue('fork-parent');
+            }catch (err){
+                console.warn('Failed getting fork-parent URL :');
+                console.warn(err);
+            }
+            
+            // If forked -- set upstream
+            
+            if (forkParentUrl !== undefined) {
+                
+                await opener.addUpstream( forkParentUrl);
+                updateRemoteRepos();
+                
+            }
+            
             
             // Switch to Remote  tab
             document.getElementById('gitHubTab').click()
@@ -311,66 +342,6 @@ async function _callback( name, event){
 
             break;
         }   
-        case 'forkButtonPressed' : {
-            console.log('forkButtonPressed');
-            
-            // I know that the last row has index same as length of number of repos
-            id = state.repos.length;
-            
-            let folder = document.getElementById('forkFolder').value;  
-            let URL = document.getElementById('urlTofork').value; 
-            
-            // Make a clone from fork-URL
-            document.getElementById('forkStatus').innerHTML = 'Fork in progress ';
-            const dummy = await gitClone( folder, URL);
-            document.getElementById('forkStatus').innerHTML = '';
-                 
-            // Combine URL and folder name => repo folder
-            let repoWithExtension = URL.replace(/^.*[\\\/]/, '');
-            let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
-            let topFolder = folder + pathsep + repoName;
-            topFolder = topFolder.replace(/[\\\/]$/, '')
-    
-            // Store forkedURL            
-            try{
-                const commands = [ 'remote', 'add','upstream', URL];
-                await simpleGitLog( state.repos[id].localFolder).raw(  commands, onSetRemoteUrl);
-                function onSetRemoteUrl(err, result ){
-                    console.log(result);
-                    console.log(err) ;
-                };
-                
-                // Set if change didn't cause error (doesn't matter if URL works)
-                state.repos[id].forkedFromURL = URL;
-            }catch(err){
-                console.log('Repository store fork-URL failed');
-                console.log(err);
-            } 
-            
-               
-            // Remove remote origin (makes it a fork -- remote/origin has to be defined manually)
-            await simpleGit(topFolder).removeRemote('origin',onDeleteRemoteUrl);
-            function onDeleteRemoteUrl(err, checkResult) { }
-                
-            // Replace table 
-            document.getElementById("settingsTableBody").innerHTML = ""; 
-            createHtmlTable(document);
-            drawBranchTab(document);
-            
-            // Switch to Remote  tab
-            document.getElementById('gitHubTab').click()                
-            
-            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
-            
-            // Update store
-            remoteRepos.fetch.names[index] = alias;
-            remoteRepos.fetch.URLs[index] = newUrl;
-            remoteRepos.push.names[index] = alias;
-            remoteRepos.push.URLs[index] = newUrl;
-
-            break;
-        } 
         case 'addRepoButtonPressed' : {
             // If folder is a repo -> add
             // If not a repo show dialog doYouWantToInitializeRepoDialog
@@ -406,11 +377,11 @@ async function _callback( name, event){
             }
             
             // Update cached branch list
-            opener.cacheBranchList();
+            await opener.cacheBranchList();
             
             
             // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
+            await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
         
             break;
@@ -473,7 +444,7 @@ async function _callback( name, event){
                 document.getElementById( 10000 + Number(id) ).value = state.repos[id].remoteURL;
                 
                                 
-                drawBranchTab(document);
+                await drawBranchTab(document);
 
                 
                     
@@ -490,12 +461,8 @@ async function _callback( name, event){
                 document.getElementById(id).checked=true
 
 
-                
-                // Update display of local author info (read from git)
-                await updateLocalAuthorInfoView();
-                
+                                
                 // Update local repo settingsDir
-                
                 document.getElementById('allowPushToRemote').checked = state.repos[state.repoNumber].allowPushToRemote;
                 if ( state.repos[state.repoNumber].allowPushToRemote ){                                    
                     document.getElementById('autoPushDiv').style.visibility = 'visible';
@@ -506,11 +473,10 @@ async function _callback( name, event){
                 document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;
                 
                 document.getElementById('NoFF_merge').checked = state.repos[state.repoNumber].NoFF_merge;
-                document.getElementById('useGlobalAuthorInfo').checked = state.repos[state.repoNumber].useGlobalAuthorInfo;
                 
                 
- 
-                await updateLocalAuthorInfoView( state.repos[state.repoNumber].useGlobalAuthorInfo);       
+                // Display author info
+                await displayLocalAuthorInfo();    
                 
                                 
                 // Update displayed .gitignore     
@@ -519,10 +485,6 @@ async function _callback( name, event){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
 
-                await updateGitconfigs( );
-         
-
-                
             }catch(err){
                 // Probably no branches, because repo does not exist
             }
@@ -557,7 +519,7 @@ async function _callback( name, event){
             
             let localFolder3 = state.repos[ state.repoNumber].localFolder; 
             
-            let index = remoteRepos.fetch.pos - 1;
+            let index = remoteRepos.fetch.pos - 1;  // pos is recorded in remoteRepos.fetch only (not in remoteRepos.push)
             
             let oldAlias = remoteRepos.fetch.names[index];
             let alias =  document.getElementById('newRepoAliasTextarea').value.trim();
@@ -578,10 +540,6 @@ async function _callback( name, event){
             }catch (err){
                 
             }
-            
-                        
-
-
 
             // Update store
             remoteRepos.fetch.names[index] = alias;
@@ -589,10 +547,13 @@ async function _callback( name, event){
             remoteRepos.push.names[index] = alias;
             remoteRepos.push.URLs[index] = newUrl;
             
+            if (index >1){
+                remoteRepos.push.URLs[index] = '';  // Push only on origin
+            }
+            
+            
             
             // Add remote url
-            
-
             try{
                 
                 // Add remote if url
@@ -879,6 +840,36 @@ async function _callback( name, event){
             break;
         }
 
+        case 'systemInfoClicked': {
+            updateGitconfigs(); 
+            updateRemoteInfo( )
+            break;
+        }
+
+        // Software input fields
+        case 'gitDiffTool': {
+            state.tools.difftool = event.value;
+            break;
+        }        
+        case 'gitMergeTool': {
+            state.tools.mergetool = event.value;
+            break;
+        }        
+        case 'fileBrowser': {
+            state.tools.fileBrowser = event.value;
+            break;
+        }        
+        case 'terminal': {
+            state.tools.terminal = event.value;
+            break;
+        }
+        case 'pathAddition': {
+            state.tools.addedPath = event.value;
+            opener.setPath(state.tools.addedPath);
+            drawPath();
+            break;
+        } 
+        
     } // End switch
     
 
@@ -897,8 +888,8 @@ async function testURL(textareaId, event){
     try{
             remoteURL = document.getElementById(textareaId).value;
         
-            console.log('textareaId = ' + textareaId);
-            console.log('remoteURL = ' + remoteURL);
+            //console.log('textareaId = ' + textareaId);
+            //console.log('remoteURL = ' + remoteURL);
     
              
             const commands = [ 'ls-remote', remoteURL];
@@ -908,7 +899,9 @@ async function testURL(textareaId, event){
                 document.getElementById(textareaId).classList.remove('green');
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.add('red'); 
-                await simpleGit().env('GIT_ASKPASS', '').raw(  commands, onListRemote); // GIT_ASKPASS='' inhibits askpass dialog window
+
+                const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                await opener.simpleGitLog() .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
             }else{
                 await simpleGit().raw(  commands, onListRemote); // default askpass 
             }
@@ -934,7 +927,7 @@ async function testURL(textareaId, event){
     document.getElementById(textareaId).classList.remove('red');
     document.getElementById(textareaId).classList.add(outputColor);
  }
-function forgetButtonClicked(event){
+async function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
     console.log('Settings - button clicked');
     console.log('Settings - event id = ' + index);
@@ -962,9 +955,12 @@ function forgetButtonClicked(event){
     document.getElementById("settingsTableBody").innerHTML = ""; 
     createHtmlTable(document);
 
-    opener.cacheBranchList();
+    await opener.cacheBranchList();
 
     console.log('Settings - updating table :');
+    
+    // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
+    await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
     
     //generateRepoTable( document, table, state.repos); // generate the table first
 }
@@ -1091,6 +1087,10 @@ async function gitClone( folderName, repoURL){
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
         
+        // Fill in state array
+        state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
+        await opener.cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+        
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
         
@@ -1133,7 +1133,7 @@ async function gitBranchList( folderName){
     
     try{
         await simpleGit( folderName).branch(['--list'], onBranchList);
-        function onBranchList(err, result ){console.log(result); branchList = result.all};
+        function onBranchList(err, result ){branchList = result.all; };
     }catch(err){        
         console.log('Error determining local branches, in gitBranchList');
         console.log(err);
@@ -1182,7 +1182,7 @@ async function gitReadConfigKey( repoNumber, key, scope){
             output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
         } 
         
-        console.log(output);
+        //console.log(output);
     }catch(err){ 
         console.error(err); 
         
@@ -1207,7 +1207,7 @@ async function gitWriteConfigKey( key, value, scope){
 async function gitRemoveConfigKey( repoNumber, key, scope){
     try{  
         commands = [ 'config', '--' + scope, '--unset', key];
-         simpleGit(  state.repos[ repoNumber].localFolder  ).raw(commands ,onConfig);
+        await simpleGit(  state.repos[ repoNumber].localFolder  ).raw(commands ,onConfig);
         function onConfig(err, result ){ }
     }catch(err){
         console.error('Failed removing key = ' + key + ' from ' + scope + ' scope');
@@ -1221,9 +1221,8 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 
         // Default to global authorinfo if missing
         if ( state.repos[i].authorName == undefined || state.repos[i].authorName.trim().length == 0 ){
-            state.repos[i].useGlobalAuthorInfo = true;
             
-            // Clean from git config --local 
+            // Clean from git-config --local 
             try{
                 gitRemoveConfigKey( i, 'user.name', 'local');
                 gitRemoveConfigKey( i, 'user.email', 'local');
@@ -1241,10 +1240,6 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
     }
 }
 
-
-
-            
-
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
@@ -1258,12 +1253,7 @@ async function injectIntoSettingsJs(document) {
     console.log(global.state);
     
     // Write path to System info 
-    if ( os.platform().startsWith('win') ){    
-        document.getElementById('path').innerHTML = process.env.PATH
-        .replace(/;\s*/g,';<br>'); // Replace semicolons
-    }else{
-        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
-    }
+    await drawPath()
       
     // Draw tabs
     await drawBranchTab(document);
@@ -1316,11 +1306,21 @@ async function injectIntoSettingsJs(document) {
 
 
     }
-
+    
+    console.log( "document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility  = " + document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility );
 
 
 };
-
+function drawPath(){
+    // Write path to System info 
+    if ( os.platform().startsWith('win') ){    
+        document.getElementById('path').innerHTML = process.env.PATH
+        .replace(/;\s*/g,';<br>'); // Replace semicolons
+    }else{
+        document.getElementById('path').innerHTML = process.env.PATH.replace(/:\s*/g,':<br>'); // Replace colons 
+    }
+       
+}
 
 // Remote repos functionality
 function getRemoteRepoInfo() { // Reads data for current repo
@@ -1457,8 +1457,6 @@ function updateRemoteRepos(){ // Displays current data in GUI
     }       
 }
 
-
-
 // Draw
 async function drawBranchTab(document){
     try{
@@ -1500,9 +1498,6 @@ async function drawSoftwareTab(document){
     }
     
 
-    updateGitconfigs(); // Write gitconfigs to System Info (TODO : update when changing repo)
-    
-    
     document.getElementById('gitVersion').innerText = localState.gitVersion;
 
     
@@ -1524,7 +1519,7 @@ async function drawSoftwareTab(document){
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
     document.getElementById('terminal').value = state.tools.terminal;
     document.getElementById('fileBrowser').value = state.tools.fileBrowser;
-    document.getElementById('pathAddition').value = state.tools.addedPath;
+    document.getElementById('pathAddition').innerText = state.tools.addedPath;
     
     // Set values according to git-config
     try{
@@ -1534,7 +1529,7 @@ async function drawSoftwareTab(document){
         document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
         
         // Show for local repo
-        await updateLocalAuthorInfoView();  
+        await displayLocalAuthorInfo();
         
     }catch(err){
         console.error(err);
@@ -1780,7 +1775,7 @@ async function generateBranchTable(document, table, branchlist) {
 
         index ++;
     }
-    console.log(table);
+    //console.log(table);
     
     //
     // Add branch (extra row at end)
@@ -1819,101 +1814,254 @@ async function generateBranchTable(document, table, branchlist) {
 
    
 }
-async function updateLocalAuthorInfoView( globalSelected ){
-    // The principle is that if local does not exist => checkbox will be selected to use global
-    // BUT, if local is manually selected with checkbox, globalSelected is true/false (call with one argument)
-    // (if called without argument, globalSelected = undefined )
+            
+// Local git-config author info  
+async function directlyDisplayLocalAuthorInfo( localAuthorName, localAuthorEmail){ // Display author info when modified local author info  (ignore local git-config)
+    // DISPLAY 
+    console.log(' ');
+    console.log('directlyDisplayLocalAuthorInfo :');
+    console.log(`  localAuthorName = ${localAuthorName} `);   
+    console.log(`  localAuthorEmail = ${localAuthorEmail} `);   
+    console.log(`  settingAuthorName = ${state.repos[state.repoNumber].authorName} `);   
+    console.log(`  settingAuthorEmail = ${state.repos[state.repoNumber].authorEmail} `);    
     
-    
-     // Read local from git
-    let localAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'local');
-    let localAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'local');
-    
-    // Must be global if local is undefined
-    let useGlobal = ( localAuthorName == undefined );
-    
+    let localGitConfigDefined = (localAuthorName !== null);  // Local is defined
 
-    // If local    
-    if (  globalSelected == false  ){
-        if (localAuthorName == undefined)
-            localAuthorName = document.getElementById('authorName').value;
-        if (localAuthorEmail == undefined)
-            localAuthorEmail = document.getElementById('authorEmail').value;
         
-        // Show / hide warning text for empty name        
+        // set textfield rw
+        document.getElementById('thisRepoAuthorName').readOnly = false;
+        document.getElementById('thisRepoAuthorEmail').readOnly = false;
+        
+        // display text field values from local gitconfig
+        document.getElementById('thisRepoAuthorName').value  = localAuthorName;
+        document.getElementById('thisRepoAuthorEmail').value = localAuthorEmail;
+                    
+        // Show / hide warning text for empty local name        
         if ( state.repos[ state.repoNumber ].authorName.trim().length == 0 ){       
             document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'visible';
         }else{
              document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
         }
+
+    console.log(`  settingAuthorName = ${state.repos[state.repoNumber].authorName} `);   
+    console.log(`  settingAuthorEmail = ${state.repos[state.repoNumber].authorEmail} `);   
+}
+async function displayLocalAuthorInfo(){ // Display based on git-config author info
+    // DISPLAY using git-config info :
+    //   1) set globalCheckbox, 
+    //   2) set r or rw for textfields (user.name, user.mail) 
+    //   3) user.name, user.mail,  
+    //
+    //                                                     1) set globalCheckbox   2) set textfield    3) Display user.name, user.mail
+    // local gitconfig user.name defined                               [ ]                 rw           display LOCAL user.name, user.mail 
+    // local gitconfig user.name undefined                             [X]                 r            display GLOBAL user.name, user.mail 
+
+    console.log(' ');
+    console.log('displayLocalAuthorInfo :');
+
+    let localAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'local');
+    let localAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'local');    
+    let globalAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
+    let globalAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'global');  
+    
+    console.log(`  localAuthorName = ${localAuthorName} `);   
+    console.log(`  localAuthorEmail = ${localAuthorEmail} `);   
+    console.log(`  globalAuthorName = ${globalAuthorName} `);   
+    console.log(`  globalAuthorEmail = ${globalAuthorEmail} `);  
+    console.log(`  settingAuthorName = ${state.repos[state.repoNumber].authorName} `);   
+    console.log(`  settingAuthorEmail = ${state.repos[state.repoNumber].authorEmail} `);   
+    
+    
+    let localGitConfigDefined = (localAuthorName !== null);  // Local is defined
+    
         
-        useGlobal = false;
-    }
-    
-    // If Global
-    if (globalSelected == true){
-        useGlobal = true;
-        document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
-    }
-    
-    
-    // Update HTML according to local / global
-    
-    if ( useGlobal ){
-        state.repos[state.repoNumber].useGlobalAuthorInfo = true;
-            
-       //document.getElementById('useGlobalAuthorInfo').checked = true   
-        document.getElementById('thisRepoAuthorName').value = document.getElementById('authorName').value;
-        document.getElementById('thisRepoAuthorEmail').value = document.getElementById('authorEmail').value;
-    
+    // Global
+    if ( localGitConfigDefined == false ){  // Global because local is not defined
+        console.log(`  use GLOBAL gitconfig`);
+        
+        // set textfield read-only
         document.getElementById('thisRepoAuthorName').readOnly = true;
         document.getElementById('thisRepoAuthorEmail').readOnly = true;
         
-        document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
-    }else{
-        state.repos[state.repoNumber].useGlobalAuthorInfo = false;
+        // display text field values
+        document.getElementById('thisRepoAuthorName').value  = globalAuthorName;
+        document.getElementById('thisRepoAuthorEmail').value = globalAuthorEmail;
         
-        //document.getElementById('useGlobalAuthorInfo').checked = false
+        // set globalCheckbox state
+        document.getElementById('useGlobalAuthorInfo').checked = true
+        
+        // Hide warning text for empty local name  
+        document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility = 'collapse';
+    }    
+    
+    
+    // Local gitconfig exist
+    if ( localGitConfigDefined == true ){ // Local is defined, therefore editable texts
+        console.log(`  use LOCAL gitconfig`);
+        
+        // set textfield rw
         document.getElementById('thisRepoAuthorName').readOnly = false;
         document.getElementById('thisRepoAuthorEmail').readOnly = false;
         
-        document.getElementById('thisRepoAuthorName').value = localAuthorName;
-        document.getElementById('thisRepoAuthorEmail').value = localAuthorEmail; 
-
-
-    }   
-            
-
-}
-async function updateGitconfigs( ){
-    gitconfigString = await simpleGit(state.repos[state.repoNumber].localFolder).raw(['config', '--list', '--show-origin']);    
-    let html = '';
-    let currentFileURI = '';
-    let rows = gitconfigString.split('\n');
-    for (let i = 0; i < rows.length; i++) {
-        row = rows[i].trim();
-        row = row.replace(/  +/g, ' ');  // Replace multiple spaces with a single space
-        row = row.replace(/\t+/g, ' ');  // Replace tab with a single space
-        fileURI = row.substring(0, row.indexOf(' '));  // Splits on space -- but destroys 'command line:'
-        configString = row.substring(row.indexOf(' ') + 1);
+        // display text field values from local gitconfig
+        document.getElementById('thisRepoAuthorName').value  = localAuthorName;
+        document.getElementById('thisRepoAuthorEmail').value = localAuthorEmail;
         
+        // set globalCheckbox state
+        document.getElementById('useGlobalAuthorInfo').checked = false
+    }
+    
+    
+    // Update stored author info from local git-config (scenario that local git-config is changed outside pragma-git, and settings.json is out of date)
+    updateStoredLocalAuthorInfoFromGitConfig(localAuthorName, localAuthorEmail);
+    
+    console.log(`  settingAuthorName = ${state.repos[state.repoNumber].authorName} `);   
+    console.log(`  settingAuthorEmail = ${state.repos[state.repoNumber].authorEmail} `);   
+    
+    return
 
-        if ( fileURI !== currentFileURI ){
-            currentFileURI = fileURI;
-            currentFileName = currentFileURI.substring(row.indexOf(':') + 1);
-            
-            if ( fileURI == 'command' ){
-                currentFileName = 'Pragma-git internal';
-                configString = row.substring(row.indexOf(':') + 1);
-            }
-            
-            // File name
-            if ( fileURI !== '' ){
-                html+= `<div> ${currentFileName} :</div>`; 
-            }
+    //
+    // Internal function
+    //
+    
+    // Make stored author info  in sync with local git-config
+    function updateStoredLocalAuthorInfoFromGitConfig( gitLocalAuthorName, gitLocalAuthorEmail){  
+        // 1) If git-config is empty -- remember old stored setting (settings.json)
+        // 2) If git-config is not empty -- update stored setting (settings.json)
+        
+        
+        //
+        // user.name
+        //
+        
+        if (gitLocalAuthorName == null){ // Fix null
+            gitLocalAuthorName = "";
         }
         
-        html += `<code>&nbsp; ${configString}</code> <br>`;
+        // Overwrite saved from local git-config if exists (keep saved if local git-config was empty)
+        if (gitLocalAuthorName.trim.length == 0){
+            //Keep  state.repos[state.repoNumber].authorName  because local git-config was empty
+        }else{
+            // Save git-config user.name
+            state.repos[state.repoNumber].authorName = gitLocalAuthorName;
+        }
+
+        
+        //
+        // user.email
+        //       
+        
+        if (gitLocalAuthorEmail == null){ // Fix null       
+            gitLocalAuthorEmail = "";
+        }   
+         
+        // Overwrite saved from local git-config if exists (keep saved if local git-config was empty)    
+        if (gitLocalAuthorEmail.trim.length == 0){
+            //Keep  state.repos[state.repoNumber].authorEmail  because local git-config was empty
+        }else{
+            // Save git-config user.email
+            state.repos[state.repoNumber].authorEmail = gitLocalAuthorEmail;
+        }
+        
+        
+    }
+  
+}
+
+async function updateRemoteInfo( ){
+    let html = '';
+    let creds = {};
+    
+    // Git credentials
+    html +='<br><div> Git credentials :</div>';
+    try{
+        creds = await opener.getCredential();
+        html += '<code><table class="keyValueTable">';
+        Object.keys(creds).forEach( 
+            (key)=> html +=  
+            `<tr> 
+                <td> &nbsp; ${key} : &nbsp; </td> 
+                <td> ${ creds[key]} </td>
+            </tr>` 
+        );
+        html += '</table></code>';       
+    }catch (err){
+        html += '<code>Error reading git credentials : <br>';
+        html += `${err}</code> <br>`
+    }
+
+    
+    // Provider specific remote info
+    html +='<br><div> Git remote info :</div>';
+    try{
+        let provider = await opener.gitProvider( creds.url)
+        let isPrivate = await provider.getValue('is-private-repo');
+        if (isPrivate){
+            visibility = 'private';
+        }else{
+            visibility = 'public';
+        }
+        let forkParentUrl = await provider.getValue('fork-parent');
+        if (forkParentUrl == undefined){
+            forkParentUrl = '(this is not a known fork)';
+        }
+
+        html += '<code> <table class="keyValueTable">';
+        html +=     `<tr><td> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` 
+        html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
+        html += '</table></code>';      
+    }catch (err){
+        html += '<code>Error reading git remote info : <br>';
+        html += `${err}</code> <br>`
+    }    
+ 
+    // Show html
+    document.getElementById('remoteInfo').innerHTML = await html;
+ 
+    return html   
+}
+
+async function updateGitconfigs( ){
+    
+    let html = '';
+    
+    // List config
+    if (state.repoNumber >= 0){
+        configList = await simpleGit(state.repos[state.repoNumber].localFolder).listConfig();
+    }else{
+        // No repo -- check global
+        if (process.platform === 'win32') {  
+            configList = await simpleGit('C:\\').listConfig();
+        } else{
+            configList = await simpleGit('/').listConfig();
+        }
+    }   
+    
+    // Build html, loop by file
+    let files = configList.files;
+    for (fileURI of files) {
+        
+        // Title
+        let fileTitle = fileURI;
+        
+        if ( fileURI == 'command line:' ){
+            fileTitle = 'Pragma-git internal';
+        }
+        
+        if ( fileURI == '.git/config' ){
+            fileTitle = state.repos[state.repoNumber].localFolder + '/.git/config';
+        }        
+        
+        html+= `<br><div> ${fileTitle} :</div>`; 
+        
+        // Loop configs of current file
+        let values = configList.values[fileURI];
+        for (const key in values) {
+            if (values.hasOwnProperty(key)) {
+                configString = `${key}: ${values[key]}`;
+                html += `<code>&nbsp; ${configString}</code> <br>`
+            }
+        }
     }
     
     document.getElementById('gitconfigs').innerHTML = await html;
