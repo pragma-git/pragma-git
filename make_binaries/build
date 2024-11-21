@@ -175,11 +175,11 @@
 
     
 # Clean old builds
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/mac_arm64
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/win64
-    rm -r /Users/jan/Documents/Projects/Pragma-git/dist/linux64
+    rm -rf /Users/jan/Documents/Projects/Pragma-git/dist/Pragma-git-*
+    rm -rf /Users/jan/Documents/Projects/Pragma-git/dist/mac
+    rm -rf /Users/jan/Documents/Projects/Pragma-git/dist/mac_arm64
+    rm -rf /Users/jan/Documents/Projects/Pragma-git/dist/win64
+    rm -rf /Users/jan/Documents/Projects/Pragma-git/dist/linux64
     
     echo 'done'
 
@@ -423,7 +423,6 @@
     -DEXEFOLDER=$DIR \
     -DOUTPUT="win64/$DIR.exe" \
     -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
-    -DPROGRAMFILESFOLDER='$PROGRAMFILES64' \
     windows_installer.nsi \
     || WIN_EXIT=$?
     

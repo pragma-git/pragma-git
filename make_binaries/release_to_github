@@ -10,15 +10,7 @@
 # Changes section :
 
 read -r -d '' CHANGES << ---
-* Settings -- add more information in System Info tab
-* Pragma-merge -- show if executable bit differs(uncommitted, and history)
-* Settings -- get correct global author info checkbox when opening
-* Pragma-merge --  determine language from shebang, if unknown extension
-* Alerts -- fix bug closing alert
-* Settings -- clone getting upstream (of forked repo) using scripts in 'apis_github_and_others/'
-* Installer linux -- add dependencies:  libatomic1, git
-* Main -- starting first time, setting author and email dialog
-* Fix bug -- external dialog input fields could not be written
+* Windows installer, choise for single user and multi user installation
 ---
 
 #

@@ -1,5 +1,5 @@
 {
-  "version": "0.9.15",
+  "version": "0.9.16",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
