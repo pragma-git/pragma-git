@@ -3449,8 +3449,6 @@ function simpleGitLog(pwd) {  // Use as with simpleGit, but this one auto-logs t
         while ( ! stack[i].getFunctionName().includes('simpleGitLog')  && ( i < stack.length - 1)) {
             i++;
         }
-        console.log('i = ' + i);
-        console.log('stack.length = ' + stack.length);
         
         if ( i > ( stack.length - 2 ) ){
                 return 'error in line number from stack trace';
@@ -5038,8 +5036,6 @@ async function cacheRemoteOrigins(){  //Fills in remote URLs for all repos
                     
                     state.repos[repoNumber].remoteURL = upstreamURL;
                     
-                    console.log(repoNumber);
-
                     return
                 }
             }
@@ -5272,6 +5268,8 @@ function mkdir(dir){
     }
 }
 async function addExistingRepo( folder) {
+		console.log(`Add repository folder = ${folder}`);
+	
         // Get top folder
         var topFolder;
         try{
@@ -5285,6 +5283,13 @@ async function addExistingRepo( folder) {
         }catch(error){
             console.log(error);
         }
+        
+        // Windows -- keep mapped network drive (Z:)
+        if (process.platform == 'win32'){
+			topFolder = fixWindowsMappedNetworkDrive( folder, topFolder);
+		}
+        
+
 
         // Add folder last in  state array
         var index = state.repos.length;
@@ -5541,6 +5546,77 @@ function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder',
 	}
 }
 
+function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, return mapped network path (Z:/ ...)
+/**     
+    Purpose : Fix that 'git rev-parse --show-toplevel' returns UNC path when using mapped network drive
+    
+ 
+     folder    : a folder with mapped network (Z:\...) or UNC ( \\vll.se\Ytor\....)
+     topFolder : "git rev-parse --show-toplevel" reports the repos top folder as a UNC network path (thus changing path if a mapped drive). 
+     This function returns either:
+      - topFolder's UNC path if not a mapped drive
+      - topFolder with restored mapped path (Z:/...) 
+    
+     The idea:
+    
+     folder = "Z:\abc\repoTop\repoSubdir" => folder2 = "Z:/abc/repoTop/repoSubdir" ( work with '/' as path separators )
+     topFolder = "//vll.se/Ytor/abc/repoTop"  (Thus "Z:"\ == "//vll.se/Ytor" )
+    
+     Compare paths
+    
+     
+       folder2 :          Z:/           abc/repoTop/repoSubdir
+       topFolder:         //vll.se/Ytor/abc/repoTop
+    
+       mappedTopFolder:   Z:/           abc/repoTop
+    
+                          drive         common
+    
+     Examples: 
+     
+       fixWindowsMappedNetworkDrive( "Z:\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")                 //  "Z:/abc/repoTop"
+       fixWindowsMappedNetworkDrive( "\\\\vll.se\\Ytor\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")   //  "//vll.se/Ytor/abc/repoTop"
+**/
+                    
+    // Exchange  ‘\’ with ‘/’
+    let folder2 = folder.replaceAll('\\','/');    // Exchange ‘\’ with ‘/’
+    
+    // If folder2 is UNC path (//vll.se/...) then topFolder is correct
+    if ( folder2.startsWith('//') ){
+        return topFolder.replaceAll( '/', '\\');  // Return using Windows '\'
+    }
+    
+    // 
+    // Mapped drive -- replace path
+    //
+    
+    let drive = folder2.substring(0,3);  // "Z:/"
+    let rest = folder2.substring(3);     // "abc/repoTop/repoSubdir"
+
+    console.log( `drive  = ${drive}`);
+    console.log( `rest   = ${rest}`);
+    
+    // Determine common (loop increasing intial part of rest until not found within topFolder)
+    let i = 1;
+    while ( ( i < rest.length) & (  topFolder.includes( rest.substring(0,i) ) ) ){ 
+        i++;
+    }    
+    let common = rest.substring(0,i);
+    console.log( `common = ${common}`);
+    
+    // Remove trailing '/'
+    if (common.endsWith('/')){
+        common = common.substring( 0, common.length - 1);
+    }
+    console.log( `common = ${common}`);
+    
+    let mappedTopFolderPath = drive + common
+
+    console.log( `topFolder = ${topFolder}`);
+    console.log( `topFolder = ${mappedTopFolderPath}`);
+    
+    return mappedTopFolderPath.replaceAll( '/', '\\');     // Return using Windows '\' 
+}
 
 // Git provider function
 async function gitProvider(giturl){
@@ -5767,9 +5843,12 @@ async function updateSettingsWindow(){     // Update selected repo
     win.focus();
 }
 async function updateSettingsRepoTable(){  // Only update Repo table
-    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
-    await settings_win.window.createHtmlTable(settings_win.window.document)
-    await updateSettingsWindow()
+	try{
+	    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
+	    await settings_win.window.createHtmlTable(settings_win.window.document)
+	    await updateSettingsWindow()  
+	}catch(err){ 
+	}
 }
 async function updateChangedListWindow(){
     
@@ -6919,8 +6998,6 @@ function loadSettings(settingsFile){
     }
     function setting( input, defaultValue){             // Utility function to set a single undefined value to its default
         if (input == undefined){
-            console.warn('Undefined, set defaultValue = ');
-            console.warn(defaultValue);
             return defaultValue
         }
         return input;
@@ -7071,8 +7148,7 @@ window.onfocus = function() {
   focusTitlebars(true);
 };
 window.onblur = function() { 
-  console.log("blur");
- 
+
   // Allow to blur if not alwaysOnTop
   if ( state.alwaysOnTop === false){
     focusTitlebars(false);  
