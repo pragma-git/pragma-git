@@ -928,7 +928,15 @@
                                          document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
                                     </script>  
                                 </td>
+                            </tr><tr> 
+                                <td> &nbsp; Install path : &nbsp; </td> 
+                                <td> <span id='pragmaPath' style="font-size: 9pt;"></span> </td>
+                                
+                                    <script>
+                                         document.getElementById("pragmaPath").innerHTML = opener.CWD_INIT; 
+                                    </script>   
                             </tr>
+                            
                         </tbody>
                     </table>
                 </code>
