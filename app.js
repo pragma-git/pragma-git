@@ -3547,7 +3547,9 @@ function configFilePath(){
     
     // Find config file
     let configfile = "";
+    
     switch (process.platform) {
+		
       case 'darwin': {
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_mac';
         
@@ -3558,6 +3560,7 @@ function configFilePath(){
         
         break;
       }
+      
       case 'linux': {
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_linux';
            
@@ -3567,17 +3570,21 @@ function configFilePath(){
         }
         break;
       }
+      
       case 'win32': {
         // Note : called win32 also for 64-bit  
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
                    
         // Special DEV
-        if ( STARTDIR.startsWith('C:\\Users') ){
+        if ( STARTDIR.startsWith('C:\\Users') && !STARTDIR.includes('AppData\\Local\\Programs\\Pragma-git')  ){
+			// DEV is located somewhere on C:\Users, but so is also a local single-user install
+			// Therefore, exclude the single-user install location at user's "AppData\Local\Programs\Pragma-git"
             configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_windows';
         }
         break;
       }
     }
+    
     console.log('Config file = ' + configfile);
     pragmaLog('Config file = ' + configfile);
       
