@@ -249,7 +249,7 @@ function loadFile(filePath)  {
 } 
 function findMimeFromExtension( extension){
     
-    // Read  "node_modules/codemirror/mode/meta.js"  to find mime-type  
+    // Read  "../node_modules/codemirror/mode/meta.js"  to find mime-type  
     
     // My version below works better than this :
     //found = CodeMirror.findModeByFileName(extension);
@@ -340,7 +340,7 @@ function themeSelected( themeName){
     console.log(themeName);
     
     // Load theme into iframe head
-    let themeDir = 'node_modules/codemirror/theme/';
+    let themeDir = '../node_modules/codemirror/theme/';
     let themeCssFile = themeDir + themeName + '.css';
     loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
     

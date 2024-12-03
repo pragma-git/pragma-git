@@ -14,11 +14,6 @@
     "min_height": 140,
     "icon": "../images/icon.png"
   },
-  "dependencies": {
-    "codemirror": "^5.65.16",
-    "diff-match-patch": "^1.0.5",
-    "mime-types": "^2.1.35"
-  },
   "build": {
     "nwFlavor": "sdk",
     "nwVersion": "v0.47.2",
@@ -41,8 +36,5 @@
       "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
       "diffUpdaters": true
     }
-  },
-  "devDependencies": {
-    "nwjs-builder-phoenix": "^1.15.0"
   }
 }
