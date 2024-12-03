@@ -1980,9 +1980,9 @@ async function updateRemoteInfo( ){
         Object.keys(creds).forEach( 
             (key)=> html +=  
             `<tr> 
-                <td> &nbsp; ${key} : &nbsp; </td> 
+                <td style="white-space: nowrap;"> &nbsp; ${key} : &nbsp; </td> 
                 <td> ${ creds[key]} </td>
-            </tr>` 
+            </tr>`   // Style "white-space: nowrap" makes it fill width of column
         );
         html += '</table></code>';       
     }catch (err){
@@ -2007,7 +2007,7 @@ async function updateRemoteInfo( ){
         }
 
         html += '<code> <table class="keyValueTable">';
-        html +=     `<tr><td> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` 
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html += '</table></code>';      
     }catch (err){
