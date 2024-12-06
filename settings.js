@@ -2064,7 +2064,16 @@ async function updateGitconfigs( ){
         }
     }
     
-    document.getElementById('gitconfigs').innerHTML = await html;
+    
+    document.getElementById('gitconfigs').innerHTML = await html; 
+    
+    // Add
+     html = await  simpleGit().raw( ['config',  '--get', 'core.askpass']) ;
+     document.getElementById('askpassPath').innerHTML = await html; 
+     
+     html = await simpleGit().raw( ['config',  '--get', 'mergetool.pragma-git.cmd']) ;
+     document.getElementById('pragmaMergePath').innerHTML = await html; 
+     
     
     return html
 }

@@ -162,7 +162,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
         // Modify so that simpleGit:
         //   1) stores last pwd
-        //   2) includes pragam-git's special include for .gitignore 
+        //   2) includes pragam-git's special include for .gitconfig 
         function simpleGit(pwd){
             // get pragma-git .gitconfig-include
             if (configFile === undefined){
@@ -3544,9 +3544,15 @@ async function gitDefineBuiltInTools(){
     util.rm(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
 }
 function configFilePath(){    
+    //
+    // Get mac / win / linux config file
+    // 
+    // If development (DEV), create config file that overrides pragma-git merge and askpass paths to their correct locations
+    // and keeps rest of config
     
     // Find config file
     let configfile = "";
+    let isDev = false;
     
     switch (process.platform) {
 		
@@ -3555,7 +3561,7 @@ function configFilePath(){
         
         // Special DEV
         if ( STARTDIR.startsWith('/Users') ){
-            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_mac';
+            isDev = true;
         }
         
         break;
@@ -3566,7 +3572,7 @@ function configFilePath(){
            
         // Special DEV
         if ( STARTDIR.startsWith('/home') ){
-            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_linux';
+            isDev = true;
         }
         break;
       }
@@ -3579,12 +3585,50 @@ function configFilePath(){
         if ( STARTDIR.startsWith('C:\\Users') && !STARTDIR.includes('AppData\\Local\\Programs\\Pragma-git')  ){
 			// DEV is located somewhere on C:\Users, but so is also a local single-user install
 			// Therefore, exclude the single-user install location at user's "AppData\Local\Programs\Pragma-git"
-            configfile = STARTDIR + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_dev_windows';
+            isDev = true;
         }
         break;
       }
-    }
+
+    }    
     
+    
+    // If DEV, create extra file
+    if (isDev) {
+        // Create new DEV config file 
+        const EOL = '\n';
+        let devConfigFilePath = settingsDir + pathsep + 'pragma-git-config-dev';  // Config when running in DEV mode
+        
+        // New DEV config -- includeordinary config for this platform
+        let configText = '';
+        configText += '# DO NOT CHANGE -- Automatically generated file, changes will be overwritten!' + EOL;
+        configText += '#' + EOL;
+        configText += '# This file is created when you run "pragma-git" in development mode' + EOL;
+        configText += '# The purpose is to get correct paths to helper programs (merge and askpass)' + EOL;
+        configText += '#' + EOL;
+        configText += '# NOTE: This file should not exist when a downloaded and installed pragma-git!' + EOL;
+        configText += '' + EOL;
+        
+        // Override with DEV settings
+        let configFileNormalized = configfile.replaceAll('\\','/');
+        configText += '[include]' + EOL;
+        configText += `    path = "${configFileNormalized}"` + EOL;  // Ordinary config for this platform (switch case above)
+        configText += '' + EOL;
+        
+        configText += '[core]' + EOL;
+        let askPassPathNormalized = `${STARTDIR}/pragma-askpass`.replaceAll('\\','/');
+        configText += `    askpass = "${askPassPathNormalized}"` + EOL;
+        configText += '' + EOL;
+        
+        configText += '[mergetool "pragma-git"]' + EOL;
+        let mergePathNormalized = `${STARTDIR}/pragma-merge`.replaceAll('\\','/');
+        configText += `    cmd = "${mergePathNormalized}" $BASE $LOCAL $REMOTE $MERGED` + EOL;
+        
+        fs.writeFileSync( devConfigFilePath, configText);
+        
+        configfile = devConfigFilePath;
+    }
+ 
     console.log('Config file = ' + configfile);
     pragmaLog('Config file = ' + configfile);
       
@@ -4730,12 +4774,12 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
     // Copy .gitignore to settings Dir
     const gitignore = settingsDir + pathsep + '.gitignore';
     const gitignoreTemplate = 'template-gitignore-settings-dir';
-    if (!fs.existsSync(gitignore)){
+   // if (!fs.existsSync(gitignore)){
         fs.copyFile(gitignoreTemplate, gitignore, (err) => {
             if (err) throw err;
             console.log('gitignoreTemplate was copied SETTINGSDIR/.gitignore');
         });
-    }
+    //}
  
     // Initialize (safe if it is already a repository)
     await simpleGitLog(settingsDir).init( onInit );
@@ -7262,6 +7306,10 @@ async function closeWindow(a){
     
     // Remove signaling file
     util.rm(MAINSIGNALFILE);
+    
+    // Remove dev mode config
+    let devConfigFilePath = settingsDir + pathsep + 'pragma-git-config-dev'; 
+    util.rm(devConfigFilePath);
 
     
     // Fold search fields

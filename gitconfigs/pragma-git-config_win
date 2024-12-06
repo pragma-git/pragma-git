@@ -1,19 +1,17 @@
 [init]
     defaultbranch=main
 
-[mergetool "pragma-git"]
-    cmd = "$ProgramW6432/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
-	trustExitCode = true 
-       
 [core]
     askPass = "C:/Program Files/Pragma-git/pragma-askpass"  
     quotepath = false  # Stop UTF-8 characters to be transcribed.  Solves swedish characters etc
     
-
 [credential]
+    interactive = 0     # Turns of default manager for Windows git[credential]
     useHttpPath = true  # Store different credentials for different repositories on same account
-    interactive = 0     # Turns of default manager for Windows git
-  
-  
+     
+[mergetool "pragma-git"]
+    cmd = "C:/Program Files/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
+	trustExitCode = true 
+
 [push]
     autoSetupRemote = true

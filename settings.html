@@ -907,6 +907,9 @@
                                     <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
                                 </td>
                             </tr><tr> 
+								<td><br></td>
+								<td><br></td>
+                            </tr><tr> 
                                 <td> &nbsp; nwjs version : &nbsp; </td> 
                                 <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
                             </tr><tr> 
@@ -918,6 +921,9 @@
                             </tr><tr> 
                                 <td> &nbsp; Git version : &nbsp; </td> 
                                 <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+								<td><br></td>
+								<td><br></td>
                             </tr><tr> 
                                 <td> &nbsp; Settings folder : &nbsp; </td> 
                                 <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
@@ -933,19 +939,26 @@
                                     </script>  
                                 </td>
                             </tr><tr> 
+								<td><br></td>
+								<td><br></td>
+                            </tr><tr> 
                                 <td> &nbsp; Install path : &nbsp; </td> 
                                 <td> <span id='pragmaPath' style="font-size: 9pt;"></span> </td>
-                                
                                     <script>
                                          document.getElementById("pragmaPath").innerHTML = opener.CWD_INIT; 
                                     </script>   
+                            </tr><tr> 
+                                <td> &nbsp; Askpass path : &nbsp; </td> 
+                                <td> <span id='askpassPath' style="font-size: 9pt;"></span> </td>
+                            </tr><tr> 
+                                <td> &nbsp; Pragma-merge command : &nbsp; </td> 
+                                <td> <span id='pragmaMergePath' style="font-size: 9pt;"></span> </td>
                             </tr>
                             
                         </tbody>
                     </table>
                 </code>
-                <br>                            
-                  
+                <br>                                          
 
                 <h3>Current Remote :</h3>
                 <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
