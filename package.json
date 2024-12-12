@@ -1,5 +1,6 @@
 {
   "version": "0.0.0",
+  "nwVersion": "0.85.0",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
@@ -36,30 +37,7 @@
     "terminal-tab": "^0.0.7",
     "windows-network-drive": "^3.0.2"
   },
-  "build": {
-    "nwFlavor": "sdk",
-    "nwVersion": "v0.85.0",
-    "mac": {
-      "displayName": "Pragma-git",
-      "copyright": "©Jan Axelsson",
-      "icon": "./images/icon.icns",
-      "plistStrings": {
-        "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
-        "CFBundleDocumentTypes": []
-      }
-    },
-    "win": {
-      "productName": "Pragma-git",
-      "companyName": "Jan Axelsson",
-      "copyright": "©Jan Axelsson",
-      "icon": "./images/icon.ico"
-    },
-    "nsis": {
-      "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
-      "diffUpdaters": true
-    }
-  },
   "devDependencies": {
-    "nwjs-builder-phoenix": "^1.15.0"
+    "nw-builder": "^4.13.7"
   }
 }

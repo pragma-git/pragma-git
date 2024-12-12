@@ -19,10 +19,10 @@ BrandingText "Jan Axelsson"
 !define REG_ROOT "HKEY_LOCAL_MACHINE"  
 
 # set the icon
-!define MUI_ICON "../images/icon_installer.ico"
+!define MUI_ICON "../../images/icon_installer.ico"
 
 # define the resulting installer's name:
-OutFile ..\dist\${OUTPUT}
+OutFile ..\..\dist\${OUTPUT}
 
 # set the installation directory
 InstallDir "$PROGRAMFILES64\${APP_NAME}\"
@@ -54,7 +54,7 @@ Section
     SetOutPath $INSTDIR
     
     # specify the files to go in the output path
-    File /r ..\dist\${EXEFOLDER}\*
+    File /r ..\..\dist\${EXEFOLDER}\*
     
     # create the uninstaller
     WriteUninstaller "$INSTDIR\Uninstall ${MAIN_APP_EXE}"
