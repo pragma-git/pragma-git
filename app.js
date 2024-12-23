@@ -5011,8 +5011,8 @@ async function cacheBranchList(){
         async function gitListUpstreamsNeedingFetch(branchName){
             // Sets upstreamAhead flag
             
-            let RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName + " 2>&1 ";
-            RUN = "cd '" + state.repos[state.repoNumber].localFolder + "' && git fetch --dry-run " + branchName;
+            let INCLUDE_PATH = `include.path = ${configFile}` ;
+            RUN = `cd '${state.repos[state.repoNumber].localFolder}' && git -c '${INCLUDE_PATH}' fetch --dry-run ${branchName}`;
         
             let child = await exec( RUN , 
                 (error, stdout, stderr) => { 

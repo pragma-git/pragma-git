@@ -2,15 +2,14 @@
     defaultbranch=main
 
 [mergetool "pragma-git"]
-    cmd = /opt/pragma-git/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
+    cmd = /opt/pragma-git/package.nw/pragma-merge $BASE $LOCAL $REMOTE $MERGED       
 	trustExitCode = true    
 
 [core]
-    askpass = /opt/pragma-git/pragma-askpass
+    askpass = /opt/pragma-git/package.nw/pragma-askpass
 
 [credential]
     useHttpPath = true
-  
-  
+    
 [push]
     autoSetupRemote = true
