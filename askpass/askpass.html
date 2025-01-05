@@ -74,7 +74,9 @@
     </body>
     
     <!--  Init and Functions  --> 
-    <script async>
+    <script>
+        
+        var EXITCODE = 1;  // Defaults to fail
          
         var fs = require('fs');
         var os = require('os');
@@ -92,7 +94,10 @@
 		repoName = url_parts[ url_parts.length - 1].split('.')[0];
         
         
-        <!-- FIRST DIALOG -->
+
+        //
+        // FIRST DIALOG 
+        //
         if ( ARG1.startsWith('Username') ){
 			nw.Window.get().show();
             document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';
@@ -112,28 +117,36 @@
             getUsername()
         }
 
-        
-        <!-- SECOND DIALOG -->
+        //
+        // SECOND DIALOG 
+        //
         if ( ARG1.startsWith('Password') ){
 			nw.Window.get().show();
             document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';
 
         }
 
-
+        //
+        // CALLBACKS 
+        //
         function OK_clicked(){
             let message = document.getElementById('pwd').value;
             
             ExitMessage( message); 
-            Exit( 0);
+            EXITCODE = 0;
+            window.close();
         }   
         
         
         function Cancel_clicked(){
-            Exit( 1);
+            EXITCODE = 1;
+            window.close();
         }
          
-        
+
+        //
+        // UTILITY FUNCTIONS 
+        //        
         function ExitMessage( message){
          
             try{
@@ -147,9 +160,13 @@
         
         
         function Exit( exitCode){
+            
+            let exitCodeString = parseInt( exitCode, 10).toString();
+            opener.pragmaLog( `ASKPASS EXIT CODE = ${exitCodeString}`)
+
          
             try{
-                fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+                fs.writeFileSync(EXITSIGNALFILE,exitCodeString,'utf8'); // Exit code as string
             }catch(err){
                 console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
                 console.log(err);
@@ -182,35 +199,32 @@
     </script>  
     
        
-    <!--  Onload, call javascript file  --> 
+    <!-- Close Event  --> 
     <script>
 		
 		document.getElementById('repoName').innerHTML= '(for repository : "' + repoName + '" )';
 
         window.addEventListener(
-            'unload', 
-            (event) => {
-                OK_clicked();
-                
-            }
+            'beforeunload', 
+            (event) => { Exit( EXITCODE); }
         );
     </script>
-    
+
+
     <script>
-		
             
-    // Set size to match content
-    let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
-    let dx = document.getElementById('outerContent').scrollWidth;
-    let dy = document.getElementById('outerContent').scrollHeight;
-    
-    let hx = window.outerWidth - window.innerWidth;
-    let hy = window.outerHeight - window.innerHeight;
-    window.resizeTo(dx + hx + 2 * padding , dy + hy + padding + 16);
-    
-    // Set ontop
-    nw.Window.get().setAlwaysOnTop( true );
-   
+        // Set size to match content
+        let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
+        let dx = document.getElementById('outerContent').scrollWidth;
+        let dy = document.getElementById('outerContent').scrollHeight;
+        
+        let hx = window.outerWidth - window.innerWidth;
+        let hy = window.outerHeight - window.innerHeight;
+        window.resizeTo(dx + hx + 2 * padding , dy + hy + padding + 16);
+        
+        // Set ontop
+        nw.Window.get().setAlwaysOnTop( true );
+       
     </script>
     
 </html>
