@@ -137,7 +137,7 @@ class gitlab extends General_git_rest_api {
             
             return this.repoInfoStruct;  // Useful for debugging
         } 
-        async getValue( parameterName){  // Get parameter from Github json struct
+        async getValue( parameterName){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
             //
@@ -161,6 +161,14 @@ class gitlab extends General_git_rest_api {
             // Provider-specific code
 
                 switch (parameterName) {  
+                    case 'git-username': {  // Returns default username (not requiring json)
+                        try{
+                            let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"
+                            let pathname = urlParts.pathname;       // "/pragma-git/pragma-git.git" (where first "pragma-git" is the username to extract)
+                            out = pathname.split('/')[1];           // get username
+                        }catch (err){ console.error(err);}
+                        break;     
+                    }
                     case 'fork-parent':     { // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.forked_from_project.http_url_to_repo; // Only available if TOKEN is correct

@@ -74,7 +74,7 @@
     </body>
     
     <!--  Init and Functions  --> 
-    <script>
+    <script async>
          
         var fs = require('fs');
         var os = require('os');
@@ -87,7 +87,7 @@
         const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
         
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`); // "Username for 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':\n"
-        [type, , url] = ARG1.split(' '); url.substring(1, url.length -3); // 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git'
+        [type, , url] = ARG1.split(' '); url = url.substring(1, url.length -3); // 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git'
 		url_parts = url.split('/');  // ["'https:", '', 'github.com', 'JanAxelssonTest', "Remote_branch_test_repo.git':\n"]
 		repoName = url_parts[ url_parts.length - 1].split('.')[0];
         
@@ -97,13 +97,21 @@
 			nw.Window.get().show();
             document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';
             
-            <!-- Github -- gues userName -->
-            if ( ARG1.includes('github.com') ){
-                userName = url_parts[ 3];
-                document.getElementById('pwd').value = userName;
+
+             <!-- Git provider -- guess userName -->
+             
+            async function getUsername(){
+                try{ 
+                    let provider = await opener.gitProvider(url);
+                    let userName = await provider.getValue('git-username');
+                    document.getElementById('pwd').value = userName;
+                }catch (err){
+                    // unknown provider
+                }
             }
+            getUsername()
         }
-        
+
         
         <!-- SECOND DIALOG -->
         if ( ARG1.startsWith('Password') ){

@@ -19,7 +19,7 @@ class git_rest_api {
     
         async fetchWithApi( apiurl, options){
             
-            let response;
+            let response = { ok: false, status: '', json: ''}; // Default
 
             // Fetch
             let json;  // Undefined if fetch fails
