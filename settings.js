@@ -2044,15 +2044,17 @@ async function updateGitconfigs( ){
         // Title
         let fileTitle = fileURI;
         
-        if ( fileURI == 'command line:' ){
-            fileTitle = 'Pragma-git internal';
-        }
-        
         if ( fileURI == '.git/config' ){
             fileTitle = state.repos[state.repoNumber].localFolder + '/.git/config';
         }        
         
-        html+= `<br><div> ${fileTitle} :</div>`; 
+        if ( fileURI == 'command line:' ){
+            fileTitle = 'Pragma-git internal';
+            html+= `<br><div style="opacity: 50%; border-left-style: inset; padding-left: 5px;"> <div> ${fileTitle} :</div>`; 
+        }else{
+            html+= `<br><div> ${fileTitle} :</div>`; 
+        }        
+        
         
         // Loop configs of current file
         let values = configList.values[fileURI];
@@ -2063,6 +2065,7 @@ async function updateGitconfigs( ){
             }
         }
     }
+    html += '</div>'
     
     
     document.getElementById('gitconfigs').innerHTML = await html; 
