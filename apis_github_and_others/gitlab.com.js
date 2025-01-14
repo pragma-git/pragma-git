@@ -57,7 +57,6 @@ class gitlab extends General_git_rest_api {
         this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
         
         // Find index for exact match -- needed if multiple repos found ( bacause having same substring in names)
-        //let util = await require('../util_module.js');
         let index = util.findObjectIndex(this.repoInfoStruct.json, 'name', this.reponame)
         
         // Modify to use apiurl with ID for correct match instead

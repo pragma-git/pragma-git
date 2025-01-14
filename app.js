@@ -5355,7 +5355,8 @@ async function addExistingRepo( folder) {
         let forkParentUrl;
         try{
             let remoteurl = state.repos[index].remoteURL;
-            let provider = await gitProvider(remoteurl)
+            let provider = await gitProvider(remoteurl);
+            
             forkParentUrl = await provider.getValue('fork-parent');
             
             state.repos[index].forkedFromURL = forkParentUrl;
@@ -5687,8 +5688,10 @@ async function gitProvider(giturl){
             console.log(creds);
             let TOKEN = creds.password;
             provider = new a(giturl, TOKEN);
+            await provider.initialize();
         }catch (err){
             provider = new a(giturl);
+            await provider.initialize();
         }
         
         return provider
