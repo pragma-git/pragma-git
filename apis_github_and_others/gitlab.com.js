@@ -151,6 +151,9 @@ class gitlab extends General_git_rest_api {
             // --- Required code :
 
                 this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct using ID-based api url
+                
+                global.log('Gitlab API call : ');
+                global.log(this.repoInfoStruct);  // Log to main console
 
                 let out;   
             // --- End required code

@@ -102,6 +102,9 @@ class github extends General_git_rest_api {
             // --- Required code :
 
                 await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
+                
+                global.log('Github API call : ');
+                global.log(this.repoInfoStruct);  // Log to main console
 
                 let out;   
             // --- End required code

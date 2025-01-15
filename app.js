@@ -173,7 +173,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
             //return simpleGitDefault(pwd)
         }
-        
+ 
+ 
+    // Create global log function (so I can log to main dev console using global.log('test-message')       
+        global.log = console.log;
 
         
     // Handles to windows
@@ -5673,6 +5676,8 @@ function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, retur
 // Git provider function
 async function gitProvider(giturl){
     // Returns the provider class for giturl
+    
+    global.log( `gitProvider( ${giturl}) `)
     
     // Find host (github.com, gitlab.com, ...)
     let urlParts = new URL(giturl);

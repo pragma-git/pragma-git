@@ -105,6 +105,9 @@ class bitbucket extends General_git_rest_api {
 
                 await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
 
+                global.log('Bitbucket API call : ');
+                global.log(this.repoInfoStruct);  // Log to main console
+                
                 let out;   
             // --- End required code
             
