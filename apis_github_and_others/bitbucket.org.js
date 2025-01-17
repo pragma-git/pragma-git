@@ -20,14 +20,26 @@ class bitbucket extends General_git_rest_api {
 
     constructor( giturl, TOKEN) {
         super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
-        this.apiurl = this.#apiUrl( giturl);  // Call provider-specific translation from git-url to api-url
-
     }
 
     //
     // Define provider-specific methods (ADAPT THESE FOR NEW PROVIDER)
     //
+      
+        async initialize(){
+            
+            this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
+            global.log(`Bitbucket API URL = ${this.apiurl} `); 
+            
+             try{
+                this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
+                global.log('Bitbucket API call : '); // Log to main console
+                global.log(this.repoInfoStruct);  // Log to main console
+            }catch (err){
+                global.log(this.repoInfoStruct);  // Log to main console
+            }
 
+        }
         #apiUrl( giturl){               // Transform GIT-URL to PROVIDER-API-URL (Github etc)
             // API URL by transforming
             //  https://bitbucket.org/janaxelsson/git-bootcamp-git-session.git  -> 
@@ -50,7 +62,7 @@ class bitbucket extends General_git_rest_api {
             
             return url;
         }     
-        async #fetchThroughAPI(){       // Fetch repo info struct through API
+              async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
             //      this.TOKEN       github TOKEN -- optional
@@ -96,22 +108,10 @@ class bitbucket extends General_git_rest_api {
             //
             // Output :
             //      out     value from json parameterName 
-            //
-            // Functions called :
-            //      this.#fetchThroughAPI   function to read json through API call
-            
 
-            // --- Required code :
-                try{
-                    this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
-                    global.log('Bitbucket API call : '); // Log to main console
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }catch (err){
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }
 
+                global.log(`getValue('${parameterName}')`);
                 let out; 
-            // --- End required code     
             
             
                 
@@ -121,19 +121,31 @@ class bitbucket extends General_git_rest_api {
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             out = 'x-token-auth';      
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-url': {  // Returns REST API url
+                        try{
+                            out = this.apiurl; 
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-status': {  // Returns status of provider API call
+                        try{
+                            out = this.repoInfoStruct.ok ? 'ok' : 'fail'; 
+                        }catch (err){ global.warn(err);}
                         break;     
                     }
                     case 'fork-parent':  { // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.parent.links.html.href + '.git'
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break;  
                     }
                     case 'is-private-repo': { // Returns true, false
                         try{                       
                             out = this.repoInfoStruct.json.is_private
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break;   
                     }    
                     default:  {
@@ -141,11 +153,12 @@ class bitbucket extends General_git_rest_api {
                     }
                 }
                 
-            // --- End Provider-specific code   
-                  
-                return out  // return value for parameterName (from json)
+            // --- End Provider-specific code 
+            
+              
+                global.log(`getValue('${parameterName}') = ${out} `);
+                return out  // return value for parameterName (from json), or undefined
         }             
-
 }
 
 module.exports = bitbucket;

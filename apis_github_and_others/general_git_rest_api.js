@@ -14,7 +14,7 @@ class git_rest_api {
 
     // Public methods
         async initialize(){
-            // Should always exist, in case some initialization has to be done after contructor
+            // Should always exist. Initialization is performed after contructor.  app.js/gitProvider(giturl) calls initialize
         }
     
         async fetchWithApi( apiurl, options){

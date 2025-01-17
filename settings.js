@@ -1995,11 +1995,19 @@ async function updateRemoteInfo( ){
     html +='<br><div> Git remote info :</div>';
     try{
         let provider = await opener.gitProvider( creds.url)
+        
+        let providerApiStatus = await provider.getValue('api-status');
+        let providerApiUrl = await provider.getValue('api-url');
+        
         let isPrivate = await provider.getValue('is-private-repo');
         if (isPrivate){
             visibility = 'private';
-        }else{
-            visibility = 'public';
+        }else {
+            if (isPrivate == false){
+                visibility = 'public';
+            }else{
+                visibility = isPrivate; // Should be undefined
+            }
         }
         let forkParentUrl = await provider.getValue('fork-parent');
         if (forkParentUrl == undefined){
@@ -2007,6 +2015,8 @@ async function updateRemoteInfo( ){
         }
 
         html += '<code> <table class="keyValueTable">';
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API call : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html += '</table></code>';      

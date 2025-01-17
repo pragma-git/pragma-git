@@ -45,38 +45,40 @@ class gitlab extends General_git_rest_api {
         super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
     }
     
-    async initialize(){
-         
-        //
-        // Gitlab specific -- update api-url to ID-based api-url
-        //
-        
-        // Call provider-specific translation from git-url to api-url
-        this.apiurl = await this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
-        
-        this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
-        global.log(this.repoInfoStruct);
-        global.log('---');
-        
-        // Find index for exact match -- needed if multiple repos found ( bacause having same substring in names)
-        let index = util.findObjectIndex(this.repoInfoStruct.json, 'name', this.reponame)
-        
-        // Modify to use apiurl with ID for correct match instead
-        global.log(this.repoInfoStruct);
-        try{
-            let ID = this.repoInfoStruct.json[index].id;  
-            this.apiurl = `https://gitlab.com/api/v4/projects/${ID}`;   
-        }catch(err){
-            // If here, only  getValue methods that are independent on api-call will work (that is, 
-        }
-    }
-
-
-        
     //
     // Define provider-specific methods (ADAPT THESE FOR NEW PROVIDER)
     //
-
+            
+        async initialize(){
+             
+            //
+            // Gitlab specific -- update api-url to ID-based api-url
+            //
+            
+            global.log('Gitlab determine API URL : '); // Log to main console
+            
+            // Call provider-specific translation from git-url to api-url
+            this.apiurl = await this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
+            
+            this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
+            global.log(this.repoInfoStruct);
+            
+            // Find index for exact match -- needed if multiple repos found ( bacause having same substring in names)
+            let index = util.findObjectIndex(this.repoInfoStruct.json, 'name', this.reponame)
+            
+            // Modify to use apiurl with ID for correct match instead, and fetch json through API
+            try{
+                let ID = this.repoInfoStruct.json[index].id;  
+                this.apiurl = `https://gitlab.com/api/v4/projects/${ID}`;  
+                global.log(`Gitlab API URL = ${this.apiurl} `);  
+                global.log('Gitlab API call : '); // Log to main console
+                this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
+            }catch(err){
+                // If here, only  getValue methods that are independent on api-call will work (that is, 
+            }
+            global.log(this.repoInfoStruct);
+    
+        }
         #apiUrl( giturl){               // Transform GIT-URL to PROVIDER-API-URL (Github etc)
             // API URL by transforming
             //   https://gitlab.com/             JanAxelsson/gitlab-test       .git  -> 
@@ -149,25 +151,12 @@ class gitlab extends General_git_rest_api {
             //
             // Output :
             //      out     value from json parameterName 
-            //
-            // Functions called :
-            //      this.#fetchThroughAPI   function to read json through API call
-
-         
-            // --- Required code :
-                try{
-                    this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
-                    global.log('Gitlab API call : '); // Log to main console
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }catch (err){
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }
-
+        
+                global.log(`getValue('${parameterName}')`);
                 let out; 
-            // --- End required code     
             
-                
-            // Provider-specific code
+
+            // Provider-specific code :
 
                 switch (parameterName) {  
                     case 'git-username': {  // Returns default username (not requiring json)
@@ -175,29 +164,42 @@ class gitlab extends General_git_rest_api {
                             let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"
                             let pathname = urlParts.pathname;       // "/pragma-git/pragma-git.git" (where first "pragma-git" is the username to extract)
                             out = pathname.split('/')[1];           // get username
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-url': {  // Returns REST API url
+                        try{
+                            out = this.apiurl; 
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-status': {  // Returns status of provider API call
+                        try{
+                            out = this.repoInfoStruct.ok ? 'ok' : 'fail'; 
+                        }catch (err){ global.warn(err);}
                         break;     
                     }
                     case 'fork-parent':     { // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.forked_from_project.http_url_to_repo; // Only available if TOKEN is correct
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break; 
                     }    
                     case 'is-private-repo': { // Returns true, false
                         try{                    
                             let visibility = this.repoInfoStruct.json.visibility    
                             out = (visibility == 'private');
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break;   
                     }    
                     default: {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }
                 }
-                
-            // --- End Provider-specific code   
-                  
+            // --- End Provider-specific code  
+            
+            
+                global.log(`getValue('${parameterName}') = ${out} `);
                 return out  // return value for parameterName (from json), or undefined
         }             
         async setValue( parameterName, value){  // Set parameter TODO: This is not finished yet
@@ -206,9 +208,6 @@ class gitlab extends General_git_rest_api {
             //
             // Output :
             //      out     value from json parameterName 
-            //
-            // Functions called :
-            //      this.#fetchThroughAPI   function to read json through API call
             
             
                 

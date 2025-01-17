@@ -27,7 +27,21 @@ class github extends General_git_rest_api {
     //
     // Define provider-specific methods (ADAPT THESE FOR NEW PROVIDER)
     //
+    
+        async initialize(){
+            
+            this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
+            global.log(`Github API URL = ${this.apiurl} `); 
+            
+             try{
+                this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
+                global.log('Github API call : '); // Log to main console
+                global.log(this.repoInfoStruct);  // Log to main console
+            }catch (err){
+                global.log(this.repoInfoStruct);  // Log to main console
+            }
 
+        }
         #apiUrl( giturl){               // Transform GIT-URL to PROVIDER-API-URL (Github etc)
             // API URL by transforming
             //  https://  github.com  /JanAxelsson/imlook4d   .git  -> 
@@ -94,25 +108,12 @@ class github extends General_git_rest_api {
             //
             // Output :
             //      out     value from json parameterName 
-            //
-            // Functions called :
-            //      this.#fetchThroughAPI   function to read json through API call
-            
-         
-            // --- Required code :
-                try{
-                    this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
-                    global.log('Github API call : '); // Log to main console
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }catch (err){
-                    global.log(this.repoInfoStruct);  // Log to main console
-                }
 
-                let out; 
-            // --- End required code     
-            
-            
-                
+
+                global.log(`getValue('${parameterName}')`);
+                let out;   
+               
+
             // Provider-specific code
 
                 switch (parameterName) {
@@ -121,29 +122,42 @@ class github extends General_git_rest_api {
                             let urlParts = new URL( this.giturl);   // "https://github.com/pragma-git/pragma-git.git"
                             let pathname = urlParts.pathname;       // "/pragma-git/pragma-git.git" (where first "pragma-git" is the username to extract)
                             out = pathname.split('/')[1];           // get username
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-url': {  // Returns REST API url
+                        try{
+                            out = this.apiurl; 
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    case 'api-status': {  // Returns status of provider API call
+                        try{
+                            out = this.repoInfoStruct.ok ? 'ok' : 'fail'; 
+                        }catch (err){ global.warn(err);}
                         break;     
                     }
                     case 'fork-parent': {  // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.parent.clone_url;
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break;     
                     }
                     case 'is-private-repo': { // Returns true, false
                         try{                       
                             out = this.repoInfoStruct.json.private
-                        }catch (err){ global.error(err);}
+                        }catch (err){ global.warn(err);}
                         break;   
                     }    
                     default:  {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }
                 }
-                
-            // --- End Provider-specific code   
-                  
-                return out  // return value for parameterName (from json)
+            // --- End Provider-specific code 
+            
+
+                global.log(`getValue('${parameterName}') = ${out} `);
+                return out  // return value for parameterName (from json), or undefined
         }             
 
 }
