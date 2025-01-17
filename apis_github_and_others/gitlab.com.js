@@ -48,20 +48,27 @@ class gitlab extends General_git_rest_api {
     async initialize(){
          
         //
-        // Gitlab specific -- update to ID-based api url
+        // Gitlab specific -- update api-url to ID-based api-url
         //
         
         // Call provider-specific translation from git-url to api-url
         this.apiurl = await this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
         
         this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
+        global.log(this.repoInfoStruct);
+        global.log('---');
         
         // Find index for exact match -- needed if multiple repos found ( bacause having same substring in names)
         let index = util.findObjectIndex(this.repoInfoStruct.json, 'name', this.reponame)
         
         // Modify to use apiurl with ID for correct match instead
-        let ID = this.repoInfoStruct.json[index].id;  
-        this.apiurl = `https://gitlab.com/api/v4/projects/${ID}`;   
+        global.log(this.repoInfoStruct);
+        try{
+            let ID = this.repoInfoStruct.json[index].id;  
+            this.apiurl = `https://gitlab.com/api/v4/projects/${ID}`;   
+        }catch(err){
+            // If here, only  getValue methods that are independent on api-call will work (that is, 
+        }
     }
 
 
@@ -147,17 +154,17 @@ class gitlab extends General_git_rest_api {
             //      this.#fetchThroughAPI   function to read json through API call
 
          
-         
             // --- Required code :
+                try{
+                    this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
+                    global.log('Gitlab API call : '); // Log to main console
+                    global.log(this.repoInfoStruct);  // Log to main console
+                }catch (err){
+                    global.log(this.repoInfoStruct);  // Log to main console
+                }
 
-                this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct using ID-based api url
-                
-                global.log('Gitlab API call : ');
-                global.log(this.repoInfoStruct);  // Log to main console
-
-                let out;   
-            // --- End required code
-            
+                let out; 
+            // --- End required code     
             
                 
             // Provider-specific code
@@ -168,20 +175,20 @@ class gitlab extends General_git_rest_api {
                             let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"
                             let pathname = urlParts.pathname;       // "/pragma-git/pragma-git.git" (where first "pragma-git" is the username to extract)
                             out = pathname.split('/')[1];           // get username
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;     
                     }
                     case 'fork-parent':     { // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.forked_from_project.http_url_to_repo; // Only available if TOKEN is correct
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break; 
                     }    
                     case 'is-private-repo': { // Returns true, false
                         try{                    
                             let visibility = this.repoInfoStruct.json.visibility    
                             out = (visibility == 'private');
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;   
                     }    
                     default: {
@@ -217,7 +224,7 @@ class gitlab extends General_git_rest_api {
                                 visibility = 'public';
                             }
 
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;   
                     }    
                     default: {

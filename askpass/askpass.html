@@ -107,10 +107,14 @@
              
             async function getUsername(){
                 try{ 
+                    global.log(`askpass, url =  ${url}`)
                     let provider = await opener.gitProvider(url);
+                    await provider.initialize();
+                    global.log(`askpass, provider =  ${provider}`)
                     let userName = await provider.getValue('git-username');
                     document.getElementById('pwd').value = userName;
                 }catch (err){
+                    global.log(err)
                     // unknown provider
                 }
             }

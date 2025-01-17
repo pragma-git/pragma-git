@@ -100,14 +100,16 @@ class github extends General_git_rest_api {
             
          
             // --- Required code :
+                try{
+                    this.repoInfoStruct = await this.#fetchThroughAPI();    // Refresh this.repoInfoStruct
+                    global.log('Github API call : '); // Log to main console
+                    global.log(this.repoInfoStruct);  // Log to main console
+                }catch (err){
+                    global.log(this.repoInfoStruct);  // Log to main console
+                }
 
-                await this.#fetchThroughAPI();    // Sets  this.repoInfoStruct 
-                
-                global.log('Github API call : ');
-                global.log(this.repoInfoStruct);  // Log to main console
-
-                let out;   
-            // --- End required code
+                let out; 
+            // --- End required code     
             
             
                 
@@ -119,19 +121,19 @@ class github extends General_git_rest_api {
                             let urlParts = new URL( this.giturl);   // "https://github.com/pragma-git/pragma-git.git"
                             let pathname = urlParts.pathname;       // "/pragma-git/pragma-git.git" (where first "pragma-git" is the username to extract)
                             out = pathname.split('/')[1];           // get username
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;     
                     }
                     case 'fork-parent': {  // Returns URL from which current repo was forked
                         try{
                             out = this.repoInfoStruct.json.parent.clone_url;
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;     
                     }
                     case 'is-private-repo': { // Returns true, false
                         try{                       
                             out = this.repoInfoStruct.json.private
-                        }catch (err){ console.error(err);}
+                        }catch (err){ global.error(err);}
                         break;   
                     }    
                     default:  {

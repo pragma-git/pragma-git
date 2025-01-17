@@ -175,8 +175,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         }
  
  
-    // Create global log function (so I can log to main dev console using global.log('test-message')       
-        global.log = console.log;
+    // Create global log functions (so I can log to main dev console using global.log('test-message')       
+        global.log = console.log;  
+        global.error = console.error;  
+        global.warn = console.warn;
 
         
     // Handles to windows
