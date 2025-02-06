@@ -102,7 +102,7 @@ class bitbucket extends General_git_rest_api {
              
             return this.repoInfoStruct;  // Useful for debuggin
         } 
-        async getValue( parameterName){  // Get provider-specific parameter 
+        async getValue( parameterName, secondParameter){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
             //
@@ -118,12 +118,29 @@ class bitbucket extends General_git_rest_api {
             // Provider-specific code
 
                 switch (parameterName) { 
+                    //
+                    // Static methods, NOT requiring initialize() call
+                    // 
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             out = 'x-token-auth';      
                         }catch (err){ global.warn(err);}
                         break;     
                     }
+                    case 'icon': {  // Returns icon (not requiring json)
+                        try{
+                            if (secondParameter == 'darkmode'){
+                                out = 'apis_github_and_others/git-provider-icons/Free-icons.github.io/bitbucket_blue.png'; 
+                            }
+                            if (secondParameter == 'lightmode'){
+                                out = 'apis_github_and_others/git-provider-icons/Free-icons.github.io/bitbucket_blue.png'; 
+                            }
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    //
+                    // Dynamic methods, requiring initialize() call
+                    // 
                     case 'api-url': {  // Returns REST API url
                         try{
                             out = this.apiurl; 

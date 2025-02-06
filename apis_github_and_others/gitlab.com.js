@@ -145,7 +145,7 @@ class gitlab extends General_git_rest_api {
             
             return this.repoInfoStruct;  // Useful for debugging
         } 
-        async getValue( parameterName){  // Get provider-specific parameter 
+        async getValue( parameterName, secondParameter){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
             //
@@ -159,6 +159,9 @@ class gitlab extends General_git_rest_api {
             // Provider-specific code :
 
                 switch (parameterName) {  
+                    //
+                    // Static methods, NOT requiring initialize() call
+                    // 
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"
@@ -167,6 +170,21 @@ class gitlab extends General_git_rest_api {
                         }catch (err){ global.warn(err);}
                         break;     
                     }
+                    case 'icon': {  // Returns icon (not requiring json)
+                        try{
+                            
+                            if (secondParameter == 'darkmode'){
+                                out = 'apis_github_and_others/git-provider-icons/Gitlab/gitlab-logo-500_zoomed.png'; 
+                            }
+                            if (secondParameter == 'lightmode'){
+                                out = 'apis_github_and_others/git-provider-icons/Gitlab/gitlab-logo-500_zoomed.png'; 
+                            }
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
+                    //
+                    // Dynamic methods, requiring initialize() call
+                    // 
                     case 'api-url': {  // Returns REST API url
                         try{
                             out = this.apiurl; 

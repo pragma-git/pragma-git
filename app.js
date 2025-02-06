@@ -1746,21 +1746,37 @@ async function _callback( name, event){
                 if ( !fs.existsSync(state.repos[i].localFolder ) ) {
                     continue;
                 }
+                
+                // Get provider-icons
+                let iconPath = 'apis_github_and_others/git-provider-icons/Blank.png';
+                try{
+                    let remoteUrl = state.repos[i].remoteURL;
+                    let provider = await gitProvider( remoteUrl, false); // Run static (second argument = false) to get icon quicker
+                    //iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+                    iconPath =  await provider.getValue('icon', 'darkmode'  );
+                    console.log(iconPath);
+                }catch(err){
+                    console.warn(err);
+                }
+                
+                
                  
                 // Add to menu
                 let isCurrentRepo =  (state.repoNumber == i );
-
-                cachedRepoMenu.append(
-                    new gui.MenuItem(
-                        { 
+                
+                let menuItemConfig = { 
                             label: myEvent.selectedRepo, 
                             type: 'checkbox',
                             checked : isCurrentRepo,
                             enabled: true,
                             click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                         } 
-                    )
-                ); 
+                
+                // Add icon-related to config        
+                menuItemConfig.iconIsTemplate = false; // MacOS (true treats as black and white icons)  
+                menuItemConfig.icon = iconPath;      
+
+                cachedRepoMenu.append( new gui.MenuItem(menuItemConfig)  ); 
     
             }
 
@@ -5676,8 +5692,10 @@ function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, retur
 }
 
 // Git provider function
-async function gitProvider(giturl){
+async function gitProvider(giturl, initialize = true){
     // Returns the provider class for giturl
+    // If optional parameter 'intitialize' = false, then provider is not initialized.
+    // This is useful, for static calls, such as provider.getValue('git-username'), or provider.getValue('icon')
     
     global.log( `gitProvider( ${giturl}) `)
     
@@ -5691,14 +5709,18 @@ async function gitProvider(giturl){
         let a = require(scriptName);
         let provider;
         try{
-            let creds = await getCredential(giturl);
-            console.log(creds);
-            let TOKEN = creds.password;
-            provider = new a(giturl, TOKEN);
-            await provider.initialize();
+            if (initialize){
+                let creds = await getCredential(giturl);
+                console.log(creds);
+                let TOKEN = creds.password;
+                provider = new a(giturl, TOKEN);
+                await provider.initialize( initialize);
+            }else{
+                provider = new a(giturl);
+            }
         }catch (err){
             provider = new a(giturl);
-            await provider.initialize();
+            await provider.initialize( initialize);
         }
         
         return provider

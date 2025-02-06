@@ -1638,6 +1638,27 @@ async function generateRepoTable(document, table, data) {
                 radiobox.setAttribute("checked", true);
                 foundIndex = index;
             }
+            
+            
+            // git-provider icon
+            cell = row.insertCell();
+            
+            try{
+                let provider = await opener.gitProvider( element.remoteURL, false); // Run static (second argument = false) to get icon quicker
+                let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+        
+                let img = document.createElement('img');
+                img.setAttribute("id", index + 30000);
+                img.setAttribute("class", 'remoteIcon');
+                img.src = iconPath;
+                cell.setAttribute("class", 'remoteIcon');
+                cell.appendChild( img );
+            }catch(err){
+                console.warn(err);
+            }
+            
+
+            
     
               
              //  Into table cell :  Remote URL textarea + button
@@ -1974,6 +1995,7 @@ async function updateRemoteInfo( ){
     
     // Git credentials
     html +='<br><div> Git credentials :</div>';
+    
     try{
         creds = await opener.getCredential();
         html += '<code><table class="keyValueTable">';
@@ -1995,7 +2017,7 @@ async function updateRemoteInfo( ){
     html +='<br><div> Git remote info :</div>';
     try{
         let provider = await opener.gitProvider( creds.url)
-        
+        let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
         let providerApiUrl = await provider.getValue('api-url');
         
@@ -2019,6 +2041,8 @@ async function updateRemoteInfo( ){
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
+        html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconPath} </td></tr>` 
+        html +=     `<tr><td> &nbsp; Icon : &nbsp; </td><td> <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
         html += '</table></code>';      
     }catch (err){
         html += '<code>Error reading git remote info : <br>';
