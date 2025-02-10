@@ -1768,7 +1768,7 @@ async function _callback( name, event){
                             label: myEvent.selectedRepo, 
                             type: 'checkbox',
                             checked : isCurrentRepo,
-                            enabled: true,
+                            enabled: !isCurrentRepo,
                             click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                         } 
                 
