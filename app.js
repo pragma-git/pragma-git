@@ -5151,6 +5151,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let isRemoteUpstreamAhead = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
             const UPSTREAM_AHEAD_MARKER = '!  ';
             
+            let isCurrentSubmenuBranch = false;  // Signal to true when I want to checkbox the main menu-item (where one submenu item is currentBranch)
+            
             for (var i = 0; i < branchNames.length; ++i) {
                 
                 // Populate utility variables 
@@ -5210,8 +5212,16 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                  
                 // Add finished submenu to menu
                 if ( submenuInProgress && (firstPart !== cachedFirstPart) ) {
-                    menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: submenu }  )); 
+                    menu.append( 
+                        new gui.MenuItem( { 
+                            label : cachedFirstPart, 
+                            submenu: submenu, 
+                            type: 'checkbox', 
+                            checked: isCurrentSubmenuBranch 
+                        }  
+                    )); 
                     submenuInProgress = false;
+                    isCurrentSubmenuBranch = false;
                     submenu = new gui.Menu(); // Prepare an empty submenu for future use
                 }                   
                        
@@ -5279,6 +5289,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         workaround_store_submenus.push( tempSubMenu); // Keep submenu-item reference to avoid premature Windows10 garbage collection
                         
                         console.log(`${i}:  Local branch = ${branchNames[i]}  showRemote = ${showRemote} `);
+                        
+                        // Finally mark that current branch is inside submenu
+                        if (isCurrentBranch){
+                            isCurrentSubmenuBranch = true;
+                        }
+                        
                     }
  
                     
