@@ -338,6 +338,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var mb; // Mac menubar
         var macWindowsMenu; // Mac windows menu
         var window_menu_handles_mapping = {}; // Store handles for window menu items
+        
+    // Tray-menu
+        const tray = new nw.Tray({ icon: '/Users/jan/Documents/Projects/Pragma-git/pragma-git/images/iconx32.png' ,  iconsAreTemplates: false});
+        var trayWindowsMenu; // Tray windows menu (will be same as for Mac)
     
         
     // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
@@ -6330,8 +6334,19 @@ function downloadNewVersionDialog(){
 // MacOS Menu
 
 function initializeWindowMenu(){
+    
+    //
+    // Tray
+    // 
+    trayWindowsMenu = new nw.Menu();
+    tray.menu = trayWindowsMenu;
+    
+    //
+    // Mac menu
+    // 
+    
     if (process.platform !== 'darwin'){
-        return
+        //return
     }   
     
     // Assumption:  Window menu is last to the right
@@ -6409,10 +6424,24 @@ function initializeWindowMenu(){
             } 
         )
     ); 
+    trayWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: "Show all", 
+                click: eval(click)
+            } 
+        )
+    ); 
      
     // Menu : Hide all
     click = `() =>  { hideAllWindows( ) } `;
     macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: 'Hide all', 
+                click: eval(click)
+            } 
+        )
+    );   
+    trayWindowsMenu.append(new gui.MenuItem(
             { 
                 label: 'Hide all', 
                 click: eval(click)
@@ -6429,9 +6458,17 @@ function initializeWindowMenu(){
             } 
         )
     );  
+    trayWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: 'Close all', 
+                click: eval(click)
+            } 
+        )
+    );  
  
     // Add separator
     macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
+    trayWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
     
     // Add main window to menu
     addWindowMenu( 'Main Window', 'main_win');
@@ -6439,17 +6476,13 @@ function initializeWindowMenu(){
 }
 function addWindowMenu(title,winHandleNameAsString){
     
-    if (process.platform !== 'darwin'){
-        return
-    }   
-    
+    let click = `() => { ${winHandleNameAsString}.focus(); }`;
     winHandle = eval(winHandleNameAsString); // Convert from string to handle
     
-    let click = `() => { ${winHandleNameAsString}.focus(); }`;
-
-    
-    // Add new menu to Windows with callback
-    macWindowsMenu.append(new gui.MenuItem(
+    //
+    // Tray
+    //     
+    trayWindowsMenu.append(new gui.MenuItem(
             { 
                 label: title, 
                 click: eval(click)
@@ -6459,11 +6492,30 @@ function addWindowMenu(title,winHandleNameAsString){
     
     // Store mapping between Menu name and handle variable
     window_menu_handles_mapping[title] = winHandleNameAsString;
+    
+    //
+    // Mac menu
+    //     
+        
+    if (process.platform !== 'darwin'){
+        //return
+    }   
+    
+
+    // Add new menu to Windows with callback
+    macWindowsMenu.append(new gui.MenuItem(
+            { 
+                label: title, 
+                click: eval(click)
+            } 
+        )
+    ); 
+
 }
 function deleteWindowMenu(title){
     
     if (process.platform !== 'darwin'){
-        return
+        //return
     }   
     
     // Make of all items except deleted
