@@ -633,7 +633,7 @@ function closeWindow(){
     localState.fileListWindow = false;  // Show to main program that window is closed
 
     // Remove from menu
-    opener.deleteWindowMenu("Changed Files");
+    opener.updateWindowMenu("Changed Files");
     
     win.close();
     

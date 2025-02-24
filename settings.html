@@ -720,12 +720,12 @@
                                     opener.github_win = win;
                                 
                                     opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
-                                    opener.addWindowMenu( 'Create Github Repository', 'github_win');
+                                    opener.updateWindowMenu( 'Create Github Repository', 'github_win');
                                     localState.githubWindow = true;
     
                                     win.on('close', function() { 
                                         localState.githubWindow = false;
-                                        opener.deleteWindowMenu('Create Github Repository');
+                                        opener.updateWindowMenu('Create Github Repository');
                                         opener.fixNwjsBug7973( win);
                                     } );
                                     
@@ -775,7 +775,7 @@
                             
                                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                                 
-                                opener.addWindowMenu( 'Git-ignore Editor', 'gitignore_win');
+                                opener.updateWindowMenu( 'Git-ignore Editor', 'gitignore_win');
                                 opener.gitignore_win = win;
                                 
                                 localState.gitignoreWindow = true;

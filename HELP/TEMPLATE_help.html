@@ -62,7 +62,7 @@
     
         window.addEventListener('unload', (event) => {
             let title = document.getElementById('title').innerText;
-            opener.deleteWindowMenu(title);
+            opener.updateWindowMenu(title);
             localState.helpWindow = false;
         });
     </script>

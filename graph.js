@@ -376,7 +376,7 @@ function closeWindow(){
 
     
     // Remove from menu
-    opener.deleteWindowMenu('Graph');
+    opener.updateWindowMenu('Graph');
     
     win.close(); 
 }

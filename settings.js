@@ -1021,7 +1021,7 @@ async function closeWindow(){
     await opener.saveSettings();
     
     // Remove from Mac menu
-    opener.deleteWindowMenu('Settings')
+    opener.updateWindowMenu('Settings')
     
     // Fix stashMap which may not have been populated
     await opener.gitStashMap( state.repos[state.repoNumber].localFolder )
