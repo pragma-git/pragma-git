@@ -225,7 +225,7 @@
         'unload', 
         (event) => {
             localState.conflictsWindow = false
-            opener.deleteWindowMenu("Resolve Conflicts");
+            opener.updateWindowMenu("Resolve Conflicts");
             console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
         }

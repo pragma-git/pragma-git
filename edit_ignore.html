@@ -283,7 +283,8 @@
         }
         
         // Delete MacOS menu
-        opener.opener.deleteWindowMenu('Git-ignore Editor');
+        opener.opener.updateWindowMenu('Git-ignore Editor');
+        localState.gitignoreWindow = false;
 
     }
     

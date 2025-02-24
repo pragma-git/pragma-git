@@ -200,8 +200,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         // General help window
         var help_win;
         
-        // List of start of window titles -- used to recreate MacOS windows after scale changes in Settings 
-        // ( used in recreateAllWindowsMenu() )
+        // List of first word of window titles, used to map to handle-variable --  This is used in makeWindowMenu() 
         // Reason to use start of titles, is that merge_win has a dynamic title = 'File = xxx' (where xxx is the file name merged)
         var windowNamesStartsWith = { 
            'Main': 'main_win',       
@@ -337,7 +336,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Mac-menu
         var mb; // Mac menubar
         var macWindowsMenu; // Mac windows menu
-        var window_menu_handles_mapping = {}; // Store handles for window menu items
+        
+    // Tray-menu
+        var tray;
     
         
     // Workaround for Windows10 garbage collection (fix crash on branch contextual submenu)
@@ -365,6 +366,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 // ---------
 // FUNCTIONS 
 // ---------
+
 
 // Main functions
 
@@ -555,7 +557,7 @@ async function _callback( name, event){
             win=>win.on('loaded', async () => {
           
                 notes_win = win;
-                addWindowMenu(title, 'notes_win');
+                updateWindowMenu(title, 'notes_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
 
                 win.on('close', function() { fixNwjsBug7973( win)} );
@@ -894,7 +896,7 @@ async function _callback( name, event){
             win=>win.on('loaded', () => {
                 
                 graph_win = win;
-          		addWindowMenu( title, 'graph_win');
+          		updateWindowMenu( title, 'graph_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 win.on('close', function() { fixNwjsBug7973( win)} );
@@ -1635,15 +1637,13 @@ async function _callback( name, event){
         // Update text            
         if ( localState.helpWindow == true ){
             
-            // Delete menu for old help window
-            let oldTitle = help_win.document.title;
-            deleteWindowMenu(oldTitle);
+
             
             // Overwrite content for help window
             updateText( event.name, title, text);
             
             // Update menu
-            addWindowMenu( title, 'help_win');
+            updateWindowMenu( title, 'help_win');
             return
         }
         
@@ -1683,7 +1683,7 @@ async function _callback( name, event){
                             showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                             
                             localState.helpWindow = true;
-                            addWindowMenu( title, 'help_win');
+                            updateWindowMenu( title, 'help_win');
                             
                             cWindows.on('close', function() { 
                                 fixNwjsBug7973( cWindows);
@@ -1999,7 +1999,7 @@ async function _callback( name, event){
                     function(){
                         //about_win = nw.Window.get(cWindows.window);
                         about_win = cWindows;
-                        addWindowMenu( title, 'about_win');
+                        updateWindowMenu( title, 'about_win');
                         showWindow(cWindows); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                         
                         cWindows.on('close', function() { fixNwjsBug7973( cWindows)} );
@@ -2521,7 +2521,7 @@ async function _callback( name, event){
             },
             win=>win.on('loaded', () => {
                 
-                settings_win =win;addWindowMenu(title, 'settings_win');
+                settings_win =win;updateWindowMenu(title, 'settings_win');
                 //showWindow(settings_win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
@@ -2554,7 +2554,7 @@ async function _callback( name, event){
                 win=>win.on('loaded', () => {
                     
                     resolve_win =win;
-          			addWindowMenu(title, 'resolve_win');
+          			updateWindowMenu(title, 'resolve_win');
                     showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                     
                     win.on('close', function() { fixNwjsBug7973( win)} );
@@ -2586,7 +2586,7 @@ async function _callback( name, event){
                         () => {
                         
                         changed_win =win;
-                        addWindowMenu( title, 'changed_win');
+                        updateWindowMenu( title, 'changed_win');
                         showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                         
                         win.on('close', function() { fixNwjsBug7973( win)  } );
@@ -3394,7 +3394,7 @@ function startPragmaMerge(){
             win=>win.on('loaded', () => {
                 
                 merge_win =win;
-      			addWindowMenu(title, 'merge_win');
+      			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 win.on('close', function() { fixNwjsBug7973( win)} );
@@ -3426,6 +3426,7 @@ function startPragmaAskPass(){
     ); 
   
 }
+
 
 // Git commands
 
@@ -5707,7 +5708,9 @@ function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, retur
     return mappedTopFolderPath.replaceAll( '/', '\\');     // Return using Windows '\' 
 }
 
+
 // Git provider function
+
 async function gitProvider(giturl, initialize = true){
     // Returns the provider class for giturl
     // If optional parameter 'intitialize' = false, then provider is not initialized.
@@ -5745,6 +5748,7 @@ async function gitProvider(giturl, initialize = true){
     }
     
 }
+
 
 // Logging to file
 
@@ -6327,26 +6331,27 @@ function downloadNewVersionDialog(){
 }
 
 
-// MacOS Menu
+// "Window"-menu (Tray and MacOS) 
 
-function initializeWindowMenu(){
-    if (process.platform !== 'darwin'){
+function createMacMenu(){  // Creates MacOS menu (or ignores if not MacOS)
+
+     if (process.platform !== 'darwin'){
         return
-    }   
+    }     
     
-    // Assumption:  Window menu is last to the right
+      // Assumption:  Window menu exists, and is last to the right
     
     
     // Read localized Window name (using original Window menu)
     let mb0 = new gui.Menu({type: 'menubar'});
-    mb0.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb0.createMacBuiltin('Main Window',{hideEdit: true, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
     
-    let localWindowMenuName = mb0.items[mb0.items.length -1].label;
+    let localWindowMenuName = mb0.items[mb0.items.length -1].label;  // Copy correct name for current language
     
     
     // Replace with own Window Menu (use localized name from above)
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb.createMacBuiltin('Main Window',{hideEdit: true, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
 
     mb.append(
         new gui.MenuItem({
@@ -6358,202 +6363,148 @@ function initializeWindowMenu(){
     
     // Assume Window menu is last to the right
     let WindowMenu = mb.items.length - 1;    
-    macWindowsMenu = mb.items[WindowMenu].submenu;
-    
-
-    // Own menu to implement "Bring all to front"
-    mb.items[WindowMenu].submenu = macWindowsMenu;
+    macWindowsMenu = mb.items[WindowMenu];
+    updateMacMenu()
     
     // Show menu
     gui.Window.get().menu = mb;
-
-   
-    //
-    // Generate Window submenu items
-    //
-   
-     
-    //// Menu : Minimize
-    //macWindowsMenu.append(new gui.MenuItem(
-            //{ 
-                //label: "Minimize", 
-                //key: 'M',
-                //modifiers: "cmd",
-                //click: () =>  minimizeWindow()
-            //} 
-        //)
-    //);  
-     
-    //// Menu : Close
-    //macWindowsMenu.append(new gui.MenuItem(
-            //{ 
-                //label: "Close", 
-                //key: 'W',
-                //modifiers: "cmd",
-                //click: () =>  closeSelectedWindow()
-            //} 
-        //)
-    //);    
- 
- 
-    //// Add separator
-    //macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
     
+}
+function createTrayMenu(){  // Creates Tray menu
+    tray = new nw.Tray( { icon: 'images/iconx32.png' ,  iconsAreTemplates: false } );
+    updateTrayMenu();
+}
+
+function updateMacMenu(){   // Update MacOS menu  (or ignores if not MacOS)
+    if (process.platform !== 'darwin'){
+        return
+    }  
+    macWindowsMenu.submenu = makeWindowMenu();
+    
+}
+async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with additional 'Quit')
+    tray.menu = makeWindowMenu()
+    
+    // Only in tray-menu ( Somehow 
+    tray.menu.append(new gui.MenuItem({ type: 'separator' }));
        
-    // Menu : Show all
-    let click = `() =>  { showAllWindows( ) } `;
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: "Show all", 
-                click: eval(click)
-            } 
-        )
-    ); 
-     
-    // Menu : Hide all
-    click = `() =>  { hideAllWindows( ) } `;
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: 'Hide all', 
-                click: eval(click)
-            } 
-        )
-    );   
+    let click = () =>  {  _callback('clicked-close-button') } ;
+    tray.menu.append(new gui.MenuItem( {  label: "Quit",  click: click }  )); 
+    tray.menu.append(new gui.MenuItem({ type: 'separator' }));
     
-    // Menu : Close all
-    click = `() =>  { closeAllWindows( ) } `;
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: 'Close all', 
-                click: eval(click)
-            } 
-        )
-    );  
- 
-    // Add separator
-    macWindowsMenu.append(new gui.MenuItem({ type: 'separator' }));
-    
-    // Add main window to menu
-    addWindowMenu( 'Main Window', 'main_win');
-    
+    // Linux fix
+    await window.setTimeout( () =>{tray.menu = tray.menu}, 100 ); // Any short delay seems to work (even 0)
 }
-function addWindowMenu(title,winHandleNameAsString){
-    
-    if (process.platform !== 'darwin'){
-        return
-    }   
-    
-    winHandle = eval(winHandleNameAsString); // Convert from string to handle
-    
-    let click = `() => { ${winHandleNameAsString}.focus(); }`;
-
-    
-    // Add new menu to Windows with callback
-    macWindowsMenu.append(new gui.MenuItem(
-            { 
-                label: title, 
-                click: eval(click)
-            } 
-        )
-    ); 
-    
-    // Store mapping between Menu name and handle variable
-    window_menu_handles_mapping[title] = winHandleNameAsString;
-}
-function deleteWindowMenu(title){
-    
-    if (process.platform !== 'darwin'){
-        return
-    }   
-    
-    // Make of all items except deleted
-    let menuItemNumber = util.findObjectIndex( macWindowsMenu.items, 'label', title);
-    let guiMenuItems = macWindowsMenu.items;
-    guiMenuItems.splice(menuItemNumber, 1); // Remove menu to delete from list
-    
-    // Create new default menu
-    initializeWindowMenu();
-    console.log('macWindowsMenu.items.length = ' + macWindowsMenu.items.length);
-    
-    // Build new menu
-    for (var j = macWindowsMenu.items.length; j < guiMenuItems.length; j++){
-        let label = guiMenuItems[j].label;
-        let winHandleNameAsString = window_menu_handles_mapping[label];
-        addWindowMenu( guiMenuItems[j].label, winHandleNameAsString)
-    }
-}
-function showAllWindows(){
-
-    gui.Window.getAll( 
+    function makeWindowMenu(){ // Generates the "Window" Menu 
+        let newWindowMenu = new nw.Menu();
         
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                win_handle.focus();
-            }    
-        } 
-    );
-}
-function recreateAllWindowsMenu(){
-
-    gui.Window.getAll( 
+        //
+        // Show, Hide, Close window items
+        //
         
-        function allWindowsCallback( windows) {
-            for (let i = 0; i < windows.length; i++) {
-                let win_handle =  windows[i];
-                
-                // Get start of title, to use to lookup variable name
-                let title = win_handle.title;
-                let firstWordInTitle = title.split(' ')[0]
-                let windowHandleName = windowNamesStartsWith[firstWordInTitle];  // String
-                
-                // Set variable
-                eval( windowHandleName + ' = win_handle');         // Populate main_win, graph_win, ...
-                
-                console.log('running  = ' + title);
+        // Menu : Show all
+        let click = `() =>  { showAllWindows( ) } `;
+        newWindowMenu.append(new gui.MenuItem( {  label: "Show Windows",  click: eval(click) }  )); 
+        
+        click = `() =>  { hideAllWindows( ) } `;
+        newWindowMenu.append(new gui.MenuItem( {  label: "Hide Windows",  click: eval(click) }  ));
+        
+        click = `() =>  { closeAllWindows( ) } `; 
+        newWindowMenu.append(new gui.MenuItem( {  label: "Close Windows",  click: eval(click) }  )); 
+         
+        // Add separator
+        newWindowMenu.append(new gui.MenuItem({ type: 'separator' }));
+        
+        //
+        // List of Windows
+        //
+        gui.Window.getAll( 
+            
+            function allWindowsCallback( windows) {
+                for (let i = 0; i < windows.length; i++) {
+                    let win_handle =  windows[i];
                     
-                // Add to menu if not already existing
-                if ( isNaN( util.findObjectIndex( macWindowsMenu.items, 'label', title) ) ) {
-                    addWindowMenu( title, windowHandleName);    // Add menu
-                }
-                
-                
-            }    
-        } 
-    );
-}
-function hideAllWindows(){
-
-        gui.Window.getAll( 
+                    try{
+                        // Get start of title, to use to lookup variable name
+                        let title = win_handle.title;
+                        let firstWordInTitle = title.split(' ')[0]
+                        let winHandleNameAsString = windowNamesStartsWith[firstWordInTitle];  // Lookup name of handle-variable from first word in title
+                        
+                        // Fix for Pragma-merge window, which does not have 'Pragma-merge' in title (but has 'File=...')
+                        if (firstWordInTitle == 'File'){
+                            title = 'Pragma-merge';
+                        }
         
-            function allWindowsCallback( windows) {
-                for (let i = 0; i < windows.length; i++) {
-                    let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Main Window'){
-                        win_handle.minimize();
+                        console.log('Adding to menu = ' + title);
+                            
+                        // Add to menu 
+                        let click = `() => { ${winHandleNameAsString}.focus(); }`;
+                        newWindowMenu.append(  new gui.MenuItem( {  label: title, click: eval(click)  }  )); 
+                        
+                    }catch (err){
+                        
                     }
+    
                 }    
-
             } 
         );
-}
-function closeAllWindows(){
+    
+        // Return menu
+        return newWindowMenu;
+    }
+    function showAllWindows(){
     
         gui.Window.getAll( 
-        
+            
             function allWindowsCallback( windows) {
                 for (let i = 0; i < windows.length; i++) {
                     let win_handle =  windows[i];
-                    if ( win_handle.title !== 'Main Window'){
-                        win_handle.close();
-                    }
+                    win_handle.focus();
                 }    
-
             } 
         );
+    }
+    function hideAllWindows(){
+    
+            gui.Window.getAll( 
+            
+                function allWindowsCallback( windows) {
+                    for (let i = 0; i < windows.length; i++) {
+                        let win_handle =  windows[i];
+                        if ( win_handle.title !== 'Main Window'){
+                            win_handle.minimize();
+                        }
+                    }    
+    
+                } 
+            );
+    }
+    function closeAllWindows(){
         
-        
+            gui.Window.getAll( 
+            
+                function allWindowsCallback( windows) {
+                    for (let i = 0; i < windows.length; i++) {
+                        let win_handle =  windows[i];
+                        if ( win_handle.title !== 'Main Window'){
+                            win_handle.close();
+                        }
+                    }    
+    
+                } 
+            );
+            
+            
+    }
+
+async function updateWindowMenu(){  // Updates MacOS and Tray "Window"-menus
+    updateMacMenu();  // (Ignores if not MacOS)
+    await updateTrayMenu(); 
+    
+   //await window.setTimeout( () =>{tray.menu = tray.menu}, 500 )
 }
+
+
 
 // Title bar
 
@@ -7306,8 +7257,9 @@ window.onload = async function() {
         console.error('Could not get local folder (maybe not a repo?)');
     }    
     
-  // Mac Menu  
-  initializeWindowMenu();
+  // "Window" Menus  
+  createMacMenu();
+  createTrayMenu()
   
   // Throws an alert dialog if git missing
   await gitIsInstalled() // sets state.git = true / false
@@ -7332,9 +7284,7 @@ window.onload = async function() {
   
   // Dialog if author's name is unknown
   showUserDialog(true)  // test = true, will show only if author is unknown
-  
-  // Update MacOS menu
-  recreateAllWindowsMenu()
+
  
   pragmaLog('Done starting app');
   pragmaLog('');

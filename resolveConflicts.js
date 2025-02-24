@@ -401,7 +401,7 @@ async function _update(){
 async function closeWindow(){
 
     // Remove from menu
-    opener.deleteWindowMenu("Resolve Conflicts");
+    opener.updateWindowMenu("Resolve Conflicts");
 
     // Close window and return
     localState.conflictsWindow = false

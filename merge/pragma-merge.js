@@ -959,7 +959,7 @@ function closeWindowNicely(exitCode){
     
     
     // Remove from menu
-    parent.opener.deleteWindowMenu('Pragma-merge');
+    parent.opener.updateWindowMenu('Pragma-merge');
         
         
     // Remove file, to let script know it has stopped

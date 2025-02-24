@@ -191,7 +191,7 @@ async function closeWindow(){
     
     
     // Remove from menu
-    parent.opener.deleteWindowMenu('Notes');
+    parent.opener.updateWindowMenu('Notes');
     
     // Commmit .Pragma-git settings dir
     await parent.opener.commitSettingsDir('Saved Notes for ' + repoName);
