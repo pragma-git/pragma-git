@@ -169,6 +169,7 @@ function extendFindInNw( elementToSearch){
       
     
     // Add Up and Down shortcuts : Shortcut-G,  Arrow Down, Arrow Up
+    // Add Ctrl-C, V, A
     findInNw.keyDownPressed = function () {
         const input = document.getElementById('find-in-nw-input');
         input.addEventListener('keydown', function (evt) {
@@ -187,6 +188,22 @@ function extendFindInNw( elementToSearch){
           if ( evt.keyCode === 38 ){
             console.log('Arrow Up')
             this.highlightPrevious();
+          }
+          if ( evt.keyCode === 86 ){
+            console.log('V')
+            document.execCommand('paste');
+          }
+          if ( evt.keyCode === 67 ){
+            console.log('C')
+            document.execCommand('copy');
+          }
+          if ( evt.keyCode === 88 ){
+            console.log('X')
+            document.execCommand('cut');
+          }
+          if ( evt.keyCode === 65 ){
+            console.log('A')
+            document.execCommand('selectAll');
           }
         }.bind(this));  
      
