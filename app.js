@@ -6344,14 +6344,14 @@ function createMacMenu(){  // Creates MacOS menu (or ignores if not MacOS)
     
     // Read localized Window name (using original Window menu)
     let mb0 = new gui.Menu({type: 'menubar'});
-    mb0.createMacBuiltin('Main Window',{hideEdit: true, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb0.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: false}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
     
     let localWindowMenuName = mb0.items[mb0.items.length -1].label;  // Copy correct name for current language
     
     
     // Replace with own Window Menu (use localized name from above)
     mb = new gui.Menu({type: 'menubar'});
-    mb.createMacBuiltin('Main Window',{hideEdit: true, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
+    mb.createMacBuiltin('Main Window',{hideEdit: false, hideWindow: true}); // NOTE: hideEdit = true, stops shortcuts for copy/paste
 
     mb.append(
         new gui.MenuItem({
