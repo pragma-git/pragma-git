@@ -1646,13 +1646,24 @@ async function generateRepoTable(document, table, data) {
             try{
                 let provider = await opener.gitProvider( element.remoteURL, false); // Run static (second argument = false) to get icon quicker
                 let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
-        
+                let webUrl = await provider.getValue('web-url');
+                
+                // Link
+                let a = document.createElement('a');
+                a.setAttribute("href", webUrl);
+                a.setAttribute("onclick", "require('nw.gui').Shell.openExternal( this.href );return false;");
+                
+                // Image inside link element
                 let img = document.createElement('img');
                 img.setAttribute("id", index + 30000);
                 img.setAttribute("class", 'remoteIcon');
                 img.src = iconPath;
                 cell.setAttribute("class", 'remoteIcon');
-                cell.appendChild( img );
+                
+                a.appendChild(img);
+                 
+                
+                cell.appendChild( a );
             }catch(err){
                 console.warn(err);
             }

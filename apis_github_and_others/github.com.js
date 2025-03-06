@@ -139,6 +139,15 @@ class github extends General_git_rest_api {
                         }catch (err){ global.warn(err);}
                         break;     
                     }
+                    case 'web-url': {  // Returns web page url
+                        try{
+                            let our = this.giturl;  // Guess same as giturl
+                            if (this.giturl.endsWith('.git') ){
+                                out = this.giturl.substring(0, this.giturl.indexOf('.git'));
+                            }
+                        }catch (err){ global.warn(err);}
+                        break;     
+                    }
                     //
                     // Dynamic methods, requiring initialize() call
                     // 
