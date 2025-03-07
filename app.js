@@ -3397,7 +3397,10 @@ function startPragmaMerge(){
       			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
-                win.on('close', function() { fixNwjsBug7973( win)} );
+                win.on('close', function() { 
+                    fixNwjsBug7973( win);
+                    updateWindowMenu();
+                } );
             } )
     ); 
     
