@@ -2031,6 +2031,10 @@ async function updateRemoteInfo( ){
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
         let providerApiUrl = await provider.getValue('api-url');
+        console.log(providerApiUrl);
+        let providerWebPageUrl = await provider.getValue('web-url');
+        console.log(providerWebPageUrl);
+        console.log('---');
         
         let isPrivate = await provider.getValue('is-private-repo');
         if (isPrivate){
@@ -2048,12 +2052,13 @@ async function updateRemoteInfo( ){
         }
 
         html += '<code> <table class="keyValueTable">';
-        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API call : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconPath} </td></tr>` 
         html +=     `<tr><td> &nbsp; Icon : &nbsp; </td><td> <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
         html += '</table></code>';      
     }catch (err){
         html += '<code>Error reading git remote info : <br>';
