@@ -105,6 +105,21 @@ async function _callback( name, event, event2){
     let status_data;
     let tool;
     
+    // Bail out if pragma-merge is open and one of the listed callback-names
+    const importantCallback = 'diffLinkAll, diffLink, diffLinkHistory, editLinkHistory, '.includes( `${name},`); // Note: end name with ','
+    if ( ( opener.merge_win !== undefined ) &&  importantCallback ){
+        
+        // Focus pragma-merge window
+        opener.merge_win.focus();
+        
+        // Show warning dialog
+        opener.merge_win.window.iframe.contentDocument.getElementById('isOpenDialog').showModal();
+        
+        return
+    }
+
+    
+    // 
     console.log('_callback = ' + name);
     switch(name) {
         case 'applySelectedFilesButton': {

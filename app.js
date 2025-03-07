@@ -3399,6 +3399,7 @@ function startPragmaMerge(){
                 win.on('close', function() { 
                     fixNwjsBug7973( win);
                     updateWindowMenu();
+                    merge_win = undefined; 
                 } );
             } )
     ); 
