@@ -1748,12 +1748,11 @@ async function _callback( name, event){
                 }
                 
                 // Get provider-icons
-                let iconPath = 'apis_github_and_others/git-provider-icons/Blank.png';
+                let iconPath = CWD_INIT + '/apis_github_and_others/git-provider-icons/Blank.png';
                 try{
                     let remoteUrl = state.repos[i].remoteURL;
                     let provider = await gitProvider( remoteUrl, false); // Run static (second argument = false) to get icon quicker
-                    //iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
-                    iconPath =  await provider.getValue('icon', 'darkmode'  );
+                    iconPath =  CWD_INIT + pathsep + await provider.getValue('icon', 'darkmode'  );
                     console.log(iconPath);
                 }catch(err){
                     console.warn(err);
