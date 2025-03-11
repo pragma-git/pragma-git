@@ -5751,7 +5751,41 @@ async function gitProvider(giturl, initialize = true){
     }
     
 }
-
+listUnstarredGithub = async function( state, owner, repo) {
+    // state is state for pragma-git
+    // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo
+    // repo  is the repo with owner 'owner', which we want to checi if starred by current (looped) repo
+    
+    let myModule =  require('apis_github_and_others/github-star.js');
+    let allUnstarred = [];
+    
+    for (i = 0; i < state.repos.length; i++) {
+        
+        try{    
+            let remoteUrl = state.repos[ i].remoteURL;
+            if (! remoteUrl.includes('github.com')){
+                continue;
+            }
+            
+            let localFolder = state.repos[ i].localFolder;
+            
+            // TOKEN for current repo
+            let creds = await getCredential( remoteUrl);
+            let token = creds.password;
+            
+            let isStarred = await myModule.isRepositoryStarred( owner, repo, token);
+            console.log( localFolder.split('/').pop() +  ' -- ' + token  + '  isStarred = ' + isStarred)
+            if ( !isStarred){
+               allUnstarred.push( state.repos[ i] );
+            }
+        }catch(err){
+            console.warn(err);
+        }
+        
+    }
+    
+    return allUnstarred
+}
 
 // Logging to file
 

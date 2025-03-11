@@ -185,7 +185,39 @@ class github extends General_git_rest_api {
                 global.log(`getValue('${parameterName}') = ${out} `);
                 return out  // return value for parameterName (from json), or undefined
         }             
+        async setValue( parameterName, value){  // Set parameter TODO: This is not finished yet
+            // Uses:
+            //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
+            //
+            // Output :
+            //      out     value from json parameterName 
+            
+            
+                
+            // Provider-specific code
 
+                switch (parameterName) {  
+
+                    case 'set-star': { // sets true, false
+                        try{              
+                            if (value == true)   {
+                                visibility = 'private';
+                            }else{
+                                visibility = 'public';
+                            }
+
+                        }catch (err){ global.error(err);}
+                        break;   
+                    }    
+                    default: {
+                         throw new Error(`setValue error: 'unknown parameterName'`);
+                    }
+                }
+                
+            // --- End Provider-specific code   
+                  
+                return out  // return value for parameterName (from json), or undefined
+        }  
 }
 
 module.exports = github;

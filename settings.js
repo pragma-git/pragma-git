@@ -13,7 +13,8 @@ const { execSync } = require('child_process');
 let simpleGit = opener.simpleGit; 
 let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
-
+let githubStar = require('apis_github_and_others/github-star.js'); // Use to star pragma-git
+            
 // Global for whole app
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
@@ -484,6 +485,9 @@ async function _callback( name, event){
                 if (fs.existsSync(ignoreFileName) ){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
+                
+                // Update starred button
+                await updateStarredButton();
 
             }catch(err){
                 // Probably no branches, because repo does not exist
@@ -843,6 +847,34 @@ async function _callback( name, event){
         case 'systemInfoClicked': {
             updateGitconfigs(); 
             updateRemoteInfo( )
+            break;
+        }
+        case 'starPragmaGit': {
+            const owner = 'pragma-git';
+            const repo = 'pragma-git';
+            
+            try{
+                // TOKEN for current repo
+                let creds = await opener.getCredential( state.repos[ state.repoNumber ].remoteUrl);
+                let token = creds.password;
+                
+                // Get star status (this repository)
+                let isStarred = await githubStar.isRepositoryStarred(owner, repo, token);
+                
+                // Set star on pragma-git repository
+                if (isStarred){
+                    await githubStar.unstarRepository (owner, repo, token); // unstar
+                }else{
+                    await githubStar.starRepository (owner, repo, token);   // star
+                }
+ 
+                // Update button
+                await updateStarredButton();
+            }catch (err){
+                console.warn('Failed starring pragma-git from current repository');
+                console.warn(err);
+            }
+            
             break;
         }
 
@@ -1453,8 +1485,9 @@ function updateRemoteRepos(){ // Displays current data in GUI
     }else{
         // Auto-push checkboxes
         document.getElementById('forgetRemoteURLButton').style.display = 'inline-block';
-        
     }       
+    // Update star button
+    updateStarredButton();
 }
 
 // Draw
@@ -1847,6 +1880,42 @@ async function generateBranchTable(document, table, branchlist) {
    
 }
             
+async function updateStarredButton(){ // Github starring of pragma-git
+    
+    const owner = 'pragma-git';
+    const repo = 'pragma-git';
+
+    try{
+        // TOKEN for current repo
+        let creds = await opener.getCredential( state.repos[ state.repoNumber ].remoteUrl);
+        let token = creds.password;
+
+        // Hide button area for all except github.com
+        if ( state.repos[ state.repoNumber ].remoteURL.includes('github.com') ){
+            document.getElementById("givePragmaGitStarDiv").style.display="block";
+        }else{
+            document.getElementById("givePragmaGitStarDiv").style.display="none";
+        }
+        
+        // Show correct star-icon, and text
+        let isStarred = await githubStar.isRepositoryStarred(owner, repo, token);
+        let starIcon = document.getElementById('star-icon');
+        if ( isStarred ){
+            starIcon.src = "images/github_star_on.png";
+            document.getElementById('givePragmaGitStarText').textContent = 'Pragma-git is starred :';
+        }else{
+            starIcon.src = "images/github_star_off.png";
+            document.getElementById('givePragmaGitStarText').textContent = 'Give Pragma-git a star :';
+        }
+
+    }catch (err){
+        console.warn('Failed starring pragma-git from current repository');
+        console.warn(err);
+    }
+        
+    
+}           
+            
 // Local git-config author info  
 async function directlyDisplayLocalAuthorInfo( localAuthorName, localAuthorEmail){ // Display author info when modified local author info  (ignore local git-config)
     // DISPLAY 
@@ -2029,6 +2098,7 @@ async function updateRemoteInfo( ){
     try{
         let provider = await opener.gitProvider( creds.url)
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+        let iconLongPath =  opener.CWD_INIT + pathsep + await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
         let providerApiUrl = await provider.getValue('api-url');
         console.log(providerApiUrl);
@@ -2056,8 +2126,7 @@ async function updateRemoteInfo( ){
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
-        html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconPath} </td></tr>` 
-        html +=     `<tr><td> &nbsp; Icon : &nbsp; </td><td> <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
+        html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
         html += '</table></code>';      
     }catch (err){
