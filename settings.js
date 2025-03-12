@@ -847,6 +847,7 @@ async function _callback( name, event){
         case 'systemInfoClicked': {
             updateGitconfigs(); 
             updateRemoteInfo( )
+            updateStarredButton();
             break;
         }
         case 'starPragmaGit': {
@@ -863,13 +864,15 @@ async function _callback( name, event){
                 
                 // Set star on pragma-git repository
                 if (isStarred){
+                    document.getElementById('star-icon').src = "images/github_star_off.png";  // Preview change before it happens (makes i snappier)
                     await githubStar.unstarRepository (owner, repo, token); // unstar
                 }else{
+                    document.getElementById('star-icon').src = "images/github_star_on.png";  // Preview change before it happens (makes i snappier)
                     await githubStar.starRepository (owner, repo, token);   // star
                 }
  
                 // Update button
-                await updateStarredButton();
+                await updateStarredButton();  // Update button-icon and text according to star-status from remote (can override preview above, if change didn't work) 
             }catch (err){
                 console.warn('Failed starring pragma-git from current repository');
                 console.warn(err);
@@ -1895,16 +1898,17 @@ async function updateStarredButton(){ // Github starring of pragma-git
             document.getElementById("givePragmaGitStarDiv").style.display="block";
         }else{
             document.getElementById("givePragmaGitStarDiv").style.display="none";
+            return // No need to update buttom image
         }
         
         // Show correct star-icon, and text
         let isStarred = await githubStar.isRepositoryStarred(owner, repo, token);
         let starIcon = document.getElementById('star-icon');
         if ( isStarred ){
-            starIcon.src = "images/github_star_on.png";
+            document.getElementById('star-icon').src = "images/github_star_on.png";
             document.getElementById('givePragmaGitStarText').textContent = 'Pragma-git is starred :';
         }else{
-            starIcon.src = "images/github_star_off.png";
+            document.getElementById('star-icon').src = "images/github_star_off.png";
             document.getElementById('givePragmaGitStarText').textContent = 'Give Pragma-git a star :';
         }
 
