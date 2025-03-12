@@ -1294,8 +1294,8 @@ async function injectIntoSettingsJs(document) {
     await drawPath()
       
     // Draw tabs
-    await drawBranchTab(document);
     await drawRepoTab(document);
+    await drawBranchTab(document);
     await drawSoftwareTab(document);
     
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
