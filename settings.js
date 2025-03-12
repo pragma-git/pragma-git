@@ -471,6 +471,8 @@ async function _callback( name, event){
                     document.getElementById('autoPushDiv').style.visibility = 'collapse';
                 } 
                 
+                
+                document.getElementById('allowPushToRemote').checked = state.repos[state.repoNumber].allowPushToRemote;
                 document.getElementById('autoPushToRemote').checked = state.repos[state.repoNumber].autoPushToRemote;
                 
                 document.getElementById('NoFF_merge').checked = state.repos[state.repoNumber].NoFF_merge;
@@ -490,6 +492,7 @@ async function _callback( name, event){
                 await updateStarredButton();
 
             }catch(err){
+                console.error(err);
                 // Probably no branches, because repo does not exist
             }
             
@@ -1462,10 +1465,7 @@ function updateRemoteRepos(){ // Displays current data in GUI
         // Readonly origin
         document.getElementById('newRepoAliasTextarea').readOnly = true;
         document.getElementById('newRepoAliasTextarea').classList.add('readonly')
-        
-        // Github Wizard button
-        document.getElementById('Github-button').style.display = 'block';
-        document.getElementById('Github-button').visibility = 'visible'
+
     }else{
         // Auto-push checkboxes
         document.getElementById('allowToPushDiv').style.display = 'none';
@@ -1474,10 +1474,7 @@ function updateRemoteRepos(){ // Displays current data in GUI
         // Readwrite remote (non-origin)
         document.getElementById('newRepoAliasTextarea').readOnly = false;
         document.getElementById('newRepoAliasTextarea').classList.remove('readonly')
-        
-        // Github Wizard button
-        document.getElementById('Github-button').style.display = 'none';
-        document.getElementById('Github-button').visibility = 'none'
+
     }
      
     // Show / hide Remove button (only hide for remote origin)
