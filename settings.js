@@ -597,6 +597,8 @@ async function _callback( name, event){
                 document.getElementById(id).value = newUrl;
                 state.repos[state.repoNumber].remoteURL = newUrl;
                 testURL( id, event);
+                
+                await drawProviderIcon( state.repoNumber + 30000, newUrl);
             }
 
             await opener.cacheBranchList(); 
@@ -760,6 +762,7 @@ async function _callback( name, event){
             
             realId = id - 20000; // Test button id:s are offset by 20000 (see generateRepoTable)
             textareaId = realId + 10000; // URL text area id:s are offset by 10000 (see generateRepoTable)
+            iconId = realId + 30000;
 
   
             //  Set remote URL 
@@ -774,7 +777,8 @@ async function _callback( name, event){
                 try{
                     
                     // Add remote if url, otherwise remove
-                        
+
+                            
                     if (newUrl.includes('://')){
                         await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                         function onSetRemoteUrl(err, result ){
@@ -784,7 +788,13 @@ async function _callback( name, event){
                             // Set if change didn't cause error (doesn't matter if URL works)
                             state.repos[realId].remoteURL = newUrl;
                         };
+
+                        await drawProviderIcon( iconId, newUrl);
+                        
                     }else{
+                        
+                        // Clear icon (default values)
+                        await drawProviderIcon( iconId, '');
                             
                         // Remove remote origin (make it a fork)
                         await simpleGit(localFolder3).removeRemote('origin',onDeleteRemoteUrl);
@@ -822,6 +832,8 @@ async function _callback( name, event){
                         console.log(err);
                     } 
                     
+                    
+                    await drawProviderIcon( iconId, newUrl);
                     
                     // Push (doesn't harm, but sends an initial commit if created locally but not yet pushed)
                     opener.gitPush();
@@ -1511,6 +1523,32 @@ async function drawRepoTab(document){
     let table = document.getElementById("settingsTableBody");
     generateRepoTable(document, table, data);
 }
+async function  drawProviderIcon( iconId, newUrl){
+     // Provider icon
+                             
+    let iconPath = '/apis_github_and_others/git-provider-icons/Blank.png';
+    let webUrl = '';
+                    
+    try{
+        let provider = await opener.gitProvider( newUrl, false); // Run static (second argument = false) to get icon quicker
+        iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+        webUrl = await provider.getValue('web-url');
+    }catch (err){
+        
+    }
+    let img = document.getElementById(iconId);
+    let a = img.parentElement;
+    
+    img.src = iconPath;
+    a.href = webUrl;   
+    a.setAttribute("onclick", "require('nw.gui').Shell.openExternal( this.href );return false;");
+    if (webUrl == ''){
+        a.removeAttribute("onclick");
+        a.removeAttribute("href");
+    }
+    
+}
+
 async function drawSoftwareTab(document){
     
     // Write system information to divs
@@ -1677,26 +1715,32 @@ async function generateRepoTable(document, table, data) {
             cell = row.insertCell();
             
             try{
-                let provider = await opener.gitProvider( element.remoteURL, false); // Run static (second argument = false) to get icon quicker
-                let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
-                let webUrl = await provider.getValue('web-url');
+                //let iconPath = '/apis_github_and_others/git-provider-icons/Blank.png';
+                //let webUrl = '';
+                //try{
+                    //let provider = await opener.gitProvider( element.remoteURL, false); // Run static (second argument = false) to get icon quicker
+                    //iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+                    //webUrl = await provider.getValue('web-url');
+                //}catch (err){
+                    
+                //}
                 
-                // Link
+                // Link (set href in drawProviderIcon, below)
                 let a = document.createElement('a');
-                a.setAttribute("href", webUrl);
                 a.setAttribute("onclick", "require('nw.gui').Shell.openExternal( this.href );return false;");
                 
-                // Image inside link element
+                // Image inside link element (set src in drawProviderIcon, below)
                 let img = document.createElement('img');
                 img.setAttribute("id", index + 30000);
                 img.setAttribute("class", 'remoteIcon');
-                img.src = iconPath;
                 cell.setAttribute("class", 'remoteIcon');
                 
                 a.appendChild(img);
                  
                 
                 cell.appendChild( a );
+                
+                await drawProviderIcon( index + 30000, element.remoteURL)
             }catch(err){
                 console.warn(err);
             }
