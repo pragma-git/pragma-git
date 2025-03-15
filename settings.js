@@ -639,7 +639,55 @@ async function _callback( name, event){
                     
             break;   
         } 
-
+        case 'openProviderWindow':{
+            if (localState.gitCreateRemoteRepoWindow.open == true){
+                return
+            }
+            
+            // Prepare data 
+            localState.gitCreateRemoteRepoWindow.data = { name: event.name, provider: event.provider}; 
+            
+            // Make window
+            nw.Window.open('Create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
+            win => win.on('loaded', function () {
+                
+                opener.createRemote_win = win;
+    
+                opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                opener.updateWindowMenu( 'Create Remote Repository', 'createRemote_win');
+                localState.gitCreateRemoteRepoWindow.open = true;
+                
+                win.on('close', function() { 
+                    localState.gitCreateRemoteRepoWindow.open = false;
+                    opener.updateWindowMenu('Create Remote Repository');
+                    opener.fixNwjsBug7973( win);
+                } );
+                
+                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                win.on('closed', function () {
+                    win = null;
+                 });
+               
+                 // Listen to main window's close event
+                 nw.Window.get().on('close', function () {
+                   // Hide the window to give user the feeling of closing immediately
+                   this.hide();
+               
+                   // If the new window is still open then close it.
+                   if (win !== null) {
+                     win.close(true);
+                   }
+               
+                   // After closing the new window, close the main window.
+                   this.close(true);
+                 });
+                    
+                    
+                } ));
+            
+            break;
+        }
+        
         case 'newBranchNameKeyUp': {
 
             document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)

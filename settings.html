@@ -178,7 +178,8 @@
         
         img[src="images/github-mark.png"],
         img[src="images/github_star_on.png"],
-        img[src="images/github_star_off.png"]
+        img[src="images/github_star_off.png"],
+        .providerImage
         {
             filter: none;
         }
@@ -711,6 +712,21 @@
                             
                         </div>
                         
+                        
+                        <div id="CreateRemoteRepoDiv" style="filter: none;">Or create new repository : 
+                            <button onclick="_callback( 'openProviderWindow', {name: 'GitHub', provider: 'github.com'} );" >
+                                <img class="providerImage" style='vertical-align:bottom;' height="17" width="17" src="apis_github_and_others/git-provider-icons/Github/github-mark.png" >
+                                GitHub
+                            </button> 
+                            <button onclick="_callback( 'openProviderWindow', {name: 'GitLab', provider: 'gitlab.com'} );" >
+                                <img class="providerImage" style='vertical-align:bottom;' height="17" width="17" src="apis_github_and_others/git-provider-icons/Gitlab/gitlab-logo-500_zoomed.png" >
+                                GitLab
+                            </button> 
+                            <button onclick="_callback( 'openProviderWindow', {name: 'Bitbucket', provider: 'bitbucket.org'} );" >
+                                <img class="providerImage" style='vertical-align:bottom;' height="17" width="17" src="apis_github_and_others/git-provider-icons/Free-icons.github.io/bitbucket_blue.png" >
+                                Bitbucket
+                            </button> 
+                        </div>
                         
                       
                     </div>

@@ -195,6 +195,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Windows opened from Settings
         var gitignore_win;
+        var createRemote_win;
         
         // General help window
         var help_win;
@@ -211,6 +212,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'About': 'about_win',      
            'File': 'merge_win',
            'Git-ignore': 'gitignore_win' ,
+           'Create': 'createRemote_win' ,
            'Help': 'help_win'    
         }
 
@@ -273,7 +275,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Windows opened from Settings
         localState.gitignoreWindow = false; // True when Gitignore window is open
-        localState.githubWindow = false; // True when Gitignore window is open
+        localState.gitCreateRemoteRepoWindow = {};
+        localState.gitCreateRemoteRepoWindow.open = false; // True when Create Remote Repo window is open
+        localState.gitCreateRemoteRepoWindow.data = {}; // True when Create Remote Repo window is open
         
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
