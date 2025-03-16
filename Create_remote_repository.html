@@ -14,6 +14,10 @@
                 switch (node.nodeType) {
                     case Node.ELEMENT_NODE:
                         replaceInText(node, pattern, replacement);
+                        // Placeholder
+                        if (node.type == 'textarea'){
+                            node.placeholder = node.placeholder.replace( pattern, replacement);
+                        }
                         break;
                     case Node.TEXT_NODE:
                         node.textContent = node.textContent.replace(pattern, replacement);
@@ -236,7 +240,7 @@
             // Read textareas
             let username = document.getElementById('accountName').value;
             let token = document.getElementById('token').value;
-            let repoName = document.getElementById(repoField).value;
+            //let repoName = document.getElementById(repoField).value;
             
             // Verify repo name
             repoName = util.branchCharFilter( repoName) ;
@@ -324,10 +328,11 @@
     <script>
         addEventListener('DOMContentLoaded',  async function () {
             
+                
+                console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
+            
                 // Read data transferred 
                 let name = localState.gitCreateRemoteRepoWindow.data.name;
-                
-                console.log( opener.opener.createRemote_win.data);
                 
                 replaceInText( document.body, 'Github', name); 
                 console.log('Create_remote_repository.html :DOM fully loaded and parsed');

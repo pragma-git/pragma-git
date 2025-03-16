@@ -646,22 +646,26 @@ async function _callback( name, event){
             
             // Prepare data 
             localState.gitCreateRemoteRepoWindow.data = { name: event.name, provider: event.provider}; 
+            console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
             
             // Make window
             nw.Window.open('Create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
             win => win.on('loaded', function () {
                 
+                console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
                 opener.createRemote_win = win;
     
                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 opener.updateWindowMenu( 'Create Remote Repository', 'createRemote_win');
                 localState.gitCreateRemoteRepoWindow.open = true;
                 
+                
                 win.on('close', function() { 
                     localState.gitCreateRemoteRepoWindow.open = false;
                     opener.updateWindowMenu('Create Remote Repository');
                     opener.fixNwjsBug7973( win);
                 } );
+                
                 
                 // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
                 win.on('closed', function () {
