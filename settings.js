@@ -649,7 +649,7 @@ async function _callback( name, event){
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
             
             // Make window
-            nw.Window.open('Create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
+            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
             win => win.on('loaded', function () {
                 
                 console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
