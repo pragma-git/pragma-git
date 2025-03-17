@@ -55,7 +55,8 @@
             color: var(--red-text);
         }
         
-        #providerImage{
+        #providerImage
+        {
             filter: none;
         }
         
@@ -105,7 +106,7 @@
                     Register a Github account
                     </a>)
                 </label>
-                <textarea id="accountName" placeholder="Github account name" oninput="build('repoName')"></textarea>  
+                <textarea id="accountName" placeholder="Github account name"></textarea>  
             </p>
             
                             
@@ -117,7 +118,7 @@
                     Create an access token
                 </a>)
                 </label>
-                <textarea id="token" placeholder="Paste Github-account access token here" oninput="build('repoName')"></textarea>  
+                <textarea id="token" placeholder="Paste Github-account access token here"></textarea>  
             </p>
         
             <br>
@@ -142,9 +143,7 @@
                         <label for="newRepoName">Name of New Repository</label>
                         <textarea id="newRepoName" placeholder="Github name of new repository" 
                             oninput="
-                            document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);
-                            build('newRepoName');
-                            "
+                            document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);"
                         ></textarea>
         
                     </p>
@@ -152,7 +151,7 @@
                     
                     <p>                        
                         <label for="repoDescription">Description (only when creating new repository)</label>
-                        <textarea id="repoDescription" placeholder="For new repository : write short description" oninput="build('newRepoName')"></textarea>               
+                        <textarea id="repoDescription" placeholder="For new repository : write short description"></textarea>               
                     </p>
                     
                     
@@ -177,7 +176,7 @@
                             id = "ok2" 
                             onclick = "
                             let textarea_id = state.repoNumber + 10000;
-                            opener.document.getElementById(textarea_id).value = build('newRepoName'); 
+                            opener.document.getElementById(textarea_id).value = document.getElementById('outputUrl').innerText; // Copy displayed giturl to settings-win
                             
                             let evt=[]; 
                             evt.innerHTML = 'Set';

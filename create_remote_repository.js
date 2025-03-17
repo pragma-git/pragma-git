@@ -1,6 +1,7 @@
 
 //let cachedAllCredentials = [];
 let provider;
+let giturl;
 
 async function runWhenDOMContentLoaded() {
 
@@ -23,7 +24,7 @@ async function runWhenDOMContentLoaded() {
             }
             
             // Initialize 
-            provider = await opener.opener.gitProvider(provider_url, initialize = true);
+            //provider = await opener.opener.gitProvider(provider_url, initialize = true);
              
             
             console.log('create_remote_repository.html :DOM fully loaded and parsed');
@@ -89,7 +90,7 @@ function build(repoField){ // Build git url
     // Read textareas
     let username = document.getElementById('accountName').value;
     let token = document.getElementById('token').value;
-    //let repoName = document.getElementById(repoField).value;
+    let repoName = document.getElementById(repoField).value;
     
     // Verify repo name
     repoName = util.branchCharFilter( repoName) ;
@@ -105,9 +106,13 @@ function build(repoField){ // Build git url
     return url;
 }
 async function createRepo(){// Create Repo
+    
+    
+    
     //
     // Assume just creating a remote repo
-    //                  
+    //   
+    let OWNER = document.getElementById('accountName').value;               
     let NEW_REPO = document.getElementById('newRepoName').value;
     let TOKEN = document.getElementById('token').value;
     let DESCRIPTION = document.getElementById('repoDescription').value;
@@ -119,50 +124,29 @@ async function createRepo(){// Create Repo
     let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
     let URL = 'https://api.github.com/user/repos';
     
+    let response = await provider.createRepo( OWNER, TOKEN, NEW_REPO, DESCRIPTION, PRIVATE );  
+    let ok = response.ok;
+    giturl = response.giturl;  // global variable in this file
 
+        
+    if (ok){
+        document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
+        document.getElementById('newRepoStatus').classList.add('green');
+        document.getElementById('newRepoStatus').classList.remove('red');
+        
+        document.getElementById('ok2').style="display: block;" ;
+ 
+        document.getElementById('outputUrl').textContent = giturl;
 
-    //
-    // Do repo creation through API
-    //           
-    try {
+    } else {
+        document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
+        document.getElementById('newRepoStatus').classList.add('red');
+        document.getElementById('newRepoStatus').classList.remove('green');
         
-        const res = await fetch(URL, {
-            method: 'POST',
-            headers: headers,
-            body: body
-        })
+        document.getElementById('ok2').style="display: none;" ;
         
-        const json = await res.json();
-        const message = json.message;
-        const ok = res.ok;
-    
-        console.log(ok)
-        console.log(res.status)
-        console.log(json.message);
-        
-        if (ok){
-            // Update repo textarea
-            document.getElementById('repoName').value = document.getElementById('newRepoName').value;
-            document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
-            document.getElementById('newRepoStatus').classList.add('green');
-            document.getElementById('newRepoStatus').classList.remove('red');
-            
-            
-            document.getElementById('ok2').style="display: block;" ;
-
-        } else {
-            document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
-            document.getElementById('newRepoStatus').classList.add('red');
-            document.getElementById('newRepoStatus').classList.remove('green');
-            
-            
-            document.getElementById('ok2').style="display: none;" ;
-            
-        }
-        
-    } catch (error) {
-        console.log(error.response.body);
     }
 
-    build('newRepoName');
+
+    //build('newRepoName');
 }

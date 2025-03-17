@@ -63,6 +63,36 @@ class github extends General_git_rest_api {
             
             return url;
         }     
+        async createRepo( owner, token, newRepoName, description, isPrivate ){  // Create Github repository
+
+            let ok = false;
+            let giturl = `https://github.com/${owner}/${newRepoName}.git`;
+            
+            try {
+                // Create
+                const res = await fetch( 'https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: {  'Authorization' : `token ${token}` },
+                    body: JSON.stringify({
+                        name: newRepoName,
+                        description: description,
+                        private: isPrivate
+                    })
+                })
+                
+                // Check result
+                const json = await res.json();
+                ok = res.ok;
+            
+                console.log(`[${ok}]  (status = ${res.status}) `);
+
+                
+            } catch (error) {
+                console.log(error);
+            }
+            
+            return { ok: ok, giturl: giturl};
+        }
         async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
@@ -102,6 +132,7 @@ class github extends General_git_rest_api {
              
             return this.repoInfoStruct;  // Useful for debuggin
         } 
+
         async getValue( parameterName, secondParameter){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
