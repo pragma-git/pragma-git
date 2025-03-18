@@ -139,7 +139,7 @@ async function createRepo(){// Create Repo
         document.getElementById('outputUrl').textContent = giturl;
 
     } else {
-        document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
+        //document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
         document.getElementById('newRepoStatus').classList.add('red');
         document.getElementById('newRepoStatus').classList.remove('green');
         

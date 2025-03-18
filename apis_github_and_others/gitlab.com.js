@@ -111,6 +111,47 @@ class gitlab extends General_git_rest_api {
             
             return url;
         }     
+        async createRepo( owner, token, newRepoName, description, isPrivate ){  // Create Github repository
+
+            let ok = false;
+            let giturl = `https://gitlab.com/${owner}/${newRepoName}.git`;
+ 
+            let isPrivateString = 'public';
+            if (isPrivate){
+                isPrivateString = 'private';
+            }
+            
+            
+            try {
+                // Create
+                const res = await fetch( 'https://gitlab.com/api/v4/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'PRIVATE-TOKEN': token,
+                    },
+                    body: JSON.stringify({
+                        name: newRepoName,
+                        description: description,
+                        visibility: isPrivateString
+                    })
+                })
+                
+                // Check result
+                console.log(res);
+                const json = await res.json();
+                ok = res.ok;
+            
+                console.log(`[${ok}]  (status = ${res.status}) `);
+                console.log( json);
+
+                
+            } catch (error) {
+                console.log(error);
+            }
+            
+            return { ok: ok, giturl: giturl};
+        }
         async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
