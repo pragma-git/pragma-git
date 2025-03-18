@@ -117,12 +117,6 @@ async function createRepo(){// Create Repo
     let TOKEN = document.getElementById('token').value;
     let DESCRIPTION = document.getElementById('repoDescription').value;
     let PRIVATE = document.getElementById('privateRepo').checked;
-
-    let headers = {  'Authorization' : `token ${TOKEN}` };
-    console.log(headers);
-    
-    let body = `{"name":"${NEW_REPO}","private":${PRIVATE},"description":"${DESCRIPTION}"}`;
-    let URL = 'https://api.github.com/user/repos';
     
     let response = await provider.createRepo( OWNER, TOKEN, NEW_REPO, DESCRIPTION, PRIVATE );  
     let ok = response.ok;

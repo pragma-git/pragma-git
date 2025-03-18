@@ -61,7 +61,67 @@ class bitbucket extends General_git_rest_api {
             // --- End Provider-specific code  
             
             return url;
-        }     
+        }  
+        async createRepo( owner, myCredentials, newRepoName, description, isPrivate, PROJECT_KEY = undefined ){  // Create Github repository
+            
+            // owner  -- bitbucket workspace = account.  For instance janaxelsson in 'https://bitbucket.org/janaxelsson'
+            // myCredentials -- ${BITBUCKET_USER_NAME}:${APP_PASSWORD}  // Use App Password instead of Token (because it is very complex to set up an Oauth token)
+            //                  BITBUCKET_USER_NAME -- found from "https://bitbucket.org/account/settings/"
+            //                  APP_PASSWORD        -- set from "https://bitbucket.org/account/settings/app-passwords/"
+            //
+            // Bitbucket has the concept of PROJECT.  If not specified, the new repo lands in first project.
+            // I have prepared this function for PROJECT_KEY (which can be found in "https://bitbucket.org/${owner}/workspace/projects/")
+            // in case I want to implement such a setting in 'create_remote_repository.html'
+            
+            let ok = false;
+            let giturl = `https://bitbucket.org/${owner}/${newRepoName}.git`;
+            
+            // Encode credentials for Basic Auth
+            const credentials = btoa(myCredentials);
+            
+            let body = {
+                        name: newRepoName,
+                        scm: 'git',
+                        is_private: isPrivate,
+                        description: description
+                    }
+            
+            // Append PROJECT to body if defined        
+            if (PROJECT_KEY !== undefined){
+                body.project = { "key": PROJECT_KEY };
+            }
+
+            
+            try {
+                // Create
+                const res = await fetch( `https://api.bitbucket.org/2.0/repositories/${owner}/${newRepoName}`, {
+                    method: 'POST',
+                    headers: {
+                       "Content-Type": "application/json",
+                        "Authorization": `Basic ${credentials}` // Use Basic Auth with App Password
+                    },
+                    body: JSON.stringify( body )
+                })
+                
+                // Check result
+                console.log(res);
+                const json = await res.json();
+                ok = res.ok;
+            
+                //console.log(`[${ok}]  (status = ${res.status}) `);
+                console.log(`[${ok}] `);
+                console.log( json);
+                
+                if (ok){
+                    console.log("Repository created:", giturl);
+                }   
+                
+            } catch (error) {
+                console.log(error);
+            }
+            
+            return { ok: ok, giturl: giturl};
+        }   
               async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
