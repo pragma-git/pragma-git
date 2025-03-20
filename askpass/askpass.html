@@ -137,13 +137,13 @@
             
             ExitMessage( message); 
             EXITCODE = 0;
-            window.close();
+            nw.Window.get().close(); //See nwjs issue #7808
         }   
         
         
         function Cancel_clicked(){
             EXITCODE = 1;
-            window.close();
+            nw.Window.get().close(); //See nwjs issue #7808
         }
          
 
@@ -183,7 +183,7 @@
             } catch(err) {
                 console.error(err)
             }
-            window.close();
+            nw.Window.get().close(); //See nwjs issue #7808
         }
 
  
@@ -210,6 +210,7 @@
         window.addEventListener(
             'beforeunload', 
             (event) => { Exit( EXITCODE); }
+            
         );
     </script>
 
