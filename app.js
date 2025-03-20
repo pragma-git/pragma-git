@@ -228,7 +228,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         mkdir(notesDir);
     
         
-        // Pragma-merge : Signaling files and folders 
+        // Pragma-git : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
         mkdir(SIGNALDIR); 
         
@@ -239,11 +239,18 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         pragmaLog('Initiating app.js');
         
+        // Pragma-merge : Signaling files and folders 
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
         const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
         
+        // Pragma-askpass : Signaling files and folders 
         const ASKPASSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running'; 
         const EXITASKPASSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
+        fs.writeFileSync( // Clear log file (see pragma-askpass bash-file)
+            SIGNALDIR + pathsep + 'askpass.txt', 
+            `# PRAGMA-ASKPASS LOG (cleared after each start of pragma-git) \n\n`, 
+            'utf8'
+        ); 
         
         
     
