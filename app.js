@@ -3413,7 +3413,7 @@ function startPragmaAskPass(){
      
          
     let title = "Password";
-    gui.Window.open('askpass/askpass.html', { 
+    gui.Window.open('askpass/askpass.html#/new_page', { 
             id: 'askpassWindowId',
             position: 'center',
             show: false,
