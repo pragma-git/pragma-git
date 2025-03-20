@@ -6371,7 +6371,13 @@ function downloadNewVersionDialog(){
 
 
 // "Window"-menu (Tray and MacOS) 
-
+async function updateWindowMenu(){  // Updates MacOS and Tray "Window"-menus
+    //updateMacMenu();  // (Ignores if not MacOS)
+    createMacMenu()
+    await updateTrayMenu(); 
+    
+   //await window.setTimeout( () =>{tray.menu = tray.menu}, 500 )
+}
 function createMacMenu(){  // Creates MacOS menu (or ignores if not MacOS)
 
      if (process.platform !== 'darwin'){
@@ -6403,7 +6409,7 @@ function createMacMenu(){  // Creates MacOS menu (or ignores if not MacOS)
     // Assume Window menu is last to the right
     let WindowMenu = mb.items.length - 1;    
     macWindowsMenu = mb.items[WindowMenu];
-    updateMacMenu()
+    macWindowsMenu.submenu = makeWindowMenu();
     
     // Show menu
     gui.Window.get().menu = mb;
@@ -6414,13 +6420,6 @@ function createTrayMenu(){  // Creates Tray menu
     updateTrayMenu();
 }
 
-function updateMacMenu(){   // Update MacOS menu  (or ignores if not MacOS)
-    if (process.platform !== 'darwin'){
-        return
-    }  
-    macWindowsMenu.submenu = makeWindowMenu();
-    
-}
 async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with additional 'Quit')
     tray.menu = makeWindowMenu()
     
@@ -6536,12 +6535,6 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
             
     }
 
-async function updateWindowMenu(){  // Updates MacOS and Tray "Window"-menus
-    updateMacMenu();  // (Ignores if not MacOS)
-    await updateTrayMenu(); 
-    
-   //await window.setTimeout( () =>{tray.menu = tray.menu}, 500 )
-}
 
 
 
