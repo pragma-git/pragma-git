@@ -90,18 +90,29 @@ class bitbucket extends General_git_rest_api {
             if (PROJECT_KEY !== undefined){
                 body.project = { "key": PROJECT_KEY };
             }
+            
+            let headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Basic ${credentials}` // Use Basic Auth with App Password
+            }
+            
+            console.log('body');
+            console.log(body);
+            console.log('headers');
+            console.log(headers);
 
             
             try {
                 // Create
                 const res = await fetch( `https://api.bitbucket.org/2.0/repositories/${owner}/${newRepoName}`, {
                     method: 'POST',
-                    headers: {
-                       "Content-Type": "application/json",
-                        "Authorization": `Basic ${credentials}` // Use Basic Auth with App Password
-                    },
+                    headers: headers,
                     body: JSON.stringify( body )
                 })
+
+                console.log(body);
+                console.log(headers);                
+
                 
                 // Check result
                 console.log(res);

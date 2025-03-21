@@ -11,6 +11,7 @@ async function runWhenDOMContentLoaded() {
             let name = localState.gitCreateRemoteRepoWindow.data.name;
             let provider_url = localState.gitCreateRemoteRepoWindow.data.provider;
             
+            // Change text to correct provider (replace Github from original file)
             replaceInText( document.body, 'Github', name); 
             
             // Change to provider's icon
@@ -23,47 +24,78 @@ async function runWhenDOMContentLoaded() {
                 console.warn(err);
             }
             
-            // Initialize 
-            //provider = await opener.opener.gitProvider(provider_url, initialize = true);
-             
+            // Change texts and links for providers
+            let labelStruct = {};
+            switch (name) {
+                
+                case 'Github': {
+                    labelStruct.accountName_label = makeLabel( 
+                        'Github username (', ')', 
+                        'Register Github account', 'https://github.com/join'
+                    );
+                    labelStruct.token_label = makeLabel( 
+                        'Token (', ')', 
+                        'Create personal access token', 'https://github.com/settings/tokens'
+                    );
+
+                    setLabels( labelStruct);
+                    break;
+                };
+                
+                case 'Gitlab': {
+                    labelStruct.accountName_label = makeLabel( 
+                        'Gitlab username (', ')', 
+                        'Register a Gitlab account', 'https://gitlab.com/users/sign_up'
+                    );
+                    labelStruct.token_label = makeLabel( 
+                        'Token (', ')', 
+                        'Create personal access token', 'https://gitlab.com/-/user_settings/personal_access_tokens'
+                    );
+
+                    setLabels( labelStruct);
+                    break;
+                };
+                
+                case 'Bitbucket': {
+                    labelStruct.accountName_label = makeLabel( 
+                        'Bitbucket username (', ')', 
+                        'Register a Bitbucket account', 'https://bitbucket.org/'
+                    );
+                    labelStruct.token_label = makeLabel( 
+                        'Username:app_password (', ')', 
+                        'Create a Bitbucket app-password', 'https://bitbucket.org/account/settings/app-passwords/'
+                    );
+
+                    setLabels( labelStruct);
+                    break;
+                };
+            }
             
+
+            function setLabels( labelStruct){
+                    document.getElementById("accountName_label").innerHTML = labelStruct.accountName_label;
+                    document.getElementById("token_label").innerHTML = labelStruct.token_label;
+            }
+            
+            function makeLabel( preText, postText, web_link_text, web_link){
+                // Call with 4 or 2 arguments.
+                //
+                // 4 arguments : Makes innerHTML for a label in format : "preText LINK postText"
+                //               where LINK is formatted as an <a> element showing link-text = "web_link_text", which opens in a web window with URL = "web_link"
+                //
+                // 2 arguments : returns innerHTML formated as : "preText postText"
+                
+                if (web_link == undefined ){
+                    // 2 arguments
+                    return   `${preText} ${postText}`
+                }else{
+                    // 4 arguments
+                    return   `${preText} <a href="${web_link}" onclick="require('nw.gui').Shell.openExternal( this.href);return false;"> ${web_link_text} </a> ${postText}`
+                }
+            }
+
             console.log('create_remote_repository.html :DOM fully loaded and parsed');
-                        
-            // Import modules
-            const util = require('./util_module.js'); // Pragma-git common functions
-            const fetch = require('node-fetch');
-            
-            // Read all stored credentials
-            //cachedAllCredentials = opener.opener.getAllCredentials();
-        
-            //// Parse existing url
-            
-            //let textarea = opener.document.getElementById(state.repoNumber + 10000).value;
-            //let strings = textarea.split('/');
-            
-            //// "https://JanAxelssonTest:13241121251413142@github.com/JanAxelssonTest/test3.git" 
-            //// ->  ["https:", "", "JanAxelssonTest@github.com", "JanAxelssonTest", "test3.git"]
-            //let account = strings[3];
-            
-            //let repoSplit = strings[4].split('.'); // Split repo at '.'
-            //let repo = repoSplit.slice(0, repoSplit.length - 1).join(".") ; // repo.git -> repo (split off last '.')
-            
-            //let token = strings[2].split('@')[0]; // token@github.com -> token  (or 'github.com' if no '@')
-            
-            //if ( token == 'github.com'){
-                //token = '';
-            //}
-            
-            //let creds = await opener.opener.getCredential(); // Read from pragma-git main
-            //token = creds.password;
-            
-            //document.getElementById('accountName').value = account;
-            //document.getElementById('token').value = token;
-            //document.getElementById('repoName').value = repo;  // This element id does not exist
-            
-            
-            //build('repoName'); // update html
-            
+
         } 
     function replaceInText(element, pattern, replacement) { 
        
@@ -141,6 +173,4 @@ async function createRepo(){// Create Repo
         
     }
 
-
-    //build('newRepoName');
 }

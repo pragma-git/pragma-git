@@ -100,7 +100,7 @@
             
             <!--  Add username / account name  --> 
             <p>
-                <label for="accountName">
+                <label id="accountName_label" for="accountName">
                     Github username (
                     <a href="https://github.com/join" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
                     Register a Github account
@@ -112,7 +112,7 @@
                             
             <!-- Add Access Token --> 
             <p>                        
-                <label for="token">Access Token or username:token (
+                <label id="token_label" for="token">Access Token or username:token (
                 
                     <a href="https://github.com/settings/tokens" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
                     Create an access token
@@ -136,11 +136,11 @@
                 
                     <p>
                         <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
-                        <label for="privateRepo">Private repository (public if not checked)</label>
+                        <label id="privateRepo_label" for="privateRepo">Private repository (public if not checked)</label>
                     </p>
                                 
                     <p>                        
-                        <label for="newRepoName">Name of New Repository</label>
+                        <label id="newRepoName_label" for="newRepoName">Name of New Repository</label>
                         <textarea id="newRepoName" placeholder="Github name of new repository" 
                             oninput="
                             document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);"
@@ -150,7 +150,7 @@
                     
                     
                     <p>                        
-                        <label for="repoDescription">Description (only when creating new repository)</label>
+                        <label id="repoDescription_label" for="repoDescription">Description (only when creating new repository)</label>
                         <textarea id="repoDescription" placeholder="For new repository : write short description"></textarea>               
                     </p>
                     
@@ -209,7 +209,7 @@
          
                     <!-- URL preview -->  
                     <p>
-                        <label for="outputUrl">Generated url</label>
+                        <label if="outputUrl_label" for="outputUrl">Generated url</label>
                         <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
                     </p>
                
