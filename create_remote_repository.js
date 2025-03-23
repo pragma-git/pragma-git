@@ -2,13 +2,14 @@
 //let cachedAllCredentials = [];
 let provider;
 let giturl;
+let name = localState.gitCreateRemoteRepoWindow.data.name;  // Provider name (Github, Gitlab, ...)
+let outputURL;  // Communicates created URL between js and html
 
 async function runWhenDOMContentLoaded() {
 
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
         
             // Read data transferred 
-            let name = localState.gitCreateRemoteRepoWindow.data.name;
             let provider_url = localState.gitCreateRemoteRepoWindow.data.provider;
             
             // Change text to correct provider (replace Github from original file)
@@ -133,14 +134,12 @@ function build(repoField){ // Build git url
     }
     let url = 'https://' + token + 'github.com/' + username + '/' + repoName + '.git';
     
-    document.getElementById('outputUrl').textContent = url;
+    outputURL = url;
     
     return url;
 }
 async function createRepo(){// Create Repo
-    
-    
-    
+
     //
     // Assume just creating a remote repo
     //   
@@ -156,21 +155,62 @@ async function createRepo(){// Create Repo
 
         
     if (ok){
-        document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${NEW_REPO}`;
+        document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${giturl}`;
         document.getElementById('newRepoStatus').classList.add('green');
         document.getElementById('newRepoStatus').classList.remove('red');
         
         document.getElementById('ok2').style="display: block;" ;
  
-        document.getElementById('outputUrl').textContent = giturl;
+        outputURL = giturl;
+        
+        // Set credential
+        await rememberCredential( giturl, OWNER, TOKEN);
 
     } else {
-        //document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${NEW_REPO} <BR> Reason: ${message}`;
+        document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${giturl} <BR> Reason: ${message}`;
         document.getElementById('newRepoStatus').classList.add('red');
         document.getElementById('newRepoStatus').classList.remove('green');
         
         document.getElementById('ok2').style="display: none;" ;
         
     }
-
 }
+async function rememberCredential( giturl, OWNER, TOKEN){
+    console.log('rememberCredential');
+    
+    try{
+            switch (name) {
+                
+                case 'Github': {
+                    opener.opener.setCredential( giturl, OWNER, TOKEN);
+                    break;
+                };
+                
+                case 'Gitlab': {
+                    opener.opener.setCredential( giturl, OWNER, TOKEN);
+                    break;
+                };
+                
+                case 'Bitbucket': {
+                    // Recommended to use app-password
+                    
+                    // Guess OAuth
+                    let username = 'x-token-auth';
+                    let password = TOKEN;
+                    
+                    // Corect if App-password (which is what I recommend)
+                    let splitToken = TOKEN.split(':');
+                    if ( splitToken.length == 2){
+                        username = splitToken[0];
+                        password = splitToken[1];
+                    }
+                    
+                    await opener.opener.setCredential( giturl, username, password);
+                    break;
+                };
+            }
+    }catch(err){
+        console.err(err);
+    }
+}
+

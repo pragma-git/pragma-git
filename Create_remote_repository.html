@@ -175,25 +175,25 @@
                         <button 
                             id = "ok2" 
                             onclick = "
-                            let textarea_id = state.repoNumber + 10000;
-                            opener.document.getElementById(textarea_id).value = document.getElementById('outputUrl').innerText; // Copy displayed giturl to settings-win
-                            
-                            let evt=[]; 
-                            evt.innerHTML = 'Set';
-                            evt.id = state.repoNumber + 20000;
-                            opener._callback('setButtonClicked',evt);
-                            
-                            
-                            // Set default in Settings / Remote tab
-                            
-                            opener.document.getElementById('allowPushToRemote').checked = false; 
-                            opener.document.getElementById('allowPushToRemote').click(); 
-                            
-                            opener.document.getElementById('autoPushToRemote').checked = false; 
-                            opener.document.getElementById('autoPushToRemote').click(); 
-                            
-                            
-                            window.close()"
+                                
+                                let textarea_id = 'additionalRemoteURL';
+                                opener.document.getElementById(textarea_id).value = outputURL;
+                                
+                                let evt=[];                        
+                                opener.document.getElementById('setRemoteURLButton').click();
+                                
+    
+                                // Set default in Settings / Remote tab
+                                
+                                opener.document.getElementById('allowPushToRemote').checked = false; 
+                                opener.document.getElementById('allowPushToRemote').click(); 
+                                
+                                opener.document.getElementById('autoPushToRemote').checked = false; 
+                                opener.document.getElementById('autoPushToRemote').click(); 
+                                
+                                
+                                //window.close()
+                            "
                         >
                         2) Set as Remote
                         </button>  
@@ -203,15 +203,7 @@
                    
                  
             </div>       
-            
-            
-                                
-         
-                    <!-- URL preview -->  
-                    <p>
-                        <label if="outputUrl_label" for="outputUrl">Generated url</label>
-                        <div id="outputUrl" style="overflow-wrap: break-word;width:400px"></div>            
-                    </p>
+
                
         </div>
     </div>
