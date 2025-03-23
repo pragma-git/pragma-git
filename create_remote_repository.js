@@ -59,11 +59,11 @@ async function runWhenDOMContentLoaded() {
                 
                 case 'Bitbucket': {
                     labelStruct.accountName_label = makeLabel( 
-                        'Bitbucket username (', ')', 
+                        'Bitbucket workspace-name (', ')', 
                         'Register a Bitbucket account', 'https://bitbucket.org/'
                     );
                     labelStruct.token_label = makeLabel( 
-                        'Username:app_password (', ')', 
+                        'Username : app-password (', ')', 
                         'Create a Bitbucket app-password', 'https://bitbucket.org/account/settings/app-passwords/'
                     );
 
