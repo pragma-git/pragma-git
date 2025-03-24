@@ -119,6 +119,30 @@
                 </a>)
                 </label>
                 <textarea id="token" placeholder="Paste Github-account access token here"></textarea>  
+                
+                
+
+                <!-- remote dialog range buttons -->
+                <div id="matchedRepoRange" style="display:block">
+                    <span id="matchedRepoDown" style="cursor:pointer; zoom: 0.8;" onclick="
+                            displayedRepoIndex = Math.max( 1, displayedRepoIndex - 1); 
+                            updateCredentialsText()
+                            document.getElementById('matchedCurrentPos').innerText = displayedRepoIndex;"> &#x25C0; </span> 
+                    
+                    <span id="matchedCurrentPos">0</span>  of <span id="matchedMax">0</span>
+                    
+                    <span id="matchedRepoUp" style="cursor:pointer; zoom: 0.8;" onclick="
+                            displayedRepoIndex = Math.min( displayedRepoMax, displayedRepoIndex + 1); 
+                            updateCredentialsText();
+                            document.getElementById('matchedCurrentPos').innerText = displayedRepoIndex;"> &#x25B6; </span> 
+     
+                </div>
+               
+
+                
+                
+                
+                
             </p>
         
             <br>

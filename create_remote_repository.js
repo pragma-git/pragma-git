@@ -6,6 +6,10 @@ let name = localState.gitCreateRemoteRepoWindow.data.name;  // Provider name (Gi
 let outputURL;  // Communicates created URL between js and html
 let allCredentials;  // struct with all credentials, read in at start (used to guess token etc
 
+let matchedRepoIndeces;  // Indeces of all repos found, matching account text
+let displayedRepoIndex = 0;   // One-based, so array index is one less.  0 means nothing to show
+let displayedRepoMax = 0;
+
 async function runWhenDOMContentLoaded() {
 
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
@@ -133,21 +137,62 @@ async function runWhenPageLoaded(){
             
 
 }
-function processAccountName( accountText ){
+function processAccountName( accountText){  // Looks up credentials by accountText
     // Check if known url, and get password etc into token field
-
-    let urlToMatch = provider.giturl + '/' + accountText +'/';
+    
+    let urlToMatch = provider.giturl + '/' + accountText +'/';  // Finds github repos with JanAxelsson, but not JanAxelssonTest
     console.log(`Account name = ${accountText},  url = ${urlToMatch}`);
-    let match = util.findOAllbjectsIndexStartsWith( allCredentials, 'url',urlToMatch);  // Finds github repos with JanAxelsson, but not JanAxelssonTest
-    if (match.length >0){
-        guessedUsername = allCredentials[ match[0] ].username;
-        guessedPassword = allCredentials[ match[0] ].password;
-        document.getElementById("token").value = guessedPassword;
-    }else{
-        document.getElementById("token").value = '';
+    matchedRepoIndeces = util.findOAllbjectsIndexStartsWith( allCredentials, 'url', urlToMatch);  //TODO: wants to filter the ones with unique urls
+    
+    // If empty
+    if (displayedRepoMax <= 0 ){
+        displayedRepoIndex = 0;
     }
     
+    displayedRepoMax = matchedRepoIndeces.length;
+    
+    // If just turned non-empty
+    if (displayedRepoMax > 0 ){
+        displayedRepoIndex = 1;
+    }
+    
+    updateCredentialsText();
+    
+
+    
 }
+function updateCredentialsText(){ // Show credential texts etc in html
+    
+    let guessedUsername, guessedPassword;
+    
+    // Get username and password
+    if (displayedRepoMax > 0){
+        guessedUsername = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].username;
+        guessedPassword = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].password;
+
+    }else{
+        guessedUsername = '';
+        guessedPassword = '';
+    }
+    
+    // Bitbucket special (modify guessedPassword)
+    if (name == 'Bitbucket'){
+        if (guessedUsername == 'x-token-auth'){
+            // Oauth
+            guessedPassword = guessedPassword; 
+        }else{
+            // App-password on format user:password 
+            guessedPassword = `${guessedUsername}:${guessedPassword}`
+        }
+    }
+    
+    // Update html
+    document.getElementById("token").value = guessedPassword;
+    document.getElementById("matchedCurrentPos").innerText = displayedRepoIndex;
+    document.getElementById("matchedMax").innerText = displayedRepoMax;
+    
+}   
+    
 async function createRepo(){// Create Repo
 
     //
