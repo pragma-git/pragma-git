@@ -106,7 +106,7 @@
                     Register a Github account
                     </a>)
                 </label>
-                <textarea id="accountName" placeholder="Github account name"></textarea>  
+                <textarea id="accountName" placeholder="Github account name" onkeyup= "processAccountName( this.value)"></textarea>  
             </p>
             
                             
@@ -157,50 +157,15 @@
                     
                     <p>                           
                         <button id="createGithubRepo" onclick="createRepo()">1) Create </button>                
-        
-                        
                     </p>
         
-                   
-                    
                     <p>                        
                         <div id="newRepoStatus"></div>             
                     </p> 
-                              
-                               
+                                           
                     <p>
-        
-                   
-                    
-                        <button 
-                            id = "ok2" 
-                            onclick = "
-                                
-                                let textarea_id = 'additionalRemoteURL';
-                                opener.document.getElementById(textarea_id).value = outputURL;
-                                
-                                let evt=[];                        
-                                opener.document.getElementById('setRemoteURLButton').click();
-                                
-    
-                                // Set default in Settings / Remote tab
-                                
-                                opener.document.getElementById('allowPushToRemote').checked = false; 
-                                opener.document.getElementById('allowPushToRemote').click(); 
-                                
-                                opener.document.getElementById('autoPushToRemote').checked = false; 
-                                opener.document.getElementById('autoPushToRemote').click(); 
-                                
-                                
-                                //window.close()
-                            "
-                        >
-                        2) Set as Remote
-                        </button>  
-                    
+                        <button  id = "ok2"   onclick = "finalizeAndClose()" > 2) Set as Remote </button>  
                     </p>
-        
-                   
                  
             </div>       
 
@@ -222,8 +187,11 @@
             opener.opener.updateWindowMenu( opener.opener.createRemote_win.title);
         
         });
+
+
                 
     </script>
+
 
     
  

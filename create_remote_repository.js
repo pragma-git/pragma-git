@@ -4,6 +4,7 @@ let provider;
 let giturl;
 let name = localState.gitCreateRemoteRepoWindow.data.name;  // Provider name (Github, Gitlab, ...)
 let outputURL;  // Communicates created URL between js and html
+let allCredentials;  // struct with all credentials, read in at start (used to guess token etc
 
 async function runWhenDOMContentLoaded() {
 
@@ -96,6 +97,9 @@ async function runWhenDOMContentLoaded() {
             }
 
             console.log('create_remote_repository.html :DOM fully loaded and parsed');
+            
+            // Run after page displayed (get credentials, etc)
+            setTimeout( runWhenPageLoaded, 1000 );
 
         } 
     function replaceInText(element, pattern, replacement) { 
@@ -117,26 +121,32 @@ async function runWhenDOMContentLoaded() {
            }
        }
     }
+async function runWhenPageLoaded(){
+        // Read all credentials
+        try{
+            allCredentials = await opener.opener.getAllCredentials();  // List all credentials information
+            console.log('allCredentials : ');
+            console.log(allCredentials);
+        }catch(err){
+            console.err(err);
+        }
+            
 
-function build(repoField){ // Build git url
-    
-    // Read textareas
-    let username = document.getElementById('accountName').value;
-    let token = document.getElementById('token').value;
-    let repoName = document.getElementById(repoField).value;
-    
-    // Verify repo name
-    repoName = util.branchCharFilter( repoName) ;
-    document.getElementById(repoField).value = repoName;
-    
-    if (token != ''){
-        token = token + '@';
+}
+function processAccountName( accountText ){
+    // Check if known url, and get password etc into token field
+
+    let urlToMatch = provider.giturl + '/' + accountText +'/';
+    console.log(`Account name = ${accountText},  url = ${urlToMatch}`);
+    let match = util.findOAllbjectsIndexStartsWith( allCredentials, 'url',urlToMatch);  // Finds github repos with JanAxelsson, but not JanAxelssonTest
+    if (match.length >0){
+        guessedUsername = allCredentials[ match[0] ].username;
+        guessedPassword = allCredentials[ match[0] ].password;
+        document.getElementById("token").value = guessedPassword;
+    }else{
+        document.getElementById("token").value = '';
     }
-    let url = 'https://' + token + 'github.com/' + username + '/' + repoName + '.git';
     
-    outputURL = url;
-    
-    return url;
 }
 async function createRepo(){// Create Repo
 
@@ -213,4 +223,23 @@ async function rememberCredential( giturl, OWNER, TOKEN){
         console.err(err);
     }
 }
+function finalizeAndClose(){ 
+    
+    // Copy and click Set Remote Button
+    let textarea_id = 'additionalRemoteURL';
+    opener.document.getElementById(textarea_id).value = outputURL;
+               
+    opener.document.getElementById('setRemoteURLButton').click();
+    
 
+    // Set default in Settings / Remote tab
+    
+    opener.document.getElementById('allowPushToRemote').checked = false; 
+    opener.document.getElementById('allowPushToRemote').click(); 
+    
+    opener.document.getElementById('autoPushToRemote').checked = false; 
+    opener.document.getElementById('autoPushToRemote').click(); 
+    
+    
+    window.close()
+}

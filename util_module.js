@@ -90,7 +90,7 @@ myModule.findOAllbjectsIndexStartsWith = function ( myArray, objectField, string
     // Loop for the array elements 
     for (let i in myArray) { 
 
-        if (myArray[i][objectField].startsWith( stringToFind)){
+        if  (myArray[i][objectField].startsWith( stringToFind)){
             foundIndeces.push(Number(i));
         }
     } 
