@@ -137,12 +137,36 @@ async function runWhenPageLoaded(){
             
 
 }
+
+
+function getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces) { 
+    
+    let seen = Object.create(null); // Store a map.  Avoids prototype issues
+    let foundIndeces = []; //last found index
+    
+    // Loop for the array elements 
+    for (let i in matchedRepoIndeces) { 
+        let index = matchedRepoIndeces[i];
+        let creds = allCredentials[index].username + allCredentials[index].password;  // Make a compound string with both
+
+        if (!seen[creds]) {
+            foundIndeces.push(Number(index));
+            seen[creds] = true;
+        }
+
+    } 
+    
+    return foundIndeces;
+}
+
+
 function processAccountName( accountText){  // Looks up credentials by accountText
     // Check if known url, and get password etc into token field
     
     let urlToMatch = provider.giturl + '/' + accountText +'/';  // Finds github repos with JanAxelsson, but not JanAxelssonTest
     console.log(`Account name = ${accountText},  url = ${urlToMatch}`);
-    matchedRepoIndeces = util.findOAllbjectsIndexStartsWith( allCredentials, 'url', urlToMatch);  //TODO: wants to filter the ones with unique urls
+    matchedRepoIndeces = util.findOAllbjectsIndexStartsWith( allCredentials, 'url', urlToMatch);  
+    matchedRepoIndeces = getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces);  // Get indeces with unique credentials
     
     // If empty
     if (displayedRepoMax <= 0 ){
@@ -157,9 +181,7 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
     }
     
     updateCredentialsText();
-    
-
-    
+   
 }
 function updateCredentialsText(){ // Show credential texts etc in html
     
