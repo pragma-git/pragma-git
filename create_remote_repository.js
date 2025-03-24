@@ -10,6 +10,7 @@ let matchedRepoIndeces;  // Indeces of all repos found, matching account text
 let displayedRepoIndex = 0;   // One-based, so array index is one less.  0 means nothing to show
 let displayedRepoMax = 0;
 
+// Initialize
 async function runWhenDOMContentLoaded() {
 
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
@@ -138,28 +139,7 @@ async function runWhenPageLoaded(){
 
 }
 
-
-function getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces) { 
-    
-    let seen = Object.create(null); // Store a map.  Avoids prototype issues
-    let foundIndeces = []; //last found index
-    
-    // Loop for the array elements 
-    for (let i in matchedRepoIndeces) { 
-        let index = matchedRepoIndeces[i];
-        let creds = allCredentials[index].username + allCredentials[index].password;  // Make a compound string with both
-
-        if (!seen[creds]) {
-            foundIndeces.push(Number(index));
-            seen[creds] = true;
-        }
-
-    } 
-    
-    return foundIndeces;
-}
-
-
+// Update from credential
 function processAccountName( accountText){  // Looks up credentials by accountText
     // Check if known url, and get password etc into token field
     
@@ -180,41 +160,67 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
         displayedRepoIndex = 1;
     }
     
+    if (displayedRepoMax > 1 ){
+        document.getElementById('matchedRepoRange').style.display = 'block';  // Show arrow buttons (to switch between credentials)
+    }else{
+        document.getElementById('matchedRepoRange').style.display = 'none'    // Hide arrow buttons (to switch between credentials)
+    }    
+    
     updateCredentialsText();
    
 }
-function updateCredentialsText(){ // Show credential texts etc in html
+    function getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces) { 
+        
+        let seen = Object.create(null); // Store a map.  Avoids prototype issues
+        let foundIndeces = []; //last found index
+        
+        // Loop for the array elements 
+        for (let i in matchedRepoIndeces) { 
+            let index = matchedRepoIndeces[i];
+            let creds = allCredentials[index].username + allCredentials[index].password;  // Make a compound string with both
     
-    let guessedUsername, guessedPassword;
+            if (!seen[creds]) {
+                foundIndeces.push(Number(index));
+                seen[creds] = true;
+            }
     
-    // Get username and password
-    if (displayedRepoMax > 0){
-        guessedUsername = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].username;
-        guessedPassword = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].password;
-
-    }else{
-        guessedUsername = '';
-        guessedPassword = '';
+        } 
+        
+        return foundIndeces;
     }
+    function updateCredentialsText(){ // Show credential texts etc in html
+        
+        let guessedUsername, guessedPassword;
+        
+        // Get username and password
+        if (displayedRepoMax > 0){
+            guessedUsername = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].username;
+            guessedPassword = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].password;
     
-    // Bitbucket special (modify guessedPassword)
-    if (name == 'Bitbucket'){
-        if (guessedUsername == 'x-token-auth'){
-            // Oauth
-            guessedPassword = guessedPassword; 
         }else{
-            // App-password on format user:password 
-            guessedPassword = `${guessedUsername}:${guessedPassword}`
+            guessedUsername = '';
+            guessedPassword = '';
         }
-    }
-    
-    // Update html
-    document.getElementById("token").value = guessedPassword;
-    document.getElementById("matchedCurrentPos").innerText = displayedRepoIndex;
-    document.getElementById("matchedMax").innerText = displayedRepoMax;
-    
-}   
-    
+        
+        // Bitbucket special (modify guessedPassword)
+        if (name == 'Bitbucket'){
+            if (guessedUsername == 'x-token-auth'){
+                // Oauth
+                guessedPassword = guessedPassword; 
+            }else{
+                // App-password on format user:password 
+                guessedPassword = `${guessedUsername}:${guessedPassword}`
+            }
+        }
+        
+        // Update html
+        document.getElementById("token").value = guessedPassword;
+        document.getElementById("matchedCurrentPos").innerText = displayedRepoIndex;
+        document.getElementById("matchedMax").innerText = displayedRepoMax;
+        
+    }   
+
+// Button clicks        
 async function createRepo(){// Create Repo
 
     //
@@ -252,44 +258,44 @@ async function createRepo(){// Create Repo
         
     }
 }
-async function rememberCredential( giturl, OWNER, TOKEN){
-    console.log('rememberCredential');
-    
-    try{
-            switch (name) {
-                
-                case 'Github': {
-                    opener.opener.setCredential( giturl, OWNER, TOKEN);
-                    break;
-                };
-                
-                case 'Gitlab': {
-                    opener.opener.setCredential( giturl, OWNER, TOKEN);
-                    break;
-                };
-                
-                case 'Bitbucket': {
-                    // Recommended to use app-password
+    async function rememberCredential( giturl, OWNER, TOKEN){
+        console.log('rememberCredential');
+        
+        try{
+                switch (name) {
                     
-                    // Guess OAuth
-                    let username = 'x-token-auth';
-                    let password = TOKEN;
+                    case 'Github': {
+                        opener.opener.setCredential( giturl, OWNER, TOKEN);
+                        break;
+                    };
                     
-                    // Corect if App-password (which is what I recommend)
-                    let splitToken = TOKEN.split(':');
-                    if ( splitToken.length == 2){
-                        username = splitToken[0];
-                        password = splitToken[1];
-                    }
+                    case 'Gitlab': {
+                        opener.opener.setCredential( giturl, OWNER, TOKEN);
+                        break;
+                    };
                     
-                    await opener.opener.setCredential( giturl, username, password);
-                    break;
-                };
-            }
-    }catch(err){
-        console.err(err);
+                    case 'Bitbucket': {
+                        // Recommended to use app-password
+                        
+                        // Guess OAuth
+                        let username = 'x-token-auth';
+                        let password = TOKEN;
+                        
+                        // Corect if App-password (which is what I recommend)
+                        let splitToken = TOKEN.split(':');
+                        if ( splitToken.length == 2){
+                            username = splitToken[0];
+                            password = splitToken[1];
+                        }
+                        
+                        await opener.opener.setCredential( giturl, username, password);
+                        break;
+                    };
+                }
+        }catch(err){
+            console.err(err);
+        }
     }
-}
 function finalizeAndClose(){ 
     
     // Copy and click Set Remote Button
