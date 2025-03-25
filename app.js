@@ -5758,7 +5758,7 @@ listUnstarredGithub = async function( state, owner, repo) {
     // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo
     // repo  is the repo with owner 'owner', which we want to checi if starred by current (looped) repo
     
-    let myModule =  require('apis_github_and_others/github-star.js');
+    let myModule =  require('github-star.js');
     let allUnstarred = [];
     
     for (i = 0; i < state.repos.length; i++) {

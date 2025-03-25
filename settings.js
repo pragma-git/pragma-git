@@ -13,7 +13,7 @@ const { execSync } = require('child_process');
 let simpleGit = opener.simpleGit; 
 let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
-let githubStar = require('apis_github_and_others/github-star.js'); // Use to star pragma-git
+let githubStar = require('github-star.js'); // Use to star pragma-git
             
 // Global for whole app
 var state = global.state; // internal copy of global.state
