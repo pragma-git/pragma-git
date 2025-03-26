@@ -43,6 +43,7 @@ class gitlab extends General_git_rest_api {
     
     constructor( giturl, TOKEN) {
         super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+        this.apiurl = this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
     }
     
     //
@@ -58,7 +59,8 @@ class gitlab extends General_git_rest_api {
             global.log('Gitlab determine API URL : '); // Log to main console
             
             // Call provider-specific translation from git-url to api-url
-            this.apiurl = await this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
+            //this.apiurl = await this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
+            
             
             this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
             global.log(this.repoInfoStruct);

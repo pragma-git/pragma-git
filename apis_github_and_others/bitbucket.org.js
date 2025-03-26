@@ -20,6 +20,7 @@ class bitbucket extends General_git_rest_api {
 
     constructor( giturl, TOKEN) {
         super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+        this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
     }
 
     //
@@ -27,8 +28,7 @@ class bitbucket extends General_git_rest_api {
     //
       
         async initialize(){
-            
-            this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
+
             global.log(`Bitbucket API URL = ${this.apiurl} `); 
             
              try{
