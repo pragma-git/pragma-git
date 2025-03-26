@@ -5737,7 +5737,8 @@ async function gitProvider(giturl, initialize = true){
                 let creds = await getCredential(giturl);
                 console.log(creds);
                 let TOKEN = creds.password;
-                provider = new a(giturl, TOKEN);
+                let username = creds.username;
+                provider = new a(giturl, username, TOKEN);
                 await provider.initialize( initialize);
             }else{
                 provider = new a(giturl);

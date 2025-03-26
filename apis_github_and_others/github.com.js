@@ -18,8 +18,8 @@ let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api
 class github extends General_git_rest_api {
     
 
-    constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+    constructor( giturl, username, TOKEN) {
+        super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
         this.apiurl = this.#apiUrl( giturl);  // Call provider-specific translation from git-url to api-url
 
     }

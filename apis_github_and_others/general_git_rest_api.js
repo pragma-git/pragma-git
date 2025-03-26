@@ -7,9 +7,10 @@ class git_rest_api {
 
         
     // Constructor
-    constructor( giturl, TOKEN) {
+    constructor( giturl, username, TOKEN) {
         this.giturl = giturl;
         this.TOKEN = TOKEN;
+        this.username = username;
     }   
 
     // Public methods

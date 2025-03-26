@@ -41,8 +41,8 @@ class gitlab extends General_git_rest_api {
      **/
     
     
-    constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+    constructor( giturl, username, TOKEN) {
+        super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
         this.apiurl = this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
     }
     

@@ -18,8 +18,8 @@ let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api
 class bitbucket extends General_git_rest_api {
     
 
-    constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+    constructor( giturl, username, TOKEN) {
+        super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
         this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
     }
 
@@ -149,7 +149,7 @@ class bitbucket extends General_git_rest_api {
             
             // --- Provider-specific code :
                 
-                // Complete options
+                // Complete options for oauth -- change below if app-password
                 this.options = {
                     method: 'GET',
                     headers: {
@@ -159,6 +159,16 @@ class bitbucket extends General_git_rest_api {
                 };
             
                 
+                // Different if app-password or oauth TOKEN
+                if (this.username == 'x-token-auth'){
+                    // Oauth
+                    this.options.headers.Authorization = 'Bearer ' + btoa( this.TOKEN);
+                }else{
+                    // App-password on format user:password 
+                    this.options.headers.Authorization = 'Basic ' + btoa( this.username + ':' + this.TOKEN);
+                }
+
+
                 // Remove options for unknown TOKEN 
                 if ( super.isEmptyString( this.TOKEN) ) {
                     delete this.options.headers.Authorization 
