@@ -2227,8 +2227,13 @@ async function updateRemoteInfo( ){
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
         html += '</table></code>';      
     }catch (err){
-        html += '<code>Error reading git remote info : <br>';
-        html += `${err}</code> <br>`
+		html += '<code> <table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp';
+		if ( err.toString().includes('unknown scriptName') ){
+			html += 'Unknown git provider  <br>';
+		}else{        
+			html += 'Error reading git remote info  <br>';
+		}
+		html += `</td><td></table></code> <br>`
     }    
  
     // Show html
