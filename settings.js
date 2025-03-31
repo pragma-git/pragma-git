@@ -980,6 +980,8 @@ async function _callback( name, event){
 
 async function testURL(textareaId, event){
     
+    let folder = state.repos[ state.repoNumber].localFolder;
+    
     let outputColor = 'red'
     
     document.getElementById(textareaId).classList.add('grey');  // Make grey until known if success or fail
@@ -1003,9 +1005,9 @@ async function testURL(textareaId, event){
                 document.getElementById(textareaId).classList.add('red'); 
 
                 const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
-                await opener.simpleGitLog() .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
+                await opener.simpleGitLog(folder) .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
             }else{
-                await simpleGit().raw(  commands, onListRemote); // default askpass 
+                await simpleGit(folder).raw(  commands, onListRemote); // default askpass 
             }
 
             function onListRemote(err, result ){
