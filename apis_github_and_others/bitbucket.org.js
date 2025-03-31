@@ -205,7 +205,7 @@ class bitbucket extends General_git_rest_api {
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             //out = 'x-token-auth';   // If default git oauth token
-                            out = '';               // Unknown if app-password (cannot be deduced from url path, as for gihub or gitlab).
+                            out = this.username;               // Unknown if app-password (cannot be deduced from url path, as for gihub or gitlab).
                         }catch (err){ global.warn(err);}
                         break;     
                     }
