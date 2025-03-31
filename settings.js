@@ -2185,6 +2185,15 @@ async function updateRemoteInfo( ){
                 <td> ${ creds[key]} </td>
             </tr>`   // Style "white-space: nowrap" makes it fill width of column
         );
+        
+    
+        let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
+        html +=  
+            `<tr> 
+                <td style="white-space: nowrap;"> &nbsp; .config/credential.username : &nbsp; </td> 
+                <td> ${ config_credential_username} </td>
+            </tr>`   // Style "white-space: nowrap" makes it fill width of column
+        
         html += '</table></code>';       
     }catch (err){
         html += '<code>Error reading git credentials : <br>';
