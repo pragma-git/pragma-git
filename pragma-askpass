@@ -22,30 +22,40 @@ echo $@ >>  "$TMP/askpasslog.txt"
 
 mkdir "$TMP" 2>/dev/null
 
+
+
 MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
 RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
 EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
 EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
 
+
+PRAGMALOG_FILE="$TMP/pragma-git-log.txt"    # Pragma-git log (same as used in javascript PragmaLog function)
+
+
+echo "$(date) Start pragma-askpass" >>  "$PRAGMALOG_FILE" 
+echo "$(date)    Input parameter = $1"  >> "$PRAGMALOG_FILE" 
+
 # Bail out if pragma-git not running
 if [ ! -f "$MAINSIGNALFILE" ] ; then
     echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" >> "$TMP/askpass.txt"
-    echo  "$(date) Bail out, require pragma-git to be up" >> "$TMP/askpass.txt"
+    echo  "$(date) Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date) Bail out, require pragma-git to be up" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     exit
 fi
 
 # Bail out if askpass already running
 if [  -f "$RUNNING" ] ; then
     echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
-    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
+    echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     exit
 fi
 
 # Store input parameters for Pragma-git to pick them up (nothing here)
 echo $1 > "$TMP/askpass_first"
+
 
 # Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
 touch "$RUNNING" 
@@ -67,7 +77,7 @@ rm "$TMP/askpass_first"
 
 # Log
 echo  " " >> "$TMP/askpasslog.txt"
-echo  "$(date) EXIT pragma-askpass" >> "$TMP/askpass.txt"
-echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/askpass.txt"
+echo  "$(date) EXIT pragma-askpass" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+echo  "$(date) EXIT_CODE = $EXITCODE" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
 
 exit $EXITCODE
