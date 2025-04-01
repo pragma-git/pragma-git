@@ -593,7 +593,7 @@ async function _callback( name, event){
             
             // Update the remote in the table if needed
             if ( alias == 'origin' ){
-                let id = 10000 + state.repoNumber;
+                let id = 10000 + state.repoNumber;  // textAreaId in table
                 document.getElementById(id).value = newUrl;
                 state.repos[state.repoNumber].remoteURL = newUrl;
                 testURL( id, event);
@@ -897,7 +897,9 @@ async function _callback( name, event){
                 
                           
             }
-            testURL(textareaId, event);
+            let workingRemote = testURL(textareaId, event);
+            
+            // TODO : Bail out -- avoid updating remote if Set button was on wrong repo
             
             // Update Remote tab 
             if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
@@ -905,7 +907,8 @@ async function _callback( name, event){
                 getRemoteRepoInfo();
                 updateRemoteRepos();
                 
-                document.getElementById('additionalRemoteURL').value = newUrl;
+                let repoTabUrl = state.repos[ state.repoNumber].remoteURL;  // The url active from radio button
+                document.getElementById('additionalRemoteURL').value = repoTabUrl;
             }
 
             break;
@@ -978,9 +981,33 @@ async function _callback( name, event){
 
 }
 
-async function testURL(textareaId, event){
+async function testURL( textareaId, event){
+    // Works on the "textAreatId" which is an html textarea containing the URL to a git repo.
+    //
+    // The problem to solve is that testURL should be run from the local folder of the repository.
+    //
+    // For repo-table :
+    //    textareaId is both a html-id, and a number.  The selected button index to state.repos array is  index = state.repoNumber - 10000.
+    //    In this case the radiobutton id gives the local folder
+    //
+    //
+    // For other textAreas :
+    //    the textAreaId is a html element (and not a number), such as "urlToClone", "setRemoteURLButton" or "additionalRemoteURL"
+    //    In this case the radiobutton id gives the local folder, that is "state.repos[ state.repoNumber].localFolder"
+    //
+    // To summmarize, if textAreaId is a number: derive repoNumber from number.  If not a number, use repoNumber = state.repoNumber.
     
-    let folder = state.repos[ state.repoNumber].localFolder;
+    let folder;
+    
+    if ( isNaN(textareaId) ){
+        // textAreaId is a named html-element-id, and radiobutton (and hence state.repoNumber) is used to get folder:
+        folder = state.repos[ state.repoNumber].localFolder;
+    }else{
+        // textAreaId is a number (as well as a html-element-id) which can be used to get folder:
+        folder = state.repos[ Number(textareaId) - 10000].localFolder;
+    }
+    
+    console.log(`Local folder = ${folder}`);
     
     let outputColor = 'red'
     
@@ -1813,10 +1840,11 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(textarea);
             
             // Test-button (Set)
+            let setButtonId = index + 20000;
             cell = row.insertCell();
             cell.setAttribute("class", 'setURL');
             button = document.createElement('button');
-            button.setAttribute("id", index + 20000);
+            button.setAttribute("id", setButtonId);
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)"); // this.type='submit'; 
             cell.appendChild(button);
@@ -1824,7 +1852,7 @@ async function generateRepoTable(document, table, data) {
             // Run test
             
             // Note: this place ignores askpass dialog, since multiple dialogs would be opened if more than one row did not have credentials.
-            testURL(index + 10000, {type: 'no_askpass', id: index + 20000});
+            testURL(index + 10000, {type: 'no_askpass', id: setButtonId});
                           
             // Into table cell :  button
             cell = row.insertCell();
