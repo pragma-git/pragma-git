@@ -4164,9 +4164,13 @@ async function gitAddCommitAndPush( message){
         // Add all files to index
         setStatusBar( 'Adding files');
         var path = '.'; // Add all
-        await simpleGit( state.repos[state.repoNumber].localFolder )
-            .add( path, onAdd );   
-        function onAdd(err, result) {console.log(result) }
+        try{
+            await simpleGit( state.repos[state.repoNumber].localFolder )
+                .add( path, onAdd );   
+            function onAdd(err, result) {console.log(result) }
+            }catch(err){
+                displayLongAlert('Failed adding files', err, 'error'); 
+        }
         
         
         // Remove localState.unstaged from index
