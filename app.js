@@ -491,6 +491,13 @@ async function _callback( name, event){
         await updateSettingsWindow();
         await updateChangedListWindow();
         win.focus();
+        
+                    
+            
+        // Write local config credential.username (this runs every time, a bit of a time waster)
+        storeUsernameInLocalGitConfig( );
+            
+                
        
         break;
       }
