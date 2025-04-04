@@ -1388,7 +1388,6 @@ async function injectIntoSettingsJs(document) {
       
     // Draw tabs
     await drawRepoTab(document);
-    await drawBranchTab(document);
     await drawSoftwareTab(document);
     
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
@@ -1438,6 +1437,7 @@ async function injectIntoSettingsJs(document) {
 
     }
     
+    await drawBranchTab(document);
     console.log( "document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility  = " + document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility );
 
 
