@@ -250,7 +250,7 @@ async function createRepo(){// Create Repo
         await rememberCredential( giturl, OWNER, TOKEN);
 
     } else {
-        document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${giturl} <BR> Reason: ${message}`;
+        document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${giturl} `;
         document.getElementById('newRepoStatus').classList.add('red');
         document.getElementById('newRepoStatus').classList.remove('green');
         

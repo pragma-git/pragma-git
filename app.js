@@ -1662,7 +1662,7 @@ async function _callback( name, event){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
             help_win.document.getElementById("title").innerText= title; // Set window title
             help_win.document.getElementById("name").innerText= name; // Set document first header  
-            //help_win.focus();         
+            help_win.focus();         
         };
                 
 

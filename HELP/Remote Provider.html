@@ -1,0 +1,157 @@
+ 
+ <style>
+    dl{
+       margin-left: 20px; 
+    }
+    
+    dt{
+        font-weight: bold;
+        text-decoration: underline;                                         */
+        list-style-position: inside; /* See https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-position */
+    }
+    
+    dd{
+        margin-bottom: 10px;
+    }
+    
+    .indent{
+        position: relative;
+        left: 20px;
+    }
+ 
+ </style>
+
+
+  <h3>What is a Remote Provider</h3>       
+    <p>
+    Github is a remote git-repository provider. There are other providers too,  such as Gitlab, Bitbucket, and more.
+    You may connect your local repository to a provider, and can use this as a backup, to keep different computers
+    you work with in sync, or for cooperation with others.
+    </p> 
+
+ 
+ <h3>About provider account</h3>       
+    <p>
+    A remote provider requires a registered account (that is, a username and a password / access token). The location of the remote  repository 
+    is defined by an URL, of a format similar to "<code>https://github.com...</code>".  
+    A new account can be created by following the link to "Register an account".
+    </p>  
+
+    <p>
+    An access token can  be defined from the provider's website, by following the link "Create an access token". 
+    The access token can act as a password for git operations, but also give access to operations such as creating a new repository from within Pragma-git. 
+    </p>  
+
+    <p>
+    For the provider Bitbucket, it is better to define an <i>app-password</i> instead of a token, which allows both git operations, and 
+    interacting with administrative tasks such as creating a new repository.
+    </p>  
+    
+    
+    
+    
+    <div id="inner-content">
+                
+
+        <hr>              
+
+
+            <h3>Fill in Account:</h3>  
+            
+            <!--  Add username / account name  --> 
+            <p>
+                <label id="accountName_label" for="accountName"> Username ( <a href="https://github.com/join"> Register account </a> )</label>
+                <textarea id="accountName" placeholder="Github account name" ></textarea>  
+            
+                <div class="indent">
+                    Username. Bitbucket is special, enter Bitbucket workspace-name instead. <br>
+                     A new account can be created by following the link to "Register account".
+                    <br><br>
+                </div>
+            
+            </p>
+                            
+            <!-- Add Access Token --> 
+            <p>                        
+                <label id="token_label" for="token">Token ( <a href="https://github.com/settings/tokens" > Create personal access token </a> )</label>
+                <textarea id="token" placeholder="Paste Github-account access token here"></textarea>  
+
+                <div class="indent">
+                    Access token.  Bitbucket is special, enter <i>username:app-password</i> instead. <br>
+                    An access token / app-password can  be defined from the provider's website, by following the link "Create an access token / app-password"
+                    
+                    <br><br>
+                </div>
+            </p>
+               
+        </div>
+    
+    <hr>
+    
+    
+    
+
+ 
+ <h3>Create a Remote Repository</h3>  
+
+    <p>
+    As said before, this can be done via the provider's website.  However, this window makes the process simpler.   
+    The fields in this section are:
+
+
+        <p>
+            <input type="checkbox" id="privateRepo" value="false" checked="" style="float:left;">
+            <label id="privateRepo_label" for="privateRepo">Private repository (public if not checked)</label>
+
+            <div class="indent">
+                A checkbox that makes the repository visible to only you and others.  If private, access is restricted to 
+                whoever you have given your username, password or access token.
+                <br><br>
+            </div>
+        </p>
+        
+                            
+        <p>                        
+            <label id="newRepoName_label" for="newRepoName">Name of New Repository</label>
+            <textarea id="newRepoName" placeholder="name of new repository"></textarea>
+            
+            <div class="indent">
+                The name of the new repository. This field inhibits forbidden characters to be typed. 
+                This must be a new repository name, that does not already exist on your account for this provider.
+                <br><br>
+            </div>
+        </p>
+        
+        <p>                        
+            <label id="repoDescription_label" for="repoDescription">Description (only when creating new repository)</label>
+            <textarea id="repoDescription" placeholder="For new repository : write short description"></textarea>               
+        </p>
+        
+        <div class="indent">
+            Is a short text describing your repository, displayed in the provider's web-view. 
+            <br><br>
+        </div>
+        
+        <p>                           
+            <button id="createGithubRepo">1) Create </button>
+            
+            <div class="indent">
+                This button creates a new repository  
+                in you account (requires correct username and access token fields). A status message is shown below the buttons, displaying success or failure.   
+                If failure, please close the window.   
+            <br><br>
+            </div>       
+        </p>
+
+                               
+        <p>
+            <button id="ok2"> 2) Set as Remote </button>  
+        
+            <div class="indent">
+                This button updates the URL in the settings window, and closes this window.
+                <br><br> 
+            </div>
+     
+        </p>
+
+
