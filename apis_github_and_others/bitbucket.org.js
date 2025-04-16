@@ -47,9 +47,12 @@ class bitbucket extends General_git_rest_api {
 
             
             // --- Provider-specific code :
+
+                let urlParts = new URL(giturl);
+                let host = urlParts.host; 
                 
                 // That is : replace "bitbucket.org" with "api.bitbucket.org//2.0/repositories", AND remove  ".git" at end
-                let url = giturl.replace( '.git', '').replace( 'bitbucket.org', 'api.bitbucket.org/2.0/repositories')        
+                let url = giturl.replace( '.git', '').replace( host, `api.${host}/2.0/repositories`)        
                 
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){

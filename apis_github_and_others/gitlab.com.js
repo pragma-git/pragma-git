@@ -43,7 +43,7 @@ class gitlab extends General_git_rest_api {
     
     constructor( giturl, username, TOKEN) {
         super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
-        this.apiurl = this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api)
+        this.apiurl = this.#apiUrl( this.giturl);  // Designed to search for name matching that of giturl (can be multiple, due to gitlab's api).  initialize function reshapes this to correct url if multiple answers
     }
     
     //
@@ -69,14 +69,17 @@ class gitlab extends General_git_rest_api {
             let index = util.findObjectIndex(this.repoInfoStruct.json, 'name', this.reponame)
             
             // Modify to use apiurl with ID for correct match instead, and fetch json through API
+            let urlParts = new URL(this.giturl);
+            let host = urlParts.host; 
+            
             try{
                 let ID = this.repoInfoStruct.json[index].id;  
-                this.apiurl = `https://gitlab.com/api/v4/projects/${ID}`;  
+                this.apiurl = `https://${host}/api/v4/projects/${ID}`;      
                 global.log(`Gitlab API URL = ${this.apiurl} `);  
                 global.log('Gitlab API call : '); // Log to main console
                 this.repoInfoStruct = await this.#fetchThroughAPI();    // Read repoInfoStruct for above apiurl
             }catch(err){
-                // If here, only  getValue methods that are independent on api-call will work (that is, 
+                // If here, only  getValue methods that are independent on api-call will work 
             }
             global.log(this.repoInfoStruct);
     
@@ -86,12 +89,15 @@ class gitlab extends General_git_rest_api {
             //   https://gitlab.com/             JanAxelsson/gitlab-test       .git  -> 
             //   https://gitlab.com/api/v4/users/JanAxelsson/projects?search=gitlab-test
             // 
-            // NOTE: This is later modified to ID-based apiurl :
+            // NOTE: This is later (in initialize() ) modified to ID-based apiurl :
             //   https://gitlab.com/api/v4/projects/${ID}
             // --- Provider-specific code :
+
+                let urlParts = new URL(giturl);
+                let host = urlParts.host; 
                 
                 // Part 1 : remove .git at end, and add extra for api
-                let url = giturl.replace( '.git', '').replace( 'gitlab.com', 'gitlab.com/api/v4/users')    
+                let url = giturl.replace( '.git', '').replace( host, host + '/api/v4/users');   
                 
                 // Part 2 : replace last '/' with   'projects?search='
                 let begin = url.substring( 0, url.lastIndexOf('/') );

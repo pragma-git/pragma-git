@@ -5737,7 +5737,27 @@ async function gitProvider(giturl, initialize = true){
     // Find host (github.com, gitlab.com, ...)
     let urlParts = new URL(giturl);
     let host = urlParts.host; 
+    
     let scriptName  = `${CWD_INIT}/apis_github_and_others/${host}.js`;
+    
+    // Get scriptName if self-hosted Gitlab
+    if ( host.includes('gitlab') ){
+        let hostForScriptName = 'gitlab.com';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }
+     
+    // Get scriptName if self-hosted Bitbucket
+    if ( urlParts.pathname.includes('/scm/') ){
+        let hostForScriptName = 'bitbucket.org';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }
+    if ( host.includes('bitbucket') ){
+        let hostForScriptName = 'bitbucket.org';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }       
+    
+    
+    
     
     // Get upstream with provider-specific methods
     if (fs.existsSync(scriptName) ) {
