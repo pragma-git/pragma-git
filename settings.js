@@ -2264,7 +2264,13 @@ async function updateRemoteInfo( ){
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
-        html += '</table></code>';      
+        html += '</table></code>';   
+        
+        
+        
+    
+        showJsonInPopup( provider.repoInfoStruct.json, 'Remote api content : ')
+          
     }catch (err){
 		html += '<code> <table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp';
 		if ( err.toString().includes('unknown scriptName') ){
@@ -2279,6 +2285,85 @@ async function updateRemoteInfo( ){
     document.getElementById('remoteInfo').innerHTML = await html;
  
     return html   
+}
+function showJsonInPopup(jsonData, title) {
+    
+   let showJsonInPopupWindow;
+   // Create a new window   
+    gui.Window.open( 
+        'jsonViewer.html', 
+        {
+            title: 'JSON Viewer',
+            id: 'jsonViewerID', 
+            show: true,
+            width: 800,
+            height: 600
+        },
+        win => win.on('loaded', function () {
+
+                win.window.document.getElementById('header').innerHTML =  title;
+                win.window.document.getElementById('json-display').innerHTML =  syntaxHighlight(jsonData);
+                
+                opener.showJsonInPopup_win = win;
+                opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
+                
+                        
+                win.on('close', function() { 
+                    opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
+                    opener.fixNwjsBug7973( win);
+                } );
+                
+                
+                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                win.on('closed', function () {
+                    win = null;
+                });
+    
+               
+                // Listen to main window's close event
+                nw.Window.get().on('close', function () {
+                  // Hide the window to give user the feeling of closing immediately
+                  this.hide();
+               
+                  // If the new window is still open then close it.
+                  if (win !== null) {
+                    win.close(true);
+                  }
+               
+                  // After closing the new window, close the main window.
+                  this.close(true);
+                });
+                 
+ 
+            }
+        ) 
+    );
+    
+    
+    // Internal function               
+    function syntaxHighlight(json) {
+        
+        if (typeof json != 'string') {
+            json = JSON.stringify(json, null, 2);
+            
+        }
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+              
+            function(match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    cls = /:$/.test(match) ? 'key' : 'string';
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            }
+        );
+  }
+            
+ 
 }
 
 async function updateGitconfigs( ){

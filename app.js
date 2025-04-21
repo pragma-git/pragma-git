@@ -196,6 +196,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         // Windows opened from Settings
         var gitignore_win;
         var createRemote_win;
+        var showJsonInPopup_win
         
         // General help window
         var help_win;
@@ -213,7 +214,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'File': 'merge_win',
            'Git-ignore': 'gitignore_win' ,
            'Create': 'createRemote_win' ,
-           'Help': 'help_win'    
+           'Help': 'help_win',
+           'JSON': 'showJsonInPopup_win'        
         }
 
       

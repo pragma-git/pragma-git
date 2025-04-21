@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>JSON viewer</title>
+    
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
+    <script src="jsonViewer.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        html{
+            overflow: auto;
+        }
+        
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+
+        .find-in-nw-current,
+        .find-in-nw-of{
+            color: black;
+        }
+
+        
+        .icon {
+          display: inline-block;
+          line-height: 30px;
+          padding-left: 17px;
+        }
+
+    
+  
+        pre {
+            font-size: 10pt;
+        }
+        
+        
+        .key { 
+            width: 250px;
+            display: inline-block;
+            min-width: max-content;
+        }
+        .string { color: cadetblue; }
+        .number { color: #005cc5; }
+        .boolean { color: chocolate; }
+        .null { color: #6a737d; }
+
+    </style>
+
+    
+</head>
+<body class='light'>
+    <!-- Dark mode on/off , zoom--> 
+    <script>
+        let localState = global.localState;
+        
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+        
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
+
+    <div id="outer-content"> <!-- Content  -->      
+        
+        <div id="inner-content">        
+            <h2><div id="header">JSON Viewer</div>
+                          
+                    
+                    <!-- Help button --> 
+                    <img id="about-icon" style='vertical-align:middle;float:right; padding-right: 15px' height="17" width="17"  
+                        onclick="let evt = {}; evt.name='Modified Files';opener._callback('help',evt);" 
+                        onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                        onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                        src="images/questionmark_black.png" >  
+                    
+                    <!-- Search button --> 
+                    <img id="find-icon" style='vertical-align:middle;float:right; padding-right: 15px'  height="17" width="17"  
+                        onclick="findInNw.positionSearchBoxGraph()" 
+                        onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                        onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                        src="images/find_black.png" >
+        
+        
+            </h2>
+        
+                   
+            <pre id="json-display">
+                JSON SHOULD GO HERE
+            </pre>
+             
+
+        </div>
+    </div>
+    
+    
+            
+    <!--  Add find  -->    
+    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); //Make find-in-nw fit my purpose for graph and note
+    </script>   
+    
+    
+</body>
+</html>
+
