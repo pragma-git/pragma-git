@@ -28,6 +28,8 @@ remoteRepos.fetch = {};
 remoteRepos.push = {};  // Prepare for having different data in push.  NOTE: not implemented yet
 remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
 
+// For provider, updated when pressing "System info" tab
+let provider;
 
 // ---------
 // FUNCTIONS
@@ -2232,7 +2234,7 @@ async function updateRemoteInfo( ){
     // Provider specific remote info
     html +='<br><div> Git remote info :</div>';
     try{
-        let provider = await opener.gitProvider( creds.url)
+        provider = await opener.gitProvider( creds.url)
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let iconLongPath =  opener.CWD_INIT + pathsep + await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
@@ -2259,17 +2261,18 @@ async function updateRemoteInfo( ){
 
         html += '<code> <table class="keyValueTable">';
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
+        
+        html += `   <tr><td> &nbsp;  API output : </td> <td> <button onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content : ')"> Show </button></td></tr>`;
+        
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
+        
+        
         html += '</table></code>';   
         
-        
-        
-    
-        showJsonInPopup( provider.repoInfoStruct.json, 'Remote api content : ')
           
     }catch (err){
 		html += '<code> <table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp';
