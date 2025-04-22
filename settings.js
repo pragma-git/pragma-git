@@ -2218,10 +2218,18 @@ async function updateRemoteInfo( ){
         
     
         let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
+        
+        //// Prepare for a clear button
+        //let clearButton = `<button class="smallButton" onclick=
+        //" gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
+        //_callback('systemInfoClicked', {id: ${state.repoNumber} })" 
+        //> Clear </button>`;
+        let clearButton = "";
+        
         html +=  
             `<tr> 
                 <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
-                <td> ${ config_credential_username} (in local .git/config)</td>
+                <td> ${ config_credential_username} (in local .git/config) ${clearButton}</td>
             </tr>`   // Style "white-space: nowrap" makes it fill width of column
         
         html += '</table></code>';       
@@ -2262,7 +2270,7 @@ async function updateRemoteInfo( ){
         html += '<code> <table class="keyValueTable">';
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
         
-        html += `   <tr><td> &nbsp;  API output : </td> <td> <button onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
+        html += `   <tr><td> &nbsp;  API output : </td> <td> <button class="smallButton" onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
         
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
