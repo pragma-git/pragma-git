@@ -21,6 +21,17 @@
             font-size: 11pt;
             background: var(--body-background);
             color: var(--body-text);
+            user-select: text; 
+        }
+        #header{
+            position: fixed;
+            top: 0px;
+            width: -webkit-fill-available;
+            background-color: var(--body-background);
+        }
+        #outer-content{
+            top: 0px;
+            margin-top: 100px;
         }
 
         .find-in-nw-current,
@@ -39,6 +50,11 @@
   
         pre {
             font-size: 10pt;
+            
+        }
+        
+        span{
+            user-select: all;  // Marks whole span when clicking
         }
         
         
@@ -69,28 +85,32 @@
         window.document.body.style.zoom = global.state.zoom;
     </script>
 
-    <div id="outer-content"> <!-- Content  -->      
+
+    <div id="outer-content"> <!-- Content  -->    
+        
+            
+        <div id="header">
+            <h2><span id="headerText">JSON Viewer</span>
+
+                
+                <!-- Search button --> 
+                <img id="find-icon" style="vertical-align:middle;position: fixed; right: 35px; "  height="17" width="17"  
+                    onclick="findInNw.positionSearchBoxGraph()" 
+                    onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                    onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
+    
+    
+            </h2>
+            
+            <h3 id="subHeader"> subHeader</h3>
+        </div>
+        
+        
+          
         
         <div id="inner-content">        
-            <h2><div id="header">JSON Viewer</div>
-                          
-                    
-                    <!-- Help button --> 
-                    <img id="about-icon" style='vertical-align:middle;float:right; padding-right: 15px' height="17" width="17"  
-                        onclick="let evt = {}; evt.name='Modified Files';opener._callback('help',evt);" 
-                        onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
-                        onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
-                        src="images/questionmark_black.png" >  
-                    
-                    <!-- Search button --> 
-                    <img id="find-icon" style='vertical-align:middle;float:right; padding-right: 15px'  height="17" width="17"  
-                        onclick="findInNw.positionSearchBoxGraph()" 
-                        onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
-                        onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-                        src="images/find_black.png" >
-        
-        
-            </h2>
+
         
                    
             <pre id="json-display">

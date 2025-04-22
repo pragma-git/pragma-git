@@ -2262,7 +2262,7 @@ async function updateRemoteInfo( ){
         html += '<code> <table class="keyValueTable">';
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
         
-        html += `   <tr><td> &nbsp;  API output : </td> <td> <button onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content : ')"> Show </button></td></tr>`;
+        html += `   <tr><td> &nbsp;  API output : </td> <td> <button onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
         
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
@@ -2289,7 +2289,7 @@ async function updateRemoteInfo( ){
  
     return html   
 }
-function showJsonInPopup(jsonData, title) {
+function showJsonInPopup(jsonData, title, subtitle) {
     
    let showJsonInPopupWindow;
    // Create a new window   
@@ -2304,7 +2304,10 @@ function showJsonInPopup(jsonData, title) {
         },
         win => win.on('loaded', function () {
 
-                win.window.document.getElementById('header').innerHTML =  title;
+                win.window.document.getElementById('headerText').innerHTML =  title;
+                win.window.document.getElementById('subHeader').innerHTML =  subtitle;
+                
+                
                 win.window.document.getElementById('json-display').innerHTML =  syntaxHighlight(jsonData);
                 
                 opener.showJsonInPopup_win = win;
