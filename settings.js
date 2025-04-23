@@ -2219,12 +2219,12 @@ async function updateRemoteInfo( ){
     
         let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
         
-        //// Prepare for a clear button
-        //let clearButton = `<button class="smallButton" onclick=
-        //" gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
-        //_callback('systemInfoClicked', {id: ${state.repoNumber} })" 
-        //> Clear </button>`;
-        let clearButton = "";
+        // Prepare for a clear button
+        let clearButton = `<button class="smallButton" onclick=
+        " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
+        _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
+        > Clear </button>`;
+        //let clearButton = "";
         
         html +=  
             `<tr> 

@@ -1,73 +1,97 @@
-#!/bin/bash 
+#!/bin/bash -xv
 
-# To test without pragma-git:
+: << 'MULTILINE_COMMENT'
+# To test from command-line with pragma-git running:
+# --------------------------------------------------
 #   Terminal 1)
-#      cd ~/Documents/Projects/Pragma-git/pragma-git
-#      echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
-#      rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+      cd ~/Documents/Projects/Pragma-git/pragma-git
+      echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
+      rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
 #   Terminal 2) 
-#      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
 #   Terminal 1)
-#      input token
+      input token
 #   Terminal 2) 
-#      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+      
+MULTILINE_COMMENT
 
-# Home dir
-if [ -z ${SYSTEMDRIVE+x} ]
-then
-    # Mac or Linux  
-    TMP="$HOME/.Pragma-git/.tmp"
-    echo "Mac or Linux" > "$TMP/askpasslog.txt"
+
+# Set variables for different OSes
+
+STARTDIR=$(dirname "$(realpath "$0")") # Script location (folder)
+
+if [ -z ${SYSTEMDRIVE+x} ] ; then
+    # Mac or Linux general
+    SETTINGSDIR="$HOME/.Pragma-git"
+    TMP="$SETTINGSDIR/.tmp"
+    
+    # Mac or Linux specific
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        echo "Mac" > "$TMP/askpasslog.txt"
+        INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_mac"  
+    else
+        echo "Linux" > "$TMP/askpasslog.txt"
+        INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_linux"  
+    fi
+    
     env >> "$TMP/askpasslog.txt"
     echo $(pwd) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
-    INCLUDE_PATH="/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_mac"  # TODO: Make separate for mac, linux, windows
+
 else
-    # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    # Windows specific
+    SETTINGSDIR="$USERPROFILE/.Pragma-git"
+    TMP="$SETTINGSDIR/.tmp"
+    INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_win" 
+
     echo "WINDOWS" > "$TMP/askpasslog.txt"
     env >> "$TMP/askpasslog.txt"
     echo $(pwd -W) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
 fi
 
-echo $@ >>  "$TMP/askpasslog.txt"
+
+# DEV mode
+INCLUDE_PATH_DEV="$SETTINGSDIR/pragma-git-config-dev"
+if [  -f "$INCLUDE_PATH_DEV" ] ; then
+    INCLUDE_PATH="$INCLUDE_PATH_DEV"
+fi
+
+
+# File paths
+MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
+RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
+EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
+
+PRAGMALOG_FILE="$TMP/pragma-git-log.txt"    # Pragma-git log (same as used in javascript PragmaLog function)
 
 mkdir "$TMP" 2>/dev/null
 
 
-
-MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
-RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
-EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
-
-EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
-
-
-PRAGMALOG_FILE="$TMP/pragma-git-log.txt"    # Pragma-git log (same as used in javascript PragmaLog function)
-
-
+# Log
+echo "$(date)" >>  "$PRAGMALOG_FILE" 
 echo "$(date) Start pragma-askpass" >>  "$PRAGMALOG_FILE" 
-echo "$(date)    Input parameter = $1"  >> "$PRAGMALOG_FILE" 
+echo "$(date)   Input parameter = $1"  >> "$PRAGMALOG_FILE" 
+echo "$(date)   INCLUDE_PATH    = $INCLUDE_PATH"  >> "$PRAGMALOG_FILE" 
 
 # Bail out if pragma-git not running
 if [ ! -f "$MAINSIGNALFILE" ] ; then
     echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    echo  "$(date) Bail out, require pragma-git to be up" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Bail out, require pragma-git to be up" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     exit
 fi
 
 # Bail out if askpass already running
 if [  -f "$RUNNING" ] ; then
     echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     exit
 fi
 
-# Store input parameters for Pragma-git to pick them up (nothing here)
-echo $1 > "$TMP/askpass_first"
+# Store input parameters for Pragma-git/Pragma-askpass to pick them up 
+echo "$1" > "$TMP/askpass_first"
 
 
 # Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
@@ -81,6 +105,8 @@ done
 EXITCODE=$(cat "$EXIT")
 rm "$EXIT"
 
+echo "$(date)   Exit Pragma-askpass GUI with EXITCODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
+
 # Print to stdout
 echo $(cat "$EXITMESSAGEFILE")
 
@@ -89,29 +115,25 @@ rm "$EXITMESSAGEFILE"
 rm "$TMP/askpass_first"
 
 
-# Write to .git/config
-if [[ "$1" == *"assword"* ]]; then
-    echo "Setting .git/config credential.username" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    
-    # username from git credential
-    giturl=$(echo "$1" | cut -d\' -f2)  # Extract giturl from "Password for 'https://pragma-git@github.com/pragma-git/pragma-git.git'"
-    echo "   giturl = $giturl (from password dialog)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    
-    echo "   include.path=$INCLUDE_PATH" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
 
-    username=$(echo "url=$giturl" | git -c include.path=$INCLUDE_PATH credential fill | grep username | cut -d= -f2) 
-    echo "   username = $username (from git credential)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+# Write to .git/config (if GUI closed with OK)
+if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
+    echo "$(date)   Setting .git/config credential.username" >>  "$PRAGMALOG_FILE" 
     
-    # replace username in .git/config
+    # username 
+    username=$(echo $1 | cut -d/ -f3- | cut -d@ -f1)  # Extract username from "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+    echo "$(date)     username = $username (from git credential)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    
+    ## replace username in .git/config
     RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
-    echo "   $RUN" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo "$(date)     run: $RUN" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     eval $RUN | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
     
 fi
 
+
 # Log
-echo  " " >> "$TMP/askpasslog.txt"
-echo  "$(date) EXIT pragma-askpass" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-echo  "$(date) EXIT_CODE = $EXITCODE" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+echo "$(date) Finish pragma-askpass" >>  "$PRAGMALOG_FILE" 
+echo  "$(date) EXIT_CODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
 
 exit $EXITCODE
