@@ -1,5 +1,17 @@
 #!/bin/bash 
 
+# To test without pragma-git:
+#   Terminal 1)
+#      cd ~/Documents/Projects/Pragma-git/pragma-git
+#      echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
+#      rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+#   Terminal 2) 
+#      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+#   Terminal 1)
+#      input token
+#   Terminal 2) 
+#      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
 then
@@ -9,6 +21,7 @@ then
     env >> "$TMP/askpasslog.txt"
     echo $(pwd) > "$TMP/repo_path"
     echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
+    INCLUDE_PATH="/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_mac"  # TODO: Make separate for mac, linux, windows
 else
     # Windows
     TMP="$USERPROFILE/.Pragma-git/.tmp"
@@ -74,6 +87,27 @@ echo $(cat "$EXITMESSAGEFILE")
 # Clean up
 rm "$EXITMESSAGEFILE"
 rm "$TMP/askpass_first"
+
+
+# Write to .git/config
+if [[ "$1" == *"assword"* ]]; then
+    echo "Setting .git/config credential.username" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    
+    # username from git credential
+    giturl=$(echo "$1" | cut -d\' -f2)  # Extract giturl from "Password for 'https://pragma-git@github.com/pragma-git/pragma-git.git'"
+    echo "   giturl = $giturl (from password dialog)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    
+    echo "   include.path=$INCLUDE_PATH" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+
+    username=$(echo "url=$giturl" | git -c include.path=$INCLUDE_PATH credential fill | grep username | cut -d= -f2) 
+    echo "   username = $username (from git credential)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    
+    # replace username in .git/config
+    RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
+    echo "   $RUN" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    eval $RUN | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    
+fi
 
 # Log
 echo  " " >> "$TMP/askpasslog.txt"
