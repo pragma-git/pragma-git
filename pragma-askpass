@@ -1,18 +1,30 @@
-#!/bin/bash -xv
+#!/bin/bash 
+#
+# This script is an askpass program, which is used by pragma-git to show a GUI and interact with git askpass.
+#
+# It returns username / password to git
+# It also adds the username to .git/config, after a succesful password dialog has been used
+#
 
 : << 'MULTILINE_COMMENT'
-# To test from command-line with pragma-git running:
-# --------------------------------------------------
-#   Terminal 1)
+
+# To force run from command-line with pragma-git running:
+# -------------------------------------------------------
+
+#   Start  
       cd ~/Documents/Projects/Pragma-git/pragma-git
       echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
       rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
-#   Terminal 2) 
-      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
-#   Terminal 1)
-      input token
-#   Terminal 2) 
-      rm /Users/jan/.Pragma-git/.tmp/pragma-askpass-running
+
+#   Check
+      cat .git/config  # Should show:    [credential]
+                       #                        username = pragma-git
+                       
+#   Check for runaway processes
+      ps aux | grep askpass
+
+#   Kill runaway processes
+      pkill -f askpass
       
 MULTILINE_COMMENT
 
@@ -115,8 +127,7 @@ rm "$EXITMESSAGEFILE"
 rm "$TMP/askpass_first"
 
 
-
-# Write to .git/config (if GUI closed with OK)
+# Write to .git/config (if password GUI closed with OK-button)
 if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
     echo "$(date)   Setting .git/config credential.username" >>  "$PRAGMALOG_FILE" 
     
