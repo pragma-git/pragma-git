@@ -16,7 +16,7 @@
       echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
       rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
 
-#   Check
+#   Check file .git/config
       cat .git/config  # Should show:    [credential]
                        #                        username = pragma-git
                        
@@ -88,25 +88,23 @@ echo "$(date)   INCLUDE_PATH    = $INCLUDE_PATH"  >> "$PRAGMALOG_FILE"
 
 # Bail out if pragma-git not running
 if [ ! -f "$MAINSIGNALFILE" ] ; then
-    echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date)   Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    echo  "$(date)   Bail out, require pragma-git to be up" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" >>  "$PRAGMALOG_FILE"
+    echo  "$(date)   Bail out, require pragma-git to be up" >>  "$PRAGMALOG_FILE"
     exit
 fi
 
 # Bail out if askpass already running
 if [  -f "$RUNNING" ] ; then
-    echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date)   Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    echo  "$(date)   Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >>  "$PRAGMALOG_FILE"
+    echo  "$(date)   Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >>  "$PRAGMALOG_FILE"
     exit
 fi
 
-# Store input parameters for Pragma-git/Pragma-askpass to pick them up 
+# Store input parameters for Pragma-git to pick them up 
 echo "$1" > "$TMP/askpass_first"
 
 
-# Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
+# Wait for GUI to close ($RUNNING removed by askpass.html when closed)
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
@@ -133,12 +131,12 @@ if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
     
     # username 
     username=$(echo $1 | cut -d/ -f3- | cut -d@ -f1)  # Extract username from "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
-    echo "$(date)     username = $username (from git credential)" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo "$(date)     username = $username (from git credential)" >>  "$PRAGMALOG_FILE"
     
     ## replace username in .git/config
     RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
-    echo "$(date)     run: $RUN" | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
-    eval $RUN | tee -a >>  "$PRAGMALOG_FILE" "$TMP/askpass.txt"
+    echo "$(date)     run: $RUN" >>  "$PRAGMALOG_FILE"
+    eval $RUN >>  "$PRAGMALOG_FILE"
     
 fi
 
