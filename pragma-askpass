@@ -83,6 +83,7 @@ mkdir "$TMP" 2>/dev/null
 # Log
 echo "$(date)" >>  "$PRAGMALOG_FILE" 
 echo "$(date) Start pragma-askpass" >>  "$PRAGMALOG_FILE" 
+echo "$(date)   pwd = $(pwd)" >>  "$PRAGMALOG_FILE" 
 echo "$(date)   Input parameter = $1"  >> "$PRAGMALOG_FILE" 
 echo "$(date)   INCLUDE_PATH    = $INCLUDE_PATH"  >> "$PRAGMALOG_FILE" 
 
