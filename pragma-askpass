@@ -70,8 +70,8 @@ fi
 
 
 # File paths
-MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
-RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
+MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-askpass.html GUI running (needed to show dialog)
+RUNNING="$TMP/pragma-askpass-running"       # Pragma-askpass.html GUI running.  Pragma-git looks for this file, and starts "askpass.html".    "askpass.html" removes this file when done, which is picked up by Pragma-git.
 EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
 
@@ -101,44 +101,45 @@ if [  -f "$RUNNING" ] ; then
 fi
 
 # Store input parameters for Pragma-git to pick them up 
-echo "$1" > "$TMP/askpass_first"
+echo "$1" > "$TMP/askpass_first"  # Carries argument to "askpass"
 
 
 # Wait for GUI to close ($RUNNING removed by askpass.html when closed)
-touch "$RUNNING" 
+touch "$RUNNING"            # Create signal file.  Pragma-git picks this up and starts "askpass.html"
 while [  -f "$RUNNING" ]
 do
   sleep 1 
 done
+# At this point, signal file has been removed by "askpass.html".  Pragma-git also senses this to do some finishing works.
+
 
 # Exited Pragma-askpass
-EXITCODE=$(cat "$EXIT")
-rm "$EXIT"
-
+EXITCODE=$(cat "$EXIT")     # EXIT code from askpass.html
+rm "$EXIT"                  # Remove file carrying EXIT code
 echo "$(date)   Exit Pragma-askpass GUI with EXITCODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
 
-# Print to stdout
-echo $(cat "$EXITMESSAGEFILE")
+# Print to stdout (what was entered in "askpass.html" textarea).  
+# echo $(cat "$EXITMESSAGEFILE")   # Dangerous!  Shows password in clear text.  Use for debugging only
 
 # Clean up
-rm "$EXITMESSAGEFILE"
-rm "$TMP/askpass_first"
+rm "$EXITMESSAGEFILE"    # Remove file carrying textarea input from "askpass.html"
+rm "$TMP/askpass_first"  # Remove file carrying argument to "askpass"
 
 
-# Write to .git/config (if password GUI closed with OK-button)
-if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
-    echo "$(date)   Setting .git/config credential.username" >>  "$PRAGMALOG_FILE" 
+## Write to .git/config (if password GUI closed with OK-button)
+#if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
+    #echo "$(date)   Setting .git/config credential.username" >>  "$PRAGMALOG_FILE" 
     
-    # username 
-    username=$(echo $1 | cut -d/ -f3- | cut -d@ -f1)  # Extract username from "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
-    echo "$(date)     username = $username (from git credential)" >>  "$PRAGMALOG_FILE"
+    ## username 
+    #username=$(echo $1 | cut -d/ -f3- | cut -d@ -f1)  # Extract username from "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+    #echo "$(date)     username = $username (from git credential)" >>  "$PRAGMALOG_FILE"
     
-    ## replace username in .git/config
-    RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
-    echo "$(date)     run: $RUN" >>  "$PRAGMALOG_FILE"
-    eval $RUN >>  "$PRAGMALOG_FILE"
+    ### replace username in .git/config
+    #RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
+    #echo "$(date)     run: $RUN" >>  "$PRAGMALOG_FILE"
+    #eval $RUN >>  "$PRAGMALOG_FILE"
     
-fi
+#fi
 
 
 # Log

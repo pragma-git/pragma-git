@@ -330,7 +330,21 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
           persistent: true
         });
        askpass_watcher.add(ASKPASSIGNALFILE);
-       askpass_watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaAskPass() } )
+       askpass_watcher.on('add', 
+           path => { 
+               pragmaLog(`File ${path} has been added`); 
+               startPragmaAskPass();
+           } 
+       )
+       // TEST that did not work, because username is not known in git-credentials directly after askpass bash script
+       //askpass_watcher.on('unlink', 
+            //path =>  { 
+                //pragmaLog(`File ${path} has been removed`);  
+                //let remoteUrl = state.repos[ state.repoNumber ].remoteURL; 
+                //pragmaLog(`Add username to .git/config, for remote repo = ${remoteUrl}`); 
+                //storeUsernameInLocalGitConfig( remoteUrl);
+            //} 
+       //)
 
               
     // Initiate pragma-git as default diff and merge tool
