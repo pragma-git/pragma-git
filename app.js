@@ -336,16 +336,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                startPragmaAskPass();
            } 
        )
-       // TEST that did not work, because username is not known in git-credentials directly after askpass bash script
-       //askpass_watcher.on('unlink', 
-            //path =>  { 
-                //pragmaLog(`File ${path} has been removed`);  
-                //let remoteUrl = state.repos[ state.repoNumber ].remoteURL; 
-                //pragmaLog(`Add username to .git/config, for remote repo = ${remoteUrl}`); 
-                //storeUsernameInLocalGitConfig( remoteUrl);
-            //} 
-       //)
-
               
     // Initiate pragma-git as default diff and merge tool
         gitDefineBuiltInTools();
@@ -511,7 +501,8 @@ async function _callback( name, event){
                     
             
         // Write local config credential.username (this runs every time, a bit of a time waster)
-        storeUsernameInLocalGitConfig( );
+        storeUsernameInLocalGitConfig( state.repos[ origRepoNumber].remoteURL );
+        storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
             
                 
        
