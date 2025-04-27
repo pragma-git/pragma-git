@@ -6871,6 +6871,9 @@ function saveSettings(){
     let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
     
+    // Save username of current repo to .git/config
+    storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
+    
     pragmaLog('Done saving settings');
     pragmaLog('');
 }
