@@ -1033,8 +1033,9 @@ async function testURL( textareaId, event){
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.add('red'); 
 
-                const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
-                await opener.simpleGitLog(folder) .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
+                // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
+                await opener.simpleGitLog(folder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); ;
             }else{
                 await simpleGit(folder).raw(  commands, onListRemote); // default askpass 
             }
