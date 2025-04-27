@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>JSON viewer</title>
+    
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    
+    <script src="jsonViewer.js"></script>
+    
+    <!-- As in settings.html -->
+    <style>
+        html{
+            overflow: auto;
+        }
+        
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+            user-select: text; 
+        }
+        #header{
+            position: fixed;
+            top: 0px;
+            width: -webkit-fill-available;
+            background-color: var(--body-background);
+        }
+        #outer-content{
+            top: 0px;
+            margin-top: 100px;
+        }
+
+        .find-in-nw-current,
+        .find-in-nw-of{
+            color: black;
+        }
+
+        
+        .icon {
+          display: inline-block;
+          line-height: 30px;
+          padding-left: 17px;
+        }
+
+    
+  
+        pre {
+            font-size: 10pt;
+            
+        }
+        
+        span{
+            user-select: all;  // Marks whole span when clicking
+        }
+        
+        
+        .key { 
+            width: 250px;
+            display: inline-block;
+            min-width: max-content;
+        }
+        .string { color: cadetblue; }
+        .number { color: #005cc5; }
+        .boolean { color: chocolate; }
+        .null { color: #6a737d; }
+
+    </style>
+
+    
+</head>
+<body class='light'>
+    <!-- Dark mode on/off , zoom--> 
+    <script>
+        let localState = global.localState;
+        
+        if (localState.dark){
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+        
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
+
+
+    <div id="outer-content"> <!-- Content  -->    
+        
+            
+        <div id="header">
+            <h2><span id="headerText">JSON Viewer</span>
+
+                
+                <!-- Search button --> 
+                <img id="find-icon" style="vertical-align:middle;position: fixed; right: 35px; "  height="17" width="17"  
+                    onclick="findInNw.positionSearchBoxGraph()" 
+                    onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                    onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
+    
+    
+            </h2>
+            
+            <h3 id="subHeader"> subHeader</h3>
+        </div>
+        
+        
+          
+        
+        <div id="inner-content">        
+
+        
+                   
+            <pre id="json-display">
+                JSON SHOULD GO HERE
+            </pre>
+             
+
+        </div>
+    </div>
+    
+    
+            
+    <!--  Add find  -->    
+    <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+    <script src="extend_find-in-nw.js"></script>
+    <script>
+        findInNw.initialize();
+        extendFindInNw(); //Make find-in-nw fit my purpose for graph and note
+    </script>   
+    
+    
+</body>
+</html>
+

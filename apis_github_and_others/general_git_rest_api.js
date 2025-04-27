@@ -7,8 +7,14 @@ class git_rest_api {
 
         
     // Constructor
-    constructor( giturl, TOKEN) {
+    constructor( giturl, username, TOKEN) {
         this.giturl = giturl;
+        
+        this.username = username;
+        if (username == undefined){ 
+            this.username = '';
+        }
+        
         this.TOKEN = TOKEN;
     }   
 

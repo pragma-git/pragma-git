@@ -1,73 +1,152 @@
 #!/bin/bash 
+#
+# This script is an askpass program, which is used by pragma-git to show the "pragma-askpass.html" GUI
+#
+# This script is used to pass output from "pragma-askpass.html" to git
+#
+# It does this by relaying username / password from "pragma-askpass.html" to stdout, from which git picks it up
+# It also relays EXIT CODE from "pragma-askpass.html" when this script ends, from which git picks up exit code
+#
 
-# Home dir
-if [ -z ${SYSTEMDRIVE+x} ]
-then
-    # Mac or Linux  
-    TMP="$HOME/.Pragma-git/.tmp"
-    echo "Mac or Linux" > "$TMP/askpasslog.txt"
+: << 'MULTILINE_COMMENT'
+
+# To force run from command-line with pragma-git running:
+# -------------------------------------------------------
+
+#   Start  
+      cd ~/Documents/Projects/Pragma-git/pragma-git
+      echo "url=https://github.com/pragma-git/pragma-git.git" | git -c include.path=/Users/jan/Documents/Projects/Pragma-git/pragma-git/gitconfigs/pragma-git-config_dev_mac credential reject # Remove credentials NOTE: Save before
+      rm -f /Users/jan/.Pragma-git/.tmp/pragma-askpass-running && touch /Users/jan/.Pragma-git/.tmp/pragma-git-running &&  ./pragma-askpass "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+
+#   Check file .git/config
+      cat .git/config  # Should show:    [credential]
+                       #                        username = pragma-git
+                       
+#   Check for runaway processes
+      ps aux | grep askpass
+
+#   Kill runaway processes
+      pkill -f askpass
+      
+MULTILINE_COMMENT
+
+
+# Set variables for different OSes
+
+STARTDIR=$(dirname "$(realpath "$0")") # Script location (folder)
+
+if [ -z ${SYSTEMDRIVE+x} ] ; then
+    # Mac or Linux general
+    SETTINGSDIR="$HOME/.Pragma-git"
+    TMP="$SETTINGSDIR/.tmp"
+    
+    # Mac or Linux specific
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        echo "Mac" > "$TMP/askpasslog.txt"
+        INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_mac"  
+    else
+        echo "Linux" > "$TMP/askpasslog.txt"
+        INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_linux"  
+    fi
+    
     env >> "$TMP/askpasslog.txt"
     echo $(pwd) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
+
 else
-    # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    # Windows specific
+    SETTINGSDIR="$USERPROFILE/.Pragma-git"
+    TMP="$SETTINGSDIR/.tmp"
+    INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_win" 
+
     echo "WINDOWS" > "$TMP/askpasslog.txt"
     env >> "$TMP/askpasslog.txt"
     echo $(pwd -W) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/askpasslog.txt"
 fi
 
-echo $@ >>  "$TMP/askpasslog.txt"
+
+# DEV mode
+INCLUDE_PATH_DEV="$SETTINGSDIR/pragma-git-config-dev"
+if [  -f "$INCLUDE_PATH_DEV" ] ; then
+    INCLUDE_PATH="$INCLUDE_PATH_DEV"
+fi
+
+
+# File paths
+MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-askpass.html GUI running (needed to show dialog)
+RUNNING="$TMP/pragma-askpass-running"       # Pragma-askpass.html GUI running.  Pragma-git looks for this file, and starts "askpass.html".    "askpass.html" removes this file when done, which is picked up by Pragma-git.
+EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
+
+PRAGMALOG_FILE="$TMP/pragma-git-log.txt"    # Pragma-git log (same as used in javascript PragmaLog function)
 
 mkdir "$TMP" 2>/dev/null
 
-MAINSIGNALFILE="$TMP/pragma-git-running"    # Pragma-git running (needed to show dialog)
-RUNNING="$TMP/pragma-askpass-running"       # Pragma-git looks for this file, and starts askpass
-EXIT="$TMP/exit-pragma-askpass"             # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass"  # Message to print to stdout
+# Log
+echo "$(date)" >>  "$PRAGMALOG_FILE" 
+echo "$(date) Start pragma-askpass" >>  "$PRAGMALOG_FILE" 
+echo "$(date)   pwd = $(pwd)" >>  "$PRAGMALOG_FILE" 
+echo "$(date)   Input parameter = $1"  >> "$PRAGMALOG_FILE" 
+echo "$(date)   INCLUDE_PATH    = $INCLUDE_PATH"  >> "$PRAGMALOG_FILE" 
 
 # Bail out if pragma-git not running
 if [ ! -f "$MAINSIGNALFILE" ] ; then
-    echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" >> "$TMP/askpass.txt"
-    echo  "$(date) Bail out, require pragma-git to be up" >> "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, but pragma-git not running : $TMP/pragma-git-running)" >>  "$PRAGMALOG_FILE"
+    echo  "$(date)   Bail out, require pragma-git to be up" >>  "$PRAGMALOG_FILE"
     exit
 fi
 
 # Bail out if askpass already running
 if [  -f "$RUNNING" ] ; then
-    echo  " " >> "$TMP/askpass.txt"
-    echo  "$(date) Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
-    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >> "$TMP/askpass.txt"
+    echo  "$(date)   Attempt to open pragma-askpass, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >>  "$PRAGMALOG_FILE"
+    echo  "$(date)   Bail out, already open (indicated by existence of file : $TMP/pragma-askpass-running)" >>  "$PRAGMALOG_FILE"
     exit
 fi
 
-# Store input parameters for Pragma-git to pick them up (nothing here)
-echo $1 > "$TMP/askpass_first"
+# Store input parameters for Pragma-git to pick them up 
+echo "$1" > "$TMP/askpass_first"  # Carries argument to "askpass"
 
-# Run Pragma-askpass while $RUNNING exists (removed by Pragma-askpass when closed)
-touch "$RUNNING" 
+
+# Wait for GUI to close ($RUNNING removed by askpass.html when closed)
+touch "$RUNNING"            # Create signal file.  Pragma-git picks this up and starts "askpass.html"
 while [  -f "$RUNNING" ]
 do
   sleep 1 
 done
+# At this point, signal file has been removed by "askpass.html".  Pragma-git also senses this to do some finishing works.
+
 
 # Exited Pragma-askpass
-EXITCODE=$(cat "$EXIT")
-rm "$EXIT"
+EXITCODE=$(cat "$EXIT")     # EXIT code from askpass.html
+rm "$EXIT"                  # Remove file carrying EXIT code
+echo "$(date)   Exit Pragma-askpass GUI with EXITCODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
 
-# Print to stdout
-echo $(cat "$EXITMESSAGEFILE")
+# Print to stdout (what was entered in "askpass.html" textarea).  
+echo $(cat "$EXITMESSAGEFILE")   # Picked up by git from stdout
 
 # Clean up
-rm "$EXITMESSAGEFILE"
-rm "$TMP/askpass_first"
+rm "$EXITMESSAGEFILE"    # Remove file carrying textarea input from "askpass.html"
+rm "$TMP/askpass_first"  # Remove file carrying argument to "askpass"
+
+
+## Write to .git/config (if password GUI closed with OK-button)
+#if [[ "$1" == *"assword"* ]] && [ $EXITCODE -eq 0 ] ; then
+    #echo "$(date)   Setting .git/config credential.username" >>  "$PRAGMALOG_FILE" 
+    
+    ## username 
+    #username=$(echo $1 | cut -d/ -f3- | cut -d@ -f1)  # Extract username from "Password for https://pragma-git@github.com/pragma-git/pragma-git.git"
+    #echo "$(date)     username = $username (from git credential)" >>  "$PRAGMALOG_FILE"
+    
+    ### replace username in .git/config
+    #RUN="git -c include.path=\"${INCLUDE_PATH}\" config --local --replace-all \"credential.username\" ${username}"
+    #echo "$(date)     run: $RUN" >>  "$PRAGMALOG_FILE"
+    #eval $RUN >>  "$PRAGMALOG_FILE"
+    
+#fi
+
 
 # Log
-echo  " " >> "$TMP/askpasslog.txt"
-echo  "$(date) EXIT pragma-askpass" >> "$TMP/askpass.txt"
-echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/askpass.txt"
+echo "$(date) Finish pragma-askpass" >>  "$PRAGMALOG_FILE" 
+echo  "$(date) EXIT_CODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
 
 exit $EXITCODE

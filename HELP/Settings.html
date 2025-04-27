@@ -13,7 +13,8 @@
         }
         
         img[src="../images/github_star_on.png"],
-        img[src="../images/github_star_off.png"]
+        img[src="../images/github_star_off.png"],
+        .providerImage
         {
             filter: none;
         }
@@ -417,18 +418,34 @@
             </dd>
             
             
-        <dt><h4>Adding a remote repository with Github wizard </h4></dt>  
+        <dt><h4>Adding a remote repository with wizard </h4></dt>  
             
             <dd>         
                  
-                <p>The Github tool aids in setting up the URL of the remote repository on Github. It interacts with your Github account, 
-                allowing for creation of access tokens, or to create a new repository.
-                </p>
-            
-                <p><button><img style='vertical-align:bottom;' height="17" width="17" src="../images/github-mark.png" > GitHub</button> 
-                 button launches a Github dialog.  It has a separate help function
+                <p>Creating a new remote repository can be done directly for Github, Gitlab or Bitbucket providers, by pressing
+                their respective dialog button :
+                
+                    <div id="CreateRemoteRepoDiv" style="filter: none;"> 
+                                <button>
+                                    <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="../apis_github_and_others/git-provider-icons/Github/github-mark.png">
+                                    GitHub
+                                </button> 
+                                <button>
+                                    <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="../apis_github_and_others/git-provider-icons/Gitlab/gitlab-logo-500_zoomed.png">
+                                    GitLab
+                                </button> 
+                                <button>
+                                    <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="../apis_github_and_others/git-provider-icons/Free-icons.github.io/bitbucket_blue.png">
+                                    Bitbucket
+                                </button> 
+                            </div>
+                                            
                 </p>
                 
+                <p>Each of these tools aids in setting up the URL of the remote repository from its respective provider. 
+                </p>
+
+
                 <br>
                 
             </dd>

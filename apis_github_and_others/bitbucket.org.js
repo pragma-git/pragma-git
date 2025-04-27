@@ -18,8 +18,9 @@ let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api
 class bitbucket extends General_git_rest_api {
     
 
-    constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+    constructor( giturl, username, TOKEN) {
+        super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+        this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
     }
 
     //
@@ -27,8 +28,7 @@ class bitbucket extends General_git_rest_api {
     //
       
         async initialize(){
-            
-            this.apiurl = this.#apiUrl( this.giturl);  // Call provider-specific translation from git-url to api-url
+
             global.log(`Bitbucket API URL = ${this.apiurl} `); 
             
              try{
@@ -47,9 +47,12 @@ class bitbucket extends General_git_rest_api {
 
             
             // --- Provider-specific code :
+
+                let urlParts = new URL(giturl);
+                let host = urlParts.host; 
                 
                 // That is : replace "bitbucket.org" with "api.bitbucket.org//2.0/repositories", AND remove  ".git" at end
-                let url = giturl.replace( '.git', '').replace( 'bitbucket.org', 'api.bitbucket.org/2.0/repositories')        
+                let url = giturl.replace( '.git', '').replace( host, `api.${host}/2.0/repositories`)        
                 
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){
@@ -61,7 +64,78 @@ class bitbucket extends General_git_rest_api {
             // --- End Provider-specific code  
             
             return url;
-        }     
+        }  
+        async createRepo( owner, myCredentials, newRepoName, description, isPrivate, PROJECT_KEY = undefined ){  // Create Github repository
+            
+            // owner  -- bitbucket workspace = account.  For instance janaxelsson in 'https://bitbucket.org/janaxelsson'
+            // myCredentials -- ${BITBUCKET_USER_NAME}:${APP_PASSWORD}  // Use App Password instead of Token (because it is very complex to set up an Oauth token)
+            //                  BITBUCKET_USER_NAME -- found from "https://bitbucket.org/account/settings/"
+            //                  APP_PASSWORD        -- set from "https://bitbucket.org/account/settings/app-passwords/"
+            //
+            // Bitbucket has the concept of PROJECT.  If not specified, the new repo lands in first project.
+            // I have prepared this function for PROJECT_KEY (which can be found in "https://bitbucket.org/${owner}/workspace/projects/")
+            // in case I want to implement such a setting in 'create_remote_repository.html'
+            
+            let ok = false;
+            let giturl = `https://bitbucket.org/${owner}/${newRepoName}.git`;
+            
+            // Encode credentials for Basic Auth
+            const credentials = btoa(myCredentials);
+            
+            let body = {
+                        name: newRepoName,
+                        scm: 'git',
+                        is_private: isPrivate,
+                        description: description
+                    }
+            
+            // Append PROJECT to body if defined        
+            if (PROJECT_KEY !== undefined){
+                body.project = { "key": PROJECT_KEY };
+            }
+            
+            let headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Basic ${credentials}` // Use Basic Auth with App Password
+            }
+            
+            console.log('body');
+            console.log(body);
+            console.log('headers');
+            console.log(headers);
+
+            
+            try {
+                // Create
+                const res = await fetch( `https://api.bitbucket.org/2.0/repositories/${owner}/${newRepoName}`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify( body )
+                })
+
+                console.log(body);
+                console.log(headers);                
+
+                
+                // Check result
+                console.log(res);
+                const json = await res.json();
+                ok = res.ok;
+            
+                //console.log(`[${ok}]  (status = ${res.status}) `);
+                console.log(`[${ok}] `);
+                console.log( json);
+                
+                if (ok){
+                    console.log("Repository created:", giturl);
+                }   
+                
+            } catch (error) {
+                console.log(error);
+            }
+            
+            return { ok: ok, giturl: giturl};
+        }   
               async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
@@ -78,7 +152,7 @@ class bitbucket extends General_git_rest_api {
             
             // --- Provider-specific code :
                 
-                // Complete options
+                // Complete options for oauth -- change below if app-password
                 this.options = {
                     method: 'GET',
                     headers: {
@@ -88,6 +162,16 @@ class bitbucket extends General_git_rest_api {
                 };
             
                 
+                // Different if app-password or oauth TOKEN
+                if (this.username == 'x-token-auth'){
+                    // Oauth
+                    this.options.headers.Authorization = 'Bearer ' + btoa( this.TOKEN);
+                }else{
+                    // App-password on format user:password 
+                    this.options.headers.Authorization = 'Basic ' + btoa( this.username + ':' + this.TOKEN);
+                }
+
+
                 // Remove options for unknown TOKEN 
                 if ( super.isEmptyString( this.TOKEN) ) {
                     delete this.options.headers.Authorization 
@@ -123,7 +207,8 @@ class bitbucket extends General_git_rest_api {
                     // 
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
-                            out = 'x-token-auth';      
+                            //out = 'x-token-auth';   // If default git oauth token
+                            out = this.username;               // Unknown if app-password (cannot be deduced from url path, as for gihub or gitlab).
                         }catch (err){ global.warn(err);}
                         break;     
                     }

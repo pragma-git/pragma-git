@@ -165,7 +165,7 @@
         function Exit( exitCode){
             
             let exitCodeString = parseInt( exitCode, 10).toString();
-            opener.pragmaLog( `ASKPASS EXIT CODE = ${exitCodeString}`)
+            //opener.pragmaLog( `ASKPASS EXIT CODE = ${exitCodeString}`)
 
          
             try{
@@ -205,7 +205,7 @@
     <!-- Close Event  --> 
     <script>
 		
-		document.getElementById('repoName').innerHTML= '(for repository : "' + repoName + '" )';
+		document.getElementById('repoName').innerHTML= '(for repository : "' + url + '" )';
 
         window.addEventListener(
             'beforeunload', 

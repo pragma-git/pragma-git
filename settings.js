@@ -13,7 +13,7 @@ const { execSync } = require('child_process');
 let simpleGit = opener.simpleGit; 
 let simpleGitLog = opener.simpleGitLog; // Use as with simpleGit, but this one logs through pragmaLog
 
-let githubStar = require('apis_github_and_others/github-star.js'); // Use to star pragma-git
+let githubStar = require('github-star.js'); // Use to star pragma-git
             
 // Global for whole app
 var state = global.state; // internal copy of global.state
@@ -28,6 +28,8 @@ remoteRepos.fetch = {};
 remoteRepos.push = {};  // Prepare for having different data in push.  NOTE: not implemented yet
 remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
 
+// For provider, updated when pressing "System info" tab
+let provider;
 
 // ---------
 // FUNCTIONS
@@ -593,7 +595,7 @@ async function _callback( name, event){
             
             // Update the remote in the table if needed
             if ( alias == 'origin' ){
-                let id = 10000 + state.repoNumber;
+                let id = 10000 + state.repoNumber;  // textAreaId in table
                 document.getElementById(id).value = newUrl;
                 state.repos[state.repoNumber].remoteURL = newUrl;
                 testURL( id, event);
@@ -639,7 +641,59 @@ async function _callback( name, event){
                     
             break;   
         } 
-
+        case 'openProviderWindow':{
+            if (localState.gitCreateRemoteRepoWindow.open == true){
+                return
+            }
+            
+            // Prepare data 
+            localState.gitCreateRemoteRepoWindow.data = { name: event.name, provider: event.provider}; 
+            console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
+            
+            // Make window
+            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
+            win => win.on('loaded', function () {
+                
+                console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
+                opener.createRemote_win = win;
+    
+                opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
+                opener.updateWindowMenu( 'Create Remote Repository', 'createRemote_win');
+                localState.gitCreateRemoteRepoWindow.open = true;
+                
+                
+                win.on('close', function() { 
+                    localState.gitCreateRemoteRepoWindow.open = false;
+                    opener.updateWindowMenu('Create Remote Repository');
+                    opener.fixNwjsBug7973( win);
+                } );
+                
+                
+                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                win.on('closed', function () {
+                    win = null;
+                 });
+               
+                 // Listen to main window's close event
+                 nw.Window.get().on('close', function () {
+                   // Hide the window to give user the feeling of closing immediately
+                   this.hide();
+               
+                   // If the new window is still open then close it.
+                   if (win !== null) {
+                     win.close(true);
+                   }
+               
+                   // After closing the new window, close the main window.
+                   this.close(true);
+                 });
+                    
+                    
+                } ));
+            
+            break;
+        }
+        
         case 'newBranchNameKeyUp': {
 
             document.getElementById('branchNameTextarea').value = util.branchCharFilter( document.getElementById('branchNameTextarea').value)
@@ -845,7 +899,9 @@ async function _callback( name, event){
                 
                           
             }
-            testURL(textareaId, event);
+            let workingRemote = testURL(textareaId, event);
+            
+            // TODO : Bail out -- avoid updating remote if Set button was on wrong repo
             
             // Update Remote tab 
             if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
@@ -853,7 +909,8 @@ async function _callback( name, event){
                 getRemoteRepoInfo();
                 updateRemoteRepos();
                 
-                document.getElementById('additionalRemoteURL').value = newUrl;
+                let repoTabUrl = state.repos[ state.repoNumber].remoteURL;  // The url active from radio button
+                document.getElementById('additionalRemoteURL').value = repoTabUrl;
             }
 
             break;
@@ -926,7 +983,33 @@ async function _callback( name, event){
 
 }
 
-async function testURL(textareaId, event){
+async function testURL( textareaId, event){
+    // Works on the "textAreatId" which is an html textarea containing the URL to a git repo.
+    //
+    // The problem to solve is that testURL should be run from the local folder of the repository.
+    //
+    // For repo-table :
+    //    textareaId is both a html-id, and a number.  The selected button index to state.repos array is  index = state.repoNumber - 10000.
+    //    In this case the radiobutton id gives the local folder
+    //
+    //
+    // For other textAreas :
+    //    the textAreaId is a html element (and not a number), such as "urlToClone", "setRemoteURLButton" or "additionalRemoteURL"
+    //    In this case the radiobutton id gives the local folder, that is "state.repos[ state.repoNumber].localFolder"
+    //
+    // To summmarize, if textAreaId is a number: derive repoNumber from number.  If not a number, use repoNumber = state.repoNumber.
+    
+    let folder;
+    
+    if ( isNaN(textareaId) ){
+        // textAreaId is a named html-element-id, and radiobutton (and hence state.repoNumber) is used to get folder:
+        folder = state.repos[ state.repoNumber].localFolder;
+    }else{
+        // textAreaId is a number (as well as a html-element-id) which can be used to get folder:
+        folder = state.repos[ Number(textareaId) - 10000].localFolder;
+    }
+    
+    console.log(`Local folder = ${folder}`);
     
     let outputColor = 'red'
     
@@ -950,10 +1033,11 @@ async function testURL(textareaId, event){
                 document.getElementById(textareaId).classList.remove('grey');
                 document.getElementById(textareaId).classList.add('red'); 
 
-                const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
-                await opener.simpleGitLog() .env({ ...process.env, GIT_ASKPASS }).raw(  commands, onListRemote); ;
+                // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
+                await opener.simpleGitLog(folder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); ;
             }else{
-                await simpleGit().raw(  commands, onListRemote); // default askpass 
+                await simpleGit(folder).raw(  commands, onListRemote); // default askpass 
             }
 
             function onListRemote(err, result ){
@@ -1307,7 +1391,6 @@ async function injectIntoSettingsJs(document) {
       
     // Draw tabs
     await drawRepoTab(document);
-    await drawBranchTab(document);
     await drawSoftwareTab(document);
     
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
@@ -1357,6 +1440,7 @@ async function injectIntoSettingsJs(document) {
 
     }
     
+    await drawBranchTab(document);
     console.log( "document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility  = " + document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility );
 
 
@@ -1759,10 +1843,11 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(textarea);
             
             // Test-button (Set)
+            let setButtonId = index + 20000;
             cell = row.insertCell();
             cell.setAttribute("class", 'setURL');
             button = document.createElement('button');
-            button.setAttribute("id", index + 20000);
+            button.setAttribute("id", setButtonId);
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)"); // this.type='submit'; 
             cell.appendChild(button);
@@ -1770,7 +1855,7 @@ async function generateRepoTable(document, table, data) {
             // Run test
             
             // Note: this place ignores askpass dialog, since multiple dialogs would be opened if more than one row did not have credentials.
-            testURL(index + 10000, {type: 'no_askpass', id: index + 20000});
+            testURL(index + 10000, {type: 'no_askpass', id: setButtonId});
                           
             // Into table cell :  button
             cell = row.insertCell();
@@ -2131,6 +2216,23 @@ async function updateRemoteInfo( ){
                 <td> ${ creds[key]} </td>
             </tr>`   // Style "white-space: nowrap" makes it fill width of column
         );
+        
+    
+        let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
+        
+        // Prepare for a clear button
+        let clearButton = `<button class="smallButton" onclick=
+        " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
+        _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
+        > Clear </button>`;
+        //let clearButton = "";
+        
+        html +=  
+            `<tr> 
+                <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
+                <td> ${ config_credential_username} (in local .git/config) ${clearButton}</td>
+            </tr>`   // Style "white-space: nowrap" makes it fill width of column
+        
         html += '</table></code>';       
     }catch (err){
         html += '<code>Error reading git credentials : <br>';
@@ -2141,7 +2243,7 @@ async function updateRemoteInfo( ){
     // Provider specific remote info
     html +='<br><div> Git remote info :</div>';
     try{
-        let provider = await opener.gitProvider( creds.url)
+        provider = await opener.gitProvider( creds.url)
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let iconLongPath =  opener.CWD_INIT + pathsep + await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
@@ -2168,21 +2270,115 @@ async function updateRemoteInfo( ){
 
         html += '<code> <table class="keyValueTable">';
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
+        
+        html += `   <tr><td> &nbsp;  API output : </td> <td> <button class="smallButton" onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
+        
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
         html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
         html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
         html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
-        html += '</table></code>';      
+        
+        
+        html += '</table></code>';   
+        
+          
     }catch (err){
-        html += '<code>Error reading git remote info : <br>';
-        html += `${err}</code> <br>`
+		html += '<code> <table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp';
+		if ( err.toString().includes('unknown scriptName') ){
+			html += 'Unknown git provider  <br>';
+		}else{        
+			html += 'Error reading git remote info  <br>';
+		}
+		html += `</td><td></table></code> <br>`
     }    
  
     // Show html
     document.getElementById('remoteInfo').innerHTML = await html;
  
     return html   
+}
+function showJsonInPopup(jsonData, title, subtitle) {
+    
+   let showJsonInPopupWindow;
+   // Create a new window   
+    gui.Window.open( 
+        'jsonViewer.html', 
+        {
+            title: 'JSON Viewer',
+            id: 'jsonViewerID', 
+            show: true,
+            width: 800,
+            height: 600
+        },
+        win => win.on('loaded', function () {
+
+                win.window.document.getElementById('headerText').innerHTML =  title;
+                win.window.document.getElementById('subHeader').innerHTML =  subtitle;
+                
+                
+                win.window.document.getElementById('json-display').innerHTML =  syntaxHighlight(jsonData);
+                
+                opener.showJsonInPopup_win = win;
+                opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
+                
+                        
+                win.on('close', function() { 
+                    opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
+                    opener.fixNwjsBug7973( win);
+                } );
+                
+                
+                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
+                win.on('closed', function () {
+                    win = null;
+                });
+    
+               
+                // Listen to main window's close event
+                nw.Window.get().on('close', function () {
+                  // Hide the window to give user the feeling of closing immediately
+                  this.hide();
+               
+                  // If the new window is still open then close it.
+                  if (win !== null) {
+                    win.close(true);
+                  }
+               
+                  // After closing the new window, close the main window.
+                  this.close(true);
+                });
+                 
+ 
+            }
+        ) 
+    );
+    
+    
+    // Internal function               
+    function syntaxHighlight(json) {
+        
+        if (typeof json != 'string') {
+            json = JSON.stringify(json, null, 2);
+            
+        }
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+              
+            function(match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    cls = /:$/.test(match) ? 'key' : 'string';
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            }
+        );
+  }
+            
+ 
 }
 
 async function updateGitconfigs( ){

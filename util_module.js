@@ -84,6 +84,20 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     return Number(foundIndex);
 }
 
+myModule.findOAllbjectsIndexStartsWith = function ( myArray, objectField, stringToFind ){ 
+    
+    var foundIndeces = []; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+
+        if  (myArray[i][objectField].startsWith( stringToFind)){
+            foundIndeces.push(Number(i));
+        }
+    } 
+    
+    return foundIndeces;
+}
+
 // Parse string containing multiple key value pairs 
 myModule.parseKeyValuePairsFromString = function (inputString) {
     const result = {};

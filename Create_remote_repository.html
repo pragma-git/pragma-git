@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <title>Create Remote Repository</title>
+        <script src="settings.js"></script>
+        <script src="create_remote_repository.js"></script>
+        <link rel="stylesheet" type="text/css" href="color_styles.css" />
+        <link rel="stylesheet" type="text/css" href="settings.css" />
+    </head>
+ 
+ 
+      
+      
+ <!-- settings window  -->        
+    
+    <style>
+        body{
+            font-family: Arial;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+        
+         
+        #outer-content{
+            margin: 20px;
+        }
+
+
+        textarea{
+            width: 400;
+            line-height: 1;
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+            margin-right:20px;
+        }
+        input{
+            color: var(--body-text);
+            border-width: thin;
+            background-color: var(--input-background);
+        }
+        
+        input, label {
+            display:block;
+        }
+
+        a{
+            color: var(--link-color);
+        }
+        
+        .green{
+            color: var(--green-text);
+        }
+        .red{
+            color: var(--red-text);
+        }
+        
+        #providerImage
+        {
+            filter: none;
+        }
+        
+    </style>
+    
+     
+ 
+    
+
+<body id='body' class='light'>     
+    <!-- Dark mode on/off , zoom --> 
+    <script>
+        if (localState.dark){
+            document.body.classList.add('dark');
+        }
+        window.document.body.style.zoom = global.state.zoom;
+    </script>
+     
+    <div id="outer-content" style="width: fit-content;">
+            
+        <div id="inner-content">
+                
+            <h2 id="header_Settings"> 
+                <img id="providerImage" style='vertical-align:baseline;' height="22" width="22" src="images/github-mark.png" > Github Remote Repository 
+        
+                <!-- HELP HERE -->
+                <img id="about-icon" style='vertical-align:middle;float: right;position:absolute; right: 20px' height="17" width="17"  
+                    onclick="let evt = {}; evt.name='Remote Provider';opener.opener._callback('help',evt);" 
+                    onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
+                    src="images/questionmark_black.png" >
+
+                
+            </h2>
+        
+        
+        <hr>              
+
+
+            <h3>Account:</h3>  
+            
+            <!--  Add username / account name  --> 
+            <p>
+                <label id="accountName_label" for="accountName">
+                    Github username (
+                    <a href="https://github.com/join" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
+                    Register a Github account
+                    </a>)
+                </label>
+                <textarea id="accountName" placeholder="Github account name" onkeyup= "processAccountName( this.value)"></textarea>  
+            </p>
+            
+                            
+            <!-- Add Access Token --> 
+            <p>                        
+                <label id="token_label" for="token">Access Token or username:token (
+                
+                    <a href="https://github.com/settings/tokens" onclick="require('nw.gui').Shell.openExternal( this.href);return false;">
+                    Create an access token
+                </a>)
+                </label>
+                <textarea id="token" placeholder="Paste Github-account access token here"></textarea>  
+                
+                
+
+                <!-- remote dialog range buttons -->
+                <div id="matchedRepoRange" style="display:none">
+                    <span id="matchedRepoDown" style="cursor:pointer; zoom: 0.8;" onclick="
+                            displayedRepoIndex = Math.max( 1, displayedRepoIndex - 1); 
+                            updateCredentialsText()
+                            document.getElementById('matchedCurrentPos').innerText = displayedRepoIndex;"> &#x25C0; </span> 
+                    
+                    <span id="matchedCurrentPos">0</span>  of <span id="matchedMax">0</span>
+                    
+                    <span id="matchedRepoUp" style="cursor:pointer; zoom: 0.8;" onclick="
+                            displayedRepoIndex = Math.min( displayedRepoMax, displayedRepoIndex + 1); 
+                            updateCredentialsText();
+                            document.getElementById('matchedCurrentPos').innerText = displayedRepoIndex;"> &#x25B6; </span> 
+     
+                </div>
+               
+
+                
+                
+                
+                
+            </p>
+        
+            <br>
+        
+            <hr>
+
+
+            <div class="tool-content " id="newRepoDiv" style="hidden">  <!--  New Repo TAB --> 
+                    
+                <h3>Create Remote Github Repository :</h3>   
+   
+                    
+                    <!-- Create Repository -->   
+
+                
+                    <p>
+                        <input type="checkbox" id="privateRepo" value="false" checked=""  style="float:left;">
+                        <label id="privateRepo_label" for="privateRepo">Private repository (public if not checked)</label>
+                    </p>
+                                
+                    <p>                        
+                        <label id="newRepoName_label" for="newRepoName">Name of New Repository</label>
+                        <textarea id="newRepoName" placeholder="Github name of new repository" 
+                            oninput="
+                            document.getElementById('newRepoName').value = util.branchCharFilter( document.getElementById('newRepoName').value);"
+                        ></textarea>
+        
+                    </p>
+                    
+                    
+                    <p>                        
+                        <label id="repoDescription_label" for="repoDescription">Description (only when creating new repository)</label>
+                        <textarea id="repoDescription" placeholder="For new repository : write short description"></textarea>               
+                    </p>
+                    
+                    
+                    <p>                           
+                        <button id="createGithubRepo" onclick="createRepo()">1) Create </button>                
+                    </p>
+        
+                    <p>                        
+                        <div id="newRepoStatus"></div>             
+                    </p> 
+                                           
+                    <p>
+                        <button  id = "ok2"   onclick = "finalizeAndClose()" > 2) Set as Remote </button>  
+                    </p>
+                 
+            </div>       
+
+               
+        </div>
+    </div>
+
+ 
+    
+    <script>
+        addEventListener('DOMContentLoaded', runWhenDOMContentLoaded );
+    
+        window.addEventListener(
+            'close', 
+            (event) => {
+    
+        
+            // Delete MacOS menu
+            opener.opener.updateWindowMenu( opener.opener.createRemote_win.title);
+        
+        });
+
+
+                
+    </script>
+
+
+    
+ 
+</body>
+</html>

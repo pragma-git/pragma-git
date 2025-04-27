@@ -7,7 +7,7 @@ const myModule = {}
      owner = 'owner_name'; // Replace with repository owner's username
      repo = 'repository_name'; // Replace with the repository name
     
-     a = require('apis_github_and_others/github-star.js');
+     a = require('github-star.js');
      ok = await a.starRepository(owner, repo, token);                   // ok = true if success, false if fail
      ok = await a.unstarRepository(owner, repo, token);                 // ok = true if success, false if fail
      isStarred = await a.isRepositoryStarred(owner, repo, token);       // isStarred = true if starred, false if not starred
@@ -20,7 +20,7 @@ const myModule = {}
      owner = 'pragma-git'; // Replace with repository owner's username
      repo = 'pragma-git'; // Replace with the repository name
      
-     a = require('apis_github_and_others/github-star.js');
+     a = require('github-star.js');
      
      isStarred = await a.isRepositoryStarred(owner, repo, token);
      console.log(`isStarred = ${isStarred}`);

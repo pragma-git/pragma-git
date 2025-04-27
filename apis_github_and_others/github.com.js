@@ -18,8 +18,8 @@ let  General_git_rest_api = require('apis_github_and_others/general_git_rest_api
 class github extends General_git_rest_api {
     
 
-    constructor( giturl, TOKEN) {
-        super( giturl, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
+    constructor( giturl, username, TOKEN) {
+        super( giturl, username, TOKEN ) // Sets properties : this.giturl,  this.TOKEN
         this.apiurl = this.#apiUrl( giturl);  // Call provider-specific translation from git-url to api-url
 
     }
@@ -63,6 +63,36 @@ class github extends General_git_rest_api {
             
             return url;
         }     
+        async createRepo( owner, token, newRepoName, description, isPrivate ){  // Create Github repository
+
+            let ok = false;
+            let giturl = `https://github.com/${owner}/${newRepoName}.git`;
+            
+            try {
+                // Create
+                const res = await fetch( 'https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: {  'Authorization' : `token ${token}` },
+                    body: JSON.stringify({
+                        name: newRepoName,
+                        description: description,
+                        private: isPrivate
+                    })
+                })
+                
+                // Check result
+                const json = await res.json();
+                ok = res.ok;
+            
+                console.log(`[${ok}]  (status = ${res.status}) `);
+
+                
+            } catch (error) {
+                console.log(error);
+            }
+            
+            return { ok: ok, giturl: giturl};
+        }
         async #fetchThroughAPI(){       // Fetch repo info struct through API
             // Uses :
             //      this.apiurl      github API URL
@@ -102,6 +132,7 @@ class github extends General_git_rest_api {
              
             return this.repoInfoStruct;  // Useful for debuggin
         } 
+
         async getValue( parameterName, secondParameter){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)

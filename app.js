@@ -195,6 +195,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Windows opened from Settings
         var gitignore_win;
+        var createRemote_win;
+        var showJsonInPopup_win
         
         // General help window
         var help_win;
@@ -211,7 +213,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'About': 'about_win',      
            'File': 'merge_win',
            'Git-ignore': 'gitignore_win' ,
-           'Help': 'help_win'    
+           'Create': 'createRemote_win' ,
+           'Help': 'help_win',
+           'JSON': 'showJsonInPopup_win'        
         }
 
       
@@ -280,7 +284,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Windows opened from Settings
         localState.gitignoreWindow = false; // True when Gitignore window is open
-        localState.githubWindow = false; // True when Gitignore window is open
+        localState.gitCreateRemoteRepoWindow = {};
+        localState.gitCreateRemoteRepoWindow.open = false; // True when Create Remote Repo window is open
+        localState.gitCreateRemoteRepoWindow.data = {}; // True when Create Remote Repo window is open
         
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
@@ -331,8 +337,12 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
           persistent: true
         });
        askpass_watcher.add(ASKPASSIGNALFILE);
-       askpass_watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaAskPass() } )
-
+       askpass_watcher.on('add', 
+           path => { 
+               pragmaLog(`File ${path} has been added`); 
+               startPragmaAskPass();
+           } 
+       )
               
     // Initiate pragma-git as default diff and merge tool
         gitDefineBuiltInTools();
@@ -494,6 +504,14 @@ async function _callback( name, event){
         await updateSettingsWindow();
         await updateChangedListWindow();
         win.focus();
+        
+                    
+            
+        // Write local config credential.username (this runs every time, a bit of a time waster)
+        storeUsernameInLocalGitConfig( state.repos[ origRepoNumber].remoteURL );
+        storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
+            
+                
        
         break;
       }
@@ -1658,7 +1676,7 @@ async function _callback( name, event){
             help_win.document.getElementById("inner-content").innerHTML= text; // Set text in window
             help_win.document.getElementById("title").innerText= title; // Set window title
             help_win.document.getElementById("name").innerText= name; // Set document first header  
-            //help_win.focus();         
+            help_win.focus();         
         };
                 
 
@@ -4167,9 +4185,13 @@ async function gitAddCommitAndPush( message){
         // Add all files to index
         setStatusBar( 'Adding files');
         var path = '.'; // Add all
-        await simpleGit( state.repos[state.repoNumber].localFolder )
-            .add( path, onAdd );   
-        function onAdd(err, result) {console.log(result) }
+        try{
+            await simpleGit( state.repos[state.repoNumber].localFolder )
+                .add( path, onAdd );   
+            function onAdd(err, result) {console.log(result) }
+            }catch(err){
+                displayLongAlert('Failed adding files', err, 'error'); 
+        }
         
         
         // Remove localState.unstaged from index
@@ -5729,7 +5751,27 @@ async function gitProvider(giturl, initialize = true){
     // Find host (github.com, gitlab.com, ...)
     let urlParts = new URL(giturl);
     let host = urlParts.host; 
+    
     let scriptName  = `${CWD_INIT}/apis_github_and_others/${host}.js`;
+    
+    // Get scriptName if self-hosted Gitlab
+    if ( host.includes('gitlab') ){
+        let hostForScriptName = 'gitlab.com';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }
+     
+    // Get scriptName if self-hosted Bitbucket
+    if ( urlParts.pathname.includes('/scm/') ){
+        let hostForScriptName = 'bitbucket.org';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }
+    if ( host.includes('bitbucket') ){
+        let hostForScriptName = 'bitbucket.org';
+        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
+    }       
+    
+    
+    
     
     // Get upstream with provider-specific methods
     if (fs.existsSync(scriptName) ) {
@@ -5740,7 +5782,8 @@ async function gitProvider(giturl, initialize = true){
                 let creds = await getCredential(giturl);
                 console.log(creds);
                 let TOKEN = creds.password;
-                provider = new a(giturl, TOKEN);
+                let username = creds.username;
+                provider = new a(giturl, username, TOKEN);
                 await provider.initialize( initialize);
             }else{
                 provider = new a(giturl);
@@ -5761,7 +5804,7 @@ listUnstarredGithub = async function( state, owner, repo) {
     // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo
     // repo  is the repo with owner 'owner', which we want to checi if starred by current (looped) repo
     
-    let myModule =  require('apis_github_and_others/github-star.js');
+    let myModule =  require('github-star.js');
     let allUnstarred = [];
     
     for (i = 0; i < state.repos.length; i++) {
@@ -6834,6 +6877,9 @@ function saveSettings(){
     // Save settings
     let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
+    
+    // Save username of current repo to .git/config
+    storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
     
     pragmaLog('Done saving settings');
     pragmaLog('');
