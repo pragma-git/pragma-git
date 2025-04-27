@@ -1,9 +1,11 @@
 #!/bin/bash 
 #
-# This script is an askpass program, which is used by pragma-git to show a GUI and interact with git askpass.
+# This script is an askpass program, which is used by pragma-git to show the "pragma-askpass.html" GUI
 #
-# It returns username / password to git
-# It also adds the username to .git/config, after a succesful password dialog has been used
+# This script is used to pass output from "pragma-askpass.html" to git
+#
+# It does this by relaying username / password from "pragma-askpass.html" to stdout, from which git picks it up
+# It also relays EXIT CODE from "pragma-askpass.html" when this script ends, from which git picks up exit code
 #
 
 : << 'MULTILINE_COMMENT'
@@ -120,7 +122,7 @@ rm "$EXIT"                  # Remove file carrying EXIT code
 echo "$(date)   Exit Pragma-askpass GUI with EXITCODE = $EXITCODE" >>  "$PRAGMALOG_FILE" 
 
 # Print to stdout (what was entered in "askpass.html" textarea).  
-# echo $(cat "$EXITMESSAGEFILE")   # Dangerous!  Shows password in clear text.  Use for debugging only
+echo $(cat "$EXITMESSAGEFILE")   # Picked up by git from stdout
 
 # Clean up
 rm "$EXITMESSAGEFILE"    # Remove file carrying textarea input from "askpass.html"
