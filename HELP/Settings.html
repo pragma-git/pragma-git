@@ -402,17 +402,13 @@
                  
                 <!-- Same as in settings.html -->
                 <p>
-                     For remote git services, enter remote URL manually for selected repository. <br>
-                     Format : <code>https://name:password@address</code> 
-                     (for token-based services, exchange name for token-name, and password for token) 
+                     For remote git services, enter remote URL manually for selected repository. It is recommended to let the
+                     git credential manager keep track of usernames and password (a dialog will come up first time you need to enter those).
                 </p> 
                  <p>                            
-                     The password, and token, may be left out, and instead stored with the git credential manager.<br>
-                     Format : <code>https://name@address</code>  .
-                     If you have problems, fall back to method above.
+                     As a backup method (not recommended), the username and password may be added to the url in formats, 
+                     <code>https://name@address</code>  or <code>https://name:password@address</code> .
                  </p>    
-                 
-                <br>                    
 
             
             </dd>
