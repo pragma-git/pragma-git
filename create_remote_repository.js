@@ -1,6 +1,6 @@
 
 //let cachedAllCredentials = [];
-let provider;
+//let provider;
 let giturl;
 let name = localState.gitCreateRemoteRepoWindow.data.name;  // Provider name (Github, Gitlab, ...)
 let outputURL;  // Communicates created URL between js and html
