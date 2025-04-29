@@ -22,6 +22,7 @@
     "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 ."
   },
   "dependencies": {
+    "@hackolade/keytar": "^7.9.0-2",
     "@toast-ui/editor": "3.0",
     "chokidar": "^3.6.0",
     "codemirror": "^5.65.16",
