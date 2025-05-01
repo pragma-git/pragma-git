@@ -50,23 +50,31 @@
   
         pre {
             font-size: 10pt;
-            
         }
         
         span{
-            user-select: all;  // Marks whole span when clicking
+            user-select: all;  /* Marks whole span when clicking */
+            padding: 3px;
         }
         
+        .url {  
+            user-select: none; 
+            color: cadetblue; 
+        }
+        .string { color: cadetblue; }
+        .number { color: #005cc5; }
+        .boolean { color: chocolate; }
+        .null { color: #6a737d; }
         
         .key { 
             width: 250px;
             display: inline-block;
             min-width: max-content;
         }
-        .string { color: cadetblue; }
-        .number { color: #005cc5; }
-        .boolean { color: chocolate; }
-        .null { color: #6a737d; }
+        
+        a {
+            color: darkkhaki;
+        }
 
     </style>
 

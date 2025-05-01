@@ -2365,6 +2365,8 @@ function showJsonInPopup(jsonData, title, subtitle) {
         return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
               
             function(match) {
+                
+                // Set css class
                 let cls = 'number';
                 if (/^"/.test(match)) {
                     cls = /:$/.test(match) ? 'key' : 'string';
@@ -2373,6 +2375,13 @@ function showJsonInPopup(jsonData, title, subtitle) {
                 } else if (/null/.test(match)) {
                     cls = 'null';
                 }
+                
+                // Make url
+                if ( match.includes('https') ){
+                    cls = 'url';
+                    match = `<a href=${match} onclick="require('nw.gui').Shell.openExternal( this.href );return false;">${match}</a>`;  // match contains "" already
+                }
+                
                 return '<span class="' + cls + '">' + match + '</span>';
             }
         );
