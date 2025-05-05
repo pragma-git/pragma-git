@@ -53,7 +53,7 @@
     --middle-background: #CCCCCC; 
     
     /* Tables */
-    --tableHoverBrightness: brightness(92%)   
+    --hoverBackGroundColor: lch( from var(--body-background) calc(l - 8 ) c h);  /* Workaround because backdrop-filter fails in jsonViewer.html */
 }
  
 .dark {
@@ -61,7 +61,7 @@
     --text:  #DDDDDD;                 /* in html and main windows (almost white) */
     --body-background: #454442;       /* in html windows (dark grey) */
     --body-text: var(--text);         /* in html windows and inputs */
-    --link-color: #f3da67;            /* in html windows */
+    --link-color: #f3da67a6;            /* in html windows */
     --link-pressed-color: #a3a040;
     --image-invert: 80%;               /* invert black-transparent images to white */
     --header-color: #d6b51d;
@@ -113,7 +113,7 @@
     --middle-background: unset;
     
     /* Tables */
-    --tableHoverBrightness: brightness(120%);
+    --hoverBackGroundColor: lch( from var(--body-background) calc(l +  15 ) c h);   /* Workaround because backdrop-filter fails in jsonViewer.html */
 }   
 
 
@@ -299,6 +299,5 @@
         }
         
         tr:hover {
-            backdrop-filter: var(--tableHoverBrightness);  //
-            override locally by   tr:hover {  backdrop-filter: none; }
+            background-color: var(--hoverBackGroundColor);
         }

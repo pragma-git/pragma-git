@@ -2358,10 +2358,12 @@ function showJsonInPopup(jsonData, title, subtitle) {
     // Internal function               
     function syntaxHighlight(json) {
         
+        let lastClassWasKey = false;  // Used to prohibit two key classes following each other   (avoid html trouble when json within json )
+        
         if (typeof json != 'string') {
             json = JSON.stringify(json, null, 2);
-            
         }
+        
         return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
               
             function(match) {
@@ -2376,13 +2378,31 @@ function showJsonInPopup(jsonData, title, subtitle) {
                     cls = 'null';
                 }
                 
-                // Make url
+                // Make url link
                 if ( match.includes('https') ){
                     cls = 'url';
                     match = `<a href=${match} onclick="require('nw.gui').Shell.openExternal( this.href );return false;">${match}</a>`;  // match contains "" already
                 }
                 
-                return '<span class="' + cls + '">' + match + '</span>';
+                
+                // Make sure new line starts with class = 'key'   (avoid html trouble when json within json )
+                if ( cls == 'key'){
+                    if (lastClassWasKey){
+                        PRE = '</div><div class="line">';   // If previous was class 'key', close, and open div again
+                        POST = '';
+                    }else{
+                        PRE = '<div class="line">';  // If previous was not class 'key', just open new div
+                        POST = '';
+                    }
+                    lastClassWasKey = true;   // This becomes lastClass
+                }else{
+                    PRE = '';
+                    POST = '</div>';
+                    lastClassWasKey = false;  // This becomes lastClass
+                }
+                
+                
+                return `${PRE}<span class="${cls}">${match}</span>${POST}`;
             }
         );
   }
