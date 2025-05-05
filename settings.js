@@ -2328,6 +2328,7 @@ function showJsonInPopup(jsonData, title, subtitle) {
                 opener.showJsonInPopup_win = win;
                 opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
                 
+                opener.showWindow(win);
                         
                 win.on('close', function() { 
                     opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');

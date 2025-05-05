@@ -189,19 +189,19 @@ function extendFindInNw( elementToSearch){
             console.log('Arrow Up')
             this.highlightPrevious();
           }
-          if ( evt.keyCode === 86 ){
+          if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 86 ){
             console.log('V')
             document.execCommand('paste');
           }
-          if ( evt.keyCode === 67 ){
+          if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 67 ){
             console.log('C')
             document.execCommand('copy');
           }
-          if ( evt.keyCode === 88 ){
+          if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 88 ){
             console.log('X')
             document.execCommand('cut');
           }
-          if ( evt.keyCode === 65 ){
+          if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 65 ){
             console.log('A')
             document.execCommand('selectAll');
           }
