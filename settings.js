@@ -2300,8 +2300,14 @@ async function updateRemoteInfo( ){
 }
 function showJsonInPopup(jsonData, title, subtitle) {
     
-   let showJsonInPopupWindow;
-   // Create a new window   
+    // Bail out if already open
+    if ( opener.showJsonInPopup_win !== undefined){
+        return
+    }
+    
+    
+    let showJsonInPopupWindow;
+    // Create a new window   
     gui.Window.open( 
         'jsonViewer.html', 
         {
@@ -2326,6 +2332,8 @@ function showJsonInPopup(jsonData, title, subtitle) {
                 win.on('close', function() { 
                     opener.updateWindowMenu('JSON Viewer', 'showJsonInPopup_win');
                     opener.fixNwjsBug7973( win);
+                    opener.showJsonInPopup_win = undefined;
+                    
                 } );
                 
                 
@@ -2344,6 +2352,8 @@ function showJsonInPopup(jsonData, title, subtitle) {
                   if (win !== null) {
                     win.close(true);
                   }
+                  
+                  opener.showJsonInPopup_win = undefined;
                
                   // After closing the new window, close the main window.
                   this.close(true);
