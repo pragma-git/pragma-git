@@ -194,7 +194,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
             
             return simpleGitDefault( 
-                pwd, 
+
                 {   
                     config: ['include.path='  + configFile ],
                     unsafe: {  
@@ -493,10 +493,14 @@ async function _callback( name, event){
                 displayLongAlert('Repository Error', 'Repository missing', 'error'); 
             }
         }else{    
-            // localFolder missing -- dialog, and reset repo
-            displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
-            state.repoNumber = origRepoNumber;  
-            return
+            // Show dialog except if over ssh
+            if ( !state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){           
+                // localFolder missing -- dialog, and reset repo
+                displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
+                state.repoNumber = origRepoNumber;  
+                return
+            }
+ 
         }
     
         
@@ -1796,10 +1800,21 @@ async function _callback( name, event){
                 myEvent.currentRepo = currentRepo;
                 repoNames.push(myEvent.selectedRepo);
                 
-                // Skip missing folder
-                if ( !fs.existsSync(state.repos[i].localFolder ) ) {
-                    continue;
+                // Handle 1) existing local folder , or 2) existing ssh
+                if ( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) {
+                    // Here if  1) local folder exists, or 2) local folder over ssh exists
+                    // Do nothing
+                }else{
+                    // Skip showing this repo (not an existing local folder, not ssh)
+                    continue
                 }
+                
+                // Add 'ssh' indicator
+                if (  state.repos[i].localFolder.startsWith('ssh:') )  {
+                    myEvent.selectedRepo = `[ssh] - ${myEvent.selectedRepo}`;
+                }
+                
+                
                 
                 // Get provider-icons
                 let iconPath = CWD_INIT + '/apis_github_and_others/git-provider-icons/Blank.png';
@@ -2780,6 +2795,11 @@ async function _update2(){
     }else{    
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
+        
+        // If localFolder over ssh, correct above
+        if ( fullFolderPath.startsWith('ssh:') ){
+            folder = "<B>[ssh] - </B>" + nameOfFolder;
+        }
     }   
 
  
@@ -3715,8 +3735,8 @@ function configFilePath(){
 }
 async function gitStatus(){
     // Determine if changed files (from git status)
-    let status_data = [] ;  
-    let status_data2 = [];
+    let status_data = '' ;  
+    let status_data2 = '';
     status_data.changedFiles = false;
     status_data.current = "";
     

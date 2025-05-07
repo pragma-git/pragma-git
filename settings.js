@@ -1891,11 +1891,20 @@ async function generateRepoTable(document, table, data) {
                 }
                 
             }else{    
-                // localFolder missiong -- make red 
-                label.style.color = 'red';
-                label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
                 
-                radiobox.style.visibility = "hidden";
+                // Handle 1) missing localFolder, and 2) local folder over ssh
+                if ( !element.localFolder.startsWith('ssh:') ){                
+                    // 1) localFolder missing -- make red 
+                    label.style.color = 'red';
+                    label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
+                    
+                    radiobox.style.visibility = "hidden";
+                    
+                }else{              
+                    // 2) localFolder over ssh -- just show
+                    
+                }
+
             }
             
       

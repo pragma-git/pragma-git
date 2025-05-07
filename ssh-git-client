@@ -17,19 +17,20 @@
 # So I take SSH URL from $1 and use remaining arguments to this custom git binary
 #
 # Example (run git status on remote server) :
-#   ./ssh-git-client 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP' status 
+#   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
+#
 
 # Remove SSH URL, and keep remaining arguments
 SSH_REPO_URL="$1"
 shift
-REMAINING_ARGUMENTS=$@
+REMAINING_ARGUMENTS="$@"
 
 
 # Split SSH_REPO_URL                                    # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-SERVER=$(echo $SSH_REPO_URL | cut -d/ -f3)              # => ssh://jan@linus
-REMOTE_FOLDER="/$(echo $SSH_REPO_URL | cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"             # => ssh://jan@linus
+REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
 
-COMMAND="git $REMAINING_ARGUMENTS"
+COMMAND="git ${REMAINING_ARGUMENTS}"
 
 
 # Run git command on remote server
