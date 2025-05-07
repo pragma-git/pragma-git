@@ -1,0 +1,41 @@
+#!/bin/bash 
+# SimpleGit custom Git binary
+#
+# Implemented as a wrapper to git that runs git commands on remote server over ssh
+# and returns stdout and stderr
+#
+# Works as git, but have an extra second argument
+#
+# Arguments
+#   $1      --  SSH URL, for instance 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+#   $2      --  git command (for instance 'status')
+#   $3      --  options to git command
+#   $4      --  options to git command
+#  .....
+#
+# All arguments except $1 are standard used in simpleGit.  
+# So I take SSH URL from $1 and use remaining arguments to this custom git binary
+#
+# Example (run git status on remote server) :
+#   ./ssh-git-client 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP' status 
+
+# Remove SSH URL, and keep remaining arguments
+SSH_REPO_URL="$1"
+shift
+REMAINING_ARGUMENTS=$@
+
+
+# Split SSH_REPO_URL                                    # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+SERVER=$(echo $SSH_REPO_URL | cut -d/ -f3)              # => ssh://jan@linus
+REMOTE_FOLDER="/$(echo $SSH_REPO_URL | cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+
+COMMAND="git $REMAINING_ARGUMENTS"
+
+
+# Run git command on remote server
+ssh -T "$SERVER" bash -s <<EOF
+
+cd "$REMOTE_FOLDER"
+$COMMAND
+
+EOF

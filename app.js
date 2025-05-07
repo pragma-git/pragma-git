@@ -163,15 +163,46 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         // Modify so that simpleGit:
         //   1) stores last pwd
         //   2) includes pragam-git's special include for .gitconfig 
+        //   3) handles local folder
+        //   4) handles when local is a folder on a remote ssh server
+
         function simpleGit(pwd){
+            
             // get pragma-git .gitconfig-include
             if (configFile === undefined){
                 configFile = configFilePath();
             }
             
             localState.lastSimpleGitFolder = pwd;
-            return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
-            //return simpleGitDefault(pwd)
+            
+            // Handle pwd == undefined  ( when simpleGit() is called without arguments)
+            if (pwd === undefined){
+                return simpleGitDefault({ config: ['include.path='  + configFile ] })
+            }
+            
+            
+            // Standard if local folder
+            if ( !pwd.startsWith('ssh:')){
+                console.log(`LOCAL FOLDER -- ${pwd}`);
+                return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
+            }
+  
+            // Special if local is a folder on server over ssh
+            let binary = `${STARTDIR}${pathsep}ssh-git-client`;
+            let sshUrl = 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+            sshUrl = pwd;
+            console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
+            
+            return simpleGitDefault( 
+                pwd, 
+                {   
+                    config: ['include.path='  + configFile ],
+                    unsafe: {  
+                        allowUnsafeCustomBinary: true
+                    } , 
+                    binary: [ binary, sshUrl]  
+                }
+            );
         }
  
  
