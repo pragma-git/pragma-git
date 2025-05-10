@@ -142,7 +142,10 @@ async function injectIntoJs(document){
         console.log(history);
     
         // Commit log output format
-        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
+        let messageFormat = `--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N${UNIQUE_EOL}`;  // %aI = author date, strict ISO 8601 format
+        if ( folder.startsWith('ssh:' )){
+            messageFormat = `--format='S=%s T=%aI D=%d H=%H P=%P B=%b N=%N${UNIQUE_EOL}'`;  // %aI = author date, strict ISO 8601 format
+        }
 
         
     //
@@ -181,7 +184,12 @@ async function injectIntoJs(document){
     //   
             
         try{
-            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  commands, onLog);
+            // Make work with remembered branch-names for both ssh and normal 
+            commands.push('--notes=refs/notes/branchname');
+            await opener.simpleGitLog( folder).raw(  commands, onLog);
+            
+            
+            
             function onLog(err, result ){graphText = result; console.log(result); };  
         }catch(err){        
             console.log(err);
