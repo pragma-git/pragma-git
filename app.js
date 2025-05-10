@@ -183,18 +183,15 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             // Standard if local folder
             if ( !pwd.startsWith('ssh:')){
-                console.log(`LOCAL FOLDER -- ${pwd}`);
                 return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
             }
   
             // Special if local is a folder on server over ssh
             let binary = `${STARTDIR}${pathsep}ssh-git-client`;
-            let sshUrl = 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-            sshUrl = pwd;
+            let sshUrl = pwd;
             console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
             
             return simpleGitDefault( 
-
                 {   
                     config: ['include.path='  + configFile ],
                     unsafe: {  
@@ -202,7 +199,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                     } , 
                     binary: [ binary, sshUrl]  
                 }
-            );
+            );  // Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
+                // My ssh-git-binary handles path by itself.
         }
  
  

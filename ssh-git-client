@@ -20,6 +20,8 @@
 #   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
 #
 
+TIMEOUT = 2;  # SSH TIME-OUT in seconds.  Stops hanging if connection does not work
+
 # Remove SSH URL, and keep remaining arguments
 SSH_REPO_URL="$1"
 shift
@@ -31,12 +33,12 @@ SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"             # => ssh://jan@linus
 REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
 
 COMMAND="git ${REMAINING_ARGUMENTS}"
+COMMAND="git -C \"${REMOTE_FOLDER}\" ${REMAINING_ARGUMENTS}"
 
 
 # Run git command on remote server
-ssh -T "$SERVER" bash -s <<EOF
+ssh -o ConnectTimeout=$TIMEOUT -T "$SERVER" bash -s <<EOF
 
-cd "$REMOTE_FOLDER"
 $COMMAND
 
 EOF
