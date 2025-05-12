@@ -14,30 +14,32 @@
 #  .....
 #
 # All arguments except $1 are standard used in simpleGit.  
-# So I take SSH URL from $1 and use remaining arguments to this custom git binary
+# So I extract SSH URL from $1 and use remaining arguments with git binary
 #
 # Example (run git status on remote server) :
 #   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
 #
 
-TIMEOUT = 2;  # SSH TIME-OUT in seconds.  Stops hanging if connection does not work
+TIMEOUT=2;  # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
 
 # Remove SSH URL, and keep remaining arguments
 SSH_REPO_URL="$1"
 shift
 REMAINING_ARGUMENTS="$@"
 
+# Fix quotes around  --pretty statement, sent from simpleGit (--pretty=format:òòòòòò %H ò %aI ò %s ò %D ò %b ò %aN ò %aE òò )
+REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòòòò/g" | sed "s/ òò/ òò'/g")
 
 # Split SSH_REPO_URL                                    # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
 SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"             # => ssh://jan@linus
 REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
 
-COMMAND="git ${REMAINING_ARGUMENTS}"
+# Git command running from $REMOTE_FOLDER
 COMMAND="git -C \"${REMOTE_FOLDER}\" ${REMAINING_ARGUMENTS}"
 
 
 # Run git command on remote server
-ssh -o ConnectTimeout=$TIMEOUT -T "$SERVER" bash -s <<EOF
+ssh -T "$SERVER" bash -s <<EOF
 
 $COMMAND
 
