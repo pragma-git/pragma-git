@@ -38,8 +38,10 @@ REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/
 COMMAND="git -C \"${REMOTE_FOLDER}\" ${REMAINING_ARGUMENTS}"
 
 
-# Run git command on remote server
-ssh -T "$SERVER" bash -s <<EOF
+# Run git command on remote server 
+#ssh -T "$SERVER" bash -s <<EOF
+ssh -T "$SERVER" -o PreferredAuthentications=publickey -o PasswordAuthentication=no  bash -s <<EOF
+
 
 $COMMAND
 
