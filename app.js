@@ -4465,7 +4465,8 @@ async function gitStashMap( folder ){
     try{
         //await simpleGit(folder).stash(['list', '--format="P=%H REF=%gd S=%s' + UNIQUE_EOL + '"'], (err, res) => { rawOutput = res; } );
         await simpleGit(folder).raw(
-            [ 'log', '--walk-reflogs', '--no-abbrev-commit', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + '', 'refs/stash'], 
+            //[ 'log', '--walk-reflogs', '--no-abbrev-commit', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + '', 'refs/stash'], 
+            [ 'stash', 'list', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + ''], 
             (err, res) => { rawOutput = res; global.res = res} 
         );
     }catch(err){
