@@ -62,6 +62,10 @@ myModule.findObjectIndex = function ( myArray, objectField, stringToFind ){
     var foundIndex; //last found index
     // Loop for the array elements 
     for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
 
         if (stringToFind === myArray[i][objectField]){
             foundIndex = i;
@@ -75,6 +79,10 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     var foundIndex; //last found index
     // Loop for the array elements 
     for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
 
         if (myArray[i][objectField].startsWith( stringToFind)){
             foundIndex = i;
@@ -89,6 +97,10 @@ myModule.findOAllbjectsIndexStartsWith = function ( myArray, objectField, string
     var foundIndeces = []; //last found index
     // Loop for the array elements 
     for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
 
         if  (myArray[i][objectField].startsWith( stringToFind)){
             foundIndeces.push(Number(i));
