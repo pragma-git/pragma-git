@@ -1311,7 +1311,7 @@ async function gitReadConfigKey( repoNumber, key, scope){
     let output;
     try{
         if (scope == 'global'){
-            output = await simpleGit().getConfig( key, scope);
+            output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
         }else{
             output = await simpleGit( state.repos[ repoNumber].localFolder).getConfig( key, scope);
         } 
@@ -1329,7 +1329,7 @@ async function gitWriteConfigKey( key, value, scope){
         
     try{
         if (scope == 'global'){
-            await simpleGit().addConfig(key, value, false, scope);
+            await simpleGit( state.repos[ repoNumber].localFolder).addConfig(key, value, false, scope);
         }else{
             await simpleGit( state.repos[ state.repoNumber].localFolder).addConfig(key, value, false, scope);
         } 
@@ -2479,11 +2479,11 @@ async function updateGitconfigs( ){
     
     document.getElementById('gitconfigs').innerHTML = await html; 
     
-    // Add
-     html = await  simpleGit().raw( ['config',  '--get', 'core.askpass']) ;
+    // Add to elements
+     html = await  simpleGit().raw( ['config',  '--get', 'core.askpass']) ;  // NOTE:  this will run askpass in ssh server when working on ssh local folder (which does not work!)
      document.getElementById('askpassPath').innerHTML = await html; 
      
-     html = await simpleGit().raw( ['config',  '--get', 'mergetool.pragma-git.cmd']) ;
+     html = await simpleGit().raw( ['config',  '--get', 'mergetool.pragma-git.cmd']) ;  // NOTE:  this will run merge-tool in ssh server when working on ssh local folder (which does not work!)
      document.getElementById('pragmaMergePath').innerHTML = await html; 
      
     
