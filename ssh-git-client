@@ -46,3 +46,5 @@ ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publi
 $COMMAND
 
 EOF
+
+exit $?  # Return error code from ssh
