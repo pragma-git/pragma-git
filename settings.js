@@ -353,7 +353,11 @@ async function _callback( name, event){
             console.log('addRepoButtonPressed');
 
             let folder = document.getElementById('addFolder').value;  
-            util.mkdir(folder); // Make folder if not existing
+            if ( folder.startsWith('ssh:') ){
+                
+            }else{
+                util.mkdir(folder); // Make folder if not existing
+            }
             
             // Dialog if repo does not exist
             try{

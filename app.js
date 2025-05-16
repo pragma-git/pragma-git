@@ -5446,8 +5446,18 @@ async function addExistingRepo( folder) {
             // Find top folder of Repo
             await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
             function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
-            //topFolder = topFolder.replace(os.EOL, ''); // Remove ending EOL
-            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); // Remove windows EOL characters
+            
+            // if ssh -- Merge server path with top folder 
+            // (because git on server does not know recieve server path -- so topFolder is local folder on server )
+            if (folder.startsWith('ssh:')){
+                // 
+                let serverString =  folder.substring( 'ssh://'.length );  // Everything after 'ssh://'
+                let server = 'ssh://' + serverString.substring( 0, serverString.indexOf('/',0) ); // 'ssh://'.length = 6.  Find first '/' after 'ssh://'
+                topFolder = server + topFolder;
+            }
+            
+            // Remove windows EOL characters
+            topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); 
     
         }catch(error){
             console.log(error);
