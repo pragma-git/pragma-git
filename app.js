@@ -5018,7 +5018,13 @@ async function gitIsMergeCommit(commit){    // true if merge commit
     
     let returnValue = false;
     try{
-        let parentHashes = await simpleGit(state.repos[state.repoNumber].localFolder).raw( [ 'log', '--pretty=%P', '-n1', commit] );
+        let folder =  state.repoNumber].localFolder;
+        let command = [ 'log', '--pretty=%P', '-n1', commit];
+        if ( folder.startsWith('ssh:') ){
+            command = [ 'log', '--pretty="%P"', '-n1', commit];
+        }
+        
+        let parentHashes = await simpleGit(folder).raw( command );
         
         returnValue = ( parentHashes.split(' ').length > 1 );
     }catch(err){

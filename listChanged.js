@@ -484,8 +484,11 @@ async function _callback( name, event, event2){
             try{
                  
                 // Unstage (may not be needed, but no harm)
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] ); 
+                 let command = [  'reset', '--', file ];
+                 if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
+                     command = [  'reset', '--', '"' + file + '"'];
+                 }
+                 await simpleGit( state.repos[state.repoNumber].localFolder ).raw( command ); 
                     
                 // Delete from file system                   
                 let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;

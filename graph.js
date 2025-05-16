@@ -720,6 +720,11 @@ async function gitCommitAuthor(hash){
     let text = '';
     try{
         let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
+        if (folder.startsWith('ssh:') ){
+             commands = [ 'show',  '-s', '--format="%aN (%aE)"', hash];
+        }
+        
+        
         await simpleGit( folder).raw(  commands, onGitCommitAuthor);
         function onGitCommitAuthor(err, result ){
             text = result; 
