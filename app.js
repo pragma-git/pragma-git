@@ -189,7 +189,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             // Special if local is a folder on server over ssh
             let binary = `${STARTDIR}${pathsep}ssh-git-client`;
             let sshUrl = pwd;
-            console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
+            //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
             
             return simpleGitDefault( 
                 {   
@@ -4215,7 +4215,10 @@ async function gitAddCommitAndPush( message){
     var status_data; 
     let forcePush = false;  // Default, if not git amend    
     
-    message = `"${message}"`;
+    // Fix for ssh
+    if (  state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
+        message = `"${message}"`;
+    }
 
     
     //
@@ -4465,12 +4468,12 @@ async function gitStashMap( folder ){
     
     let rawOutput;
     try{
-        //await simpleGit(folder).stash(['list', '--format="P=%H REF=%gd S=%s' + UNIQUE_EOL + '"'], (err, res) => { rawOutput = res; } );
-        await simpleGit(folder).raw(
-            //[ 'log', '--walk-reflogs', '--no-abbrev-commit', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + '', 'refs/stash'], 
-            [ 'stash', 'list', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + ''], 
-            (err, res) => { rawOutput = res; global.res = res} 
-        );
+        let command = [ 'stash', 'list', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + ''];
+        
+        if (folder.startsWith( 'ssh:') ){
+            command = [ 'stash', 'list', '--format="H=%P REF=%gd S=%s"' + UNIQUE_EOL + ''];
+        }
+        await simpleGit(folder).raw( command,   (err, res) => { rawOutput = res; global.res = res} );
     }catch(err){
         console.error('ERROR in gitStashMap');
         console.error('      Repo = '  + folder);
@@ -4954,12 +4957,16 @@ async function gitCurrentCommit(){
         return currentHash
 }
 async function isAmendCommit(){             // true if current commit is an amend commit
-
+    let folder = state.repos[state.repoNumber].localFolder;
     currentHash = await gitCurrentCommit();
+  
+    let command = ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)'];
+    if (folder.startsWith( 'ssh:') ){
+        command = ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format="%H|%gs|%d"', '--grep-reflog="(amend)"'];
+    }
     
-    all_amend_commits = ( await simpleGitLog(state.repos[state.repoNumber].localFolder).raw( 
-        ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format="%H|%gs|%d"', '--grep-reflog="(amend)"']) ) 
-        .split('\n'); 
+    
+    let all_amend_commits = ( await simpleGitLog( folder).raw( command ) ).split('\n');       
     
     firstOccuranceOfCurrentHash = all_amend_commits.find(element => element.includes( currentHash)) 
     let isAmendCommit = ( firstOccuranceOfCurrentHash !== undefined )  // True if I found currentHash in list of all amend commits
