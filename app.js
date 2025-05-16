@@ -5018,7 +5018,7 @@ async function gitIsMergeCommit(commit){    // true if merge commit
     
     let returnValue = false;
     try{
-        let folder =  state.repoNumber].localFolder;
+        let folder =  state.repos[state.repoNumber].localFolder;
         let command = [ 'log', '--pretty=%P', '-n1', commit];
         if ( folder.startsWith('ssh:') ){
             command = [ 'log', '--pretty="%P"', '-n1', commit];
