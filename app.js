@@ -4214,6 +4214,8 @@ async function gitAddCommitAndPush( message){
     
     var status_data; 
     let forcePush = false;  // Default, if not git amend    
+    
+    message = `"${message}"`;
 
     
     //
@@ -4955,8 +4957,8 @@ async function isAmendCommit(){             // true if current commit is an amen
 
     currentHash = await gitCurrentCommit();
     
-    all_amend_commits = ( await simpleGit(state.repos[state.repoNumber].localFolder).raw( 
-        ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)']) ) 
+    all_amend_commits = ( await simpleGitLog(state.repos[state.repoNumber].localFolder).raw( 
+        ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format="%H|%gs|%d"', '--grep-reflog="(amend)"']) ) 
         .split('\n'); 
     
     firstOccuranceOfCurrentHash = all_amend_commits.find(element => element.includes( currentHash)) 
