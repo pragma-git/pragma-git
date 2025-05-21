@@ -193,7 +193,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             return simpleGitDefault( 
                 {   
-                    config: ['include.path='  + configFile ],
+                    config: ['include.path='  + '/home/jan/Desktop/ssh_local_test/.git/config' ],
                     unsafe: {  
                         allowUnsafeCustomBinary: true
                     } , 

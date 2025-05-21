@@ -1,0 +1,75 @@
+#!/bin/bash 
+# Pragma-git tool to interface ssh folder
+#
+# Implemented as a tool to git that transfers temporary diff-files from ssh-folder to local $TEMP_FILE_LOCATION
+#
+# Arguments
+#   $1      --  SSH URL, for instance 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+#  .....
+#
+# Example (run git status on remote server) :
+#   ./ssh-pragma-merge-files 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' 
+#
+
+# CONSTANTS
+FILE_LIST_ON_SSH='/tmp/test.txt'                          # Four files on ssh folder, coming from difftool BASE LOCAL REMOTE MERGED
+TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder (same path defined in pragma-merge.js)
+TIMEOUT=2;                                                # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
+
+# FUNCTIONS
+
+function getFiles () {
+    for var in "$@"
+    do
+        echo "FILE = $var"
+        
+        # Create absolute paths (needed if relative path from beginning)
+        if [[ ${var:0:1} == "/" ]] ; then 
+        
+            # Absolute file path
+            DIRNAME="${TEMP_FILE_LOCATION}$(dirname ${var})"
+            echo "CREATE DIR = ${DIRNAME}" 
+            mkdir -p "${DIRNAME}"     # Create folder 
+            LOCAL="${TEMP_FILE_LOCATION}${var}"  # don't add "/" , because absolute path starts with "/" 
+            REMOTE="${var}" 
+        else 
+        
+            # Relative file name
+            LOCAL="${TEMP_FILE_LOCATION}/${var}"
+            REMOTE="${REMOTE_FOLDER}/${var}" 
+        fi
+        
+        # Transfer
+        echo "SSH TRANSFER :  ${REMOTE}  > ${LOCAL}"
+        ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  "cat ${REMOTE} " > "${LOCAL}"
+        
+        echo ' '
+        
+        # Return through variable
+        ABSOLUTE_FILE_LOCATIONS="$ABSOLUTE_FILE_LOCATIONS ${LOCAL}"  # Concatenate all absolute paths
+        echo "ABSOLUTE_FILE_LOCATIONS = $ABSOLUTE_FILE_LOCATIONS"
+    done
+ 
+}
+
+
+
+# CODE
+
+
+# Prepare temp storage
+mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exists
+
+# Split SSH_REPO_URL 
+SSH_REPO_URL="$1"                                        # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"            # => ssh://jan@linus
+REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+
+# Get files from ssh folder
+FILE_LOCATIONS=$(ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  cat "${FILE_LIST_ON_SSH}" )  
+getFiles $FILE_LOCATIONS  # Gets files from server, and sets $ABSOLUTE_FILE_LOCATIONS to all absolute paths
+
+# Run pragma-merge locally
+./pragma-merge $ABSOLUTE_FILE_LOCATIONS  # TODO : Make absolute paths as in getFiles
+
+exit $?  # Return error code from ssh

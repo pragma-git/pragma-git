@@ -39,10 +39,14 @@ const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
+const TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in ssh-pragma-merge-files
+
 process.chdir( SIGNALDIR);
 
 // Read file names stored in different files
-const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");   
+
+const ROOT = global.state.repos[global.state.repoNumber].localFolder;
+//const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");    // TODO: Does not work for SSH -- will use pragma-git folder as repo_path 
 
 const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
 
@@ -70,12 +74,14 @@ if (SECOND == '--edit'){
     MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
 }
 
-// Set working folder
-process.chdir( ROOT);  // Now all relative paths works
+// Set working folder (only for non-ssh, since ssh works with absolute paths)
+if (! ROOT.startsWith('ssh:')){
+    process.chdir( ROOT);  // Now all relative paths works
+}
 
 
 // HTML Title
-const HTML_TITLE = 'File    =   ' + MERGED;
+var HTML_TITLE = 'File    =   ' + MERGED;
         
 // Define help icon
 //const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
@@ -842,11 +848,20 @@ function getMode( ){
 
 // Get info
 async function getExecutableFlags( file){
+    
+    // TODO: ROOT does not work for SSH -- will use pragma-git folder as repo_path 
+    
+    if (ROOT.startsWith('ssh:') ){
+        file = file.replace( `${TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove TEMP_FILE_LOCATION from file)
+    }
+    
+    
     let executableResults = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous:  undefined};
 
     
      // Uncommitted (check executable flag directly -- Windows does only check if file exists)
     executableResults.uncommitted = !!(fs.statSync( BASE).mode & fs.constants.S_IXUSR)
+    // NOTE: Does not work on ssh folder
 
     
     // HEAD
