@@ -1,0 +1,65 @@
+#!/bin/bash -x
+# This script closes pragma-merge for ssh on server
+# by removing file "$TMP/pragma-merge-running-ssh" from server
+#
+# Arguments
+#   $1      --  SSH URL, for instance  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
+#
+# Example :
+#   ./ssh-close-pragma-merge-ssh  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
+#
+
+TIMEOUT=2;  # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
+
+# Get Server from SSH URL
+SSH_REPO_URL="$1"                                   # ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test
+SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"       # => jan@home-jan-ubuntu
+
+FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'      # NOTE: this is a place holder -- remember to change in heredoc (between EOFs)
+
+# Run git command on remote server 
+ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  bash -s <<'EOF' 
+# quotes around EOF means that following is not expanded
+
+    # Get TMP folder for any system
+    if [ -z ${SYSTEMDRIVE+x} ]
+    then
+        # Mac or Linux  
+        TMP="$HOME/.Pragma-git/.tmp"
+    else
+        # Windows
+        TMP="$USERPROFILE/.Pragma-git/.tmp"
+    fi
+    
+    # Remove signaling file 
+    rm -f "$TMP/pragma-merge-running-ssh" 
+    
+    
+    # Verify removal of signaling file
+    FILE="$TMP/pragma-merge-running-ssh"    
+    if [ -f $FILE ]; then
+       echo "File $FILE still exists. IT SHOULD NOT"
+       exit 1
+    else
+       echo "File $FILE removed"
+    fi
+    
+    
+    FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
+    
+    # Remove file-list file 
+    rm -f "$FILE_LIST_ON_SSH" 
+    
+    FILE="$FILE_LIST_ON_SSH"
+    # Verify removal of file-list file  
+    if [ -f $FILE ]; then
+       echo "File $FILE still exists. IT SHOULD NOT"
+       exit 1
+    else
+       echo "File $FILE removed"
+    fi
+    
+EOF
+
+# Return error code from ssh
+exit $? 

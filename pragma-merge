@@ -30,9 +30,10 @@ EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, 
 # SSH folder -- special 
 echo "Argument \$5 = $5 (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$TMP/mergelog.txt"
 if [[ $5 = "ssh" ]] ; then
+    FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
     # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
-    echo $@ > "/tmp/test.txt"  # Store all input parameters for Pragma-git to pick up for ssh folder 
+    echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
 fi
 
 # Bail out if already running
@@ -43,7 +44,7 @@ if [  -f "$RUNNING" ] ; then
     exit
 fi
 
-# Store input parameters for Pragma-git to pick them up
+# Store input parameters for Pragma-git to pick them up (not used for ssh version)
 echo $1 > "$TMP/first"
 echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"

@@ -1,0 +1,16 @@
+#!/bin/bash -x
+DELAY=2
+SCRIPT_FOLDER=$(dirname $0)  
+
+SSH_REPO_URL="$1"
+echo "Entered delayed-start-pragma-merge with arguments = \"$SSH_REPO_URL\"" >> /tmp/test
+
+
+echo "Start sleep $DELAY seconds" >> /tmp/test
+sleep $DELAY  # Wait for git over ssh
+
+
+# Get files
+echo 'Get files : ' >> /tmp/test
+"${SCRIPT_FOLDER}/ssh-pragma-merge-files" "$SSH_REPO_URL"  >> /tmp/test
+

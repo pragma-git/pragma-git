@@ -954,7 +954,7 @@ function save(){
         console.log(err);
     }    
 }
-function closeWindowNicely(exitCode){
+async function closeWindowNicely(exitCode){
     
     // Write exit code to file for script to pick up
     try{

@@ -187,7 +187,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             }
   
             // Special if local is a folder on server over ssh
-            let binary = `${STARTDIR}${pathsep}ssh-git-client`;
+            let binary = `${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client`;
             let sshUrl = pwd;
             //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
             
@@ -3468,10 +3468,16 @@ function startPragmaMerge(){
       			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
-                win.on('close', function() { 
+                win.on('close', async function() { 
                     fixNwjsBug7973( win);
                     updateWindowMenu();
                     merge_win = undefined; 
+                    
+                    let folder = global.state.repos[global.state.repoNumber].localFolder;
+                    if ( folder.startsWith('ssh:') ){
+                         await multiPlatformExecSync( undefined , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
+                    }
+                    
                 } );
             } )
     ); 
@@ -5660,7 +5666,11 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
 	console.log(cmd.toString())
 	const { execSync } = require('child_process');
     
-    let options = {cwd: folder};
+    
+    let options = {};
+    if ( folder !== undefined){
+        options = {cwd: folder};
+    }
     
     if (mode == 'timeout'){
         // With time out of subprocess
