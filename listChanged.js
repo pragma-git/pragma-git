@@ -482,18 +482,9 @@ async function _callback( name, event, event2){
             
             file = event;   
             try{
-                 
-                // Unstage (may not be needed, but no harm)
-                 let command = [  'reset', '--', file ];
-                 if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
-                     command = [  'reset', '--', '"' + file + '"'];
-                 }
-                 await simpleGit( state.repos[state.repoNumber].localFolder ).raw( command ); 
-                    
-                // Delete from file system                   
-                let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
-                console.log('deleteLink -- deleting file = ' + filePath);
-                fs.unlinkSync(filePath)
+                await simpleGit( state.repos[state.repoNumber].localFolder ).add( file ); 
+                let command = [  'rm', '-f', '--',  file];
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw( command ); 
   
             }catch(err){
                 console.log('deleteLink -- caught error ');
