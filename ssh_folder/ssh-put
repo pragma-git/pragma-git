@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Puts file from client to server
+# Usage: ./ssh-put SSH_URL relativeFilePath    # Note, this is relative to TEMP_FILE_LOCATION
+#
+# Arguments
+#   $1      --  SSH URL, for instance  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
+#   $2      --  Path relative SSH URL (relative base folder of git repo; thus what git gives)
+#
+# Example:   ssh_folder/ssh-put ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test tmp/jan
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+# Setup paths
+RELATIVE_PATH="$2"
+SERVER_PATH="${SERVER_BASE_PATH}/${RELATIVE_PATH}"
+
+CLIENT_BASE_DIR="${TEMP_FILE_LOCATION}"   # Client base directory
+LOCAL_PATH="${CLIENT_BASE_DIR}/${RELATIVE_PATH}"
+
+# Verify local file exists
+if [ ! -f "$LOCAL_PATH" ]; then
+    echo "Error: Local file not found at $LOCAL_PATH"
+    exit 1
+fi
+
+# Make folder on server
+MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$(dirname "$SERVER_PATH")\""
+echo "$MKDIR"
+eval $MKDIR
+
+# Copy to server
+SCP="scp -P ${PORT} $SSH_OPTIONS \"$LOCAL_PATH\" \"${SERVER}:${SERVER_PATH}\" "
+echo "$SCP"
+eval $SCP
+
+# Check result
+if [ $? -eq 0 ]; then
+    echo "File pushed successfully to server: $SERVER_PATH"
+else
+    echo "Error: Failed to push file"
+    exit 1
+fi

@@ -20,25 +20,24 @@
 #   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
 #
 
-TIMEOUT=2;  # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
 
+# Import functions and constants: TEMP_FILE_LOCATION
+source $(dirname $0)/lib/ssh-functions 
 
 SCRIPT_FOLDER=$(dirname $0)   # The location of this script is the same as "pragma-merge" command
 
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
 # Remove SSH URL, and keep remaining arguments
-SSH_REPO_URL="$1"
 shift
 REMAINING_ARGUMENTS="$@"
 
 # Fix quotes around  --pretty statement, sent from simpleGit (--pretty=format:òòòòòò %H ò %aI ò %s ò %D ò %b ò %aN ò %aE òò )
 REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòòòò/g" | sed "s/ òò/ òò'/g")
 
-# Split SSH_REPO_URL                                    # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"             # => jan@linus
-REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-
-# Git command running from $REMOTE_FOLDER
-COMMAND="git -C \"${REMOTE_FOLDER}\" ${REMAINING_ARGUMENTS}"
+# Git command running from $SERVER_BASE_PATH
+COMMAND="git -C \"${SERVER_BASE_PATH}\" ${REMAINING_ARGUMENTS}"
 
 # Start Pragma-merge in new thread
 case "$3" in
@@ -53,7 +52,7 @@ esac
 
 
 # Run git command on remote server 
-ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  bash -s <<EOF
+ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS  bash -s <<EOF
     $COMMAND
 EOF
 

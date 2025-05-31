@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# This is the standard way for all ssh-functions to get constants, and functions
+#
+# The function "getSshUrlParts" is important for all ssh-functions, since it splits the SSHURL into parts
+# NOTE: None of the ssh-functions in this file should print anything to stdout (because it may break pragma-git)
+
+# LOCAL SSH FILE STORAGE (TEMPORARY FILES)
+TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder (same path defined in pragma-merge.js)
+
+# SSH AND SCP OPTIONS
+TIMEOUT=2   # SSH TIMEOUT
+SSH_OPTIONS=" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "
+
+# FUNCTIONS
+function getSshUrlParts () {
+    
+    SSH_REPO_URL="$1"
+    
+    TEMPSERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"               # => jan@linus:22 or if port isn't in jan@linus
+
+    # Separate SERVER, PORT, PATH from URL
+    SERVER=$( echo $TEMPSERVER: | cut -f1 -d: )                     # jan@linus:22: Add extra :, so I am sure there is at least a colon to separate
+    PORT=$( echo $TEMPSERVER: | cut -f2 -d: )                       # => 22 or '' in second case above
+    if [ -z "${PORT}" ]; then PORT="22"; fi                         # Fix if PORT emtpy '' => make it default ssh port 22
+    SERVER_BASE_PATH="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"       # => Server base path (absolute) , separate of initial / 
+
+
+}

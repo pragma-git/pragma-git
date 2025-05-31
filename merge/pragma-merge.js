@@ -39,7 +39,7 @@ const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
-const TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in ssh-pragma-merge-files
+const TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
 process.chdir( SIGNALDIR);
 
@@ -547,7 +547,13 @@ async function initUI( keep) {
 
     // Get executable bits 
     let showExecutableBitDiffersState = 'collapse'; // May be changed to 'visible' if relevant bits differ
-    let execBits = await getExecutableFlags(BASE);
+    
+    let execBits
+    try{
+        execBits = await getExecutableFlags(BASE);
+    }catch (err){
+        
+    }
   
     
      //

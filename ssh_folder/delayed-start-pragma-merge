@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 DELAY=2
 SCRIPT_FOLDER=$(dirname $0)  
 
@@ -12,5 +12,5 @@ sleep $DELAY  # Wait for git over ssh
 
 # Get files
 echo 'Get files : ' >> /tmp/test
-"${SCRIPT_FOLDER}/ssh-pragma-merge-files" "$SSH_REPO_URL"  >> /tmp/test
+"${SCRIPT_FOLDER}/ssh-get-merge-files" "$SSH_REPO_URL"  >> /tmp/test
 

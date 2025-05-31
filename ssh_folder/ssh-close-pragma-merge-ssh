@@ -9,16 +9,16 @@
 #   ./ssh-close-pragma-merge-ssh  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
 #
 
-TIMEOUT=2;  # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
 
-# Get Server from SSH URL
-SSH_REPO_URL="$1"                                   # ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test
-SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"       # => jan@home-jan-ubuntu
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
-FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'      # NOTE: this is a place holder -- remember to change in heredoc (between EOFs)
+FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'      # NOTE: this is a remainder -- remember to change in heredoc (between EOFs) -- that is where it matters
 
 # Run git command on remote server 
-ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  bash -s <<'EOF' 
+ssh -T "$SERVER" -o $SSH_OPTIONS bash -s <<'EOF' 
 # quotes around EOF means that following is not expanded
 
     # Get TMP folder for any system
@@ -30,6 +30,8 @@ ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publi
         # Windows
         TMP="$USERPROFILE/.Pragma-git/.tmp"
     fi
+    
+    
     
     # Remove signaling file 
     rm -f "$TMP/pragma-merge-running-ssh" 
@@ -45,9 +47,11 @@ ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publi
     fi
     
     
-    FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
+    
     
     # Remove file-list file 
+    
+    FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     rm -f "$FILE_LIST_ON_SSH" 
     
     FILE="$FILE_LIST_ON_SSH"

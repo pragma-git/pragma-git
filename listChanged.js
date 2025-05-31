@@ -346,8 +346,14 @@ async function _callback( name, event, event2){
             let file = event;
             let rw_switch = event2; // --rw or --ro  or --show 
             
+            // NOTE: pragma-merge.js knows to use the hash when finding --show
+            //       so I don't need to supply the hash here
+            
+            
+            // If ssh-folder, the file has to be moved to client
+            
 
-            // Setup running pragma-merge in edit mode 
+            // Setup running pragma-merge in edit mode.  Edit mode means one pane (not rw, which is another flag)
             try{
                 
                 const { exec } = require("child_process");
@@ -363,7 +369,7 @@ async function _callback( name, event, event2){
                     let PRAGMA_MERGE = `${opener.CWD_INIT}/pragma-merge`
 					//"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " cd 'C:/Users/jan/menu-test2'; 'C:\\Users\\jan\\test-clone\\pragma-git\\pragma-merge ' 'New folder/tjena.txt.txt' --edit --rw "
 	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
-	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}' --edit --rw "`;
+	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`; 
 	                COMMAND = EXE + RUNWIN;
 				}
                 
@@ -847,7 +853,7 @@ async function createFileTable(status_data) {
         //      
             cell = row.insertCell();
             
-            if (localState.mode == 'HISTORY'){
+            if (localState.mode == 'HISTORY'){  // IS HISTORY
                 // diff-link for history vs previous history
                 let commit = localState.historyHash;
                 
@@ -857,7 +863,8 @@ async function createFileTable(status_data) {
                 }
                 cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
                 
-            }else{ // NOT HISTORY
+            }else{ // IS NOT HISTORY
+                
                 // diff-link for working_dir and staged vs HEAD
                 let commit = 'HEAD'
                 //cell.appendChild( diffLinkHistory( document, commit, file) );

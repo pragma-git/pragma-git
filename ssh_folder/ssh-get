@@ -1,0 +1,38 @@
+#!/bin/bash 
+# Fetches file from server to client
+# Usage: ./ssh-get SSH_URL relativeFilePath
+#
+# Arguments
+#   $1      --  SSH URL, for instance  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
+#   $2      --  Path relative SSH URL (relative base folder of git repo; thus what git gives)
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+# Setup paths
+RELATIVE_PATH="$2"
+SERVER_PATH="${SERVER_BASE_PATH}/${RELATIVE_PATH}"
+
+CLIENT_BASE_DIR="${TEMP_FILE_LOCATION}"   # Client base directory
+LOCAL_DIR="${CLIENT_BASE_DIR}/$(dirname "$RELATIVE_PATH")"
+LOCAL_PATH="${CLIENT_BASE_DIR}/${RELATIVE_PATH}"
+
+# Create local directory structure
+mkdir -p "$LOCAL_DIR"
+
+# Copy from server
+SCP="scp -P ${PORT} $SSH_OPTIONS  \"${SERVER}:${SERVER_PATH}\" \"$LOCAL_PATH\" "
+echo "$SCP"
+eval $SCP
+
+
+# Check resul
+if [ $? -eq 0 ]; then
+    echo "File pulled successfully to: $LOCAL_PATH"
+else
+    echo "Error: Failed to pull file"
+    exit 1
+fi

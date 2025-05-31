@@ -10,14 +10,16 @@
 #  .....
 #
 # Example (run git status on remote server) :
-#   ./ssh-pragma-merge-files 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' 
+#   ./ssh-get-merge-files 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' 
 #
 
-SCRIPT_FOLDER=$(dirname $0)   # The location of this script is the same as "pragma-merge" command
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
 
 # CONSTANTS
-FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'                          # Four files on ssh folder, coming from difftool BASE LOCAL REMOTE MERGED
-TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder (same path defined in pragma-merge.js)
+SCRIPT_FOLDER=$(dirname $0)   # The location of this script, used to get absolute path to "pragma-merge"
+FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'            # Four files on ssh folder, coming from difftool BASE LOCAL REMOTE MERGED
 TIMEOUT=2;                                                # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
 
 # FUNCTIONS
@@ -40,12 +42,12 @@ function getFiles () {
         
             # Relative file name
             LOCAL="${TEMP_FILE_LOCATION}/${var}"
-            REMOTE="${REMOTE_FOLDER}/${var}" 
+            REMOTE="${SERVER_BASE_PATH}/${var}" 
         fi
         
         # Transfer
         echo "SSH TRANSFER :  ${REMOTE}  > ${LOCAL}"
-        ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  "cat ${REMOTE} " > "${LOCAL}"
+        ssh -T "$SERVER" $SSH_OPTIONS  "cat ${REMOTE} " > "${LOCAL}"
         
         #echo ' '
         
@@ -63,13 +65,11 @@ function getFiles () {
 # Prepare temp storage
 mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exists
 
-# Split SSH_REPO_URL 
-SSH_REPO_URL="$1"                                        # 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-SERVER="$(echo ${SSH_REPO_URL}| cut -d/ -f3)"            # => ssh://jan@linus
-REMOTE_FOLDER="/$(echo ${SSH_REPO_URL}| cut -d/ -f4-)"   # => /usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
 # Get files from ssh folder
-FILE_LOCATIONS=$(ssh -T "$SERVER" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no  cat ${FILE_LIST_ON_SSH} )  
+FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
 echo "FILE_LOCATIONS = ${FILE_LOCATIONS}"
 eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
 #echo "ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
