@@ -1404,28 +1404,25 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 // Start initiated from settings.html
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
+
+    
+    _callback('repoRadiobuttonChanged', {id: state.repoNumber});  //draws branchTab too
+    await drawRepoTab(document);
+    await drawSoftwareTab(document);
+    await drawPath() // Write path to System info
+    
+    
+    // Set tab from setting
+    tabButton[state.settingsWindow.selectedTab].click();
     
         
     // Update remote branch list 
-    await opener.cacheRemoteOrigins();
+    //await opener.cacheRemoteOrigins();
 
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
     console.log(global.state);
-    
-    // Write path to System info 
-    await drawPath()
-      
-    // Draw tabs
-    await drawRepoTab(document);
-    await drawSoftwareTab(document);
-    
-    // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-    _callback('repoRadiobuttonChanged', {id: state.repoNumber});
-    
-    // Set tab from setting
-    tabButton[state.settingsWindow.selectedTab].click();
-
+ 
     // Set Software as first sub-tab in Repo tab
     document.getElementById('SoftwareTab').click(); 
     
@@ -1460,7 +1457,7 @@ async function injectIntoSettingsJs(document) {
             `
         );
         
-        // Set tab from setting
+        // Set tab to Repo tab
         let tab = 0; // Repository tab
         tabButton[ tab ].click();
 
@@ -1469,7 +1466,6 @@ async function injectIntoSettingsJs(document) {
     
     await drawBranchTab(document);
     console.log( "document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility  = " + document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility );
-
 
 };
 function drawPath(){
