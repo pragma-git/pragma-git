@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 # This script closes pragma-merge for ssh on server
 # by removing file "$TMP/pragma-merge-running-ssh" from server
 #
@@ -18,7 +18,7 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'      # NOTE: this is a remainder -- remember to change in heredoc (between EOFs) -- that is where it matters
 
 # Run git command on remote server 
-ssh -T "$SERVER" -o $SSH_OPTIONS bash -s <<'EOF' 
+ssh -T "$SERVER" $SSH_OPTIONS bash -s <<'EOF' 
 # quotes around EOF means that following is not expanded
 
     # Get TMP folder for any system

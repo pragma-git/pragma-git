@@ -110,6 +110,8 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * There are two variables that are global to all windows
  * - state                   - contains data that are also saved in settings file ($HOME/.Pragma-git/settings.json)
  * - localState              - contains state data (historyNumber, branchNumber, mode) which is not saved to file
+ * - global.CWD_INIT         - base-path to pragma-git files.  Use to call scripts etc in paths relative to base-path
+ * - global.windows          - Store references to scopes for different windows. Example: MAIN = global.windows['main_win']; MAIN.gitPull() to call gitPull defined in MAIN
  * 
  * 
  * Setting dialog
@@ -156,6 +158,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
         var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
+        global.CWD_INIT = CWD_INIT;    // Can be found from all open windows
         var configFile;  // Path to Pragma-git special version of .gitconfig
 
     // Modify simpleGit function
@@ -211,6 +214,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
         
     // Handles to windows
+    
+        // Global windows I want to reference from other windows
+        global.windows = {}
     
         // Windows opened from main
         var main_win;
@@ -285,6 +291,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             'utf8'
         ); 
         
+        // SSH folder (work on a server over ssh)
+        SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders' // Called TEMP_FILE_LOCATION in ssh_folder/ssh-functions bash script
         
     
     // State variables
@@ -7382,6 +7390,7 @@ window.onload = async function() {
   
   var win = nw.Window.get();
   main_win = win;
+  global.windows['main_win'] = main_win.window;  // The Window (main_win itself is an NWwindow)
 
   
   //console.log('PATH= ' + process.env.PATH);

@@ -39,7 +39,7 @@ const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
-const TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
+const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
 process.chdir( SIGNALDIR);
 
@@ -858,7 +858,7 @@ async function getExecutableFlags( file){
     // TODO: ROOT does not work for SSH -- will use pragma-git folder as repo_path 
     
     if (ROOT.startsWith('ssh:') ){
-        file = file.replace( `${TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove TEMP_FILE_LOCATION from file)
+        file = file.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
     }
     
     
@@ -912,8 +912,9 @@ async function getExecutableFlags( file){
 }
 
 // Finishing
-function finish( wayToFinish){
+async function finish( wayToFinish){
     
+    pragmaLog(`Pragma-merge  -- finish( ${wayToFinish}) called`)
     switch(wayToFinish) {
         case 'cancel':  {
             closeWindowNicely(1);
@@ -929,9 +930,9 @@ function finish( wayToFinish){
             break;
         }
         case 'save':  {
-            save();
+            await save();
             SAVED=true;
-            closeWindowNicely(0);
+            await closeWindowNicely(0);
             break;
         }
         case 'unloadWindow':  {
@@ -950,17 +951,32 @@ function finish( wayToFinish){
     win.close();
 
 }
-function save(){
+async function save(){
+    pragmaLog('Pragma-merge  -- save() called');
     let content = "";
     try{
         content = dv.editor().getValue(); 
         fs.writeFileSync(MERGED,content,'utf8');
+        
+        // Copy to server if ssh-folder
+        if ( ROOT.startsWith('ssh:') ){
+            
+            // Make relative
+            MERGED_REL_PATH = MERGED.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+    
+            
+            pragmaLog('Pragma-merge  -- save() called -- ssh:');
+            await sshPut( ROOT, MERGED_REL_PATH);  // Copies local tempFile to remote server's sshUrl
+        }
+        
     }catch(err){
         console.log('FAILED SAVING FILE = ' + MERGED);
         console.log(err);
     }    
 }
 async function closeWindowNicely(exitCode){
+    
+    pragmaLog(`Pragma-merge  -- closeWindowNicely( ${exitCode}) called`);
     
     // Write exit code to file for script to pick up
     try{

@@ -346,11 +346,23 @@ async function _callback( name, event, event2){
             let file = event;
             let rw_switch = event2; // --rw or --ro  or --show 
             
+            let folder = state.repos[state.repoNumber].localFolder;
+            
+            let SSH_EDIT = ( folder.startsWith('ssh:') && rw_switch.startsWith('--rw') );
+            
             // NOTE: pragma-merge.js knows to use the hash when finding --show
             //       so I don't need to supply the hash here
             
             
-            // If ssh-folder, the file has to be moved to client
+            // If ssh-folder, the file has to be moved to client -- will change relative path to absolute path of temp-file
+            // ( Will transfer temp file back to URL when saving in pragma-merge)
+            let workingFolder = folder;
+            if ( SSH_EDIT){
+                let sshUrl = folder;
+                absoluteTempFilePath = await sshGet( sshUrl, file);  // Copies remote file from sshUrl (folder) to workingFolder
+                console.log(absoluteTempFilePath);
+                file = absoluteTempFilePath;
+            }
             
 
             // Setup running pragma-merge in edit mode.  Edit mode means one pane (not rw, which is another flag)
@@ -360,7 +372,10 @@ async function _callback( name, event, event2){
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 
                 // Mac or Linux
-                let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
+                let CD = 'cd  "' + folder + '"; ';  // Change to repo folder
+                if ( SSH_EDIT ){
+                    CD='';  // Cannot cd to URL.  file is absolute path instead
+                }
                 let RUN = opener.CWD_INIT + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
                 let COMMAND = CD + RUN;
                 
@@ -369,7 +384,12 @@ async function _callback( name, event, event2){
                     let PRAGMA_MERGE = `${opener.CWD_INIT}/pragma-merge`
 					//"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " cd 'C:/Users/jan/menu-test2'; 'C:\\Users\\jan\\test-clone\\pragma-git\\pragma-merge ' 'New folder/tjena.txt.txt' --edit --rw "
 	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
-	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`; 
+	                let RUNWIN  = `" cd '${folder}'; '${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`; 
+                    
+                    if ( SSH_EDIT ){
+                        RUNWIN  = `"'${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`;   // Cannot cd to URL.  file is absolute path instead
+                    }
+                    
 	                COMMAND = EXE + RUNWIN;
 				}
                 
