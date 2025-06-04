@@ -1,6 +1,11 @@
 #!/bin/bash
-
-##bash recipy
+#
+# 1) Normally runs on local PC.
+#
+# 2) If connected over ssh to a folder, and working with git there, it will start with $5 == 'ssh'
+#    Pragma-git will in this case get the files from the server, and open a local pragma-merge ( $5 is not set on the local instance)
+#
+# 
 
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
@@ -27,7 +32,7 @@ mkdir "$TMP" 2>/dev/null
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-# SSH folder -- special 
+# SSH folder -- special ($5 == 'ssh' means that pragma-merge is running on server)
 echo "Argument \$5 = $5 (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$TMP/mergelog.txt"
 if [[ $5 = "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
@@ -60,7 +65,7 @@ done
 
 # Exited Pragma-merge
 EXITCODE=$(cat "$EXIT")
-rm "$EXIT"
+# rm "$EXIT"  # Don't remove -- needs this file so I can copy EXITCODE to server (when using ssh-folder)
 
 echo  " " >> "$TMP/mergelog.txt"
 echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"

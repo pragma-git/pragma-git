@@ -12,58 +12,81 @@
 # Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
 source $(dirname $0)/lib/ssh-functions
 
+# Platform specific $TMP in Home dir
+if [ -z ${SYSTEMDRIVE+x} ]
+then
+    # Mac or Linux  
+    TMP="$HOME/.Pragma-git/.tmp"
+else
+    # Windows
+    TMP="$USERPROFILE/.Pragma-git/.tmp"
+fi
+
+
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
-FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'      # NOTE: this is a remainder -- remember to change in heredoc (between EOFs) -- that is where it matters
+FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'  
+
+# Get EXIT CODE (local) 
+EXITCODE=$(cat "$TMP/exit-pragma-merge")
 
 # Run git command on remote server 
-ssh -T "$SERVER" $SSH_OPTIONS bash -s <<'EOF' 
-# quotes around EOF means that following is not expanded
+ssh -T "$SERVER" $SSH_OPTIONS bash -s <<EOF
+# \$ means that a variable name is on server ($ means that the variable is inserted from above script)
 
+    #
     # Get TMP folder for any system
-    if [ -z ${SYSTEMDRIVE+x} ]
-    then
-        # Mac or Linux  
-        TMP="$HOME/.Pragma-git/.tmp"
-    else
-        # Windows
-        TMP="$USERPROFILE/.Pragma-git/.tmp"
-    fi
+    #
+        if [ -z \${SYSTEMDRIVE+x} ]
+        then
+            # Mac or Linux  
+            TMP="\$HOME/.Pragma-git/.tmp"
+        else
+            # Windows
+            TMP="\$USERPROFILE/.Pragma-git/.tmp"
+        fi
+        
+    #
+    # Copy EXIT status from local to server
+    #
+        echo $EXITCODE > "\$TMP/exit-pragma-merge"
+
+
     
+    #
+    # Remove signaling file (remote pragma-merge will terminate, and use above EXITCODE from file)
+    #
+        rm -f "\$TMP/pragma-merge-running-ssh" 
+        
+        # Verify removal of signaling file
+        FILE="\$TMP/pragma-merge-running-ssh"    
+        if [ -f \$FILE ]; then
+           echo "File \$FILE still exists. IT SHOULD NOT"
+           exit 1
+        else
+           echo "File \$FILE removed"
+        fi
+
     
-    
-    # Remove signaling file 
-    rm -f "$TMP/pragma-merge-running-ssh" 
-    
-    
-    # Verify removal of signaling file
-    FILE="$TMP/pragma-merge-running-ssh"    
-    if [ -f $FILE ]; then
-       echo "File $FILE still exists. IT SHOULD NOT"
-       exit 1
-    else
-       echo "File $FILE removed"
-    fi
-    
-    
-    
-    
+    #
     # Remove file-list file 
-    
-    FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
-    rm -f "$FILE_LIST_ON_SSH" 
-    
-    FILE="$FILE_LIST_ON_SSH"
-    # Verify removal of file-list file  
-    if [ -f $FILE ]; then
-       echo "File $FILE still exists. IT SHOULD NOT"
-       exit 1
-    else
-       echo "File $FILE removed"
-    fi
-    
+    #
+        rm -f "$FILE_LIST_ON_SSH" 
+        
+        FILE="$FILE_LIST_ON_SSH"
+        # Verify removal of file-list file  
+        if [ -f \$FILE ]; then
+           echo "File \$FILE still exists. IT SHOULD NOT"
+           exit 1
+        else
+           echo "File \$FILE removed"
+        fi
+        
 EOF
+
+# Clean up local
+    rm -f "$TMP/exit-pragma-merge"
 
 # Return error code from ssh
 exit $? 
