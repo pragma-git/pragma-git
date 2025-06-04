@@ -2804,7 +2804,7 @@ async function _update2(){
         
         // If localFolder over ssh, correct above
         if ( fullFolderPath.startsWith('ssh:') ){
-            folder = "<B>[ssh] - </B>" + nameOfFolder;
+            folder = "<span class='ssh-button'>< ssh ></span> &nbsp;" + nameOfFolder;
         }
     }   
 

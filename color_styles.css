@@ -280,6 +280,12 @@
             background-color: white;
             padding: 8px;
         }
+        
+        .ssh-button{
+            background-color: #d0d0d0;
+            color: #303030;
+            padding: 0px
+        }
 
 
         li{
