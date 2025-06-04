@@ -428,8 +428,31 @@ async function _callback( name, event){
             console.log(event);
                 
             try{                    
+                        
+            
+                // Check ssh connection to repo        
+                if ( global.state.repos[  Number(id)].localFolder.startsWith('ssh:') ){  
+                    try{
+                        await simpleGit( global.state.repos[ Number(id)].localFolder ).checkIsRepo( () => { isRepo = checkResult});
+                    }catch (err){
+                        opener.displayLongAlert('SSH Folder Error -- repo check failed!', 
+                            `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
+                            'error'); 
+                            
+                        // Set to previous    
+                        document.getElementById(state.repoNumber).click()    
+                        return
+                    }
+                    
+                    
+                }
+                
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
+                
+                            
+            
+            
                 
                 // Replace table 
                 document.getElementById("branchesTableBody").innerHTML = ""; 

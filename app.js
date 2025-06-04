@@ -487,12 +487,12 @@ async function _callback( name, event){
         pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
         pragmaLog(' ');
         
+        var isRepo;
         // Check if repo
         if (fs.existsSync(state.repos[state.repoNumber].localFolder )) {
             // If folder exists, I am allowed to check if repo
             
             // Check if repository 
-            var isRepo;
             await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo(onCheckIsRepo);
             function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
             if (!isRepo) {
@@ -504,9 +504,22 @@ async function _callback( name, event){
                 // localFolder missing -- dialog, and reset repo
                 displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
                 state.repoNumber = origRepoNumber;  
-                return
             }
  
+        }
+        
+        if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
+            try{
+                await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo( () => { isRepo = checkResult});
+            }catch (err){
+                displayLongAlert('SSH Folder Error -- repo check failed', 
+                    `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
+                    'error'); 
+                    
+                state.repoNumber = origRepoNumber;
+            }
+            
+            
         }
     
         
