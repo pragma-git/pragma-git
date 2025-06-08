@@ -117,7 +117,7 @@ async function _callback( name, event){
         case 'conflictsResolvedButton': {
             console.log('conflictsResolvedButton');
             console.log(event);
-            await gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            //await gitDeleteBackups( state.repos[state.repoNumber].localFolder);  // Instead config : mergetool.keepBackup = false
             await gitConflictsResolutionSolved( state.repos[state.repoNumber].localFolder);
                     
             // Close window
@@ -283,55 +283,55 @@ async function _callback( name, event){
         }
 
     }
-    function gitDeleteBackups( folder){
+    //function gitDeleteBackups( folder){   // Instead config : mergetool.keepBackup = false   TODO: Remove
         
-        // Remove .orig
-        for (let i in origConflictingFiles) {
-            try {
-                let file = folder + pathsep + origConflictingFiles[i] + '.orig';
-                console.log('gitDeleteBackups -- deleting file = ' + file);
-                fs.unlinkSync(file)
-                //file removed
-            }catch(err) {
-                console.log('gitDeleteBackups -- failed deleting file');
-                console.log(err)
-            }
-        }
+        //// Remove .orig
+        //for (let i in origConflictingFiles) {
+            //try {
+                //let file = folder + pathsep + origConflictingFiles[i] + '.orig';
+                //console.log('gitDeleteBackups -- deleting file = ' + file);
+                //fs.unlinkSync(file)
+                ////file removed
+            //}catch(err) {
+                //console.log('gitDeleteBackups -- failed deleting file');
+                //console.log(err)
+            //}
+        //}
          
-        // Remove _BACKUP_nnnn, _BASE_nnnn, B_LOCAL_nnnn, B_REMOTE_nnnn
-        // - BASE is the first commit down the tree the two branches split off from. It is the first common ancestor. Often it is useful to have this to help decide which of the newer commits you want.
-        // - LOCAL is your local file, the one in the current branch you are standing on.
-        // - REMOTE is the remote file, of the branch you are merging into your common on.
+        //// Remove _BACKUP_nnnn, _BASE_nnnn, B_LOCAL_nnnn, B_REMOTE_nnnn
+        //// - BASE is the first commit down the tree the two branches split off from. It is the first common ancestor. Often it is useful to have this to help decide which of the newer commits you want.
+        //// - LOCAL is your local file, the one in the current branch you are standing on.
+        //// - REMOTE is the remote file, of the branch you are merging into your common on.
         
-        // Take the originally conflicting files one-by-one
-        for (let i in origConflictingFiles) {
+        //// Take the originally conflicting files one-by-one
+        //for (let i in origConflictingFiles) {
 
             
-            try {
+            //try {
                             
-                let path = folder + pathsep + origConflictingFiles[i];
-                let directory = path.match(/(.*)[\/\\]/)[1]||'';
-                let fileName = path.split(/^.*[\\\/]/).pop();
+                //let path = folder + pathsep + origConflictingFiles[i];
+                //let directory = path.match(/(.*)[\/\\]/)[1]||'';
+                //let fileName = path.split(/^.*[\\\/]/).pop();
                 
-                // Look for files that start with fileName followed by "_"
-                let filesInThisFolder = fs.readdirSync(directory);
-                for (let j in filesInThisFolder) {
-                    if ( filesInThisFolder[j].startsWith(fileName + '_')  ){
-                        // Identified as A_BASE_12345 etc, should be removed :
-                        console.log('Found matching file = ' + filesInThisFolder[j]);
-                        let file = folder + pathsep + filesInThisFolder[j];
-                        fs.unlinkSync(file);
-                    }
+                //// Look for files that start with fileName followed by "_"
+                //let filesInThisFolder = fs.readdirSync(directory);
+                //for (let j in filesInThisFolder) {
+                    //if ( filesInThisFolder[j].startsWith(fileName + '_')  ){
+                        //// Identified as A_BASE_12345 etc, should be removed :
+                        //console.log('Found matching file = ' + filesInThisFolder[j]);
+                        //let file = folder + pathsep + filesInThisFolder[j];
+                        //fs.unlinkSync(file);
+                    //}
 
-                }
+                //}
 
-            }catch(err) {
-                console.log('gitDeleteBackups -- failed deleting file');
-                console.log(err)
-            }
-        }
+            //}catch(err) {
+                //console.log('gitDeleteBackups -- failed deleting file');
+                //console.log(err)
+            //}
+        //}
                
-    }
+    //}
     async function gitUndoMerge( folder){
 
         try{
@@ -348,7 +348,7 @@ async function _callback( name, event){
             //await waitTime( 1000);
             
             // Remove git backup-files
-            gitDeleteBackups( state.repos[state.repoNumber].localFolder);
+            //gitDeleteBackups( state.repos[state.repoNumber].localFolder); // Instead config : mergetool.keepBackup = false
             
             // Close pragma-merge window (may or may not be opened)
             opener.merge_win.close();

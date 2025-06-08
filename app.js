@@ -3744,6 +3744,9 @@ function configFilePath(){
         configText += `    askpass = "${askPassPathNormalized}"` + EOL;
         configText += '' + EOL;
         
+        configText += '[mergetool]' + EOL;
+        configText += '    keepBackup = false' + EOL;
+        
         configText += '[mergetool "pragma-git"]' + EOL;
         let mergePathNormalized = `${STARTDIR}/pragma-merge`.replaceAll('\\','/');
         configText += `    cmd = "${mergePathNormalized}" $BASE $LOCAL $REMOTE $MERGED` + EOL;

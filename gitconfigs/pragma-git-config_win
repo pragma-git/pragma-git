@@ -8,7 +8,10 @@
 [credential]
     interactive = 0     # Turns of default manager for Windows git[credential]
     useHttpPath = true  # Store different credentials for different repositories on same account
-     
+
+[mergetool]
+    keepBackup = false
+         
 [mergetool "pragma-git"]
     cmd = "C:/Program Files/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
 	trustExitCode = true 
