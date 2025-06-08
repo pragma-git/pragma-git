@@ -589,5 +589,10 @@ function createUnsureFileTable(document, status_data) {
 // Info
 function isRebaseMerge(){
     let folder = state.repos[state.repoNumber].localFolder;
+    
+    if ( folder.startsWith('ssh:') ){
+        return await sshFileExists( folder, '.git' + pathsep +  'rebase-merge')
+    }
+    
     return fs.existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
 }

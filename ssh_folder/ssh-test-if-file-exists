@@ -1,0 +1,32 @@
+#!/bin/bash 
+
+# Tests if file or folder exists on server
+# Usage: ./ssh-test-if-file-exists SSH_URL   
+#
+# Arguments
+#   $1      --  SSH URL, for instance  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
+#
+# Example:   ssh_folder/ssh-test-if-file-exists ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test tmp/jan
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+# Setup paths
+SERVER_PATH="${SERVER_BASE_PATH}"
+
+# Execute the test command remotely
+ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS  "test -e \"$SERVER_PATH\""
+exit_code=$?
+
+case $exit_code in
+    0) echo 'File exists'; exit 0 ;;    # File exists
+    1) echo 'File missing'; exit 1 ;;    # File doesn't exist
+    *) 
+        echo "Error: SSH command failed (code $exit_code)" >&2
+        exit $exit_code  # Propagate other SSH errors
+        ;;
+esac
+

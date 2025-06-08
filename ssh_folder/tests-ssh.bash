@@ -22,6 +22,19 @@ counter=0
 
 function main () {
     
+    # Specific for "ssh-test-if-file-exists"
+    
+    SSH_FOLDER='ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh local test/.git'   # Mainly check test-ssh-test-if-file-exists finds a folder (.git)
+    runTestFileExists 0
+    
+    SSH_FOLDER='ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh local test/.git/index'   # Mainly check test-ssh-test-if-file-exists finds a file  (.git/index)
+    runTestFileExists 0
+    
+    
+    # General for all functions
+    
+    REL_FILE="new_folder/jan"
+    
     SSH_FOLDER='ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh local test'   # Default port  -- Excpect [OK) if works
     runTests 0
     
@@ -36,6 +49,28 @@ function main () {
     
     SSH_FOLDER='ssh://my-non-existing-server/test/location'  # Non-existing server  -- [OK) if fails
     runTests 1
+}
+
+function runTestFileExists () {
+    # Input $1 -- 0 expect working, 1 expect fail
+    
+    # Print server info the way it is done inside functions (using functions from lib/ssh-functions)
+    echo ' '
+    echo '======================================'
+    (( 0 == $1 ))   && echo EXPECT OK  || echo EXPECT FAIL
+    echo "SSHURL = $SSH_FOLDER"
+    getSshUrlParts "$SSH_FOLDER" 
+    
+
+    echo SERVER=$SERVER
+    echo PORT=$PORT
+    echo SERVER_BASE_PATH=$SERVER_BASE_PATH
+    
+    echo '======================================'
+    
+    
+    test-ssh-test-if-file-exists $1
+    echo '' >> /tmp/test-out  # Empty row in summary
 }
 
 function runTests () {
@@ -55,6 +90,8 @@ function runTests () {
     
     echo '======================================'
     
+    
+    test-ssh-test-if-file-exists $1
     test-ssh-git-client $1
     test-ssh-put $1
     test-ssh-get $1
@@ -112,6 +149,7 @@ function test-ssh-put () {
     echo ' '
     
  }   
+ 
 function test-ssh-get () {    
     #
     # Test ssh-get  (Get temporary file from server)
@@ -124,6 +162,16 @@ function test-ssh-get () {
     echo ' '
 }
 
+function test-ssh-test-if-file-exists () {    
+    #
+    # Test ssh-get  (Get temporary file from server)
+    #
+     ((counter++))
+    echo "($counter) --- SSH-TEST-IF-FILE-EXISTS ---"
+    ./ssh-test-if-file-exists "${SSH_FOLDER}" "${REL_FILE}"
+    echo "($counter) " $(formatReturn $? $1) "ssh-test-if-file-exists $SSH_FOLDER ${REL_FILE}" | tee -a /tmp/test-out
+    echo ' '
+}
 
 main
 
