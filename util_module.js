@@ -159,17 +159,7 @@ myModule.isHiddenBranch = function( hiddenBranchNames, branchToCheck){
     return result;
 }      
 
-// File system
-myModule.mkdir = function (dir){
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
-    }
-}
-myModule.rm = function (f){
-    if (fs.existsSync(f)){
-        fs.unlinkSync(f);
-    }
-}
+
 
 
 // Export

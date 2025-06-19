@@ -2,6 +2,8 @@
     <head>
         <title>Git-ignore Editor</title>  <!-- NOTE : Don't edit title, without updating listChanged.js which uses this title to close this editor --> 
         <script src="settings.js"></script>
+        <script src="ssh_folder/ssh-folder-lib.js"></script>
+    
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
         <link rel="stylesheet" type="text/css" href="settings.css" />
         <link rel="stylesheet" type="text/css" href="node_modules/css-spinners/dist/round/round.css" />
@@ -367,7 +369,7 @@
                     try {
                         let fileName = splitted[row].substring(3); 
                         let filePath = global.state.repos[global.state.repoNumber].localFolder + pathsep + fileName;
-                        if (fs.existsSync(filePath)) {
+                        if (fs_existsSync(filePath)) {
                             //file exists, must be deleted from tracking
                             modified += splitted[row].substring(3) + '(untracked) \n';
                         }else{

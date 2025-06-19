@@ -356,7 +356,7 @@ async function _callback( name, event){
             if ( folder.startsWith('ssh:') ){
                 
             }else{
-                util.mkdir(folder); // Make folder if not existing
+                opener.mkdir(folder); // Make folder if not existing
             }
             
             // Dialog if repo does not exist
@@ -513,7 +513,7 @@ async function _callback( name, event){
                                 
                 // Update displayed .gitignore     
                 let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                if (fs.existsSync(ignoreFileName) ){
+                if (fs_existsSync(ignoreFileName) ){
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                 }
                 
@@ -1899,36 +1899,51 @@ async function generateRepoTable(document, table, data) {
 
                              
             // Check if localFolder exists -- make red otherwise
-            if (fs.existsSync(element.localFolder)) {
-                // If folder exists, I am allowed to check if repo
-                
-                // Check if repository -- make red otherwise
-                var isRepo;
-                await simpleGit(element.localFolder).checkIsRepo(onCheckIsRepo);
-                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
-                if (!isRepo) {
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
+            try {
+                if (fs_existsSync(element.localFolder)) {
+                    // If folder exists, I am allowed to check if repo
                     
-                    radiobox.style.visibility = "hidden";
+                    // Check if repository -- make red otherwise
+                    var isRepo;
+                    await simpleGit(element.localFolder).checkIsRepo(onCheckIsRepo);
+                    function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                    if (!isRepo) {
+                        label.style.color = 'red';
+                        label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
+                        
+                        radiobox.style.visibility = "hidden";
+                    }
+                    
+                }else{    
+                    
+                    // Handle missing localFolder
+                    if ( !element.localFolder.startsWith('ssh:') ){                
+                        // 1) localFolder missing -- make red 
+                        label.style.color = 'red';
+                        label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
+                        
+                        radiobox.style.visibility = "hidden";
+                        
+                    }else{              
+                        // 2) localFolder over ssh -- just show
+                        
+                    }
+    
                 }
-                
-            }else{    
-                
-                // Handle 1) missing localFolder, and 2) local folder over ssh
-                if ( !element.localFolder.startsWith('ssh:') ){                
-                    // 1) localFolder missing -- make red 
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
-                    
-                    radiobox.style.visibility = "hidden";
-                    
-                }else{              
-                    // 2) localFolder over ssh -- just show
-                    
-                }
-
+            
+        }catch (err) {
+            console.error(err);
+            
+            label.style.color = 'red';
+            radiobox.style.visibility = "hidden";
+            
+            if (element.localFolder.startsWith('ssh:')){
+                label.innerHTML = '<b><i>(failed ssh)</i></b> : ' + label.innerHTML ;
+            }else{
+                label.innerHTML = '<b><i>(did not find)</i></b> : ' + label.innerHTML ;
             }
+            
+        }
             
       
             

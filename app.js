@@ -358,7 +358,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Inititate listening to Pragma-merge start signal
        
-       util.rm(MERGESIGNALFILE);
+       rmLocalFile(MERGESIGNALFILE);
        const merge_watcher = chokidar.watch('file, dir, glob, or array', {
           ignored: /(^|[\/\\])\../, // ignore dotfiles
           persistent: true
@@ -368,7 +368,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
     // Inititate listening to askpass start signal
-       util.rm(ASKPASSIGNALFILE);
+       rmLocalFile(ASKPASSIGNALFILE);
        const askpass_watcher = chokidar.watch('file, dir, glob, or array', {
           ignored: /(^|[\/\\])\../, // ignore dotfiles
           persistent: true
@@ -489,7 +489,7 @@ async function _callback( name, event){
         
         var isRepo;
         // Check if repo
-        if (fs.existsSync(state.repos[state.repoNumber].localFolder )) {
+        if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
             // If folder exists, I am allowed to check if repo
             
             // Check if repository 
@@ -1820,8 +1820,8 @@ async function _callback( name, event){
                 repoNames.push(myEvent.selectedRepo);
                 
                 // Handle 1) existing local folder , or 2) existing ssh
-                if ( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) {
-                    // Here if  1) local folder exists, or 2) local folder over ssh exists
+                if ( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) {  // NOTE fs_existsSync is very slow -- do this instead!
+                    // Here if  1) local folder exists, or 2) local folder over ssh (not tested if exists)
                     // Do nothing
                 }else{
                     // Skip showing this repo (not an existing local folder, not ssh)
@@ -2742,7 +2742,7 @@ async function _update2(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    let folderExists = fs.existsSync( fullFolderPath );
+    let folderExists = await fs_existsSync( fullFolderPath );
   
     var startTime = performance.now();      
     
@@ -2762,10 +2762,11 @@ async function _update2(){
     promises.push( statusCheck );
     
     // Promise 3 (allowed to check if folder exists)
-    if ( folderExists ) {
-        let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
-        promises.push( folderCheck );
-    }
+    //if ( folderExists ) {
+        //let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
+        //promises.push( folderCheck );
+    //}
+    folder = path .basename(state.repos[state.repoNumber].localFolder)
     
     // Promise 4
     promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
@@ -2811,14 +2812,15 @@ async function _update2(){
             folder = "(not a repo) " + folder;
             currentBranch = "";
         }
+                
+        // If localFolder over ssh, correct above
+        if ( fullFolderPath.startsWith('ssh:') ){
+            folder = "<span class='ssh-button'>< ssh ></span> &nbsp;" + folder;
+        }
     }else{    
         let nameOfFolder = fullFolderPath.replace(/^.*[\\\/]/, ''); // This is a substitute -- prefer to get it from git, but here it is unknown from git
         folder = "(not a folder) " + nameOfFolder;
-        
-        // If localFolder over ssh, correct above
-        if ( fullFolderPath.startsWith('ssh:') ){
-            folder = "<span class='ssh-button'>< ssh ></span> &nbsp;" + nameOfFolder;
-        }
+
     }   
 
  
@@ -3655,17 +3657,17 @@ async function gitDefineBuiltInTools(){
     
     
     // Set up signalling folder  +  remove files that may interfere if left after a crash
-    util.mkdir(SIGNALDIR); // In case it does not exist yet
+    mkdir(SIGNALDIR); // In case it does not exist yet
     try{
         
     }catch(err){
         
     }
-    util.rm(MERGESIGNALFILE);       // rm 'pragma-merge-running'
-    util.rm(EXITMERGESIGNALFILE);   // rm 'exit-pragma-merge'
+    rmLocalFile(MERGESIGNALFILE);       // rm 'pragma-merge-running'
+    rmLocalFile(EXITMERGESIGNALFILE);   // rm 'exit-pragma-merge'
     
-    util.rm(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
-    util.rm(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
+    rmLocalFile(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
+    rmLocalFile(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
 }
 function configFilePath(){    
     //
@@ -4911,7 +4913,7 @@ async function commitSettingsDir(from){  // Settings dir local incremental backu
     // Copy .gitignore to settings Dir
     const gitignore = settingsDir + pathsep + '.gitignore';
     const gitignoreTemplate = 'template-gitignore-settings-dir';
-   // if (!fs.existsSync(gitignore)){
+   // if (!fs_existsSync(gitignore)){
         fs.copyFile(gitignoreTemplate, gitignore, (err) => {
             if (err) throw err;
             console.log('gitignoreTemplate was copied SETTINGSDIR/.gitignore');
@@ -5476,11 +5478,142 @@ function waitTime( delay) {
         )
   })
 }
-function mkdir(dir){
+
+function mkdir(dir){        // Make local folder
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir, { recursive: true });
     }
 }
+function rmLocalFile(localFile){
+    if (fs.existsSync(localFile)){
+        fs.unlinkSync(localFile);
+    }
+}
+
+function setPath( additionalPath){
+    
+    let sep = ':';  // mac or linux
+    if ( os.platform().startsWith('win') ){
+        sep = ';';
+    }
+    
+    // Add to path 
+    try{
+        process.env.PATH = defaultPath + sep + additionalPath; 
+    }catch(err){
+        console.log(err);
+    }
+    
+    // Correct if empty
+    if (additionalPath.length  == 0 ){
+         process.env.PATH = defaultPath;
+    }
+    
+}
+function getSettingsDir(){
+    return settingsDir;
+}
+function getDownloadsDir(){
+    
+    try{
+        return downloadsFolder();  // This wasn't allowed on Windows with McAffee end point security, due to calling Windows registry
+        
+    }catch(err){
+        // Multiple options
+        
+        // 1) Guess for Windows
+        if ( ( process.platform == 'win32' ) && fs_existsSync( path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' )) ){
+           let downloadsFolder = path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' );
+           console.warn('getDownloadsDir - GUESSED DOWNLOADS FOLDER = ' + downloadsFolder);
+           return downloadsFolder;
+        }
+
+        // TODO : Fallback: Use saved downloadsDir if folder exists, othrewise ask for download folder
+        if ( fs_existsSync( state.downloadsDir ) ){
+            // Saved downloadsDir exists
+            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, SAVED DOWNLOADS FOLDER');
+            return state.downloadsDir;
+        }else{
+            // Ask for downloads folder
+            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, ASK FOR DOWNLOADS FOLDER');
+            return 
+        }
+    }
+    
+}
+
+function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, return mapped network path (Z:/ ...)
+/**     
+    Purpose : Fix that 'git rev-parse --show-toplevel' returns UNC path when using mapped network drive
+    
+ 
+     folder    : a folder with mapped network (Z:\...) or UNC ( \\vll.se\Ytor\....)
+     topFolder : "git rev-parse --show-toplevel" reports the repos top folder as a UNC network path (thus changing path if a mapped drive). 
+     This function returns either:
+      - topFolder's UNC path if not a mapped drive
+      - topFolder with restored mapped path (Z:/...) 
+    
+     The idea:
+    
+     folder = "Z:\abc\repoTop\repoSubdir" => folder2 = "Z:/abc/repoTop/repoSubdir" ( work with '/' as path separators )
+     topFolder = "//vll.se/Ytor/abc/repoTop"  (Thus "Z:"\ == "//vll.se/Ytor" )
+    
+     Compare paths
+    
+     
+       folder2 :          Z:/           abc/repoTop/repoSubdir
+       topFolder:         //vll.se/Ytor/abc/repoTop
+    
+       mappedTopFolder:   Z:/           abc/repoTop
+    
+                          drive         common
+    
+     Examples: 
+     
+       fixWindowsMappedNetworkDrive( "Z:\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")                 //  "Z:/abc/repoTop"
+       fixWindowsMappedNetworkDrive( "\\\\vll.se\\Ytor\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")   //  "//vll.se/Ytor/abc/repoTop"
+**/
+                    
+    // Exchange  ‘\’ with ‘/’
+    let folder2 = folder.replaceAll('\\','/');    // Exchange ‘\’ with ‘/’
+    
+    // If folder2 is UNC path (//vll.se/...) then topFolder is correct
+    if ( folder2.startsWith('//') ){
+        return topFolder.replaceAll( '/', '\\');  // Return using Windows '\'
+    }
+    
+    // 
+    // Mapped drive -- replace path
+    //
+    
+    let drive = folder2.substring(0,3);  // "Z:/"
+    let rest = folder2.substring(3);     // "abc/repoTop/repoSubdir"
+
+    console.log( `drive  = ${drive}`);
+    console.log( `rest   = ${rest}`);
+    
+    // Determine common (loop increasing intial part of rest until not found within topFolder)
+    let i = 1;
+    while ( ( i < rest.length) & (  topFolder.includes( rest.substring(0,i) ) ) ){ 
+        i++;
+    }    
+    let common = rest.substring(0,i);
+    console.log( `common = ${common}`);
+    
+    // Remove trailing '/'
+    if (common.endsWith('/')){
+        common = common.substring( 0, common.length - 1);
+    }
+    console.log( `common = ${common}`);
+    
+    let mappedTopFolderPath = drive + common
+
+    console.log( `topFolder = ${topFolder}`);
+    console.log( `topFolder = ${mappedTopFolderPath}`);
+    
+    return mappedTopFolderPath.replaceAll( '/', '\\');     // Return using Windows '\' 
+}
+
 async function addExistingRepo( folder) {
 		console.log(`Add repository folder = ${folder}`);
 	
@@ -5559,26 +5692,6 @@ async function addExistingRepo( folder) {
         
         await cacheBranchList();
 }    
-function setPath( additionalPath){
-    
-    let sep = ':';  // mac or linux
-    if ( os.platform().startsWith('win') ){
-        sep = ';';
-    }
-    
-    // Add to path 
-    try{
-        process.env.PATH = defaultPath + sep + additionalPath; 
-    }catch(err){
-        console.log(err);
-    }
-    
-    // Correct if empty
-    if (additionalPath.length  == 0 ){
-         process.env.PATH = defaultPath;
-    }
-    
-}
 function selectInGraph(hash){
         
         if (localState.graphWindow){  
@@ -5595,9 +5708,6 @@ function selectInGraph(hash){
             }
         }
     }
-function getSettingsDir(){
-    return settingsDir;
-}
 
 function setButtonText(){  // Store or Commit, depending on setting for autopush
     
@@ -5645,34 +5755,6 @@ async function getLatestRelease( url,  wantPreRelease){
     });
     return outData; // outData.tag_name is latest release
 } 
-function getDownloadsDir(){
-    
-    try{
-        return downloadsFolder();  // This wasn't allowed on Windows with McAffee end point security, due to calling Windows registry
-        
-    }catch(err){
-        // Multiple options
-        
-        // 1) Guess for Windows
-        if ( ( process.platform == 'win32' ) && fs.existsSync( path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' )) ){
-           let downloadsFolder = path.resolve( process.env.USERPROFILE + pathsep + 'Downloads' );
-           console.warn('getDownloadsDir - GUESSED DOWNLOADS FOLDER = ' + downloadsFolder);
-           return downloadsFolder;
-        }
-
-        // TODO : Fallback: Use saved downloadsDir if folder exists, othrewise ask for download folder
-        if ( fs.existsSync( state.downloadsDir ) ){
-            // Saved downloadsDir exists
-            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, SAVED DOWNLOADS FOLDER');
-            return state.downloadsDir;
-        }else{
-            // Ask for downloads folder
-            console.error('TODO in getDownloadsDir - NOT IMPLEMENTED YET, ASK FOR DOWNLOADS FOLDER');
-            return 
-        }
-    }
-    
-}
 
 function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
@@ -5775,78 +5857,6 @@ function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder',
 	}
 }
 
-function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, return mapped network path (Z:/ ...)
-/**     
-    Purpose : Fix that 'git rev-parse --show-toplevel' returns UNC path when using mapped network drive
-    
- 
-     folder    : a folder with mapped network (Z:\...) or UNC ( \\vll.se\Ytor\....)
-     topFolder : "git rev-parse --show-toplevel" reports the repos top folder as a UNC network path (thus changing path if a mapped drive). 
-     This function returns either:
-      - topFolder's UNC path if not a mapped drive
-      - topFolder with restored mapped path (Z:/...) 
-    
-     The idea:
-    
-     folder = "Z:\abc\repoTop\repoSubdir" => folder2 = "Z:/abc/repoTop/repoSubdir" ( work with '/' as path separators )
-     topFolder = "//vll.se/Ytor/abc/repoTop"  (Thus "Z:"\ == "//vll.se/Ytor" )
-    
-     Compare paths
-    
-     
-       folder2 :          Z:/           abc/repoTop/repoSubdir
-       topFolder:         //vll.se/Ytor/abc/repoTop
-    
-       mappedTopFolder:   Z:/           abc/repoTop
-    
-                          drive         common
-    
-     Examples: 
-     
-       fixWindowsMappedNetworkDrive( "Z:\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")                 //  "Z:/abc/repoTop"
-       fixWindowsMappedNetworkDrive( "\\\\vll.se\\Ytor\\abc\\repoTop\\repoSubdir", "//vll.se/Ytor/abc/repoTop")   //  "//vll.se/Ytor/abc/repoTop"
-**/
-                    
-    // Exchange  ‘\’ with ‘/’
-    let folder2 = folder.replaceAll('\\','/');    // Exchange ‘\’ with ‘/’
-    
-    // If folder2 is UNC path (//vll.se/...) then topFolder is correct
-    if ( folder2.startsWith('//') ){
-        return topFolder.replaceAll( '/', '\\');  // Return using Windows '\'
-    }
-    
-    // 
-    // Mapped drive -- replace path
-    //
-    
-    let drive = folder2.substring(0,3);  // "Z:/"
-    let rest = folder2.substring(3);     // "abc/repoTop/repoSubdir"
-
-    console.log( `drive  = ${drive}`);
-    console.log( `rest   = ${rest}`);
-    
-    // Determine common (loop increasing intial part of rest until not found within topFolder)
-    let i = 1;
-    while ( ( i < rest.length) & (  topFolder.includes( rest.substring(0,i) ) ) ){ 
-        i++;
-    }    
-    let common = rest.substring(0,i);
-    console.log( `common = ${common}`);
-    
-    // Remove trailing '/'
-    if (common.endsWith('/')){
-        common = common.substring( 0, common.length - 1);
-    }
-    console.log( `common = ${common}`);
-    
-    let mappedTopFolderPath = drive + common
-
-    console.log( `topFolder = ${topFolder}`);
-    console.log( `topFolder = ${mappedTopFolderPath}`);
-    
-    return mappedTopFolderPath.replaceAll( '/', '\\');     // Return using Windows '\' 
-}
-
 
 // Git provider function
 
@@ -5883,7 +5893,7 @@ async function gitProvider(giturl, initialize = true){
     
     
     // Get upstream with provider-specific methods
-    if (fs.existsSync(scriptName) ) {
+    if (fs_existsSync(scriptName) ) {
         let a = require(scriptName);
         let provider;
         try{
@@ -7131,10 +7141,10 @@ function loadSettings(settingsFile){
         
         // If missing repo-folder, find another repo
         try {
-            if ( !fs.existsSync(state.repos[ state.repoNumber ].localFolder ) ) {
+            if ( !fs_existsSync(state.repos[ state.repoNumber ].localFolder ) ) {
                 // Look for first existing repo-folder
                 let i = 0;
-                while  ( ( i < (state.repos.length - 1) ) && !fs.existsSync(state.repos[ i ].localFolder ) ){
+                while  ( ( i < (state.repos.length - 1) ) && !fs_existsSync(state.repos[ i ].localFolder ) ){
                     i++;
                 }
                 state.repoNumber = i;
@@ -7494,11 +7504,11 @@ async function closeWindow(a){
     }
     
     // Remove signaling file
-    util.rm(MAINSIGNALFILE);
+    rmLocalFile(MAINSIGNALFILE);
     
     // Remove dev mode config
     let devConfigFilePath = settingsDir + pathsep + 'pragma-git-config-dev'; 
-    util.rm(devConfigFilePath);
+    rmLocalFile(devConfigFilePath);
 
     
     // Fold search fields

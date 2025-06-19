@@ -594,5 +594,5 @@ function isRebaseMerge(){
         return await sshFileExists( folder, '.git' + pathsep +  'rebase-merge')
     }
     
-    return fs.existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
+    return fs_existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
 }
