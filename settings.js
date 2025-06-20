@@ -356,7 +356,7 @@ async function _callback( name, event){
             if ( folder.startsWith('ssh:') ){
                 
             }else{
-                opener.mkdir(folder); // Make folder if not existing
+                opener.mkdir(folder); // Make local folder if not existing
             }
             
             // Dialog if repo does not exist
@@ -512,9 +512,17 @@ async function _callback( name, event){
                 
                                 
                 // Update displayed .gitignore     
+                document.getElementById('gitignoreText').innerText = ''
+                
                 let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
                 if (fs_existsSync(ignoreFileName) ){
+                    
+                    if (global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        let sshUrl = global.state.repos[global.state.repoNumber].localFolder;
+                        ignoreFileName = await sshGet( sshUrl, '.gitignore')
+                    }
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
+                    
                 }
                 
                 // Update starred button
@@ -522,7 +530,6 @@ async function _callback( name, event){
 
             }catch(err){
                 console.error(err);
-                // Probably no branches, because repo does not exist
             }
             
             
@@ -1212,7 +1219,7 @@ async function gitClone( folderName, repoURL){
     try{
         // 1) Clone 
         let options = [];
-        opener.mkdir(folderName);  // Create folder if it does not exist
+        opener.mkdir(folderName);  // Create local folder if it does not exist
         await simpleGitLog(folderName).clone(  repoURL, topFolder, options, onClone);
         function onClone(error, result ){}; 
         

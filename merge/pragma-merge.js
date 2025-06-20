@@ -1,4 +1,7 @@
-
+//
+// NOTE: 
+// To run locally is relatively easy
+// To run on a folder over ssh requires quite a bit of passing files from ssh server to local, and back.  See Tech-overview.pptx
 
 // Learned from :
 // https://blog.beardhatcode.be/2018/03/your-own-git-mergetool.html
