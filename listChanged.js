@@ -539,7 +539,7 @@ async function _callback( name, event, event2){
             console.log(event);
             
             // File paths
-            const ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      
+            let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      // Assume local folder (not ssh)
             const settingsDir = os.homedir() + pathsep + '.Pragma-git';        
             
             file = event;   
@@ -561,16 +561,37 @@ async function _callback( name, event, event2){
             
             // Append to file
                 try{
-                     
-                    // Unstage (may not be needed, but no harm)
-                     await simpleGit( state.repos[state.repoNumber].localFolder )
-                        .raw( [  'reset', '--', file ] ); 
+                    
+                    let  gitIgnoreExists = await fs_existsSync(global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore' );
+                    
+                    // If ssh -- Get server .gitignore
+                    if ( gitIgnoreExists && global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        ignoreFileName = await sshGet( global.state.repos[global.state.repoNumber].localFolder, '.gitignore'); // Get file from server, and put temp-file in ignoreFileName
+                    }
+                    
+                    // If ssh and .gitignore missing -- make path so it can be created later (in fs.appendFileSync)
+                    if ( !gitIgnoreExists && global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        ignoreFileName = SSH_TEMP_FILE_LOCATION + pathsep + '.gitignore'; // Get file from server, and make temp-file in ignoreFileName
+                    }
+                    
+                    //
+                    // Update local .gitignore (local or temp-file if ssh-server) 
+                    //
+                    
+                        // Unstage (may not be needed, but no harm)
+                         await simpleGit( state.repos[state.repoNumber].localFolder )
+                            .raw( [  'reset', '--', file ] ); 
+                            
+                        // Append to .gitignore  (will create file if missing)               
+                        await fs.appendFileSync(ignoreFileName, '\n' + file, function (err) {
+                            if (err) throw err;
+                            console.log('Added "' + file +'" to gitignore = ' + ignoreFileName);
+                        });
                         
-                    // Append to .gitignore                  
-                    fs.appendFile(ignoreFileName, '\n' + file, function (err) {
-                        if (err) throw err;
-                        console.log('Added "' + file +'" to gitignore = ' + ignoreFileName);
-                    });
+                    // IF ssh -- update server .gitignore
+                     if ( global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        await sshPut( global.state.repos[global.state.repoNumber].localFolder, '.gitignore'); // Get file from server, and put temp-file in ignoreFileName
+                    }                   
       
                 }catch(err){
                     console.log('ignoreLink -- caught error ');
