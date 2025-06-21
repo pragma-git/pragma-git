@@ -7055,10 +7055,25 @@ function loadSettings(settingsFile){
             
             state.alwaysOnTop = setting( state_in.alwaysOnTop, false);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
-            state.displayToolTip = setting( state_in.displayToolTip, true);
+            state.displayToolTip = setting( state_in.displayToolTip, true)
+            
             
             state.zoom = setting( state_in.zoom, '1.0');
             state.zoomMain = setting( state_in.zoomMain, '1.0');
+            
+            // Repair if zoom values are non-numeric
+                function isDecimal(str) {
+                  // Check if the string converts to a finite number 
+                  // and isn't empty or whitespace-only
+                  return str.trim() !== '' && !isNaN(str) && isFinite(str);
+                }
+                
+                if ( !isDecimal(state.zoom) ){
+                    state.zoom = '1.0'
+                } 
+                if ( !isDecimal(state.zoomMain) ){
+                    state.zoomMain = '1.0'
+                } 
             
         
         // Git
