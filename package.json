@@ -1,6 +1,6 @@
 {
   "version": "0.0.0",
-  "nwVersion": "0.85.0",
+  "nwVersion": "0.100.1",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
