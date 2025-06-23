@@ -1423,7 +1423,9 @@ async function fixEmptyLocalAuthors(){ // Empty local author info removed
 async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
 
-    
+ 
+    tabButton[state.settingsWindow.selectedTab].click();
+       
     _callback('repoRadiobuttonChanged', {id: state.repoNumber});  //draws branchTab too
     await drawRepoTab(document);
     await drawSoftwareTab(document);

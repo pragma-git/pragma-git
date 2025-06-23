@@ -1840,6 +1840,8 @@ async function _callback( name, event){
                     continue
                 }
                 
+                
+                
                 // Add 'ssh' indicator
                 if (  state.repos[i].localFolder.startsWith('ssh:') )  {
                     myEvent.selectedRepo = `[ssh] - ${myEvent.selectedRepo}`;
@@ -1863,11 +1865,18 @@ async function _callback( name, event){
                 // Add to menu
                 let isCurrentRepo =  (state.repoNumber == i );
                 
+                // Add warning sign if folder does not exist
+                let warningSign = '';
+                if ( !cachedLocalStatus.exists[i] ) {
+                    //warningSign = '\u26A0 ';  // Warning triangle
+                    warningSign = ' ! ';        // Simple ! instead
+                }
+                
                 let menuItemConfig = { 
-                            label: myEvent.selectedRepo, 
+                            label: warningSign + myEvent.selectedRepo, 
                             type: 'checkbox',
                             checked : isCurrentRepo,
-                            enabled: !isCurrentRepo,
+                            enabled: !isCurrentRepo && cachedLocalStatus.exists[i] ,
                             click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
                         } 
                 
@@ -2625,8 +2634,21 @@ async function _callback( name, event){
                 
                 localState.settings = true;  // Signals that Settings window is open -- set to false when window closes
                 
-                win.on('close', function() { fixNwjsBug7973( win)} );
-            } )
+                win.on('close', async function() { 
+                    fixNwjsBug7973( win)
+                     
+                    // Hide settings icon
+                    parent.document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'hidden'
+                    
+                    // Cache local folder status (can take a while if ssh 
+                    await cacheLocalFolderExistStatus();
+                    await updateAndTestRemoteOrigins();
+                    
+                    // Show settings icon
+                    parent.document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'visible'
+                } );
+                
+            } ) // win.on('loaded')
         ); 
         console.log(settings_win);
         
