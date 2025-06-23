@@ -31,6 +31,7 @@ remoteRepos.fetch.pos = 1;  // Default, reserved for remotes/origin
 // For provider, updated when pressing "System info" tab
 let provider;
 
+
 // ---------
 // FUNCTIONS
 // ---------  
@@ -422,6 +423,7 @@ async function _callback( name, event){
             // 1) User clicks radiobutton in settings window_menu_handles_mapping
             // 2) User selects repository in main window, which initiates this callback
             
+            let origRepoNumber = state.repoNumber ;
 
                 
             console.log('repoRadiobuttonChanged');
@@ -435,11 +437,9 @@ async function _callback( name, event){
                     try{
                         await simpleGit( global.state.repos[ Number(id)].localFolder ).checkIsRepo( () => { isRepo = checkResult});
                     }catch (err){
-                        opener.displayLongAlert('SSH Folder Error -- repo check failed!', 
-                            `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
-                            'error'); 
                             
                         // Set to previous    
+                        id = origRepoNumber;  
                         document.getElementById(state.repoNumber).click()    
                         return
                     }
@@ -470,7 +470,7 @@ async function _callback( name, event){
                 getRemoteRepoInfo();
                 updateRemoteRepos();
                 
-                await opener.cacheRemoteOrigins();
+                //await opener.updateAndTestRemoteOrigins();
                 document.getElementById( 10000 + Number(id) ).value = state.repos[id].remoteURL;
                 
                                 
@@ -1065,7 +1065,7 @@ async function testURL( textareaId, event){
             if ( event.type == 'no_askpass'){
                 document.getElementById(textareaId).classList.remove('green');
                 document.getElementById(textareaId).classList.remove('grey');
-                document.getElementById(textareaId).classList.add('red'); 
+                //document.getElementById(textareaId).classList.add('red'); 
 
                 // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
                 const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
@@ -1105,7 +1105,16 @@ async function forgetButtonClicked(event){
     console.log(state.repos);
     
     console.log('Settings - removing index = ' + index);
+    
     state.repos.splice(index,1); // Remove index
+    
+    opener.cachedLocalStatus.exists.splice(index,1); // Remove index
+    opener.cachedLocalStatus.isRepo.splice(index,1); // Remove index
+    opener.cachedLocalStatus.localFolder.splice(index,1); // Remove index
+    
+    opener.cachedRemoteOrigins.isActiveRemote.splice(index,1); // Remove index
+    opener.cachedRemoteOrigins.remoteURL.splice(index,1); // Remove index
+    
     console.log(state.repos);
 
     
@@ -1127,10 +1136,12 @@ async function forgetButtonClicked(event){
 
     console.log('Settings - updating table :');
     
+    
+    generateRepoTable( document, table, state.repos); // generate the table first
+    
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
     await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
     
-    //generateRepoTable( document, table, state.repos); // generate the table first
 }
 async function closeWindow(){
 
@@ -1257,7 +1268,7 @@ async function gitClone( folderName, repoURL){
         
         // Fill in state array
         state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
-        await opener.cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+        await opener.updateAndTestRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -1419,12 +1430,14 @@ async function injectIntoSettingsJs(document) {
     await drawPath() // Write path to System info
     
     
+    
     // Set tab from setting
     tabButton[state.settingsWindow.selectedTab].click();
     
         
-    // Update remote branch list 
-    //await opener.cacheRemoteOrigins();
+    // Update remote URLs and test
+    //await opener.updateAndTestRemoteOrigins();
+    
 
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
@@ -1464,15 +1477,20 @@ async function injectIntoSettingsJs(document) {
             `
         );
         
+        
+        
         // Set tab to Repo tab
         let tab = 0; // Repository tab
         tabButton[ tab ].click();
+        
 
 
     }
     
     await drawBranchTab(document);
     console.log( "document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility  = " + document.getElementById('warnThatLocalAuthorInfoMissing').style.visibility );
+    
+    
 
 };
 function drawPath(){
@@ -1735,11 +1753,7 @@ async function createHtmlTable(document){
             
     // Set default branch-name
     await opener.registerDefaultBranch(document);
-    
-            
-    // branch table is generated inside generateRepoTable
-
-    
+ 
 
     // Repo table           
         
@@ -1771,6 +1785,9 @@ async function generateRepoTable(document, table, data) {
     
     
     let foundIndex = 0;  // index matching currentRepoFolder
+
+    
+    table.innerHTML = '';
     
     //
     // Add repos to table
@@ -1790,6 +1807,9 @@ async function generateRepoTable(document, table, data) {
              //  Into table cell : Column Repo-path with radiobuttons
             cell = row.insertCell();
             
+            //
+            // LOCAL FOLDER
+            //
     
             var radiobox = document.createElement('input');
             radiobox.setAttribute("name", "repoGroup");
@@ -1815,6 +1835,23 @@ async function generateRepoTable(document, table, data) {
             
             cell.appendChild(label);
             cell.appendChild(newline);
+
+                      
+            // Local folder exists / missing   (also ssh folder)
+            console.log(`Coloring Local Folder --  ${opener.cachedLocalStatus.exists[index] } -- ${element.localFolder}`);
+            if ( opener.cachedLocalStatus.exists[index] == false){
+                label.style.color = 'red';
+                label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
+                radiobox.style.visibility = "hidden";
+            }     
+            
+            if ( opener.cachedLocalStatus.isRepo[index] == false ){
+                label.style.color = 'red';
+                label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML;
+                radiobox.style.visibility = "hidden";
+            }     
+            
+                       
             
 
             
@@ -1824,21 +1861,14 @@ async function generateRepoTable(document, table, data) {
                 foundIndex = index;
             }
             
-            
-            // git-provider icon
+                
+            //
+            // GIT PROVIDER ICON
+            //        
             cell = row.insertCell();
             
             try{
-                //let iconPath = '/apis_github_and_others/git-provider-icons/Blank.png';
-                //let webUrl = '';
-                //try{
-                    //let provider = await opener.gitProvider( element.remoteURL, false); // Run static (second argument = false) to get icon quicker
-                    //iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
-                    //webUrl = await provider.getValue('web-url');
-                //}catch (err){
-                    
-                //}
-                
+
                 // Link (set href in drawProviderIcon, below)
                 let a = document.createElement('a');
                 a.setAttribute("onclick", "require('nw.gui').Shell.openExternal( this.href );return false;");
@@ -1861,18 +1891,31 @@ async function generateRepoTable(document, table, data) {
             
 
             
-    
+
+                
+            //
+            // REMOTE URL 
+            //            
               
-             //  Into table cell :  Remote URL textarea + button
             cell = row.insertCell();
             cell.setAttribute("class", 'remoteURL');
             
             textarea = document.createElement('textarea');
-            textarea.setAttribute("id", index + 10000);
+            let textareaId = index + 10000
+            textarea.setAttribute("id", textareaId);
             textarea.value = element.remoteURL;
             cell.appendChild(textarea);
-            
-            // Test-button (Set)
+                       
+            // Remote URL active / inactive
+            if ( opener.cachedRemoteOrigins.isActiveRemote[index]){
+                document.getElementById(textareaId).classList.add('green');  // Connection has been tested to work
+            }else{
+                document.getElementById(textareaId).classList.add('red');  // Connection has been tested to work
+            }
+                        
+            //
+            // SET BUTTON
+            //    
             let setButtonId = index + 20000;
             cell = row.insertCell();
             cell.setAttribute("class", 'setURL');
@@ -1881,12 +1924,8 @@ async function generateRepoTable(document, table, data) {
             button.innerHTML = 'Set';
             button.setAttribute("onclick", "_callback('setButtonClicked',this)"); // this.type='submit'; 
             cell.appendChild(button);
-                       
-            // Run test
-            
-            // Note: this place ignores askpass dialog, since multiple dialogs would be opened if more than one row did not have credentials.
-            testURL(index + 10000, {type: 'no_askpass', id: setButtonId});
-                          
+
+           
             // Into table cell :  button
             cell = row.insertCell();
             cell.setAttribute("class", 'repoAction');
@@ -1897,72 +1936,18 @@ async function generateRepoTable(document, table, data) {
             button.onclick = forgetButtonClicked;
     
             cell.appendChild(button);
-            
-            //
-            // Validate repo and folder
-            //
-            
 
-
-                             
-            // Check if localFolder exists -- make red otherwise
-            try {
-                if (fs_existsSync(element.localFolder)) {
-                    // If folder exists, I am allowed to check if repo
-                    
-                    // Check if repository -- make red otherwise
-                    var isRepo;
-                    await simpleGit(element.localFolder).checkIsRepo(onCheckIsRepo);
-                    function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
-                    if (!isRepo) {
-                        label.style.color = 'red';
-                        label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML ;
-                        
-                        radiobox.style.visibility = "hidden";
-                    }
-                    
-                }else{    
-                    
-                    // Handle missing localFolder
-                    if ( !element.localFolder.startsWith('ssh:') ){                
-                        // 1) localFolder missing -- make red 
-                        label.style.color = 'red';
-                        label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
-                        
-                        radiobox.style.visibility = "hidden";
-                        
-                    }else{              
-                        // 2) localFolder over ssh -- just show
-                        
-                    }
-    
-                }
-            
-        }catch (err) {
-            console.error(err);
-            
-            label.style.color = 'red';
-            radiobox.style.visibility = "hidden";
-            
-            if (element.localFolder.startsWith('ssh:')){
-                label.innerHTML = '<b><i>(failed ssh)</i></b> : ' + label.innerHTML ;
-            }else{
-                label.innerHTML = '<b><i>(did not find)</i></b> : ' + label.innerHTML ;
-            }
-            
-        }
-            
-      
-            
-            
-        
-     
             // counter update
             index ++;
         }
+        
+        
+        
     } // if any repos
-
+ 
+  
 }
+
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
     let cell, text, button, checkbox;

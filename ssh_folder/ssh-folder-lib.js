@@ -47,7 +47,7 @@ async function fs_existsSync( folder_or_sshUrl) {
         MAIN.multiPlatformExecSync( undefined, CMD);
         return true
     }catch (err){
-        console.error(err);
+        //console.error(err);
         return false
     }
     

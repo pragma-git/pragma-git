@@ -25,7 +25,7 @@ case $exit_code in
     0) echo 'File exists'; exit 0 ;;    # File exists
     1) echo 'File missing'; exit 1 ;;    # File doesn't exist
     *) 
-        echo "Error: SSH command failed (code $exit_code)" >&2
+        echo "SSH ERROR in 'ssh-test-if-file-exists' (code $exit_code) for $SERVER:$PORT$SERVER_PATH" >&2
         exit $exit_code  # Propagate other SSH errors
         ;;
 esac

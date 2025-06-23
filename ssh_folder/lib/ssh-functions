@@ -9,7 +9,7 @@
 TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder (same path defined in pragma-merge.js)
 
 # SSH AND SCP OPTIONS
-TIMEOUT=2   # SSH TIMEOUT
+TIMEOUT="1"   # SSH TIMEOUT
 SSH_OPTIONS=" -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "
 
 # FUNCTIONS

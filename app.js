@@ -400,19 +400,15 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var cachedRepoMenu;  // // Keep reference to popup menu, to avoid premature garbage collection (caused clicked on repo to fail fairly often)
         var cachedTagMenu;
 
-    // Cached objects
+    // Cached Repo objects (updated in windows.onload )
+        var cachedRemoteOrigins = {};  // .isActiveRemote true if remoteURL works, .remoteURL mirrors that of state.repos[].remoteURL
+        var cachedLocalStatus = {};    // .exists  -- true if local or ssh folder exists.  .isRepo  -- true if is git repo
+        
+    // Cached Branch list
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
-        var cachedRemoteOrigins = {};  
-        cachedRemoteOrigins.names = [];
-        cachedRemoteOrigins.URLs = [];
-        cachedRemoteOrigins.folders= [];
-        
-        
-        var gitCounter = 0;  // For SimpleGitLog
-
-            
-        cacheRemoteOrigins();
   
+    // Counter git-call numbering for Log
+        var gitCounter = 0;  // For SimpleGitLog
 
     
 // ---------
@@ -487,22 +483,34 @@ async function _callback( name, event){
         pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
         pragmaLog(' ');
         
+        let noDialog = true;
+        
         var isRepo;
         // Check if repo
         if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
             // If folder exists, I am allowed to check if repo
             
             // Check if repository 
-            await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo(onCheckIsRepo);
-            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
-            if (!isRepo) {
-                displayLongAlert('Repository Error', 'Repository missing', 'error'); 
+            try{
+                
+                await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo(onCheckIsRepo);
+                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                if (!isRepo) {
+                    displayLongAlert('Repository Error', 'Repository missing', 'error'); 
+                    noDialog = false;
+                }
+            }catch (err){
+                isRepo = false;
+                displayLongAlert('Repository Error', 'Missing repository : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
+                noDialog = false;
+                state.repoNumber = origRepoNumber;  
             }
         }else{    
             // Show dialog except if over ssh
             if ( !state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){           
                 // localFolder missing -- dialog, and reset repo
                 displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
+                noDialog = false;
                 state.repoNumber = origRepoNumber;  
             }
  
@@ -515,6 +523,7 @@ async function _callback( name, event){
                 displayLongAlert('SSH Folder Error -- repo check failed', 
                     `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
                     'error'); 
+                    noDialog = false;
                     
                 state.repoNumber = origRepoNumber;
             }
@@ -557,7 +566,10 @@ async function _callback( name, event){
         await updateGraphWindow();
         await updateSettingsWindow();
         await updateChangedListWindow();
-        win.focus();
+        
+        if (noDialog){
+            win.focus();
+        }
         
                     
             
@@ -2742,7 +2754,13 @@ async function _update2(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    let folderExists = await fs_existsSync( fullFolderPath );
+    let folderExists= false;
+    
+    try{
+        folderExists = await fs_existsSync( fullFolderPath );
+    }catch (err){
+        console.error(err);
+    }
   
     var startTime = performance.now();      
     
@@ -2766,7 +2784,11 @@ async function _update2(){
         //let folderCheck = gitLocalFolder().then(  function(value) { folder = value.folderName; }  );
         //promises.push( folderCheck );
     //}
-    folder = path .basename(state.repos[state.repoNumber].localFolder)
+    if ( folderExists ) {
+        folder = path .basename(state.repos[state.repoNumber].localFolder)
+    } else {
+        folder = '';
+    }
     
     // Promise 4
     promises.push( simpleGit( state.repos[state.repoNumber].localFolder).stash(['list'], onStash) );
@@ -5198,52 +5220,137 @@ async function cacheBranchList(){
             
         }
 
-async function cacheRemoteOrigins(){  //Fills in remote URLs for all repos
+async function updateAndTestRemoteOrigins(){  
+    // Fills in remote URLs for all repos (or keeps the one from settings.json)
+    // -- updates  state.repos[repoNumber].remoteURL 
+    //
+    // Stores if remoteURL is active, and the same  remoteURL as above
+    // -- cachedRemoteOrigins.isActiveRemote
+    // -- cachedRemoteOrigins.remoteURL         (really stored only to help debugging)
+    // 
+    
+    console.log('=== updateAndTestRemoteOrigins ===');
     
     let promises = [];
-    var newCachedRemoteOrigins = {};
-    cachedRemoteOrigins.names = new Array(state.repos.length).fill(null);
-    cachedRemoteOrigins.URLs = new Array(state.repos.length).fill(null);
-    cachedRemoteOrigins.folders = new Array(state.repos.length).fill(null);
+    let newCachedRemoteOrigins = {};
+    newCachedRemoteOrigins.remoteURL = new Array(state.repos.length).fill(null);        // original remoteURL (to make a trace)
+    newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(false);  // true if remote works, false if not
     
+    // Parallelize to : 1) get remoteURL from repo, 2) tests remoteURL 
     for (var i = 0; i < state.repos.length; ++i) {
-        promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); // Add promise
+        promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
     }
-    
     await Promise.allSettled( promises )
     
+    // Atomic copy 
+    cachedRemoteOrigins = newCachedRemoteOrigins;
     
     
+    // Internal function -- process for each remoteURL :   1) get remoteURL from repo, 2) tests remoteURL  
     async function getRemoteOrigin( repoNumber, folder){
+        // Gets and tests remoteURL
+        //
+        // 1) Sets remoteURL from Repo if 'origin' exists as remote
+        // 2) Tests if remoteURL is active
+        //
+        // 2) does this:
+        //    Sets newCachedRemoteOrigins.isActiveRemote[repoNumber] to
+        //    true -- if remote is actvie
+        //    false -- if remote does not answer
+        //
+        // The test is performed in function testRemoteOrigin (using ls-remote)
         
+        // Copy original remoteURL (to make a trace)
+        newCachedRemoteOrigins.remoteURL[repoNumber]  =  state.repos[repoNumber].remoteURL;
+        
+        // Get remote repo, and process (set state.repos[i].remoteURL , and test)
         await simpleGitLog( folder ).remote( [ '-v'], onRemote);
-        function onRemote(err, result) {
-            
+        
+        // Processing function 
+        async function onRemote(err, result) {
             let rows = result.split('\n');
             
+            // Loop to identify 'origin' if multiple
             for (var j = 0; j < rows.length - 1; ++j){  // Last row is empty
                 
-                // Split 'test9	https://github.com/pragma-git/issue7715.git (push)'
+                // Identify remoteURL from repo
+                // Done by splitting 'test	https://github.com/pragma-git/issue7715.git (push)'
                 let upstreamName = rows[j].split('\t')[0];
                 let upstreamURL = rows[j].split('\t')[1].split(' ')[0];
-                let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];
+                //let upstreamFetchOrPull = rows[j].split('\t')[1].split(' ')[1];  
 
-                // Only store if remote origin
+                // CORE functionalisty -- update and test if remote origin
                 if ( upstreamName == 'origin'){       
-                    cachedRemoteOrigins.names[repoNumber] = upstreamName;
-                    cachedRemoteOrigins.URLs[repoNumber] = upstreamURL;
-                    cachedRemoteOrigins.folders[repoNumber] = folder;
+                    state.repos[repoNumber].remoteURL = upstreamURL;  // New URL from repo (otherwise untouched)
                     
-                    state.repos[repoNumber].remoteURL = upstreamURL;
-                    
+                    // Test if remote is active
+                    newCachedRemoteOrigins.isActiveRemote[repoNumber]  =  await testRemoteOrigin( repoNumber);
                     return
                 }
             }
             
-        };
+           // Internal function inside onRemote     
+               async function testRemoteOrigin( repoNumber){
+                    let isActive = true;
+                    
+                    const commands = [ 'ls-remote', state.repos[repoNumber].remoteURL ];
+        
+                    // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                    const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
+                    try {
+                        await simpleGitLog( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); 
+                    }catch (err){
+                        console.error(err);
+                        console.log(repoNumber);
+                    }
+                    
+                    function onListRemote(err, result ){
+                        if (result == undefined){
+                            isActive = false;
+                        }
+                        console.log( `testRemoteStatus -- ${isActive} -- ${state.repos[ repoNumber].localFolder} `);
+                    };
+                    
+                    return isActive;
+                }
+
+        }; // END onRemote
  
     }
 
+
+}
+async function cacheLocalFolderExistStatus(){
+ 
+    console.log('=== cacheLocalFolderExistStatus ===');
+    
+    let newCachedLocalStatus = {};
+    newCachedLocalStatus.exists = new Array(state.repos.length).fill(false);
+    newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
+    newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+    
+    // Parallelize to tests if local folder (or ssh) exists 
+    let promises = [];
+    for (var i = 0; i < state.repos.length; ++i) {
+        promises.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
+    }
+    console.log('START');
+    await Promise.allSettled( promises )
+    console.log('STOP');
+    
+    // Atomic copy 
+    cachedLocalStatus = newCachedLocalStatus; 
+    
+    // Internal function
+    async function testLocalStatus( repoNumber, folder){
+        console.log( `testLocalStatus -- ${folder} `);
+        newCachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
+        newCachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
+        
+         await simpleGit(folder).checkIsRepo(onCheckIsRepo);
+         function onCheckIsRepo(err, checkResult) { newCachedLocalStatus.isRepo[ repoNumber]  = checkResult}
+        
+    }
 }
 
     
@@ -5655,7 +5762,8 @@ async function addExistingRepo( folder) {
         
         // Fill in state array
         state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
-        await cacheRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+        await updateAndTestRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+        await cacheLocalFolderExistStatus();
 
         // Figure out URL of fork-parent (undefined if not a forked repo)
         let forkParentUrl;
@@ -6147,13 +6255,14 @@ async function updateSettingsWindow(){     // Update selected repo
         }
     }
     
-    win.focus();
+    //win.focus();
 }
 async function updateSettingsRepoTable(){  // Only update Repo table
 	try{
 	    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
 	    await settings_win.window.createHtmlTable(settings_win.window.document)
 	    await updateSettingsWindow()  
+        win.focus();
 	}catch(err){ 
 	}
 }
@@ -7247,7 +7356,7 @@ function loadSettings(settingsFile){
         
         // LocalFolder and URLs
         repoState.localFolder = setting( repoStateIn.localFolder, '' );
-        //repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOrigins()
+        repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in updateAndTestRemoteOrigins()
         repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
         
         // Local author info
@@ -7500,10 +7609,21 @@ window.onload = async function() {
   
   // Dialog if author's name is unknown
   showUserDialog(true)  // test = true, will show only if author is unknown
-
+ 
+  // Hide settings icon
+  document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'hidden'
+  
+  // Cache local folder status (can take a while if ssh 
+  await cacheLocalFolderExistStatus();
+  await updateAndTestRemoteOrigins();
+  
+  // Show settings icon
+  document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'visible'
  
   pragmaLog('Done starting app');
   pragmaLog('');
+  
+  
 
 };
 async function closeWindow(a){
