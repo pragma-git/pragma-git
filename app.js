@@ -5220,8 +5220,12 @@ async function cacheBranchList(){
             
         }
 
-async function updateAndTestRemoteOrigins(){  
+// Cache repo status ( local folder exists, remoteURL active )
+async function updateAndTestRemoteOrigins( start = 0 ){  
     // Fills in remote URLs for all repos (or keeps the one from settings.json)
+    //
+    // If first argument is set (other than 0), then  only update that repoNumber (actually updates all repos from that repoNumber to end)
+    //
     // -- updates  state.repos[repoNumber].remoteURL 
     //
     // Stores if remoteURL is active, and the same  remoteURL as above
@@ -5233,11 +5237,16 @@ async function updateAndTestRemoteOrigins(){
     
     let promises = [];
     let newCachedRemoteOrigins = {};
-    newCachedRemoteOrigins.remoteURL = new Array(state.repos.length).fill(null);        // original remoteURL (to make a trace)
-    newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(false);  // true if remote works, false if not
+    
+    if ( start == 0){  
+        newCachedRemoteOrigins.remoteURL = new Array(state.repos.length).fill(null);        // original remoteURL (to make a trace)
+        newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(false);  // true if remote works, false if not    
+    }else{
+        newCachedRemoteOrigins = cachedRemoteOrigins;  // Copy if subset
+    }
     
     // Parallelize to : 1) get remoteURL from repo, 2) tests remoteURL 
-    for (var i = 0; i < state.repos.length; ++i) {
+    for (var i = start; i < state.repos.length; ++i) {
         promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
     }
     await Promise.allSettled( promises )
@@ -5320,18 +5329,31 @@ async function updateAndTestRemoteOrigins(){
 
 
 }
-async function cacheLocalFolderExistStatus(){
+async function cacheLocalFolderExistStatus( start = 0 ){
+    // Fills in status if local folder exists for all repos (or keeps the one from settings.json)
+    //
+    // If first argument is set (other than 0), then  only update that repoNumber (actually updates all repos from that repoNumber to end)
+    //
+    // Stores if localFolder exist
+    // -- cachedLocalStatus.exists
+    // -- cachedLocalStatus.localFolder         (really stored only to help debugging)
+    // 
  
     console.log('=== cacheLocalFolderExistStatus ===');
     
     let newCachedLocalStatus = {};
-    newCachedLocalStatus.exists = new Array(state.repos.length).fill(false);
-    newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
-    newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+    if ( start == 0){  
+        // Start with empty
+        newCachedLocalStatus.exists = new Array(state.repos.length).fill(false);
+        newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
+        newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+    }else{
+        newCachedLocalStatus = cachedLocalStatus;  // Copy if subset
+    }
     
     // Parallelize to tests if local folder (or ssh) exists 
     let promises = [];
-    for (var i = 0; i < state.repos.length; ++i) {
+    for (var i = start; i < state.repos.length; ++i) {
         promises.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
     }
     console.log('START');
@@ -5348,7 +5370,13 @@ async function cacheLocalFolderExistStatus(){
         newCachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
          await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-         function onCheckIsRepo(err, checkResult) { newCachedLocalStatus.isRepo[ repoNumber]  = checkResult}
+         function onCheckIsRepo(err, checkResult) { 
+             newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
+             if ( checkResult == undefined){
+                 console.error(err);
+                 checkResult = false;  // Set to false
+             }
+         }
         
     }
 }
@@ -5762,8 +5790,8 @@ async function addExistingRepo( folder) {
         
         // Fill in state array
         state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
-        await updateAndTestRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
-        await cacheLocalFolderExistStatus();
+        await updateAndTestRemoteOrigins( index);  // Update for this repo (index)
+        await cacheLocalFolderExistStatus( index);
 
         // Figure out URL of fork-parent (undefined if not a forked repo)
         let forkParentUrl;
