@@ -1137,7 +1137,7 @@ async function forgetButtonClicked(event){
     console.log('Settings - updating table :');
     
     
-    generateRepoTable( document, table, state.repos); // generate the table first
+    //generateRepoTable( document, table, state.repos); // generate the table first
     
     // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
     await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
@@ -1758,22 +1758,27 @@ async function createHtmlTable(document){
     // Repo table           
         
         let table = document.getElementById("settingsTableBody");
-        console.log('Settings - data repos:');
+        //console.log('Settings - data repos:');
 
-        // Amend data with a field for remote repo
+        //// Amend data with a field for remote repo
+        //for (let i in state.repos) {
+            //let configList;
+            //try{
+                //configList = await gitConfigList( state.repos[i].localFolder ); 
+                //state.repos[i].remoteURL = configList["remote.origin.url"];
+                //console.log( state.repos[i].localFolder);
+                //console.log( configList["remote.origin.url"]);   
+            //}catch(err){
+                //configList = [];
+                //console.log( state.repos[i].localFolder);
+                //console.log( 'Caught error');
+            //}
+        //}   
+        
+        
         for (let i in state.repos) {
-            let configList;
-            try{
-                configList = await gitConfigList( state.repos[i].localFolder ); 
-                state.repos[i].remoteURL = configList["remote.origin.url"];
-                console.log( state.repos[i].localFolder);
-                console.log( configList["remote.origin.url"]);   
-            }catch(err){
-                configList = [];
-                console.log( state.repos[i].localFolder);
-                console.log( 'Caught error');
-            }
-        }   
+            state.repos[i].remoteURL = opener.cachedRemoteOrigins.remoteURL[i];
+        }
         
         await generateRepoTable( document, table, state.repos); // generate the table first
 
