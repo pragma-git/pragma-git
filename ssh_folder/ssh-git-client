@@ -20,8 +20,12 @@
 #   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
 #
 
+# Start timing clock
+start_time=$(date +%s.%N)
 
-# Import functions and constants: TEMP_FILE_LOCATION
+
+
+# Import functions and constants: 
 source $(dirname $0)/lib/ssh-functions 
 
 SCRIPT_FOLDER=$(dirname $0)   # The location of this script is the same as "pragma-merge" command
@@ -32,7 +36,6 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 # Remove SSH URL, and keep remaining arguments
 shift
 REMAINING_ARGUMENTS="$@"
-
 # Fix quotes around  --pretty statement, sent from simpleGit (--pretty=format:òòòòòò %H ò %aI ò %s ò %D ò %b ò %aN ò %aE òò )
 REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòòòò/g" | sed "s/ òò/ òò'/g")
 
@@ -52,10 +55,20 @@ esac
 
 
 # Run git command on remote server 
-ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS  bash -s <<EOF
+ssh -T "$SERVER"  -p ${PORT}  $SSH_OPTIONS <<EOF
     $COMMAND
 EOF
 
 SSH_RETURN_STATUS=$?
+
+# Calculate timing
+end_time=$(date +%s.%N)
+time_diff=$(echo "$end_time - $start_time" | bc)
+{
+    echo "$time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
+    echo "$time_diff -- ${COMMAND} \n" 
+    echo ' '
+} >> /tmp/ssh-client-log.txt
+
 
 exit $SSH_RETURN_STATUS  
