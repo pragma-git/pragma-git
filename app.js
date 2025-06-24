@@ -194,6 +194,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             let sshUrl = pwd;
             //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
             
+            
+            // TODO (below) :  include.path is hardcoded -- need to make it correct 
+            
             return simpleGitDefault( 
                 {   
                     config: ['include.path='  + '/home/jan/Desktop/ssh_local_test/.git/config' ],
@@ -203,7 +206,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                     binary: [ binary, sshUrl]  
                 }
             );  // Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
-                // My ssh-git-binary handles path by itself.
+                // My ssh-git-client handles path by itself.
         }
  
  

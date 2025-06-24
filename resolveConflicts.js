@@ -256,7 +256,7 @@ async function _callback( name, event){
         
                     
         // Rebase conflict
-        if ( isRebaseMerge() ){
+        if ( await isRebaseMerge() ){
 			opener.multiPlatformExecSync( folder, 'export GIT_EDITOR=true; git rebase --continue');
             return
         }
@@ -338,7 +338,7 @@ async function _callback( name, event){
             // Store conflicting file names
             console.log('gitUndoMerge -- entered');
             
-            if ( isRebaseMerge() ){
+            if ( await isRebaseMerge() ){
                 await simpleGit( folder).rebase(['--abort'], onUndoMerge );
             }else{
                 await simpleGit( folder).merge(['--abort'], onUndoMerge );
@@ -417,7 +417,7 @@ async function createConflictingFileTable(document, status_data) {
     let folder = state.repos[state.repoNumber].localFolder;
     
     // Print current commit being rebased
-    if ( isRebaseMerge() ){
+    if ( await isRebaseMerge() ){
         let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1');  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
         let thisCommit = thisPicked.trim().split(" ").slice(2).join(" ");              //'my first commit'
         document.getElementById('rebaseDetails').innerText = 'Rebase : ' + thisCommit;
@@ -587,12 +587,12 @@ function createUnsureFileTable(document, status_data) {
 }
 
 // Info
-function isRebaseMerge(){
+async function isRebaseMerge(){
     let folder = state.repos[state.repoNumber].localFolder;
     
-    if ( folder.startsWith('ssh:') ){
-        return await sshFileExists( folder, '.git' + pathsep +  'rebase-merge')
-    }
+    //if ( folder.startsWith('ssh:') ){
+        //return await sshFileExists( folder, '.git' + pathsep +  'rebase-merge')
+    //}
     
-    return fs_existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
+    return await fs_existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
 }
