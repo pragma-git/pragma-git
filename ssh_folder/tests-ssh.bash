@@ -18,6 +18,9 @@ cd $(dirname $0)
 #    getSshUrlParts -- gives variables for SERVER, PORT, SERVER_BASE_PATH from $1 
 source lib/ssh-functions
 
+TEST_LOG="/tmp/testlog.log"
+rm  "$TEST_LOG" 
+
 counter=0
 
 function main () {
@@ -70,7 +73,7 @@ function runTestFileExists () {
     
     
     test-ssh-test-if-file-exists $1
-    echo '' >> /tmp/test-out  # Empty row in summary
+    echo '' >> "$TEST_LOG"  # Empty row in summary
 }
 
 function runTests () {
@@ -95,7 +98,7 @@ function runTests () {
     test-ssh-git-client $1
     test-ssh-put $1
     test-ssh-get $1
-    echo '' >> /tmp/test-out  # Empty row in summary
+    echo '' >> "$TEST_LOG"  # Empty row in summary
 }
 
     
@@ -128,7 +131,7 @@ function test-ssh-git-client () {
      ((counter++))
     echo "($counter) --- SSH-GIT-CLIENT ---"
     ./ssh-git-client "${SSH_FOLDER}" status
-    echo "($counter) " $(formatReturn $? $1) "ssh-git-client $SSH_FOLDER status" | tee -a /tmp/test-out
+    echo "($counter) " $(formatReturn $? $1) "ssh-git-client $SSH_FOLDER status" | tee -a "$TEST_LOG"
     echo ' '
     
 }
@@ -145,7 +148,7 @@ function test-ssh-put () {
     mkdir -p "$( dirname "${NEW_FILE}" )"
     date > "${NEW_FILE}"
     ./ssh-put "${SSH_FOLDER}" "${REL_FILE}"
-    echo "($counter) " $(formatReturn $? $1) "ssh-put $SSH_FOLDER ${REL_FILE}" | tee -a /tmp/test-out
+    echo "($counter) " $(formatReturn $? $1) "ssh-put $SSH_FOLDER ${REL_FILE}" | tee -a "$TEST_LOG"
     echo ' '
     
  }   
@@ -158,7 +161,7 @@ function test-ssh-get () {
     echo "($counter) --- SSH-GET ---"
     rm -rf "${TEMP_FILE_LOCATION}" ; 
     ./ssh-get "${SSH_FOLDER}" "${REL_FILE}"
-    echo "($counter) " $(formatReturn $? $1) "ssh-get $SSH_FOLDER ${REL_FILE}" | tee -a /tmp/test-out
+    echo "($counter) " $(formatReturn $? $1) "ssh-get $SSH_FOLDER ${REL_FILE}" | tee -a "$TEST_LOG"
     echo ' '
 }
 
@@ -169,12 +172,12 @@ function test-ssh-test-if-file-exists () {
      ((counter++))
     echo "($counter) --- SSH-TEST-IF-FILE-EXISTS ---"
     ./ssh-test-if-file-exists "${SSH_FOLDER}" "${REL_FILE}"
-    echo "($counter) " $(formatReturn $? $1) "ssh-test-if-file-exists $SSH_FOLDER ${REL_FILE}" | tee -a /tmp/test-out
+    echo "($counter) " $(formatReturn $? $1) "ssh-test-if-file-exists $SSH_FOLDER ${REL_FILE}" | tee -a "$TEST_LOG"
     echo ' '
 }
 
 main
 
 echo "--- SUMMARY ---"
-cat /tmp/test-out
-rm  /tmp/test-out
+cat "$TEST_LOG"
+rm  "$TEST_LOG" 

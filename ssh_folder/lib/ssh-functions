@@ -27,7 +27,7 @@ REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${
 
 SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
-
+SSH_LOG="${TMP}/ssh-log.log"
 
 # FUNCTIONS
 #function getSshUrlParts1 () {

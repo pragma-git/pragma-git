@@ -24,7 +24,6 @@
 start_time=$(date +%s.%N)
 
 
-
 # Import functions and constants: 
 source $(dirname $0)/lib/ssh-functions 
 
@@ -45,8 +44,8 @@ COMMAND="git -C \"${SERVER_BASE_PATH}\" ${REMAINING_ARGUMENTS}"
 # Start Pragma-merge in new thread
 case "$3" in
 mergetool|difftool)
-    echo "Calling  ssh_folder/delayed-start-pragma-merge " >> /tmp/test
-    "${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSH_REPO_URL" >> /tmp/test  & 
+    echo "Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
+    "${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSH_REPO_URL" >> "$SSH_LOG"  & 
 ;;
 mergetool)
 
@@ -55,7 +54,7 @@ esac
 
 
 # Run git command on remote server 
-ssh -T "$SERVER"  -p ${PORT}  $SSH_OPTIONS <<EOF
+ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF
     $COMMAND
 EOF
 
@@ -68,7 +67,7 @@ time_diff=$(echo "$end_time - $start_time" | bc)
     echo "$time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
     echo "$time_diff -- ${COMMAND} \n" 
     echo ' '
-} >> /tmp/ssh-client-log.txt
+} >> "$SSH_LOG"
 
 
 exit $SSH_RETURN_STATUS  
