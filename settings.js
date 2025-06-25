@@ -1693,6 +1693,7 @@ async function drawSoftwareTab(document){
     document.getElementById('latestVersion').innerText = localState.LATEST_RELEASE;
     document.getElementById('nw-version').innerText = process.versions['nw']  + '(' + process.versions['nw-flavor'] + ')';
     document.getElementById('platform').innerText = process.platform;
+    document.getElementById('nwjs-settings-folder').innerText = nw.App.dataPath;
     
     // MacOS -- figure out code-platform and cpu-info
     if (os.platform().startsWith('darwin') ){
