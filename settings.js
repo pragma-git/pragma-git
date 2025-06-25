@@ -1424,7 +1424,12 @@ async function injectIntoSettingsJs(document) {
     win = gui.Window.get();
 
  
+    // Set selected tab (in settings.json initially)
     tabButton[state.settingsWindow.selectedTab].click();
+ 
+    // Set Software as first sub-tab in Repo tab
+    document.getElementById('SoftwareTab').click(); 
+    
        
     _callback('repoRadiobuttonChanged', {id: state.repoNumber});  //draws branchTab too
     await drawRepoTab(document);
@@ -1444,9 +1449,6 @@ async function injectIntoSettingsJs(document) {
     console.log('Settings - settings.js entered');  
     console.log('Settings - state :');  
     console.log(global.state);
- 
-    // Set Software as first sub-tab in Repo tab
-    document.getElementById('SoftwareTab').click(); 
     
     
     // Warn if no repos
