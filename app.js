@@ -350,13 +350,17 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const seconds = 1000; // milliseconds per second
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
+        var  cacheFolderStatusTimer = _loopTimer('cache-folder-status-loop', 120 * seconds); // loop to cache folder, ssh-folder, remoteURL status
+        
         try {
             gitFetch();
         }catch (err){
             
         }
         
+        // Flags blocking simultaneous runs of slow functions
         var updateIsRunning = false;
+        var cacheFolderStatusIsRunning = false;
 
 
     // Inititate listening to Pragma-merge start signal
@@ -2639,16 +2643,10 @@ async function _callback( name, event){
                 
                 win.on('close', async function() { 
                     fixNwjsBug7973( win)
-                     
-                    // Hide settings icon
-                    parent.document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'hidden'
-                    
-                    // Cache local folder status (can take a while if ssh 
-                    await cacheLocalFolderExistStatus();
-                    await updateAndTestRemoteOrigins();
-                    
-                    // Show settings icon
-                    parent.document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'visible'
+
+                    // Cache local folder status 
+                    cacheFolderStatus()
+
                 } );
                 
             } ) // win.on('loaded')
@@ -2733,11 +2731,37 @@ async function _loopTimer( timerName, delayInMs){
         case 'fetch-loop':    
             return window.setInterval( gitFetch, delayInMs );
             break;
+    
+        case 'cache-folder-status-loop':    
+            return window.setInterval( cacheFolderStatus, delayInMs );
+            break;
 
     }
-
-    
 }
+async function cacheFolderStatus(){
+    
+    // Bail out if running already
+    if (cacheFolderStatusIsRunning){        
+        console.log('skipped cacheFolderStatus -- because was already running' );  
+        return
+    }
+    
+    // Start run
+    console.log('cacheFolderStatus started');
+    cacheFolderStatusIsRunning = true;
+    
+    try{
+        await cacheLocalFolderExistStatus();
+        await updateAndTestRemoteOrigins();
+    }catch(err){
+        
+    }
+
+    // End run    
+    cacheFolderStatusIsRunning = false;
+    console.log('cacheFolderStatus stopped');
+}
+
 async function _update(){ 
     if (updateIsRunning){
         console.log('skipped _update -- because was already running' );  // One option would be to try to queue updates, and skip if more than N updates
@@ -5815,8 +5839,7 @@ async function addExistingRepo( folder) {
         
         // Fill in state array
         state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
-        await updateAndTestRemoteOrigins( index);  // Update for this repo (index)
-        await cacheLocalFolderExistStatus( index);
+        await cacheFolderStatus()
 
         // Figure out URL of fork-parent (undefined if not a forked repo)
         let forkParentUrl;
