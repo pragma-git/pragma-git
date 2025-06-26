@@ -62,7 +62,7 @@ SSH_RETURN_STATUS=$?
 
 # Calculate timing
 end_time=$(date +%s.%N)
-time_diff=$(echo "$end_time - $start_time" | bc)
+time_diff=$(awk "BEGIN {print $end_time - $start_time }")
 {
     echo "$time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
     echo "$time_diff -- ${COMMAND} \n" 
