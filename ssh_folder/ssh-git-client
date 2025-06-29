@@ -4,37 +4,61 @@
 # Implemented as a wrapper to git that runs git commands on remote server over ssh
 # and returns stdout and stderr
 #
-# Works as git, but have an extra second argument
+# Works as git, but have  two extra arguments carrying the SSH-URL.  They are removed,
+# and standard git arguments remain
 #
 # Arguments
-#   $1      --  SSH URL, for instance 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
-#   $2      --  git command (for instance 'status')
-#   $3      --  options to git command
+#   $1      --  -c
+#   $2      --  SSH URL of format  "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test"
+#   $3      --  git command (for instance 'status')
 #   $4      --  options to git command
+#   $5      --  options to git command
 #  .....
+# ($1, $2 are example placement for SSHURL, may be anywhere in argument list)
 #
-# All arguments except $1 are standard used in simpleGit.  
-# So I extract SSH URL from $1 and use remaining arguments with git binary
+# I extract SSH URL and use remaining arguments with git binary 
 #
 # Example (run git status on remote server) :
-#   ./ssh-git-client 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' status
+#   ./ssh-git-client -c "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test" status
 #
+# Example on Windows cmd:
+#    cd C:\Users\axels\Documents\Projects\Pragma-git\pragma-git\ssh_folder
+#	 wsl /mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client -c SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test version
 
 # Start timing clock
 start_time=$(date +%s.%N)
 
-
 # Import functions and constants: 
 source $(dirname $0)/lib/ssh-functions 
+
+#echo "ALL ARGUMENTS : $@"  >> "$SSH_LOG"
+
+# Get -c SSHURL... from argument list -- also remove these two from total filtered_args argument list
+
+# Remove $SSHURL, and keep remaining arguments
+filtered_args=()
+while [[ $# -gt 0 ]]; do
+
+    if [[ "$1" == "-c" && "$2" == SSHURL=* ]]; then
+		SSHURL="${2#SSHURL=}"
+		#echo "SSHURL : $SSHURL" >> "$SSH_LOG"
+        # Skip both -c and the SSHURL=... argument
+        shift 2
+    else
+        # Keep the argument
+        filtered_args+=("$1")
+        shift
+    fi
+done
+#echo "REMAINING_ARGUMENTS : ${filtered_args[@]}"  >> "$SSH_LOG"
+REMAINING_ARGUMENTS="${filtered_args[@]}" 
 
 SCRIPT_FOLDER=$(dirname $0)   # The location of this script is the same as "pragma-merge" command
 
 # Get server info
-getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+getSshUrlParts "$SSHURL"  # Sets SERVER PORT SERVER_BASE_PATH
 
-# Remove SSH URL, and keep remaining arguments
-shift
-REMAINING_ARGUMENTS="$@"
+
 # Fix quotes around  --pretty statement, sent from simpleGit (--pretty=format:òòòòòò %H ò %aI ò %s ò %D ò %b ò %aN ò %aE òò )
 REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòòòò/g" | sed "s/ òò/ òò'/g")
 
@@ -65,7 +89,7 @@ end_time=$(date +%s.%N)
 time_diff=$(awk "BEGIN {print $end_time - $start_time }")
 {
     echo "$time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
-    echo "$time_diff -- ${COMMAND} \n" 
+    echo "$time_diff -- ${COMMAND}" 
     echo ' '
 } >> "$SSH_LOG"
 

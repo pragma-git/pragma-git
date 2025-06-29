@@ -130,7 +130,7 @@ function test-ssh-git-client () {
     #
      ((counter++))
     echo "($counter) --- SSH-GIT-CLIENT ---"
-    ./ssh-git-client "${SSH_FOLDER}" status
+    ./ssh-git-client -c "SSHURL=${SSH_FOLDER}" status
     echo "($counter) " $(formatReturn $? $1) "ssh-git-client $SSH_FOLDER status" | tee -a "$TEST_LOG"
     echo ' '
     

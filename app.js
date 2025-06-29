@@ -186,26 +186,32 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             // Standard if local folder
             if ( !pwd.startsWith('ssh:')){
+                console.log(`LOCAL FOLDER -- ${pwd}`);
                 return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
             }
   
             // Special if local is a folder on server over ssh
-            let binary = `${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client`;
+            let binary = [`${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client` ];
+            if (process.platform === 'win32') {  
+                let WSL_STARTDIR =  STARTDIR.replaceAll('\\','/').replace('C:','/mnt/c'); // 'C:\\Users\\axels\\Documents\\Projects\\Pragma-git\\pragma-git' => '/mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git'
+                binary = ['wsl', `${WSL_STARTDIR}/ssh_folder/ssh-git-client` ]; // WSL abs path to ssh-git-client
+            }
+            
             let sshUrl = pwd;
-            //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
-            
-            
+            console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
+           
             // TODO (below) :  include.path is hardcoded -- need to make it correct 
             
             return simpleGitDefault( 
                 {   
-                    config: ['include.path='  + '/home/jan/Desktop/ssh_local_test/.git/config' ],
+                    config: ['include.path='  + '/home/jan/Desktop/ssh_local_test/.git/config', `SSHURL=${sshUrl}` ],
                     unsafe: {  
                         allowUnsafeCustomBinary: true
                     } , 
-                    binary: [ binary, sshUrl]  
+                    binary: binary  
                 }
-            );  // Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
+            ); 
+				// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
                 // My ssh-git-client handles path by itself.
         }
  
@@ -3569,7 +3575,7 @@ function startPragmaMerge(){
                     
                     let folder = global.state.repos[global.state.repoNumber].localFolder;
                     if ( folder.startsWith('ssh:') ){
-                         await multiPlatformExecSync( undefined , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
+                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
                     }
                     
                 } );
@@ -5826,7 +5832,7 @@ async function addExistingRepo( folder) {
         }
         
         // Windows -- keep mapped network drive (Z:)
-        if (process.platform == 'win32'){
+        if ( (process.platform == 'win32') &&( !folder.startsWith('ssh:') ) ){
 			topFolder = fixWindowsMappedNetworkDrive( folder, topFolder);
 		}
         
@@ -5955,13 +5961,17 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
      //     string output of command, trimmed  (without leading and trailing spaces)
 	console.log(cmd.toString())
 	const { execSync } = require('child_process');
-    
-    
     let options = {};
-    if ( folder !== undefined){
+    let out;
+    
+    // Set path if known
+    let isDefinedFolder =  ( folder !== undefined);
+    let isLocalFolder = ( ! folder.startsWith('ssh:') );
+    if ( isDefinedFolder && isLocalFolder ){  
         options = {cwd: folder};
     }
     
+    // Set time-out if defined
     if (mode == 'timeout'){
         // With time out of subprocess
         options = {cwd: folder, timeout: timeoutInMs, detached: true};  
@@ -5970,14 +5980,19 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
 
     //
     
-	if (process.platform === 'win32') {
-		
-		let out;
+    //
+    // MacOS or Linux
+    //
+	if ( (process.platform === 'darwin') || (process.platform === 'linux') ) {
+		// Linux or Mac
+		return  execSync( cmd, options ).toString().trim();
+	}
+	
 
-		//Run using git bash
-		delete process.platform;
-		process.platform = 'linux';
-		
+    //
+    // Windows local 
+    //    
+	if ( (process.platform === 'win32') &&  !folder.startsWith('ssh:') ) {
 		try{
 			out = execSync( cmd, {
 				env: { PATH: 'PATH:/mingw64/bin/' },
@@ -5987,16 +6002,59 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
 					console.log(err);
 				}
 			).toString().trim()
-		} catch (err){
-			process.platform = 'win32';
-			throw new Error( `multiPlatformExecSync error: = ${err}`);
+
+		} catch (err) {
+			  console.error('Error:', err.message);
+			  console.error('stderr:', err.stderr?.toString());
+			  //process.platform = 'win32';
+			  throw new Error( `multiPlatformExecSync error: = ${err}`);
 		}
-		process.platform = 'win32';
+	}	
+
+    //
+    // Windows ssh-folder (run using wsl) 
+    //   
+	if ( (process.platform === 'win32') &&  folder.startsWith('ssh:') ) {
 		
+		cmd =  cmd.replaceAll('\\','/').replace('C:/','/mnt/c/');  // Change to wsl path
+		const { execFileSync } = require('child_process');
+
+		try{
+			let parsedCommandString = parseCommandString(cmd);
+			let out = execFileSync( 'wsl', 
+				 parsedCommandString, 
+				 { encoding: 'utf-8' }
+			 );
+			 
+			 console.log('Output:', out);
+		} catch (err) {
+			  console.error('Error:', err.message);
+			  console.error('stderr:', err.stderr?.toString());
+			  //process.platform = 'win32';
+			  throw new Error( `multiPlatformExecSync error: = ${err}`);
+		}
+
 		return  out;
 
-	}else{
-		return  execSync( cmd, options ).toString().trim();
+	}
+	
+	// INTERNAL FUNCTION
+		
+	// Separate one string with all arguments, into multiple arguments
+	function parseCommandString(cmd) {
+	  const regex = /(?:[^\s"]+|"[^"]*")+/g;
+	  const args = [];
+	
+	  let match;
+	  while ((match = regex.exec(cmd)) !== null) {
+	    let arg = match[0];
+	    // Remove surrounding quotes if present
+	    if (arg.startsWith('"') && arg.endsWith('"')) {
+	      arg = arg.slice(1, -1);
+	    }
+	    args.push(arg);
+	  }
+	  return args;
 	}
 }
 function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 

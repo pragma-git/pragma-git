@@ -44,7 +44,7 @@ async function fs_existsSync( folder_or_sshUrl) {
     try{
         let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"`;
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-        MAIN.multiPlatformExecSync( undefined, CMD);
+        MAIN.multiPlatformExecSync( sshUrl, CMD);
         return true
     }catch (err){
         //console.error(err);
@@ -78,7 +78,7 @@ async function sshGet( sshUrl, fileRelativeRepoBase) {
   // run ssh-get bash script
   let CMD = `${CWD_INIT}/ssh_folder/ssh-get "${sshUrl}" "${fileRelativeRepoBase}"`;
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  MAIN.multiPlatformExecSync( undefined, CMD);
+  MAIN.multiPlatformExecSync( sshUrl, CMD);
   
   // Return temp-path
   let tempFile = `${SSH_TEMP_FILE_LOCATION}/${fileRelativeRepoBase}`;
@@ -103,7 +103,7 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   let CMD = `${CWD_INIT}/ssh_folder/ssh-put "${sshUrl}" "${fileRelativeRepoBase}"`;
   
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  MAIN.multiPlatformExecSync( undefined, CMD);
+  MAIN.multiPlatformExecSync( sshUrl, CMD);
   
   // Return temp-path
 

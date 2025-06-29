@@ -17,7 +17,7 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 # Setup paths
 SERVER_PATH="${SERVER_BASE_PATH}"
 
-# Execute the test command remotely
+# Execute the test command 
 ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS  "test -e \"$SERVER_PATH\""
 exit_code=$?
 
@@ -26,6 +26,10 @@ case $exit_code in
     1) echo 'File missing'; exit 1 ;;    # File doesn't exist
     *) 
         echo "SSH ERROR in 'ssh-test-if-file-exists' (code $exit_code) for $SERVER:$PORT$SERVER_PATH" >&2
+        
+        echo "SERVER = ${SERVER}" >&2
+        echo "PORT = ${PORT}" >&2
+        echo "SERVER_PATH = ${SERVER_PATH}" >&2
         exit $exit_code  # Propagate other SSH errors
         ;;
 esac

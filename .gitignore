@@ -3,3 +3,5 @@ node_modules*/
 docs/~*
 log*.txt
 mytoken.txt
+
+pragma-git.geany

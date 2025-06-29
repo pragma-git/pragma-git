@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 #
 # This is the standard way for all ssh-functions to get constants, and functions
 #
@@ -10,27 +10,32 @@ TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder (sam
 
 
 # Platform specific $TMP in Home dir
-if [ -z ${SYSTEMDRIVE+x} ]
-then
-    # Mac or Linux  
-    TMP="$HOME/.Pragma-git/.tmp"
-else
-    # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"
-fi
 
+# Mac or Linux  
+    TMP="$HOME/.Pragma-git/.tmp"	# /home/jan
+	CONTROLPATH="${TMP}/%r@%h:%p"	# Controlpath in "$HOME/.Pragma-git/.tmp"
+
+# Windows (git over ssh  is implemented using WSL)
+if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+    # Make paths for running inside WSL
+    TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp  
+	CONTROLPATH="${HOME}/%r@%h:%p"      # Sockets must be in native linux, not a mount points /mnt/c/... .  "$HOME/.Pragma-git/.tmp"
+fi
 
 # SSH AND SCP OPTIONS
 TIMEOUT="1"   # SSH TIMEOUT
 CONNECT_OPTIONS=" -4 -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no " # Connecting
-REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${TMP}/%r@%h:%p "  # Reuse ssh channel (speed up )
+REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${CONTROLPATH} "  # Reuse ssh channel (speed up )
 
+# Combine connection and reuse options  
 SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
 SSH_LOG="${TMP}/ssh-log.log"
 
 # FUNCTIONS
-#function getSshUrlParts1 () {
+
+# Original function before optimizing (keep commented-out version here as reference)
+#function getSshUrlParts1 () {  
     
     #SSH_REPO_URL="$1"
     
@@ -89,4 +94,8 @@ function getSshUrlParts() {
     # - Empty path becomes "/"
     # - Existing paths get leading slash: "path" → "/path"
     SERVER_BASE_PATH="/${path_part}"
+    
+    #echo "SERVER = $SERVER" >> "$SSH_LOG"
+    #echo "PORT = $PORT" >> "$SSH_LOG"
+    #echo "SERVER_BASE_PATH = $SERVER_BASE_PATH" >> "$SSH_LOG"
 }
