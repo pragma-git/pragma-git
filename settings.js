@@ -387,6 +387,7 @@ async function _callback( name, event){
             // Update cached branch list
             await opener.cacheBranchList();
             
+            console.log('addRepoButtonPressed');
             
             // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
             await _callback('repoRadiobuttonChanged', {id: state.repoNumber});
@@ -1755,7 +1756,8 @@ async function createHtmlTable(document){
     console.log('Settings - document :');
     console.log(document)
     
-            
+	console.log( opener.cachedRemoteOrigins.isActiveRemote);
+		            
     // Set default branch-name
     await opener.registerDefaultBranch(document);
  
@@ -1780,13 +1782,14 @@ async function createHtmlTable(document){
             //}
         //}   
         
-        
+
+		console.log( opener.cachedRemoteOrigins.isActiveRemote);
         for (let i in state.repos) {
             state.repos[i].remoteURL = opener.cachedRemoteOrigins.remoteURL[i];
         }
         
         await generateRepoTable( document, table, state.repos); // generate the table first
-
+		console.log( opener.cachedRemoteOrigins.isActiveRemote);
 
 
 }

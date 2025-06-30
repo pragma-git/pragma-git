@@ -5845,7 +5845,10 @@ async function addExistingRepo( folder) {
         
         // Fill in state array
         state.repos[index] = fixRepoSettingWithDefault( state.repos[index]);
-        await cacheFolderStatus()
+        
+        // Update only last repo -- Saves a lot of time compatred to cacheFolderStatus() which updates all repos
+        await cacheLocalFolderExistStatus(index);   // sets  cachedLocalStatus
+		await updateAndTestRemoteOrigins(index);    // sets  cachedRemoteOrigins
 
         // Figure out URL of fork-parent (undefined if not a forked repo)
         let forkParentUrl;

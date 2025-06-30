@@ -19,7 +19,7 @@ cd $(dirname $0)
 source lib/ssh-functions
 
 TEST_LOG="/tmp/testlog.log"
-rm  "$TEST_LOG" 
+rm  "$TEST_LOG" > /dev/null
 
 counter=0
 

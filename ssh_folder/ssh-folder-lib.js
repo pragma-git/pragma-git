@@ -11,6 +11,14 @@
 SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders' // Called TEMP_FILE_LOCATION in ssh_folder/ssh-functions bash script
 CWD_INIT = global.CWD_INIT;         // Defined in app.js as base-dir for pragma-git
 
+// Adjust to Windows SSH_TEMP_FILE_LOCATION
+if ( process.platform === 'win32' ){
+	SSH_TEMP_FILE_LOCATION = getAndCreateWinTempFolder() + '\\pragma-git-ssh-folders';  // os.homedir()\AppData\Local\Temp\pragma-git-ssh-folders
+}
+
+
+
+
 
 // =============================================
 // fs_existsSync
@@ -81,7 +89,11 @@ async function sshGet( sshUrl, fileRelativeRepoBase) {
   MAIN.multiPlatformExecSync( sshUrl, CMD);
   
   // Return temp-path
-  let tempFile = `${SSH_TEMP_FILE_LOCATION}/${fileRelativeRepoBase}`;
+  let tempFile = `${SSH_TEMP_FILE_LOCATION}/${fileRelativeRepoBase}`;  // Sloppy with '/' but if windows it will be converted to \\
+  
+  // Adjust to windows path if WSL
+  tempFile = wslToWindowsPath(tempFile)
+  
   return tempFile
 }
 
@@ -109,3 +121,41 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
 
 }
 
+
+// =============================================
+// Transform between WSL and Windows paths (do nothing if linux / macos)
+// =============================================
+function wslToWindowsPath( wslPath) {  
+	
+	if ( process.platform === 'win32' ) {
+		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
+	}
+	return wslPath
+}
+
+function windowsToWslPath( windowsPath) {  
+	
+	if ( process.platform === 'win32' ) {
+		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
+	}
+	return windowsPath
+}
+
+
+function getAndCreateWinTempFolder(){
+	const fs = require('fs');
+	const path = require('path');
+	const os = require('os');
+	
+	// Get the TEMP folder path
+	const tempPath = path.join(os.homedir(), 'AppData', 'Local', 'Temp');
+	
+	// Check if the folder exists
+	if (!fs.existsSync(tempPath)) {
+		console.log(`TEMP folder not found. Creating: ${tempPath}`);
+		fs.mkdirSync(tempPath, { recursive: true });
+	} else {
+		console.log(`TEMP folder already exists at: ${tempPath}`);
+	}
+	return tempPath;  
+}
