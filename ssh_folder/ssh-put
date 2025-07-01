@@ -15,6 +15,8 @@ source $(dirname $0)/lib/ssh-functions
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
+echo ">> SSH-PUT  \"$1\" \"$2\"" >> "$SSH_LOG"
+
 # Setup paths
 RELATIVE_PATH="$2"
 SERVER_PATH="${SERVER_BASE_PATH}/${RELATIVE_PATH}"
@@ -30,18 +32,21 @@ fi
 
 # Make folder on server
 MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$(dirname "$SERVER_PATH")\""
-echo "$MKDIR"
+echo "    $MKDIR" >> "$SSH_LOG"
 eval $MKDIR
 
 # Copy to server
 SCP="scp -P ${PORT} $SSH_OPTIONS \"$LOCAL_PATH\" \"${SERVER}:${SERVER_PATH}\" "
-echo "$SCP"
+echo "    $SCP" >> "$SSH_LOG"
 eval $SCP
 
 # Check result
 if [ $? -eq 0 ]; then
-    echo "File pushed successfully to server: $SERVER_PATH"
+    echo "    Success : Pushed file \"$2\" to \"$1\""  >> "$SSH_LOG"
+    echo " " >> "$SSH_LOG"
+    exit 0
 else
-    echo "Error: Failed to push file"
+    echo "    Error : Failed to push file \"$2\" to \"$1\"" >> "$SSH_LOG"
+    echo " " >> "$SSH_LOG"
     exit 1
 fi

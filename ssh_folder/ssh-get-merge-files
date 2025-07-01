@@ -9,7 +9,7 @@
 #   $1      --  SSH URL, for instance 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
 #  .....
 #
-# Example (run git status on remote server) :
+# Example  :
 #   ./ssh-get-merge-files 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' 
 #
 
@@ -21,6 +21,8 @@ source $(dirname $0)/lib/ssh-functions
 SCRIPT_FOLDER=$(dirname $0)   # The location of this script, used to get absolute path to "pragma-merge"
 FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'            # Four files on ssh folder, coming from difftool BASE LOCAL REMOTE MERGED
 TIMEOUT=2;                                                # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
+
+
 
 # FUNCTIONS
 
@@ -46,13 +48,15 @@ function getFiles () {
         fi
         
         # Transfer
-        echo "SSH TRANSFER :  ${REMOTE}  > ${LOCAL}"
+        echo "    SSH TRANSFER :  ${REMOTE}  > ${LOCAL}"
         ssh -T "$SERVER" $SSH_OPTIONS  "cat ${REMOTE} " > "${LOCAL}"
         
         #echo ' '
         
         # Return through variable
         ABSOLUTE_FILE_LOCATIONS="${ABSOLUTE_FILE_LOCATIONS} \"${LOCAL}\""  # Concatenate all absolute paths
+        
+        #echo "    ABSOLUTE_FILE_LOCATIONS from ssh-get-merge-files with arguments = \"${LOCAL}\"" >> "$SSH_LOG"
     done
  
 }
@@ -68,15 +72,19 @@ mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exist
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
+
+echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$SSH_LOG"
+echo " " >> "$SSH_LOG"
+
 # Get files from ssh folder
 FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
-echo "FILE_LOCATIONS = ${FILE_LOCATIONS}"
+echo "    FILE_LOCATIONS = ${FILE_LOCATIONS}"
 eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
 #echo "ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
 
 # Run pragma-merge locally
 command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
-echo "run command = $command" 
+echo "    Call $command" >> "$SSH_LOG"
 eval $command
 
 exit $?  # Return error code from ssh

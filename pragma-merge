@@ -1,24 +1,35 @@
-#!/bin/bash
+#!/bin/bash -x
 #
-# 1) Normally runs on local PC.
+# 1) Normally runs on local PC.  
 #
 # 2) If connected over ssh to a folder, and working with git there, it will start with $5 == 'ssh'
 #    Pragma-git will in this case get the files from the server, and open a local pragma-merge ( $5 is not set on the local instance)
 #
-# 
+# 3) For ssh to a folder on Windows, this runs over WSL.  Hence special WSL if statements
 
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
 then
-    # Mac or Linux  
+    # Mac or Linux or WSL 
     TMP="$HOME/.Pragma-git/.tmp"
-    echo "Mac or Linux" > "$TMP/mergelog.txt"
+    
+    # Modify TMP if run under WSL
+    # Windows (git over ssh  is implemented using WSL)
+	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+		
+		SSH_LOG="${TMP}/ssh-log.log"
+	fi
+    
+    echo "Mac or Linux or WSL" > "$TMP/mergelog.txt"
+    
     #env >> "$TMP/mergelog.txt"
     echo $(pwd) > "$TMP/repo_path"
     echo "TMP=$TMP" >> "$TMP/mergelog.txt"
 else
     # Windows
     TMP="$USERPROFILE/.Pragma-git/.tmp"
+    
     echo "WINDOWS" > "$TMP/mergelog.txt"
     #env >> "$TMP/mergelog.txt"
     echo $(pwd -W) > "$TMP/repo_path"
@@ -49,7 +60,24 @@ if [  -f "$RUNNING" ] ; then
     exit
 fi
 
-# Store input parameters for Pragma-git to pick them up (not used for ssh version)
+# If started in WSL -- need to transform to Window file paths in signalling files
+if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+	TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+
+	# Rewrite positional parameters $1, .. $4
+	set -e -- \
+		"$(echo "$1" | sed 's|/mnt/c|C:|')" \
+		"$(echo "$2" | sed 's|/mnt/c|C:|')" \
+		"$(echo "$3" | sed 's|/mnt/c|C:|')" \
+		"$(echo "$4" | sed 's|/mnt/c|C:|')" 
+		
+	# Running in WSL only if working with repo on server (ssh-folder).  Log to SSH-LOG
+	echo ">> PRAGMA-MERGE $@" >> "$SSH_LOG"
+	echo " " >> "$SSH_LOG"
+fi
+
+
+# Local repo : Store input parameters for Pragma-git to pick them up (these are only used on local computer 
 echo $1 > "$TMP/first"
 echo $2 > "$TMP/second"
 echo $3 > "$TMP/third"
@@ -72,6 +100,13 @@ echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"
 echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/mergelog.txt"
 
 echo  " " >> "$TMP/mergelog.txt"
+
+# Also log to SSHLOG --  so SSHLOG will show trace of all SSH-operations
+if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+	echo  "PRAGMA-MERGE exit"  >> "$SSH_LOG"
+	echo  "    EXIT_CODE = $EXITCODE"  >> "$SSH_LOG"
+	echo " " >> "$SSH_LOG"
+fi
     
 
 exit $EXITCODE

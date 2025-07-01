@@ -1,3 +1,7 @@
 
 # Enforce LF line endings for all files without extensions in ssh_folder and its subdirectories
 ssh_folder/**/[^.]* text eol=lf
+
+# Enforce LF line endings for these files :
+pragma-merge text eol=lf
+pragma-askpass text eol=lf

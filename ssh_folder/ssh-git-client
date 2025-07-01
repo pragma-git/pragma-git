@@ -25,6 +25,9 @@
 #    cd C:\Users\axels\Documents\Projects\Pragma-git\pragma-git\ssh_folder
 #	 wsl /mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client -c SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test version
 
+
+echo "ARGUMENTS = $@ " >> "$SSH_LOG"
+
 # Start timing clock
 start_time=$(date +%s.%N)
 
@@ -50,8 +53,9 @@ while [[ $# -gt 0 ]]; do
         shift
     fi
 done
-#echo "REMAINING_ARGUMENTS : ${filtered_args[@]}"  >> "$SSH_LOG"
+
 REMAINING_ARGUMENTS="${filtered_args[@]}" 
+echo ">> SSH_GIT_CLIENT  ${REMAINING_ARGUMENTS} " >> "$SSH_LOG"
 
 SCRIPT_FOLDER=$(dirname $0)   # The location of this script is the same as "pragma-merge" command
 
@@ -66,10 +70,10 @@ REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòò
 COMMAND="git -C \"${SERVER_BASE_PATH}\" ${REMAINING_ARGUMENTS}"
 
 # Start Pragma-merge in new thread
-case "$3" in
+case "${filtered_args[2]}"  in
 mergetool|difftool)
-    echo "Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
-    "${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSH_REPO_URL" >> "$SSH_LOG"  & 
+    echo "    Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
+    "${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSHURL" >> "$SSH_LOG"  & 
 ;;
 mergetool)
 
@@ -88,8 +92,8 @@ SSH_RETURN_STATUS=$?
 end_time=$(date +%s.%N)
 time_diff=$(awk "BEGIN {print $end_time - $start_time }")
 {
-    echo "$time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
-    echo "$time_diff -- ${COMMAND}" 
+    echo "    $time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
+    echo "    $time_diff -- ${COMMAND}" 
     echo ' '
 } >> "$SSH_LOG"
 

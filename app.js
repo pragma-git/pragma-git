@@ -3575,6 +3575,7 @@ function startPragmaMerge(){
                     
                     let folder = global.state.repos[global.state.repoNumber].localFolder;
                     if ( folder.startsWith('ssh:') ){
+						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
                          await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
                     }
                     
@@ -5949,7 +5950,7 @@ async function getLatestRelease( url,  wantPreRelease){
     return outData; // outData.tag_name is latest release
 } 
 
-function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
+function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -5957,6 +5958,7 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
      //    cmd              command to run in terminal
      //
      // Optional inputs:
+     //		forcelocal		Windows typically runs git on ssh-folder over WSL.  Force running local git-bash instead
      //     mode            'timeout'
      //     timeoutInMs     
      //
@@ -5995,7 +5997,13 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
     //
     // Windows local 
     //    
-	if ( (process.platform === 'win32') &&  !folder.startsWith('ssh:') ) {
+	if ( forcelocal || 
+			( (process.platform === 'win32') &&  !folder.startsWith('ssh:') ) 
+		)
+		{  
+		// forcelocal=true overrides test after ||
+		// So, always run this if forcelocal==true
+			
 		try{
 			out = execSync( cmd, {
 				env: { PATH: 'PATH:/mingw64/bin/' },
@@ -6017,8 +6025,12 @@ function multiPlatformExecSync( folder, cmd, mode, timeoutInMs){  // Run git bas
     //
     // Windows ssh-folder (run using wsl) 
     //   
-	if ( (process.platform === 'win32') &&  folder.startsWith('ssh:') ) {
-		
+	if ( !forcelocal && 
+			( (process.platform === 'win32') &&  folder.startsWith('ssh:') ) 
+		)
+		// forcelocal=false is required 
+		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
+		{  
 		cmd =  cmd.replaceAll('\\','/').replace('C:/','/mnt/c/');  // Change to wsl path
 		const { execFileSync } = require('child_process');
 

@@ -5,6 +5,7 @@
 # The function "getSshUrlParts" is important for all ssh-functions, since it splits the SSHURL into parts
 # NOTE: None of the ssh-functions in this file should print anything to stdout (because it may break pragma-git)
 
+ISWSL=false
 
 # Mac or Linux  
 TMP="$HOME/.Pragma-git/.tmp"	# /home/jan
@@ -13,13 +14,16 @@ TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder temp
 
 # Windows (git over ssh  is implemented using WSL)
 if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+
+	ISWSL=true
+
     # Make paths for running inside WSL
     TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp  
-	CONTROLPATH="${HOME}/%r@%h:%p"      # Sockets must be in native linux, not a mount points /mnt/c/... .  "$HOME/.Pragma-git/.tmp"
+	CONTROLPATH="${HOME}/%r@%h:%p"      # Sockets must be in native linux, not a mount points /mnt/c/... . Use  "$HOME/"
 	
 	TEMP_FILE_LOCATION="${HOME/\/home/\/mnt\/c\/Users}"
 	TEMP_FILE_LOCATION="${TEMP_FILE_LOCATION}/AppData/Local/Temp/pragma-git-ssh-folders"
-	if [ ! -d "$TEMP_FILE_LOCATIO" ]; then
+	if [ ! -d "$TEMP_FILE_LOCATION" ]; then
 		mkdir -p "$TEMP_FILE_LOCATION"
 	fi
 	

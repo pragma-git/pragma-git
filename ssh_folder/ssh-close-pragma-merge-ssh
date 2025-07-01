@@ -9,19 +9,30 @@
 #   ./ssh-close-pragma-merge-ssh  'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac'
 #
 
+
 # Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
 source $(dirname $0)/lib/ssh-functions
+
+echo ">> SSH-CLOSE-PRAGMA-MERGE-SSH  \"$1\"" >> "$SSH_LOG"
 
 # Platform specific $TMP in Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
 then
-    # Mac or Linux  
+    # Mac or Linux or WSL
     TMP="$HOME/.Pragma-git/.tmp"
+    
+    # Modify TMP if run under WSL
+    # Windows (git over ssh  is implemented using WSL)
+	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+		SSH_LOG="${TMP}/ssh-log.log"
+	fi
 else
-    # Windows
+    # Windows local
     TMP="$USERPROFILE/.Pragma-git/.tmp"
 fi
 
+echo  "SSH-CLOSE-PRAGMA-MERGE $1"  >> "$SSH_LOG"
 
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
@@ -36,7 +47,7 @@ ssh -T "$SERVER" $SSH_OPTIONS bash -s <<EOF
 # \$ means that a variable name is on server ($ means that the variable is inserted from above script)
 
     #
-    # Get TMP folder for any system
+    # Get TMP folder for any system (Really - ssh-folder only works on Linux / Mac - so this is a bit unnecessary)
     #
         if [ -z \${SYSTEMDRIVE+x} ]
         then
@@ -86,7 +97,15 @@ ssh -T "$SERVER" $SSH_OPTIONS bash -s <<EOF
 EOF
 
 # Clean up local
-    rm -f "$TMP/exit-pragma-merge"
 
+	# Make signal file to close Pragma-merge
+	echo  "    rm -f $TMP/exit-pragma-merge"  >> "$SSH_LOG"
+    rm -f "$TMP/exit-pragma-merge"
+	EXIT_CODE=$?
+	
+	
+	echo  "    EXIT_CODE = $EXITCODE"  >> "$SSH_LOG"
+	echo  " "  >> "$SSH_LOG"
+	
 # Return error code from ssh
-exit $? 
+exit $EXIT_CODE
