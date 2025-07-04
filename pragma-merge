@@ -7,33 +7,42 @@
 #
 # 3) For ssh to a folder on Windows, this runs over WSL.  Hence special WSL if statements
 
+LOG_INDENT=""
+
 # Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
 then
     # Mac or Linux or WSL 
     TMP="$HOME/.Pragma-git/.tmp"
+    MERGE_LOG="$TMP/mergelog.txt"
     
     # Modify TMP if run under WSL
     # Windows (git over ssh  is implemented using WSL)
 	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
 		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
 		
-		SSH_LOG="${TMP}/ssh-log.log"
+		MERGE_LOG="${TMP}/mergelog.txt"
+		LOG_INDENT="   "
+		echo ">> PRAGMA-MERGE  $@" >> "$MERGE_LOG"
+		echo "${LOG_INDENT}Running in WSL" >> "$MERGE_LOG"
+	else
+		 # Must be without git over ssh -- restart log
+		 echo "Mac or Linux or WSL" > "$MERGE_LOG"
 	fi
     
-    echo "Mac or Linux or WSL" > "$TMP/mergelog.txt"
+   
     
-    #env >> "$TMP/mergelog.txt"
+    #env >> "$MERGE_LOG"
     echo $(pwd) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/mergelog.txt"
+    echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 else
     # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    TMP="$USERPROFILE/.Pragma-git/.tmp"  # Must be without git over ssh -- restart log
     
-    echo "WINDOWS" > "$TMP/mergelog.txt"
-    #env >> "$TMP/mergelog.txt"
+    echo "${LOG_INDENT}WINDOWS" > "$MERGE_LOG"
+    #env >> "$MERGE_LOG"
     echo $(pwd -W) > "$TMP/repo_path"
-    echo "TMP=$TMP" >> "$TMP/mergelog.txt"
+    echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 fi
 
 
@@ -44,7 +53,7 @@ RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and start
 EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
 # SSH folder -- special ($5 == 'ssh' means that pragma-merge is running on server)
-echo "Argument \$5 = $5 (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$TMP/mergelog.txt"
+echo "${LOG_INDENT}Argument \$5 = $5 (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
 if [[ $5 = "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
@@ -54,9 +63,9 @@ fi
 
 # Bail out if already running
 if [  -f "$RUNNING" ] ; then
-    echo  " " >> "$TMP/mergelog.txt"
-    echo  "$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
-    echo  "$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$TMP/mergelog.txt"
+    echo  " " >> "$MERGE_LOG"
+    echo  "${LOG_INDENT}$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$MERGE_LOG"
+    echo  "${LOG_INDENT}$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$MERGE_LOG"
     exit
 fi
 
@@ -70,10 +79,7 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
 		"$(echo "$2" | sed 's|/mnt/c|C:|')" \
 		"$(echo "$3" | sed 's|/mnt/c|C:|')" \
 		"$(echo "$4" | sed 's|/mnt/c|C:|')" 
-		
-	# Running in WSL only if working with repo on server (ssh-folder).  Log to SSH-LOG
-	echo ">> PRAGMA-MERGE $@" >> "$SSH_LOG"
-	echo " " >> "$SSH_LOG"
+
 fi
 
 
@@ -85,6 +91,8 @@ echo $4 > "$TMP/fourth"
 
 
 # Run Pragma-merge while file $RUNNING exists (removed by Pragma-merge when closed)
+echo  " " >> "$MERGE_LOG"
+
 touch "$RUNNING" 
 while [  -f "$RUNNING" ]
 do
@@ -95,18 +103,10 @@ done
 EXITCODE=$(cat "$EXIT")
 # rm "$EXIT"  # Don't remove -- needs this file so I can copy EXITCODE to server (when using ssh-folder)
 
-echo  " " >> "$TMP/mergelog.txt"
-echo  "$(date) EXIT pragma-merge" >> "$TMP/mergelog.txt"
-echo  "$(date) EXIT_CODE = $EXITCODE" >> "$TMP/mergelog.txt"
+echo  " " >> "$MERGE_LOG"
+echo  "${LOG_INDENT}EXIT pragma-merge" >> "$MERGE_LOG"
+echo  "${LOG_INDENT}EXIT_CODE = $EXITCODE" >> "$MERGE_LOG"
 
-echo  " " >> "$TMP/mergelog.txt"
-
-# Also log to SSHLOG --  so SSHLOG will show trace of all SSH-operations
-if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-	echo  "PRAGMA-MERGE exit"  >> "$SSH_LOG"
-	echo  "    EXIT_CODE = $EXITCODE"  >> "$SSH_LOG"
-	echo " " >> "$SSH_LOG"
-fi
-    
+echo  " " >> "$MERGE_LOG"
 
 exit $EXITCODE

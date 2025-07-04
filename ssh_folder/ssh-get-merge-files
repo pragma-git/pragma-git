@@ -56,7 +56,7 @@ function getFiles () {
         # Return through variable
         ABSOLUTE_FILE_LOCATIONS="${ABSOLUTE_FILE_LOCATIONS} \"${LOCAL}\""  # Concatenate all absolute paths
         
-        #echo "    ABSOLUTE_FILE_LOCATIONS from ssh-get-merge-files with arguments = \"${LOCAL}\"" >> "$SSH_LOG"
+        #echo "    ABSOLUTE_FILE_LOCATIONS from ssh-get-merge-files with arguments = \"${LOCAL}\"" >> "$MERGE_LOG"
     done
  
 }
@@ -73,8 +73,7 @@ mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exist
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
 
-echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$SSH_LOG"
-echo " " >> "$SSH_LOG"
+echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$MERGE_LOG"
 
 # Get files from ssh folder
 FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
@@ -84,7 +83,8 @@ eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEM
 
 # Run pragma-merge locally
 command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
-echo "    Call $command" >> "$SSH_LOG"
+echo "    Call $command" >> "$MERGE_LOG"
+echo " " >> "$MERGE_LOG"
 eval $command
 
 exit $?  # Return error code from ssh

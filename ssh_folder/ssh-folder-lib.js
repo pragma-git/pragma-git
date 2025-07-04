@@ -8,12 +8,17 @@
 // 
 
 // SSH folder (work on a server over ssh)
-SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders' // Called TEMP_FILE_LOCATION in ssh_folder/ssh-functions bash script
+let SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders' // Called TEMP_FILE_LOCATION in ssh_folder/ssh-functions bash script
+console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
 CWD_INIT = global.CWD_INIT;         // Defined in app.js as base-dir for pragma-git
 
+console.log('SSH-FOLDER-LIB.JS');
+
 // Adjust to Windows SSH_TEMP_FILE_LOCATION
-if ( process.platform === 'win32' ){
+if ( process.platform == 'win32' ){
+	console.log('win32');
 	SSH_TEMP_FILE_LOCATION = getAndCreateWinTempFolder() + '\\pragma-git-ssh-folders';  // os.homedir()\AppData\Local\Temp\pragma-git-ssh-folders
+	console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
 }
 
 
@@ -26,7 +31,7 @@ if ( process.platform === 'win32' ){
 
 async function fs_existsSync( folder_or_sshUrl) {  
   // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
-  
+  console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
   // SSH or local version :
   if ( folder_or_sshUrl.startsWith('ssh:') ){  
     // SSH folder

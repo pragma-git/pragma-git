@@ -12,7 +12,7 @@ source $(dirname $0)/lib/ssh-functions
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
-echo ">> SSH-GET  \"$1\" \"$2\"" >> "$SSH_LOG"
+echo ">> SSH-GET  \"$1\" \"$2\"" >> "$MERGE_LOG"
 
 # Setup paths
 RELATIVE_PATH="$2"
@@ -33,13 +33,13 @@ eval $SCP
 
 # Check resul
 if [ $? -eq 0 ]; then
-    echo "    Success : Pulled file \"$2\" from \"$1\""  >> "$SSH_LOG"
-    echo "              to \"$LOCAL_PATH\""  >> "$SSH_LOG"
-    echo " " >> "$SSH_LOG"
+    echo "    Success : Pulled file \"$2\" from \"$1\""  >> "$MERGE_LOG"
+    echo "              to \"$LOCAL_PATH\""  >> "$MERGE_LOG"
+    echo " " >> "$MERGE_LOG"
     exit 0
 else
-    echo "    Error : Failed to pull file \"$2\" from \"$1\"" >> "$SSH_LOG"
-    echo " " >> "$SSH_LOG"
+    echo "    Error : Failed to pull file \"$2\" from \"$1\"" >> "$MERGE_LOG"
+    echo " " >> "$MERGE_LOG"
     exit 1
 fi
 

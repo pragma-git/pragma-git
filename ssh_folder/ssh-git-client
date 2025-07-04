@@ -25,9 +25,6 @@
 #    cd C:\Users\axels\Documents\Projects\Pragma-git\pragma-git\ssh_folder
 #	 wsl /mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client -c SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test version
 
-
-echo "ARGUMENTS = $@ " >> "$SSH_LOG"
-
 # Start timing clock
 start_time=$(date +%s.%N)
 

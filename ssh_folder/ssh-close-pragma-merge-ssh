@@ -13,7 +13,7 @@
 # Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
 source $(dirname $0)/lib/ssh-functions
 
-echo ">> SSH-CLOSE-PRAGMA-MERGE-SSH  \"$1\"" >> "$SSH_LOG"
+echo ">> SSH-CLOSE-PRAGMA-MERGE-SSH  \"$1\"" >> "$MERGE_LOG"
 
 # Platform specific $TMP in Home dir
 if [ -z ${SYSTEMDRIVE+x} ]
@@ -25,14 +25,15 @@ then
     # Windows (git over ssh  is implemented using WSL)
 	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
 		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
-		SSH_LOG="${TMP}/ssh-log.log"
+		MERGE_LOG="${TMP}/ssh-log.log"
 	fi
 else
     # Windows local
     TMP="$USERPROFILE/.Pragma-git/.tmp"
 fi
 
-echo  "SSH-CLOSE-PRAGMA-MERGE $1"  >> "$SSH_LOG"
+echo  "SSH-CLOSE-PRAGMA-MERGE $1"  >> "$MERGE_LOG"
+echo  " "  >> "$MERGE_LOG"
 
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
@@ -99,13 +100,13 @@ EOF
 # Clean up local
 
 	# Make signal file to close Pragma-merge
-	echo  "    rm -f $TMP/exit-pragma-merge"  >> "$SSH_LOG"
+	echo  "    rm -f $TMP/exit-pragma-merge"  >> "$MERGE_LOG"
     rm -f "$TMP/exit-pragma-merge"
 	EXIT_CODE=$?
 	
 	
-	echo  "    EXIT_CODE = $EXITCODE"  >> "$SSH_LOG"
-	echo  " "  >> "$SSH_LOG"
+	echo  "    EXIT_CODE = $EXITCODE"  >> "$MERGE_LOG"
+	echo  " "  >> "$MERGE_LOG"
 	
-# Return error code from ssh
+# Return exit code from ssh
 exit $EXIT_CODE

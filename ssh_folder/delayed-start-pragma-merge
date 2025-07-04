@@ -2,18 +2,19 @@
 DELAY=2
 SCRIPT_FOLDER=$(dirname $0)  
 
-# Import functions and constants: $SSH_LOG 
+# Import functions and constants: $MERGE_LOG 
 source $(dirname $0)/lib/ssh-functions 
 
 SSH_REPO_URL="$1"
-echo ">> DELAYED-START-PRAGMA-MERGE \"${SSH_REPO_URL}\"" >> "$SSH_LOG"
+echo ">> DELAYED-START-PRAGMA-MERGE \"${SSH_REPO_URL}\"" >> "$MERGE_LOG"
 
 
-echo "    Start sleep $DELAY seconds" >> "$SSH_LOG"
+echo "    Start sleep $DELAY seconds" >> "$MERGE_LOG"
 sleep $DELAY  # Wait for git over ssh
 
 
 # Get files
-echo  "    Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSH_REPO_URL\"" >> "$SSH_LOG"
-"${SCRIPT_FOLDER}/ssh-get-merge-files" "$SSH_REPO_URL"  >> "$SSH_LOG"
+echo  "    Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSH_REPO_URL\"" >> "$MERGE_LOG"
+echo  "  "  >> "$MERGE_LOG"
 
+"${SCRIPT_FOLDER}/ssh-get-merge-files" "$SSH_REPO_URL"  

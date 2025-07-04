@@ -39,6 +39,7 @@ REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${
 SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
 SSH_LOG="${TMP}/ssh-log.log"
+MERGE_LOG="$TMP/mergelog.txt"
 
 # FUNCTIONS
 
@@ -103,7 +104,7 @@ function getSshUrlParts() {
     # - Existing paths get leading slash: "path" → "/path"
     SERVER_BASE_PATH="/${path_part}"
     
-    #echo "SERVER = $SERVER" >> "$SSH_LOG"
-    #echo "PORT = $PORT" >> "$SSH_LOG"
-    #echo "SERVER_BASE_PATH = $SERVER_BASE_PATH" >> "$SSH_LOG"
+    #echo "SERVER = $SERVER" >> "$MERGE_LOG"
+    #echo "PORT = $PORT" >> "$MERGE_LOG"
+    #echo "SERVER_BASE_PATH = $SERVER_BASE_PATH" >> "$MERGE_LOG"
 }

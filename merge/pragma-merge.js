@@ -42,7 +42,7 @@ const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
-const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
+//const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
 process.chdir( SIGNALDIR);
 
@@ -965,7 +965,13 @@ async function save(){
         if ( ROOT.startsWith('ssh:') ){
             
             // Make relative
-            MERGED_REL_PATH = MERGED.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+            // WAS :  MERGED_REL_PATH = MERGED.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+            
+            // SSH_TEMP_FILE_LOCATION 'C:\\Users\\axels\\AppData\\Local\\Temp\\pragma-git-ssh-folders'
+            // =>  NEW_SSH_TEMP_FILE_LOCATION = 'C:/Users/axels/AppData/Local/Temp/pragma-git-ssh-folders/'
+            // (No harm if separator is / already)
+            let NEW_SSH_TEMP_FILE_LOCATION = SSH_TEMP_FILE_LOCATION.replaceAll('\\','/') + '/';  // Replace separator \ with /.  Add extra / at end
+            MERGED_REL_PATH = MERGED.replace( NEW_SSH_TEMP_FILE_LOCATION , '');
     
             
             pragmaLog('Pragma-merge  -- save() called -- ssh:');
