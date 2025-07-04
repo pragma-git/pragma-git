@@ -6364,14 +6364,23 @@ async function showWindow(win){ // Show external window that was opened hidden
 
 } 
 function fixNwjsBug7973( win){
-    // This function should be called after intercepting 'close' event for a spawned window
-    // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
-    // See : https://github.com/nwjs/nw.js/issues/7973
+    // Function name not relevant any more, since issue 7973 is fixed
+    //
+    // Commented out code was to fix the 7973 issue
+    //
+    // The end of the function is not related to the issue, and hence the function should still be called (TODO: give the function a better name)
     
-    // Hide and resize
-    win.hide();
-    resizeHeightBy = win.window.outerHeight - win.window.innerHeight;
-    win.resizeBy(0,-resizeHeightBy);
+    // Commented out code for issue 7973 -- because issue is fixed in nwjs 0.100.0 :
+        // This function should be called after intercepting 'close' event for a spawned window
+        // Nwjs bug 7973 is related to windows with same id growing each time they are opened again
+        // See : https://github.com/nwjs/nw.js/issues/7973
+        
+        //// Hide and resize
+        //win.hide();
+        //resizeHeightBy = win.window.outerHeight - win.window.innerHeight;
+        //win.resizeBy(0,-resizeHeightBy);
+    
+    // Code to keep :
     
     // Remove 'close' event handler, and then close window
     win.removeAllListeners('close');
