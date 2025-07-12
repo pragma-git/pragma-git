@@ -873,15 +873,14 @@ async function _callback( name, event){
         // Override terminal command from settings
         //       
             
-            if ( state.tools.terminal.trim() !== '' ){
+            if (( state.tools.terminal.trim() !== '' ) && !folder.startsWith('ssh:') ) {
                 try{
                     multiPlatformStartApp( folder, state.tools.terminal, append=false)
                     break;  // End if success, otherwise continue with default
                 }catch (err){
                     console.warn(err);
                 }
-            }
-                
+            }	
             
          
         //
@@ -934,21 +933,62 @@ async function _callback( name, event){
               env: null,
               encoding: 'utf8'
             }
+            
+            
+            
         
         //
         // Linux  solution
         //
-            if (process.platform === 'linux') { 
+        
+            // Linux local folder
+            if ( ( process.platform === 'linux')&& !folder.startsWith('ssh:')) { 
 				// Implement workaround so path with spaces works
 	            options.cwd = folder;
 	            command = 'pwd'; // Dummy command
 			}
         
+        
+            // Linux ssh folder
+            if ( ( process.platform === 'linux')&& !folder.startsWith('ssh:')) { 
+				// TODO : Linux ssh into folder
+			}
+        
+        
+        
         //
         // Windows solution
-        //    
-            
-            // Windows  Note : named win32 also for 64-bit
+        //   
+      
+            // Windows ssh folder
+			if ((process.platform === 'win32') && folder.startsWith('ssh:')) {
+			    const { exec } = require('child_process');
+			    const url = new URL(folder);
+			    const sshUser = url.username;
+			    const sshHost = url.hostname;
+			    const remotePath = url.pathname.replace(/\//g, '/'); // Normalize path
+			    let portCommand = url.port ? ` -p ${url.port}` : '';
+			
+			    // Construct the SSH command for WSL
+			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} "cd ${remotePath} && bash"`;
+			
+			    // Launch a new WSL terminal window and run the SSH command
+			    const terminalCommand = `start wsl.exe ${sshCommand}`;
+			
+			    exec(terminalCommand, (error, stdout, stderr) => {
+			        if (error) {
+			            console.error(`Error launching WSL: ${error.message}`);
+			            return;
+			        }
+			        console.log('WSL launched and SSH session started in target directory');
+			    });
+			
+			    break; // Exit switch
+			}
+		
+
+				
+            // Windows local folder
             if (process.platform === 'win32') {  
                 folder = path.normalize(folder);
                 command = 'cd /d "' + folder + '" && ' + 'cls';
