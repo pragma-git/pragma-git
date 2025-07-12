@@ -889,11 +889,39 @@ async function _callback( name, event){
         //
                 
             // Mac Ventura and later (terminal-tab does not work)
-            if (process.platform === 'darwin') {  
+            if ( (process.platform === 'darwin') && ( ! folder.startsWith('ssh:') ) ){  
                 const { spawn } = require('child_process');
                 const child = spawn('open', [folder, '-a', 'Terminal.app']);
                 break; // Get out of switch statement
             }
+            
+            // ssh folder
+            if ( (process.platform === 'darwin') && ( folder.startsWith('ssh:') ) ){ 
+                const { exec } = require('child_process');
+                
+                
+                const url = new URL(folder);
+                const sshUser = url.username;
+                const sshHost = url.hostname;
+                const remotePath = url.pathname;
+                let portCommand = ` -p ${url.port}`;
+                if (url.port == ''){
+                    portCommand = '';
+                }
+                
+                // This command opens Terminal and runs the SSH command with directory change
+                let terminalCommand = `osascript -e 'tell application "Terminal" to do script "ssh -t ${sshUser}@${sshHost} ${portCommand} \\"cd ${remotePath} && bash\\""'`;
+                
+                exec(terminalCommand, (error, stdout, stderr) => {
+                  if (error) {
+                    console.error(`Error launching Terminal: ${error.message}`);
+                    return;
+                  }
+                  console.log('Terminal launched and SSH session started in target directory');
+                });
+                break; // Get out of switch statement
+            }
+
         
         //
         // Common Linux and Windows
