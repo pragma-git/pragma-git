@@ -927,21 +927,6 @@ async function _callback( name, event){
 
         
         //
-        // Common Linux and Windows
-        //
-			let command;
-			// Using terminal-tab
-	        const terminalTab = require('terminal-tab');
-	        const options = {
-              cwd: null,
-              env: null,
-              encoding: 'utf8'
-            }
-            
-            
-            
-        
-        //
         // Linux  solution
         //
         
@@ -1077,12 +1062,18 @@ async function _callback( name, event){
                      // Find the mapped name (G: etc) and replace path with part matching ProviderName
     
                 }
+                terminalCommand = `start cmd.exe /K ${command}`
+			    exec(terminalCommand, (error, stdout, stderr) => {
+			        if (error) {
+			            console.error(`Error launching WSL: ${error.message}`);
+			            return;
+			        }
+			        console.log('WSL launched and SSH session started in target directory');
+			    });                
+                
                 
             }
 
-            
-            terminalTab.open( command, options)  // Only used for Windows local -- TODO : Maybe I should just remove it
-        
         break;
       }     
       case 'clicked-status-text' : {
