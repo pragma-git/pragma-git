@@ -198,7 +198,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             }
             
             let sshUrl = pwd;
-            console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
+            //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
            
             // TODO (below) :  include.path is hardcoded -- need to make it correct 
             
@@ -869,6 +869,10 @@ async function _callback( name, event){
 
         let folder = state.repos[ state.repoNumber].localFolder;
         
+        if ( folder.startsWith('ssh:') ){
+            
+        }
+        
         //
         // Override terminal command from settings
         //       
@@ -950,8 +954,70 @@ async function _callback( name, event){
         
         
             // Linux ssh folder
-            if ( ( process.platform === 'linux')&& !folder.startsWith('ssh:')) { 
-				// TODO : Linux ssh into folder
+            if ( ( process.platform === 'linux') && folder.startsWith('ssh:')) {
+			    const { exec } = require('child_process');
+			    const url = new URL(folder);
+			    const sshUser = url.username;
+			    const sshHost = url.hostname;
+			    const remotePath = url.pathname.replace(/\//g, '/'); // Normalize path
+			    let portCommand = url.port ? ` -p ${url.port}` : '';
+			
+			    // Construct the SSH command 
+			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${remotePath}" && bash \"`;
+			    let terminalCommand = `gnome-terminal -- bash -c '${sshCommand}' `;  // Default
+                
+                //
+                // Set terminal command (assume command is run with -e flag)
+                //
+                if ( state.tools.terminal.trim() !== '' ) {
+                    terminalCommand = `${state.tools.terminal} -e bash -c '${sshCommand}' `;
+                }
+                
+                function isGnome(){
+                      try {
+                        child_process.execSync('which gnome-terminal')
+                        return true
+                      } catch(e) {
+                        return false
+                      }
+                }                
+                function isXterm(){
+                      try {
+                        child_process.execSync('which xterm')
+                        return true
+                      } catch(e) {
+                        return false
+                      }
+                }                
+                function isXtermEmulator(){
+                      try {
+                        child_process.execSync('which x-terminal-emulator')
+                        return true
+                      } catch(e) {
+                        return false
+                      }
+                }
+                
+              if (isGnome()) {
+                    terminalCommand = `gnome-terminal -- bash -c '${sshCommand}' `;  // -e is depreciated
+              } else if (isXterm()) {
+                    terminalCommand = `xterm -e  bash -c '${sshCommand}' `;
+              } else if (isXtermEmulator()) {
+                    terminalCommand = `x-terminal-emulator -e  bash -c '${sshCommand}' `;
+              }
+                
+                
+                
+               // Execute command 
+			    exec(terminalCommand, (error, stdout, stderr) => {
+			        if (error) {
+			            console.error(`Error launching terminal: ${error.message}`);
+			            return;
+			        }
+			        console.log('Terminal launched and SSH session started in target directory');
+			    });
+			
+			    break; // Exit switch
 			}
         
         
@@ -1015,7 +1081,7 @@ async function _callback( name, event){
             }
 
             
-            terminalTab.open( command, options)
+            terminalTab.open( command, options)  // Only used for Windows local -- TODO : Maybe I should just remove it
         
         break;
       }     
