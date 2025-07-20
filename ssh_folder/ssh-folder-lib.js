@@ -23,12 +23,11 @@ if ( process.platform == 'win32' ){
 
 
 
-
-
 // =============================================
-// fs_existsSync
+// FUNCTIONS
 // =============================================
 
+// All platforms 
 async function fs_existsSync( folder_or_sshUrl) {  
   // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
   console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
@@ -68,16 +67,6 @@ async function fs_existsSync( folder_or_sshUrl) {
   }
   
 }
-
-// =============================================
-// sshFileExists
-// =============================================
-
-  
-
-// =============================================
-// sshGet
-// =============================================
 async function sshGet( sshUrl, fileRelativeRepoBase) {  
   //  Copy file from ssh to tempFolder
   //
@@ -101,11 +90,6 @@ async function sshGet( sshUrl, fileRelativeRepoBase) {
   
   return tempFile
 }
-
-
-// =============================================
-// sshPut
-// =============================================
 async function sshPut( sshUrl, fileRelativeRepoBase) {  
   //  Copy file from ssh to tempFolder
   //
@@ -113,7 +97,7 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   //    sshUrl                -- git repo's base sshURL
   //    fileRelativeRepoBase  -- file's path relative git repo's base
   //  Output :
-  //    absolute path to copied file
+  //    none
   
 
   // run ssh-get bash script
@@ -121,32 +105,40 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
   MAIN.multiPlatformExecSync( sshUrl, CMD);
+}
+async function sshPutSimple( absoluteLocalFilePath, sshUrl) {  
+  //  Copy file from ssh to tempFolder
+  //
+  //  Inputs :
+  //    absoluteLocalFilePath  -- local file path with file to put into sshUrl
+  //    sshUrl                 -- sshURL with full path to file name to write
+  //  Output :
+  //    none
   
-  // Return temp-path
 
+  // run ssh-get-simple bash script
+  let CMD = `${CWD_INIT}/ssh_folder/ssh-put-simple "${absoluteLocalFilePath}" "${sshUrl}"`; 
+  
+  MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
+  MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
 
 
-// =============================================
-// Transform between WSL and Windows paths (do nothing if linux / macos)
-// =============================================
-function wslToWindowsPath( wslPath) {  
+// Windows specific
+function wslToWindowsPath( wslPath) {       // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
 		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
 	}
 	return wslPath
 }
-
-function windowsToWslPath( windowsPath) {  
+function windowsToWslPath( windowsPath) {   // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
 		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
 	}
 	return windowsPath
 }
-
-
 function getAndCreateWinTempFolder(){
 	const fs = require('fs');
 	const path = require('path');

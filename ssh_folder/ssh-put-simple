@@ -1,0 +1,50 @@
+#!/bin/bash 
+
+# Puts file from client to server using absolute paths (compare ssh-put which is more repo-oriented)
+# Usage: ./ssh-put-simple SSH_URL absolutePathForFileToCopy    
+#
+# Arguments
+#   $1      --  local file
+#   $2      --  SSH URL to copy local file to , for instance  'ssh://jan@localhost/Users/jan/.Pragma-git/pragma-git-config-ssh'
+#
+# Example:   ssh_folder/ssh-put ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test tmp/jan
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
+# Get server info
+getSshUrlParts "$2"  # Sets SERVER PORT SERVER_BASE_PATH
+
+echo ">> SSH-PUT-SIMPLE  \"$1\" \"$2\"" >> "$MERGE_LOG"
+
+# Setup paths
+LOCAL_PATH="$1"
+SERVER_PATH="${SERVER_BASE_PATH}"
+
+
+# Verify local file exists
+if [ ! -f "$LOCAL_PATH" ]; then
+    echo "Error: Local file not found at $LOCAL_PATH"
+    exit 1
+fi
+
+# Make folder on server
+MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$(dirname "$SERVER_PATH")\""
+echo "    $MKDIR" >> "$MERGE_LOG"
+eval $MKDIR
+
+# Copy to server
+SCP="scp -P ${PORT} $SSH_OPTIONS \"$LOCAL_PATH\" \"${SERVER}:${SERVER_PATH}\" "
+echo "    $SCP" >> "$MERGE_LOG"
+eval $SCP
+
+# Check result
+if [ $? -eq 0 ]; then
+    echo "    Success : Pushed file \"$1\" to \"$2\""  >> "$MERGE_LOG"
+    echo " " >> "$MERGE_LOG"
+    exit 0
+else
+    echo "    Error : Failed to push file \"$1\" to \"$2\"" >> "$MERGE_LOG"
+    echo " " >> "$MERGE_LOG"
+    exit 1
+fi

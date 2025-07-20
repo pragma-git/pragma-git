@@ -173,7 +173,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             // get pragma-git .gitconfig-include
             if (configFile === undefined){
-                configFile = configFilePath();
+                configFile = configFilePath();  // Gets config file path.  If developing -- config file is created in .Pragma-git
             }
             
             localState.lastSimpleGitFolder = pwd;
@@ -198,21 +198,23 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             }
             
             let sshUrl = pwd;
-            //console.log(`SSH FOLDER -- ${binary} ${sshUrl}`);
            
-            // TODO (below) :  include.path is hardcoded -- need to make it correct 
-            
+            // The second config-row below is used to sneak the SSHURL into the ssh-git-client
+            // The SSH_CONFIG_FILE_LOCATION file is copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             return simpleGitDefault( 
                 {   
-                    config: ['include.path='  + '/home/jan/Desktop/ssh_local_test/.git/config', `SSHURL=${sshUrl}` ],
+                    config: [   
+                                `include.path=${SSH_CONFIG_FILE_LOCATION}`, 
+                                `SSHURL=${sshUrl}` 
+                            ],
                     unsafe: {  
                         allowUnsafeCustomBinary: true
                     } , 
                     binary: binary  
                 }
             ); 
-				// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
-                // My ssh-git-client handles path by itself.
+			// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
+            // My ssh-git-client handles path by itself.
         }
  
  
@@ -301,7 +303,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         ); 
         
         // SSH folder (work on a server over ssh)
-        SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders' // Called TEMP_FILE_LOCATION in ssh_folder/ssh-functions bash script
+        // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
+        const SSH_CONFIG_FILE_LOCATION='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder
         
     
     // State variables
@@ -589,7 +592,9 @@ async function _callback( name, event){
         // Write local config credential.username (this runs every time, a bit of a time waster)
         storeUsernameInLocalGitConfig( state.repos[ origRepoNumber].remoteURL );
         storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
-            
+        
+        // Copy to ssh server
+        await setupSshServer();  
                 
        
         break;
@@ -5778,6 +5783,30 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 // Utility functions
 
+async function setupSshServer( ){ // Copies config, and executables to ssh server "$HOME/.Pragma-merge" folder
+    
+    const sshUrl = state.repos[state.repoNumber].localFolder;  
+    if ( !sshUrl.startsWith('ssh:') ){
+        console.error('NOT A SSH URL');
+        return
+    }
+    const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+    
+    // Copy config to ssh server -- 'pragma-git-config-ssh' (SSH_CONFIG_FILE_LOCATION)
+    await sshPutSimple( CWD_INIT + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_linux_ssh_server' , 
+                        `${baseUrl}/.Pragma-git/pragma-git-config-ssh` 
+                       ); 
+                       
+    // Copy pragma-merge executable
+    await sshPutSimple( CWD_INIT + pathsep + 'pragma-merge'  , 
+                        `${baseUrl}/.Pragma-git/pragma-merge` 
+                       );  
+    
+    
+    // TODO: Copy pragma-askpass
+}
+
 function getMode(){
     return localState.mode;
 }
@@ -7902,6 +7931,8 @@ window.onload = async function() {
   
   // Show settings icon
   document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'visible'
+  
+  setupSshServer() // Copy config and pragma-merge executable to server
  
   pragmaLog('Done starting app');
   pragmaLog('');

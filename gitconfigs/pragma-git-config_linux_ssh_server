@@ -1,0 +1,19 @@
+[init]
+    defaultbranch=main
+
+[mergetool]
+    keepBackup = false
+    
+[mergetool "pragma-git"]
+    #cmd = /home/jan/Desktop/Pragma-git-dev/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh  
+    cmd = $HOME/.Pragma-git/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh      
+	trustExitCode = true    
+
+[core]
+    #askpass = /opt/pragma-git/package.nw/pragma-askpass
+
+[credential]
+    useHttpPath = true
+    
+[push]
+    autoSetupRemote = true
