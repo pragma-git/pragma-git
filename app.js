@@ -5791,20 +5791,34 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
         return
     }
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
-    const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
     
-    // Copy config to ssh server -- 'pragma-git-config-ssh' (SSH_CONFIG_FILE_LOCATION)
-    await sshPutSimple( CWD_INIT + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_linux_ssh_server' , 
-                        `${baseUrl}/.Pragma-git/pragma-git-config-ssh` 
-                       ); 
-                       
-    // Copy pragma-merge executable
-    await sshPutSimple( CWD_INIT + pathsep + 'pragma-merge'  , 
-                        `${baseUrl}/.Pragma-git/pragma-merge` 
-                       );  
+    try{
+        // Assume linux
+        const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+        await putFiles(baseUrl);
+    }catch (err){
+        // Assume MacOS
+        const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
+        await putFiles(baseUrl);
+    }
     
-    
-    // TODO: Copy pragma-askpass
+    // Internal function
+    async function putFiles(baseUrl){
+               
+        // Copy config to ssh server -- 'pragma-git-config-ssh' (SSH_CONFIG_FILE_LOCATION)
+        await sshPutSimple( CWD_INIT + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_linux_ssh_server' , 
+                            `${baseUrl}/.Pragma-git/pragma-git-config-ssh` 
+                           ); 
+                           
+        // Copy pragma-merge executable
+        await sshPutSimple( CWD_INIT + pathsep + 'pragma-merge'  , 
+                            `${baseUrl}/.Pragma-git/pragma-merge` 
+                           );  
+        
+        
+        // TODO: Copy pragma-askpass
+    }
+ 
 }
 
 function getMode(){
