@@ -190,7 +190,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                 return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
             }
   
+            //
             // Special if local is a folder on server over ssh
+            //
+            
+            // Git binary linux, MacOS, Windows
             let binary = [`${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client` ];
             if (process.platform === 'win32') {  
                 let WSL_STARTDIR =  STARTDIR.replaceAll('\\','/').replace('C:','/mnt/c'); // 'C:\\Users\\axels\\Documents\\Projects\\Pragma-git\\pragma-git' => '/mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git'
@@ -200,7 +204,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             let sshUrl = pwd;
            
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
-            // The SSH_CONFIG_FILE_LOCATION file is copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
+            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             return simpleGitDefault( 
                 {   
                     config: [   
@@ -304,8 +308,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // SSH folder (work on a server over ssh)
         // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
-        const SSH_CONFIG_FILE_LOCATION='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder
-        
+        const SSH_CONFIG_FILE_LOCATION_TEMPLATE='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder
+        var SSH_CONFIG_FILE_LOCATION = '';  // This is set to correct path in setupSshServer()
     
     // State variables
     
@@ -504,7 +508,10 @@ async function _callback( name, event){
         var isRepo;
         // Check if repo
         if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
-            // If folder exists, I am allowed to check if repo
+            // If folder exists, I am allowed to set up ssh-server, and can then check if repo exists
+            
+	        // Setup SSH_CONFIG_FILE_LOCATION and copy to ssh server
+	        await setupSshServer(); 
             
             // Check if repository 
             try{
@@ -592,9 +599,7 @@ async function _callback( name, event){
         // Write local config credential.username (this runs every time, a bit of a time waster)
         storeUsernameInLocalGitConfig( state.repos[ origRepoNumber].remoteURL );
         storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
-        
-        // Copy to ssh server
-        await setupSshServer();  
+         
                 
        
         break;
@@ -5794,12 +5799,14 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
     
     try{
         // Assume linux
-        const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
         await putFiles(baseUrl);
+        SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', `/home/${urlParts.username}`);
     }catch (err){
         // Assume MacOS
-        const baseUrl = `${urlParts.protocol}//${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
+        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
         await putFiles(baseUrl);
+        SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', `/Users/${urlParts.username}`);
     }
     
     // Internal function
@@ -6199,7 +6206,7 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
 		// forcelocal=false is required 
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
-		cmd =  cmd.replaceAll('\\','/').replace('C:/','/mnt/c/');  // Change to wsl path
+		cmd =  cmd.replaceAll('\\','/').replaceAll('C:/','/mnt/c/');  // Change to wsl path
 		const { execFileSync } = require('child_process');
 
 		try{
