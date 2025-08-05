@@ -257,7 +257,7 @@ async function _callback( name, event){
                     
         // Rebase conflict
         if ( await isRebaseMerge() ){
-			opener.multiPlatformExecSync( folder, 'export GIT_EDITOR=true; git rebase --continue');
+			await opener.multiPlatformExecSync( folder, 'export GIT_EDITOR=true; git rebase --continue');
             return
         }
     
@@ -418,7 +418,7 @@ async function createConflictingFileTable(document, status_data) {
     
     // Print current commit being rebased
     if ( await isRebaseMerge() ){
-        let thisPicked = opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1');  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
+        let thisPicked = await opener.multiPlatformExecSync( folder, 'cat  .git/rebase-merge/done | tail -1');  // 'pick ac15e882c3f8ac8394911f9a70be7fb88e7c271a my first commit'
         let thisCommit = thisPicked.trim().split(" ").slice(2).join(" ");              //'my first commit'
         document.getElementById('rebaseDetails').innerText = 'Rebase : ' + thisCommit;
     }

@@ -186,7 +186,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             // Standard if local folder
             if ( !pwd.startsWith('ssh:')){
-                console.log(`LOCAL FOLDER -- ${pwd}`);
+                //console.log(`LOCAL FOLDER -- ${pwd}`);
                 return simpleGitDefault(pwd, { config: ['include.path='  + configFile ] })
             }
   
@@ -204,7 +204,15 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             let sshUrl = pwd;
            
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
-            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
+            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() -- IS THIS SURE ?  I think it is copied when I switch to Repo.
+            
+            // Set for correct home folder
+            const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
+            const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];
+            let SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
+            console.log(`SSH_CONFIG_FILE_LOCATION2 = ${SSH_CONFIG_FILE_LOCATION}`);
+            
+            
             return simpleGitDefault( 
                 {   
                     config: [   
@@ -5468,6 +5476,15 @@ async function updateAndTestRemoteOrigins( start = 0 ){
         
         // Processing function 
         async function onRemote(err, result) {
+            
+            // If err, bail out
+            if (result == undefined){
+                newCachedRemoteOrigins.isActiveRemote[repoNumber] = false;
+                // Do not update state.repos[repoNumber].remoteURL
+                return
+            }
+            
+            // Here if not err
             let rows = result.split('\n');
             
             // Loop to identify 'origin' if multiple
@@ -5525,9 +5542,12 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     //
     // If first argument is set (other than 0), then  only update that repoNumber (actually updates all repos from that repoNumber to end)
     //
-    // Stores if localFolder exist
-    // -- cachedLocalStatus.exists
-    // -- cachedLocalStatus.localFolder         (really stored only to help debugging)
+    // Stores info about localFolder (or ssh-folder) :
+    // -- cachedLocalStatus.exists           (folder exists)
+    // -- cachedLocalStatus.isRepo           (is git repo)
+    // -- cachedLocalStatus.localFolder      (really stored only to help debugging)
+    // -- cachedLocalStatus.platform         (Mac, Linux, undefined or Local.  Local if not ssh-folder, undefined if ssh-folder but could not be determined)
+    // -- cachedLocalStatus.sshHome          (Home directory of ssh-server.  /Users/jan for Mac.  /home/jan for Linux)
     // 
  
     console.log('=== cacheLocalFolderExistStatus ===');
@@ -5538,6 +5558,8 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         newCachedLocalStatus.exists = new Array(state.repos.length).fill(false);
         newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
         newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+        newCachedLocalStatus.platform = new Array(state.repos.length).fill(null);
+        newCachedLocalStatus.sshHome = new Array(state.repos.length).fill(null);
     }else{
         newCachedLocalStatus = cachedLocalStatus;  // Copy if subset
     }
@@ -5560,13 +5582,29 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         newCachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
         newCachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
+        let platform = await typeOfRepoServer(folder); 
+        newCachedLocalStatus.platform[ repoNumber] = platform;
+        
+        if (folder.startsWith('ssh:') ){
+            const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+            
+            if (platform == 'Mac'){
+                newCachedLocalStatus.sshHome[ repoNumber] = `/Users/${urlParts.username}`
+            }
+            if (platform == 'Linux'){
+                newCachedLocalStatus.sshHome[ repoNumber] = `/home/${urlParts.username}`
+            }
+            
+        }
+
          await simpleGit(folder).checkIsRepo(onCheckIsRepo);
          function onCheckIsRepo(err, checkResult) { 
-             newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
              if ( checkResult == undefined){
-                 console.error(err);
+                 console.warn(`Error calling  testLocalStatus( ${repoNumber}, ${folder} )`);
+                 console.warn(err);
                  checkResult = false;  // Set to false
              }
+             newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
          }
         
     }
@@ -5788,7 +5826,38 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 // Utility functions
 
-async function setupSshServer( ){ // Copies config, and executables to ssh server "$HOME/.Pragma-merge" folder
+async function typeOfRepoServer( sshUrl){  // For ssh-folders, returns : Mac, Linux or undefined.   For local, returns 'Local'
+    
+    if ( !sshUrl.startsWith('ssh:') ){
+        return 'Local'
+    }
+    
+    const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    
+    // Check home directory
+    try{
+        // Assume linux
+        let baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+        if ( await fs_existsSync(baseUrl)){
+            return 'Linux';
+        }
+        
+        // Assume MacOS
+        baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
+        if ( await fs_existsSync(baseUrl)){
+            return 'Mac';
+        }
+        
+        
+    }catch (err){
+        console.error(err);
+        return undefined
+    }
+    
+    
+}
+
+async function setupSshServer( ){ // Copies config, and executables to ssh server "$HOME/.Pragma-git" folder
     
     const sshUrl = state.repos[state.repoNumber].localFolder;  
     if ( !sshUrl.startsWith('ssh:') ){
@@ -6125,6 +6194,51 @@ async function getLatestRelease( url,  wantPreRelease){
     return outData; // outData.tag_name is latest release
 } 
 
+async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
+/**
+ * Runs any shell command with a timeout, simulating execSync behavior.
+ * @param {string} command - The command to run (e.g., 'ssh', 'ls', 'curl')
+ * @param {string[]} args - Array of arguments for the command
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @returns {Promise<string>} - Resolves with stdout or throws with stderr
+ */
+  return new Promise((resolve, reject) => {
+    const proc = exec(command, args);
+
+    let stdout = '';
+    let stderr = '';
+    let timedOut = false;
+
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      proc.kill('SIGTERM');
+      reject(new Error(`Command timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    proc.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    proc.on('error', (err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+
+    proc.on('close', (code) => {
+      clearTimeout(timeout);
+      if (timedOut) return;
+      if (code === 0) {
+        resolve(stdout.trim());
+      } else {
+        reject(new Error(stderr.trim() || `Command failed with code ${code}`));
+      }
+    });
+  });
+}
 function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
@@ -6165,7 +6279,18 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
     //
 	if ( (process.platform === 'darwin') || (process.platform === 'linux') ) {
 		// Linux or Mac
-		return  execSync( cmd, options ).toString().trim();
+		
+        //return  execSync( cmd, options ).toString().trim();
+        
+
+        try{
+            timeoutInMs = 2000
+            return  runCommandWithTimeout(cmd, [], timeoutInMs);
+        }catch (err){
+            //console.error( err);
+            return err.toString();
+        }
+
 	}
 	
 
@@ -6247,7 +6372,7 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
 	  return args;
 	}
 }
-function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
+async function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
     // Start freerunning program (so it will not be attached to pragma-git anymore
     //
     // append = true means that cmd and folder are appended after each other (good for fileBrowser, bad for opening terminal)
@@ -6269,7 +6394,7 @@ function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder',
     // Test if command starts from bash
     try{
         // Test if command is in bash path
-        multiPlatformExecSync( folder, `which "${cmd}" `);  // Fails if not in path
+        await multiPlatformExecSync( folder, `which "${cmd}" `);  // Fails if not in path
         
         // Run (and unref from pragma-git) if which command existed in path ( catch otherwise)
         if (process.platform === 'win32') {

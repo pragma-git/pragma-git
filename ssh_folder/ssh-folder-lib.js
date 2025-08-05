@@ -30,7 +30,9 @@ if ( process.platform == 'win32' ){
 // All platforms 
 async function fs_existsSync( folder_or_sshUrl) {  
   // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
-  console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
+  
+  //console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
+  
   // SSH or local version :
   if ( folder_or_sshUrl.startsWith('ssh:') ){  
     // SSH folder
@@ -56,7 +58,10 @@ async function fs_existsSync( folder_or_sshUrl) {
     try{
         let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"`;
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-        MAIN.multiPlatformExecSync( sshUrl, CMD);
+        
+        //MAIN.multiPlatformExecSync( sshUrl, CMD);
+        await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000)
+        
         return true
     }catch (err){
         //console.error(err);
@@ -80,7 +85,7 @@ async function sshGet( sshUrl, fileRelativeRepoBase) {
   // run ssh-get bash script
   let CMD = `${CWD_INIT}/ssh_folder/ssh-get "${sshUrl}" "${fileRelativeRepoBase}"`;
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  MAIN.multiPlatformExecSync( sshUrl, CMD);
+  await MAIN.multiPlatformExecSync( sshUrl, CMD);
   
   // Return temp-path
   let tempFile = `${SSH_TEMP_FILE_LOCATION}/${fileRelativeRepoBase}`;  // Sloppy with '/' but if windows it will be converted to \\
@@ -104,10 +109,10 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   let CMD = `${CWD_INIT}/ssh_folder/ssh-put "${sshUrl}" "${fileRelativeRepoBase}"`;
   
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  MAIN.multiPlatformExecSync( sshUrl, CMD);
+  await MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
 async function sshPutSimple( absoluteLocalFilePath, sshUrl) {  
-  //  Copy file from ssh to tempFolder
+  //  Copy file from ssh to absoluteLocalFilePath
   //
   //  Inputs :
   //    absoluteLocalFilePath  -- local file path with file to put into sshUrl
@@ -120,7 +125,7 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {
   let CMD = `${CWD_INIT}/ssh_folder/ssh-put-simple "${absoluteLocalFilePath}" "${sshUrl}"`; 
   
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  MAIN.multiPlatformExecSync( sshUrl, CMD);
+  await MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
 
 
