@@ -204,7 +204,9 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             let sshUrl = pwd;
            
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
-            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() -- IS THIS SURE ?  I think it is copied when I switch to Repo.
+            //
+            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
+            // NOTE: This is copied when I switch to the repo.  Thus, if config has been removed on ssh-server manually, this will fail until next switch.
             
             // Set for correct home folder
             const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
@@ -5544,7 +5546,7 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     //
     // Stores info about localFolder (or ssh-folder) :
     // -- cachedLocalStatus.exists           (folder exists)
-    // -- cachedLocalStatus.isRepo           (is git repo)
+    // -- cachedLocalStatus.isRepo           (is git repo)  true, false, or undefined (happens first time calling ssh-folder, because simpleGit does not know 
     // -- cachedLocalStatus.localFolder      (really stored only to help debugging)
     // -- cachedLocalStatus.platform         (Mac, Linux, undefined or Local.  Local if not ssh-folder, undefined if ssh-folder but could not be determined)
     // -- cachedLocalStatus.sshHome          (Home directory of ssh-server.  /Users/jan for Mac.  /home/jan for Linux)
@@ -5561,7 +5563,7 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         newCachedLocalStatus.platform = new Array(state.repos.length).fill(null);
         newCachedLocalStatus.sshHome = new Array(state.repos.length).fill(null);
     }else{
-        newCachedLocalStatus = cachedLocalStatus;  // Copy if subset
+        newCachedLocalStatus = await cachedLocalStatus;  // Copy if subset
     }
     
     // Parallelize to tests if local folder (or ssh) exists 
@@ -5596,16 +5598,27 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             }
             
         }
+        
+        // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
 
-         await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-         function onCheckIsRepo(err, checkResult) { 
-             if ( checkResult == undefined){
-                 console.warn(`Error calling  testLocalStatus( ${repoNumber}, ${folder} )`);
-                 console.warn(err);
-                 checkResult = false;  // Set to false
+        if ( folder.startsWith('ssh:') ){
+            // simpleGit for ssh requires "cachedLocalStatus" to be set (not set, since this function does that)
+            // So lets look for .git/HEAD file manually instead (which indicates that it is a git repository)
+            newCachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD` );
+            
+        }else{
+             await simpleGit(folder).checkIsRepo(onCheckIsRepo);  
+             function onCheckIsRepo(err, checkResult) { 
+                 if ( checkResult == undefined){
+                     console.warn(`Error calling  testLocalStatus( ${repoNumber}, ${folder} )`);
+                     console.warn(err);
+                     checkResult = false;  // Set to false
+                 }
+                 newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
              }
-             newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
-         }
+        }
+         
+         
         
     }
 }
@@ -5861,7 +5874,7 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
     
     const sshUrl = state.repos[state.repoNumber].localFolder;  
     if ( !sshUrl.startsWith('ssh:') ){
-        console.error('NOT A SSH URL');
+        console.error(`NOT A SSH URL -- ${sshUrl}`);
         return
     }
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
