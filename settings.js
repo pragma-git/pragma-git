@@ -353,36 +353,51 @@ async function _callback( name, event){
             
             console.log('addRepoButtonPressed');
 
+
+			//
+			// Make folder for local repo (if folder missing)
+			// 
             let folder = document.getElementById('addFolder').value;  
             if ( folder.startsWith('ssh:') ){
-                
+				// Assume existing -- I don't plan to implement creating new repos on ssh-folder
+				
+				// Add repo as is 
+				await opener.addExistingRepo( folder); 
+				// Replace table 
+				document.getElementById("settingsTableBody").innerHTML = ""; 
+				createHtmlTable(document);
             }else{
+				// Local Folder in else clause
                 opener.mkdir(folder); // Make local folder if not existing
-            }
-            
-            // Dialog if repo does not exist
-            try{
-                var isRepo;
-                await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
                 
-                console.log('dropFolder CHECK IF REPO = ' + isRepo);
-                
-                // If not a repo
-                if (!isRepo){
-                    // Ask permisson to init repo
-                    localState.droppedRepoFolder = folder;
-                    document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
-                    return
-                } else {
-                    await opener.addExistingRepo( folder); 
-                    // Replace table 
-                    document.getElementById("settingsTableBody").innerHTML = ""; 
-                    createHtmlTable(document);
-                }
-            }catch(error){
-                console.log(error);
+                // Dialog if repo does not exist
+	            try{
+	                var isRepo;
+	                await simpleGit(folder).checkIsRepo(onCheckIsRepo);  // simpleGit for ssh-folder only works if repo is in "state.repos.localFolder"
+	                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+	                
+	                console.log('dropFolder CHECK IF REPO = ' + isRepo);
+	                
+	                // If not a repo
+	                if (!isRepo){
+	                    // Ask permisson to init repo
+	                    localState.droppedRepoFolder = folder;
+	                    document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+	                    return
+	                } else {
+	                    await opener.addExistingRepo( folder); 
+	                    // Replace table 
+	                    document.getElementById("settingsTableBody").innerHTML = ""; 
+	                    createHtmlTable(document);
+	                }
+	            }catch(error){
+					opener.displayLongAlert('Add Repository Error', error, 'error'); 
+	                console.warn(error);
+	            }
             }
+
+			            
+
             
             // Update cached branch list
             await opener.cacheBranchList();
@@ -530,7 +545,7 @@ async function _callback( name, event){
                 await updateStarredButton();
 
             }catch(err){
-                console.error(err);
+                console.warn(err);
             }
             
             

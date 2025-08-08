@@ -208,7 +208,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             // Set for correct home folder
             const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
-            const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];
+            const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];  // Get index -- works for existing repos -- not when making a new ssh-repo
             let SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
             console.log(`SSH_CONFIG_FILE_LOCATION2 = ${SSH_CONFIG_FILE_LOCATION}`);
             
@@ -6056,18 +6056,17 @@ async function addExistingRepo( folder) {
         var topFolder;
         try{
 
-            // Find top folder of Repo
-            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
-            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
             
-            // if ssh -- Merge server path with top folder 
-            // (because git on server does not know recieve server path -- so topFolder is local folder on server )
+            // if ssh -- use full URL, if local figure out repo-top-folder
             if (folder.startsWith('ssh:')){
-                // 
-                let serverString =  folder.substring( 'ssh://'.length );  // Everything after 'ssh://'
-                let server = 'ssh://' + serverString.substring( 0, serverString.indexOf('/',0) ); // 'ssh://'.length = 6.  Find first '/' after 'ssh://'
-                topFolder = server + topFolder;
-            }
+
+                topFolder = folder;  // adding ssh-folder assumes the URL points to the top folder of the repo
+            }else{
+					
+	            // Find top folder of Repo
+	            await simpleGit(folder).raw([ 'rev-parse', '--show-toplevel'], onShowToplevel);
+	            function onShowToplevel(err, showToplevelResult){ console.log(showToplevelResult); topFolder = showToplevelResult } //repeated for readibility
+			}
             
             // Remove windows EOL characters
             topFolder = topFolder.replace(/(\r\n|\n|\r)/gm, ""); 
@@ -6212,7 +6211,7 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
     const timeout = setTimeout(() => {
       timedOut = true;
       proc.kill('SIGTERM');
-      reject(new Error(`Command timed out after ${timeoutMs}ms`));
+      reject(new Error(`Time out after ${timeoutMs} ms --  ${command}`));
     }, timeoutMs);
 
     proc.stdout.on('data', (data) => {
@@ -6234,12 +6233,12 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
       if (code === 0) {
         resolve(stdout.trim());
       } else {
-        reject(new Error(stderr.trim() || `Command failed with code ${code}`));
+        reject(new Error(stderr.trim() || `Command failed with code ${code} --  ${command}`));
       }
     });
   });
 }
-function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
+async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -6287,7 +6286,7 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
             timeoutInMs = 2000
             return  runCommandWithTimeout(cmd, [], timeoutInMs);
         }catch (err){
-            //console.error( err);
+            console.error( err);
             return err.toString();
         }
 
@@ -6315,8 +6314,8 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
 			).toString().trim()
 
 		} catch (err) {
-			  console.error('Error:', err.message);
-			  console.error('stderr:', err.stderr?.toString());
+			  console.warn('Warning :', err.message);
+			  console.warn('stderr:', err.stderr?.toString());
 			  //process.platform = 'win32';
 			  throw new Error( `multiPlatformExecSync error: = ${err}`);
 		}
@@ -6332,45 +6331,22 @@ function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutIn
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
 		cmd =  cmd.replaceAll('\\','/').replaceAll('C:/','/mnt/c/');  // Change to wsl path
-		const { execFileSync } = require('child_process');
 
 		try{
-			let parsedCommandString = parseCommandString(cmd);
-			let out = execFileSync( 'wsl', 
-				 parsedCommandString, 
-				 { encoding: 'utf-8' }
-			 );
+
+			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, [], timeoutInMs);
 			 
 			 console.log('Output:', out);
 		} catch (err) {
-			  console.error('Error:', err.message);
-			  console.error('stderr:', err.stderr?.toString());
-			  //process.platform = 'win32';
+			  console.warn('Warning:', err.message);
+			  console.warn('stderr:', err.stderr?.toString());
 			  throw new Error( `multiPlatformExecSync error: = ${err}`);
 		}
 
 		return  out;
 
 	}
-	
-	// INTERNAL FUNCTION
-		
-	// Separate one string with all arguments, into multiple arguments
-	function parseCommandString(cmd) {
-	  const regex = /(?:[^\s"]+|"[^"]*")+/g;
-	  const args = [];
-	
-	  let match;
-	  while ((match = regex.exec(cmd)) !== null) {
-	    let arg = match[0];
-	    // Remove surrounding quotes if present
-	    if (arg.startsWith('"') && arg.endsWith('"')) {
-	      arg = arg.slice(1, -1);
-	    }
-	    args.push(arg);
-	  }
-	  return args;
-	}
+
 }
 async function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'folder', on all platforms. 
     // Start freerunning program (so it will not be attached to pragma-git anymore
@@ -7726,7 +7702,7 @@ function loadSettings(settingsFile){
             if ( !fs_existsSync(state.repos[ state.repoNumber ].localFolder ) ) {
                 // Look for first existing repo-folder
                 let i = 0;
-                while  ( ( i < (state.repos.length - 1) ) && !fs_existsSync(state.repos[ i ].localFolder ) ){
+                while  ( ( i < (state.repos.length - 1) ) &&  !fs_existsSync(state.repos[ i ].localFolder ) ){
                     i++;
                 }
                 state.repoNumber = i;

@@ -36,11 +36,23 @@ async function fs_existsSync( folder_or_sshUrl) {
   // SSH or local version :
   if ( folder_or_sshUrl.startsWith('ssh:') ){  
     // SSH folder
-    return await sshFileExists( folder_or_sshUrl);
+    try{
+		return await sshFileExists( folder_or_sshUrl);
+	} catch (err){
+		console.warn('Error in fs_existsSync : ');
+		console.warn(err);
+	}
+    
     
   }else{    
     // local folder
-    return await fs.existsSync( folder_or_sshUrl ) 
+    try{
+		return await fs.existsSync( folder_or_sshUrl ) 
+	} catch (err){
+		console.warn('Error in fs_existsSync : ');
+		console.warn(err);
+	}
+    
   }
   
   // Internal function
@@ -112,20 +124,25 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   await MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
 async function sshPutSimple( absoluteLocalFilePath, sshUrl) {  
-  //  Copy file from ssh to absoluteLocalFilePath
-  //
-  //  Inputs :
-  //    absoluteLocalFilePath  -- local file path with file to put into sshUrl
-  //    sshUrl                 -- sshURL with full path to file name to write
-  //  Output :
-  //    none
-  
-
-  // run ssh-get-simple bash script
-  let CMD = `${CWD_INIT}/ssh_folder/ssh-put-simple "${absoluteLocalFilePath}" "${sshUrl}"`; 
-  
-  MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-  await MAIN.multiPlatformExecSync( sshUrl, CMD);
+	//  Copy file from ssh to absoluteLocalFilePath
+	//
+	//  Inputs :
+	//    absoluteLocalFilePath  -- local file path with file to put into sshUrl
+	//    sshUrl                 -- sshURL with full path to file name to write
+	//  Output :
+	//    none
+	
+	
+	// run ssh-get-simple bash script
+	let CMD = `${CWD_INIT}/ssh_folder/ssh-put-simple "${absoluteLocalFilePath}" "${sshUrl}"`; 
+	
+	MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
+	try{
+		await MAIN.multiPlatformExecSync( sshUrl, CMD);
+	} catch (err){
+		console.warn('Error in fs_exisetsSync : ');
+		console.warn(err);
+	}
 }
 
 
