@@ -205,8 +205,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
             //
-            // The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
-            // NOTE: This is copied when I switch to the repo.  Thus, if config has been removed on ssh-server manually, this will fail until next switch.
+            // NOTE: The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
+            //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
             
             // Set for correct home folder
             const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
@@ -318,8 +318,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // SSH folder (work on a server over ssh)
         // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
-        const SSH_CONFIG_FILE_LOCATION_TEMPLATE='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder
-        var SSH_CONFIG_FILE_LOCATION = '';  // This is set to correct path in setupSshServer()
+        const SSH_CONFIG_FILE_LOCATION_TEMPLATE='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder. See setupSshServer()
     
     // State variables
     
@@ -520,7 +519,7 @@ async function _callback( name, event){
         if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
             // If folder exists, I am allowed to set up ssh-server, and can then check if repo exists
             
-	        // Setup SSH_CONFIG_FILE_LOCATION and copy to ssh server
+	        // Setup and copy git config to ssh server
 	        await setupSshServer(); 
             
             // Check if repository 
@@ -5883,12 +5882,10 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
         // Assume linux
         const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
         await putFiles(baseUrl);
-        SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', `/home/${urlParts.username}`);
     }catch (err){
         // Assume MacOS
         const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
         await putFiles(baseUrl);
-        SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', `/Users/${urlParts.username}`);
     }
     
     // Internal function
