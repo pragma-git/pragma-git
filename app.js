@@ -207,6 +207,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             // NOTE: The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
             
+            // TODO:  Use configFile instead from above
+            
             // Set for correct home folder
             const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
             const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];  // Get index -- works for existing repos -- not when making a new ssh-repo
@@ -3990,6 +3992,11 @@ function configFilePath(){
         
         configText += '[mergetool]' + EOL;
         configText += '    keepBackup = false' + EOL;
+        configText += '' + EOL;
+        
+        configText += '[credential]' + EOL;
+        configText += '    useHttpPath = true' + EOL;
+        configText += '' + EOL;
         
         configText += '[mergetool "pragma-git"]' + EOL;
         let mergePathNormalized = `${STARTDIR}/pragma-merge`.replaceAll('\\','/');
@@ -4000,8 +4007,8 @@ function configFilePath(){
         configfile = devConfigFilePath;
     }
  
-    console.log('Config file = ' + configfile);
-    pragmaLog('Config file = ' + configfile);
+    // console.log('Config file = ' + configfile);
+    // pragmaLog('Config file = ' + configfile);
       
     return configfile;
 }
