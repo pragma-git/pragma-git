@@ -213,7 +213,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
             const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];  // Get index -- works for existing repos -- not when making a new ssh-repo
             let SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
-            console.log(`SSH_CONFIG_FILE_LOCATION2 = ${SSH_CONFIG_FILE_LOCATION}`);
+            //console.log(`SSH_CONFIG_FILE_LOCATION2 = ${SSH_CONFIG_FILE_LOCATION}`);
             
             
             return simpleGitDefault( 
@@ -5900,7 +5900,7 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
     
     const sshUrl = state.repos[state.repoNumber].localFolder;  
     if ( !sshUrl.startsWith('ssh:') ){
-        console.error(`NOT A SSH URL -- ${sshUrl}`);
+        //console.log(`NOT A SSH URL -- ${sshUrl}`);
         return
     }
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
