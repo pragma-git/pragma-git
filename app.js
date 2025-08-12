@@ -6288,17 +6288,21 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     //
 	if ( (process.platform === 'darwin') || (process.platform === 'linux') ) {
 		// Linux or Mac
-		
-        //return  execSync( cmd, options ).toString().trim();
         
-
-        try{
-            timeoutInMs = 2000
-            return  runCommandWithTimeout(cmd, [], timeoutInMs);
-        }catch (err){
-            console.error( err);
-            return err.toString();
+        // If ssh
+        if ( folder.startsWith('ssh:') ) {
+            
+            try{
+                timeoutInMs = 2000
+                return  runCommandWithTimeout(cmd, [], timeoutInMs);
+            }catch (err){
+                console.error( err);
+                return err.toString();
+            }
         }
+        
+        // Local (not ssh) if here
+        return  execSync( cmd, options ).toString().trim();
 
 	}
 	
