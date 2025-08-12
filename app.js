@@ -948,83 +948,93 @@ async function _callback( name, event){
         //
         // Linux  solution
         //
+
         
-            // Linux local folder
-            if ( ( process.platform === 'linux')&& !folder.startsWith('ssh:')) { 
-				// Implement workaround so path with spaces works
-	            options.cwd = folder;
-	            command = 'pwd'; // Dummy command
-			}
-        
-        
-            // Linux ssh folder
-            if ( ( process.platform === 'linux') && folder.startsWith('ssh:')) {
-			    const { exec } = require('child_process');
-			    const url = new URL(folder);
-			    const sshUser = url.username;
-			    const sshHost = url.hostname;
-			    const remotePath = url.pathname.replace(/\//g, '/'); // Normalize path
-			    let portCommand = url.port ? ` -p ${url.port}` : '';
-			
-			    // Construct the SSH command 
-			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${remotePath}" && bash \"`;
-			    let terminalCommand = `gnome-terminal -- bash -c '${sshCommand}' `;  // Default
+            // Linux 
+            if ( ( process.platform === 'linux') ) {
+                
+                let command;
+                
+                
+                // Linux local folder
+                if ( ! folder.startsWith('ssh:') ) {
+                    command = `cd "${folder}" && bash ` ; // Dummy command
+                }
+                
+                
+                // Linux ssh folder
+                if ( folder.startsWith('ssh:') ) {
+                    
+                    const { exec } = require('child_process');
+                    const url = new URL(folder);
+                    const sshUser = url.username;
+                    const sshHost = url.hostname;
+                    const remotePath = url.pathname.replace(/\//g, '/'); // Normalize path
+                    let portCommand = url.port ? ` -p ${url.port}` : '';
+                
+                    // Construct the SSH command 
+                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${remotePath}" && bash \"`;  
+                                
+                }
+                
                 
                 //
                 // Set terminal command (assume command is run with -e flag)
                 //
+                
+			    let terminalCommand = `gnome-terminal -- bash -c '${command}' `;  // Default
+                
                 if ( state.tools.terminal.trim() !== '' ) {
-                    terminalCommand = `${state.tools.terminal} -e bash -c '${sshCommand}' `;
+                    terminalCommand = `${state.tools.terminal} -e bash -c '${command}' `;
+                }
+
+
+                if (isGnome()) {
+                    terminalCommand = `gnome-terminal -- bash -c '${command}' `;  // -e is depreciated  
+                } else if (isXterm()) {
+                    terminalCommand = `xterm -e  bash -c '${command}' `;
+                } else if (isXtermEmulator()) {
+                    terminalCommand = `x-terminal-emulator -e  bash -c '${command}' `;
                 }
                 
-                function isGnome(){
-                      try {
-                        child_process.execSync('which gnome-terminal')
-                        return true
-                      } catch(e) {
-                        return false
-                      }
-                }                
-                function isXterm(){
-                      try {
-                        child_process.execSync('which xterm')
-                        return true
-                      } catch(e) {
-                        return false
-                      }
-                }                
-                function isXtermEmulator(){
-                      try {
-                        child_process.execSync('which x-terminal-emulator')
-                        return true
-                      } catch(e) {
-                        return false
-                      }
-                }
-                
-              if (isGnome()) {
-                    terminalCommand = `gnome-terminal -- bash -c '${sshCommand}' `;  // -e is depreciated
-              } else if (isXterm()) {
-                    terminalCommand = `xterm -e  bash -c '${sshCommand}' `;
-              } else if (isXtermEmulator()) {
-                    terminalCommand = `x-terminal-emulator -e  bash -c '${sshCommand}' `;
-              }
-                
-                
-                
+
                // Execute command 
 			    exec(terminalCommand, (error, stdout, stderr) => {
 			        if (error) {
 			            console.error(`Error launching terminal: ${error.message}`);
 			            return;
 			        }
-			        console.log('Terminal launched and SSH session started in target directory');
+			        console.log('Terminal launched with command = ' + terminalCommand);
 			    });
 			
 			    break; // Exit switch
 			}
-        
-        
+            
+            // Internal functions 
+            function isGnome(){
+                  try {
+                    child_process.execSync('which gnome-terminal')
+                    return true
+                  } catch(e) {
+                    return false
+                  }
+            }                
+            function isXterm(){
+                  try {
+                    child_process.execSync('which xterm')
+                    return true
+                  } catch(e) {
+                    return false
+                  }
+            }                
+            function isXtermEmulator(){
+                  try {
+                    child_process.execSync('which x-terminal-emulator')
+                    return true
+                  } catch(e) {
+                    return false
+                  }
+            }        
         
         //
         // Windows solution
