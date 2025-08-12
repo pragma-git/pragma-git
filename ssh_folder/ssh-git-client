@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 # SimpleGit custom Git binary
 #
 # Implemented as a wrapper to git that runs git commands on remote server over ssh
@@ -9,7 +9,8 @@
 #
 # Arguments
 #   $1      --  -c
-#   $2      --  SSH URL of format  "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test"
+#   $2      --  SSH URL, formatted as :  "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test"
+#   $opt    --  optional -- -PIPED -- meaning that the command is run as :  echo 'hej' | ssh-git-client ....  -- which is piped into git command on ssh-server
 #   $3      --  git command (for instance 'status')
 #   $4      --  options to git command
 #   $5      --  options to git command
@@ -28,6 +29,8 @@
 # Start timing clock
 start_time=$(date +%s.%N)
 
+PIPED=false
+
 # Import functions and constants: 
 source $(dirname $0)/lib/ssh-functions 
 
@@ -44,6 +47,9 @@ while [[ $# -gt 0 ]]; do
 		#echo "SSHURL : $SSHURL" >> "$SSH_LOG"
         # Skip both -c and the SSHURL=... argument
         shift 2
+    elif [[ "$1" == "-PIPED" ]]; then
+        PIPED=true
+        shift
     else
         # Keep the argument
         filtered_args+=("$1")
@@ -79,9 +85,14 @@ esac
 
 
 # Run git command on remote server 
-ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF
-    $COMMAND
+if [ "$PIPED" = true ]; then
+    ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c '$COMMAND'" < /dev/stdin
+else
+    ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF
+        $COMMAND
 EOF
+
+fi
 
 SSH_RETURN_STATUS=$?
 
