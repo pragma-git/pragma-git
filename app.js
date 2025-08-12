@@ -172,9 +172,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         function simpleGit(pwd){
             
             // get pragma-git .gitconfig-include
-            if (configFile === undefined){
-                configFile = configFilePath();  // Gets config file path.  If developing -- config file is created in .Pragma-git
-            }
+            configFile = configFilePath();  // Gets config file path.  If developing -- config file is created in .Pragma-git
+            
             
             localState.lastSimpleGitFolder = pwd;
             
@@ -3831,7 +3830,7 @@ async function gitIsInstalled(){
     var isInstalled = false;
     
     try{
-		await simpleGitLog().raw([ 'version'], test );
+		await simpleGitDefault().raw([ 'version'], test );  // Force to run locally (not on ssh-server)
 	}catch(err){
 		state.git = isInstalled;
 		showGitNotInstalledDialog( err) 
@@ -3911,6 +3910,17 @@ function configFilePath(){
     // Find config file
     let configfile = "";
     let isDev = false;
+    
+    
+    const folder = state.repos[ state.repoNumber].localFolder;
+    
+    if ( folder.startsWith('ssh:') ){
+        const sshHome = cachedLocalStatus.sshHome[ state.repoNumber]; 
+        configfile = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
+        return configfile;  // Bail out if ssh
+    }
+    
+    
     
     switch (process.platform) {
 		
@@ -8065,8 +8075,11 @@ window.onload = async function() {
     } 
   }
   
-  // Dialog if author's name is unknown
-  showUserDialog(true)  // test = true, will show only if author is unknown
+  // Dialog if author's name is unknown (for  local folder)
+  let folder = state.repos[state.repoNumber].localFolder;
+  if ( ! folder.startsWith('ssh:') ){
+    showUserDialog(true)  // test = true, will show only if author is unknown
+  }
  
   // Hide settings icon
   document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'hidden'
