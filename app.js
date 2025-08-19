@@ -376,6 +376,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var  cacheFolderStatusTimer = _loopTimer('cache-folder-status-loop', 120 * seconds); // loop to cache folder, ssh-folder, remoteURL status
         
         try {
+            gitEnsureUpstream();
             gitFetch();
         }catch (err){
             
@@ -566,7 +567,7 @@ async function _callback( name, event){
     
         
         gitSetLocalBranchNumber();  // Update localState.branchNumber here, after repo is changed
-        
+        gitEnsureUpstream();     // Set upstream if not existing
         
         
         // Update remote info immediately
@@ -4236,6 +4237,7 @@ async function gitSwitchBranch(branchName){
         displayLongAlert('Switch branch error', err, 'error');
     }
     // Update info
+    await gitEnsureUpstream();     // Set upstream if not existing
     gitFetch();  
     cacheBranchList();
     await updateGraphWindow();
@@ -4898,7 +4900,8 @@ async function gitPush( forcePush){
                         await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( ['origin', '--force' ], onPush);  // Changed to array format (this was only placed with object format for options)
                     }else{
                         //Normal push
-                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
+                        await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,[ '--tags' ], onPush);  // Rely on gitEnsureUpstream() to set -- thus allowing manual strange git-configurations to remain
+                        //await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', currentBranch,['--set-upstream', '--tags' ], onPush);  // Changed to array format (this was only placed with object format for options)
                     }
                     
                 }catch(err){
@@ -4933,6 +4936,45 @@ async function gitPush( forcePush){
     
     await waitTime( 1000);  
 
+}
+async function gitEnsureUpstream() { // Set upstream to origin/[same name as branch] -- if not set already
+    // a remote tracking branch from a --set-upstream-to command must exist for 
+    // -  git status -- to understand if there are remote changes for current branch (compared to remote tracking branch)
+    // -  git pull   -- to know what branch to pull from
+    // -  git push   -- to know what branch to push to
+    //
+    // git fetch does not require knowing this
+    //
+    // It is important to know that remote branch is set before acting on it.  
+    // Pragma-git only acts on the current branch in the current repo.
+    // That means -- when changing branch (also changing repo) , or starting pragma-git this function should be called
+    try {
+
+        const localFolder = state.repos[ state.repoNumber].localFolder        
+        
+        // Get current branch name
+        const status = await simpleGitLog(localFolder).status();
+        const currentBranch = status.current;
+
+        // Get tracking info
+        const branchSummary = await simpleGitLog(localFolder).branch(['-vv']);
+        const branchInfo = branchSummary.branches[currentBranch];
+
+        if (!branchInfo || !branchInfo.tracking) {
+            // No upstream set — set it to origin/<branch>
+            await simpleGitLog(localFolder).raw([
+                'branch',
+                '--set-upstream-to=origin/' + currentBranch,
+                currentBranch,
+            ]);
+            console.log(`Upstream set to origin/${currentBranch}`);
+        } else {
+            console.log(`Upstream already set to ${branchInfo.tracking}`);
+        }
+        
+    } catch (err) {
+        console.error('Error checking or setting upstream:', err);
+    }
 }
 function gitFetch( longUpstreamBranch){ // Fetch 
     // Default without argument -- fetch from origin
@@ -5063,7 +5105,7 @@ async function gitPull(){
         }
         _setMode('UNKNOWN');
     }else {
-        displayLongAlert('No files can be pulled from remote', err, 'error');
+        displayAlert('No files can be pulled from remote', 'warning');
     }
 
 }
@@ -5500,7 +5542,7 @@ async function updateAndTestRemoteOrigins( start = 0 ){
         newCachedRemoteOrigins.remoteURL[repoNumber]  =  state.repos[repoNumber].remoteURL;
         
         // Get remote repo, and process (set state.repos[i].remoteURL , and test)
-        await simpleGitLog( folder ).remote( [ '-v'], onRemote);
+        await simpleGit( folder ).remote( [ '-v'], onRemote);
         
         // Processing function 
         async function onRemote(err, result) {
@@ -5543,7 +5585,7 @@ async function updateAndTestRemoteOrigins( start = 0 ){
                     // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
                     const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
                     try {
-                        await simpleGitLog( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); 
+                        await simpleGit( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); // Do not log -- very long output
                     }catch (err){
                         console.error(err);
                         console.log(repoNumber);

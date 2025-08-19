@@ -265,12 +265,12 @@ async function createRepo(){// Create Repo
                 switch (name) {
                     
                     case 'Github': {
-                        opener.opener.setCredential( giturl, OWNER, TOKEN);
+                        await opener.opener.setCredential( giturl, OWNER, TOKEN);
                         break;
                     };
                     
                     case 'Gitlab': {
-                        opener.opener.setCredential( giturl, OWNER, TOKEN);
+                        await opener.opener.setCredential( giturl, OWNER, TOKEN);
                         break;
                     };
                     
