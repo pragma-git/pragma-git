@@ -4919,7 +4919,7 @@ async function gitPush( forcePush){
                 }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( 'origin', 'refs/notes/branchname', onPush);    
+                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( '--force', 'origin', 'refs/notes/branchname', onPush);    
                 
                 if (ERR){
                     throw 'Push Error';
