@@ -486,7 +486,7 @@ async function _callback( name, event){
                 getRemoteRepoInfo();
                 updateRemoteRepos();
                 
-                //await opener.updateAndTestRemoteOrigins();
+                //await opener.cacheRemoteOriginStatus();
                 document.getElementById( 10000 + Number(id) ).value = state.repos[id].remoteURL;
                 
                                 
@@ -1103,6 +1103,13 @@ async function testURL( textareaId, event){
         outputColor = 'red'
         document.getElementById(textareaId).classList.add('red');
         console.log('Repository test failed ' + remoteURL);
+        
+        let extraText = ''
+        if ( folder.startsWith('ssh:') ){
+            extraText = ' (on ssh server)';
+        }
+        
+        opener.displayLongAlert('Failed adding remote repository' + extraText, err, 'error'); 
     }
                 
     // Set color        
@@ -1284,7 +1291,7 @@ async function gitClone( folderName, repoURL){
         
         // Fill in state array
         state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
-        await opener.updateAndTestRemoteOrigins();  // Updates for all repos, but that is fine since this one will be updated as well
+        await opener.cacheRemoteOriginStatus();  // Updates for all repos, but that is fine since this one will be updated as well
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -1459,7 +1466,7 @@ async function injectIntoSettingsJs(document) {
     
         
     // Update remote URLs and test
-    //await opener.updateAndTestRemoteOrigins();
+    //await opener.cacheRemoteOriginStatus();
     
 
     console.log('Settings - settings.js entered');  

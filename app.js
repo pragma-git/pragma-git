@@ -159,7 +159,6 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const tmpdir = os.tmpdir();
         var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
         global.CWD_INIT = CWD_INIT;    // Can be found from all open windows
-        var configFile;  // Path to Pragma-git special version of .gitconfig
 
     // Modify simpleGit function
 
@@ -172,7 +171,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         function simpleGit(pwd){
             
             // get pragma-git .gitconfig-include
-            configFile = configFilePath();  // Gets config file path.  If developing -- config file is created in .Pragma-git
+            configFile = configFilePath( pwd);  // Gets config file path.  If developing -- config file is created in .Pragma-git
             
             
             localState.lastSimpleGitFolder = pwd;
@@ -204,22 +203,14 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
             //
-            // NOTE: The SSH_CONFIG_FILE_LOCATION file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
+            // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
-            
-            // TODO:  Use configFile instead from above
-            
-            // Set for correct home folder
-            const sshHomeIndex = cachedLocalStatus.localFolder.indexOf( sshUrl);
-            const sshHome = cachedLocalStatus.sshHome[ sshHomeIndex];  // Get index -- works for existing repos -- not when making a new ssh-repo
-            let SSH_CONFIG_FILE_LOCATION = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
-            //console.log(`SSH_CONFIG_FILE_LOCATION2 = ${SSH_CONFIG_FILE_LOCATION}`);
             
             
             return simpleGitDefault( 
                 {   
                     config: [   
-                                `include.path=${SSH_CONFIG_FILE_LOCATION}`, 
+                                `include.path=${configFile}`, 
                                 `SSHURL=${sshUrl}` 
                             ],
                     unsafe: {  
@@ -229,7 +220,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                 }
             ); 
 			// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
-            // My ssh-git-client handles path by itself.
+            // My ssh-git-client handles path by itself (by SSHURL being sneaked in via config parameters).
         }
  
  
@@ -2914,7 +2905,7 @@ async function cacheFolderStatus(){
     
     try{
         await cacheLocalFolderExistStatus();
-        await updateAndTestRemoteOrigins();
+        await cacheRemoteOriginStatus();
     }catch(err){
         
     }
@@ -3903,7 +3894,7 @@ async function gitDefineBuiltInTools(){
     rmLocalFile(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
     rmLocalFile(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
 }
-function configFilePath(){    
+function configFilePath( folder){    
     //
     // Get mac / win / linux config file
     // 
@@ -3915,16 +3906,40 @@ function configFilePath(){
     let isDev = false;
     
     
-    const folder = state.repos[ state.repoNumber].localFolder;
+    // Find index in state.repos, for folder
+    const repoNumber = util.findObjectIndex(state.repos, 'localFolder', folder)
+    
+    //
+    // SSH
+    //
     
     if ( folder.startsWith('ssh:') ){
-        const sshHome = cachedLocalStatus.sshHome[ state.repoNumber]; 
-        configfile = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
+                
+        // SSH folder (work on a server over ssh)
+        // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
+        const SSH_CONFIG_FILE_LOCATION_TEMPLATE='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder. See setupSshServer()
+            
+        const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+        let sshHome;
+        if (process.platform == 'darwin'){
+            sshHome = `/Users/${urlParts.username}`
+        }
+        if (process.platform == 'linux'){
+            sshHome = `/home/${urlParts.username}`
+        }  
+            
+        try{
+            configfile = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
+        }catch (err){
+            console.error(`Error in configFilePath( ${folder}) -- ${err}`);
+        }
         return configfile;  // Bail out if ssh
     }
     
     
-    
+    //
+    // NORMAL (NOT SSH)
+    //   
     switch (process.platform) {
 		
       case 'darwin': {
@@ -5168,7 +5183,8 @@ async function gitConfigList( localFolder ){
 }
 async function registerDefaultBranch(document){
     
-    let defBranch = await simpleGit().getConfig( 'init.defaultBranch'); 
+    let folder = state.repos[state.repoNumber].localFolder;
+    let defBranch = await simpleGit(folder).getConfig( 'init.defaultBranch'); 
     let defBranchName = defBranch.value;
     
     // null 
@@ -5490,7 +5506,7 @@ async function cacheBranchList(){
         }
 
 // Cache repo status ( local folder exists, remoteURL active )
-async function updateAndTestRemoteOrigins( start = 0 ){  
+async function cacheRemoteOriginStatus( start = 0 ){  
     // Fills in remote URLs for all repos (or keeps the one from settings.json)
     //
     // If first argument is set (other than 0), then  only update that repoNumber (actually updates all repos from that repoNumber to end)
@@ -5502,7 +5518,7 @@ async function updateAndTestRemoteOrigins( start = 0 ){
     // -- cachedRemoteOrigins.remoteURL         (really stored only to help debugging)
     // 
     
-    console.log('=== updateAndTestRemoteOrigins ===');
+    console.log('=== cacheRemoteOriginStatus ===');
     
     let promises = [];
     let newCachedRemoteOrigins = {};
@@ -5514,14 +5530,44 @@ async function updateAndTestRemoteOrigins( start = 0 ){
         newCachedRemoteOrigins = cachedRemoteOrigins;  // Copy if subset
     }
     
-    // Parallelize to : 1) get remoteURL from repo, 2) tests remoteURL 
+    //// Parallelize to : 1) get remoteURL from repo, 2) tests remoteURL 
+    //for (var i = start; i < state.repos.length; ++i) {
+        //promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+    //}
+    //await Promise.allSettled( promises )
+    
+    let promisesLocal = [];
+    let promisesSSH = [];
     for (var i = start; i < state.repos.length; ++i) {
-        promises.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+        if ( state.repos[ i ].localFolder.startsWith('ssh:') ){
+            promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+        }else{
+            promisesLocal.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+        }
     }
-    await Promise.allSettled( promises )
+    
+    // First time
+    if (cachedRemoteOrigins.isActiveRemote == undefined){
+        cachedRemoteOrigins = newCachedRemoteOrigins;
+    }
+    
+    
+    //promisesSSH.push( cachedRemoteOrigins = newCachedRemoteOrigins );
+    
+    console.log('START promisesLocal');
+    await Promise.allSettled( promisesLocal )
+    await console.log('STOP promisesLocal');
+    
+    console.log('START promisesSSH');
+    await Promise.allSettled( promisesSSH )
+    await console.log('STOP promisesSSH');
+        
+    
+    
+    
     
     // Atomic copy 
-    cachedRemoteOrigins = newCachedRemoteOrigins;
+    //cachedRemoteOrigins = newCachedRemoteOrigins;
     
     
     // Internal function -- process for each remoteURL :   1) get remoteURL from repo, 2) tests remoteURL  
@@ -5551,6 +5597,11 @@ async function updateAndTestRemoteOrigins( start = 0 ){
             if (result == undefined){
                 newCachedRemoteOrigins.isActiveRemote[repoNumber] = false;
                 // Do not update state.repos[repoNumber].remoteURL
+                console.error( 'configFilePath = ' + configFilePath( folder ) );
+                console.error( 'folder = ' + folder );
+                
+                console.error( `await simpleGit( ${folder} ).remote( [ '-v'], onRemote);`);
+                console.error(err);
                 return
             }
             
@@ -5572,6 +5623,17 @@ async function updateAndTestRemoteOrigins( start = 0 ){
                     
                     // Test if remote is active
                     newCachedRemoteOrigins.isActiveRemote[repoNumber]  =  await testRemoteOrigin( repoNumber);
+                    
+                                        
+                    // Immediate update
+                    cachedRemoteOrigins.isActiveRemote[repoNumber] = newCachedRemoteOrigins.isActiveRemote[repoNumber];
+                    
+                    console.log(`cacheRemoteOriginStatus.getRemoteOrigin( ${repoNumber}, ${folder} ).onRemote : `);
+                    console.log(`  folder[${repoNumber}] =  ${folder}`);
+                    console.log(`  upstreamURL[${repoNumber}] =  ${upstreamURL}`);
+                    console.log(`  upstreamName[${repoNumber}] =  ${upstreamName}`);
+                    console.log(`  isActiveRemote[${repoNumber}] =  ${newCachedRemoteOrigins.isActiveRemote[repoNumber]}`);
+                    
                     return
                 }
             }
@@ -5602,7 +5664,7 @@ async function updateAndTestRemoteOrigins( start = 0 ){
                 }
 
         }; // END onRemote
- 
+
     }
 
 
@@ -5617,7 +5679,6 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     // -- cachedLocalStatus.isRepo           (is git repo)  true, false, or undefined (happens first time calling ssh-folder, because simpleGit does not know 
     // -- cachedLocalStatus.localFolder      (really stored only to help debugging)
     // -- cachedLocalStatus.platform         (Mac, Linux, undefined or Local.  Local if not ssh-folder, undefined if ssh-folder but could not be determined)
-    // -- cachedLocalStatus.sshHome          (Home directory of ssh-server.  /Users/jan for Mac.  /home/jan for Linux)
     // 
  
     console.log('=== cacheLocalFolderExistStatus ===');
@@ -5629,43 +5690,44 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
         newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
         newCachedLocalStatus.platform = new Array(state.repos.length).fill(null);
-        newCachedLocalStatus.sshHome = new Array(state.repos.length).fill(null);
     }else{
         newCachedLocalStatus = await cachedLocalStatus;  // Copy if subset
     }
     
-    // Parallelize to tests if local folder (or ssh) exists 
-    let promises = [];
+    // Parallelize to tests if local folder (or ssh folder) exists 
+    let promisesLocal = [];
+    let promisesSSH = [];
     for (var i = start; i < state.repos.length; ++i) {
-        promises.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
+        if ( state.repos[ i ].localFolder.startsWith('ssh:') ){
+            promisesSSH.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
+        }else{
+            promisesLocal.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
+        }
     }
-    console.log('START');
-    await Promise.allSettled( promises )
-    console.log('STOP');
+    
+    promisesSSH.push( cachedLocalStatus = newCachedLocalStatus );
+    
+    console.log('START promisesLocal');
+    await Promise.allSettled( promisesLocal )
+    console.log('STOP promisesLocal');
+    
+    console.log('START promisesSSH');
+    Promise.allSettled( promisesSSH )
+    console.log('STOP promisesSSH');
+    
+    
+    
     
     // Atomic copy 
     cachedLocalStatus = newCachedLocalStatus; 
     
     // Internal function
     async function testLocalStatus( repoNumber, folder){
-        console.log( `testLocalStatus -- ${folder} `);
         newCachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
         newCachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
         let platform = await typeOfRepoServer(folder); 
         newCachedLocalStatus.platform[ repoNumber] = platform;
-        
-        if (folder.startsWith('ssh:') ){
-            const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
-            
-            if (platform == 'Mac'){
-                newCachedLocalStatus.sshHome[ repoNumber] = `/Users/${urlParts.username}`
-            }
-            if (platform == 'Linux'){
-                newCachedLocalStatus.sshHome[ repoNumber] = `/home/${urlParts.username}`
-            }
-            
-        }
         
         // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
 
@@ -5685,9 +5747,16 @@ async function cacheLocalFolderExistStatus( start = 0 ){
                  newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
              }
         }
-         
-         
         
+        
+        console.log(`cacheLocalFolderExistStatus.testLocalStatus( ${repoNumber}, ${folder} ) : `);
+        console.log(`  folder[${repoNumber}] =  ${folder}`);
+        console.log(`  exists[${repoNumber}] =  ${newCachedLocalStatus.exists[ repoNumber]}`);
+        console.log(`  platform[${repoNumber}] =  ${newCachedLocalStatus.platform[ repoNumber]}`);
+        console.log(`  isRepo[${repoNumber}] =  ${newCachedLocalStatus.isRepo[ repoNumber]}`);
+         
+         
+        cachedLocalStatus = newCachedLocalStatus; 
     }
 }
 
@@ -6171,7 +6240,7 @@ async function addExistingRepo( folder) {
         
         // Update only last repo -- Saves a lot of time compatred to cacheFolderStatus() which updates all repos
         await cacheLocalFolderExistStatus(index);   // sets  cachedLocalStatus
-		await updateAndTestRemoteOrigins(index);    // sets  cachedRemoteOrigins
+		await cacheRemoteOriginStatus(index);    // sets  cachedRemoteOrigins
 
         // Figure out URL of fork-parent (undefined if not a forked repo)
         let forkParentUrl;
@@ -7015,12 +7084,13 @@ function displayLongAlert(title, message, type){
             return    // Bail out if git is not installed -- no way to get author info without git
         }
          
+        let folder = state.repos[state.repoNumber].localFolder;
         
         // Get values according to git-config
         let authorName = '';
         let authorEmail = '';
      
-        let configList = await gitConfigList(); 
+        let configList = await gitConfigList(folder); 
         
         try{
             console.log(configList);
@@ -7057,6 +7127,8 @@ function displayLongAlert(title, message, type){
         }
 
         const title = 'Git needs Author information';
+        
+        console.warn(`'Git needs Author information'  -- showUserDialog( ${test} )`);
         
         // Message text
         let message =  
@@ -7873,7 +7945,7 @@ function loadSettings(settingsFile){
         
         // LocalFolder and URLs
         repoState.localFolder = setting( repoStateIn.localFolder, '' );
-        repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in updateAndTestRemoteOrigins()
+        repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOriginStatus()
         repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
         
         // Local author info
@@ -8135,7 +8207,7 @@ window.onload = async function() {
   
   // Cache local folder status (can take a while if ssh 
   await cacheLocalFolderExistStatus();
-  await updateAndTestRemoteOrigins();
+  await cacheRemoteOriginStatus();
   
   // Show settings icon
   document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'visible'
