@@ -3894,7 +3894,7 @@ async function gitDefineBuiltInTools(){
     rmLocalFile(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
     rmLocalFile(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
 }
-function configFilePath( folder){    
+function configFilePath( folder = ''){    
     //
     // Get mac / win / linux config file
     // 
@@ -3913,7 +3913,7 @@ function configFilePath( folder){
     // SSH
     //
     
-    if ( folder.startsWith('ssh:') ){
+    if ( folder.startsWith('ssh:') ){  // Function definition sets empty folder to '' -- this avoids crash from "undefined.startsWith" 
                 
         // SSH folder (work on a server over ssh)
         // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
