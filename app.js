@@ -398,7 +398,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
        askpass_watcher.add(ASKPASSIGNALFILE);
        askpass_watcher.on('add', 
            path => { 
-               pragmaLog(`File ${path} has been added`); 
+               pragmaLog(`Pragma-git : File ${path} has been added`); 
+               pragmaLog(`Pragma-git : startPragmaAskPass()`); 
                startPragmaAskPass();
            } 
        )
@@ -2893,6 +2894,12 @@ async function _loopTimer( timerName, delayInMs){
 }
 async function cacheFolderStatus(){
     
+    // Bail out if isPaused = true
+    if(isPaused) {
+        console.log('skipped cacheFolderStatus -- because isPaused = true ' );  
+        return;
+    }    
+    
     // Bail out if running already
     if (cacheFolderStatusIsRunning){        
         console.log('skipped cacheFolderStatus -- because was already running' );  
@@ -3734,7 +3741,7 @@ function startPragmaMerge(){
 }
 function startPragmaAskPass(){
      console.log('askpass');
-     
+     isPaused = true
          
     let title = "Password";
     gui.Window.open('askpass/askpass.html#/new_page', { 
@@ -3750,7 +3757,11 @@ function startPragmaAskPass(){
                           
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
-                win.on('close', function() { fixNwjsBug7973( win);} );
+                win.on('close', function() { 
+                    fixNwjsBug7973( win);
+                    isPaused = false
+                    } 
+                );
             })
     ); 
   
@@ -3894,7 +3905,7 @@ async function gitDefineBuiltInTools(){
     rmLocalFile(ASKPASSIGNALFILE);     // rm 'pragma-askpass-running'
     rmLocalFile(EXITASKPASSIGNALFILE); // rm 'exit-pragma-askpass'
 }
-function configFilePath( folder){    
+function configFilePath( folder = ''){    
     //
     // Get mac / win / linux config file
     // 
@@ -3913,7 +3924,7 @@ function configFilePath( folder){
     // SSH
     //
     
-    if ( folder.startsWith('ssh:') ){
+    if ( folder.startsWith('ssh:') ){  // Function definition sets empty folder to '' -- this avoids crash from "undefined.startsWith" 
                 
         // SSH folder (work on a server over ssh)
         // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
@@ -4996,7 +5007,11 @@ function gitFetch( longUpstreamBranch){ // Fetch
     // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
 
-     
+    if(isPaused) {
+        console.log('Bail out gitFetch() -- because isPaused = true');
+        return;
+    }    
+    
     var error = "";
 
 
@@ -6040,7 +6055,10 @@ async function setupSshServer( ){ // Copies config, and executables to ssh serve
                            );  
         
         
-        // TODO: Copy pragma-askpass
+        // Copy pragma-askpass and rename it to pragma-askpass-ssh
+        await sshPutSimple( CWD_INIT + pathsep + 'pragma-askpass'  , 
+                            `${baseUrl}/.Pragma-git/pragma-askpass-ssh` 
+                           );  
     }
  
 }
