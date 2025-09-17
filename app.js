@@ -518,9 +518,8 @@ async function _callback( name, event){
             
             // Check if repository 
             try{
-                
-                await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo(onCheckIsRepo);
-                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+
+                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD`);
                 if (!isRepo) {
                     displayLongAlert('Repository Error', 'Repository missing', 'error'); 
                     noDialog = false;
@@ -544,7 +543,7 @@ async function _callback( name, event){
         
         if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
             try{
-                await simpleGit( state.repos[state.repoNumber].localFolder ).checkIsRepo( () => { isRepo = checkResult});
+                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD` );
             }catch (err){
                 displayLongAlert('SSH Folder Error -- repo check failed', 
                     `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
@@ -2702,8 +2701,7 @@ async function _callback( name, event){
         // Dialog if repo does not exist
         try{
             var isRepo;
-            await simpleGit(folder).checkIsRepo(onCheckIsRepo);
-            function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+            isRepo = await fs_existsSync( `${folder}/.git/HEAD` );
             
             console.log('dropFolder CHECK IF REPO = ' + isRepo);
             
@@ -2981,8 +2979,7 @@ async function _update2(){
     let promises = [];
 
     // Promise 1
-    promises.push(  simpleGit( fullFolderPath ).checkIsRepo(onCheckIsRepo) );
-    function onCheckIsRepo(err, checkResult) { isRepo = checkResult; }    
+    promises.push( isRepo = await fs_existsSync( `${fullFolderPath}/.git/HEAD` ));
     
     // Promise 2
     let statusCheck = gitStatus().then(  function(value) { status_data = value; }  );
@@ -3006,6 +3003,10 @@ async function _update2(){
 
     // Run 
     await Promise.allSettled( promises )
+    
+    
+    //isRepo = await fs_existsSync( fullFolderPath );
+    
 
     //
     // Process

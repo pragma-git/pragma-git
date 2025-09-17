@@ -446,22 +446,16 @@ async function _callback( name, event){
             console.log(event);
                 
             try{                    
-                        
-            
-                // Check ssh connection to repo        
-                if ( global.state.repos[  Number(id)].localFolder.startsWith('ssh:') ){  
-                    try{
-                        await simpleGit( global.state.repos[ Number(id)].localFolder ).checkIsRepo( () => { isRepo = checkResult});
-                    }catch (err){
-                            
+                
+                // Check that repo (both normal and ssh-folder)
+                isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD` ); 
+                if ( isRepo == false ){
                         // Set to previous    
                         id = origRepoNumber;  
                         document.getElementById(state.repoNumber).click()    
-                        return
-                    }
-                    
-                    
+                        return                    
                 }
+                
                 
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
