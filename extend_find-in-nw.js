@@ -191,7 +191,7 @@ function extendFindInNw( elementToSearch){
           }
           if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 86 ){
             console.log('V')
-            document.execCommand('paste');
+            //document.execCommand('paste');  // Avoid duplicate
           }
           if ( (evt.ctrlKey || evt.metaKey) && evt.keyCode === 67 ){
             console.log('C')
