@@ -3741,7 +3741,6 @@ function startPragmaMerge(){
 }
 function startPragmaAskPass(){
      console.log('askpass');
-     isPaused = true
          
     let title = "Password";
     gui.Window.open('askpass/askpass.html#/new_page', { 
@@ -3759,7 +3758,6 @@ function startPragmaAskPass(){
                 
                 win.on('close', function() { 
                     fixNwjsBug7973( win);
-                    isPaused = false
                     } 
                 );
             })
@@ -8118,7 +8116,7 @@ function dev_show_all_icons(){
     document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible'
     
- 
+    console.warn('Set isPaused = true -- set to false to start Pragma-git update-loop' );
 }
 
 

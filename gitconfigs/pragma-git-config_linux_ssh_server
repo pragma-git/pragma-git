@@ -5,7 +5,7 @@
 
 [credential]
     useHttpPath = true
-    helper = store      # Store credentials on server using git's file-based store mechanism
+    helper = store      # Store credentials on server using git's file-based store mechanism. Is also hard-coded in ssh-git-client
 
     
 [mergetool]

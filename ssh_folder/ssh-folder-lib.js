@@ -140,8 +140,9 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {
 	try{
 		await MAIN.multiPlatformExecSync( sshUrl, CMD);
 	} catch (err){
-		console.warn('Error in fs_exisetsSync : ');
-		console.warn(err);
+		console.error('Error in fs_exisetsSync : ');
+		console.error(err);
+        throw Error('Error in sshPutSimple')
 	}
 }
 
