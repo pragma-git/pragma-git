@@ -250,7 +250,7 @@ EOF
         echo "($PID) ssh-git-client  --     $time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
         echo "($PID) ssh-git-client  --     $time_diff -- ${COMMAND}" 
         echo ' '
-    } #>> "$SSH_LOG"
+    } >> "$SSH_LOG"
     
     
     exit $SSH_RETURN_STATUS  
