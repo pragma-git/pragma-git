@@ -925,8 +925,9 @@ async function _callback( name, event){
                 }
                 
                 // This command opens Terminal and runs the SSH command with directory change
-                let terminalCommand = `osascript -e 'tell application "Terminal" to do script "ssh -t ${sshUser}@${sshHost} ${portCommand} \\"cd ${remotePath} && bash\\""'`;
-                
+                const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
+                let terminalCommand = `osascript -e 'tell application "Terminal" to do script "ssh -t ${sshUser}@${sshHost} ${portCommand} \\"cd \\\\\\"${decodedPath}\\\\\\" && bash\\""'`;  // Many escapes needed for  javascript and inside osa-script
+
                 exec(terminalCommand, (error, stdout, stderr) => {
                   if (error) {
                     console.error(`Error launching Terminal: ${error.message}`);
@@ -966,7 +967,8 @@ async function _callback( name, event){
                     let portCommand = url.port ? ` -p ${url.port}` : '';
                 
                     // Construct the SSH command 
-                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${remotePath}" && bash \"`;  
+                    const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
+                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${decodedPath}" && bash \"`;  
                                 
                 }
                 
@@ -1043,7 +1045,8 @@ async function _callback( name, event){
 			    let portCommand = url.port ? ` -p ${url.port}` : '';
 			
 			    // Construct the SSH command for WSL
-			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} "cd ${remotePath} && bash"`;
+                const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
+			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} "cd ${decodedPath} && bash"`;
 			
 			    // Launch a new WSL terminal window and run the SSH command
 			    const terminalCommand = `start wsl.exe ${sshCommand}`;
