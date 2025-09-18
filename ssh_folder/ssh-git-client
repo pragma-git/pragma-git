@@ -247,8 +247,8 @@ EOF
     end_time=$(date +%s.%N)
     time_diff=$(awk "BEGIN {print $end_time - $start_time }")
     {
-        echo "($PID) ssh-git-client  --     $time_diff -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
-        echo "($PID) ssh-git-client  --     $time_diff -- ${COMMAND}" 
+        echo "($PID) ssh-git-client --  time  $time_diff   -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
+        echo "($PID) ssh-git-client --  time  $time_diff   -- ${COMMAND}" 
         echo ' '
     } >> "$SSH_LOG"
     
