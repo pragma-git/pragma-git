@@ -2505,19 +2505,33 @@ async function updateGitconfigs( ){
         }
     }   
     
+    // Server name -- populated if ssh folder :
+    let server = '';
+    let onServerString = '';
+    // Write out if on ssh folder
+    if (state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
+        html += `<code>On server ${state.repos[state.repoNumber].localFolder} </code><br>`
+        const fullUrl = state.repos[state.repoNumber].localFolder;
+        const url = new URL(fullUrl);
+        server = `${url.protocol}//${url.username}@${url.hostname}${url.port ? `:${url.port}` : ''}`;
+        onServerString = ` ( on server ${server} )`
+    }
+    
+
+    
     // Build html, loop by file
     let files = configList.files;
     for (fileURI of files) {
         
         // Title
-        let fileTitle = fileURI;
+        let fileTitle = server + fileURI;
         
         if ( fileURI == '.git/config' ){
             fileTitle = state.repos[state.repoNumber].localFolder + '/.git/config';
         }        
         
         if ( fileURI == 'command line:' ){
-            fileTitle = 'Pragma-git internal';
+            fileTitle = 'Pragma-git internal' + onServerString;
             html+= `<br><div style="opacity: 50%; border-left-style: inset; padding-left: 5px;"> <div> ${fileTitle} :</div>`; 
         }else{
             html+= `<br><div> ${fileTitle} :</div>`; 
