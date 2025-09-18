@@ -3934,13 +3934,22 @@ function configFilePath( folder = ''){
             
         const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
         let sshHome;
-        if (process.platform == 'darwin'){
-            sshHome = `/Users/${urlParts.username}`
-        }
-        if (process.platform == 'linux'){
+        
+        // Get remote platform if cached
+        try{
+            platform = cachedLocalStatus.platform[repoNumber];
+            if (platform == 'Mac'){
+                sshHome = `/Users/${urlParts.username}`
+            }
+            if (platform == 'Linux'){
+                sshHome = `/home/${urlParts.username}`
+            }  
+        }catch (err){
+            // Falback -- guess linux system
             sshHome = `/home/${urlParts.username}`
-        }  
-            
+        }
+        
+        // Use sshHome in config file path     
         try{
             configfile = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
         }catch (err){
