@@ -3944,6 +3944,10 @@ function configFilePath( folder = ''){
             if (platform == 'Linux'){
                 sshHome = `/home/${urlParts.username}`
             }  
+            if (platform == undefined){
+                // Falback -- guess linux system
+                sshHome = `/home/${urlParts.username}`
+            }  
         }catch (err){
             // Falback -- guess linux system
             sshHome = `/home/${urlParts.username}`
