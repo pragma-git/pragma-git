@@ -244,11 +244,24 @@
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>
     
+            <!--Help icon -- in all tabs   -->   
             <img id="about-icon" style='vertical-align:middle;position: absolute; right: 20;' height="17" width="17"  
                 onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
                 onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                 src="images/questionmark_black.png" >
+                                            
+            <!-- Find icon -- in all tabs   -->       
+            <img id="find-icon" 
+            style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
+            height="17" width="17"  
+            onclick="findInNw.showSearchBox();" 
+            onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+            onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+            src="images/find_black.png" >
+            
+        
+            
     
        <br><br>
             <div class="wrapper">
@@ -265,6 +278,10 @@
         
 
         <div id="inner-content">   
+            
+
+            
+            
             <div class="content" id="foldableDiv2" style="display:none;">  <!--  SOFTWARE SETTINGS tab -->             
                     
                 <h3>Visual</h3>  
@@ -438,6 +455,7 @@
             </div>                
             <div class="content" id="foldableDiv1"  style="display:none;"> <!--  REPO SETTINGS tab  --> 
                 <h3>Repository table </h3>  
+                        
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
                         <th class=""></th>
@@ -813,16 +831,6 @@
         
             </div>     
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
-
-                <img id="find-icon" 
-                style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
-                height="17" width="17"  
-                onclick="findInNw.showSearchBox();" 
-                onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
-                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-                src="images/find_black.png" >
-
-
 
 
                 <div style='float:right; position: relative; top: 0px;

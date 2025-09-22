@@ -86,7 +86,19 @@ function extendFindInNw( elementToSearch){
         // If Settings
         try{
             if (document.title == 'Settings'){
-                searchElement = document.getElementById( 'foldableDiv3');  
+                //searchElement = document.getElementById( 'foldableDiv3');  
+                
+                // Determine which tab to search in
+                const contentElements = document.getElementsByClassName('content');
+                
+                for (let el of contentElements) {
+                    const style = window.getComputedStyle(el);
+                    if (style.display === 'contents') {
+                        searchElement = el;
+                        break
+                    }
+                }
+
             }
             
 
@@ -143,14 +155,7 @@ function extendFindInNw( elementToSearch){
                 pragmaMergeSearchInEditorId = 'searchElement'; findInNw.positionSearchBoxPragmaMerge()
                 return
             }
-            
-            // Special case for Settings (ctrl-F should only show if System info tab)
-            if (document.title == 'Settings'){
-                // Hide if System Info tab not shown
-                if (global.state.settingsWindow.selectedTab !== 3){
-                    return
-                }
-            }
+
 
             // Normal case
             this.showSearchBox();
