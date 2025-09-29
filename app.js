@@ -7747,7 +7747,7 @@ function loadSettings(settingsFile){
 
     try{
         // 1) Read json
-        let jsonString = fs.readFileSync(settingsFile);
+        let jsonString = fs.readFileSync(settingsFile, 'utf8');
         state_in = JSON.parse(jsonString);
         
         console.log('state -- read from json file');
@@ -7989,6 +7989,9 @@ function loadSettings(settingsFile){
         repoState.allowPushToRemote = setting( repoStateIn.allowPushToRemote, true ); 
         repoState.autoPushToRemote = setting( repoStateIn.autoPushToRemote, true );
         repoState.NoFF_merge = setting( repoStateIn.NoFF_merge, true );
+        
+        // Hidden branches
+        repoState.hiddenBranches = setting( repoStateIn.hiddenBranches, [] );
         
         return repoState;
     }
