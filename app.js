@@ -440,9 +440,31 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
 // Main functions
-
+var _debounceState = {};  // State variable for _callback debounce
 async function _callback( name, event){ 
     
+    // Debounce code (prevent double-click)
+    const delay = 500;   // Customize your debounce delay here
+    
+    const debounceableCallbacks = ['clicked-graph', 'clicked-settings'];  // Add trouble some callbacks here!
+    const key = name; // Use first argument as debounce key
+    
+    // Only consider the list in "debounceableCallbacks"
+    if (debounceableCallbacks.includes(key)) {
+        const now = Date.now();
+        const lastCall = _debounceState[key]?.lastCall || 0;  // "_debounceState[key]?lastCall" avoids fail (returns undefined), if key not in array.  If so, fall back to value 0
+        
+        // Bail out if called too close to previous call
+        if (now - lastCall < delay) {
+            return;
+        }
+        
+        // Update last call timestamp
+        _debounceState[key] = { lastCall: now }; 
+    }
+
+    
+ 
     // Log event
     console.log('_callback = ' + name);
     console.log(event);
