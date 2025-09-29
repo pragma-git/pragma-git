@@ -68,10 +68,26 @@
             }
             window.document.body.style.zoom = global.state.zoom;
         </script>
+        
+        <!--  Add find  -->    
+        <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+        <script src="extend_find-in-nw.js"></script>
+        <script>
+            findInNw.initialize();
+            extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
+        </script> 
+
     
         <!-- HTML -->       
         <div id="outer-content" style="width: auto;">        
             <div id="inner-content">
+                
+                
+                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                    onclick="findInNw.showSearchBox();" 
+                    onmouseover="document.getElementById('about-icon').src='images/find_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
                 
                 
                     
