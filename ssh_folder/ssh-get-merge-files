@@ -44,6 +44,7 @@ function getFiles () {
         
             # Relative file name
             LOCAL="${TEMP_FILE_LOCATION}/${var}"
+            mkdir -p $(dirname ${LOCAL})
             REMOTE="${SERVER_BASE_PATH}/${var}" 
         fi
         
@@ -79,7 +80,7 @@ echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$MERGE_LOG"
 FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
 echo "    FILE_LOCATIONS = ${FILE_LOCATIONS}"
 eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
-#echo "ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
+echo "ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
 
 # Run pragma-merge locally
 command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
