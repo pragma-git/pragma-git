@@ -319,12 +319,12 @@ async function _callback( name, event, event2){
                 '-y',  
                 '--tool',
                 tool,
-                commit1,
-                commit2
+                quoteGitPath(commit1),
+                quoteGitPath(commit2)
             ];
 
-
-            console.log(command);
+            console.log( 'git ' );
+            console.log( command.join(' ') );
 
             // Git 
             try{
@@ -679,6 +679,26 @@ async function _callback( name, event, event2){
 
 // ================= END CALLBACK =================  
 }
+    function quoteGitPath(input) {
+        // Example usage:
+        // const original = "7c1b6811a73aa38de05e89729b4100f54062ce1c^:imlook4d/external  functions/checkForNewVersion.m";
+        // const quoted = quoteGitPath(original);
+        // console.log(quoted);  // Gives: "7c1b6811a73aa38de05e89729b4100f54062ce1c^:'imlook4d/external  functions/checkForNewVersion.m'"
+        const separatorIndex = input.indexOf(':');
+        if (separatorIndex === -1) return input; // No colon found, return as-is
+        
+        const prefix = input.slice(0, separatorIndex + 1); // includes the colon
+        const path = input.slice(separatorIndex + 1);
+        
+        // Wrap the path in single quotes
+        const quotedPath = `'${path}'`;
+        
+        return `${prefix}${quotedPath}`;
+    }
+
+
+
+
 function closeWindow(){
     
     // This used to be a button in listChanged.html, no apply selected files when closing window instead

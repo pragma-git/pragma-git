@@ -27,30 +27,44 @@ TIMEOUT=2;                                                # SSH TIME-OUT in seco
 # FUNCTIONS
 
 function getFiles () {
+    
+    echo "    TEMP_FILE_LOCATION='${TEMP_FILE_LOCATION}'"
+    
     for var in "$@"
     do
-        #echo "FILE = $var"
+        echo ' '
+        echo "    REMOTE FILE   = '${var}'"
+        REMOTEFOLDER=$(dirname "${var}")
+        echo "    REMOTE FOLDER = '${REMOTEFOLDER}'"
         
         # Create absolute paths (needed if relative path from beginning)
         if [[ ${var:0:1} == "/" ]] ; then 
         
             # Absolute file path
-            DIRNAME="${TEMP_FILE_LOCATION}$(dirname ${var})"
+            echo '    IS ABSOLUTE FILE PATH'
+            DIRNAME=${TEMP_FILE_LOCATION}$(dirname "${var}")
             #echo "CREATE DIR = ${DIRNAME}" 
+            echo "    Making local folder '${DIRNAME}'"
             mkdir -p "${DIRNAME}"     # Create folder 
+            echo "    $?"
             LOCAL="${TEMP_FILE_LOCATION}${var}"  # don't add "/" , because absolute path starts with "/" 
             REMOTE="${var}" 
         else 
         
             # Relative file name
+            echo '    IS RELATIVE FILE PATH'
             LOCAL="${TEMP_FILE_LOCATION}/${var}"
-            mkdir -p $(dirname ${LOCAL})
+            DIRNAME=$(dirname "${LOCAL}")
+            echo "    Making local folder '${DIRNAME}' "
+            mkdir -p "${DIRNAME}"
+            echo "    $?"
             REMOTE="${SERVER_BASE_PATH}/${var}" 
         fi
         
         # Transfer
-        echo "    SSH TRANSFER :  ${REMOTE}  > ${LOCAL}"
-        ssh -T "$SERVER" $SSH_OPTIONS  "cat ${REMOTE} " > "${LOCAL}"
+        echo "    SSH TRANSFER :  '${REMOTE}'  > '${LOCAL}'"
+        ssh -T "$SERVER" $SSH_OPTIONS  "cat '${REMOTE}'" > "${LOCAL}"
+        echo "    $?"
         
         #echo ' '
         
@@ -66,6 +80,7 @@ function getFiles () {
 
 # CODE
 
+echo 'ENTER ssh-get-merge-files'
 
 # Prepare temp storage
 mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exists
@@ -80,12 +95,15 @@ echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$MERGE_LOG"
 FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
 echo "    FILE_LOCATIONS = ${FILE_LOCATIONS}"
 eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
-echo "ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
+echo "    ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
 
 # Run pragma-merge locally
 command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
 echo "    Call $command" >> "$MERGE_LOG"
 echo " " >> "$MERGE_LOG"
 eval $command
+
+
+echo 'EXIT ssh-get-merge-files'
 
 exit $?  # Return error code from ssh

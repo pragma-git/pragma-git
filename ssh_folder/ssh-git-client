@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 # SimpleGit custom Git binary
 #
 # Implemented as a wrapper to git that runs git commands on remote server over ssh
@@ -20,7 +20,12 @@
 # I extract SSH URL and use remaining arguments with git binary 
 #
 # Example (run git status on remote server) :
-#   ./($PID) ssh-git-client -c "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test" status
+#   ./ssh-git-client -c "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test" status
+#
+#
+# NOTE: to mimic pragma-git simpleGit commands on an ssh folder, many commands rely on the include.path.
+# Example
+#  ./ssh-git-client -c include.path="/Users/jan/.pragma-git/pragma-git-config-ssh" -c "SSHURL=ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/imlook4d_DEVELOP"    difftool -y --tool pragma-git  "7c1b6811a73aa38de05e89729b4100f54062ce1c^:'imlook4d/imlook4d.m'" "7c1b6811a73aa38de05e89729b4100f54062ce1c:'imlook4d/imlook4d.m'"
 #
 # Example on Windows cmd:
 #    cd C:\Users\axels\Documents\Projects\Pragma-git\pragma-git\ssh_folder
@@ -50,10 +55,18 @@ SSH_LOG="$TMP/pragma-git-log.txt"
     # Get -c SSHURL... from argument list -- also remove these two from total filtered_args argument list
     # Get -PIPED... from argument list -- also remove from total filtered_args argument list
     filtered_args=()
+    
+    # UNCOMMENT FOR DEBUG (USEFUL TO FIND SPACE PROBLEMS)
+    #echo "($PID) ssh-git-client  -- ARGUMENTS : "  >> "$SSH_LOG"
+    #for arg in "$@"; do    
+        #echo "($PID) ssh-git-client  --    '$arg'"  >> "$SSH_LOG"
+    #done
+    
     while [[ $# -gt 0 ]]; do
     
         if [[ "$1" == "-c" && "$2" == SSHURL=* ]]; then
             SSHURL="${2#SSHURL=}"
+            echo "($PID) ssh-git-client  -- SSHURL='$SSHURL'" 2>&1 >> "$SSH_LOG"
             shift 2     # Skip both -c and the SSHURL=... from argument list
         elif [[ "$1" == "-PIPED" ]]; then
             PIPED=true  # Skip "-PIPED" from argument list
@@ -81,7 +94,7 @@ SSH_LOG="$TMP/pragma-git-log.txt"
     COMMAND="git -C '${SERVER_BASE_PATH}'" # Work in repo folder from SSHURL
     COMMAND="$COMMAND  -c credential.helper= -c credential.helper=store " # This was needed to force osxkeychain not to show up on ssh to remote MacOS
     COMMAND="$COMMAND ${REMAINING_ARGUMENTS}"
-    echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" >> "$SSH_LOG"
+    echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" 2>&1 >> "$SSH_LOG"
 
 #
 # Pragma-merge
@@ -110,6 +123,7 @@ SSH_LOG="$TMP/pragma-git-log.txt"
     else
         # Run in background
         echo "($PID) ssh-git-client  -- Start git command on remote server -- run in background" >> "$SSH_LOG"
+        echo "($PID) ssh-git-client  -- COMMAND = $COMMAND" >> "$SSH_LOG"
         ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF &
             export GIT_ASKPASS="\$HOME/.Pragma-git/pragma-askpass-ssh"  # Make $HOME work (does not expand in config)
             eval "$COMMAND"

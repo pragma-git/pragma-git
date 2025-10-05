@@ -15,6 +15,7 @@ then
     # Mac or Linux or WSL 
     TMP="$HOME/.Pragma-git/.tmp"
     MERGE_LOG="$TMP/mergelog.txt"
+    date > "$MERGE_LOG"
     
     # Modify TMP if run under WSL
     # Windows (git over ssh  is implemented using WSL)
@@ -22,12 +23,13 @@ then
 		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
 		
 		MERGE_LOG="${TMP}/mergelog.txt"
+        date > "$MERGE_LOG"
 		LOG_INDENT="   "
 		echo ">> PRAGMA-MERGE  $@" >> "$MERGE_LOG"
 		echo "${LOG_INDENT}Running in WSL" >> "$MERGE_LOG"
 	else
 		 # Must be without git over ssh -- restart log
-		 echo "Mac or Linux or WSL" > "$MERGE_LOG"
+		 echo "Mac or Linux or WSL" >> "$MERGE_LOG"
 	fi
     
    
@@ -37,15 +39,23 @@ then
     echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 else
     # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"  # Must be without git over ssh -- restart log
+    TMP="$USERPROFILE/.Pragma-git/.tmp"  # Must be without git over ssh -- restart log		
+    MERGE_LOG="${TMP}/mergelog.txt"
+    date > "$MERGE_LOG"
     
-    echo "${LOG_INDENT}WINDOWS" > "$MERGE_LOG"
+    echo "${LOG_INDENT}WINDOWS" >> "$MERGE_LOG"
     #env >> "$MERGE_LOG"
     echo $(pwd -W) > "$TMP/repo_path"
     echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 fi
 
 
+echo "x$0x" >> "$MERGE_LOG"
+echo "x$1x" >> "$MERGE_LOG"
+echo "x$2x" >> "$MERGE_LOG"
+echo "x$3x" >> "$MERGE_LOG"
+echo "x$4x" >> "$MERGE_LOG"
+echo "x$5x" >> "$MERGE_LOG"
 
 mkdir "$TMP" 2>/dev/null
 
@@ -53,11 +63,12 @@ RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and start
 EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
 # SSH folder -- special ($5 == 'ssh' means that pragma-merge is running on server)
-echo "${LOG_INDENT}Argument \$5 = $5 (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
-if [[ $5 = "ssh" ]] ; then
+echo "${LOG_INDENT}Argument \$5 = \"$5\" (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
+if [[ $5 == "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
     # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
+    echo "\"$1\" \"$2\" \"$3\" \"$4\" $5" >>  "$MERGE_LOG" 
     echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
 fi
 
@@ -84,10 +95,10 @@ fi
 
 
 # Local repo : Store input parameters for Pragma-git to pick them up (these are only used on local computer 
-echo $1 > "$TMP/first"
-echo $2 > "$TMP/second"
-echo $3 > "$TMP/third"
-echo $4 > "$TMP/fourth"    
+echo "$1" > "$TMP/first"
+echo "$2" > "$TMP/second"
+echo "$3" > "$TMP/third"
+echo "$4" > "$TMP/fourth"    
 
 
 # Run Pragma-merge while file $RUNNING exists (removed by Pragma-merge when closed)

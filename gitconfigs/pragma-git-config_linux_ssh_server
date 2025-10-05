@@ -1,4 +1,5 @@
-# app.js/setupSshServer()  copies this file to ".Pragma-git/pragma-git-config-ssh" 
+# pragma-git client app.js/setupSshServer()  
+# copies this file to linux server "$HOME/.Pragma-git/pragma-git-config-ssh" 
 
 [init]
     defaultbranch=main
