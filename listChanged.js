@@ -105,6 +105,8 @@ async function _callback( name, event, event2){
     let status_data;
     let tool;
     
+    let folder = state.repos[state.repoNumber].localFolder;
+    
     // Bail out if pragma-merge is open and one of the listed callback-names
     const importantCallback = 'diffLinkAll, diffLink, diffLinkHistory, editLinkHistory, '.includes( `${name},`); // Note: end name with ','
     if ( ( opener.merge_win !== undefined ) &&  importantCallback ){
@@ -319,8 +321,8 @@ async function _callback( name, event, event2){
                 '-y',  
                 '--tool',
                 tool,
-                quoteGitPath(commit1),
-                quoteGitPath(commit2)
+                quoteGitPath( commit1),
+                quoteGitPath( commit2)
             ];
 
             console.log( 'git ' );
@@ -328,7 +330,7 @@ async function _callback( name, event, event2){
 
             // Git 
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
+                simpleGit( folder).raw(command );
             }catch(err){
                 console.log('diffLinkHistory -- caught error ');
                 console.log(err);
@@ -345,8 +347,6 @@ async function _callback( name, event, event2){
 
             let file = event;
             let rw_switch = event2; // --rw or --ro  or --show 
-            
-            let folder = state.repos[state.repoNumber].localFolder;
             
             let SSH_EDIT = ( folder.startsWith('ssh:') && rw_switch.startsWith('--rw') );
             
@@ -679,11 +679,17 @@ async function _callback( name, event, event2){
 
 // ================= END CALLBACK =================  
 }
-    function quoteGitPath(input) {
+    function quoteGitPath( input) {
         // Example usage:
         // const original = "7c1b6811a73aa38de05e89729b4100f54062ce1c^:imlook4d/external  functions/checkForNewVersion.m";
         // const quoted = quoteGitPath(original);
         // console.log(quoted);  // Gives: "7c1b6811a73aa38de05e89729b4100f54062ce1c^:'imlook4d/external  functions/checkForNewVersion.m'"
+        
+        // Bail out if not SSH (simpleGit does not allow quoted -- it seems to do add quote internally, so I'll get two quotes if I add this)
+        if ( ! state.repos[state.repoNumber].localFolder.startsWith('ssh:')){
+            return input;
+        }
+        
         const separatorIndex = input.indexOf(':');
         if (separatorIndex === -1) return input; // No colon found, return as-is
         
