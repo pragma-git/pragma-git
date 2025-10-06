@@ -803,6 +803,8 @@ async function createFileTable(status_data) {
         let Y = fileStruct.working_dir
         let XY = X + Y;  
         
+        console.log(`${XY} -- ${file}`);
+        
         //console.log( '[' + XY + '] ' + fileStruct.path);
         
         // Remember found file
