@@ -17,7 +17,8 @@
 #  .....
 # ($1, $2 are example placement for SSHURL, may be anywhere in argument list)
 #
-# I extract SSH URL and use remaining arguments with git binary 
+# I extract SSH URL and -PIPED, and use remaining arguments with git binary
+# (internally each kept argument is quoted and added to a string REMAINING_ARGUMENTS)
 #
 # Example (run git status on remote server) :
 #   ./ssh-git-client -c "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test" status
@@ -46,7 +47,8 @@ source $SCRIPT_FOLDER/lib/ssh-functions
 # Override SSH_LOG and save in pragma-git-log.txt instead
 SSH_LOG="$TMP/pragma-git-log.txt" 
 
-
+# String with arguments for git command binary, quoted and filtered to remove control commands (SSHURL, --PIPED)
+REMAINING_ARGUMENTS=''  
 
 #
 # Massage argument list -- remove $SSHURL and -PIPED
@@ -73,28 +75,25 @@ SSH_LOG="$TMP/pragma-git-log.txt"
             shift
         else
             # Add to argument list
-            filtered_args+=("$1")
+            filtered_args+=("$1")  # String array
+            REMAINING_ARGUMENTS="${REMAINING_ARGUMENTS} '$1'"  # QUOTE
             shift
         fi
     done
     
-    REMAINING_ARGUMENTS="${filtered_args[@]}" 
-    echo "($PID) ssh-git-client  -- >> SSH_GIT_CLIENT  $ALL_ARGUMENTS " >> "$SSH_LOG"
-    echo "($PID) ssh-git-client  -- ( git  ${REMAINING_ARGUMENTS} )" >> "$SSH_LOG"
-    
+    echo "($PID) ssh-git-client  -- SSH_GIT_CLIENT  $ALL_ARGUMENTS " >> "$SSH_LOG"
+    echo "($PID) ssh-git-client  -- REMAINING_ARGUMENTS =${REMAINING_ARGUMENTS}" >> "$SSH_LOG"
     
     # Get server info
     getSshUrlParts "$SSHURL"  # Sets SERVER PORT SERVER_BASE_PATH
-    
-    
-    # Fix quotes around  --pretty statement, sent from simpleGit (--pretty=format:òòòòòò %H ò %aI ò %s ò %D ò %b ò %aN ò %aE òò )
-    REMAINING_ARGUMENTS=$(echo ${REMAINING_ARGUMENTS}| sed "s/òòòòòò/'òòòòòò/g" | sed "s/ òò/ òò'/g")
+
     
     # Git command running from $SERVER_BASE_PATH
     COMMAND="git -C '${SERVER_BASE_PATH}'" # Work in repo folder from SSHURL
     COMMAND="$COMMAND  -c credential.helper= -c credential.helper=store " # This was needed to force osxkeychain not to show up on ssh to remote MacOS
     COMMAND="$COMMAND ${REMAINING_ARGUMENTS}"
     echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" 2>&1 >> "$SSH_LOG"
+
 
 #
 # Pragma-merge

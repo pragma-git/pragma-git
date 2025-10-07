@@ -321,8 +321,8 @@ async function _callback( name, event, event2){
                 '-y',  
                 '--tool',
                 tool,
-                quoteGitPath( commit1),
-                quoteGitPath( commit2)
+                commit1,
+                commit2
             ];
 
             console.log( 'git ' );
