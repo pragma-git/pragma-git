@@ -10,7 +10,7 @@
 # Arguments
 #   $1      --  -c
 #   $2      --  SSH URL, formatted as :  "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test"
-#   $opt    --  optional -- -PIPED -- meaning that the command is run as :  echo 'hej' | ($PID) ssh-git-client ....  -- which is piped into git command on ssh-server
+#   $opt    --  optional -- -PIPED -- meaning that the command is run as :  echo 'hej' | ssh-git-client ....  -- which is piped into git command on ssh-server
 #   $3      --  git command (for instance 'status')
 #   $4      --  options to git command
 #   $5      --  options to git command
@@ -148,7 +148,7 @@ EOF
 
 
 #
-# Askpass if needed
+# Wait for git command to finish -- askpass if needed
 #
     if [ "$GIT_DONE" == false ]; then
         echo "($PID) ssh-git-client  -- Start wait for git command to finish (over ssh on server) ..." >> "$SSH_LOG"   
