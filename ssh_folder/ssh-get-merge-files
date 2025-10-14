@@ -1,5 +1,5 @@
 #!/bin/bash 
-# Tool to get difftool or mergetool files from ssh-folder
+# Tool to get difftool or mergetool files from ssh-folder.  Then start pragma-merge locally
 #
 # Started from ssh-git-client -> delayed-start-pragma-merge -> this
 #
@@ -32,7 +32,7 @@ function getFiles () {
     
     for var in "$@"
     do
-        echo ' '
+        #echo ' '
         echo "    REMOTE FILE   = '${var}'"
         REMOTEFOLDER=$(dirname "${var}")
         echo "    REMOTE FOLDER = '${REMOTEFOLDER}'"

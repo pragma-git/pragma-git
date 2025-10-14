@@ -95,20 +95,20 @@ REMAINING_ARGUMENTS=''
     echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" 2>&1 >> "$SSH_LOG"
 
 
-#
-# Pragma-merge
-#
+##
+## Pragma-merge
+##
     
-    # Start Pragma-merge in new thread
-    case "${filtered_args[2]}"  in
-    mergetool|difftool)
-        echo "($PID) ssh-git-client  --     Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
-        "${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSHURL" >> "$SSH_LOG"  & 
-    ;;
-    mergetool)
+    ## Start Pragma-merge in new thread
+    #case "${filtered_args[2]}"  in
+    #mergetool|difftool)
+        #echo "($PID) ssh-git-client  --     Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
+        #"${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSHURL" >> "$SSH_LOG"  & 
+    #;;
+    #mergetool)
     
-    ;;
-    esac
+    #;;
+    #esac
 
 
 #
@@ -148,8 +148,10 @@ EOF
 
 
 #
-# Wait for git command to finish -- askpass if needed
+# Wait for git command to finish
 #
+    echo "($PID) ssh-git-client  -- SSHURL='$SSHURL'" 2>&1 >> "$SSH_LOG"
+
     if [ "$GIT_DONE" == false ]; then
         echo "($PID) ssh-git-client  -- Start wait for git command to finish (over ssh on server) ..." >> "$SSH_LOG"   
         
@@ -160,33 +162,62 @@ EOF
         fi
         echo "($PID) ssh-git-client  -- REMOTE_TMP = $REMOTE_TMP" >> "$SSH_LOG" 
                 
-        REMOTE_SIGNAL_FILE="$REMOTE_TMP/pragma-askpass-running-ssh"
-        REMOTE_PROMPT_FILE="$REMOTE_TMP/askpass_first-ssh"
-        REMOTE_EXIT="$REMOTE_TMP/exit-pragma-askpass-ssh" 
-        REMOTE_EXITMESSAGEFILE="$REMOTE_TMP/exit-message-pragma-askpass-ssh" 
+        REMOTE_ASKPASS_SIGNAL_FILE="$REMOTE_TMP/pragma-askpass-running-ssh"
         
-        LOCAL_EXIT="$TMP/exit-pragma-askpass"  
-        LOCAL_PROMPT_FILE="$TMP/askpass_first"
-        LOCAL_EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass" 
+        REMOTE_MERGE_SIGNAL_FILE="$REMOTE_TMP/pragma-merge-running-ssh"
+        FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'
     fi    
     
-    # Loop until remote git connection stops
+#
+# Loop until remote git connection stops  -- askpass or merge if needed
+#
+
+    MERGE_CALLED=false  # This is used to only perform merge operation in loop once
     while kill -0 $GIT_SSH_PID 2>/dev/null; do
     
-        # Bail out if git command finished (saves time; see above). Signaling files are not needed -- OK that they are not defined if true
+        # Bail out if git command finished (saves time; see above). 
         if [ "$GIT_DONE" == true ]; then
             break
         fi
         
         echo "($PID) ssh-git-client  -- Git has not exited yet" >> "$SSH_LOG"    
+        
 
-    
+        #
+        # If remote Git is waiting for merge dialog :
+        #
+        if [ "$MERGE_CALLED" == false ];  then   # MERGE_CALLED will be set to true, to ensure only doing this once
+        
+            if ssh -p $PORT "$SERVER" "test -f '$FILE_LIST_ON_SSH'"; then
+                
+                echo  "($PID) ssh-git-client  -- Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSHURL\""  >> "$SSH_LOG" 
+                echo  "  "  >> "$SSH_LOG"
+                
+                # Get files, and open pragma-merge locally
+                "${SCRIPT_FOLDER}/ssh-get-merge-files" "$SSHURL" 
+  
+                # Inhibit going into merge section of this script again
+                MERGE_CALLED=true
+            fi
+         fi   
+        
+
+        #
         # If remote Git is waiting for askpass dialog :
-        if ssh -p $PORT "$SERVER" "test -f '$REMOTE_SIGNAL_FILE'"; then
+        #
+        if ssh -p $PORT "$SERVER" "test -f '$REMOTE_ASKPASS_SIGNAL_FILE'"; then
+        
+            # Signaling files
+            REMOTE_PROMPT_FILE="$REMOTE_TMP/askpass_first-ssh"
+            REMOTE_EXIT="$REMOTE_TMP/exit-pragma-askpass-ssh" 
+            REMOTE_EXITMESSAGEFILE="$REMOTE_TMP/exit-message-pragma-askpass-ssh" 
+            
+            LOCAL_EXIT="$TMP/exit-pragma-askpass"  
+            LOCAL_PROMPT_FILE="$TMP/askpass_first"
+            LOCAL_EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass" 
         
             echo "($PID) ssh-git-client  -- =========================================================================================" >> "$SSH_LOG"
-        
-            echo "($PID) ssh-git-client  -- Signal file detected on server ($SERVER:$REMOTE_SIGNAL_FILE)" >> "$SSH_LOG"
+            echo "($PID) ssh-git-client  -- Signal file detected on server ($SERVER:$REMOTE_ASKPASS_SIGNAL_FILE)" >> "$SSH_LOG"
             
             # Copy from remote askpass to local
             echo "($PID) ssh-git-client  -- Copy prompt from $SERVER:$REMOTE_PROMPT_FILE  ->  $LOCAL_PROMPT_FILE" >> "$SSH_LOG"
@@ -196,7 +227,7 @@ EOF
             
             # Run local askpass dialog
             echo "($PID) ssh-git-client  -- Start local pragma-askpass" >> "$SSH_LOG"
-            ../pragma-askpass "$(cat "$LOCAL_PROMPT_FILE" )" 2>&1 | sed "s/^/(${PID}) pragma-askpass output -- /" >> "$SSH_LOG" &
+            ./pragma-askpass "$(cat "$LOCAL_PROMPT_FILE" )" 2>&1 | sed "s/^/(${PID}) pragma-askpass output -- /" >> "$SSH_LOG" &
             ASKPASS_PID=$!
             echo "($PID) ssh-git-client  -- ASKPASS_PID = $ASKPASS_PID" >> "$SSH_LOG"
             
@@ -205,7 +236,7 @@ EOF
             echo "($PID) ssh-git-client  -- Wait for user to close askpass dialog ..." >> "$SSH_LOG"
             while kill -0 $ASKPASS_PID 2>/dev/null; do
                 sleep 1
-                echo -n '.' >> "$SSH_LOG"
+                echo "($PID) ssh-git-client  -- Wait for user to close askpass dialog ..." >> "$SSH_LOG"
                 
             done
             echo ' ' >> "$SSH_LOG"
@@ -219,12 +250,12 @@ EOF
             echo "($PID) ssh-git-client  -- Copy $LOCAL_EXITMESSAGEFILE  ->  $SERVER:$REMOTE_EXITMESSAGEFILE" >> "$SSH_LOG"
             scp -P $PORT "$LOCAL_EXITMESSAGEFILE" "$SERVER:$REMOTE_EXITMESSAGEFILE"  >> "$SSH_LOG"
             
-            echo "($PID) ssh-git-client  -- Close remote pragma-askpass -- remove file  $SERVER:$REMOTE_SIGNAL_FILE" >> "$SSH_LOG"
-            ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c 'rm \"$REMOTE_SIGNAL_FILE\" ' "
+            echo "($PID) ssh-git-client  -- Close remote pragma-askpass -- remove file  $SERVER:$REMOTE_ASKPASS_SIGNAL_FILE" >> "$SSH_LOG"
+            ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c 'rm \"$REMOTE_ASKPASS_SIGNAL_FILE\" ' "
             
             
     
-            # Clean up (if not ssh -- if ssh, let ($PID) ssh-git-client clear)
+            # Clean up 
             echo "($PID) ssh-git-client  -- Remove askpass temporary files :" >> "$SSH_LOG"
             
             echo "($PID) ssh-git-client  -- rm $LOCAL_EXITMESSAGEFILE  (local)" >> "$SSH_LOG"
