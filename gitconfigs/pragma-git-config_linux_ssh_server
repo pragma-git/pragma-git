@@ -1,4 +1,4 @@
-# pragma-git client app.js/setupSshServer()  
+# Pragma-git client app.js/setupSshServer()  
 # copies this file to linux server "$HOME/.Pragma-git/pragma-git-config-ssh" 
 
 [init]
@@ -6,14 +6,12 @@
 
 [credential]
     useHttpPath = true
-    helper = store      # Store credentials on server using git's file-based store mechanism. Is also hard-coded in ssh-git-client
+    helper = store
 
-    
 [mergetool]
     keepBackup = false
     
 [mergetool "pragma-git"]
-    #cmd = /home/jan/Desktop/Pragma-git-dev/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh
     cmd = $HOME/.Pragma-git/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh
     trustExitCode = true    
 

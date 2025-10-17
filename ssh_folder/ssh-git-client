@@ -90,7 +90,6 @@ REMAINING_ARGUMENTS=''
     
     # Git command running from $SERVER_BASE_PATH
     COMMAND="git -C '${SERVER_BASE_PATH}'" # Work in repo folder from SSHURL
-    COMMAND="$COMMAND  -c credential.helper= -c credential.helper=store " # This was needed to force osxkeychain not to show up on ssh to remote MacOS
     COMMAND="$COMMAND ${REMAINING_ARGUMENTS}"
     echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" 2>&1 >> "$SSH_LOG"
 
