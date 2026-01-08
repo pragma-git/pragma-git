@@ -1666,8 +1666,19 @@ async function drawGraph( document, splitted, branchHistory, history){
                         onmouseout="updateImageUrl( '${imgId}', 'images/stash_pop.png')"
                         src="images/stash_pop.png">`
                 
-                //stashHtml += stashArray[i].stashNumber;
-                stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber"> &nbsp;` + imageHTML + stashArray[i].stashNumber + '</pre>'
+
+                if ( stashArray[i].message.startsWith('WIP') ) {
+                    // Only show numbered icon
+                    stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber"> ${imageHTML} ${stashArray[i].stashNumber} </pre>`;
+                }else{
+                    // If named stash -- show numbered icon, followed by stash message
+                    let N = stashArray[i].message.indexOf(':');
+                    let text = stashArray[i].message.substring(N + 1).trim();
+                    stashHtml +=  `<pre  class="stashText"> &nbsp;&nbsp;</pre>`;
+                    stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber">${imageHTML}${stashArray[i].stashNumber}</pre>`;
+                    stashHtml +=  `<pre  class="stashText">< "${text}" </pre> `;
+                }
+                
             }
         }
         
