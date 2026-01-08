@@ -143,11 +143,7 @@ async function injectIntoJs(document){
     
         // Commit log output format
         let messageFormat = `--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N${UNIQUE_EOL}`;  // %aI = author date, strict ISO 8601 format
-        if ( folder.startsWith('ssh:' )){
-            messageFormat = `--format='S=%s T=%aI D=%d H=%H P=%P B=%b N=%N${UNIQUE_EOL}'`;  // %aI = author date, strict ISO 8601 format
-        }
-
-        
+    
     //
     // Set HTML
     //
@@ -720,10 +716,6 @@ async function gitCommitAuthor(hash){
     let text = '';
     try{
         let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
-        if (folder.startsWith('ssh:') ){
-             commands = [ 'show',  '-s', '--format="%aN (%aE)"', hash];
-        }
-        
         
         await simpleGit( folder).raw(  commands, onGitCommitAuthor);
         function onGitCommitAuthor(err, result ){

@@ -4816,9 +4816,6 @@ async function gitStashMap( folder ){
     try{
         let command = [ 'stash', 'list', '--format=H=%P REF=%gd S=%s' + UNIQUE_EOL + ''];
         
-        if (folder.startsWith( 'ssh:') ){
-            command = [ 'stash', 'list', '--format="H=%P REF=%gd S=%s"' + UNIQUE_EOL + ''];
-        }
         await simpleGit(folder).raw( command,   (err, res) => { rawOutput = res; global.res = res} );
     }catch(err){
         console.error('ERROR in gitStashMap');
@@ -5351,11 +5348,7 @@ async function isAmendCommit(){             // true if current commit is an amen
     let folder = state.repos[state.repoNumber].localFolder;
     currentHash = await gitCurrentCommit();
   
-    let command = ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)'];
-    if (folder.startsWith( 'ssh:') ){
-        command = ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format="%H|%gs|%d"', '--grep-reflog="(amend)"'];
-    }
-    
+    let command = ['reflog', '--walk-reflogs', '--all', '--parents', '--pretty', '--single-worktree', '--format=%H|%gs|%d', '--grep-reflog=(amend)'];    
     
     let all_amend_commits = ( await simpleGitLog( folder).raw( command ) ).split('\n');       
     
