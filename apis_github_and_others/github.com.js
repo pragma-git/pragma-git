@@ -55,7 +55,7 @@ class github extends General_git_rest_api {
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){
                     // 'https://abc:dev@api.github.com/repos/pragma-git/git-scm' -> 'https://api.github.com/repos/pragma-git/git-scm'
-                    urlParts = new URL(url);
+                    let urlParts = new URL(url);
                     url = urlParts.origin + urlParts.pathname; 
                 }
             
