@@ -228,7 +228,7 @@ function extendFindInNw( elementToSearch){
         elements.forEach(function (element) {
         if (element.id !== 'find-in-nw-search-box') {
                 window.findAndReplaceDOMText(element, {
-                find: RegExp(text,'gi') ,
+                find: RegExp( text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'gi') , // replace escapes regexp characters, making find literal
                 wrap: 'mark',
                 wrapClass: 'find-in-nw-token'
                 });
@@ -244,7 +244,7 @@ function extendFindInNw( elementToSearch){
                 textElements.forEach(function (textElement) {
                 if (textElement.id.startsWith( hashText  ) ) {
                     window.findAndReplaceDOMText(textElement, {
-                        find: RegExp(textElement.innerText,'gi') ,
+                        find: RegExp(textElement.innerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'gi') , // replace escapes regexp characters, making find literal
                         wrap: 'mark',
                         wrapClass: 'find-in-nw-token'
                         });
