@@ -150,8 +150,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const chokidar = require('chokidar');     // Listen to file update (used for starting and stopping Pragma-merge)
         const { exec } = require("child_process");
         const util = require('./util_module.js'); // Pragma-git common functions
-        const simpleGitDefault = require('simple-git');  // npm install simple-git
+        //const simpleGitDefault = require('simple-git');  // npm install simple-git
         
+        const simpleGitDefault = require('lib/simpleGitWithRetry');
+
 
     // Constants 
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
