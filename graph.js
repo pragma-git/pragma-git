@@ -1674,9 +1674,9 @@ async function drawGraph( document, splitted, branchHistory, history){
                     // If named stash -- show numbered icon, followed by stash message
                     let N = stashArray[i].message.indexOf(':');
                     let text = stashArray[i].message.substring(N + 1).trim();
-                    stashHtml +=  `<pre  class="stashText"> &nbsp;&nbsp;</pre>`;
+                    stashHtml +=  `&nbsp;&nbsp;<div class="stashBox"><pre  class="stashText"> </pre>`;
                     stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber">${imageHTML}${stashArray[i].stashNumber}</pre>`;
-                    stashHtml +=  `<pre  class="stashText">< "${text}" </pre> `;
+                    stashHtml +=  `<pre  class="stashText">"${text}" &nbsp;</pre> </div>`;
                 }
                 
             }
@@ -1702,7 +1702,7 @@ async function drawGraph( document, splitted, branchHistory, history){
         }
         
         let until;
-        
+         
         if (nodeMap.has(commit.parents[0])){
             until = nodeMap.get(commit.parents[0]).y;  
         }else{

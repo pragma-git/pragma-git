@@ -3611,6 +3611,11 @@ async function _setMode( inputModeName){
                 'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
                 "- is MODIFIED";  
                 
+
+            textOutput.placeholder = 
+                "Type description here ... and press Store" + os.EOL + os.EOL + 
+                "(or give name to stash, and press Stash button)";  
+                
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
                  textOutput.placeholder = 
@@ -4753,7 +4758,22 @@ async function gitRememberBranch( hash, name){
 async function gitStash(){
     // Stash
     try{
-        await simpleGitLog( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
+        let message = document.getElementById( 'message').value;
+        
+        // Make a WIP stash or a names stash
+        if ( message === ''){
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked'], onStash);
+        }  
+        else{
+            await simpleGitLog( state.repos[state.repoNumber].localFolder ).stash( ['push', '--include-untracked', '-m', message], onStash);
+            
+            // Write latest commit to message area placeholder (because there is nothing uncommited now)
+            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
+            commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
+            writeTextOutput( { placeholder: commitMessage, value: '' } ); 
+        }
+        
+        
         function onStash(err, result) {console.log(result);console.log(err);  };
     
     }catch(err){

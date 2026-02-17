@@ -21,6 +21,7 @@
     --graph-decoration-color: DarkBlue;
     --border-color: var(--text);
     --stash-icon-filter: invert( 80% ); 
+    --stash-text-background: #CCCCCC;
     
     /* Settings */
     --green-text: green;
@@ -74,6 +75,7 @@
     --graph-decoration-color: #d6b51d; /* (mustard yellow) */
     --border-color: var(--text);
     --stash-icon-filter: invert( 20% ); 
+    --stash-text-background: #666666;
     
     /* Settings */
     --input-background: #505050;      /* in html windows (slightly less dark grey) */
