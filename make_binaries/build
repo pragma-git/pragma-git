@@ -32,7 +32,7 @@
 
  7) brew install makensis # For making windows installer
  8) brew install create-dmg # For creating mac installer
- 9) sudo gem install fpm # For linux .deb creation
+ 9) gem install fpm # For linux .deb creation
     run later version : /usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin/fpm  instead of  fpm
  10) brew install gnu-tar # (tar for macos, for fpm)
  11) brew install rpm
@@ -66,6 +66,8 @@
     #
     # START OF SCRIPT
     #
+    
+    LC_ALL=C.UTF-8 LANG=C.UTF-8
 
 
     # Declare formatting function (return "[OK] - " or "[XX] - ")
@@ -78,7 +80,7 @@
             tput setaf 2  # Green
             echo -n "OK"
             tput sgr0  
-            echo -n ']   - '
+            echo -n '] - '
         else
             tput setaf 1  # Red
             echo -n "XX"
@@ -176,7 +178,7 @@
     rsync -a  '/Users/jan/Documents/Projects/Pragma-git/pragma-git/' "${TEMPDIR}" --exclude='.git*' 
     
     # Build for platforms
-    node ./scripts/nwbuild_script.js # Build for all platforms and architectures
+    node ./scripts/nwbuild_script.mjs # Build for all platforms and architectures
 
 
     # Make pragma-merge and pragma-askpass executables
@@ -229,11 +231,11 @@
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
       --add-file  "README.txt" "../../pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      --icon ".fseventsd"  1000 190 \
-      --icon ".VolumeIcon.icns"  1000 190 \
       "$DIR.dmg" \
       "../$DIR/" \
     || MAC_EXIT=$?
+    
+    
     
 
     # Clean up 
@@ -283,8 +285,6 @@
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
       --add-file  "README.txt" "../../pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      --icon ".fseventsd"  1000 190 \
-      --icon ".VolumeIcon.icns"  1000 190 \
       "$DIR.dmg" \
       "../$DIR/" \
     || MAC_EXIT_ARM=$?
@@ -309,14 +309,19 @@
     
     mkdir ../dist/win64
 
-    DIR=$(ls -1 ../dist/|grep  'win-x64')
-    makensis \
-    -DEXEFOLDER=$DIR \
-    -DOUTPUT="win64/$DIR.exe" \
-    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
-    assets-win/windows_installer.nsi \
-    || WIN_EXIT=$?
-    
+    DIR=$(ls -1 ../dist/|grep  'win-x64') || WIN_EXIT=$?
+
+    if [ "$WIN_EXIT" -eq 0 ]; then    
+        makensis \
+        -DEXEFOLDER=$DIR \
+        -DOUTPUT="win64/$DIR.exe" \
+        -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
+        assets-win/windows_installer.nsi \
+        || WIN_EXIT=$?
+    else
+        echo "Failed because missing 'dist/win-x64' folder"
+    fi
+
     echo ' '
     echo $(formatReturn $WIN_EXIT) Creating Windows installer
 
@@ -342,6 +347,7 @@
 
     
     fpm \
+    --log info \
     --input-type dir \
     --output-type deb \
     --name 'pragma-git' \
@@ -392,6 +398,7 @@
     
     # Dependencies are added from problems I had with CentOS7
     fpm \
+    --log info \
     --input-type dir \
     --output-type rpm \
     --name 'pragma-git' \

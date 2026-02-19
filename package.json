@@ -38,6 +38,6 @@
     "windows-network-drive": "^3.0.2"
   },
   "devDependencies": {
-    "nw-builder": "^4.13.7"
+    "nw-builder": "^4.7.8"
   }
 }
