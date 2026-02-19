@@ -11,7 +11,9 @@ cp '/opt/pragma-git/package.nw/images/linux-icons/256/pragma-git.png' '/usr/shar
 cp '/opt/pragma-git/package.nw/images/linux-icons/scalable/pragma-git.svg' '/usr/share/icons/hicolor/scalable/apps'
 
 # Set executable
-sudo chmod -R 755 /opt/pragma-git # Make executable for all users (and writable for root)
+chmod -R 755 /opt/pragma-git # Make executable for all users (and writable for root)
 
 # Launcher icon, all users
-desktop-file-install /opt/pragma-git/package.nw/make_binaries/assets-linux/pragma-git.desktop
+desktop-file-install \
+    --dir=/usr/share/applications \
+    /opt/pragma-git/package.nw/make_binaries/assets-linux/pragma-git.desktop
