@@ -7819,7 +7819,7 @@ function loadSettings(settingsFile){
         
         // Visual
             console.log('- setting visual settings');
-            state.darkmode = setting( state_in.darkmode, 'system');
+            state.darkmode = setting( state_in.darkmode, 'dark');
             
             state.alwaysOnTop = setting( state_in.alwaysOnTop, false);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);
