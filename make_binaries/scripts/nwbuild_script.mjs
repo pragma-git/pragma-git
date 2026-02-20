@@ -33,7 +33,7 @@ try{
     srcDir: SOURCE,     // SOURCE from above
     cacheDir: "/Users/jan/Downloads/caches-nwjs",
     outDir: "DUMMY",    // Set for each build
-    glob: "false",
+    glob: false,
     logLevel: "info",
     app: {}
   };
