@@ -205,7 +205,8 @@
 
     # Copy .app to temporary folder (keep original, to use for apple silicon)
     DIR=$(ls -1 ../dist/|grep  'mac-x64')
-    echo "$DIR.dmg" 
+    NAME="$DIR.dmg"
+    echo "$NAME" 
     
     # About dialog -- edit plist
     plist="../dist/$DIR/Pragma-git.app/Contents/Info.plist"
@@ -214,8 +215,13 @@
 
     
     # Make installer in destination folder (dist/mac) 
-    mkdir ../dist/mac
-    cd ../dist/mac
+    mkdir "../dist/mac"
+    cd "../dist/mac"
+    
+    # Make sure that only Pragma-git.app is packaged
+    STAGING_MAC="../staging_mac"
+    mkdir "$STAGING_MAC/"
+    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"
 
      
     # Make .dmg in ../dist/temp-macos
@@ -231,8 +237,8 @@
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
       --add-file  "README.txt" "../../pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      "$DIR.dmg" \
-      "../$DIR/" \
+      "$NAME" \
+      "$STAGING_MAC" \
     || MAC_EXIT=$?
     
     
@@ -260,16 +266,24 @@
 
     # Copy .app to temporary folder (keep original, to use for apple silicon)
     DIR=$(ls -1 ../dist/|grep  'mac-arm64')
-    echo "$DIR.dmg"
+    NAME="$DIR.dmg"
+    echo "$NAME" 
 
     # About dialog -- edit plist
     plist="../dist/$DIR/Pragma-git.app/Contents/Info.plist"
     CFBundleVersion=$(git rev-parse --short HEAD) || MAC_EXIT=$?  # Hash as build version (version n.n.n is taken from package.json)
     plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist || MAC_EXIT=$?
     
+    
     # Make installer in destination folder (dist/mac) 
-    mkdir ../dist/mac_arm64
-    cd ../dist/mac_arm64
+    mkdir "../dist/mac_arm64"
+    cd "../dist/mac_arm64"
+
+    # Make sure that only Pragma-git.app is packaged
+    STAGING_MAC="../staging_mac_arm64"
+    mkdir "$STAGING_MAC/"
+    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"   
+    
     
 
     # Make .dmg in ../dist/temp-macos
@@ -285,8 +299,8 @@
       --hide-extension "Pragma-git.app" \
       --app-drop-link 375 175 \
       --add-file  "README.txt" "../../pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      "$DIR.dmg" \
-      "../$DIR/" \
+      "$NAME" \
+      "$STAGING_MAC" \
     || MAC_EXIT_ARM=$?
     
 
@@ -434,7 +448,8 @@
      
     # Temporary folders for MacOS builds
     rm -rf ../dist/Pragma-git-*
-    rm -rf temp_pragma_git # Created when building apps
+    rm -rf temp_pragma_git  # Created when building apps
+    rm -rf staging_mac*     # Created when building MacOS apps
     
     ls -l ../dist/
     
