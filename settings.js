@@ -360,6 +360,29 @@ async function _callback( name, event){
             let folder = document.getElementById('addFolder').value;  
             if ( folder.startsWith('ssh:') ){
 				// Assume existing -- I don't plan to implement creating new repos on ssh-folder
+                try{
+	                var isRepo;
+	                await simpleGit(folder).checkIsRepo(onCheckIsRepo);  // simpleGit for ssh-folder only works if repo is in "state.repos.localFolder"
+	                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                    
+                    	                
+	                // If not a repo
+	                if (!isRepo){
+	                    // Ask permisson to init repo
+	                    localState.droppedRepoFolder = folder;
+	                    document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
+	                    return
+	                } else {
+	                    await opener.addExistingRepo( folder); 
+	                    // Replace table 
+	                    document.getElementById("settingsTableBody").innerHTML = ""; 
+	                    createHtmlTable(document);
+	                }
+                    
+                }catch(error){
+					opener.displayLongAlert('Add Repository Error', error, 'error'); 
+	                console.warn(error);
+	            }
 				
 				// Add repo as is 
 				await opener.addExistingRepo( folder); 
