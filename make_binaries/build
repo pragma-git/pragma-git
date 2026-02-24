@@ -1,4 +1,21 @@
-#!/bin/bash
+#!/bin/bash#
+#
+# build
+# =====
+# 
+# Build Pragma-git installers
+#
+# Typically run without extra flag.
+#
+# ./build           # Builds for Mac, Win, Linux.  Makes dmg files for MacOS (but not pkg)
+# ./build --pkg     # Builds for Mac, Win, Linux.  Makes dmg files AND pkg installers for MacOS
+#
+# Comment : I believe that dmg files will be the way forward for MacOS installers
+#
+
+## Help -- print file header until '##', ignore first row, remove leading '# '
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then sed '1d; /^##/q; /^\s*$/d; s/^#//g; s/^ //g' $0 | sed '$d'; exit 0; fi 
+## End Help
 
 # Some good input from https://github.com/Aluxian/nwjs-starter
 
@@ -183,10 +200,10 @@
 
     # Make pragma-merge and pragma-askpass executables
     echo ' '
-    echo 'Make "pragma-merge" executable'
+    echo 'Set "pragma-merge" executable bit'
     chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge" || BUILD_EXIT=$?
     
-    echo 'Make "pragma-askpass" executable'
+    echo 'Set "pragma-askpass" executable bit'
     chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass" || BUILD_EXIT=$?
 
     echo ' '
@@ -195,9 +212,9 @@
 # Build Mac installer Intel
 #
     tput setaf $COLOR; echo ' '
-    echo '============================'
-    echo 'INSTALLER MACOS 64-BIT INTEL'
-    echo '============================'
+    echo '=================================='
+    echo 'INSTALLER MACOS 64-BIT INTEL (DMG)'
+    echo '=================================='
     tput sgr0
     
     MAC_EXIT=0
@@ -243,49 +260,53 @@
 
 
     # Clean up 
-    #cd -
+    cd -
     
     echo ' '
     echo $(formatReturn $MAC_EXIT) Creating Mac installer
     
  
-    tput setaf $COLOR; echo ' '
-    echo '================================='
-    echo 'PKG INSTALLER MACOS 64-BIT INTEL'
-    echo '================================='
-    tput sgr0
-    
-    MAC_EXIT_PKG=0    
+    # Only if "--pkg" flag
+    if [[ "$1" == "--pkg" ]]; then
+        cd -  # Undo last cd -
         
-    
-    # Make pkg installer
-    pwd 
-    export OS='mac-x64'
-    DIR=$(ls -1 ../ |grep  $OS)
-    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
-    export STAGING_MAC
-    export IDENT="io.github.pragma-git"
-    export VERSION="$VERSION"
-    export WORK="$PWD/../build_pkg"
-    bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
-    || MAC_EXIT_PKG=$?
-    
-    # Clean up 
-    cd -
-    
-    echo ' '
-    echo $(formatReturn $MAC_EXIT_PKG) "Creating Mac PKG installer (intel)"
-    
-    
+        tput setaf $COLOR; echo ' '
+        echo '=================================='
+        echo 'INSTALLER MACOS 64-BIT INTEL (PKG)'
+        echo '=================================='
+        tput sgr0
+        
+        MAC_EXIT_PKG=0    
+            
+        
+        # Make pkg installer
+        pwd 
+        export OS='mac-x64'
+        DIR=$(ls -1 ../ |grep  $OS)
+        VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+        export STAGING_MAC
+        export IDENT="io.github.pragma-git"
+        export VERSION="$VERSION"
+        export WORK="$PWD/../build_pkg"
+        bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+        || MAC_EXIT_PKG=$?
+        
+        # Clean up 
+        cd -
+        
+        echo ' '
+        echo $(formatReturn $MAC_EXIT_PKG) "Creating Mac PKG installer (intel)"
+        
+    fi
     
 #
 # Build Mac installer Arm
 #    
  
     tput setaf $COLOR; echo ' '
-    echo '============================'
-    echo 'INSTALLER MACOS 64-BIT ARM'
-    echo '============================'
+    echo '================================'
+    echo 'INSTALLER MACOS 64-BIT ARM (DMG)'
+    echo '================================'
     tput sgr0
     
     MAC_EXIT_ARM=0
@@ -330,39 +351,43 @@
     || MAC_EXIT_ARM=$?
 
     # Clean up 
-    #cd -
+    cd -
     
     echo ' '
     echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (apple silicon)"
     
  
-    tput setaf $COLOR; echo ' '
-    echo '==============================='
-    echo 'PKG INSTALLER MACOS 64-BIT ARM'
-    echo '==============================='
-    tput sgr0
+    # Only if "--pkg" flag
+    if [[ "$1" == "--pkg" ]]; then
+        cd -  # Undo last cd -
     
-    MAC_EXIT_PKG_ARM=0    
+        tput setaf $COLOR; echo ' '
+        echo '================================'
+        echo 'INSTALLER MACOS 64-BIT ARM (PKG)'
+        echo '================================'
+        tput sgr0
         
-    
-    # Make pkg installer
-    pwd 
-    export OS='mac-arm64'
-    DIR=$(ls -1 ../ |grep  $OS)
-    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
-    export STAGING_MAC
-    export IDENT="io.github.pragma-git"
-    export VERSION="$VERSION"
-    export WORK="$PWD/../build_pkg"
-    bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
-    || MAC_EXIT_PKG_ARM=$?
-    
-    # Clean up 
-    cd -
-    
-    echo ' '
-    echo $(formatReturn $MAC_EXIT_PKG_ARM) "Creating Mac PKG installer (apple silicon)"
-    
+        MAC_EXIT_PKG_ARM=0    
+            
+        
+        # Make pkg installer
+        pwd 
+        export OS='mac-arm64'
+        DIR=$(ls -1 ../ |grep  $OS)
+        VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+        export STAGING_MAC
+        export IDENT="io.github.pragma-git"
+        export VERSION="$VERSION"
+        export WORK="$PWD/../build_pkg"
+        bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+        || MAC_EXIT_PKG_ARM=$?
+        
+        # Clean up 
+        cd -
+        
+        echo ' '
+        echo $(formatReturn $MAC_EXIT_PKG_ARM) "Creating Mac PKG installer (apple silicon)"
+    fi
 
 # Build Windows installers
 #
@@ -525,14 +550,19 @@
     echo "$(formatReturn $BUILD_EXIT) Building all platforms"
     
     echo "$(formatReturn $MAC_EXIT) Creating Mac installer (intel)"
-    echo "$(formatReturn $MAC_EXIT_PKG) Creating Mac PKG installer (intel)"
+    if [[ "$1" == "--pkg" ]]; then
+        echo "$(formatReturn $MAC_EXIT_PKG) Creating Mac PKG installer (intel)"
+    fi
     
     echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac installer (Apple silicon)"
-    echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
+    if [[ "$1" == "--pkg" ]]; then
+        echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
+    fi
     
     echo "$(formatReturn $WIN_EXIT) Creating Windows installer"
     
     echo "$(formatReturn $DEB_EXIT) Creating Linux .deb installer"
+    
     echo "$(formatReturn $RPM_EXIT) Creating Linux .rpm installer"
     echo ' '
 
