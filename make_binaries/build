@@ -240,15 +240,41 @@
       "$NAME" \
       "$STAGING_MAC" \
     || MAC_EXIT=$?
-    
-    
-    
 
+
+    # Clean up 
+    #cd -
+    
+    echo ' '
+    echo $(formatReturn $MAC_EXIT) Creating Mac installer
+    
+ 
+    tput setaf $COLOR; echo ' '
+    echo '================================='
+    echo 'PKG INSTALLER MACOS 64-BIT INTEL'
+    echo '================================='
+    tput sgr0
+    
+    MAC_EXIT_PKG=0    
+        
+    
+    # Make pkg installer
+    pwd 
+    export OS='mac-x64'
+    DIR=$(ls -1 ../ |grep  $OS)
+    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+    export STAGING_MAC
+    export IDENT="io.github.pragma-git"
+    export VERSION="$VERSION"
+    export WORK="$PWD/../build_pkg"
+    bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+    || MAC_EXIT_PKG=$?
+    
     # Clean up 
     cd -
     
     echo ' '
-    echo $(formatReturn $MAC_EXIT) Creating Mac installer
+    echo $(formatReturn $MAC_EXIT_PKG) "Creating Mac PKG installer (intel)"
     
     
     
@@ -302,13 +328,41 @@
       "$NAME" \
       "$STAGING_MAC" \
     || MAC_EXIT_ARM=$?
-    
 
+    # Clean up 
+    #cd -
+    
+    echo ' '
+    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (apple silicon)"
+    
+ 
+    tput setaf $COLOR; echo ' '
+    echo '==============================='
+    echo 'PKG INSTALLER MACOS 64-BIT ARM'
+    echo '==============================='
+    tput sgr0
+    
+    MAC_EXIT_PKG_ARM=0    
+        
+    
+    # Make pkg installer
+    pwd 
+    export OS='mac-arm64'
+    DIR=$(ls -1 ../ |grep  $OS)
+    VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+    export STAGING_MAC
+    export IDENT="io.github.pragma-git"
+    export VERSION="$VERSION"
+    export WORK="$PWD/../build_pkg"
+    bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+    || MAC_EXIT_PKG_ARM=$?
+    
     # Clean up 
     cd -
     
     echo ' '
-    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (apple silicon)"
+    echo $(formatReturn $MAC_EXIT_PKG_ARM) "Creating Mac PKG installer (apple silicon)"
+    
 
 # Build Windows installers
 #
@@ -447,9 +501,10 @@
     tput sgr0  
      
     # Temporary folders for MacOS builds
-    rm -rf ../dist/Pragma-git-*
-    rm -rf temp_pragma_git  # Created when building apps
-    rm -rf staging_mac*     # Created when building MacOS apps
+    rm -rf ../dist/Pragma-git-*/
+    rm -rf temp_pragma_git/  # Created when building apps for all platforms
+    rm -rf staging_mac*/     # Created when building MacOS apps
+    rm -rf build_pkg/        # Created when building MacOS pkg installer
     
     ls -l ../dist/
     
@@ -468,9 +523,15 @@
     # Output summary
     echo 'Summary : '
     echo "$(formatReturn $BUILD_EXIT) Building all platforms"
+    
     echo "$(formatReturn $MAC_EXIT) Creating Mac installer (intel)"
+    echo "$(formatReturn $MAC_EXIT_PKG) Creating Mac PKG installer (intel)"
+    
     echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac installer (Apple silicon)"
+    echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
+    
     echo "$(formatReturn $WIN_EXIT) Creating Windows installer"
+    
     echo "$(formatReturn $DEB_EXIT) Creating Linux .deb installer"
     echo "$(formatReturn $RPM_EXIT) Creating Linux .rpm installer"
     echo ' '
