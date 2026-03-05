@@ -4,9 +4,11 @@
     <title>Settings</title>
     <script src="settings.js"></script>
     <script src="ssh_folder/ssh-folder-lib.js"></script>
+    <script src="ssh_folder/lib/installKey.js"></script>
     
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="settings.css" />
+    <link rel="stylesheet" type="text/css" href="slider_switch.css" /> 
     
     <style> /* Style Tables   */
     
@@ -485,7 +487,7 @@
                               <button id="SoftwareTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add Repo</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
                     </div>
@@ -599,35 +601,109 @@
                     
                     <div class="tool-content " id="addDiv" >  
                         (Add repository to list) <br><br> 
-                        Add local repository from folder on this computer :
-                        <table class="toolTable">
-                            <tbody>
-  
-                                <tr class="tool">
-                                    <td>
-                                        <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
-                                            ondrop = "_callback('droppedFolder',event)" 
-                                            ondragover = "this.className = 'hover'; return false; "
-                                            ondragleave = "this.className = ''; return false; " 
-                                        ></textarea>
-                                    </td>
-                                    <td class="toolButtonField">
-                                        <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
-                                    </td>
-                                </tr>
-
+                        
+                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                <span id="local" style="color: var(--text)">local</span> 
+                                <label class="switch">
+                                    <input id="local_server_switch" type="checkbox" class="slider round" onclick="switchSlicerTextColors(); ">
+                                    <span class="slider round"></span> 
+                                </label> 
+                                <span id="server" style="color: var(--dim-text)">server</span> 
+                        </span>
+                        
+                        
+                        <script>            
+                            function switchSlicerTextColors(){
+                                if ( document.getElementById("local_server_switch").checked ){
+                                    // Server
+                                    document.getElementById('server').setAttribute('style','color: var(--text)');
+                                    document.getElementById('local').setAttribute('style','color: var(--dim-text)');
+                                    document.getElementById('addLocalRepoTable').style.display='none';
+                                    document.getElementById('addServerRepoTable').style.display='block';
+                                }else{
+                                    // Local
+                                    document.getElementById('server').setAttribute('style','color: var(--dim-text)');
+                                    document.getElementById('local').setAttribute('style','color: var(--text)');
+                                    document.getElementById('addLocalRepoTable').style.display='block';
+                                    document.getElementById('addServerRepoTable').style.display='none';
+                                }
                                 
+                            }
+                            
+                            function parseServerFields() {
+                                const username = document.querySelector('input[name="username"]').value.trim();
+                                const server   = document.querySelector('input[name="server"]').value.trim();
+                                const folder   = document.querySelector('input[name="folder"]').value.trim();
+                            
+                                const combined = `ssh://${username}@${server}${folder}`; 
+                                console.log(combined);
+                            
+                                return combined;
+                            }
+                        </script>            
+                        
+                        <br><br> 
+                
+                        <div  id='addLocalRepoTable' >
+                            Add local repository from folder on this computer :
+                            <table id='addLocalRepoTable' class="toolTable">
+                                <tbody>
+                                    
+      
+                                    <tr class="tool">
+                                        <td>
+                                            <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
+                                                ondrop = "_callback('droppedFolder',event)" 
+                                                ondragover = "this.className = 'hover'; return false; "
+                                                ondragleave = "this.className = ''; return false; " 
+                                            ></textarea>
+                                        </td>
+                                        <td class="toolButtonField">
+                                            <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                        </td>
+                                    </tr>
+    
+                                    
+                                    <tr class="tool">
+                                        <td>
+                                            <button id="addRepoButton"  onclick="_callback('addRepoButtonPressed',this)">Add</button>
+                                        </td>                                
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>      
+                                    
+                        </div>     
+                        
+                        <div  id='addServerRepoTable' style="display: none">
+                           
+                            Add repository on server :
+                            <table>
+                                <tr class="tool">
+                                    <td><input type="text" name="username" placeholder="username on server"
+                                               style="width:150px;" /></td>
+                                    <td>@</td>
+                                    <td><input type="text" name="server" placeholder="server ip or address"
+                                               style="width:200px;" /></td>
+                                    <td><input type="text" name="folder" placeholder="absolute folder path"
+                                               style="width:350px;" /></td>
+                                </tr>
+    
+                                    
                                 <tr class="tool">
                                     <td>
-                                        <button id="addRepoButton"  onclick="_callback('addRepoButtonPressed',this)">Add</button>
+                                        <button id="addServerRepoButton"  onclick="document.getElementById('addFolder').value = parseServerFields(); _callback('addRepoButtonPressed',this)">Add</button>
                                     </td>                                
                                 </tr>
-                                
-                            </tbody>
-                        </table>                    
+                            </table>   
+                            <br><br>  
+                                    
+                        </div>           
                     </div>   
                     
+                
                     
+                                        
                     <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 

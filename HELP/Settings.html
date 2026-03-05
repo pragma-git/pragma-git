@@ -1,6 +1,7 @@
 <link rel="stylesheet" type="text/css" href="../settings.css" />
 <link rel="stylesheet" type="text/css" href="../color_styles.css" />
-
+<link rel="stylesheet" type="text/css" href="../slider_switch.css" /> 
+    
 <style>
      /* Settings : images */  
                   
@@ -85,7 +86,7 @@
 
         <p><b>The forth column</b> has the <button>Forget</button> button, which is used remove the selected repository from the list. 
         The files remains both locally and in the remote repository, and the repository can be added again by 
-        dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Local</button> tab. 
+        dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Repo</button> tab. 
         
         </p>
         <hr>
@@ -106,7 +107,7 @@
                       <button id="cloneTab" class="tab-button-small active" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Repo</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
@@ -176,7 +177,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small active" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Repo</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
@@ -202,7 +203,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small active" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Repo</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
@@ -315,7 +316,7 @@
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="addTab" class="tab-button-small active" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Repo</button>
                       <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
@@ -333,10 +334,24 @@
                 </p>
                 
                 <ol>
-                <li><button>Get Folder</button> button is used to select the folder. Alternatively an existing folder can be droped on text field.  
-                <li><b>The text field </b> displays the selected folder path.     
-                <li><button>Add</button> adds the repository inside the selected folder.
-                If folder is not a repository, a dialog asks permission to create a git repository.
+                    <li> 
+                        By default, "local" is selected in the switch :       <br>   
+                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                    <span id="local" style="color: var(--text)">local</span> 
+                                    <label class="switch">
+                                        <input id="local_server_switch" type="checkbox" class="slider round">
+                                        <span class="slider round"></span> 
+                                    </label> 
+                                    <span id="server" style="color: var(--dim-text)">server</span> 
+                        </span>
+                        
+                    <li><button>Get Folder</button> button is used to select the folder. Alternatively an existing folder can be droped on text field. 
+                     
+                    <li><b>The text field </b> displays the selected folder path.  You can also enter the path manually.
+                    
+                    <li><button>Add</button> adds the repository inside the selected folder.
+                    If folder is not a repository, a dialog asks permission to create a git repository.
+                    
                 </ol>    
                 
          
@@ -344,14 +359,62 @@
             </dd>
             <br>
             <br>
-                   
+        
+        <dt><h4>Server folder</h4></dt> 
+            <dd>
+                <p>A server folder (repository on a server which you work on from a terminal over ssh) can be added using the add tool.</p>
+                
+                
+                 <p><b>Adding a server folder </b> :<br>  
+
+                
+                </p>
+                
+                <ol>
+                    <li>   
+                        "Server" is selected in the switch :        <br>   
+                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                    <span id="local" style="color: var(--dim-text)">local</span> 
+                                    <label class="switch">
+                                        <input id="local_server_switch" type="checkbox" class="slider round" checked>
+                                        <span class="slider round"></span> 
+                                    </label> 
+                                    <span id="server" style="color: var(--text)">server</span> 
+                        </span>
+                        
+                    <li><b>The text fields </b>  are used to enter login name, server address, and absolute path to folder on server :
+                        <table>
+                                    <tbody><tr class="tool">
+                                        <td><input type="text" name="username" placeholder="username on server" style="width:150px;"></td>
+                                        <td>@</td>
+                                        <td><input type="text" name="server" placeholder="server ip or address" style="width:200px;"></td>
+                                        <td><input type="text" name="folder" placeholder="absolute folder path" style="width:350px;"></td>
+                                    </tr>
+    
+                                </tbody></table>
+                                
+                    <li><button>Add</button> adds the repository inside the selected folder.
+                    If folder is not a repository, a dialog asks permission to create a git repository.
+                    
+                </ol>    
+                
+         
+                <p>For a server folder, pragma-git runs on your local computer, but handles git as if you were working on the server.  
+                   This is useful if you are connected to terminal, but still wants to do git work in the graphical pragma-git client</p>
+         
+                <p><b>NOTE :</b> The server must be set up with (password-less) public-key authentication.</p>
+
+
+            </dd>
+            <br>
+            <br>                   
             
             <div class="toolWrapper" id="remoteSection"> 
                 <div class="buttonWrapper">
                       <button id="cloneTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv" onclick="window.location.href='#softwareSection'" >Software (this repo)</button>  
                       <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv" onclick="window.location.href='#gitIgnoreSection'" >Ignore</button>
                       <button id="cloneTab" class="tab-button-small" data-id="cloneDiv" onclick="window.location.href='#cloneSection'" >Clone</button>
-                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Local</button>
+                      <button id="addTab" class="tab-button-small" data-id="addDiv" onclick="window.location.href='#addSection'" >Add Repo</button>
                       <button id="gitHubTab" class="tab-button-small active" style="border-top-right-radius: 10px;" data-id="gitHubDiv" onclick="window.location.href='#remoteSection'" >Remote</button>
                       <div class="tab-click-text"> (click on tab)</div>  
                 </div>
