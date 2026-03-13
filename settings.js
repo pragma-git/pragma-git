@@ -352,12 +352,20 @@ async function _callback( name, event){
             // which calls _callback('initializeRepoOK')
             
             console.log('addRepoButtonPressed');
-
+            
+            
+            let folder = document.getElementById('addFolder').value;  
+            
+            // Warn if already existing
+            index = util.findObjectIndex( state.repos, 'localFolder', folder);  // Local function
+            if ( ! isNaN( index) ){
+                console.error('DUPLICATE');  // TODO Show dialog, and tell that switching to repo instead.  Skip break!
+                displayAlert('Repo already known', 'Repository was added previously, switching to repository');  // The switch occurs in the call to opener.addExistingRepo
+            }
 
 			//
 			// Make folder for local repo (if folder missing)
 			// 
-            let folder = document.getElementById('addFolder').value;  
             if ( folder.startsWith('ssh:') ){
 				// Assume existing -- I don't plan to implement creating new repos on ssh-folder
                 try{
