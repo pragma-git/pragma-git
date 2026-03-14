@@ -929,8 +929,11 @@ async function _callback( name, event){
                 
             // Mac Ventura and later (terminal-tab does not work)
             if ( (process.platform === 'darwin') && ( ! folder.startsWith('ssh:') ) ){  
+                
+                // Run this way to go directly to folder (instead of runInTerminalWindow_Mac which would require to cd with a bash command)
                 const { spawn } = require('child_process');
                 const child = spawn('open', [folder, '-a', 'Terminal.app']);
+                
                 break; // Get out of switch statement
             }
             
@@ -947,19 +950,15 @@ async function _callback( name, event){
                 if (url.port == ''){
                     portCommand = '';
                 }
-                
-                // This command opens Terminal and runs the SSH command with directory change
                 const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
-                let terminalCommand = `osascript -e 'tell application "Terminal" to do script "ssh -t ${sshUser}@${sshHost} ${portCommand} \\"cd \\\\\\"${decodedPath}\\\\\\" && bash\\""'`;  // Many escapes needed for  javascript and inside osa-script
 
-                exec(terminalCommand, (error, stdout, stderr) => {
-                  if (error) {
-                    console.error(`Error launching Terminal: ${error.message}`);
-                    return;
-                  }
-                  console.log('Terminal launched and SSH session started in target directory');
-                });
-                break; // Get out of switch statement
+                // Öppna terminal, looga in med SSH, och byt directory
+                const sshCommand = `ssh -t ${sshUser}@${sshHost} ${portCommand} 'cd ${JSON.stringify(decodedPath)} && bash'`;  // JSON.stringify(decodedPath) lägger till " " runt sökvägen och fixar dolda tecken.
+                //runInTerminalWindow_Mac(sshCommand);
+                runInTerminal(sshCommand);
+
+
+                break;  // Get out of switch statement
             }
 
         
@@ -992,68 +991,14 @@ async function _callback( name, event){
                 
                     // Construct the SSH command 
                     const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
-                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${decodedPath}" && bash \"`;  
-                                
+                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${decodedPath}" && bash \"`;          
                 }
                 
-                
-                //
-                // Set terminal command (assume command is run with -e flag)
-                //
-                
-			    let terminalCommand = `gnome-terminal -- bash -c '${command}' `;  // Default
-                
-                if ( state.tools.terminal.trim() !== '' ) {
-                    terminalCommand = `${state.tools.terminal} -e bash -c '${command}' `;
-                }
-
-
-                if (isGnome()) {
-                    terminalCommand = `gnome-terminal -- bash -c '${command}' `;  // -e is depreciated  
-                } else if (isXterm()) {
-                    terminalCommand = `xterm -e  bash -c '${command}' `;
-                } else if (isXtermEmulator()) {
-                    terminalCommand = `x-terminal-emulator -e  bash -c '${command}' `;
-                }
-                
-
-               // Execute command 
-			    exec(terminalCommand, (error, stdout, stderr) => {
-			        if (error) {
-			            console.error(`Error launching terminal: ${error.message}`);
-			            return;
-			        }
-			        console.log('Terminal launched with command = ' + terminalCommand);
-			    });
-			
+                //runInTerminalWindow_Linux( command);
+                runInTerminal(command);
 			    break; // Exit switch
 			}
-            
-            // Internal functions 
-            function isGnome(){
-                  try {
-                    child_process.execSync('which gnome-terminal')
-                    return true
-                  } catch(e) {
-                    return false
-                  }
-            }                
-            function isXterm(){
-                  try {
-                    child_process.execSync('which xterm')
-                    return true
-                  } catch(e) {
-                    return false
-                  }
-            }                
-            function isXtermEmulator(){
-                  try {
-                    child_process.execSync('which x-terminal-emulator')
-                    return true
-                  } catch(e) {
-                    return false
-                  }
-            }        
+
         
         //
         // Windows solution
