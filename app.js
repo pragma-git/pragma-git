@@ -913,6 +913,7 @@ async function _callback( name, event){
         // Override terminal command from settings
         //       
             
+            // Works only to open a terminal in folder (can not be used for ssh, since I don't know how a custom terminal takes commands)
             if (( state.tools.terminal.trim() !== '' ) && !folder.startsWith('ssh:') ) {
                 try{
                     multiPlatformStartApp( folder, state.tools.terminal, append=false)
@@ -953,8 +954,7 @@ async function _callback( name, event){
                 const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
 
                 // Öppna terminal, looga in med SSH, och byt directory
-                const sshCommand = `ssh -t ${sshUser}@${sshHost} ${portCommand} 'cd ${JSON.stringify(decodedPath)} && bash'`;  // JSON.stringify(decodedPath) lägger till " " runt sökvägen och fixar dolda tecken.
-                //runInTerminalWindow_Mac(sshCommand);
+                const sshCommand = `ssh -t ${sshUser}@${sshHost} ${portCommand} 'cd ${JSON.stringify(decodedPath)} && bash'`;  // JSON.stringify(decodedPath) lägger till " " runt sökvägen och fixar dolda tecken. SPECIAL för applescript
                 runInTerminal(sshCommand);
 
 
@@ -991,7 +991,8 @@ async function _callback( name, event){
                 
                     // Construct the SSH command 
                     const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
-                    command = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${decodedPath}" && bash \"`;          
+                    const  sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd "${decodedPath}" && bash \"`;  // Quote myself instead of JSON.stringify
+                    command = sshCommand;
                 }
                 
                 //runInTerminalWindow_Linux( command);
@@ -1016,7 +1017,7 @@ async function _callback( name, event){
 			    // Construct the SSH command for WSL
                 const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
 			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} "cd ${decodedPath} && bash"`;
-			
+
 			    // Launch a new WSL terminal window and run the SSH command
 			    const terminalCommand = `start wsl.exe ${sshCommand}`;
 			
