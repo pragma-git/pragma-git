@@ -2,25 +2,18 @@
 
 ###############################################################################
 #  PURPOSE:
-#    - Generate a new SSH keypair (default: ED25519, no passphrase)
-#    - Detect if the remote server supports post‑quantum (PQ) key exchange
-#    - If not, fall back to safe traditional KEX to avoid warnings
-#    - Securely copy the public key without ssh-copy-id
-#    - Install the key on the remote host with correct permissions
-#    - Do NOT overwrite existing local SSH keys
-#    - Do NOT insert duplicate keys into authorized_keys
-#    - Provide clear logging for every condition
+#    - Generate SSH key if missing
+#    - Detect PQ KEX support (warn at end)
+#    - Use SSH ControlMaster to reuse authentication (ONE PASSWORD)
+#    - Copy & install public key without duplicates
 #
 #  USAGE:
-#       ./ssh-generate-key-login <remote-user> <remote-host> [keyname_name]
-#
-#  EXAMPLE:
-#       ./ssh-generate-key-login alice server.example.com mykey_name
+#       ./ssh-generate-key-login <remote-user> <remote-host> [keyname]
 ###############################################################################
 
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
-KEY_NAME="${3:-id_ed25519}"          # default key name
+KEY_NAME="${3:-id_ed25519}"
 KEY_PATH="$HOME/.ssh/$KEY_NAME"
 
 if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
@@ -29,89 +22,126 @@ if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
 fi
 
 ###############################################################################
-# Generate SSH key pair (skip if it already exists)
+# Generate SSH key pair
 ###############################################################################
-echo "==> Checking local SSH key..."
+echo "==> Checking for local SSH key: $KEY_PATH"
 
 if [ -e "$KEY_PATH" ]; then
-    echo "==> Local key '$KEY_PATH' already exists — NOT overwriting."
+    echo "==> Key already exists — not overwriting."
 else
-    echo "==> Generating new SSH key pair (no passphrase)…"
+    echo "==> Generating new ED25519 key (no passphrase)…"
     ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
 fi
 
 ###############################################################################
-# Detect PQ KEX support
+# Prepare ControlMaster session (ONE PASSWORD)
 ###############################################################################
-echo "==> Checking remote server for post-quantum KEX support…"
+CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
 
-SSH_VERSION_OUTPUT=$(ssh -o BatchMode=yes -o ConnectTimeout=5 \
-    "$REMOTE_USER@$REMOTE_HOST" "ssh -V" 2>&1)
+echo "==> Opening master SSH connection (one password will be asked)…"
 
+ssh -o ControlMaster=yes \
+    -o ControlPersist=600 \
+    -o ControlPath="$CONTROL_SOCKET" \
+    "$REMOTE_USER@$REMOTE_HOST" "true"
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to open SSH master connection."
+    exit 1
+fi
+
+echo "==> Master SSH connection active."
+
+SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
+
+
+###############################################################################
+# Detect PQ KEX support (just warn later)
+###############################################################################
+echo "==> Detecting remote OpenSSH version…"
+
+SSH_VERSION_OUTPUT=$(ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "ssh -V" 2>&1)
 REMOTE_SSH_VERSION=$(echo "$SSH_VERSION_OUTPUT" | grep -oE 'OpenSSH_([0-9]+\.[0-9]+)' | cut -d_ -f2)
 
-USE_LEGACY_KEX="no"
+USE_LEGACY_KEX="unknown"
 
 if [ -n "$REMOTE_SSH_VERSION" ]; then
     REMOTE_MAJOR=$(echo "$REMOTE_SSH_VERSION" | cut -d. -f1)
     REMOTE_MINOR=$(echo "$REMOTE_SSH_VERSION" | cut -d. -f2)
-
     if (( REMOTE_MAJOR < 9 )); then
         USE_LEGACY_KEX="yes"
+    else
+        USE_LEGACY_KEX="no"
     fi
-else
-    echo "   Could not detect remote OpenSSH version. Falling back to safe KEX."
-    USE_LEGACY_KEX="yes"
 fi
 
-if [ "$USE_LEGACY_KEX" = "yes" ]; then
-    echo "   -> Remote server does NOT support PQ KEX. Using fallback."
-    KEX_OPTS="-o KexAlgorithms=+diffie-hellman-group-exchange-sha256"
-else
-    echo "   -> Remote server supports PQ KEX."
-    KEX_OPTS=""
-fi
 
 ###############################################################################
-# Prepare remote ~/.ssh directory
+# Remote ~/.ssh setup
 ###############################################################################
-echo "==> Ensuring ~/.ssh exists on remote host…"
+echo "==> Creating ~/.ssh on remote server…"
 
-ssh $KEX_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-    "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    mkdir -p ~/.ssh && chmod 700 ~/.ssh
+"
 
-###############################################################################
-# Copy public key via SCP
-###############################################################################
-echo "==> Uploading public key to remote host…"
-
-scp $KEX_OPTS "${KEY_PATH}.pub" \
-    "${REMOTE_USER}@${REMOTE_HOST}:/tmp/remote_tmp_key.pub"
 
 ###############################################################################
-# Install key on remote server safely (no duplicates, with logging)
+# Upload key without scp, using single SSH session (ControlMaster reused)
 ###############################################################################
-echo "==> Installing public key on remote host…"
+echo "==> Uploading public key…"
 
-ssh $KEX_OPTS "$REMOTE_USER@$REMOTE_HOST" "
-    touch ~/.ssh/authorized_keys &&
-    chmod 600 ~/.ssh/authorized_keys &&
+cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    cat > /tmp/remote_tmp_key.pub
+"
+
+
+###############################################################################
+# Install key
+###############################################################################
+echo "==> Installing key on remote host…"
+
+ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+
     PUBKEY_CONTENT=\$(cat /tmp/remote_tmp_key.pub)
 
     if grep -qxF \"\$PUBKEY_CONTENT\" ~/.ssh/authorized_keys; then
-        echo '   -> Key is already present on remote server — no update needed.'
+        echo '   -> Key already present — no change.'
     else
         echo \"\$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys
-        echo '   -> Key added to remote authorized_keys.'
+        echo '   -> Key added successfully.'
     fi
 
     rm /tmp/remote_tmp_key.pub
 "
 
+
 ###############################################################################
+# Close ControlMaster connection
+###############################################################################
+ssh -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
+
+
+###############################################################################
+# Done — PQ warning at the end
+###############################################################################
+
+echo ""
 echo "==> ✔ DONE!"
 echo "Local key path: $KEY_PATH"
-echo "You can now log in without a password:"
-echo "  ssh $KEX_OPTS $REMOTE_USER@$REMOTE_HOST"
+echo "You can now SSH without a password:"
+echo "  ssh $REMOTE_USER@$REMOTE_HOST"
+echo ""
+
+if [ "$USE_LEGACY_KEX" = "yes" ]; then
+    echo "⚠ WARNING: Remote server OpenSSH < 9.0 — no post‑quantum KEX available."
+    echo "   Connection still works, but PQ protection is not active."
+elif [ "$USE_LEGACY_KEX" = "unknown" ]; then
+    echo "⚠ WARNING: Could not detect remote OpenSSH version — PQ status unknown."
+else
+    echo "✓ Remote server supports post‑quantum KEX."
+fi
+
+echo ""
 ###############################################################################
-``
