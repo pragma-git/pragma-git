@@ -132,6 +132,10 @@ async function runWhenPageLoaded(){
             allCredentials = await opener.opener.getAllCredentials();  // List all credentials information
             console.log('allCredentials : ');
             console.log(allCredentials);
+            
+            // Update finding password
+            accountText = document.getElementById('accountName').value;
+            processAccountName( accountText);
         }catch(err){
             console.err(err);
         }
@@ -178,8 +182,14 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
         for (let i in matchedRepoIndeces) { 
             let index = matchedRepoIndeces[i];
             let creds = allCredentials[index].username + allCredentials[index].password;  // Make a compound string with both
-    
-            if (!seen[creds]) {
+            
+            // Skip showing undefined passwords
+            if (allCredentials[index].password === undefined ){
+                continue
+            }
+            
+            // Add unque password
+            if (!seen[creds] ) {
                 foundIndeces.push(Number(index));
                 seen[creds] = true;
             }
