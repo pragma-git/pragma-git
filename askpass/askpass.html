@@ -89,11 +89,9 @@
         const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
         
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`); // "Username for 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':\n"
-        [type, , url] = ARG1.split(' '); url = url.substring(1, url.length -3); // 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git'
-		url_parts = url.split('/');  // ["'https:", '', 'github.com', 'JanAxelssonTest', "Remote_branch_test_repo.git':\n"]
-		repoName = url_parts[ url_parts.length - 1].split('.')[0];
-        
-        
+        [type, , url] = ARG1.split(' ');    // 'Username'  'for'  "'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':"  "\n"
+        url = url.split("'")[1];    // ['', 'https://pragma-git@github.com/pragma-git2/pragma-git.git', ':']
+
 
         //
         // FIRST DIALOG 
