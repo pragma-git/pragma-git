@@ -679,22 +679,32 @@
                             Add repository on server :
                             <table>
                                 <tr class="tool">
-                                    <td><input type="text" name="username" placeholder="username on server"
-                                               style="width:150px;" /></td>
+                                    <td><input type="text" name="username" placeholder="username on server" style="width:150px;" /></td>
                                     <td>@</td>
-                                    <td><input type="text" name="server" placeholder="server ip or address"
-                                               style="width:200px;" /></td>
-                                    <td><input type="text" name="folder" placeholder="absolute folder path"
-                                               style="width:350px;" /></td>
+                                    <td><input type="text" name="server" placeholder="server ip or address" style="width:200px;" /></td>
+                                    <td><input type="text" name="folder" placeholder="absolute folder path" style="width:350px;" /></td>
+                                </tr>
+                                
+                                <tr class="tool">
+                                    <td colspan="100%">
+                                        <input type="checkbox" id="setupRemoteKeyLogin" name="name" value="true" 
+                                            onchange=" if (!this.checked) { document.getElementById('disabledPasswordlessLogin').showModal(); }"
+                                            checked=''
+                                        />
+                                             
+                                        <label for="onAllWorkspaces" id="setupRemoteKeyLogin"> Make passwordless login (deploy key pair)</label>
+                                    </td>
                                 </tr>
     
                                     
                                 <tr class="tool">
                                     <td>
                                         <button id="addServerRepoButton"  onclick="document.getElementById('addFolder').value = parseServerFields(); _callback('addRepoButtonPressed',this)">Add</button>
-                                    </td>                                
+                                    </td>                          
                                 </tr>
-                            </table>   
+                                
+                            </table> 
+                              
                             <br><br>  
                                     
                         </div>           
@@ -1114,7 +1124,27 @@
         </button>    
 
     </dialog>  
-     
+     <dialog id="disabledPasswordlessLogin"  class="warning">         <!--  Warning dialog for dsabling passwordless login  -->  
+        <p>
+             You have disabled creation of passwordless login! <br> 
+             <br> 
+             Can you already ssh without a password? Then press [OK].<br> 
+             <br> 
+             If unsure, press [Cancel] and let pragma-git create passwordless log in.
+        </p>  
+        <button 
+            onclick="document.getElementById('disabledPasswordlessLogin').close();">
+            OK
+        </button>   
+        <button
+            onclick="
+                document.getElementById('setupRemoteKeyLogin').checked = true;
+                document.getElementById('disabledPasswordlessLogin').close();
+            " >
+            Cancel
+        </button>  
+    </dialog>     
+
     <!-- Scripts  -->       
     <script>  <!--  Store selectedBranch used in dialog   -->
         var selectedBranch;  // Will be set when clicking "Delete" (which is a dynamically generated link, created from javascript)
