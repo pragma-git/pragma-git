@@ -1896,22 +1896,30 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(label);
             cell.appendChild(newline);
 
-                      
-            // Local folder exists / missing   (also ssh folder)
-            console.log(`Coloring Local Folder --  ${opener.cachedLocalStatus.exists[index] } -- ${element.localFolder}`);
-            if ( opener.cachedLocalStatus.exists[index] == false){
-                label.style.color = 'red';
-                label.innerHTML = '<b><i>(not a folder)</i></b> : ' + label.innerHTML;
-                radiobox.style.visibility = "hidden";
-            }     
-            
-            if ( opener.cachedLocalStatus.isRepo[index] == false ){
-                label.style.color = 'red';
-                label.innerHTML = '<b><i>(not a repo)</i></b> : ' + label.innerHTML;
-                radiobox.style.visibility = "hidden";
-            }     
-            
-                       
+
+            // Write the most important warning, overriding with more important if multiple ( order: repo, folder, network for ssh-folder)
+
+                // Local repo exists / missing   (also for ssh folder)
+                console.log(`Coloring Local Folder --  ${opener.cachedLocalStatus.exists[index] } -- ${element.localFolder}`);   
+                if ( opener.cachedLocalStatus.isRepo[index] == false ){
+                    label.style.color = 'red';
+                    label.innerHTML = '<b><i>(not a repo)</i></b> : ' + element.localFolder
+                    radiobox.style.visibility = "hidden";
+                }  
+                
+                // Local folder exists / missing   (also for ssh folder)
+                if ( opener.cachedLocalStatus.exists[index] == false){
+                    label.style.color = 'red';
+                    label.innerHTML = '<b><i>(not a folder)</i></b> : ' + element.localFolder
+                    radiobox.style.visibility = "hidden";
+                }     
+      
+                // ssh folder missing because of network -- overwrite missing folder and missing repo (we don't know that if missing network)         
+                if ( ( opener.cachedLocalStatus.exists[index] == false ) && ( opener.cachedLocalStatus.ping[index] == false ) ){
+                    label.style.color = 'red';
+                    label.innerHTML = '<b><i>(no network)</i></b> : '  + element.localFolder
+                    radiobox.style.visibility = "hidden";
+                }                           
             
 
             

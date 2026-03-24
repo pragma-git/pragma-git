@@ -5703,6 +5703,7 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
         newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
         newCachedLocalStatus.platform = new Array(state.repos.length).fill(null);
+        newCachedLocalStatus.ping = new Array(state.repos.length).fill(null);  // For ssh-folder, this tests ssh-server online.  null if not ssh-server, false if ping fails, true if ping ok.
     }else{
         newCachedLocalStatus = await cachedLocalStatus;  // Copy if subset
     }
@@ -5748,6 +5749,24 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             // simpleGit for ssh requires "cachedLocalStatus" to be set (not set, since this function does that)
             // So lets look for .git/HEAD file manually instead (which indicates that it is a git repository)
             newCachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD` );
+            
+            
+            // Folder missing -- test server connection
+            if ( newCachedLocalStatus.exists[ repoNumber] ){
+                newCachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
+            }else{
+                // Did not find folder on ssh-server -- check if ping works
+                let servername = new URL( folder).host;
+                let command = `ping ${servername}`;
+                try {
+                    await runCommandWithTimeout(command, args = [], timeoutMs = 1000);
+                    newCachedLocalStatus.ping[ repoNumber] = true;  
+                }catch (err){
+                    newCachedLocalStatus.ping[ repoNumber] = false;  
+                }
+                
+                
+            }
             
         }else{
              await simpleGit(folder).checkIsRepo(onCheckIsRepo);  
