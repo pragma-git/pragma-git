@@ -5696,16 +5696,16 @@ async function cacheLocalFolderExistStatus( start = 0 ){
  
     console.log('=== cacheLocalFolderExistStatus ===');
     
-    let newCachedLocalStatus = {};
+    //let cachedLocalStatus = {};
     if ( start == 0){  
         // Start with empty
-        newCachedLocalStatus.exists = new Array(state.repos.length).fill(false);
-        newCachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
-        newCachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
-        newCachedLocalStatus.platform = new Array(state.repos.length).fill(null);
-        newCachedLocalStatus.ping = new Array(state.repos.length).fill(null);  // For ssh-folder, this tests ssh-server online.  null if not ssh-server, false if ping fails, true if ping ok.
+        //cachedLocalStatus.exists = new Array(state.repos.length).fill(false);
+        //cachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
+        //cachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+        //cachedLocalStatus.platform = new Array(state.repos.length).fill(null);
+        //cachedLocalStatus.ping = new Array(state.repos.length).fill(null);  // For ssh-folder, this tests ssh-server online.  null if not ssh-server, false if ping fails, true if ping ok.
     }else{
-        newCachedLocalStatus = await cachedLocalStatus;  // Copy if subset
+        cachedLocalStatus = await cachedLocalStatus;  // Copy if subset
     }
     
     // Parallelize to tests if local folder (or ssh folder) exists 
@@ -5719,7 +5719,7 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         }
     }
     
-    promisesSSH.push( cachedLocalStatus = newCachedLocalStatus );
+    //promisesSSH.push( cachedLocalStatus = cachedLocalStatus );
     
     console.log('START promisesLocal');
     await Promise.allSettled( promisesLocal )
@@ -5730,39 +5730,34 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     console.log('STOP promisesSSH');
     
     
-    
-    
-    // Atomic copy 
-    cachedLocalStatus = newCachedLocalStatus; 
-    
     // Internal function
     async function testLocalStatus( repoNumber, folder){
-        newCachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
-        newCachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
+        cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
+        cachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
         let platform = await typeOfRepoServer(folder); 
-        newCachedLocalStatus.platform[ repoNumber] = platform;
+        cachedLocalStatus.platform[ repoNumber] = platform;
         
         // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
 
         if ( folder.startsWith('ssh:') ){
             // simpleGit for ssh requires "cachedLocalStatus" to be set (not set, since this function does that)
             // So lets look for .git/HEAD file manually instead (which indicates that it is a git repository)
-            newCachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD` );
+            cachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD` );
             
             
             // Folder missing -- test server connection
-            if ( newCachedLocalStatus.exists[ repoNumber] ){
-                newCachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
+            if ( cachedLocalStatus.exists[ repoNumber] ){
+                cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
             }else{
                 // Did not find folder on ssh-server -- check if ping works
                 let servername = new URL( folder).host;
                 let command = `ping ${servername}`;
                 try {
                     await runCommandWithTimeout(command, args = [], timeoutMs = 1000);
-                    newCachedLocalStatus.ping[ repoNumber] = true;  
+                    cachedLocalStatus.ping[ repoNumber] = true;  
                 }catch (err){
-                    newCachedLocalStatus.ping[ repoNumber] = false;  
+                    cachedLocalStatus.ping[ repoNumber] = false;  
                 }
                 
                 
@@ -5776,19 +5771,17 @@ async function cacheLocalFolderExistStatus( start = 0 ){
                      console.warn(err);
                      checkResult = false;  // Set to false
                  }
-                 newCachedLocalStatus.isRepo[ repoNumber]  = checkResult;
+                 cachedLocalStatus.isRepo[ repoNumber]  = checkResult;
              }
         }
         
         
         console.log(`cacheLocalFolderExistStatus.testLocalStatus( ${repoNumber}, ${folder} ) : `);
         console.log(`  folder[${repoNumber}] =  ${folder}`);
-        console.log(`  exists[${repoNumber}] =  ${newCachedLocalStatus.exists[ repoNumber]}`);
-        console.log(`  platform[${repoNumber}] =  ${newCachedLocalStatus.platform[ repoNumber]}`);
-        console.log(`  isRepo[${repoNumber}] =  ${newCachedLocalStatus.isRepo[ repoNumber]}`);
-         
-         
-        cachedLocalStatus = newCachedLocalStatus; 
+        console.log(`  exists[${repoNumber}] =  ${cachedLocalStatus.exists[ repoNumber]}`);
+        console.log(`  platform[${repoNumber}] =  ${cachedLocalStatus.platform[ repoNumber]}`);
+        console.log(`  isRepo[${repoNumber}] =  ${cachedLocalStatus.isRepo[ repoNumber]}`);
+  
     }
 }
 
@@ -8243,7 +8236,13 @@ window.onload = async function() {
   // Hide settings icon
   document.getElementById('bottom-titlebar-settings-icon').style.visibility = 'hidden'
   
-  // Cache local folder status (can take a while if ssh 
+  // Cache local folder status (can take a while if ssh )
+  cachedLocalStatus.exists = new Array(state.repos.length).fill(false);
+  cachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
+  cachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+  cachedLocalStatus.platform = new Array(state.repos.length).fill(null);
+  cachedLocalStatus.ping = new Array(state.repos.length).fill(null);  // For ssh-folder, this tests ssh-server online.  null if not ssh-server, false if ping fails, true if ping ok.
+        
   await cacheLocalFolderExistStatus();
   await cacheRemoteOriginStatus();
   

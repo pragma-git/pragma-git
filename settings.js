@@ -1159,6 +1159,7 @@ async function forgetButtonClicked(event){
     opener.cachedLocalStatus.exists.splice(index,1); // Remove index
     opener.cachedLocalStatus.isRepo.splice(index,1); // Remove index
     opener.cachedLocalStatus.localFolder.splice(index,1); // Remove index
+    opener.cachedLocalStatus.ping.splice(index,1); // Remove index
     
     opener.cachedRemoteOrigins.isActiveRemote.splice(index,1); // Remove index
     opener.cachedRemoteOrigins.remoteURL.splice(index,1); // Remove index
