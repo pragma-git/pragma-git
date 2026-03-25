@@ -1,4 +1,21 @@
 <html>
+    <!-- 
+    This is the GUI shown when GIT or SSH asks for password through ASKPASS-helper (script "pragma-askpass")
+    
+    This was initially made for GIT,
+    but has been adjusted for SSH.  
+    This history is reflected in variable names, and code.
+    
+    Example useage (requires pragma-git to be running) :
+
+    export SSH_ASKPASS="/Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"
+    export SSH_ASKPASS_REQUIRE=force
+    ssh test@home-jan-ubuntu
+    
+    Example just testing the dialog
+    
+    
+    --> 
     <head>
         <title>Credentials</title>
     
@@ -56,20 +73,25 @@
         
         <!-- Text field -->       
         <label id="pwdlabel" for="pwd">Access Token / Password</label><br>
-        <textarea id="pwd" 
-            rows="1" 
-            cols="50" 
-            ></textarea>
-        <br>
-        <br>
-        <div id=repoName style="font-size: 0.8em"></div>
-        <br>
+        <textarea id="pwd" rows="1" cols="50"></textarea><br><br>
         
-
-
+        <div id="repoName" style="font-size: 0.8em"></div><br>
         
-        <button  id="Select-button" onclick="OK_clicked();"> OK  </button>    
-        <button  id="Select-button" onclick="Cancel_clicked();"> Cancel  </button>   
+        <button id="okButton" onclick="OK_clicked();">OK</button>
+        <button onclick="Cancel_clicked();">Cancel</button>
+        
+        <script>
+        // Focus the textarea when the page/dialog loads
+        window.addEventListener("DOMContentLoaded", () => {    document.getElementById("pwd").focus();});    
+            
+            
+        document.getElementById("pwd").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // prevents newline in textarea
+                document.getElementById("okButton").click();
+            }
+        });
+        </script> 
         </div>
     </body>
     
@@ -126,6 +148,20 @@
             document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';
 
         }
+        
+        //
+        // SSH  PASSWORD DIALOG
+        //
+            // True if prompt looks like: jan@192.168.2.213's password:const isSshPassword = /.+@.+\'s password:$/.test(prompt);
+            const prompt = ( ARG1 || "").trim();
+            const isSshPassword = /^[^@\s]+@[^@\s]+'s password:$/.test(prompt);
+
+            if (isSshPassword){
+                nw.Window.get().show();
+                document.getElementById('pwdlabel').innerHTML = 'SSH Password <br>';
+                
+                url = ARG1.split(' ')[0].split("'")[0]; // "jan@192.168.2.213's password: \n"  => url = jan@192.168.2.213
+            } 
 
         //
         // CALLBACKS 
@@ -204,6 +240,10 @@
     <script>
 		
 		document.getElementById('repoName').innerHTML= '(for repository : "' + url + '" )';
+        
+        if (isSshPassword){
+            document.getElementById('repoName').innerHTML= '(for  : "' + url + '" )';
+        }
 
         window.addEventListener(
             'beforeunload', 
