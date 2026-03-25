@@ -780,13 +780,35 @@ async function _callback( name, event){
         break;
       }
       case 'message_dblclick': {
-        if ( getMode() == 'NO_FILES_TO_COMMIT'){ // Copy commit message to message area, to be able to edit from existing
-            let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
-            commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
-            writeTextOutput( { value: commitMessage} ); 
-            document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
-        }
-        break;
+
+            // If we've already consumed the first dblclick:
+            if (!window._msgAllowAction) {
+                break; // normal dblclick (select word)
+            }
+
+            // FIRST double-click after blur → run your action
+            window._msgAllowAction = false;  // block future dblclicks
+
+            if (getMode() === 'NO_FILES_TO_COMMIT') {
+                let latestCommit = await simpleGit(
+                    state.repos[state.repoNumber].localFolder
+                ).log({ '-1': null, 'multiLine': null });
+
+                let commitMessage =
+                    latestCommit.latest.message +
+                    "\n\n" +
+                    latestCommit.latest.body;
+
+                writeTextOutput({ value: commitMessage });
+                document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+                
+                messageKeyUpEvent();  // Will act as if I have typed -- shows some messages
+            }
+
+            // Focus the textarea
+            document.getElementById('message').focus();
+
+            break;
       }
       case 'file-dropped': {
         dropFile( event); 
@@ -3536,7 +3558,12 @@ async function _setMode( inputModeName){
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
                 setButtonText()
                 
-                // Show edit message text
+                // Modify edit message text
+                if (!window._msgAllowAction) {
+                    document.getElementById('edit_commit_text_div').innerHTML='(esc-key to cancel)';
+                }else{
+                    document.getElementById('edit_commit_text_div').innerHTML='(double-click to change)';
+                }
                 document.getElementById('edit_commit_text_div').style.visibility = 'visible';
                 return
             };

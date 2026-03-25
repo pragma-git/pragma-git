@@ -268,12 +268,23 @@
 
             
              <!-- Message Textarea -->
-             
-            <textarea style="resize: none;" class="message" id="message" 
-            onkeyup="_callback( 'message_key_up');"  
-            ondblclick="_callback( 'message_dblclick');"
-            placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;" readonly=""></textarea>  
-
+            <textarea
+                style="resize: none;"
+                class="message"
+                id="message"
+            
+                onkeyup="_callback('message_key_up');"
+                ondblclick="_callback('message_dblclick');"
+                onblur="window._msgAllowAction = true;"
+            
+                placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;"
+                readonly
+            ></textarea>
+            
+            <script>
+                window._msgAllowAction = true;
+            </script>
+                                
 
 
 
