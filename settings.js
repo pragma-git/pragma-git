@@ -364,14 +364,45 @@ async function _callback( name, event){
             }
 
 			//
-			// Make folder for local repo (if folder missing)
+			// Make folder for ssh-folder or local repo (if folder missing)
 			// 
             if ( folder.startsWith('ssh:') ){
-				// Assume existing -- I don't plan to implement creating new repos on ssh-folder
+
+				// Assume existing -- I don't plan to implement creating new empty repos on ssh-folder
+                
                 try{
-	                var isRepo;
-	                await simpleGit(folder).checkIsRepo(onCheckIsRepo);  // simpleGit for ssh-folder only works if repo is in "state.repos.localFolder"
-	                function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+                    // Setup password-less login
+                    if ( document.getElementById('setupRemoteKeyLogin').checked ){
+                        try{
+                            let username = document.querySelector('input[name="username"]').value.trim();
+                            let server = document.querySelector('input[name="server"]').value.trim()
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
+                        }catch (err){
+                            console.error('Error in password-less login');
+                            opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
+                            console.error(err);
+                            
+                            // Close Credential windows 
+                            opener.closeWindowsByTitle( 'Credentials');
+                            
+                            
+                            // Remove signal file
+                            const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+                            const ASKPASSSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';  
+                            opener.rmLocalFile( ASKPASSSIGNALFILE);
+
+                            return
+                        }
+                        
+                    }
+                    
+                                              
+                    // Check if repo
+                    var isRepo;
+                    await simpleGit(folder).checkIsRepo(onCheckIsRepo);  // simpleGit for ssh-folder only works if repo is in "state.repos.localFolder"
+                    function onCheckIsRepo(err, checkResult) { isRepo = checkResult}
+
                     
                     	                
 	                // If not a repo

@@ -72,10 +72,10 @@
             
         
         <!-- Text field -->       
-        <label id="pwdlabel" for="pwd">Access Token / Password</label><br>
+        <label id="pwdlabel" for="pwd">Access Token / Password</label><br><br>
         <textarea id="pwd" rows="1" cols="50"></textarea><br><br>
         
-        <div id="repoName" style="font-size: 0.8em"></div><br>
+        <div id="descriptiveText" style="font-size: 0.8em"></div><br>
         
         <button id="okButton" onclick="OK_clicked();">OK</button>
         <button onclick="Cancel_clicked();">Cancel</button>
@@ -111,17 +111,19 @@
         const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';  // Written to console from pragma-askpass shell script
         
         const ARG1 = loadFile(`${SIGNALDIR}/askpass_first`); // "Username for 'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':\n"
+        
+        // Assume git, otherwise correct lower down
         [type, , url] = ARG1.split(' ');    // 'Username'  'for'  "'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':"  "\n"
         url = url.split("'")[1];    // ['', 'https://pragma-git@github.com/pragma-git2/pragma-git.git', ':']
 
 
         //
-        // FIRST DIALOG 
+        // GIT USERNAME DIALOG 
         //
         if ( ARG1.startsWith('Username') ){
-			nw.Window.get().show();
-            document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';
-            
+            document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';	
+            document.getElementById('descriptiveText').innerHTML= '(for repository : "' + url + '" )';
+
 
              <!-- Git provider -- guess userName -->
              
@@ -141,12 +143,12 @@
         }
 
         //
-        // SECOND DIALOG 
+        // GIT PASSWORD DIALOG 
         //
         if ( ARG1.startsWith('Password') ){
 			nw.Window.get().show();
-            document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';
-
+            document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';	
+            document.getElementById('descriptiveText').innerHTML= '(for repository : "' + url + '" )';
         }
         
         //
@@ -154,14 +156,31 @@
         //
             // True if prompt looks like: jan@192.168.2.213's password:const isSshPassword = /.+@.+\'s password:$/.test(prompt);
             const prompt = ( ARG1 || "").trim();
-            const isSshPassword = /^[^@\s]+@[^@\s]+'s password:$/.test(prompt);
+            const isSshPassword = prompt.toLowerCase().includes("password:"); 
 
             if (isSshPassword){
                 nw.Window.get().show();
-                document.getElementById('pwdlabel').innerHTML = 'SSH Password <br>';
                 
                 url = ARG1.split(' ')[0].split("'")[0]; // "jan@192.168.2.213's password: \n"  => url = jan@192.168.2.213
+                document.getElementById('pwdlabel').innerHTML = 'SSH Password <br>';
+                document.getElementById('descriptiveText').innerHTML= '(for  : "' + url + '" )';
+                
             } 
+        
+        //
+        // SSH  FINGERPRINT DIALOG
+        //
+
+            if ( ARG1.includes('fingerprint') ){
+                console.log('fingerprint dialog');
+                
+                nw.Window.get().show();
+                document.getElementById('pwdlabel').innerHTML = `${ ARG1.replaceAll('\n','<br><br>') } <br>`;
+                document.getElementById('descriptiveText').innerHTML= '(Type yes / no in textarea above)';
+            }            
+            
+            
+            
 
         //
         // CALLBACKS 
@@ -238,12 +257,6 @@
        
     <!-- Close Event  --> 
     <script>
-		
-		document.getElementById('repoName').innerHTML= '(for repository : "' + url + '" )';
-        
-        if (isSshPassword){
-            document.getElementById('repoName').innerHTML= '(for  : "' + url + '" )';
-        }
 
         window.addEventListener(
             'beforeunload', 

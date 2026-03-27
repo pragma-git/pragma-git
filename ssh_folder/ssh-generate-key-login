@@ -11,15 +11,39 @@
 #       ./ssh-generate-key-login <remote-user> <remote-host> [keyname]
 ###############################################################################
 
+# INITIALIZE LOGGING (all echo commands and errors prefixed)
+PRAGMA_LOG="$HOME/.Pragma-git/.tmp/pragma-git-log.txt"
+
+# Redirect ALL output (stdout and stderr) to the log
+PID=$$
+PREFIX="($PID) ssh-generate-key-login -- "
+
+exec > >(while IFS= read -r line; do
+    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG"
+done) 2>&1
+
+
+# SCRIPT STARTS
+
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
 KEY_NAME="${3:-id_ed25519}"
 KEY_PATH="$HOME/.ssh/$KEY_NAME"
 
 if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
-    echo "Usage: $0 <remote-user> <remote-host> [keyname]"
+    echo "Usage: $0 <remote-user> <remote-host> [keyname]"  
     exit 1
 fi
+
+
+###############################################################################
+# Setup ASKPASS dialogs (only works if pragma-git is running))
+###############################################################################
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # pragma-git/ssh_folder
+
+export SSH_ASKPASS="$SCRIPT_DIR/../pragma-askpass"  # export SSH_ASKPASS="/Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"
+export SSH_ASKPASS_REQUIRE=force
+export DISPLAY=dummy
 
 ###############################################################################
 # Generate SSH key pair
@@ -34,26 +58,57 @@ else
 fi
 
 ###############################################################################
-# Prepare ControlMaster session (ONE PASSWORD)
+# Prepare ControlMaster session (ONE PASSWORD, ONE FINGERPRINT DIALOG)
 ###############################################################################
 CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
 
 echo "==> Opening master SSH connection (one password will be asked)…"
 
+EXIT="$HOME/.Pragma-git/.tmp/exit-pragma-askpass-ssh"
+rm -f "$EXIT"
+
+# Start real master connection (handles fingerprint + password)
 ssh -o ControlMaster=yes \
     -o ControlPersist=600 \
     -o ControlPath="$CONTROL_SOCKET" \
-    "$REMOTE_USER@$REMOTE_HOST" "true"
+    -N "$REMOTE_USER@$REMOTE_HOST" &
+SSH_PID=$!
 
-if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to open SSH master connection."
+# Wait for either:
+#   - SSH finishing authentication
+#   - Askpass writing exit file (CANCEL button in askpass.html)
+while kill -0 "$SSH_PID" 2>/dev/null; do
+
+    if [ -f "$EXIT" ]; then
+        EXITCODE=$(cat "$EXIT")
+
+        if [ "$EXITCODE" != "0" ]; then
+            echo "==> Cancel detected — killing SSH master"
+            kill "$SSH_PID" 2>/dev/null
+            sleep 0.2
+            kill -9 "$SSH_PID" 2>/dev/null
+            rm -f "$EXIT"
+            exit 1
+        fi
+
+        # If EXIT=0, let SSH finish authentication normally
+    fi
+
+    sleep 0.1
+done
+
+wait "$SSH_PID"
+SSH_EXIT=$?
+
+if [ "$SSH_EXIT" -ne 0 ]; then
+    echo "ERROR: SSH authentication failed."
     exit 1
 fi
 
 echo "==> Master SSH connection active."
 
-SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
 
+SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
 
 ###############################################################################
 # Detect PQ KEX support (just warn later)

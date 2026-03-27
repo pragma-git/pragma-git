@@ -6441,7 +6441,7 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
     });
   });
 }
-async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs){  // Run git bash in 'folder', on all platforms. 
+async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000 ){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -6486,7 +6486,6 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         if ( folder.startsWith('ssh:') ) {
             
             try{
-                timeoutInMs = 2000
                 return  runCommandWithTimeout(cmd, [], timeoutInMs);
             }catch (err){
                 console.error( err);
@@ -7452,7 +7451,23 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
             
             
     }
-
+    function closeWindowsByTitle( title){  // Close all windows with document.title
+        
+            gui.Window.getAll( 
+            
+                function allWindowsCallback( windows) {
+                    for (let i = 0; i < windows.length; i++) {
+                        let win_handle =  windows[i];
+                        if ( win_handle.title == title){
+                            win_handle.close();
+                        }
+                    }    
+    
+                } 
+            );
+            
+            
+    }
 
 
 
