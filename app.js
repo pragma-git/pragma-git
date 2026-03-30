@@ -1037,8 +1037,8 @@ async function _callback( name, event){
 			    let portCommand = url.port ? ` -p ${url.port}` : '';
 			
 			    // Construct the SSH command for WSL
-                const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
-			    const sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} "cd ${decodedPath} && bash"`;
+				const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
+				const  sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd '${decodedPath}' && bash \"`;  // Quote myself instead of JSON.stringify
 
 			    // Launch a new WSL terminal window and run the SSH command
 			    const terminalCommand = `start wsl.exe ${sshCommand}`;

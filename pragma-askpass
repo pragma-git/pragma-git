@@ -50,10 +50,22 @@ if [ -z ${SYSTEMDRIVE+x} ] ; then
     if [[ "$(uname -s)" == "Darwin" ]]; then
         echo "Mac" > "$TMP/askpasslog.txt"
         INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_mac"  
-    else
+    fi
+    
+    if [[ "$(uname -s)" == "Linux" ]]; then
+	       
+	    # Windows over WSL  (git over ssh  is implemented using WSL)
+		if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
+			HOME="${HOME/\/home/\/mnt\/c\/Users}" # Transform /home/jan/ => /mnt/c/Users/jan/  
+			SETTINGSDIR="$HOME/.Pragma-git"
+			TMP="$SETTINGSDIR/.tmp"
+	        echo "WSL Linux" > "$TMP/askpasslog.txt"
+		fi
+    
         echo "Linux" > "$TMP/askpasslog.txt"
         INCLUDE_PATH="$STARTDIR/gitconfigs/pragma-git-config_linux"  
     fi
+
     
     env >> "$TMP/askpasslog.txt"
     echo $(pwd) > "$TMP/repo_path"

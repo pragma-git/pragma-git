@@ -11,8 +11,14 @@
 #       ./ssh-generate-key-login <remote-user> <remote-host> [keyname]
 ###############################################################################
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/ssh-functions"  # Standard setup for SSH
+
+
+
+
 # INITIALIZE LOGGING (all echo commands and errors prefixed)
-PRAGMA_LOG="$HOME/.Pragma-git/.tmp/pragma-git-log.txt"
+PRAGMA_LOG="$TMP/pragma-git-log.txt"
 
 # Redirect ALL output (stdout and stderr) to the log
 PID=$$
