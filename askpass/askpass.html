@@ -72,26 +72,92 @@
             
         
         <!-- Text field -->       
-        <label id="pwdlabel" for="pwd">Access Token / Password</label><br><br>
-        <textarea id="pwd" rows="1" cols="50"></textarea><br><br>
-        
-        <div id="descriptiveText" style="font-size: 0.8em"></div><br>
-        
-        <button id="okButton" onclick="OK_clicked();">OK</button>
-        <button onclick="Cancel_clicked();">Cancel</button>
-        
-        <script>
-        // Focus the textarea when the page/dialog loads
-        window.addEventListener("DOMContentLoaded", () => {    document.getElementById("pwd").focus();});    
             
+                    
+            <style>
+              .input-container {
+                display: flex;         /* Ändrat från inline-flex till flex */
+                align-items: flex-start; 
+                margin-bottom: 10px;   /* Ger lite luft till texten under */
+              }
             
-        document.getElementById("pwd").addEventListener("keydown", function(e) {
-            if (e.key === "Enter") {
-                e.preventDefault(); // prevents newline in textarea
-                document.getElementById("okButton").click();
-            }
-        });
-        </script> 
+              #pwd {
+                padding-right: 10px;
+                /* Ändra till 'both' eller 'vertical' för att tillåta dragning */
+                resize: both; 
+                overflow: auto;
+                font-family: 'Verdana', sans-serif;
+                min-width: 100px;
+                min-height: 30px;
+              }
+            
+              #pwd.masked {
+                -webkit-text-security: disc;
+                letter-spacing: 2px;
+              }
+            
+              .eye-icon {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                margin-left: 8px;
+                margin-top: 5px; /* Justera så ikonen ligger snyggt vid första raden */
+                opacity: 0.6;
+              }
+            </style>
+            
+            <label id="pwdlabel" for="pwd">Access Token / Password</label><br>
+            <div class="input-container">
+                <textarea id="pwd" class="masked" rows="1" cols="50"></textarea>
+                <img id="toggleBtn" src="../images/eye-off.svg" class="eye-icon" alt="Visa/Dölj">
+            </div><br>
+            
+            <div id="descriptiveText" style="font-size: 0.8em"></div><br>
+            
+            <button id="okButton" onclick="OK_clicked();">OK</button>
+            <button onclick="Cancel_clicked();">Cancel</button>
+                    
+                    
+                    
+            <script>
+                const pwdArea = document.getElementById('pwd');
+                const toggleBtn = document.getElementById('toggleBtn');
+                
+                // NW.js fönster-instans
+                const win = nw.Window.get();
+                
+                // 1. Växla visa/dölj (din befintliga kod)
+                toggleBtn.addEventListener('click', () => {
+                    const isMasked = pwdArea.classList.toggle('masked');
+                    toggleBtn.src = isMasked ? '../images/eye-off.svg' : '../images/eye.svg';
+                });
+                
+                // 2. Automatiskt fönster-resize när användaren drar i textarean
+                // Vi använder en ResizeObserver för att detektera när elementet ändrar storlek
+                const resizeObserver = new ResizeObserver(() => {
+                // NW.js metod för att anpassa fönstret efter dess innehåll (DOM)
+                // Detta gör att fönstret växer om textarean blir större
+                /* win.setMinimumSize(window.outerWidth, window.outerHeight); // Valfritt: hindra fönstret från att bli mindre än innehållet */
+                });
+                
+                resizeObserver.observe(pwdArea);
+            </script>
+            
+                
+     
+            <script>
+            // Focus the textarea when the page/dialog loads
+            window.addEventListener("DOMContentLoaded", () => {    document.getElementById("pwd").focus();});    
+                
+                
+            document.getElementById("pwd").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault(); // prevents newline in textarea
+                    document.getElementById("okButton").click();
+                }
+            });
+            </script> 
+
         </div>
     </body>
     
@@ -115,6 +181,8 @@
         // Assume git, otherwise correct lower down
         [type, , url] = ARG1.split(' ');    // 'Username'  'for'  "'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':"  "\n"
         url = url.split("'")[1];    // ['', 'https://pragma-git@github.com/pragma-git2/pragma-git.git', ':']
+        
+        var isPassword = false;
 
 
         //
@@ -149,6 +217,8 @@
 			nw.Window.get().show();
             document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';	
             document.getElementById('descriptiveText').innerHTML= '(for repository : "' + url + '" )';
+            
+            isPassword = true;
         }
         
         //
@@ -165,6 +235,7 @@
                 document.getElementById('pwdlabel').innerHTML = 'SSH Password <br>';
                 document.getElementById('descriptiveText').innerHTML= '(for  : "' + url + '" )';
                 
+                isPassword = true;
             } 
         
         //
@@ -179,7 +250,14 @@
                 document.getElementById('descriptiveText').innerHTML= '(Type yes / no in textarea above)';
             }            
             
-            
+         
+         //
+         // Make it a non-password dialog
+         //   
+         if ( !isPassword ){
+             toggleBtn.style.visibility = 'hidden';
+             pwdArea.classList.toggle('masked');
+         }
             
 
         //
