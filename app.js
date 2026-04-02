@@ -6117,9 +6117,9 @@ function waitTime( delay) {
   })
 }
 
-function mkdir(dir){        // Make local folder
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir, { recursive: true });
+async function mkdir(dir){        // Make local folder
+    if (! await fs_existsSync(dir)){
+        await fs_mkdir( dir);   // Use this for both ssh-folder and local folder
     }
 }
 function rmLocalFile(localFile){
@@ -6707,14 +6707,10 @@ function pragmaLog(message){
     // Remove anything between :// and @ 
     // Example : BLABLA https://user:passwd@github.com/JanAxelsson/imlook4d.git BLABLA 
     // =>        BLABLA https://CREDENTIALS@github.com/JanAxelsson/imlook4d.git BLABLA
-    let cleanedMessage;
-    if ( message.includes('://') && message.includes('@') ){
-        let before = message.split('://')[0]; // https
-        let after= message.split('@')[1];      // github.com/JanAxelsson/imlook4d.git
-        cleanedMessage = before + '://CREDENTIALS@' + after;   
-    }else{
-        cleanedMessage = message;
-    }
+    //
+    // (works also for multiple URLs in text )
+    let cleanedMessage = message.replace(/:\/\/[^/@]+@/g, "://CREDENTIALS@");
+
     
     // Create stream if not defined
     if (mainLogFileStream == undefined){

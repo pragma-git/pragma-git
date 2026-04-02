@@ -40,6 +40,7 @@ SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
 SSH_LOG="${TMP}/ssh-log.log"
 MERGE_LOG="$TMP/mergelog.txt"
+PRAGMALOG_FILE="$TMP/pragma-git-log.txt" 
 
 # FUNCTIONS
 

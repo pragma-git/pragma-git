@@ -27,9 +27,9 @@ if ( process.platform == 'win32' ){
 // FUNCTIONS
 // =============================================
 
-// All platforms 
-async function fs_existsSync( folder_or_sshUrl) {  
-  // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
+// Both SSH and LOCAL
+async function fs_existsSync( folder_or_sshUrl) {               // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
+  
   
   //console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
   
@@ -84,8 +84,40 @@ async function fs_existsSync( folder_or_sshUrl) {
   }
   
 }
-async function sshGet( sshUrl, fileRelativeRepoBase) {  
-  //  Copy file from ssh to tempFolder
+async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- works on both local and over ssh
+
+
+    // TODO : Make app.js mkdir call this function !
+
+
+    //if (!fs_existsSync( folder_or_sshUrl)){
+        
+        
+        try{    
+            // SSH or local version :
+            if ( folder_or_sshUrl.startsWith('ssh:') ){  
+                // SSH folder
+                
+                  // run ssh-get bash script
+                  let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"`;
+                  MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
+                  await MAIN.multiPlatformExecSync( folder_or_sshUrl, CMD);
+
+            }else{    
+                // local folder
+                fs.mkdirSync( folder_or_sshUrl, { recursive: true });
+            }
+            
+        } catch (err){
+                global.warn(`Error in fs_mkdir( "${folder_or_sshUrl}") `);
+                global.warn(err);
+      
+        }
+    //}
+}
+
+// SSH file read/write 
+async function sshGet( sshUrl, fileRelativeRepoBase) {          //  Copy file from ssh to tempFolder
   //
   //  Inputs :
   //    sshUrl                -- git repo's base sshURL
@@ -107,8 +139,7 @@ async function sshGet( sshUrl, fileRelativeRepoBase) {
   
   return tempFile
 }
-async function sshPut( sshUrl, fileRelativeRepoBase) {  
-  //  Copy file from ssh to tempFolder
+async function sshPut( sshUrl, fileRelativeRepoBase) {          //  Copy file from ssh tempFolder to ssh 
   //
   //  Inputs :
   //    sshUrl                -- git repo's base sshURL
@@ -123,7 +154,7 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
   await MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
-async function sshPutSimple( absoluteLocalFilePath, sshUrl) {  
+async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file from absoluteLocalFilePath to ssh 
 	//  Copy file from ssh to absoluteLocalFilePath
 	//
 	//  Inputs :
@@ -146,23 +177,22 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {
 	}
 }
 
-
-// Windows specific
-function wslToWindowsPath( wslPath) {       // Transform between WSL and Windows paths (do nothing if linux / macos)
+// WINDOWS specific helpers
+function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
 		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
 	}
 	return wslPath
 }
-function windowsToWslPath( windowsPath) {   // Transform between WSL and Windows paths (do nothing if linux / macos)
+function windowsToWslPath( windowsPath) {                       // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
 		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
 	}
 	return windowsPath
 }
-function getAndCreateWinTempFolder(){
+function getAndCreateWinTempFolder(){                           // Returns windows Appdata/Local/Temp (creates if necessary)
 	const fs = require('fs');
 	const path = require('path');
 	const os = require('os');

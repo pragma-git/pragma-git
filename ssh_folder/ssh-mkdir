@@ -1,0 +1,44 @@
+#!/bin/bash -x
+# makes a directory on server
+# Usage: ./ssh-mkdir SSH_URL_new_folder
+#
+# Arguments
+#   $1      --  SSH URL to the new folder, for instance  'ssh://jan@localhost/Users/jan/Documents/new_folder'
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+cd "$(dirname $0)"
+source lib/ssh-functions
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+echo ">> SSH-MKDIR  \"$1\" " >> "$PRAGMALOG_FILE"
+
+# Make folder on server
+MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$SERVER_BASE_PATH\""
+echo "    $MKDIR" >> "$PRAGMALOG_FILE"
+eval $MKDIR
+
+
+# Check result
+if [ $? -eq 0 ]; then
+    echo "    Success : Created folder \"$1\"" 
+    echo "    Success : Created folder \"$1\""  >> "$PRAGMALOG_FILE"
+    
+    ./ssh-test-if-file-exists "$1" > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "    Verified folder exists : \"$1\"" 
+    else
+        echo "    Folder does not exist : \"$1\"" 
+        exit 1 
+    fi
+    
+    echo " " >> "$PRAGMALOG_FILE"
+    exit 0
+else
+    echo "    Error : Failed to create folder \"$1\"" 
+    echo "    Error : Failed to create folder \"$1\"" >> "$PRAGMALOG_FILE"
+    echo " " >> "$PRAGMALOG_FILE"
+    exit 1
+fi
+

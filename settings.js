@@ -312,11 +312,16 @@ async function _callback( name, event){
             const dummy = await gitClone( folder, url);
             document.getElementById('cloneStatus').innerHTML = '';
             
+            // Update latest
+            await opener.cacheRemoteOriginStatus(id);  // Needs to be updated
+            await opener.cacheFolderStatus(id);  
+
+            
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
-            createHtmlTable(document);
+            await createHtmlTable(document);
             drawBranchTab(document);
-            
+               
             
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
@@ -342,7 +347,7 @@ async function _callback( name, event){
             document.getElementById('gitHubTab').click()
             
             // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            _callback('repoRadiobuttonChanged', {id: state.repoNumber});
+            //_callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
             break;
         }   
@@ -522,9 +527,6 @@ async function _callback( name, event){
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
                 
-                            
-            
-            
                 
                 // Replace table 
                 document.getElementById("branchesTableBody").innerHTML = ""; 
@@ -608,7 +610,7 @@ async function _callback( name, event){
             // Update Graph & changed list windows
             await opener.updateGraphWindow();
             await opener.updateChangedListWindow();
-                        
+
             
             break;
         }        
@@ -1308,13 +1310,25 @@ async function gitClone( folderName, repoURL){
     // Clone
 
     try{
-        // 1) Clone 
+        // 1) mkdir 
         let options = [];
-        opener.mkdir(folderName);  // Create local folder if it does not exist
-        await simpleGitLog(folderName).clone(  repoURL, topFolder, options, onClone);
+        opener.pragmaLog(`Create folder : ${folderName}`);
+        await opener.mkdir(topFolder);  // Create local folder if it does not exist
+        
+        
+        // 2) Clone
+        let topFolderValidOnServer = topFolder;
+        if (topFolder.startsWith('ssh:')){
+            // Clean to make it local on the server
+            let url = new URL(topFolder);
+            topFolderValidOnServer = url.pathName;
+        }
+        
+        opener.pragmaLog(`Clone : "${repoURL}"  to "${folderName}"`);
+        await simpleGitLog(folderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
         function onClone(error, result ){}; 
         
-        // 2) Checkout default branch
+        // 3) Checkout default branch
         await simpleGitLog(topFolder).checkout( onCheckout);
         function onCheckout(err, result){
             // if err =="Error: fatal: You are on a branch yet to be born"
@@ -1368,6 +1382,7 @@ async function gitClone( folderName, repoURL){
         state.repos[state.repoNumber].localFolder = topFolder;
         state.repos[state.repoNumber].remoteURL = document.getElementById('urlToClone').value;
         console.log( 'Git  folder = ' + state.repos[state.repoNumber].localFolder );
+        console.log( 'Remote  URL = ' + state.repos[state.repoNumber].remoteURL );
         
         // Update "Allow git push" setting
         let allowPush = document.getElementById('allowPushToRemoteClone').checked;  // Read from checkbox in the clone command
@@ -1376,7 +1391,7 @@ async function gitClone( folderName, repoURL){
         // Set other per repo settings to default value
         state.repos[state.repoNumber].autoPushToRemote = true;
         state.repos[state.repoNumber].NoFF_merge = true;
-        
+
         // Change to Software tab (In repo tab, where we already are)
         Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
 
@@ -1677,6 +1692,11 @@ function updateRemoteRepos(){ // Displays current data in GUI
     let arrayIndex = remoteRepos.fetch.pos - 1;
     document.getElementById('newRepoAliasTextarea').value = remoteRepos.fetch.names[ arrayIndex]; 
     document.getElementById('additionalRemoteURL').value = remoteRepos.fetch.URLs[ arrayIndex];    
+    
+    // Update the remote repo in table
+    document.getElementById( (10000 + state.repoNumber).toString() ).value = remoteRepos.fetch.URLs[ 0];   
+    
+     
 
 
     // Clean coloring of URL in GUI
