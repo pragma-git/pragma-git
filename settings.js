@@ -373,7 +373,8 @@ async function _callback( name, event){
 			// 
             if ( folder.startsWith('ssh:') ){
 
-				// Assume existing -- I don't plan to implement creating new empty repos on ssh-folder
+                // mkdir 
+				await opener.mkdir(folder);  // Create local folder if it does not exist
                 
                 try{
                     // Setup password-less login

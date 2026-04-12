@@ -542,11 +542,12 @@
                     <!--  Clone TAB -->
                     
                     <div class="tool-content " id="cloneDiv" >  
-                        (Add repository to list) <br><br> 
-                        Clone a remote repository to this computer :
+                        (Clone and add repository to list) <br><br> 
+                        Clone a remote repository from :
                         <table class="toolTable">
                             <tbody>
                                 
+                                <!--  url to clone from-->
                                 <tr class="tool">
                                     <td>
                                         <textarea id="urlToClone"  placeholder="URL to clone from"></textarea>
@@ -556,7 +557,24 @@
                                     </td>
                                 </tr>
                                 
-                                
+                                       
+                                <tr class="tool">
+                                    <td>                 
+                                    to this location ( 
+                                        <!--  switch local/server -->
+                                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                                <span id="local_clone" style="color: var(--text)">local</span> 
+                                                <label class="switch">
+                                                    <input id="local_server_switch_clone" type="checkbox" class="slider round" onclick="switchSlicerTextColors_clone(); ">
+                                                    <span class="slider round"></span> 
+                                                </label> 
+                                                <span id="server_clone" style="color: var(--dim-text)">server</span> 
+                                        </span>
+                                        ) :
+                                    </td>
+                                </tr>
+                                        
+                                <!--  folder to clone to-->
                                 <tr class="tool">
                                     <td>
                                         <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " 
@@ -564,10 +582,44 @@
                                             ondragover = "this.className = 'hover'; return false; "
                                             ondragleave = "this.className = ''; return false; "
                                         ></textarea>
+                                        
+                                        
+                                        
+                                        <div  id='cloneServerRepoTable' style="display: none">
+                                           
+                                            <table>
+                                                <tr class="tool">
+                                                    <td><input type="text" name="username_clone" placeholder="username on server" style="width:150px;" /></td>
+                                                    <td>@</td>
+                                                    <td><input type="text" name="server_clone" placeholder="server ip or address" style="width:200px;" /></td>
+                                                    <td><input type="text" name="folder_clone" placeholder="absolute folder path" style="width:350px;" /></td>
+                                                </tr>
+                                                
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <input type="checkbox" id="setupRemoteKeyLogin_clone" name="name" value="true" 
+                                                            onchange=" if (!this.checked) { document.getElementById('disabledPasswordlessLogin').showModal(); }"
+                                                            checked=''
+                                                        />
+                                                             
+                                                        <label for="cloneServerRepoTable" id="setupRemoteKeyLogin_clone_label"> Make passwordless login (deploy key pair)</label>
+                                                    </td>
+                                                </tr>
+                    
+                                                    
+                                                <tr class="tool">
+                                                    <td>
+                                                        <button id="cloneServerRepoButton"  onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button>
+                                                    </td>                          
+                                                </tr>
+                                                
+                                            </table> 
+                                            
+                                                    
+                                        </div>          
+                                        
                                     </td>
-                                    <td class="toolButtonField">
-                                        <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
-                                    </td>
+ 
                                 </tr>
                                 
                                 
@@ -575,13 +627,13 @@
                                     <td>
                                      <!--  Allow push to remote (This input is saved indirectly when pressing cloneButton ) -->
                                     <input type="checkbox" id="allowPushToRemoteClone" >
-                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password.</label><br>
+                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to cloned remote repository, and plan to push.  May require password.</label><br>
                            
                                     </td>                                
                                 </tr>
                                 
                                 
-                                <tr class="tool">
+                                <tr class="tool" id="cloneButtonLocalRow">
                                     <td>
                                         <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus"></span>
                                     </td>                                
@@ -601,6 +653,7 @@
                     <div class="tool-content " id="addDiv" >  
                         (Add repository to list) <br><br> 
                         
+                        <!--  switch local/server -->
                         <span class="normal-text" style="display: inline;font-size: 11px">             
                                 <span id="local" style="color: var(--text)">local</span> 
                                 <label class="switch">
@@ -609,37 +662,7 @@
                                 </label> 
                                 <span id="server" style="color: var(--dim-text)">server</span> 
                         </span>
-                        
-                        
-                        <script>            
-                            function switchSlicerTextColors(){
-                                if ( document.getElementById("local_server_switch").checked ){
-                                    // Server
-                                    document.getElementById('server').setAttribute('style','color: var(--text)');
-                                    document.getElementById('local').setAttribute('style','color: var(--dim-text)');
-                                    document.getElementById('addLocalRepoTable').style.display='none';
-                                    document.getElementById('addServerRepoTable').style.display='block';
-                                }else{
-                                    // Local
-                                    document.getElementById('server').setAttribute('style','color: var(--dim-text)');
-                                    document.getElementById('local').setAttribute('style','color: var(--text)');
-                                    document.getElementById('addLocalRepoTable').style.display='block';
-                                    document.getElementById('addServerRepoTable').style.display='none';
-                                }
-                                
-                            }
-                            
-                            function parseServerFields() {
-                                const username = document.querySelector('input[name="username"]').value.trim();
-                                const server   = document.querySelector('input[name="server"]').value.trim();
-                                const folder   = document.querySelector('input[name="folder"]').value.trim();
-                            
-                                const combined = `ssh://${username}@${server}${folder}`; 
-                                console.log(combined);
-                            
-                                return combined;
-                            }
-                        </script>            
+         
                         
                         <br><br> 
                 
@@ -710,9 +733,7 @@
                         </div>           
                     </div>   
                     
-                
                     
-                                        
                     <!--  Remote TAB -->
                                    
                     <div class="tool-content " id="gitHubDiv" > 
@@ -1235,8 +1256,67 @@
     
     </script>
     
-    
+    <script>   <!--  local/server switch for Add Repo  -->          
+    function switchSlicerTextColors(){
+        if ( document.getElementById("local_server_switch").checked ){
+            // Server
+            document.getElementById('server').setAttribute('style','color: var(--text)');
+            document.getElementById('local').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('addLocalRepoTable').style.display='none';
+            document.getElementById('addServerRepoTable').style.display='block';
+        }else{
+            // Local
+            document.getElementById('server').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('local').setAttribute('style','color: var(--text)');
+            document.getElementById('addLocalRepoTable').style.display='block';
+            document.getElementById('addServerRepoTable').style.display='none';
+        }
         
+    }
+    
+    function parseServerFields() {
+        const username = document.querySelector('input[name="username"]').value.trim();
+        const server   = document.querySelector('input[name="server"]').value.trim();
+        const folder   = document.querySelector('input[name="folder"]').value.trim();
+    
+        const combined = `ssh://${username}@${server}${folder}`; 
+        console.log(combined);
+    
+        return combined;
+    }
+</script>   
+    <script>   <!--  local/server switch for Clone  -->          
+    function switchSlicerTextColors_clone(){
+        if ( document.getElementById("local_server_switch_clone").checked ){
+            // Server
+            document.getElementById('server_clone').setAttribute('style','color: var(--text)');
+            document.getElementById('local_clone').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('cloneFolder').style.display='none';
+            document.getElementById('cloneServerRepoTable').style.display='block';
+            document.getElementById('cloneButtonLocalRow').style.display='none';
+        }else{
+            // Local
+            document.getElementById('server_clone').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('local_clone').setAttribute('style','color: var(--text)');
+            document.getElementById('cloneFolder').style.display='block';
+            document.getElementById('cloneServerRepoTable').style.display='none';
+            document.getElementById('cloneButtonLocalRow').style.display='block';
+        }
+        
+    }
+    
+    function parseServerFields_clone() {
+        const username = document.querySelector('input[name="username_clone"]').value.trim();
+        const server   = document.querySelector('input[name="server_clone"]').value.trim();
+        const folder   = document.querySelector('input[name="folder_clone"]').value.trim();
+    
+        const combined = `ssh://${username}@${server}${folder}`; 
+        console.log(combined);
+    
+        return combined;
+    }
+</script>   
+               
     <!-- Drop folder initiate script-->    
     <script>
     
