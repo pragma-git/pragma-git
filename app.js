@@ -383,21 +383,30 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Inititate listening to Pragma-merge start signal
        
        rmLocalFile(MERGESIGNALFILE);
-       const merge_watcher = chokidar.watch('file, dir, glob, or array', {
-          ignored: /(^|[\/\\])\../, // ignore dotfiles
-          persistent: true
-        });
-       merge_watcher.add(MERGESIGNALFILE);
-       merge_watcher.on('add', path => {console.log(`File ${path} has been added`); startPragmaMerge() } )
+       const merge_watcher = chokidar.watch(MERGESIGNALFILE, {
+            usePolling: true,
+            interval: 100, // Detta täcker alla ändringar på signalfilen
+            persistent: true
+       });
+       
+       merge_watcher.on('add', 
+           path => { 
+               pragmaLog(`Pragma-git : File ${path} has been added`); 
+               pragmaLog(`Pragma-git : startPragmaMerge()`); 
+               startPragmaMerge();
+           } 
+       )
 
 
     // Inititate listening to askpass start signal
+    
        rmLocalFile(ASKPASSIGNALFILE);
-       const askpass_watcher = chokidar.watch('file, dir, glob, or array', {
-          ignored: /(^|[\/\\])\../, // ignore dotfiles
-          persistent: true
-        });
-       askpass_watcher.add(ASKPASSIGNALFILE);
+       const askpass_watcher = chokidar.watch(ASKPASSIGNALFILE, {
+            usePolling: true,
+            interval: 100, // Detta täcker alla ändringar på signalfilen
+            persistent: true
+       });
+       
        askpass_watcher.on('add', 
            path => { 
                pragmaLog(`Pragma-git : File ${path} has been added`); 
