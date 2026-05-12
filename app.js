@@ -1256,6 +1256,25 @@ async function _callback( name, event){
             let hash = localState.historyHash;
             console.log('Hash to revert = ' + hash);
             
+            
+            // git reset if clean commit with nothing changed
+            if ( getMode() === 'NO_FILES_TO_COMMIT'){
+                
+                // Bail out if merge commit (exists in more than two local branches)
+                let branches = await simpleGitLog( state.repos[state.repoNumber].localFolder).branch( ['--contains', 'HEAD'] );
+                let N = branches.all.length;
+                if ( N > 1){
+                    break;
+                }
+                
+                // Reset, leave files
+                await simpleGitLog( state.repos[state.repoNumber].localFolder).raw(['reset', '--soft', 'HEAD~1']);
+                    
+                break;
+            }
+            
+            // From here -- a historical commit, thus git revert
+            
             // Get history
             var history = await gitHistory();
 
@@ -2959,6 +2978,8 @@ async function _update2(){
     let fullFolderPath = "";
     let isRepo;
     let stash_status;
+    let queueVisibility = {};  // Used to queue up hidden/visible state for buttons.  Use _ instead of - in names
+    queueVisibility.bottom_titlebar_revert_icon = 'hidden';
         
     // Initiate   
     if (state.repos.length >0){
@@ -3174,14 +3195,17 @@ async function _update2(){
                 
                 // Only visible if non-merge commit
                 if ( isMergeCommit ){  // 
-                    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                    //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                    queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 }else{
                     if (currentBranch == 'HEAD'){
-                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                        //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                        queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                         document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                     }else{
-                        document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                        //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                        queueVisibility.bottom_titlebar_revert_icon = 'visible';
                         document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible' 
                     }
                 }
@@ -3189,7 +3213,8 @@ async function _update2(){
             }else{
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'hidden'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'hidden'
-                document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
+                //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'
+                queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                 document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
                 
@@ -3244,7 +3269,8 @@ async function _update2(){
             document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
             document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'hidden'; 
-            document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'; 
+            //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden'; 
+            queueVisibility.bottom_titlebar_revert_icon = 'hidden';
             document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
             
             // Notes and folder icon hidden if no repo
@@ -3280,6 +3306,18 @@ async function _update2(){
                 setTitleBar( 'top-titlebar-repo-text', folder );
                 setTitleBar( 'top-titlebar-branch-text', '<u>' + currentBranch + '</u>' );
                 setStatusBar( fileStatusString( status_data));
+                
+                // Don't show if merge commit (exists in more than two local branches)
+                let HEADisMergeCommit = await gitIsMergeCommit('HEAD');
+                if (HEADisMergeCommit) {
+                    // Here if contained in 1 branch ( <2 branches)
+                    //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'hidden' 
+                    queueVisibility.bottom_titlebar_revert_icon = 'hidden';
+                }else{
+                    //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible' 
+                    queueVisibility.bottom_titlebar_revert_icon = 'visible';
+                }
+                
                 
                 // If not correct mode, fix :
                 if (status_data.changedFiles){
@@ -3371,6 +3409,9 @@ async function _update2(){
             }
         }    
     // return
+    
+        // Fix visibility for queued buttons (TODO: add more buttons using this concept)
+        document.getElementById('bottom-titlebar-revert-icon').style.visibility = queueVisibility.bottom_titlebar_revert_icon;
     
         //log(`_update took ${ performance.now() - startTime} ms (at END)`); 
         return true
@@ -8175,7 +8216,7 @@ function dev_show_all_icons(){
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
     document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
-    document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
+    //document.getElementById('bottom-titlebar-revert-icon').style.visibility = 'visible'
     document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'visible'
     
     console.warn('Set isPaused = true -- set to false to start Pragma-git update-loop' );
