@@ -1260,15 +1260,23 @@ async function _callback( name, event){
             // git reset if clean commit with nothing changed
             if ( getMode() === 'NO_FILES_TO_COMMIT'){
                 
-                // Bail out if merge commit (exists in more than two local branches)
-                let branches = await simpleGitLog( state.repos[state.repoNumber].localFolder).branch( ['--contains', 'HEAD'] );
-                let N = branches.all.length;
-                if ( N > 1){
-                    break;
-                }
+                //// Bail out if merge commit (exists in more than two local branches)
+                //let branches = await simpleGitLog( state.repos[state.repoNumber].localFolder).branch( ['--contains', 'HEAD'] );
+                //let N = branches.all.length;
+                //if ( N > 1){
+                    //break;
+                //}
                 
+                // Bail out if merge commit.  Use same mechanism as in _update2
+                let isMergeCommit = await gitIsMergeCommit( localState.historyHash );
+                if ( isMergeCommit){
+                    break;
+                }               
                 // Reset, leave files
                 await simpleGitLog( state.repos[state.repoNumber].localFolder).raw(['reset', '--soft', 'HEAD~1']);
+                
+                // Sync with remote
+                gitPush( forcePush = true);  // Make remote also have the same git history (thus the removed commit will be lost.  Uncommitted local files are still left 
                     
                 break;
             }
@@ -2978,7 +2986,9 @@ async function _update2(){
     let fullFolderPath = "";
     let isRepo;
     let stash_status;
-    let queueVisibility = {};  // Used to queue up hidden/visible state for buttons.  Use _ instead of - in names
+    
+    // Used to queue up hidden/visible state for buttons.  Use _ instead of - in names
+    let queueVisibility = {};  
     queueVisibility.bottom_titlebar_revert_icon = 'hidden';
         
     // Initiate   
