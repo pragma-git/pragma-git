@@ -1941,8 +1941,32 @@ async function generateRepoTable(document, table, data) {
             
             var label = document.createElement('label')
             label.htmlFor = index;
-            var description = document.createTextNode(element.localFolder);
-            label.appendChild(description);
+            
+            // 1. Skapa ett span-element för den grå texten
+            var prefixSpan = document.createElement('span');
+            
+            
+            var directoryPath = path.dirname(element.localFolder) + path.sep; 
+            prefixSpan.textContent = directoryPath;
+            prefixSpan.style.color = "gray";       // Sätter färgen direkt till grå
+            prefixSpan.style.marginRight = "1px";  // Lägger till ett litet mellanrum efter texten
+            
+            // VIKTIGT: Gör så att span-elementet inte skapar egna "block-gränser" vid markering
+            prefixSpan.style.userSelect = "text"; 
+            prefixSpan.style.webkitUserSelect = "text"; // För Chrome/Safari
+        
+            // 2. Lägg till den grå texten först i labeln
+            label.appendChild(prefixSpan);
+                    
+            
+            var folderName = document.createTextNode(path.basename(element.localFolder));
+            label.appendChild(folderName);
+            
+            // Sätt samma markeringsregler på själva labeln
+            label.style.userSelect = "text";
+            label.style.webkitUserSelect = "text";
+            label.style.display = "inline"; // Håller texten på en helt rak linje
+            
             
             var newline = document.createElement('br');
             
