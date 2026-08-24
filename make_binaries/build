@@ -520,6 +520,16 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then sed '1d; /^##/q; /^\s*$/d; s/^
  
  
     tput setaf $COLOR; echo ' '
+    echo '==================================== ' 
+    echo 'Verifying node module architechtures '
+    echo '==================================== ' 
+    tput sgr0  
+    
+    NODE_PLATFORM_EXIT=0
+    bash ../pragma-git/make_binaries/scripts/verify_node_platforms.bash . || NODE_PLATFORM_EXIT=$?
+
+ 
+    tput setaf $COLOR; echo ' '
     echo '========================== ' 
     echo 'Clean up temporary folders '
     echo '========================== ' 
@@ -548,6 +558,8 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then sed '1d; /^##/q; /^\s*$/d; s/^
     # Output summary
     echo 'Summary : '
     echo "$(formatReturn $BUILD_EXIT) Building all platforms"
+    
+    echo "$(formatReturn $NODE_PLATFORM_EXIT) Verifying node compiled code for correct platform"
     
     echo "$(formatReturn $MAC_EXIT) Creating Mac installer (intel)"
     if [[ "$1" == "--pkg" ]]; then

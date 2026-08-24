@@ -57,7 +57,9 @@ try{
     }
   
   // osx arm64
-  options = {  ...generalOptions, ...{ platform:'osx', arch: 'arm64', app: macOptions } };
+  //options = {  ...generalOptions, ...{ platform:'osx', arch: 'arm64', app: macOptions } };
+  options = {  ...generalOptions, platform: 'osx', arch: 'arm64', app: macOptions, managedManifest: true }; // managedManifest: true forces compile for platform
+
   options.outDir = `${OUTPUT}/Pragma-git-${VERSION}-mac-${options.arch}`; // Pragma-git-0.0.0-mac-arm64
   
   console.log('\n=========================================================================================================')
@@ -68,7 +70,8 @@ try{
 
 
   // osx x64
-  options = {  ...generalOptions, ...{ platform:'osx', arch: 'x64', app: macOptions } };
+  //options = {  ...generalOptions, ...{ platform:'osx', arch: 'x64', app: macOptions } };
+  options = {  ...generalOptions, platform: 'osx', arch: 'x64', app: macOptions, managedManifest: true };  // managedManifest: true forces compile for platform
   options.outDir = `${OUTPUT}/Pragma-git-${VERSION}-mac-${options.arch}`; // Pragma-git-0.0.0-mac-arm64
   
   console.log('\n=========================================================================================================')
