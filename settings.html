@@ -101,6 +101,16 @@
             .localFolder {
               width: 40%;
             }
+                        
+            /* 1. Hide the path span inside the localFolder cell by default */
+            td.localFolder label span { 
+              display: none !important; 
+            }
+            
+            /* 2. Reveal the span instantly when hovering over the table cell */
+            td.localFolder:hover label span { 
+              display: inline !important; 
+            }
             
             .remoteIcon{
               width: 20px;
@@ -123,6 +133,7 @@
               width: 8%;
               text-align:right; 
             } 
+
         
         
         /* Clone function */   

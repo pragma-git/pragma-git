@@ -1942,13 +1942,13 @@ async function generateRepoTable(document, table, data) {
             var label = document.createElement('label')
             label.htmlFor = index;
             
-            // 1. Skapa ett span-element för den grå texten
+            // 1. Skapa ett span-element för folder-path (before the last folder name)
             var prefixSpan = document.createElement('span');
             
             
             var directoryPath = path.dirname(element.localFolder) + path.sep; 
             prefixSpan.textContent = directoryPath;
-            prefixSpan.style.color = "gray";       // Sätter färgen direkt till grå
+            //prefixSpan.style.color = "gray";       // Sätter färgen direkt till grå
             prefixSpan.style.marginRight = "1px";  // Lägger till ett litet mellanrum efter texten
             
             // VIKTIGT: Gör så att span-elementet inte skapar egna "block-gränser" vid markering

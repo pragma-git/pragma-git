@@ -36,6 +36,7 @@ var origConflictingFiles = [];  // Store files found to be conflicting.  Use to 
 // ---------    
 
 // Start initiated from settings.html
+
 async function injectIntoJs(document) {
 
     
@@ -88,6 +89,7 @@ async function injectIntoJs(document) {
 };
 
 // Main functions 
+
 async function _callback( name, event){
 
     let id = event.id;
@@ -283,86 +285,43 @@ async function _callback( name, event){
         }
 
     }
-    //function gitDeleteBackups( folder){   // Instead config : mergetool.keepBackup = false   TODO: Remove
+
+async function gitUndoMerge(folder){
+    try {
+        console.log('gitUndoMerge -- entered');
+        let git = simpleGit(folder);
         
-        //// Remove .orig
-        //for (let i in origConflictingFiles) {
-            //try {
-                //let file = folder + pathsep + origConflictingFiles[i] + '.orig';
-                //console.log('gitDeleteBackups -- deleting file = ' + file);
-                //fs.unlinkSync(file)
-                ////file removed
-            //}catch(err) {
-                //console.log('gitDeleteBackups -- failed deleting file');
-                //console.log(err)
-            //}
-        //}
-         
-        //// Remove _BACKUP_nnnn, _BASE_nnnn, B_LOCAL_nnnn, B_REMOTE_nnnn
-        //// - BASE is the first commit down the tree the two branches split off from. It is the first common ancestor. Often it is useful to have this to help decide which of the newer commits you want.
-        //// - LOCAL is your local file, the one in the current branch you are standing on.
-        //// - REMOTE is the remote file, of the branch you are merging into your common on.
-        
-        //// Take the originally conflicting files one-by-one
-        //for (let i in origConflictingFiles) {
-
+        if (await isRebaseMerge()) {
+            await git.rebase(['--abort'], onUndoMerge);
+        } else if (await isMerge()) {
+            await git.merge(['--abort'], onUndoMerge);
+        } else if (await isStashMerge()) {
+            // HÄR HANTERAR VI ABORT UNSTASH:
+            await git.reset(['--hard', 'HEAD']);
+            await git.clean('f', ['-d']);
             
-            //try {
-                            
-                //let path = folder + pathsep + origConflictingFiles[i];
-                //let directory = path.match(/(.*)[\/\\]/)[1]||'';
-                //let fileName = path.split(/^.*[\\\/]/).pop();
-                
-                //// Look for files that start with fileName followed by "_"
-                //let filesInThisFolder = fs.readdirSync(directory);
-                //for (let j in filesInThisFolder) {
-                    //if ( filesInThisFolder[j].startsWith(fileName + '_')  ){
-                        //// Identified as A_BASE_12345 etc, should be removed :
-                        //console.log('Found matching file = ' + filesInThisFolder[j]);
-                        //let file = folder + pathsep + filesInThisFolder[j];
-                        //fs.unlinkSync(file);
-                    //}
-
-                //}
-
-            //}catch(err) {
-                //console.log('gitDeleteBackups -- failed deleting file');
-                //console.log(err)
-            //}
-        //}
-               
-    //}
-    async function gitUndoMerge( folder){
-
-        try{
-            // Store conflicting file names
-            console.log('gitUndoMerge -- entered');
-            
-            if ( await isRebaseMerge() ){
-                await simpleGit( folder).rebase(['--abort'], onUndoMerge );
-            }else{
-                await simpleGit( folder).merge(['--abort'], onUndoMerge );
-            }
-            
-            function onUndoMerge(err, result){ console.log(result); console.log(err) };
-            //await waitTime( 1000);
-            
-            // Remove git backup-files
-            //gitDeleteBackups( state.repos[state.repoNumber].localFolder); // Instead config : mergetool.keepBackup = false
-            
-            // Close pragma-merge window (may or may not be opened)
-            opener.merge_win.close();
-            
-            
-            
-        }catch(err){
-            console.log('gitUndoMerge -- caught error ');
-            console.log(err);
+            // Eftersom reset/clean inte har en callback-flagga som --abort, 
+            // anropar vi din callback manuellt här
+            onUndoMerge(null, "Stash pop/apply successfully aborted.");
+        } else {
+            console.log('gitUndoMerge -- okänd konflikttyp eller inga konflikter hittades');
         }
-
-
         
+        function onUndoMerge(err, result){ 
+            console.log(result); 
+            console.log(err); 
+        };
+        
+        // Stäng fönstret (från din originalkod)
+        if (opener && opener.merge_win) {
+            opener.merge_win.close();
+        }
+        
+    } catch(err) {
+        console.log('gitUndoMerge -- caught error ');
+        console.log(err);
     }
+}
 
 
 // ================= END CALLBACK =================  
@@ -587,12 +546,30 @@ function createUnsureFileTable(document, status_data) {
 }
 
 // Info
-async function isRebaseMerge(){
+
+async function isMerge(){
+    let folder = state.repos[state.repoNumber].localFolder;
+    // En vanlig git merge skapar alltid filen MERGE_HEAD
+    return await fs_existsSync(folder + pathsep + '.git' + pathsep + 'MERGE_HEAD');
+}
+
+async function isStashMerge(){
     let folder = state.repos[state.repoNumber].localFolder;
     
-    //if ( folder.startsWith('ssh:') ){
-        //return await sshFileExists( folder, '.git' + pathsep +  'rebase-merge')
-    //}
+    // 1. Om det är en rebase eller vanlig merge är det INTE en ren stash-konflikt
+    if (await isRebaseMerge() || await isMerge()) {
+        return false;
+    }
     
+    // 2. Om det inte är rebase/merge, kolla om simple-git säger att det finns aktiva konflikter
+    try {
+        const status = await simpleGit(folder).status();
+        return status.conflicted.length > 0;
+    } catch(err) {
+        return false;
+    }
+}
+async function isRebaseMerge(){
+    let folder = state.repos[state.repoNumber].localFolder;    
     return await fs_existsSync(folder + pathsep + '.git' + pathsep +  'rebase-merge')
 }
