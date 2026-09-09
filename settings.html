@@ -16,8 +16,11 @@
         table{
             border-collapse: collapse;
             text-align:left;
+            table-layout: fixed;
+            width: 100%;
         }
         
+
             background-color: #444;
      
         th{
@@ -99,7 +102,10 @@
             }
         
             .localFolder {
-              width: 40%;
+                width: 40%;
+                /* Force text to wrap to a second row instead of clipping */
+                word-break: break-all; 
+                white-space: normal !important; 
             }
                         
             /* 1. Hide the path span inside the localFolder cell by default */
@@ -110,6 +116,27 @@
             /* 2. Reveal the span instantly when hovering over the table cell */
             td.localFolder:hover label span { 
               display: inline !important; 
+            }
+            
+            /* Show the .ssh element by default */
+            td.localFolder .ssh {
+                  display: inline !important;
+            }
+          
+            /* Hide the .ssh element instantly when hovering over the parent td */
+            td.localFolder:hover .ssh {
+                  display: none !important;
+            }
+            
+            .ssh {
+                display: inline !important;
+                background-color: #F5F5F5 !important; /* Solid white block background, same as page background for light-mode (so it will hide in light-mode)*/
+                color: #1a1a1a !important;            /* Dark charcoal text for high contrast */
+                padding: 2px 2px;                     /* Creates the block shape */
+                border-radius: 4px;                   /* Clean, slightly rounded corners */
+                font-weight: bold;                    /* Makes the text easy to read */
+                margin-right: 6px;                    /* Separation from the path string */
+                user-select: none;                    /* Keeps the badge itself unselectable */
             }
             
             .remoteIcon{

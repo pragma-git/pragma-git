@@ -1942,6 +1942,18 @@ async function generateRepoTable(document, table, data) {
             var label = document.createElement('label')
             label.htmlFor = index;
             
+            
+            
+            // 0. Skapa ett span-element för SSH
+            var sshSpan = document.createElement('span');
+            sshSpan.textContent = '';
+            sshSpan.setAttribute("class", 'ssh');
+            if ( element.localFolder.startsWith('ssh')){
+                sshSpan.textContent = '[ssh]';
+                label.appendChild(sshSpan);
+            }
+            
+            
             // 1. Skapa ett span-element för folder-path (before the last folder name)
             var prefixSpan = document.createElement('span');
             
@@ -1955,7 +1967,7 @@ async function generateRepoTable(document, table, data) {
             prefixSpan.style.userSelect = "text"; 
             prefixSpan.style.webkitUserSelect = "text"; // För Chrome/Safari
         
-            // 2. Lägg till den grå texten först i labeln
+            // 2. Lägg till den  texten  i labeln
             label.appendChild(prefixSpan);
                     
             
