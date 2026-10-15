@@ -174,6 +174,21 @@ async function injectIntoJs(document) {
     cachedFile.REMOTE = loadFile(REMOTE);
     cachedFile.MERGED = loadFile(MERGED);
     
+
+    // === AUTOMATISK RENSNING AV WINDOWS-RADBRYTNINGAR (\r) ===
+    for (let key in cachedFile) {
+        if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key] === 'string') {
+            // Helt säkert: Rör inte binärfiler, påverkar bara textsträngar
+            if (!cachedFile[key].includes('\x00')) {
+                cachedFile[key] = cachedFile[key].replace(/\r/g, '');
+            }
+        }
+    }
+
+    
+    
+    console.log("-------------------------------");
+    
     // Set mode if called as editor
     if (SECOND == '--edit'){
         await setupAsBinary();
@@ -250,6 +265,9 @@ function loadFile(filePath)  {
     try{
         content = fs.readFileSync(filePath,'utf8');
         console.log('Success reading "' + filePath +'"');
+        if (fileContent.startsWith('\uFEFF')) {
+		    fileContent = fileContent.slice(1);
+		}
     }catch(err){
         console.warn('failed reading "' + filePath +'"');
     }
