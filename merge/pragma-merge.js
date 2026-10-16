@@ -29,7 +29,17 @@ var win;
 // Remember state
 var panes = global.state.pragmaMerge.mergePanes;
 var lastPaneNumber = panes; // Updates every InitUI
-var cachedFile = {};  // Struct to store content from files loaded
+
+// Struct to store content from files loaded 
+// where for instance cachedFile.LOCAL = { FileContent, FilePath, hasCRLF}
+// with  'FileContent' being the  text from file, 'FilePath' is obviously filepath to that file, and hasCRLF is true if windows EOL
+var cachedFile = { 
+    BASE: {}, 
+    LOCAL: {}, 
+    REMOTE: {}, 
+    MERGED: {} 
+    };  
+
 
 var SAVED = false; // Flag to show that save has been performed.
 var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
@@ -46,7 +56,7 @@ const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 process.chdir( SIGNALDIR);
 
-// Read file names stored in different files
+// Read file names stored in different files (file names are stored in files :  'first', 'second', 'third', 'fourth' )
 
 const ROOT = global.state.repos[global.state.repoNumber].localFolder;
 //const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");    // TODO: Does not work for SSH -- will use pragma-git folder as repo_path 
@@ -62,6 +72,7 @@ const REMOTE = THIRD;
 var MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
 var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
+
 
 console.log('PATHS : ')
 console.log('$ROOT   = ' + ROOT);
@@ -87,8 +98,6 @@ if (! ROOT.startsWith('ssh:')){
 var HTML_TITLE = 'File    =   ' + MERGED;
         
 // Define help icon
-//const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
-
 const helpIcon =     `  <!-- Help icon --> 
                 <img id="help-icon" style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  
                     onclick="parent.opener._callback('help',{name: 'Merge Window'})"  
@@ -130,11 +139,11 @@ async function setupAsBinary(){
             let hash = global.localState.historyHash;
             await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
-                cachedFile.BASE = res;
+                cachedFile.BASE.FileContent = res;
             }
             
             // Figure out if binary
-            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            let fileBuffer = await Buffer.from( cachedFile.BASE.FileContent);
             //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
             IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
             console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
@@ -169,19 +178,29 @@ function isBinaryFile(){
 async function injectIntoJs(document) {
     win = gui.Window.get();
     
-    cachedFile.BASE = loadFile(BASE);
-    cachedFile.LOCAL = loadFile(LOCAL);
-    cachedFile.REMOTE = loadFile(REMOTE);
-    cachedFile.MERGED = loadFile(MERGED);
+    // Read the file content
+    cachedFile.BASE.FileContent = loadFile(BASE);
+    cachedFile.BASE.FilePath = BASE;
     
-
-    // === AUTOMATISK RENSNING AV WINDOWS-RADBRYTNINGAR (\r) ===
+    cachedFile.LOCAL.FileContent = loadFile(LOCAL);
+    cachedFile.LOCAL.FilePath = LOCAL;
+    
+    cachedFile.REMOTE.FileContent = loadFile(REMOTE);
+    cachedFile.REMOTE.FilePath = REMOTE;
+    
+    cachedFile.MERGED.FileContent = loadFile(MERGED);
+    cachedFile.MERGED.FilePath = MERGED;
+  
+    // Automatic cleaning of (\r)
     for (let key in cachedFile) {
-        if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key] === 'string') {
-            // Helt säkert: Rör inte binärfiler, påverkar bara textsträngar
-            if (!cachedFile[key].includes('\x00')) {
-                cachedFile[key] = cachedFile[key].replace(/\r/g, '');
-            }
+        if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key].FileContent === 'string') {
+            // ignore binary files ( and don't test non-files where we have arguments  --edit, --show, --ro, --rw  )
+            if (  !cachedFile[key].FilePath.startsWith( '--')  ) {
+				if ( !isBinaryFileSync(cachedFile[key].FilePath) ) {
+					cachedFile[key].FileContent = cachedFile[key].FileContent.replace(/\r/g, '');
+					cachedFile[key].hasCRLF = cachedFile[key].FileContent.includes('\r');
+				}
+			}
         }
     }
 
@@ -238,11 +257,11 @@ async function injectIntoJs(document) {
             let hash = global.localState.historyHash;
             await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
-                cachedFile.BASE = res;
+                cachedFile.BASE.FileContent = res;
             }
             
             // Figure out if binary
-            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            let fileBuffer = await Buffer.from( cachedFile.BASE.FileContent);
             //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
             IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
             console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
@@ -262,18 +281,27 @@ async function injectIntoJs(document) {
 
 function loadFile(filePath)  { 
     let content = "";
-    try{
-        content = fs.readFileSync(filePath,'utf8');
-        console.log('Success reading "' + filePath +'"');
-        if (fileContent.startsWith('\uFEFF')) {
-		    fileContent = fileContent.slice(1);
-		}
-    }catch(err){
-        console.warn('failed reading "' + filePath +'"');
+    try {
+        content = fs.readFileSync(filePath, 'utf8');
+        console.log('Success reading "' + filePath + '"');
+        
+        // Remove Byte Order Mark (BOM) if present
+        if (content.startsWith('\uFEFF')) {
+            content = content.slice(1);
+        }
+        
+        // Normalize line endings to LF for the diff engine (skip binary files)
+        if ( !isBinaryFileSync(filePath) ) {
+            content = content.replace(/\r/g, '');
+        }
+        
+    } catch(err) {
+        console.warn('failed reading "' + filePath + '"', err);
     }
     
     return content;
-} 
+}
+
 function findMimeFromExtension( extension){
     
     // Read  "../node_modules/codemirror/mode/meta.js"  to find mime-type  
@@ -319,7 +347,7 @@ function findMimeFromExtension( extension){
     //
     // Reach here if undefined -- search using shebang
     //
-    let sheBang = cachedFile.BASE.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
+    let sheBang = cachedFile.BASE.FileContent.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
     console.log('Plan B) Find mime-mode from shebang (=' + sheBang + ')');
     
     modeInfo.forEach( handleShebang);
@@ -595,17 +623,17 @@ async function initUI( keep) {
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
-        options.origLeft = cachedFile.LOCAL;
+        options.origLeft = cachedFile.LOCAL.File;
 
         if (keep){
             options.value = dv.editor().getValue();
         }else{
-            options.value = cachedFile.BASE;
+            options.value = cachedFile.BASE.FileContent;
         }
         
         
 
-        options.orig = cachedFile.REMOTE; 
+        options.orig = cachedFile.REMOTE.FileContent;
         
         // html
         document.getElementById('left3').innerHTML = 'this ';
@@ -644,7 +672,7 @@ async function initUI( keep) {
             
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
-            options.orig = cachedFile.LOCAL;
+            options.orig = cachedFile.LOCAL.FileContent;
 
             if ( execBits.uncommitted !== execBits.HEAD ){
                 showExecutableBitDiffersState = 'visible';
@@ -662,8 +690,8 @@ async function initUI( keep) {
                 rightViewerLabel = 'pinned commit < ' + global.localState.pinnedCommit.substring(0,6) + ' >';
             }
             
-            options.value = cachedFile.REMOTE;  // Can't be changed, because readonly
-            options.orig = cachedFile.LOCAL;
+            options.value = cachedFile.REMOTE.FileContent; // Can't be changed, because readonly
+            options.orig = cachedFile.LOCAL.FileContent;
             
             readOnlyOption(true); // Sets this mode to read only
             
@@ -682,12 +710,12 @@ async function initUI( keep) {
             if (keep){
                 options.value = dv.editor().getValue();
             }else{
-                options.value = cachedFile.LOCAL;
+                options.value = cachedFile.LOCAL.FileContent;
             }
             
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
-            options.orig = cachedFile.REMOTE
+            options.orig = cachedFile.REMOTE.FileContent
             break;
           }
           case 'EDITOR':  { 
@@ -700,15 +728,15 @@ async function initUI( keep) {
                     options.value = dv.editor().getValue();  // Use content, in case it has been edited
                 }catch(err){
                     // Lands here on open when dv not fully defined
-                    options.value = cachedFile.BASE;
+                    options.value = cachedFile.BASE.FileContent;
                 }
             }else{
-                // 2) cachedFile.LOCAL if changed from 3-pane
-                options.value = cachedFile.BASE;
+                // 2) cachedFile.LOCAL.FileContent if changed from 3-pane
+                options.value = cachedFile.BASE.FileContent;
             }
             
             
-            options.orig = cachedFile.BASE
+            options.orig = cachedFile.BASE.FileContent
             
             
             break;
@@ -977,6 +1005,13 @@ async function save(){
     let content = "";
     try{
         content = dv.editor().getValue(); 
+        
+        // Reset windows CRLF:
+        if ( cachedFile.MERGED.hasCRLF ) {
+        //if (localFileHadCRLF && typeof content === 'string') {
+			content = content.replace(/\r/g, '').replace(/\n/g, '\r\n');
+		}
+        
         fs.writeFileSync(MERGED,content,'utf8');
         
         // Copy to server if ssh-folder
