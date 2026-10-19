@@ -51,15 +51,15 @@ if [ -d "$NODE_MODULES_PATH" ]; then
     done
 fi
 
-# 3. Sign standard framework resources
-find "$APP_PATH/Contents/Frameworks" -name "*.dylib" -or -name "*.framework" | while read -r framework_file; do
+# 3. Sign standard framework dynamic libraries
+find "$APP_PATH/Contents/Frameworks" -type f -name "*.dylib" | while read -r framework_file; do
     echo "Signing framework resource: $framework_file"
     chmod -R +w "$framework_file" 2>/dev/null || true
     codesign --force --timestamp --options runtime --sign "$DEV_ID_CERT" "$framework_file"
 done
 
 # 4. Sign the three hidden unlinked framework binaries (app_mode_loader, chrome_crashpad_handler, web_app_shortcut_copier)
-find "$APP_PATH/Contents/Frameworks" -type f -perm +111 -not -name "*.dylib" -not -name "*.sh" -not -path "*/Contents/MacOS/*" | while read -r binary_file; do
+find "$APP_PATH/Contents/Frameworks" -type f -perm +111 -not -name "*.dylib" -not -name "*.sh" -not -name "nwjs Framework" -not -path "*/Contents/MacOS/*" | while read -r binary_file; do
     echo "Signing hidden framework binary: $binary_file"
     chmod +w "$binary_file" 2>/dev/null || true
     codesign --force --timestamp --options runtime --sign "$DEV_ID_CERT" "$binary_file"

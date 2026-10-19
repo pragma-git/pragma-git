@@ -241,33 +241,36 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     
     # Make sure that only Pragma-git.app is packaged
     STAGING_MAC="../staging_mac"
+    rm -rf "$STAGING_MAC"
     mkdir "$STAGING_MAC/"
-    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"
-
-     
-    # Make .dmg in ../dist/temp-macos
-    test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
-    create-dmg \
-      --volname "Mac-Pragma-git-Installer" \
-      --volicon "../../pragma-git/images/icon_installer.icns" \
-      --window-pos 200 120 \
-      --window-size 500 520 \
-      --background "../../pragma-git/make_binaries/assets-mac/dmg_background.png" \
-      --icon-size 80 \
-      --icon "Pragma-git.app"  125 175 \
-      --hide-extension "Pragma-git.app" \
-      --app-drop-link 375 175 \
-      --add-file  "README.txt" "../../pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      "$NAME" \
-      "$STAGING_MAC" \
-    || MAC_EXIT=$?
+    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"   
+    
+    # Make signed DMG
+    /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh  "$STAGING_MAC"  "$DEV_ID_CERT" "$KEY_CHAIN_PROFILE" "$NAME"
+    BITMASK_RESULT=$?
+    
+    # Decipher the bitmask using bitwise AND operations
+    # We want 0 for success (OK) and 1 for failure (FAIL) to match your formatReturn requirements
+    
+    # Check Bit 1 (Value 1): Build status
+    if [ $((BITMASK_RESULT & 1)) -eq 1 ]; then MAC_EXIT=0; else MAC_EXIT=1; fi
+    
+    # Check Bit 2 (Value 2): Sign status
+    if [ $((BITMASK_RESULT & 2)) -eq 2 ]; then MAC_SIGN=0; else MAC_SIGN=1; fi
+    
+    # Check Bit 3 (Value 4): Notary status
+    if [ $((BITMASK_RESULT & 4)) -eq 4 ]; then MAC_NOTARY=0; else MAC_NOTARY=1; fi
 
 
+    # Print out the status rows using your custom function
+    echo "$(formatReturn $MAC_EXIT) Creating Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_SIGN) Code signing Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_NOTARY) Notarizing and validating Mac installer (intel)"
+
+
+        
     # Clean up 
     cd -
-    
-    echo ' '
-    echo $(formatReturn $MAC_EXIT) Creating Mac installer
     
  
     # Only if "--pkg" flag
@@ -567,19 +570,20 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     
     echo "$(formatReturn $NODE_PLATFORM_EXIT) Verifying node compiled code for correct platform"
     
-    echo "$(formatReturn $MAC_EXIT) Creating Mac installer (intel)"
+    echo "$(formatReturn $MAC_EXIT) Creating Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_SIGN) Code signing Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_NOTARY) Notarizing and validating Mac installer (intel)"
     if [[ "$1" == "--pkg" ]]; then
         echo "$(formatReturn $MAC_EXIT_PKG) Creating Mac PKG installer (intel)"
     fi
     
     echo ' '
-    echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac installer (Apple silicon)"
-    if [[ "$1" == "--pkg" ]]; then
-        echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
-    fi
     echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac DMG installer (apple silicon)"
     echo "$(formatReturn $MAC_SIGN_ARM) Code signing Mac DMG installer (apple silicon)"
     echo "$(formatReturn $MAC_NOTARY_ARM) Notarizing and validating Mac installer (apple silicon)"
+    if [[ "$1" == "--pkg" ]]; then
+        echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
+    fi
     
     echo ' '
     echo "$(formatReturn $WIN_EXIT) Creating Windows installer"
