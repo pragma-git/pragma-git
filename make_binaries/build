@@ -17,8 +17,9 @@
 if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then sed '1d; /^##/q; /^\s*$/d; s/^#//g; s/^ //g' $0 | sed '$d'; exit 0; fi 
 ## End Help
 
-# App signing
+# App signing and notarization
 DEV_ID_CERT="Developer ID Application: HAKAN JAN ERIK AXELSSON (BV7CXXA5MP)"
+KEY_CHAIN_PROFILE="jans-notary-profile"
 
 # Some good input from https://github.com/Aluxian/nwjs-starter
 
@@ -336,7 +337,7 @@ DEV_ID_CERT="Developer ID Application: HAKAN JAN ERIK AXELSSON (BV7CXXA5MP)"
     cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"   
     
     # Make signed DMG
-    /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh  "$STAGING_MAC"  "$DEV_ID_CERT"
+    /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh  "$STAGING_MAC"  "$DEV_ID_CERT" "$KEY_CHAIN_PROFILE" "$NAME"
     BITMASK_RESULT=$?
     
     # Decipher the bitmask using bitwise AND operations

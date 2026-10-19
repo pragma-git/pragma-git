@@ -10,7 +10,8 @@ set +e # Låt skriptet fortsätta så vi kan räkna ihop bitmasken manuellt
 
 STAGING_DIR="$1"
 IDENTITY="$2"
-DMG_NAME="Pragma-git-Installer.dmg"
+KEY_CHAIN_PROFILE="$3"
+DMG_NAME="$4"
 VOLUME_NAME="Mac-Pragma-git-Installer"
 
 # Initiera bitmask-variabler till 0 (Failure)
@@ -71,10 +72,19 @@ fi
 echo '================================'
 echo 'Notarize DMG'
 echo '================================'
-xcrun notarytool submit "$DMG_NAME" --keychain-profile "jans-notary-profile" --wait 2>&1
-#NOTARY_OUTPUT=$(xcrun notarytool submit "$DMG_NAME" --keychain-profile "jans-notary-profile" --wait 2>&1)
 
-if [ $? -eq 0 ] && ! echo "$NOTARY_OUTPUT" | grep -q "status: Invalid"; then
+
+echo "--- Apple Notary Service Output Start ---"
+NOTARY_LOG=$(mktemp)
+xcrun notarytool submit "$DMG_NAME" --keychain-profile "$KEY_CHAIN_PROFILE" --wait 2>&1 | tee "$NOTARY_LOG"
+NOTARY_STATUS=${PIPESTATUS[0]}
+NOTARY_OUTPUT=$(cat "$NOTARY_LOG")
+rm -f "$NOTARY_LOG"
+echo "--- Apple Notary Service Output End ---"
+
+# Validate
+if [ $NOTARY_STATUS -eq 0 ] && ! echo "$NOTARY_OUTPUT" | grep -q "status: Invalid"; then
+
 
     FINAL_VAL=0
 
@@ -89,11 +99,11 @@ if [ $? -eq 0 ] && ! echo "$NOTARY_OUTPUT" | grep -q "status: Invalid"; then
     echo 'Verify DMG for GateKeeper'
     echo '================================'
     
-    edho ' '
+    echo ' '
     echo 'Validate DMG :'
     xcrun stapler validate "$DMG_NAME" || FINAL_VAL=1
     
-    edho ' '
+    echo ' '
     echo 'Deep validate app :'
     echo ' '
     diskutil image attach "$DMG_NAME" #> /dev/null 2>&1
@@ -102,6 +112,23 @@ if [ $? -eq 0 ] && ! echo "$NOTARY_OUTPUT" | grep -q "status: Invalid"; then
     
     if [ $FINAL_VAL -eq 0 ]; then
         BIT_NOTARY=4 # Notarization and Gatekeeper passed!
+    fi
+else
+    echo "ERROR: Notarization failed or was rejected as Invalid by Apple."
+    
+    # Hämta ut Submission ID från texten vi sparade
+    SUBMISSION_ID=$(echo "$NOTARY_OUTPUT" | awk '/id:/ {print $2; exit}')
+    
+    if [ -n "$SUBMISSION_ID" ]; then
+        echo ' '
+        echo '--------------------------------------------------------------------'
+        echo "Automatically fetching JSON error log for ID: $SUBMISSION_ID"
+        echo '--------------------------------------------------------------------'
+        
+        # HÄR hämtas och skrivs hela JSON-loopen ut i terminalen direkt!
+        xcrun notarytool log "$SUBMISSION_ID" --keychain-profile "$KEY_CHAIN_PROFILE"
+        
+        echo '--------------------------------------------------------------------'
     fi
 fi
 

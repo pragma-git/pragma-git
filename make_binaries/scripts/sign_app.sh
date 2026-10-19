@@ -65,20 +65,24 @@ find "$APP_PATH/Contents/Frameworks" -type f -perm +111 -not -name "*.dylib" -no
     codesign --force --timestamp --options runtime --sign "$DEV_ID_CERT" "$binary_file"
 done
 
-# 5. Sign all inner Helper.app bundle wrappers (Let the system manage their internal binaries automatically)
+# 5. Sign all inner Helper.app bundle wrappers (inside nwjs Framework)
 find "$APP_PATH/Contents/Frameworks" -name "*.app" | while read -r helper_app; do
     echo "Signing nested process helper bundle: $helper_app"
     chmod -R +w "$helper_app" 2>/dev/null || true
     codesign --force --timestamp --options runtime --sign "$DEV_ID_CERT" "$helper_app"
 done
 
-# 6. Sign the core heavy framework engine binary explicitly
+# 6. Sign the core heavy framework engine binary explicitly (sealing the framework bundle)
 echo "Signing core framework engine file..."
-FRAMEWORK_BIN="$APP_PATH/Contents/Frameworks/nwjs Framework.framework/Versions/137.0.7151.69/nwjs Framework"
+FRAMEWORK_BIN="$APP_PATH/Contents/Frameworks/nwjs Framework.framework/Versions/Current/nwjs Framework"
+if [ ! -f "$FRAMEWORK_BIN" ]; then
+    FRAMEWORK_BIN=$(find "$APP_PATH/Contents/Frameworks/nwjs Framework.framework/Versions" -maxdepth 2 -name "nwjs Framework" -type f | head -n 1)
+fi
 if [ -f "$FRAMEWORK_BIN" ]; then
     chmod +w "$FRAMEWORK_BIN"
     codesign --force --timestamp --sign "$DEV_ID_CERT" "$FRAMEWORK_BIN"
 fi
+
 
 # 7. Sign the main executable execution binary with Hardened Runtime
 echo "Signing main application executable binary..."
