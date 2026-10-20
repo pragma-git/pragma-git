@@ -628,7 +628,7 @@ async function _callback( name, event, event2){
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
             
             let checked = event.checked;
-            let file2 = event.parentElement.innerText;
+            let file2 = event.dataset.filePath || (event.parentElement && event.parentElement.children[1] ? event.parentElement.children[1].innerText.trim() : event.parentElement.innerText.trim());
             //file2 = '"' + file2 + '"';
             
             if ( checked ) {
@@ -643,6 +643,8 @@ async function _callback( name, event, event2){
             function onAdd(err, result) {console.log(result) ;console.log(err);}
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
+            localState.unstaged = makeListOfUnstagedFiles();
+
             break;
         }
 
@@ -656,16 +658,19 @@ async function _callback( name, event, event2){
         let unStaged = [];
         
         var table = document.getElementById("listFilesTableBody");
+        if (!table) return unStaged;
         
         for (var i = 0, row; row = table.rows[i]; i++) {
             //iterate through rows
             //rows would be accessed using the "row" variable assigned in the for loop
             
             let col = row.cells[0]; // First column
+            if (!col) continue;
         
-            let isChecked = col.children[0].checked;
-            let file  = col.children[1].innerText;
-            if (isChecked == false) {
+            let checkbox = col.querySelector('input[type="checkbox"]');
+            let isChecked = checkbox ? checkbox.checked : true;
+            let file = (checkbox && checkbox.dataset.filePath) ? checkbox.dataset.filePath : (col.children[1] ? col.children[1].innerText.trim() : '');
+            if (isChecked == false && file) {
                 unStaged.push(file);
             }
 
@@ -675,6 +680,7 @@ async function _callback( name, event, event2){
 
         return unStaged;
     };
+    window.makeListOfUnstagedFiles = makeListOfUnstagedFiles;
 
 
 // ================= END CALLBACK =================  
@@ -825,6 +831,7 @@ async function createFileTable(status_data) {
                 checkbox.setAttribute("onclick", "_callback('radioButtonChanged', this );" ) ; // Quotes around file
                 checkbox.type = 'checkbox';
                 checkbox.id = index;
+                checkbox.dataset.filePath = file;
                 checkbox.checked = true;
                 cell.appendChild(checkbox);
                 

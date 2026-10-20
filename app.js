@@ -839,13 +839,14 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-store-button': {
-         storeButtonClicked();
+        await storeButtonClicked();
           
         // Update graph
         await _update();
         if (localState.graphWindow){
             _callback( 'clicked-graph');
         }
+        await updateChangedListWindow();
         break;
       }
         
@@ -4830,6 +4831,16 @@ async function gitAddCommitAndPush( message){
         var currentBranch = status_data.current;
         var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
     
+        // If Changed Files window is open, sync unstaged files from it
+        if (localState.fileListWindow && typeof changed_win !== 'undefined' && changed_win && !changed_win.window.closed) {
+            try {
+                if (typeof changed_win.window.makeListOfUnstagedFiles === 'function') {
+                    localState.unstaged = changed_win.window.makeListOfUnstagedFiles();
+                }
+            } catch(e) {
+                console.warn('Could not read unstaged files from changed_win:', e);
+            }
+        }
         
         // Add all files to index
         setStatusBar( 'Adding files');
@@ -4868,18 +4879,22 @@ async function gitAddCommitAndPush( message){
             // AMEND FILE-CHANGE        
             if (document.getElementById('amend_commit_checkbox').checked == true){
                 if ( await warningChangeRemote() ){
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit'], onCommit); 
+                    let amendCmd = ['commit', '--amend'];
+                    if (message && message.trim() !== '') {
+                        amendCmd.push('-m', message);
+                    } else {
+                        amendCmd.push('--no-edit');
+                    }
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( amendCmd, onCommit); 
                     forcePush = true;
+                    document.getElementById('amend_commit_checkbox').checked = false;
                 }else{
                     return  // Do not commit if dialog Canceled
                 }
-            }
-        
-            
-            if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
+            } else if  ( getMode() == 'NO_FILES_TO_COMMIT' ){
                 // AMEND MESSAGE-CHANGE
                 if ( await warningChangeRemote() ){
-                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '--no-edit', '-m', message], onCommit);  
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).raw( ['commit', '--amend', '-m', message], onCommit);  
                     forcePush = true;
                 }else{
                     return // Do not commit if dialog Canceled
@@ -4921,6 +4936,7 @@ async function gitAddCommitAndPush( message){
         await _update()
         _setMode('UNKNOWN');  
         await _update()
+        await updateChangedListWindow();
         
         return
     

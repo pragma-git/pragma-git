@@ -7,6 +7,7 @@
 
 ### 🏛️ Architecture & Files
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
+* **Modified Files List**: Fönster för modifierade filer och filurval ([listChanged.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.html), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js))
 * **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
 * **Build Orchestration**: Master-byggskript för plattformsoberoende paketering ([make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build))
 * **Code Signing Engine**: Inside-out djupkodsignering för NW.js och dess hjälparappar/moduler ([make_binaries/scripts/sign_app.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/sign_app.sh))
@@ -17,18 +18,23 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Implementerat avslutning av gruppnamnsredigering med Enter/Return och klick utanför ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
-  - **Lämna redigering med Enter**:
-    - Lade till `keydown`-lyssnare på `groupInput` som fångar Enter/Return (`e.key === 'Enter'`).
-    - Vid Enter sparas värdet automatiskt, inputfältet avfokuseras (`this.blur()`), och klassen `.editing-done` sätts på cellen så att textvyn (`.groupDisplay`) omedelbart visas även om musen fortfarande hovrar över cellen.
-    - Escape avbryter redigering och återställer värdet.
-  - **Bibehållen avslutning vid klick utanför**:
-    - Vid klick utanför cellen avfokuseras inputfältet och cellen återgår automatiskt till textvisning precis som tidigare.
-    - Vid `mouseleave` tas `.editing-done` bort så att hovring/klick fungerar som vanligt nästa gång.
+* **Task Description**: Verifierat och klart: "Store in same" (`amend_commit_checkbox`) respekterar nu avbockade filer i Changed Files-fönstret ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js)):
+  - **Realtidssynkning av avbockade filer**:
+    - Sparar exakt git-sökväg i `checkbox.dataset.filePath` i [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js).
+    - `case 'radioButtonChanged'` uppdaterar nu `localState.unstaged = makeListOfUnstagedFiles()` direkt vid varje klick, så listan alltid är aktuell oavsett om fönstret hålls öppet eller stängs.
+    - Exponerar `window.makeListOfUnstagedFiles` på fönstret så att `gitAddCommitAndPush` i [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) direkt kan synka urvalet om fönstret är öppet vid Store.
+  - **Fixad if-else och fall-through i commit-logik**:
+    - Åtgärdat kontrollflödet i `gitAddCommitAndPush` där `commit --amend` tidigare föll rakt igenom till den normala `simpleGitLog(...).commit()`-grenen utan `else if`.
+    - Stöd för att behålla befintligt meddelande (`--no-edit`) eller skriva över med nytt meddelande om användaren skrivit text i meddelanderutan.
+    - Återställer `amend_commit_checkbox.checked = false` efter lyckad amend.
+    - Uppdaterar Changed Files-fönstret via `updateChangedListWindow()` efter genomförd commit så att endast kvarvarande ostagade filer visas.
+  - **Status**: Verifierat fungerande av användaren.
 
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug**: "Store in same" (`amend_commit_checkbox`) respekterade inte avbockade filer i Changed Files-fönstret och committade allt eller kastade fel.
+  * *Remediation*: Löst via realtidssynkning av `localState.unstaged`, `dataset.filePath`, synkning i `gitAddCommitAndPush`, samt fixat if-else grenstruktur för amend vs normal commit.
 * **Bug**: Grupprubriken i Repository-tabellen tappade ordet "Group" när ett filter sattes och visade bara gruppens namn (t.ex. "Jan").
   * *Remediation*: Implementerat `.groupHeaderWrapper` med `#groupHeaderLabel` som dynamiskt växlar mellan "Group (All)" och "Group (filtered)" med tooltip.
 * **Bug**: Knapparnas teckenstorlek krymptes oavsiktligt till 11px vid åtgärdande av kolumnkollisioner.
@@ -43,9 +49,3 @@
   * *Remediation*: `.authorTable` håller ihop namn och e-post; `.systemToolsTable` (50% bredd) matchar fälten under Clone.
 * **Bug**: Repomenyn fallerade när inga grupper var satta (t.ex. vid nyinstallation eller om alla repon saknade gruppnamn).
   * *Remediation*: Helt tätat i `app.js` och `settings.js`: ren flack fallback-meny, säker hantering av oinitierad statuscache och automatisk anpassning av UI i inställningar.
-* **Bug**: Grupper skrevs över vid appstängning på grund av in-memory state.
-  * *Remediation*: Återställt `settings.json` med alla 14 grupper medan processen är avstängd, committat till `~/.Pragma-git`.
-* **Bug**: Kolumnen med branch-namn i inställningarnas Branch-tabb var för smal.
-  * *Remediation*: Löst med `#branchesTable` (width: 100%), `.hiddenBranch` (50px), `.branchAction` (110px), och `.branchName` (auto).
-* **Bug**: Textfälten för serverdetaljer under AddRepo och Clone var trånga.
-  * *Remediation*: Löst med `.serverDetailsContainer` flexbox (`flex: 1 : 1.5 : 2.2` och `flex-wrap: wrap`).
