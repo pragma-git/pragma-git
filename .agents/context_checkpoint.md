@@ -25,14 +25,17 @@
     - Returnerar strukturerade statusrader (`STATUS:OK`, `STATUS:KEY_NEEDED`, `STATUS:TIMEOUT`, `STATUS:ERROR`) utan att kasta onödiga processfel.
   - **SSH-wrapper & UI-funktion i `ssh-folder-lib.js`** ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)):
     - `sshTestLogin(sshUrl)`: Low-level wrapper för `ssh-test-login`, anropar `multiPlatformExecSync` och returnerar status.
-    - `testSshKeyLogin(mode)`: UI-funktion för Clone och Add Repo-tabbarna i Inställningar.
-    - Kontrollerar att server och användare är ifyllt och kör `sshTestLogin`.
-    - Om nyckelinloggning redan fungerar (`STATUS:OK`): visar grön bekräftelse (`✓ Login works (key already set up)`) och avmarkerar kryssrutan så att inga onödiga lösenordsdialoger eller omskrivningar sker.
-    - Om nyckel saknas (`STATUS:KEY_NEEDED`): visar info (`ℹ Key needed (will be deployed on submit)`) och markerar kryssrutan så att nyckeln genereras/distribueras vid Clone/Add.
-    - Vid fel/timeout: visar röd felstatus med förklarande text.
+    - `testSshKeyLogin(mode)`: Körs från "Test login"-knappen.
+      - Om login fungerar (`STATUS:OK`): visar grön bekräftelse (`✓ Login works`) och aktiverar (ogråar) Add/Clone-knappen.
+      - Om login nekas (`STATUS:KEY_NEEDED`): visar `ℹ Key needed (login not permitted)` och visar en "Create key pair"-knapp bredvid. Add/Clone hålls gråad.
+    - `deploySshKey(mode)`: Kör `ssh-generate-key-login`, och testar sedan automatiskt inloggningen igen. När den verifieras grön aktiveras Add/Clone och Create key pair-knappen döljs.
+    - `onServerInputsChanged(mode)`: Nollställer validering och gråar Add/Clone vid ändring av server eller användarnamn.
   - **UI i `settings.html`** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
-    - Lagt till "Test login"-knapp och statusfält vid kryssrutan under både Clone-tabben och Add Repo-tabben.
-    - Harmoniserat Add Repo-tabbens layout med Clone-tabben: Add Repo använder nu samma `toolTable`-struktur och tabellrad som Clone för serverdetaljer, vilket eliminerar att fälten blir för breda (anpassat till 50% kolumnbredd) och integrerar local/server-switchen snyggt.
+    - "Test login"-knappen placerad längst till vänster i serverinmatningsraden.
+    - "Create key pair"-knappen visas dynamiskt intill vid behov.
+    - Add/Clone för server är inaktiverad (`disabled`) tills inloggningen är testad och grön.
+    - I Local-läge är Add- och Clone-knapparna alltid aktiva.
+    - Harmoniserat Add Repo-tabbens layout med Clone-tabben: Add Repo använder samma `toolTable`-struktur och tabellrad som Clone för serverdetaljer, vilket eliminerar att fälten blir för breda (anpassat till 50% kolumnbredd) och integrerar local/server-switchen snyggt.
   - **SSH-server Setup i `cloneButtonPressed`** ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
     - Hanterar `setupRemoteKeyLogin_clone` analogt med Add Repo: kör `ssh-generate-key-login` med 60s timeout vid behov.
     - Anropar `await opener.mkdir(folder)` på servern för att skapa mål-/övermappen innan `gitClone`.

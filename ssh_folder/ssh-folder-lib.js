@@ -195,9 +195,10 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
     // Tests SSH key login for 'clone' or 'add' settings tabs and updates UI
     let usernameInput = document.querySelector(mode === 'clone' ? 'input[name="username_clone"]' : 'input[name="username"]');
     let serverInput = document.querySelector(mode === 'clone' ? 'input[name="server_clone"]' : 'input[name="server"]');
-    let checkbox = document.getElementById(mode === 'clone' ? 'setupRemoteKeyLogin_clone' : 'setupRemoteKeyLogin');
     let statusEl = document.getElementById(mode === 'clone' ? 'testSshStatus_clone' : 'testSshStatus_add');
-    let btnEl = document.getElementById(mode === 'clone' ? 'testSshLoginButton_clone' : 'testSshLoginButton_add');
+    let testBtn = document.getElementById(mode === 'clone' ? 'testSshLoginButton_clone' : 'testSshLoginButton_add');
+    let deployBtn = document.getElementById(mode === 'clone' ? 'deploySshKeyButton_clone' : 'deploySshKeyButton_add');
+    let submitBtn = document.getElementById(mode === 'clone' ? 'cloneServerRepoButton' : 'addServerRepoButton');
 
     if (!statusEl) return;
 
@@ -212,10 +213,13 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
     if (!username || !server) {
         statusEl.style.color = 'var(--warn-color, orange)';
         statusEl.textContent = 'Please enter username and server first';
+        if (deployBtn) deployBtn.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = true;
         return;
     }
 
-    if (btnEl) btnEl.disabled = true;
+    if (testBtn) testBtn.disabled = true;
+    if (deployBtn) deployBtn.disabled = true;
     statusEl.style.color = 'var(--dim-text, #888)';
     statusEl.textContent = 'Testing connection...';
 
@@ -227,31 +231,125 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
         if (result && result.includes('STATUS:OK')) {
             statusEl.style.color = 'var(--green-text, green)';
             statusEl.textContent = '✓ Login works (key already set up)';
-            if (checkbox) checkbox.checked = false;
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
         } else if (result && result.includes('STATUS:KEY_NEEDED')) {
             statusEl.style.color = 'var(--warn-color, orange)';
-            statusEl.textContent = 'ℹ Key needed (will be deployed on submit)';
-            if (checkbox) checkbox.checked = true;
+            statusEl.textContent = 'ℹ Key needed (login not permitted)';
+            if (deployBtn) {
+                deployBtn.style.display = 'inline-block';
+                deployBtn.disabled = false;
+            }
+            if (submitBtn) submitBtn.disabled = true;
         } else if (result && result.includes('STATUS:TIMEOUT')) {
             statusEl.style.color = 'var(--red-text, red)';
             statusEl.textContent = '✗ Connection timed out';
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = true;
         } else if (result && result.includes('STATUS:ERROR:')) {
             let errorMsg = result.split('STATUS:ERROR:')[1]?.trim() || 'Unknown error';
             statusEl.style.color = 'var(--red-text, red)';
             statusEl.textContent = '✗ ' + errorMsg;
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = true;
         } else {
             statusEl.style.color = 'var(--red-text, red)';
             let cleanRes = (result || 'No response').toString().trim().replace(/[\r\n]+/g, ' ').substring(0, 80);
             statusEl.textContent = '✗ ' + cleanRes;
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = true;
         }
     } catch (err) {
         console.error('testSshKeyLogin error:', err);
         statusEl.style.color = 'var(--red-text, red)';
         let msg = (err?.message || err?.toString() || 'Execution failed').replace(/[\r\n]+/g, ' ').substring(0, 80);
         statusEl.textContent = '✗ ' + msg;
+        if (deployBtn) deployBtn.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = true;
     } finally {
-        if (btnEl) btnEl.disabled = false;
+        if (testBtn) testBtn.disabled = false;
     }
+}
+
+async function deploySshKey( mode ) {                           // Deploys key pair to remote server and verifies
+    let usernameInput = document.querySelector(mode === 'clone' ? 'input[name="username_clone"]' : 'input[name="username"]');
+    let serverInput = document.querySelector(mode === 'clone' ? 'input[name="server_clone"]' : 'input[name="server"]');
+    let statusEl = document.getElementById(mode === 'clone' ? 'testSshStatus_clone' : 'testSshStatus_add');
+    let testBtn = document.getElementById(mode === 'clone' ? 'testSshLoginButton_clone' : 'testSshLoginButton_add');
+    let deployBtn = document.getElementById(mode === 'clone' ? 'deploySshKeyButton_clone' : 'deploySshKeyButton_add');
+    let submitBtn = document.getElementById(mode === 'clone' ? 'cloneServerRepoButton' : 'addServerRepoButton');
+
+    let username = (usernameInput?.value || '').trim();
+    let server = (serverInput?.value || '').trim();
+
+    if (server.includes('@') && !username) {
+        username = server.split('@')[0];
+        server = server.split('@').slice(1).join('@');
+    }
+
+    if (!username || !server) {
+        if (statusEl) {
+            statusEl.style.color = 'var(--warn-color, orange)';
+            statusEl.textContent = 'Please enter username and server first';
+        }
+        return;
+    }
+
+    if (testBtn) testBtn.disabled = true;
+    if (deployBtn) deployBtn.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
+    if (statusEl) {
+        statusEl.style.color = 'var(--dim-text, #888)';
+        statusEl.textContent = 'Creating and deploying key pair...';
+    }
+
+    let fakeFolder = `ssh://${username}@${server}/`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+    let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+
+    try {
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+    } catch (err) {
+        console.error('Error when setting up password-less login:', err);
+        if (MAIN.displayLongAlert) {
+            MAIN.displayLongAlert('Error when setting up password-less login', err, 'error');
+        }
+        if (MAIN.closeWindowsByTitle) {
+            MAIN.closeWindowsByTitle('Credentials');
+        }
+        try {
+            const os = require('os');
+            const pathsep = require('path').sep;
+            const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git' + pathsep + '.tmp';
+            const ASKPASSSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';
+            if (MAIN.rmLocalFile) MAIN.rmLocalFile(ASKPASSSIGNALFILE);
+        } catch (e) {}
+
+        if (statusEl) {
+            statusEl.style.color = 'var(--red-text, red)';
+            let msg = (err?.message || err?.toString() || 'Key deployment failed').replace(/[\r\n]+/g, ' ').substring(0, 80);
+            statusEl.textContent = '✗ ' + msg;
+        }
+        if (testBtn) testBtn.disabled = false;
+        if (deployBtn) deployBtn.disabled = false;
+        return;
+    } finally {
+        if (testBtn) testBtn.disabled = false;
+        if (deployBtn) deployBtn.disabled = false;
+    }
+
+    // Automatically re-test login after deployment
+    await testSshKeyLogin(mode);
+}
+
+function onServerInputsChanged( mode ) {                        // Resets validation state when server fields change
+    let statusEl = document.getElementById(mode === 'clone' ? 'testSshStatus_clone' : 'testSshStatus_add');
+    let deployBtn = document.getElementById(mode === 'clone' ? 'deploySshKeyButton_clone' : 'deploySshKeyButton_add');
+    let submitBtn = document.getElementById(mode === 'clone' ? 'cloneServerRepoButton' : 'addServerRepoButton');
+
+    if (statusEl) statusEl.textContent = '';
+    if (deployBtn) deployBtn.style.display = 'none';
+    if (submitBtn) submitBtn.disabled = true;
 }
 
 // WINDOWS specific helpers
