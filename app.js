@@ -8084,10 +8084,8 @@ function saveSettings(){
     let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
     
-    // Save username of current repo to .git/config
-    if (typeof storeUsernameInLocalGitConfig === 'function' && state.repoNumber >= 0 && state.repos[state.repoNumber]) {
-        storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
-    }
+    // Note: Automatic writing of credential.username to local .git/config has been removed
+    // because it locks repos to the wrong account and causes authentication/password popup loops.
     
     pragmaLog('Done saving settings');
     pragmaLog('');

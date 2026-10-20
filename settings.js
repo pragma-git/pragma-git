@@ -2781,18 +2781,24 @@ async function updateRemoteInfo( ){
     
         let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
         
-        // Prepare for a clear button
-        let clearButton = `<button class="smallButton" onclick=
-        " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
-        _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
-        > Clear </button>`;
-        //let clearButton = "";
-        
-        html +=  
-            `<tr> 
-                <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
-                <td> ${ config_credential_username} (in local .git/config) ${clearButton}</td>
-            </tr>`   // Style "white-space: nowrap" makes it fill width of column
+        if (config_credential_username && config_credential_username.trim().length > 0) {
+            let clearButton = `<button class="smallButton" onclick=
+            " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
+            _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
+            > Clear </button>`;
+            
+            html +=  
+                `<tr> 
+                    <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
+                    <td> ${config_credential_username} (in local .git/config) ${clearButton}</td>
+                </tr>`;
+        } else {
+            html +=  
+                `<tr> 
+                    <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
+                    <td> <i>(not set)</i> </td>
+                </tr>`;
+        }
         
         html += '</table></code>';       
     }catch (err){
