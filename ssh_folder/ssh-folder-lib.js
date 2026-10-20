@@ -101,7 +101,7 @@ async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- w
                   // run ssh-get bash script
                   let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"`;
                   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
-                  await MAIN.multiPlatformExecSync( folder_or_sshUrl, CMD);
+                  await MAIN.multiPlatformExecSync( folder_or_sshUrl, CMD, false, 'timeout', 30000);
 
             }else{    
                 // local folder

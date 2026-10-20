@@ -934,7 +934,7 @@
                                                     
                                                 <tr class="tool">
                                                     <td>
-                                                        <button id="cloneServerRepoButton"  onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button>
+                                                        <button id="cloneServerRepoButton"  onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus_server"></span>
                                                     </td>                          
                                                 </tr>
                                                 
@@ -1474,7 +1474,8 @@
         </button>   
         <button
             onclick="
-                document.getElementById('setupRemoteKeyLogin').checked = true;
+                if (document.getElementById('setupRemoteKeyLogin')) document.getElementById('setupRemoteKeyLogin').checked = true;
+                if (document.getElementById('setupRemoteKeyLogin_clone')) document.getElementById('setupRemoteKeyLogin_clone').checked = true;
                 document.getElementById('disabledPasswordlessLogin').close();
             " >
             Cancel
@@ -1592,8 +1593,11 @@
     function parseServerFields() {
         const username = document.querySelector('input[name="username"]').value.trim();
         const server   = document.querySelector('input[name="server"]').value.trim();
-        const folder   = document.querySelector('input[name="folder"]').value.trim();
+        let folder   = document.querySelector('input[name="folder"]').value.trim();
     
+        if (folder && !folder.startsWith('/')) {
+            folder = '/' + folder;
+        }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);
     
@@ -1623,8 +1627,11 @@
     function parseServerFields_clone() {
         const username = document.querySelector('input[name="username_clone"]').value.trim();
         const server   = document.querySelector('input[name="server_clone"]').value.trim();
-        const folder   = document.querySelector('input[name="folder_clone"]').value.trim();
+        let folder   = document.querySelector('input[name="folder_clone"]').value.trim();
     
+        if (folder && !folder.startsWith('/')) {
+            folder = '/' + folder;
+        }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);
     

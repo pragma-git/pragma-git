@@ -307,22 +307,87 @@ async function _callback( name, event){
             
             let folder = document.getElementById('cloneFolder').value;  
             let url = document.getElementById('urlToClone').value; 
+
+            if (!url || !url.trim()){
+                displayAlert('Clone failed', 'Please enter a repository URL to clone');
+                return;
+            }
+            if (!folder || !folder.trim()){
+                displayAlert('Clone failed', 'Please specify a folder to clone to');
+                return;
+            }
+            folder = folder.trim();
+            url = url.trim();
+
+            setCloneStatus('Cloning in progress ');
+
+            // If SSH server folder
+            if ( folder.startsWith('ssh:') ){
+                // Setup password-less login
+                let setupKeyCheckbox = document.getElementById('setupRemoteKeyLogin_clone');
+                if ( setupKeyCheckbox && setupKeyCheckbox.checked ){
+                    try{
+                        let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
+                        let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
+                        if (username && server) {
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
+                        }
+                    }catch (err){
+                        console.error('Error in password-less login');
+                        opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
+                        console.error(err);
+                        
+                        // Close Credential windows 
+                        opener.closeWindowsByTitle( 'Credentials');
+                        
+                        // Remove signal file
+                        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+                        const ASKPASSSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';  
+                        opener.rmLocalFile( ASKPASSSIGNALFILE);
+
+                        setCloneStatus('');
+                        return;
+                    }
+                }
+
+                // Create folder on server if missing
+                try {
+                    await opener.mkdir(folder);
+                } catch (err) {
+                    console.error('Error creating folder on server:', err);
+                    opener.displayLongAlert('Clone Repository Error', `Could not create folder on server: ${err}`, 'error');
+                    setCloneStatus('');
+                    return;
+                }
+            } else {
+                // Local folder - create if missing
+                try {
+                    await opener.mkdir(folder);
+                } catch (err) {
+                    console.error('Error creating local folder:', err);
+                }
+            }
             
-            document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
-            const dummy = await gitClone( folder, url);
-            document.getElementById('cloneStatus').innerHTML = '';
+            const success = await gitClone( folder, url);
+            setCloneStatus('');
+            if (!success) {
+                return;
+            }
             
             // Update latest
             await opener.cacheRemoteOriginStatus(id);  // Needs to be updated
-            await opener.cacheFolderStatus(id);  
+            if (opener.cacheFolderStatus) {
+                await opener.cacheFolderStatus(id);
+            } else if (opener.cacheLocalFolderExistStatus) {
+                await opener.cacheLocalFolderExistStatus(id);
+            }
 
-            
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             await createHtmlTable(document);
             drawBranchTab(document);
                
-            
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
             try{
@@ -334,20 +399,13 @@ async function _callback( name, event){
             }
             
             // If forked -- set upstream
-            
             if (forkParentUrl !== undefined) {
-                
                 await opener.addUpstream( forkParentUrl);
                 updateRemoteRepos();
-                
             }
             
-            
-            // Switch to Remote  tab
+            // Switch to Remote tab
             document.getElementById('gitHubTab').click()
-            
-            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            //_callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
             break;
         }   
@@ -1297,6 +1355,13 @@ async function closeWindow(){
 }
 
 
+function setCloneStatus(text) {
+    let s1 = document.getElementById('cloneStatus');
+    let s2 = document.getElementById('cloneStatus_server');
+    if (s1) s1.innerHTML = text;
+    if (s2) s2.innerHTML = text;
+}
+
 // Git
 async function gitClone( folderName, repoURL){
      
@@ -1304,43 +1369,38 @@ async function gitClone( folderName, repoURL){
     // /Users/jan/Desktop/TEMP/cloned-TestJanAxelssonTest/
     // https://github.com/JanAxelssonTest/test3.git
     
-    
     // Combine URL and folder name => repo folder
-    let repoWithExtension = repoURL.replace(/^.*[\\\/]/, '');
-    let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
-    let topFolder = folderName + pathsep + repoName;
-    topFolder = topFolder.replace(/[\\\/]$/, '')
-
+    let repoWithExtension = repoURL.trim().replace(/^.*[\\\/]/, '');
+    let repoName = repoWithExtension.endsWith('.git') ? repoWithExtension.slice(0, -4) : repoWithExtension;
+    
+    let isSsh = folderName.startsWith('ssh:');
+    let sep = isSsh ? '/' : pathsep;
+    let cleanFolderName = folderName.replace(/[\\\/]+$/, '');
+    let topFolder = cleanFolderName + sep + repoName;
 
     // Clone
-
     try{
-        // 1) mkdir 
+        // 1) mkdir parent folder if missing
         let options = [];
-        opener.pragmaLog(`Create folder : ${folderName}`);
-        await opener.mkdir(topFolder);  // Create local folder if it does not exist
-        
+        opener.pragmaLog(`Create folder : ${cleanFolderName}`);
+        await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
         
         // 2) Clone
         let topFolderValidOnServer = topFolder;
-        if (topFolder.startsWith('ssh:')){
+        if (isSsh){
             // Clean to make it local on the server
             let url = new URL(topFolder);
-            topFolderValidOnServer = url.pathName;
+            topFolderValidOnServer = decodeURIComponent(url.pathname);
         }
         
-        opener.pragmaLog(`Clone : "${repoURL}"  to "${folderName}"`);
-        await simpleGitLog(folderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
+        opener.pragmaLog(`Clone : "${repoURL}"  to "${cleanFolderName}"`);
+        await simpleGitLog(cleanFolderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
         function onClone(error, result ){}; 
         
         // 3) Checkout default branch
         await simpleGitLog(topFolder).checkout( onCheckout);
         function onCheckout(err, result){
-            // if err =="Error: fatal: You are on a branch yet to be born"
-            // This happens for instance when a Github repo is created, but no commits exist.
-            // Reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
-            // which asks permisson to init repo
-            if ( err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
+            if ( err && err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
                 localState.droppedRepoFolder = topFolder;
                 document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
                 return
@@ -1350,16 +1410,12 @@ async function gitClone( folderName, repoURL){
     }catch(err){ 
         console.log(err);
         opener.pragmaLog(err);
-        
-        //displayAlert('Failed cloning', err)
-        displayAlert('Clone failed', err)
-        return
+        displayAlert('Clone failed', err);
+        return false;
     }
         
     // Add this repo to state
     try{
-
-        
         // Add folder last in  state array
         var index = state.repos.length;
         state.repos[index] = {}; 
@@ -1399,10 +1455,11 @@ async function gitClone( folderName, repoURL){
 
         // Change to Software tab (In repo tab, where we already are)
         Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
-
+        return true;
     }catch(err){
         console.log(err);
-        return
+        displayAlert('Failed cloning (settings)', err);
+        return false;
     }
 
 
