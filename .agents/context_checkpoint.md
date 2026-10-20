@@ -16,14 +16,20 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
-  - **Dubbelklick i message-textarea**:
-    - När användaren redan har en markör i textarea (`document.activeElement === message`) blockeras `message_dblclick`-åtgärden som återställde meddelandet. Dubbelklick fungerar då som standard (markera ord) fram tills användaren lämnar fältet (`blur`).
-    - Implementerat med minimal förändring via `_messageHadFocus` som fångar fokusläget i `onmousedown (event.detail === 1)` innan klicksekvensen flyttar fokus.
-  - **Piltangenter (Upp/Ned)**:
-    - I `app.html` begränsades fönstrets `keydown`-lyssnare för tangentkod 38 (upp) och 40 (ned) så att `_callback('clicked-up-arrow')` och `_callback('clicked-down-arrow')` endast anropas när `document.activeElement !== document.getElementById('message')`.
-    - Detta tillåter standard piltangentnavigering mellan textrader under redigering utan att byta commit i historiken.
+* **Task Description**: Implementerat fullständig repogruppering: gruppkolumn i inställningar med integrerat kolumnfilter, och grupperade menyer i huvudfönstret.
+  - **Gruppkolumn och integrerat filter i Settings (`settings.html` & `settings.js`)**:
+    - Lade till `<meta charset="utf-8">` i både `settings.html` och `app.html` för att garantera korrekt teckenkodning.
+    - Tog bort separat text ovanför tabellen och integrerade filter-dropdownen (`#repoTableGroupFilter`) direkt i tabellens kolumnrubrik (`Group (All)` / valt gruppnamn).
+    - Dropdownen i varje tabellrad har rensats från skräptecken och visar nu tydligt `Select group:` och `None (Remove from group)`.
+    - Filtrering görs via `row.style.display` baserat på `data-group`, vilket bevarar alla rad-ID:n intakta.
+  - **Grupperad repo-meny i huvudfönstret (`app.js`)**:
+    - Rensat bort emoji-symboler som orsakade mojibake-skräptecken i NW.js macOS-menyer.
+    - Tog bort alla separatorlinjer utom den enda linjen ovanför "Switch to repo" (ingen separator alls om inga grupper finns).
+    - Ändrade undermenynamn från `(Ungrouped)` till ren `Ungrouped`.
+    - Symmetrisk rubrik för aktiv sektion: `Repos in '${currentGroup}' : ` (eller `Ungrouped repos : ` om aktivt repo saknar grupp). Vid helt ogrupperat läge visas standard `Switch to repo : `.
+    - Aktuell grupp härleds implicit från det aktiva repot (`state.repos[state.repoNumber].group`).
 * **Tidigare åtgärder**:
+  - Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
   - Symmetriserat macOS-paketering, kodsignering och Apple-notarisering för Intel (`mac-x64`) och ARM (`mac-arm64`).
   - Terminal mail-varning utredd och åtgärdad.
 

@@ -2018,6 +2018,55 @@ async function generateRepoTable(document, table, data) {
                 foundIndex = index;
             }
             
+            //
+            // REPO GROUP
+            //
+            cell = row.insertCell();
+            cell.setAttribute("class", 'repoGroupCol');
+            row.setAttribute('data-group', element.group || '');
+
+            let groupDisplay = document.createElement('span');
+            groupDisplay.setAttribute('class', 'groupDisplay');
+            groupDisplay.setAttribute('id', 'groupDisplay_' + index);
+            groupDisplay.textContent = element.group || '';
+            cell.appendChild(groupDisplay);
+
+            let groupEdit = document.createElement('div');
+            groupEdit.setAttribute('class', 'groupEdit');
+
+            let groupInput = document.createElement('input');
+            groupInput.type = 'text';
+            groupInput.setAttribute('class', 'groupInput');
+            groupInput.setAttribute('id', 'groupInput_' + index);
+            groupInput.value = element.group || '';
+            groupInput.placeholder = 'Group...';
+            (function(idx) {
+                groupInput.onchange = function() {
+                    updateRepoGroup(idx, this.value);
+                };
+            })(index);
+            groupEdit.appendChild(groupInput);
+
+            let groupSelect = document.createElement('select');
+            groupSelect.setAttribute('class', 'groupSelect');
+            groupSelect.setAttribute('id', 'groupSelect_' + index);
+            groupSelect.title = 'Select existing group';
+            (function(idx) {
+                groupSelect.onchange = function() {
+                    if (this.value !== '') {
+                        let chosen = (this.value === '__CLEAR__') ? '' : this.value;
+                        let inp = document.getElementById('groupInput_' + idx);
+                        if (inp) {
+                            inp.value = chosen;
+                        }
+                        updateRepoGroup(idx, chosen);
+                        this.value = '';
+                    }
+                };
+            })(index);
+            groupEdit.appendChild(groupSelect);
+
+            cell.appendChild(groupEdit);
                 
             //
             // GIT PROVIDER ICON
@@ -2098,11 +2147,122 @@ async function generateRepoTable(document, table, data) {
             index ++;
         }
         
-        
+        updateAllGroupDropdowns();
         
     } // if any repos
  
   
+}
+
+function updateAllGroupDropdowns() {
+    let groups = new Set();
+    for (let r of state.repos) {
+        if (r && r.group && r.group.trim().length > 0) {
+            groups.add(r.group.trim());
+        }
+    }
+    let sortedGroups = Array.from(groups).sort();
+
+    // 1. Populate each row's group select
+    for (let i = 0; i < state.repos.length; i++) {
+        let sel = document.getElementById('groupSelect_' + i);
+        if (!sel) continue;
+
+        sel.innerHTML = '';
+        let defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Select group:';
+        defaultOpt.disabled = true;
+        defaultOpt.selected = true;
+        sel.appendChild(defaultOpt);
+
+        for (let g of sortedGroups) {
+            let opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            sel.appendChild(opt);
+        }
+
+        let clearOpt = document.createElement('option');
+        clearOpt.value = '__CLEAR__';
+        clearOpt.textContent = 'None (Remove from group)';
+        sel.appendChild(clearOpt);
+    }
+
+    // 2. Populate table filter dropdown
+    let filterSel = document.getElementById('repoTableGroupFilter');
+    if (filterSel) {
+        let currentFilter = filterSel.value || 'ALL';
+        filterSel.innerHTML = '';
+
+        let optAll = document.createElement('option');
+        optAll.value = 'ALL';
+        optAll.textContent = 'Group (All)';
+        filterSel.appendChild(optAll);
+
+        let optUngrouped = document.createElement('option');
+        optUngrouped.value = '__UNGROUPED__';
+        optUngrouped.textContent = 'Ungrouped';
+        filterSel.appendChild(optUngrouped);
+
+        for (let g of sortedGroups) {
+            let opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            filterSel.appendChild(opt);
+        }
+
+        // Restore filter if still valid, otherwise ALL
+        filterSel.value = currentFilter;
+        if (filterSel.value !== currentFilter && currentFilter !== '__UNGROUPED__') {
+            filterSel.value = 'ALL';
+        }
+        filterRepoTableByGroup(filterSel.value);
+    }
+}
+
+function filterRepoTableByGroup(selectedGroup) {
+    let tbody = document.getElementById('settingsTableBody');
+    if (!tbody) return;
+
+    for (let row of tbody.rows) {
+        let rowGroup = (row.getAttribute('data-group') || '').trim();
+        let show = false;
+
+        if (selectedGroup === 'ALL') {
+            show = true;
+        } else if (selectedGroup === '__UNGROUPED__') {
+            show = (rowGroup.length === 0);
+        } else {
+            show = (rowGroup === selectedGroup);
+        }
+
+        row.style.display = show ? '' : 'none';
+    }
+}
+
+function updateRepoGroup(index, newGroup) {
+    newGroup = (newGroup || '').trim();
+    if (!state.repos[index]) return;
+    state.repos[index].group = newGroup;
+
+    // Update table row data-group attribute
+    let tbody = document.getElementById('settingsTableBody');
+    if (tbody && tbody.rows[index]) {
+        tbody.rows[index].setAttribute('data-group', newGroup);
+    }
+
+    // Update display span
+    let disp = document.getElementById('groupDisplay_' + index);
+    if (disp) {
+        disp.textContent = newGroup;
+    }
+
+    // Save settings via opener
+    opener.saveSettings();
+
+    // Refresh dropdown choices across all rows and the filter bar
+    updateAllGroupDropdowns();
 }
 
 async function generateBranchTable(document, table, branchlist) {

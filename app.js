@@ -2009,83 +2009,126 @@ async function _callback( name, event){
         if (type == 'menu'){
             cachedRepoMenu= new gui.Menu();
             
-            let currentRepo = state.repos[state.repoNumber].localFolder;
-    
-            // Add context cachedRepoMenu title-row
-            cachedRepoMenu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
-            cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
-            
-            let repoNames = [];
-                    
-            // Add names of all repos
-            for (var i = 0; i < state.repos.length; ++i) {
-                
+            let currentRepo = (state.repoNumber >= 0 && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            let currentRepoObj = (state.repoNumber >= 0 && state.repos[state.repoNumber]) ? state.repos[state.repoNumber] : null;
+            let currentGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
+
+            // Helper to build a MenuItem for a given repo index
+            async function buildRepoMenuItem(i) {
+                // Handle 1) existing local folder , or 2) existing ssh
+                if ( !( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) ) {
+                    return null;
+                }
+
                 let myEvent = [];
-                console.log(i);
-                console.log(state.repos[i].localFolder);
                 myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
                 myEvent.selectedRepoNumber = i;
                 myEvent.currentRepo = currentRepo;
-                repoNames.push(myEvent.selectedRepo);
-                
-                // Handle 1) existing local folder , or 2) existing ssh
-                if ( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) {  // NOTE fs_existsSync is very slow -- do this instead!
-                    // Here if  1) local folder exists, or 2) local folder over ssh (not tested if exists)
-                    // Do nothing
-                }else{
-                    // Skip showing this repo (not an existing local folder, not ssh)
-                    continue
-                }
-                
-                
-                
+
                 // Add 'ssh' indicator
-                if (  state.repos[i].localFolder.startsWith('ssh:') )  {
+                if ( state.repos[i].localFolder.startsWith('ssh:') ) {
                     myEvent.selectedRepo = `[ssh] - ${myEvent.selectedRepo}`;
                 }
-                
-                
-                
+
                 // Get provider-icons
                 let iconPath = CWD_INIT + '/apis_github_and_others/git-provider-icons/Blank.png';
-                try{
+                try {
                     let remoteUrl = state.repos[i].remoteURL;
                     let provider = await gitProvider( remoteUrl, false); // Run static (second argument = false) to get icon quicker
-                    iconPath =  CWD_INIT + pathsep + await provider.getValue('icon', 'darkmode'  );
-                    console.log(iconPath);
-                }catch(err){
+                    iconPath = CWD_INIT + pathsep + await provider.getValue('icon', 'darkmode');
+                } catch(err) {
                     console.warn(err);
                 }
-                
-                
-                 
-                // Add to menu
-                let isCurrentRepo =  (state.repoNumber == i );
-                
-                // Add warning sign if folder does not exist
+
+                let isCurrentRepo = (state.repoNumber == i);
                 let warningSign = '';
                 if ( !cachedLocalStatus.exists[i] ) {
-                    //warningSign = '\u26A0 ';  // Warning triangle
-                    warningSign = ' ! ';        // Simple ! instead
+                    warningSign = ' ! ';
                 }
-                
-                let menuItemConfig = { 
-                            label: warningSign + myEvent.selectedRepo, 
-                            type: 'checkbox',
-                            checked : isCurrentRepo,
-                            enabled: !isCurrentRepo && cachedLocalStatus.exists[i] ,
-                            click: () => { _callback('clickedRepoContextualMenu',myEvent);} 
-                        } 
-                
-                // Add icon-related to config        
-                menuItemConfig.iconIsTemplate = false; // MacOS (true treats as black and white icons)  
-                menuItemConfig.icon = iconPath;      
 
-                cachedRepoMenu.append( new gui.MenuItem(menuItemConfig)  ); 
-    
+                let menuItemConfig = { 
+                    label: warningSign + myEvent.selectedRepo, 
+                    type: 'checkbox',
+                    checked: isCurrentRepo,
+                    enabled: !isCurrentRepo && cachedLocalStatus.exists[i],
+                    click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
+                };
+
+                menuItemConfig.iconIsTemplate = false; // MacOS (true treats as black and white icons)  
+                menuItemConfig.icon = iconPath;
+
+                return new gui.MenuItem(menuItemConfig);
             }
 
-    
+            // Group repos by group name
+            let groupMap = {};
+            let hasAnyGroup = false;
+
+            for (var i = 0; i < state.repos.length; ++i) {
+                let g = (state.repos[i].group || '').trim();
+                if (g.length > 0) hasAnyGroup = true;
+                if (!groupMap[g]) groupMap[g] = [];
+                groupMap[g].push(i);
+            }
+
+            if (!hasAnyGroup) {
+                // Flat menu if no groups defined anywhere
+                cachedRepoMenu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
+
+                for (var i = 0; i < state.repos.length; ++i) {
+                    let item = await buildRepoMenuItem(i);
+                    if (item) {
+                        cachedRepoMenu.append(item);
+                    }
+                }
+            } else {
+                // Grouped menu:
+                // 1. Other groups folded as submenus at top
+                let otherGroups = Object.keys(groupMap).filter(g => g !== currentGroup).sort();
+                let addedSubmenus = false;
+
+                if (otherGroups.length > 0) {
+                    // Leading grey text above other groups
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Other repos : ', enabled: false }));
+
+                    for (let g of otherGroups) {
+                        let subMenu = new gui.Menu();
+                        let countInSub = 0;
+                        for (let idx of groupMap[g]) {
+                            let item = await buildRepoMenuItem(idx);
+                            if (item) {
+                                subMenu.append(item);
+                                countInSub++;
+                            }
+                        }
+                        if (countInSub > 0) {
+                            let labelText = (g.length === 0) ? 'Ungrouped' : g;
+                            cachedRepoMenu.append(new gui.MenuItem({
+                                label: labelText,
+                                submenu: subMenu
+                            }));
+                            addedSubmenus = true;
+                        }
+                    }
+                }
+
+                if (addedSubmenus) {
+                    cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
+                }
+
+                // 2. Current group repos shown directly in menu
+                let headerText = (currentGroup.length > 0) ? `Repos in '${currentGroup}' : ` : 'Ungrouped repos : ';
+                cachedRepoMenu.append(new gui.MenuItem({ label: headerText, enabled: false }));
+
+                let currentRepos = groupMap[currentGroup] || [];
+                for (let idx of currentRepos) {
+                    let item = await buildRepoMenuItem(idx);
+                    if (item) {
+                        cachedRepoMenu.append(item);
+                    }
+                }
+            }
+
             // Popup as context cachedRepoMenu
             let pos = document.getElementById("top-titlebar-repo-arrow").getBoundingClientRect();
             await cachedRepoMenu.popup( Math.trunc(pos.left * state.zoomMain) -10,24);
@@ -8079,6 +8122,9 @@ function loadSettings(settingsFile){
         repoState.localFolder = setting( repoStateIn.localFolder, '' );
         repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOriginStatus()
         repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
+        
+        // Group name
+        repoState.group = setting( repoStateIn.group, '' );
         
         // Local author info
         repoState.authorName = setting( repoStateIn.authorName, '' );
