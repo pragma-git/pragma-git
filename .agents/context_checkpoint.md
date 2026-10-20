@@ -26,11 +26,15 @@
     - Rensat bort emoji-symboler som orsakade mojibake-skräptecken i NW.js macOS-menyer.
     - Tog bort alla separatorlinjer utom den enda linjen ovanför "Switch to repo" (ingen separator alls om inga grupper finns).
     - Ändrade undermenynamn från `(Ungrouped)` till ren `Ungrouped`.
-    - Översta sektionen heter nu `Repo groups : ` och behåller alla grupper stabilt i listan (namngivna grupper, `Ungrouped` samt `All` som sista alternativ), så listan inte hoppar eller ändras när en grupp väljs.
+    - Översta sektionen heter nu `Repo groups : ` och behåller alla grupper stabilt i listan (namngivna grupper, `Ungrouped`, `Recent` samt `All`).
+    - Implementerat spårning av senast öppnade repon via `lastOpened` (ISO-tidsstämpel) direkt på varje repo-objekt i `settings.json`.
+    - `ensureLastOpenedInitialized()` garanterar att alla befintliga repon har en initial tidsstämpel och sparar till `settings.json`, så att `Recent ▶` alltid syns direkt utan att kräva manuella repobyten först.
+    - `getRecentRepoIndices(5)` returnerar de 5 senast öppnade repona utan dubbletter och är helt oberoende av borttagna repon.
+    - `Recent ▶` visas i `Repo groups : `, och när `Recent` väljs visas de 5 senast öppnade repona under `Recent repos : ` i huvudlistan.
     - Val av repo från `All` sätter aktiv vy till `ALL`, vilket visar alla repon direkt under `All repos : ` i huvudlistan.
     - Val av repo från en grupp sätter aktiv vy till den gruppen (`Repos in '...' : `).
-    - Klick på det aktiva repot inuti en annan undermeny (t.ex. i `All`) tillåts för att växla visningsvy utan att byta repo.
-    - Rubriker för aktiv sektion: `All repos : `, `Repos in '${group}' : ` eller `Ungrouped repos : `. Vid helt ogrupperat läge visas `Switch to repo : `.
+    - Klick på det aktiva repot inuti en annan undermeny (t.ex. i `All` eller `Recent`) tillåts för att växla visningsvy utan att byta repo.
+    - Rubriker för aktiv sektion: `Recent repos : `, `All repos : `, `Repos in '${group}' : ` eller `Ungrouped repos : `. Vid helt ogrupperat läge visas `Switch to repo : `.
 * **Tidigare åtgärder**:
   - Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
   - Symmetriserat macOS-paketering, kodsignering och Apple-notarisering för Intel (`mac-x64`) och ARM (`mac-arm64`).
@@ -47,6 +51,8 @@
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug**: `app.js:7961 Uncaught ReferenceError: storeUsernameInLocalGitConfig is not defined` vid uppstart eller tidig inställningssparning.
+  * *Remediation*: `pragma-credentials-lib.js` laddas med `defer` i `app.html` medan `app.js` körs synkront. `loadSettings()` anropade `saveSettings()` i förtid vilket anropade `storeUsernameInLocalGitConfig` innan funktionen fanns i globalt scope. Åtgärdat genom att kapsla in anropet i `saveSettings()` med `if (typeof storeUsernameInLocalGitConfig === 'function' && ...)` samt ta bort synkront `saveSettings()`-anrop inuti `loadSettings()`.
 * **Bug**: Apple Notarisering eller Gatekeeper fallerade med "code object is not signed at all" för `libnode.dylib` inuti `nwjs Framework.framework`.
   * *Remediation*: Korrigerade signeringsordningen i `make_binaries/scripts/sign_app.sh` så att alla `.dylib` och hjälparappar signeras *före* `nwjs Framework.framework`, och hjälparappar signeras utan förälderns entitlements.
 * **Bug**: `build_dmg.sh` tappade bort felkoder vid pipeline med `tee`.

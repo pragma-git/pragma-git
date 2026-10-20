@@ -527,6 +527,10 @@ async function _callback( name, event){
                 
                 // Set state (so it will be updated in main program)
                 state.repoNumber = Number(id);  // id can be a string
+                if (state.repos[state.repoNumber]) {
+                    state.repos[state.repoNumber].lastOpened = new Date().toISOString();
+                    opener.saveSettings();
+                }
                 
                 
                 // Replace table 

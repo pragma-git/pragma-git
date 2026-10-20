@@ -540,6 +540,10 @@ async function _callback( name, event){
         
         let origRepoNumber = state.repoNumber ;
         state.repoNumber = event.selectedRepoNumber;
+        if (state.repos[state.repoNumber]) {
+            state.repos[state.repoNumber].lastOpened = new Date().toISOString();
+            saveSettings();
+        }
         pragmaLog('   repopath = ' + state.repos[state.repoNumber].localFolder );
         pragmaLog('   repo url = ' + state.repos[state.repoNumber].remoteURL ) ;
         pragmaLog(' ');
@@ -2004,6 +2008,47 @@ async function _callback( name, event){
     // LOCAL FUNCTIONS
     // ---------------
 
+    // Utility to ensure all repos have a lastOpened timestamp initialized
+    function ensureLastOpenedInitialized() {
+        if (!state.repos || state.repos.length === 0) return;
+        let now = Date.now();
+        let modified = false;
+
+        // Ensure active repo has newest timestamp
+        if (state.repoNumber >= 0 && state.repos[state.repoNumber]) {
+            if (!state.repos[state.repoNumber].lastOpened) {
+                state.repos[state.repoNumber].lastOpened = new Date(now).toISOString();
+                modified = true;
+            }
+        }
+
+        // Initialize any other repos without lastOpened with descending timestamps
+        for (let i = 0; i < state.repos.length; i++) {
+            if (state.repos[i] && !state.repos[i].lastOpened) {
+                state.repos[i].lastOpened = new Date(now - (i + 1) * 60000).toISOString();
+                modified = true;
+            }
+        }
+
+        if (modified) {
+            saveSettings();
+        }
+    }
+
+    // Utility to get indices of recently opened repos, sorted newest first, without duplicates
+    function getRecentRepoIndices(maxCount = 5) {
+        ensureLastOpenedInitialized();
+        let recent = [];
+        for (let i = 0; i < state.repos.length; i++) {
+            let r = state.repos[i];
+            if (r && r.lastOpened) {
+                recent.push({ index: i, lastOpened: r.lastOpened });
+            }
+        }
+        recent.sort((a, b) => (b.lastOpened > a.lastOpened ? 1 : (b.lastOpened < a.lastOpened ? -1 : 0)));
+        return recent.slice(0, maxCount).map(item => item.index);
+    }
+
     // title-bar
     async function repoClicked( type){
         
@@ -2095,7 +2140,7 @@ async function _callback( name, event){
                 let currentRepoGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
                 if (currentGroupView === undefined) {
                     currentGroupView = currentRepoGroup;
-                } else if (currentGroupView !== 'ALL') {
+                } else if (currentGroupView !== 'ALL' && currentGroupView !== 'RECENT') {
                     if (!groupMap[currentGroupView] && currentGroupView !== '') {
                         currentGroupView = currentRepoGroup;
                         localState.activeGroupView = currentGroupView;
@@ -2107,6 +2152,9 @@ async function _callback( name, event){
                 if (groupMap[''] && groupMap[''].length > 0) {
                     allGroups.push('');
                 }
+
+                let recentIndices = getRecentRepoIndices(5);
+                allGroups.push('RECENT');
                 allGroups.push('ALL');
 
                 let addedSubmenus = false;
@@ -2118,7 +2166,7 @@ async function _callback( name, event){
                     for (let g of allGroups) {
                         let subMenu = new gui.Menu();
                         let countInSub = 0;
-                        let repoIndices = (g === 'ALL') ? Array.from({ length: state.repos.length }, (_, k) => k) : (groupMap[g] || []);
+                        let repoIndices = (g === 'ALL') ? Array.from({ length: state.repos.length }, (_, k) => k) : ((g === 'RECENT') ? recentIndices : (groupMap[g] || []));
                         for (let idx of repoIndices) {
                             let item = await buildRepoMenuItem(idx, g);
                             if (item) {
@@ -2127,7 +2175,7 @@ async function _callback( name, event){
                             }
                         }
                         if (countInSub > 0) {
-                            let labelText = (g === 'ALL') ? 'All' : ((g.length === 0) ? 'Ungrouped' : g);
+                            let labelText = (g === 'ALL') ? 'All' : ((g === 'RECENT') ? 'Recent' : ((g.length === 0) ? 'Ungrouped' : g));
                             cachedRepoMenu.append(new gui.MenuItem({
                                 label: labelText,
                                 submenu: subMenu
@@ -2147,6 +2195,9 @@ async function _callback( name, event){
                 if (currentGroupView === 'ALL') {
                     headerText = 'All repos : ';
                     currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
+                } else if (currentGroupView === 'RECENT') {
+                    headerText = 'Recent repos : ';
+                    currentRepos = recentIndices;
                 } else if (currentGroupView.length > 0) {
                     headerText = `Repos in '${currentGroupView}' : `;
                     currentRepos = groupMap[currentGroupView] || [];
@@ -7907,7 +7958,9 @@ function saveSettings(){
     fs.writeFileSync(settingsFile, jsonString);
     
     // Save username of current repo to .git/config
-    storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
+    if (typeof storeUsernameInLocalGitConfig === 'function' && state.repoNumber >= 0 && state.repos[state.repoNumber]) {
+        storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
+    }
     
     pragmaLog('Done saving settings');
     pragmaLog('');
@@ -8139,6 +8192,13 @@ function loadSettings(settingsFile){
     
         cacheBranchList();
         
+        // Ensure active repo has a lastOpened timestamp
+        if (state.repoNumber >= 0 && state.repos[state.repoNumber]) {
+            if (!state.repos[state.repoNumber].lastOpened) {
+                state.repos[state.repoNumber].lastOpened = new Date().toISOString();
+            }
+        }
+        
         console.log('END LOAD SETTINGS');
         console.log('localState:');
         console.log(localState);
@@ -8161,6 +8221,9 @@ function loadSettings(settingsFile){
         
         // Group name
         repoState.group = setting( repoStateIn.group, '' );
+        
+        // Last opened date/time
+        repoState.lastOpened = setting( repoStateIn.lastOpened, '' );
         
         // Local author info
         repoState.authorName = setting( repoStateIn.authorName, '' );
