@@ -327,6 +327,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         localState.branchNumber = 0;   // Used only when changing to next branch -- otherwise branch as in current repository TODO : Update value when changing Repo
         localState.mode = 'UNKNOWN'; // _setMode finds the correct mode for you
         localState.unstaged = [];    // List of files explicitly put to not staged (default is that all changed files will be staged)
+        localState.activeGroupView = undefined; // Active group view in repo menu ('ALL', groupName, or '' for ungrouped)
         
         // Windows opened from Main
         localState.settings = false;        // True when settings window is open
@@ -532,6 +533,10 @@ async function _callback( name, event){
         console.log('Selected repo = ' + event.selectedRepo);
         console.log('Selected repo = ' + event.selectedRepoNumber);
         pragmaLog('   reponame = ' + event.selectedRepo);
+        
+        if (event.groupContext !== undefined) {
+            localState.activeGroupView = event.groupContext;
+        }
         
         let origRepoNumber = state.repoNumber ;
         state.repoNumber = event.selectedRepoNumber;
@@ -2014,7 +2019,7 @@ async function _callback( name, event){
             let currentGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
 
             // Helper to build a MenuItem for a given repo index
-            async function buildRepoMenuItem(i) {
+            async function buildRepoMenuItem(i, groupContext) {
                 // Handle 1) existing local folder , or 2) existing ssh
                 if ( !( ( fs.existsSync( state.repos[i].localFolder ) ) || ( state.repos[i].localFolder.startsWith('ssh:') ) ) ) {
                     return null;
@@ -2024,6 +2029,7 @@ async function _callback( name, event){
                 myEvent.selectedRepo = path.basename( state.repos[i].localFolder );
                 myEvent.selectedRepoNumber = i;
                 myEvent.currentRepo = currentRepo;
+                myEvent.groupContext = groupContext;
 
                 // Add 'ssh' indicator
                 if ( state.repos[i].localFolder.startsWith('ssh:') ) {
@@ -2041,6 +2047,7 @@ async function _callback( name, event){
                 }
 
                 let isCurrentRepo = (state.repoNumber == i);
+                let isCurrentInCurrentView = isCurrentRepo && (currentGroupView === groupContext);
                 let warningSign = '';
                 if ( !cachedLocalStatus.exists[i] ) {
                     warningSign = ' ! ';
@@ -2050,7 +2057,7 @@ async function _callback( name, event){
                     label: warningSign + myEvent.selectedRepo, 
                     type: 'checkbox',
                     checked: isCurrentRepo,
-                    enabled: !isCurrentRepo && cachedLocalStatus.exists[i],
+                    enabled: !isCurrentInCurrentView && cachedLocalStatus.exists[i],
                     click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
                 };
 
@@ -2071,6 +2078,8 @@ async function _callback( name, event){
                 groupMap[g].push(i);
             }
 
+            let currentGroupView = localState.activeGroupView;
+
             if (!hasAnyGroup) {
                 // Flat menu if no groups defined anywhere
                 cachedRepoMenu.append(new gui.MenuItem({ label: 'Switch to repo : ', enabled : false }));
@@ -2083,26 +2092,42 @@ async function _callback( name, event){
                 }
             } else {
                 // Grouped menu:
-                // 1. Other groups folded as submenus at top
-                let otherGroups = Object.keys(groupMap).filter(g => g !== currentGroup).sort();
+                let currentRepoGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
+                if (currentGroupView === undefined) {
+                    currentGroupView = currentRepoGroup;
+                } else if (currentGroupView !== 'ALL') {
+                    if (!groupMap[currentGroupView] && currentGroupView !== '') {
+                        currentGroupView = currentRepoGroup;
+                        localState.activeGroupView = currentGroupView;
+                    }
+                }
+
+                // 1. All groups folded as submenus at top
+                let allGroups = Object.keys(groupMap).filter(g => g.length > 0).sort();
+                if (groupMap[''] && groupMap[''].length > 0) {
+                    allGroups.push('');
+                }
+                allGroups.push('ALL');
+
                 let addedSubmenus = false;
 
-                if (otherGroups.length > 0) {
-                    // Leading grey text above other groups
-                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Other repos : ', enabled: false }));
+                if (allGroups.length > 0) {
+                    // Leading grey text above groups
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Repo groups : ', enabled: false }));
 
-                    for (let g of otherGroups) {
+                    for (let g of allGroups) {
                         let subMenu = new gui.Menu();
                         let countInSub = 0;
-                        for (let idx of groupMap[g]) {
-                            let item = await buildRepoMenuItem(idx);
+                        let repoIndices = (g === 'ALL') ? Array.from({ length: state.repos.length }, (_, k) => k) : (groupMap[g] || []);
+                        for (let idx of repoIndices) {
+                            let item = await buildRepoMenuItem(idx, g);
                             if (item) {
                                 subMenu.append(item);
                                 countInSub++;
                             }
                         }
                         if (countInSub > 0) {
-                            let labelText = (g.length === 0) ? 'Ungrouped' : g;
+                            let labelText = (g === 'ALL') ? 'All' : ((g.length === 0) ? 'Ungrouped' : g);
                             cachedRepoMenu.append(new gui.MenuItem({
                                 label: labelText,
                                 submenu: subMenu
@@ -2117,12 +2142,23 @@ async function _callback( name, event){
                 }
 
                 // 2. Current group repos shown directly in menu
-                let headerText = (currentGroup.length > 0) ? `Repos in '${currentGroup}' : ` : 'Ungrouped repos : ';
+                let headerText = '';
+                let currentRepos = [];
+                if (currentGroupView === 'ALL') {
+                    headerText = 'All repos : ';
+                    currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
+                } else if (currentGroupView.length > 0) {
+                    headerText = `Repos in '${currentGroupView}' : `;
+                    currentRepos = groupMap[currentGroupView] || [];
+                } else {
+                    headerText = 'Ungrouped repos : ';
+                    currentRepos = groupMap[''] || [];
+                }
+
                 cachedRepoMenu.append(new gui.MenuItem({ label: headerText, enabled: false }));
 
-                let currentRepos = groupMap[currentGroup] || [];
                 for (let idx of currentRepos) {
-                    let item = await buildRepoMenuItem(idx);
+                    let item = await buildRepoMenuItem(idx, currentGroupView);
                     if (item) {
                         cachedRepoMenu.append(item);
                     }

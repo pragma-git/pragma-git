@@ -26,8 +26,11 @@
     - Rensat bort emoji-symboler som orsakade mojibake-skräptecken i NW.js macOS-menyer.
     - Tog bort alla separatorlinjer utom den enda linjen ovanför "Switch to repo" (ingen separator alls om inga grupper finns).
     - Ändrade undermenynamn från `(Ungrouped)` till ren `Ungrouped`.
-    - Symmetrisk rubrik för aktiv sektion: `Repos in '${currentGroup}' : ` (eller `Ungrouped repos : ` om aktivt repo saknar grupp). Vid helt ogrupperat läge visas standard `Switch to repo : `.
-    - Aktuell grupp härleds implicit från det aktiva repot (`state.repos[state.repoNumber].group`).
+    - Översta sektionen heter nu `Repo groups : ` och behåller alla grupper stabilt i listan (namngivna grupper, `Ungrouped` samt `All` som sista alternativ), så listan inte hoppar eller ändras när en grupp väljs.
+    - Val av repo från `All` sätter aktiv vy till `ALL`, vilket visar alla repon direkt under `All repos : ` i huvudlistan.
+    - Val av repo från en grupp sätter aktiv vy till den gruppen (`Repos in '...' : `).
+    - Klick på det aktiva repot inuti en annan undermeny (t.ex. i `All`) tillåts för att växla visningsvy utan att byta repo.
+    - Rubriker för aktiv sektion: `All repos : `, `Repos in '${group}' : ` eller `Ungrouped repos : `. Vid helt ogrupperat läge visas `Switch to repo : `.
 * **Tidigare åtgärder**:
   - Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
   - Symmetriserat macOS-paketering, kodsignering och Apple-notarisering för Intel (`mac-x64`) och ARM (`mac-arm64`).
