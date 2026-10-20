@@ -928,6 +928,9 @@
                                                         />
                                                              
                                                         <label for="setupRemoteKeyLogin_clone" id="setupRemoteKeyLogin_clone_label"> Make passwordless login (deploy key pair)</label>
+                                                        &nbsp;&nbsp;
+                                                        <button type="button" id="testSshLoginButton_clone" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('clone')">Test login</button>
+                                                        <span id="testSshStatus_clone" style="font-size: 11px; vertical-align: middle; margin-left: 6px;"></span>
                                                     </td>
                                                 </tr>
                     
@@ -973,93 +976,93 @@
                     
                     </div>
                     
-                     <!--  Add TAB -->
+                    <!--  Add TAB -->
                     
                     <div class="tool-content " id="addDiv" >  
                         (Add repository to list) <br><br> 
-                        
-                        <!--  switch local/server -->
-                        <span class="normal-text" style="display: inline;font-size: 11px">             
-                                <span id="local" style="color: var(--text)">local</span> 
-                                <label class="switch">
-                                    <input id="local_server_switch" type="checkbox" class="slider round" onclick="switchSlicerTextColors(); ">
-                                    <span class="slider round"></span> 
-                                </label> 
-                                <span id="server" style="color: var(--dim-text)">server</span> 
-                        </span>
-         
-                        
-                        <br><br> 
-                
-                        <div  id='addLocalRepoTable' >
-                            Add local repository from folder on this computer :
-                            <table id='addLocalRepoTable' class="toolTable">
-                                <tbody>
-                                    
-      
-                                    <tr class="tool">
-                                        <td>
-                                            <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
-                                                ondrop = "_callback('droppedFolder',event)" 
-                                                ondragover = "this.className = 'hover'; return false; "
-                                                ondragleave = "this.className = ''; return false; " 
-                                            ></textarea>
-                                        </td>
-                                        <td class="toolButtonField">
-                                            <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
-                                        </td>
-                                    </tr>
-    
-                                    
-                                    <tr class="tool">
-                                        <td>
-                                            <button id="addRepoButton"  onclick="_callback('addRepoButtonPressed',this)">Add</button>
-                                        </td>                                
-                                    </tr>
-                                    
-                                </tbody>
-                            </table>      
-                                    
-                        </div>     
-                        
-                        <div  id='addServerRepoTable' style="display: none">
-                           
-                            Add repository on server :
-                            <table>
-                                <tr class="tool">
-                                    <td colspan="100%">
-                                        <div class="serverDetailsContainer">
-                                            <input type="text" name="username" placeholder="username on server" class="serverInput serverUsername" />
-                                            <span class="serverAt">@</span>
-                                            <input type="text" name="server" placeholder="server ip or address" class="serverInput serverHost" />
-                                            <input type="text" name="folder" placeholder="absolute folder path" class="serverInput serverFolder" />
-                                        </div>
-                                    </td>
-                                </tr>
+                        Add repository from :
+                        <table class="toolTable">
+                            <tbody>
                                 
                                 <tr class="tool">
-                                    <td colspan="100%">
-                                        <input type="checkbox" id="setupRemoteKeyLogin" name="name" value="true" 
-                                            onchange=" if (!this.checked) { document.getElementById('disabledPasswordlessLogin').showModal(); }"
-                                            checked=''
-                                        />
-                                             
-                                        <label for="setupRemoteKeyLogin" id="setupRemoteKeyLogin_label"> Make passwordless login (deploy key pair)</label>
+                                    <td>                 
+                                    location ( 
+                                        <!--  switch local/server -->
+                                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                                <span id="local" style="color: var(--text)">local</span> 
+                                                <label class="switch">
+                                                    <input id="local_server_switch" type="checkbox" class="slider round" onclick="switchSlicerTextColors(); ">
+                                                    <span class="slider round"></span> 
+                                                </label> 
+                                                <span id="server" style="color: var(--dim-text)">server</span> 
+                                        </span>
+                                        ) :
                                     </td>
+                                    <td class="toolButtonField"></td>
                                 </tr>
-    
-                                    
+                                        
+                                <!--  folder to add -->
                                 <tr class="tool">
                                     <td>
-                                        <button id="addServerRepoButton"  onclick="document.getElementById('addFolder').value = parseServerFields(); _callback('addRepoButtonPressed',this)">Add</button>
-                                    </td>                          
+                                        <textarea id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
+                                            ondrop = "_callback('droppedFolder',event)" 
+                                            ondragover = "this.className = 'hover'; return false; "
+                                            ondragleave = "this.className = ''; return false; " 
+                                        ></textarea>
+                                        
+                                        <div id='addServerRepoTable' style="display: none">
+                                           
+                                            <table>
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div class="serverDetailsContainer">
+                                                            <input type="text" name="username" placeholder="username on server" class="serverInput serverUsername" />
+                                                            <span class="serverAt">@</span>
+                                                            <input type="text" name="server" placeholder="server ip or address" class="serverInput serverHost" />
+                                                            <input type="text" name="folder" placeholder="absolute folder path" class="serverInput serverFolder" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <input type="checkbox" id="setupRemoteKeyLogin" name="name" value="true" 
+                                                            onchange=" if (!this.checked) { document.getElementById('disabledPasswordlessLogin').showModal(); }"
+                                                            checked=''
+                                                        />
+                                                             
+                                                        <label for="setupRemoteKeyLogin" id="setupRemoteKeyLogin_label"> Make passwordless login (deploy key pair)</label>
+                                                        &nbsp;&nbsp;
+                                                        <button type="button" id="testSshLoginButton_add" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('add')">Test login</button>
+                                                        <span id="testSshStatus_add" style="font-size: 11px; vertical-align: middle; margin-left: 6px;"></span>
+                                                    </td>
+                                                </tr>
+                                    
+                                                    
+                                                <tr class="tool">
+                                                    <td>
+                                                        <button id="addServerRepoButton" onclick="document.getElementById('addFolder').value = parseServerFields(); _callback('addRepoButtonPressed',this)">Add</button>
+                                                    </td>                          
+                                                </tr>
+                                                
+                                            </table> 
+                                              
+                                        </div>           
+                                        
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                    </td>
                                 </tr>
                                 
-                            </table> 
-                              
-                            <br><br>  
-                                    
-                        </div>           
+                                <tr class="tool" id="addRepoButtonLocalRow">
+                                    <td>
+                                        <button id="addRepoButton" onclick="_callback('addRepoButtonPressed',this)">Add</button>
+                                    </td>                                
+                                </tr>
+                                
+                            </tbody>
+                        </table>
                     </div>   
                     
                     
@@ -1578,14 +1581,18 @@
             // Server
             document.getElementById('server').setAttribute('style','color: var(--text)');
             document.getElementById('local').setAttribute('style','color: var(--dim-text)');
-            document.getElementById('addLocalRepoTable').style.display='none';
+            document.getElementById('addFolder').style.display='none';
             document.getElementById('addServerRepoTable').style.display='block';
+            document.getElementById('addFolderSelectButton').style.visibility='hidden';
+            document.getElementById('addRepoButtonLocalRow').style.display='none';
         }else{
             // Local
             document.getElementById('server').setAttribute('style','color: var(--dim-text)');
             document.getElementById('local').setAttribute('style','color: var(--text)');
-            document.getElementById('addLocalRepoTable').style.display='block';
+            document.getElementById('addFolder').style.display='block';
             document.getElementById('addServerRepoTable').style.display='none';
+            document.getElementById('addFolderSelectButton').style.visibility='visible';
+            document.getElementById('addRepoButtonLocalRow').style.display='block';
         }
         
     }

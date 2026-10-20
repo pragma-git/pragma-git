@@ -9,7 +9,7 @@
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
 * **Modified Files List**: Fönster för modifierade filer och filurval ([listChanged.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.html), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js))
 * **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info, Clone ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
-* **SSH Folder Integration**: Hjälpskript och wrappers för fjärr-git över SSH ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [ssh_folder/ssh-mkdir](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login))
+* **SSH Folder Integration**: Hjälpskript och wrappers för fjärr-git över SSH ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [ssh_folder/ssh-mkdir](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login), [ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login))
 * **Build Orchestration**: Master-byggskript för plattformsoberoende paketering ([make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build))
 * **Code Signing Engine**: Inside-out djupkodsignering för NW.js och dess hjälparappar/moduler ([make_binaries/scripts/sign_app.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/sign_app.sh))
 * **DMG Builder**: Genererar monterbara DMG-paket med live-loggning ([make_binaries/scripts/build_dmg.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh))
@@ -19,14 +19,27 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Klona till icke-existerande mapp på server (samma setup som Add Repo):
+* **Task Description**: "Test login"-knapp och SSH-inloggningstest:
+  - **SSH-testskript** ([ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login)):
+    - Icke-interaktivt hjälpskript som anropar ssh med publickey-autentisering (`BatchMode=yes`, timeout 4s).
+    - Returnerar strukturerade statusrader (`STATUS:OK`, `STATUS:KEY_NEEDED`, `STATUS:TIMEOUT`, `STATUS:ERROR`) utan att kasta onödiga processfel.
+  - **SSH-wrapper & UI-funktion i `ssh-folder-lib.js`** ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)):
+    - `sshTestLogin(sshUrl)`: Low-level wrapper för `ssh-test-login`, anropar `multiPlatformExecSync` och returnerar status.
+    - `testSshKeyLogin(mode)`: UI-funktion för Clone och Add Repo-tabbarna i Inställningar.
+    - Kontrollerar att server och användare är ifyllt och kör `sshTestLogin`.
+    - Om nyckelinloggning redan fungerar (`STATUS:OK`): visar grön bekräftelse (`✓ Login works (key already set up)`) och avmarkerar kryssrutan så att inga onödiga lösenordsdialoger eller omskrivningar sker.
+    - Om nyckel saknas (`STATUS:KEY_NEEDED`): visar info (`ℹ Key needed (will be deployed on submit)`) och markerar kryssrutan så att nyckeln genereras/distribueras vid Clone/Add.
+    - Vid fel/timeout: visar röd felstatus med förklarande text.
+  - **UI i `settings.html`** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
+    - Lagt till "Test login"-knapp och statusfält vid kryssrutan under både Clone-tabben och Add Repo-tabben.
+    - Harmoniserat Add Repo-tabbens layout med Clone-tabben: Add Repo använder nu samma `toolTable`-struktur och tabellrad som Clone för serverdetaljer, vilket eliminerar att fälten blir för breda (anpassat till 50% kolumnbredd) och integrerar local/server-switchen snyggt.
   - **SSH-server Setup i `cloneButtonPressed`** ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
-    - Nu hanteras `setupRemoteKeyLogin_clone` analogt med Add Repo: kör `ssh-generate-key-login` med 60s timeout vid behov innan mappar skapas och git-kommandon anropas.
-    - Anropar `await opener.mkdir(folder)` på servern för att säkerställa att mål-/övermappen skapas innan `gitClone` anropas.
+    - Hanterar `setupRemoteKeyLogin_clone` analogt med Add Repo: kör `ssh-generate-key-login` med 60s timeout vid behov.
+    - Anropar `await opener.mkdir(folder)` på servern för att skapa mål-/övermappen innan `gitClone`.
   - **Korrigerad `gitClone`-funktion** ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
-    - Fixat typofel i `url.pathname` (hette felaktigt `url.pathName` vilket evaluerade till `undefined`).
-    - Fixat pathsammanfogning för SSH så att `/` alltid används istället för OS-beroende `pathsep` (`\`).
-    - Skapar baskatalogen `cleanFolderName` via `await opener.mkdir(cleanFolderName)` så `git -C` kan byta till den.
+    - Fixat typofel i `url.pathname` (hette felaktigt `url.pathName`).
+    - Fixat sökvägsseparator för SSH så att `/` alltid används istället för OS-beroende `pathsep` (`\`).
+    - Skapar baskatalogen `cleanFolderName` via `await opener.mkdir(cleanFolderName)`.
     - Säkrat felhantering och returvärde (`true`/`false`) samt statusåterställning vid avbrott.
     - Säkrat att tom repository checkout (`to be born`) inte kastar `TypeError` på null `err`.
   - **UI-feedback & Validering i `settings.html`** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
@@ -39,6 +52,8 @@
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug**: `Permission denied` vid anrop av `ssh-test-login` efter flytt till `ssh-folder-lib.js`.
+  * *Remediation*: Löst genom att sätta `+x` direkt på filen `ssh_folder/ssh-test-login` i filsystemet och köra skriptet standardmässigt (`${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"`) utan anrop inifrån JavaScript.
 * **Bug**: Kloning till ny/icke-existerande mapp på server fungerade inte (fungerade bara till befintlig mapp).
   * *Remediation*: Implementerat samma SSH- och lösenordsfri inloggnings-setup som i Add Repo, anropar `opener.mkdir(folder)` och `cleanFolderName`, fixat `url.pathname`-felet (var `pathName`) i `gitClone`, och säkrat SSH-sökvägsseparatorer.
 * **Bug**: "Store in same" (`amend_commit_checkbox`) respekterade inte avbockade filer i Changed Files-fönstret och committade allt eller kastade fel.

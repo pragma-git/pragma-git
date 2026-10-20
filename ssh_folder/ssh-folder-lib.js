@@ -177,6 +177,83 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file fr
 	}
 }
 
+// SSH login test
+async function sshTestLogin( sshUrl ) {                         // Test if passwordless SSH login works
+  // Tests if passwordless SSH login is working
+  //
+  // Inputs :
+  //   sshUrl    -- sshURL to test (e.g. ssh://user@server/)
+  // Output :
+  //   string status from ssh-test-login ('STATUS:OK', 'STATUS:KEY_NEEDED', 'STATUS:TIMEOUT', or 'STATUS:ERROR: ...')
+
+  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"`;
+  let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+  return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000);
+}
+
+async function testSshKeyLogin( mode ) {                        // UI handler for Settings (Clone and Add Repo tabs)
+    // Tests SSH key login for 'clone' or 'add' settings tabs and updates UI
+    let usernameInput = document.querySelector(mode === 'clone' ? 'input[name="username_clone"]' : 'input[name="username"]');
+    let serverInput = document.querySelector(mode === 'clone' ? 'input[name="server_clone"]' : 'input[name="server"]');
+    let checkbox = document.getElementById(mode === 'clone' ? 'setupRemoteKeyLogin_clone' : 'setupRemoteKeyLogin');
+    let statusEl = document.getElementById(mode === 'clone' ? 'testSshStatus_clone' : 'testSshStatus_add');
+    let btnEl = document.getElementById(mode === 'clone' ? 'testSshLoginButton_clone' : 'testSshLoginButton_add');
+
+    if (!statusEl) return;
+
+    let username = (usernameInput?.value || '').trim();
+    let server = (serverInput?.value || '').trim();
+
+    if (server.includes('@') && !username) {
+        username = server.split('@')[0];
+        server = server.split('@').slice(1).join('@');
+    }
+
+    if (!username || !server) {
+        statusEl.style.color = 'var(--warn-color, orange)';
+        statusEl.textContent = 'Please enter username and server first';
+        return;
+    }
+
+    if (btnEl) btnEl.disabled = true;
+    statusEl.style.color = 'var(--dim-text, #888)';
+    statusEl.textContent = 'Testing connection...';
+
+    try {
+        let fakeFolder = `ssh://${username}@${server}/`;
+        let result = await sshTestLogin(fakeFolder);
+        console.log('testSshKeyLogin output:', result);
+
+        if (result && result.includes('STATUS:OK')) {
+            statusEl.style.color = 'var(--green-text, green)';
+            statusEl.textContent = '✓ Login works (key already set up)';
+            if (checkbox) checkbox.checked = false;
+        } else if (result && result.includes('STATUS:KEY_NEEDED')) {
+            statusEl.style.color = 'var(--warn-color, orange)';
+            statusEl.textContent = 'ℹ Key needed (will be deployed on submit)';
+            if (checkbox) checkbox.checked = true;
+        } else if (result && result.includes('STATUS:TIMEOUT')) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ Connection timed out';
+        } else if (result && result.includes('STATUS:ERROR:')) {
+            let errorMsg = result.split('STATUS:ERROR:')[1]?.trim() || 'Unknown error';
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ ' + errorMsg;
+        } else {
+            statusEl.style.color = 'var(--red-text, red)';
+            let cleanRes = (result || 'No response').toString().trim().replace(/[\r\n]+/g, ' ').substring(0, 80);
+            statusEl.textContent = '✗ ' + cleanRes;
+        }
+    } catch (err) {
+        console.error('testSshKeyLogin error:', err);
+        statusEl.style.color = 'var(--red-text, red)';
+        let msg = (err?.message || err?.toString() || 'Execution failed').replace(/[\r\n]+/g, ' ').substring(0, 80);
+        statusEl.textContent = '✗ ' + msg;
+    } finally {
+        if (btnEl) btnEl.disabled = false;
+    }
+}
+
 // WINDOWS specific helpers
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	

@@ -1,0 +1,35 @@
+#!/bin/bash
+# Tests if passwordless SSH login is working
+# Usage: ./ssh-test-login <SSH_URL>
+# Example: ./ssh-test-login ssh://jan@localhost/
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/lib/ssh-functions"
+
+getSshUrlParts "$1"
+
+# Run ssh with publickey authentication only, timeout 4 seconds
+OUTPUT=$(ssh -T "$SERVER" -p ${PORT} -o BatchMode=yes -o ConnectTimeout=4 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "echo PRAGMA_SSH_OK" 2>&1)
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "PRAGMA_SSH_OK"; then
+    echo "STATUS:OK"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "permission denied"; then
+    echo "STATUS:KEY_NEEDED"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "timed out"; then
+    echo "STATUS:TIMEOUT"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "could not resolve"; then
+    echo "STATUS:ERROR: Could not resolve hostname ($SERVER)"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "connection refused"; then
+    echo "STATUS:ERROR: Connection refused on port ${PORT}"
+    exit 0
+else
+    # Clean output to one line
+    CLEAN_OUTPUT=$(echo "$OUTPUT" | tr '\n' ' ' | sed 's/  */ /g' | cut -c 1-80)
+    echo "STATUS:ERROR: $CLEAN_OUTPUT"
+    exit 0
+fi
