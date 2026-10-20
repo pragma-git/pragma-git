@@ -178,15 +178,154 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file fr
 }
 
 // SSH login test
-async function sshTestLogin( sshUrl ) {                         // Test if passwordless SSH login works
+function getDefaultSshKey() {
+    let os = require('os');
+    let path = require('path');
+    let fs = require('fs');
+    if (global.state?.tools?.defaultSshKey && global.state.tools.defaultSshKey.trim().length > 0) {
+        return global.state.tools.defaultSshKey.trim();
+    }
+    let ed25519Path = path.join(os.homedir(), '.ssh', 'id_ed25519');
+    if (fs.existsSync(ed25519Path)) {
+        return ed25519Path;
+    }
+    let rsaPath = path.join(os.homedir(), '.ssh', 'id_rsa');
+    if (fs.existsSync(rsaPath)) {
+        return rsaPath;
+    }
+    return ed25519Path;
+}
+
+function getSelectedSshKey( mode ) {
+    let inputEl = document.getElementById(mode === 'clone' ? 'sshKeyInput_clone' : 'sshKeyInput_add');
+    if (inputEl && inputEl.dataset && inputEl.dataset.keyPath && inputEl.dataset.keyPath.trim().length > 0) {
+        return inputEl.dataset.keyPath.trim();
+    }
+    if (inputEl && inputEl.value && inputEl.value.trim().length > 0) {
+        return inputEl.value.trim();
+    }
+    return getDefaultSshKey();
+}
+
+function selectSshKey( mode ) {
+    let fileInput = document.getElementById(mode === 'clone' ? 'sshKeyFileInput_clone' : 'sshKeyFileInput_add');
+    if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+    }
+}
+
+function onSshKeyFileSelected( mode, inputEl ) {
+    if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+    let fs = require('fs');
+    let path = require('path');
+    let selectedPath = inputEl.files[0].path || inputEl.value || '';
+    selectedPath = selectedPath.trim();
+    if (!selectedPath) return;
+
+    let displayInput = document.getElementById(mode === 'clone' ? 'sshKeyInput_clone' : 'sshKeyInput_add');
+    let noticeEl = document.getElementById(mode === 'clone' ? 'sshKeyNotice_clone' : 'sshKeyNotice_add');
+    let resetBtn = document.getElementById(mode === 'clone' ? 'resetSshKeyButton_clone' : 'resetSshKeyButton_add');
+    let deployBtn = document.getElementById(mode === 'clone' ? 'deploySshKeyButton_clone' : 'deploySshKeyButton_add');
+
+    let privPath = selectedPath;
+    let pubPath = '';
+    let isPubSelected = selectedPath.endsWith('.pub');
+
+    if (isPubSelected) {
+        pubPath = selectedPath;
+        privPath = selectedPath.slice(0, -4);
+    } else {
+        pubPath = selectedPath + '.pub';
+    }
+
+    if (displayInput) {
+        displayInput.value = privPath;
+        displayInput.dataset.keyPath = privPath;
+    }
+
+    if (noticeEl) {
+        noticeEl.style.display = 'block';
+        if (isPubSelected) {
+            if (fs.existsSync(privPath)) {
+                noticeEl.style.color = 'var(--green-text, green)';
+                noticeEl.textContent = `✓ Public key chosen: ${path.basename(pubPath)}. Matching private key found locally. Only public key will be deployed to server; private key stays local.`;
+            } else {
+                noticeEl.style.color = 'var(--warn-color, orange)';
+                noticeEl.textContent = `⚠ Public key chosen: ${path.basename(pubPath)}, but private key (${path.basename(privPath)}) was not found locally. SSH login requires the matching private key.`;
+            }
+        } else {
+            if (fs.existsSync(pubPath)) {
+                noticeEl.style.color = 'var(--green-text, green)';
+                noticeEl.textContent = `✓ Key pair confirmed. Public key (${path.basename(pubPath)}) will be deployed to server; private key stays local.`;
+            } else {
+                noticeEl.style.color = 'var(--dim-text, #888)';
+                noticeEl.textContent = `ℹ Private key chosen. Public key will be derived locally via ssh-keygen before deploying. Only the public key will be deployed to server.`;
+            }
+        }
+    }
+
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    if (deployBtn) deployBtn.textContent = 'Deploy public key';
+
+    onServerInputsChanged(mode);
+}
+
+function resetSshKeyToDefault( mode ) {
+    let fs = require('fs');
+    let path = require('path');
+    let displayInput = document.getElementById(mode === 'clone' ? 'sshKeyInput_clone' : 'sshKeyInput_add');
+    let noticeEl = document.getElementById(mode === 'clone' ? 'sshKeyNotice_clone' : 'sshKeyNotice_add');
+    let resetBtn = document.getElementById(mode === 'clone' ? 'resetSshKeyButton_clone' : 'resetSshKeyButton_add');
+    let deployBtn = document.getElementById(mode === 'clone' ? 'deploySshKeyButton_clone' : 'deploySshKeyButton_add');
+    let fileInput = document.getElementById(mode === 'clone' ? 'sshKeyFileInput_clone' : 'sshKeyFileInput_add');
+
+    if (displayInput) {
+        displayInput.value = '';
+        delete displayInput.dataset.keyPath;
+    }
+    if (fileInput) fileInput.value = '';
+    if (noticeEl) {
+        noticeEl.textContent = '';
+        noticeEl.style.display = 'none';
+    }
+    if (resetBtn) resetBtn.style.display = 'none';
+
+    initSshKeyInputs();
+
+    let defaultKey = getDefaultSshKey();
+    if (deployBtn) {
+        deployBtn.textContent = fs.existsSync(defaultKey) ? 'Deploy public key' : 'Create key pair';
+    }
+
+    onServerInputsChanged(mode);
+}
+
+function initSshKeyInputs() {
+    let path = require('path');
+    let defaultKey = getDefaultSshKey();
+    let base = path.basename(defaultKey);
+    let cloneInp = document.getElementById('sshKeyInput_clone');
+    let addInp = document.getElementById('sshKeyInput_add');
+    if (cloneInp && !cloneInp.value) {
+        cloneInp.placeholder = `Default (~/.ssh/${base})`;
+    }
+    if (addInp && !addInp.value) {
+        addInp.placeholder = `Default (~/.ssh/${base})`;
+    }
+}
+
+async function sshTestLogin( sshUrl, keyPath ) {                 // Test if passwordless SSH login works
   // Tests if passwordless SSH login is working
   //
   // Inputs :
   //   sshUrl    -- sshURL to test (e.g. ssh://user@server/)
+  //   keyPath   -- optional path to SSH private or public key
   // Output :
   //   string status from ssh-test-login ('STATUS:OK', 'STATUS:KEY_NEEDED', 'STATUS:TIMEOUT', or 'STATUS:ERROR: ...')
 
-  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"`;
+  let keyArg = (keyPath && keyPath.trim().length > 0) ? ` "${keyPath.trim()}"` : '';
+  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"${keyArg}`;
   let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
   return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000);
 }
@@ -218,6 +357,8 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
         return;
     }
 
+    let selectedKey = getSelectedSshKey(mode);
+
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     statusEl.style.color = 'var(--dim-text, #888)';
@@ -225,7 +366,7 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
 
     try {
         let fakeFolder = `ssh://${username}@${server}/`;
-        let result = await sshTestLogin(fakeFolder);
+        let result = await sshTestLogin(fakeFolder, selectedKey);
         console.log('testSshKeyLogin output:', result);
 
         if (result && result.includes('STATUS:OK')) {
@@ -237,6 +378,9 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
             statusEl.style.color = 'var(--warn-color, orange)';
             statusEl.textContent = 'ℹ Key needed (login not permitted)';
             if (deployBtn) {
+                let fs = require('fs');
+                let keyExists = fs.existsSync(selectedKey) || fs.existsSync(selectedKey + '.pub');
+                deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
                 deployBtn.style.display = 'inline-block';
                 deployBtn.disabled = false;
             }
@@ -295,16 +439,18 @@ async function deploySshKey( mode ) {                           // Deploys key p
         return;
     }
 
+    let selectedKey = getSelectedSshKey(mode);
+
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
-        statusEl.textContent = 'Creating and deploying key pair...';
+        statusEl.textContent = 'Deploying public key to remote server...';
     }
 
     let fakeFolder = `ssh://${username}@${server}/`;
-    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${selectedKey}"`;
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
 
     try {

@@ -19,38 +19,26 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: "Test login"-knapp och SSH-inloggningstest:
-  - **SSH-testskript** ([ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login)):
-    - Icke-interaktivt hjälpskript som anropar ssh med publickey-autentisering (`BatchMode=yes`, timeout 4s).
-    - Returnerar strukturerade statusrader (`STATUS:OK`, `STATUS:KEY_NEEDED`, `STATUS:TIMEOUT`, `STATUS:ERROR`) utan att kasta onödiga processfel.
-  - **SSH-wrapper & UI-funktion i `ssh-folder-lib.js`** ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)):
-    - `sshTestLogin(sshUrl)`: Low-level wrapper för `ssh-test-login`, anropar `multiPlatformExecSync` och returnerar status.
-    - `testSshKeyLogin(mode)`: Körs från "Test login"-knappen.
-      - Om login fungerar (`STATUS:OK`): visar grön bekräftelse (`✓ Login works`) och aktiverar (ogråar) Add/Clone-knappen.
-      - Om login nekas (`STATUS:KEY_NEEDED`): visar `ℹ Key needed (login not permitted)` och visar en "Create key pair"-knapp bredvid. Add/Clone hålls gråad.
-    - `deploySshKey(mode)`: Kör `ssh-generate-key-login`, och testar sedan automatiskt inloggningen igen. När den verifieras grön aktiveras Add/Clone och Create key pair-knappen döljs.
-    - `onServerInputsChanged(mode)`: Nollställer validering och gråar Add/Clone vid ändring av server eller användarnamn.
-  - **UI i `settings.html`** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
-    - "Test login"-knappen placerad längst till vänster i serverinmatningsraden.
-    - "Create key pair"-knappen visas dynamiskt intill vid behov.
-    - Add/Clone för server är inaktiverad (`disabled`) tills inloggningen är testad och grön.
-    - I Local-läge är Add- och Clone-knapparna alltid aktiva.
-    - Harmoniserat Add Repo-tabbens layout med Clone-tabben: Add Repo använder samma `toolTable`-struktur och tabellrad som Clone för serverdetaljer, vilket eliminerar att fälten blir för breda (anpassat till 50% kolumnbredd) och integrerar local/server-switchen snyggt.
-  - **SSH-server Setup i `cloneButtonPressed`** ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
-    - Hanterar `setupRemoteKeyLogin_clone` analogt med Add Repo: kör `ssh-generate-key-login` med 60s timeout vid behov.
-    - Anropar `await opener.mkdir(folder)` på servern för att skapa mål-/övermappen innan `gitClone`.
-  - **Korrigerad `gitClone`-funktion** ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
-    - Fixat typofel i `url.pathname` (hette felaktigt `url.pathName`).
-    - Fixat sökvägsseparator för SSH så att `/` alltid används istället för OS-beroende `pathsep` (`\`).
-    - Skapar baskatalogen `cleanFolderName` via `await opener.mkdir(cleanFolderName)`.
-    - Säkrat felhantering och returvärde (`true`/`false`) samt statusåterställning vid avbrott.
-    - Säkrat att tom repository checkout (`to be born`) inte kastar `TypeError` på null `err`.
-  - **UI-feedback & Validering i `settings.html`** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
-    - Lade till `#cloneStatus_server` bredvid serverns klonknapp så att "Cloning in progress " visas även när server är vald.
-    - Lade till säkerställande av inledande snedstreck (`/`) i `parseServerFields_clone` och `parseServerFields` ifall användaren utelämnar det.
-    - Uppdaterade `disabledPasswordlessLogin`-dialogens Avbryt-knapp till att återställa både `setupRemoteKeyLogin` och `setupRemoteKeyLogin_clone`.
-  - **Timeout-förbättring i `fs_mkdir`** ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)):
-    - Satt timeout till 30s vid fjärr-mkdir så långsammare nätverks- och SSH-anrop inte avbryts av standardtimeouten på 2s.
+* **Task Description**: SSH Key Selection, Distribution, Default Key & System Info "Project folder":
+  - **Val av befintlig SSH-nyckel & UI i Clone & Add Repo** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)):
+    - Infört en dedikerad rad för SSH-nyckel med fält, "Select key..."-knapp och återställningsknapp (`✕`) till Default.
+    - Använder infödd filväljare (`<input type="file">`).
+    - Stödjer både val av privat nyckel (t.ex. `id_rsa_jans_mac`) och publik nyckel (`.pub`).
+    - Tydlig visualisering i UI: Informerar att *endast* den publika nyckeln skickas till serverns `authorized_keys`, medan den privata nyckeln hålls helt lokal och säker på datorn.
+    - Om privat nyckel valts och `.pub` saknas, härleds den automatiskt lokalt via `ssh-keygen -y -f`.
+    - Knappen heter "Deploy public key" (eller "Create key pair" om ingen nyckel finns ännu).
+  - **Uppdaterat SSH-test och Nyckeldistribution** ([ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login)):
+    - `ssh-test-login <SSH_URL> [KEY_PATH]`: Accepterar anpassad nyckelsökväg och lägger till `-i "$KEY_PATH" -o IdentitiesOnly=yes` vid test mot servern.
+    - `ssh-generate-key-login <user> <host> [keyname_or_path]`: Hanterar fullständiga sökvägar (t.ex. `/Users/...`, `~`, eller nyckelnamn i `~/.ssh/`), skapar saknad `.pub` vid behov, och överför den publika nyckeln via ControlMaster till `~/.ssh/authorized_keys`.
+  - **Persistens i `settings.json` & `app.js`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
+    - Global default key i `state.tools.defaultSshKey` (default `~/.ssh/id_ed25519` eller `~/.ssh/id_rsa`).
+    - Per-repo inställning i `state.repos[i].sshKey` sparas vid clone och add av SSH-repon via `opener.saveSettings()`.
+  - **System Info "Project folder"-sektion** ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
+    - Ny sektion/rubrik "Project folder" placerad direkt ovanför "Current Remote".
+    - Visar `Project path : <mappsökväg>`.
+    - Om det är en SSH-server visas även:
+      - `Private key (local) : <lokal privat nyckelsökväg>`
+      - `Public key (server) : ssh://user@server:port/~/.ssh/authorized_keys`
 
 ---
 

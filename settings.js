@@ -330,7 +330,9 @@ async function _callback( name, event){
                         let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
                         let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
                         if (username && server) {
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
                             await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
                         }
                     }catch (err){
@@ -439,8 +441,10 @@ async function _callback( name, event){
                     if ( document.getElementById('setupRemoteKeyLogin').checked ){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
-                            let server = document.querySelector('input[name="server"]').value.trim()
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            let server = document.querySelector('input[name="server"]').value.trim();
+                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
                             await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
                         }catch (err){
                             console.error('Error in password-less login');
@@ -489,6 +493,14 @@ async function _callback( name, event){
 				
 				// Add repo as is 
 				await opener.addExistingRepo( folder); 
+				if (folder.startsWith('ssh:')) {
+					let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+					let idx = util.findObjectIndex(state.repos, 'localFolder', folder);
+					if (!isNaN(idx) && state.repos[idx]) {
+						state.repos[idx].sshKey = selectedKey;
+						opener.saveSettings();
+					}
+				}
 				// Replace table 
 				document.getElementById("settingsTableBody").innerHTML = ""; 
 				createHtmlTable(document);
@@ -540,7 +552,15 @@ async function _callback( name, event){
             
             await opener._callback('initializeRepoOK', event);
             
-            let folder = document.getElementById('addFolder').value; 
+            let folder = document.getElementById('addFolder').value;
+            if (folder && folder.startsWith('ssh:')) {
+                let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+                let idx = util.findObjectIndex(state.repos, 'localFolder', folder);
+                if (!isNaN(idx) && state.repos[idx]) {
+                    state.repos[idx].sshKey = selectedKey;
+                    opener.saveSettings();
+                }
+            }
  
             // update list
             try {
@@ -664,6 +684,9 @@ async function _callback( name, event){
                 
                 // Update starred button
                 await updateStarredButton();
+
+                // Update project folder in system info
+                updateProjectFolderInfo();
 
             }catch(err){
                 console.warn(err);
@@ -1088,6 +1111,7 @@ async function _callback( name, event){
         }
 
         case 'systemInfoClicked': {
+            updateProjectFolderInfo();
             updateGitconfigs(); 
             updateRemoteInfo( )
             updateStarredButton();
@@ -1453,6 +1477,13 @@ async function gitClone( folderName, repoURL){
         state.repos[state.repoNumber].autoPushToRemote = true;
         state.repos[state.repoNumber].NoFF_merge = true;
 
+        if (topFolder.startsWith('ssh:')) {
+            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+            if (selectedKey) {
+                state.repos[state.repoNumber].sshKey = selectedKey;
+            }
+        }
+
         // Change to Software tab (In repo tab, where we already are)
         Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
         return true;
@@ -1592,6 +1623,7 @@ async function injectIntoSettingsJs(document) {
     await drawRepoTab(document);
     await drawSoftwareTab(document);
     await drawPath() // Write path to System info
+    await updateProjectFolderInfo();
     
     
     
@@ -2673,6 +2705,61 @@ async function displayLocalAuthorInfo(){ // Display based on git-config author i
         
     }
   
+}
+
+async function updateProjectFolderInfo() {
+    let html = '';
+    let el = document.getElementById('projectFolderInfo');
+    if (!el) return;
+
+    if (state.repoNumber < 0 || !state.repos || !state.repos[state.repoNumber]) {
+        html = '<code><table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp; Project path : &nbsp; </td><td> (No repository selected) </td></tr></table></code>';
+        el.innerHTML = html;
+        return;
+    }
+
+    let repo = state.repos[state.repoNumber];
+    let folder = repo.localFolder || '';
+
+    html += '<code><table class="keyValueTable">';
+    html += `<tr><td style="white-space: nowrap;"> &nbsp; Project path : &nbsp; </td><td> ${folder} </td></tr>`;
+
+    if (folder.startsWith('ssh:')) {
+        let username = '';
+        let hostname = '';
+        let port = '';
+        try {
+            let parsed = new URL(folder);
+            username = parsed.username || '';
+            hostname = parsed.hostname || '';
+            port = parsed.port ? `:${parsed.port}` : '';
+        } catch (e) {
+            let clean = folder.replace(/^ssh:\/\//, '');
+            let hostPart = clean.split('/')[0];
+            if (hostPart.includes('@')) {
+                username = hostPart.split('@')[0];
+                hostname = hostPart.split('@')[1];
+            } else {
+                hostname = hostPart;
+            }
+        }
+
+        let defaultKey = (typeof getDefaultSshKey === 'function') ? getDefaultSshKey() : path.join(os.homedir(), '.ssh', 'id_ed25519');
+        let privKey = repo.sshKey || (state.tools && state.tools.defaultSshKey) || defaultKey;
+        if (privKey.endsWith('.pub')) {
+            privKey = privKey.slice(0, -4);
+        }
+
+        let userPrefix = username ? `${username}@` : '';
+        let remotePublicPath = `ssh://${userPrefix}${hostname}${port}/~/.ssh/authorized_keys`;
+
+        html += `<tr><td style="white-space: nowrap;"> &nbsp; Private key (local) : &nbsp; </td><td> ${privKey} </td></tr>`;
+        html += `<tr><td style="white-space: nowrap;"> &nbsp; Public key (server) : &nbsp; </td><td> ${remotePublicPath} </td></tr>`;
+    }
+
+    html += '</table></code>';
+    el.innerHTML = html;
+    return html;
 }
 
 async function updateRemoteInfo( ){

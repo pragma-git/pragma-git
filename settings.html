@@ -925,6 +925,19 @@
                                                         </div>
                                                     </td>
                                                 </tr>
+
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
+                                                            <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
+                                                            <input type="text" id="sshKeyInput_clone" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                                                            <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;" onclick="selectSshKey('clone')">Select key...</button>
+                                                            <button type="button" id="resetSshKeyButton_clone" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key" onclick="resetSshKeyToDefault('clone')">&#x2715;</button>
+                                                        </div>
+                                                        <div id="sshKeyNotice_clone" style="font-size: 10px; margin-top: 3px; display: none;"></div>
+                                                        <input type="file" id="sshKeyFileInput_clone" style="display: none;" onchange="onSshKeyFileSelected('clone', this)" />
+                                                    </td>
+                                                </tr>
                                                 
                                                 <tr class="tool">
                                                     <td colspan="100%">
@@ -1024,6 +1037,19 @@
                                                             <input type="text" name="server" placeholder="server ip or address" class="serverInput serverHost" oninput="onServerInputsChanged('add')" />
                                                             <input type="text" name="folder" placeholder="absolute folder path" class="serverInput serverFolder" />
                                                         </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
+                                                            <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
+                                                            <input type="text" id="sshKeyInput_add" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                                                            <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;" onclick="selectSshKey('add')">Select key...</button>
+                                                            <button type="button" id="resetSshKeyButton_add" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key" onclick="resetSshKeyToDefault('add')">&#x2715;</button>
+                                                        </div>
+                                                        <div id="sshKeyNotice_add" style="font-size: 10px; margin-top: 3px; display: none;"></div>
+                                                        <input type="file" id="sshKeyFileInput_add" style="display: none;" onchange="onSshKeyFileSelected('add', this)" />
                                                     </td>
                                                 </tr>
                                                 
@@ -1377,6 +1403,10 @@
                 </div>
                 <br>                                          
 
+                <h3>Project folder :</h3>
+                <div  class='indent'><div id='projectFolderInfo' style="font-size: 9pt"></div> </div>
+                <br>
+
                 <h3>Current Remote :</h3>
                 <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
                 <br>
@@ -1579,6 +1609,7 @@
     function switchSlicerTextColors(){
         if ( document.getElementById("local_server_switch").checked ){
             // Server
+            if (typeof initSshKeyInputs === 'function') initSshKeyInputs();
             document.getElementById('server').setAttribute('style','color: var(--text)');
             document.getElementById('local').setAttribute('style','color: var(--dim-text)');
             document.getElementById('addFolder').style.display='none';
@@ -1618,6 +1649,7 @@
     function switchSlicerTextColors_clone(){
         if ( document.getElementById("local_server_switch_clone").checked ){
             // Server
+            if (typeof initSshKeyInputs === 'function') initSshKeyInputs();
             document.getElementById('server_clone').setAttribute('style','color: var(--text)');
             document.getElementById('local_clone').setAttribute('style','color: var(--dim-text)');
             document.getElementById('cloneFolder').style.display='none';

@@ -8145,6 +8145,7 @@ function loadSettings(settingsFile){
             state.tools.terminal = setting( state_in.tools.terminal, "");
             state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
+            state.tools.defaultSshKey = setting( state_in.tools.defaultSshKey, "");
             
             console.log('State after amending non-existing with defaults ');
             console.log(state);
@@ -8307,6 +8308,7 @@ function loadSettings(settingsFile){
         repoState.localFolder = setting( repoStateIn.localFolder, '' );
         repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOriginStatus()
         repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
+        repoState.sshKey = setting( repoStateIn.sshKey, '' ); // Path to local private SSH key if custom key used
         
         // Group name
         repoState.group = setting( repoStateIn.group, '' );

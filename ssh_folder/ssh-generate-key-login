@@ -33,11 +33,19 @@ done) 2>&1
 
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
-KEY_NAME="${3:-id_ed25519}"
-KEY_PATH="$HOME/.ssh/$KEY_NAME"
+KEY_INPUT="${3:-id_ed25519}"
+
+if [[ "$KEY_INPUT" == /* ]]; then
+    KEY_PATH="$KEY_INPUT"
+elif [[ "$KEY_INPUT" == ~* ]]; then
+    KEY_PATH="${KEY_INPUT/#\~/$HOME}"
+else
+    KEY_PATH="$HOME/.ssh/$KEY_INPUT"
+fi
+KEY_PATH="${KEY_PATH%.pub}"
 
 if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
-    echo "Usage: $0 <remote-user> <remote-host> [keyname]"  
+    echo "Usage: $0 <remote-user> <remote-host> [keyname_or_path]"  
     exit 1
 fi
 
@@ -52,14 +60,19 @@ export SSH_ASKPASS_REQUIRE=force
 export DISPLAY=dummy
 
 ###############################################################################
-# Generate SSH key pair
+# Generate SSH key pair or derive public key if missing
 ###############################################################################
 echo "==> Checking for local SSH key: $KEY_PATH"
 
 if [ -e "$KEY_PATH" ]; then
     echo "==> Key already exists — not overwriting."
+    if [ ! -f "${KEY_PATH}.pub" ]; then
+        echo "==> Generating missing public key from private key..."
+        ssh-keygen -y -f "$KEY_PATH" > "${KEY_PATH}.pub"
+    fi
 else
     echo "==> Generating new ED25519 key (no passphrase)…"
+    mkdir -p "$(dirname "$KEY_PATH")"
     ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
 fi
 
