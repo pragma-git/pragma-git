@@ -273,9 +273,10 @@
                 class="message"
                 id="message"
             
+                onmousedown="if (event.detail === 1) { window._messageHadFocus = (document.activeElement === this); }"
                 onkeyup="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
-                onblur="window._msgAllowAction = true;"
+                onblur="window._messageHadFocus = false; window._msgAllowAction = true;"
             
                 placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;"
                 readonly
@@ -283,6 +284,7 @@
             
             <script>
                 window._msgAllowAction = true;
+                window._messageHadFocus = false;
             </script>
                                 
 
@@ -1008,12 +1010,16 @@
                 
                 // Up-arrow
                 if (event.keyCode === 38) {  
-                    _callback( 'clicked-up-arrow')
+                    if (document.activeElement !== document.getElementById('message')) {
+                        _callback( 'clicked-up-arrow');
+                    }
                 }
                 
                  // Down-arrow
                 if (event.keyCode === 40){
-                    _callback( 'clicked-down-arrow')
+                    if (document.activeElement !== document.getElementById('message')) {
+                        _callback( 'clicked-down-arrow');
+                    }
                 }                 
                 
                 // SHIFT

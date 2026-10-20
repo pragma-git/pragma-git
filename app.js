@@ -790,6 +790,11 @@ async function _callback( name, event){
       }
       case 'message_dblclick': {
 
+            // If we already have a cursor in the textarea (already editing):
+            if (window._messageHadFocus) {
+                break; // normal dblclick (select word)
+            }
+
             // If we've already consumed the first dblclick:
             if (!window._msgAllowAction) {
                 break; // normal dblclick (select word)
@@ -797,6 +802,7 @@ async function _callback( name, event){
 
             // FIRST double-click after blur → run your action
             window._msgAllowAction = false;  // block future dblclicks
+            window._messageHadFocus = true;
 
             if (getMode() === 'NO_FILES_TO_COMMIT') {
                 let latestCommit = await simpleGit(

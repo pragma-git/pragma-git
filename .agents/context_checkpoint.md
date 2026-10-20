@@ -16,20 +16,24 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Åtgärdat och symmetriserat macOS-paketering, kodsignering och Apple-notarisering för både Intel (`mac-x64`) och Apple Silicon (`mac-arm64`).
-  - **Inside-Out Kodsignering**:
-    1. Signera alla dynamiska bibliotek (`*.dylib`).
-    2. Signera infödda `.node`-moduler (`registry.node`, `keytar`, `fsevents`).
-    3. Signera interna hjälparbinärer (`app_mode_loader`, `chrome_crashpad_handler`, `web_app_shortcut_copier`) och exkludera `nwjs Framework`.
-    4. Signera nästlade hjälparappar (`nwjs Helper*.app`) **utan** föräldra-entitlements.
-    5. Signera och försegla `nwjs Framework.framework` sist.
-    6. Signera och försegla huvudexekverbara filen och app-omslaget med entitlements.
-  - **DMG & Notarisering**:
-    - Byggt och verifierat DMG för Intel x64: `dist/mac/Pragma-git-0.0.0-mac-x64.dmg` (Godkänd, notariserad och häftad).
-    - Byggt och verifierat DMG för ARM64: `dist/mac_arm64/Pragma-git-0.0.0-mac-arm64.dmg` (Godkänd, notariserad och häftad).
-    - Båda installationsfilerna validerade med Gatekeeper (`spctl --assess -vvv --type install`).
-  - **Terminal Mail Issue**:
-    - Identifierat orsaken till terminalvarningen `Du har ny post i /var/mail/jan`: Universitets-cronjobbet `osxbash.sh` genererade `stderr`-loggar som Postfix sparade i `/var/mail/jan` (20 MB). Löst genom att uppdatera crontab med `2>&1` och tömma mailboxen.
+* **Task Description**: Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
+  - **Dubbelklick i message-textarea**:
+    - När användaren redan har en markör i textarea (`document.activeElement === message`) blockeras `message_dblclick`-åtgärden som återställde meddelandet. Dubbelklick fungerar då som standard (markera ord) fram tills användaren lämnar fältet (`blur`).
+    - Implementerat med minimal förändring via `_messageHadFocus` som fångar fokusläget i `onmousedown (event.detail === 1)` innan klicksekvensen flyttar fokus.
+  - **Piltangenter (Upp/Ned)**:
+    - I `app.html` begränsades fönstrets `keydown`-lyssnare för tangentkod 38 (upp) och 40 (ned) så att `_callback('clicked-up-arrow')` och `_callback('clicked-down-arrow')` endast anropas när `document.activeElement !== document.getElementById('message')`.
+    - Detta tillåter standard piltangentnavigering mellan textrader under redigering utan att byta commit i historiken.
+* **Tidigare åtgärder**:
+  - Symmetriserat macOS-paketering, kodsignering och Apple-notarisering för Intel (`mac-x64`) och ARM (`mac-arm64`).
+  - Terminal mail-varning utredd och åtgärdad.
+
+---
+
+### 🐛 Open / Historical Bugs
+* **Bug**: Dubbelklick i 'message'-textarea återställde meddelandet även om användaren redan höll på att redigera eller ville markera ett ord.
+  * *Remediation*: Sparade föregående fokusstatus `_messageHadFocus` vid första musklicket (`mousedown` med `detail === 1`) och avbröt `message_dblclick` om elementet redan hade fokus.
+* **Bug**: Tryck på upp- eller nedåtpil vid redigering av commit-meddelande växlade vald commit i historiken istället för att flytta markören i textarean.
+  * *Remediation*: Lade till kontroll i fönstrets piltangent-lyssnare så att historik-callbacken inte triggas när meddelandefältet har fokus.
 
 ---
 
