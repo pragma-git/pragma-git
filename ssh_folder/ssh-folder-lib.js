@@ -28,7 +28,7 @@ if ( process.platform == 'win32' ){
 // =============================================
 
 // Both SSH and LOCAL
-async function fs_existsSync( folder_or_sshUrl) {               // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
+async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // Replaces fs_existsSync( fileOrDir) -- works both for local file and file over SSH
   
   
   //console.log(`SSH_TEMP_FILE_LOCATION = ${SSH_TEMP_FILE_LOCATION}`);
@@ -37,7 +37,7 @@ async function fs_existsSync( folder_or_sshUrl) {               // Replaces fs_e
   if ( folder_or_sshUrl.startsWith('ssh:') ){  
     // SSH folder
     try{
-		return await sshFileExists( folder_or_sshUrl);
+		return await sshFileExists( folder_or_sshUrl, sshKey);
 	} catch (err){
 		console.warn('Error in fs_existsSync : ');
 		console.warn(err);
@@ -56,7 +56,7 @@ async function fs_existsSync( folder_or_sshUrl) {               // Replaces fs_e
   }
   
   // Internal function
-  async function sshFileExists( sshUrl) {  
+  async function sshFileExists( sshUrl, sshKey = '') {  
     //  Tests if a file exists
     //
     //  Inputs :
@@ -68,15 +68,25 @@ async function fs_existsSync( folder_or_sshUrl) {               // Replaces fs_e
   
     // run ssh-test-if-file-exists bash script
     try{
-        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"`;
+        let keyArg = (sshKey && typeof sshKey === 'string' && sshKey.trim().length > 0) ? ` "${sshKey.trim()}"` : '';
+        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"${keyArg}`;
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
         
         //MAIN.multiPlatformExecSync( sshUrl, CMD);
         await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000)
         
+        fs_existsSync.lastReason = '';
         return true
     }catch (err){
-        //console.error(err);
+        let msg = (err && err.message) ? err.message : String(err);
+        let lower = msg.toLowerCase();
+        if (lower.includes('permission denied') || lower.includes('key rejected')) {
+            fs_existsSync.lastReason = 'key rejected';
+        } else if (lower.includes('timed out') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host')) {
+            fs_existsSync.lastReason = 'no network';
+        } else {
+            fs_existsSync.lastReason = 'not a folder';
+        }
         return false
     }
     

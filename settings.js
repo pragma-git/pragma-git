@@ -2086,26 +2086,24 @@ async function generateRepoTable(document, table, data) {
                 let isRepoStatus = localStatus.isRepo ? localStatus.isRepo[index] : true;
                 let existsStatus = localStatus.exists ? localStatus.exists[index] : true;
                 let pingStatus = localStatus.ping ? localStatus.ping[index] : true;
+                let reason = (localStatus.reason && localStatus.reason[index]) ? localStatus.reason[index] : '';
 
-                // Local repo exists / missing   (also for ssh folder)
-                console.log(`Coloring Local Folder --  ${existsStatus} -- ${element.localFolder}`);   
-                if ( isRepoStatus == false ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a repo)</i></b> : ' + element.localFolder
-                    radiobox.style.visibility = "hidden";
-                }  
-                
-                // Local folder exists / missing   (also for ssh folder)
-                if ( existsStatus == false ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a folder)</i></b> : ' + element.localFolder
-                    radiobox.style.visibility = "hidden";
-                }     
-      
-                // ssh folder missing because of network -- overwrite missing folder and missing repo (we don't know that if missing network)         
-                if ( ( existsStatus == false ) && ( pingStatus == false ) ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(no network)</i></b> : '  + element.localFolder
+                // Fallback to legacy checks if reason not directly set
+                if (!reason) {
+                    if ( ( existsStatus == false ) && ( pingStatus == false ) ){
+                        reason = 'no network';
+                    } else if ( existsStatus == false ){
+                        reason = 'not a folder';
+                    } else if ( isRepoStatus == false ){
+                        reason = 'not a repo';
+                    }
+                }
+
+                // Local repo status warning (also for ssh folder)
+                console.log(`Coloring Local Folder -- exists:${existsStatus} isRepo:${isRepoStatus} reason:${reason} -- ${element.localFolder}`);   
+                if ( reason ){
+                    label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
+                    label.innerHTML = '<b><i>(' + reason + ')</i></b> : ' + element.localFolder;
                     radiobox.style.visibility = "hidden";
                 }                           
             
