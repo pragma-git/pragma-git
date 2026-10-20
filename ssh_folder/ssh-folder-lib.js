@@ -192,18 +192,42 @@ function getDefaultSshKey() {
     let os = require('os');
     let path = require('path');
     let fs = require('fs');
+
+    // 1. Explicitly configured default key in Pragma-git settings
     if (global.state?.tools?.defaultSshKey && global.state.tools.defaultSshKey.trim().length > 0) {
         return global.state.tools.defaultSshKey.trim();
     }
-    let ed25519Path = path.join(os.homedir(), '.ssh', 'id_ed25519');
-    if (fs.existsSync(ed25519Path)) {
-        return ed25519Path;
+
+    let sshDir = path.join(os.homedir(), '.ssh');
+    if (!fs.existsSync(sshDir)) {
+        return path.join(sshDir, 'id_ed25519');
     }
-    let rsaPath = path.join(os.homedir(), '.ssh', 'id_rsa');
-    if (fs.existsSync(rsaPath)) {
-        return rsaPath;
+
+    // 2. OpenSSH standard key types in cryptographic priority order
+    const standardKeyTypes = ['id_ed25519', 'id_ecdsa', 'id_rsa'];
+    for (const keyName of standardKeyTypes) {
+        let keyPath = path.join(sshDir, keyName);
+        if (fs.existsSync(keyPath)) {
+            return keyPath;
+        }
     }
-    return ed25519Path;
+
+    // 3. Dynamic scan: find any private key in ~/.ssh that has a matching .pub file
+    try {
+        let files = fs.readdirSync(sshDir);
+        for (let f of files) {
+            if (!f.endsWith('.pub') && !f.startsWith('.') && !['known_hosts', 'authorized_keys', 'config'].includes(f)) {
+                if (files.includes(f + '.pub')) {
+                    return path.join(sshDir, f);
+                }
+            }
+        }
+    } catch (e) {
+        // Ignore directory read errors
+    }
+
+    // 4. Default target filename if no keys exist on system yet (OpenSSH modern standard)
+    return path.join(sshDir, 'id_ed25519');
 }
 
 function getSelectedSshKey( mode ) {
