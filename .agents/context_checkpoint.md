@@ -7,6 +7,7 @@
 
 ### 🏛️ Architecture & Files
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
+* **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
 * **Build Orchestration**: Master-byggskript för plattformsoberoende paketering ([make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build))
 * **Code Signing Engine**: Inside-out djupkodsignering för NW.js och dess hjälparappar/moduler ([make_binaries/scripts/sign_app.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/sign_app.sh))
 * **DMG Builder**: Genererar monterbara DMG-paket med live-loggning ([make_binaries/scripts/build_dmg.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh))
@@ -16,44 +17,35 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Implementerat fullständig repogruppering: gruppkolumn i inställningar med integrerat kolumnfilter, och grupperade menyer i huvudfönstret.
-  - **Gruppkolumn och integrerat filter i Settings (`settings.html` & `settings.js`)**:
-    - Lade till `<meta charset="utf-8">` i både `settings.html` och `app.html` för att garantera korrekt teckenkodning.
-    - Tog bort separat text ovanför tabellen och integrerade filter-dropdownen (`#repoTableGroupFilter`) direkt i tabellens kolumnrubrik (`Group (All)` / valt gruppnamn).
-    - Dropdownen i varje tabellrad har rensats från skräptecken och visar nu tydligt `Select group:` och `None (Remove from group)`.
-    - Filtrering görs via `row.style.display` baserat på `data-group`, vilket bevarar alla rad-ID:n intakta.
-  - **Grupperad repo-meny i huvudfönstret (`app.js`)**:
-    - Rensat bort emoji-symboler som orsakade mojibake-skräptecken i NW.js macOS-menyer.
-    - Tog bort alla separatorlinjer utom den enda linjen ovanför "Switch to repo" (ingen separator alls om inga grupper finns).
-    - Ändrade undermenynamn från `(Ungrouped)` till ren `Ungrouped`.
-    - Översta sektionen heter nu `Repo groups : ` och behåller alla grupper stabilt i listan (namngivna grupper, `Ungrouped`, `Recent` samt `All`).
-    - Implementerat spårning av senast öppnade repon via `lastOpened` (ISO-tidsstämpel) direkt på varje repo-objekt i `settings.json`.
-    - `ensureLastOpenedInitialized()` garanterar att alla befintliga repon har en initial tidsstämpel och sparar till `settings.json`, så att `Recent ▶` alltid syns direkt utan att kräva manuella repobyten först.
-    - `getRecentRepoIndices(5)` returnerar de 5 senast öppnade repona utan dubbletter och är helt oberoende av borttagna repon.
-    - `Recent ▶` visas i `Repo groups : `, och när `Recent` väljs visas de 5 senast öppnade repona under `Recent repos : ` i huvudlistan.
-    - Val av repo från `All` sätter aktiv vy till `ALL`, vilket visar alla repon direkt under `All repos : ` i huvudlistan.
-    - Val av repo från en grupp sätter aktiv vy till den gruppen (`Repos in '...' : `).
-    - Klick på det aktiva repot inuti en annan undermeny (t.ex. i `All` eller `Recent`) tillåts för att växla visningsvy utan att byta repo.
-    - Rubriker för aktiv sektion: `Recent repos : `, `All repos : `, `Repos in '${group}' : ` eller `Ungrouped repos : `. Vid helt ogrupperat läge visas `Switch to repo : `.
-* **Tidigare åtgärder**:
-  - Hantering av 'message' textarea: åtgärdat dubbelklicksåterställning och piltangentnavigering vid redigering.
-  - Symmetriserat macOS-paketering, kodsignering och Apple-notarisering för Intel (`mac-x64`) och ARM (`mac-arm64`).
-  - Terminal mail-varning utredd och åtgärdad.
+* **Task Description**: Implementerat avslutning av gruppnamnsredigering med Enter/Return och klick utanför ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
+  - **Lämna redigering med Enter**:
+    - Lade till `keydown`-lyssnare på `groupInput` som fångar Enter/Return (`e.key === 'Enter'`).
+    - Vid Enter sparas värdet automatiskt, inputfältet avfokuseras (`this.blur()`), och klassen `.editing-done` sätts på cellen så att textvyn (`.groupDisplay`) omedelbart visas även om musen fortfarande hovrar över cellen.
+    - Escape avbryter redigering och återställer värdet.
+  - **Bibehållen avslutning vid klick utanför**:
+    - Vid klick utanför cellen avfokuseras inputfältet och cellen återgår automatiskt till textvisning precis som tidigare.
+    - Vid `mouseleave` tas `.editing-done` bort så att hovring/klick fungerar som vanligt nästa gång.
 
 ---
 
 ### 🐛 Open / Historical Bugs
-* **Bug**: Dubbelklick i 'message'-textarea återställde meddelandet även om användaren redan höll på att redigera eller ville markera ett ord.
-  * *Remediation*: Sparade föregående fokusstatus `_messageHadFocus` vid första musklicket (`mousedown` med `detail === 1`) och avbröt `message_dblclick` om elementet redan hade fokus.
-* **Bug**: Tryck på upp- eller nedåtpil vid redigering av commit-meddelande växlade vald commit i historiken istället för att flytta markören i textarean.
-  * *Remediation*: Lade till kontroll i fönstrets piltangent-lyssnare så att historik-callbacken inte triggas när meddelandefältet har fokus.
-
----
-
-### 🐛 Open / Historical Bugs
-* **Bug**: `app.js:7961 Uncaught ReferenceError: storeUsernameInLocalGitConfig is not defined` vid uppstart eller tidig inställningssparning.
-  * *Remediation*: `pragma-credentials-lib.js` laddas med `defer` i `app.html` medan `app.js` körs synkront. `loadSettings()` anropade `saveSettings()` i förtid vilket anropade `storeUsernameInLocalGitConfig` innan funktionen fanns i globalt scope. Åtgärdat genom att kapsla in anropet i `saveSettings()` med `if (typeof storeUsernameInLocalGitConfig === 'function' && ...)` samt ta bort synkront `saveSettings()`-anrop inuti `loadSettings()`.
-* **Bug**: Apple Notarisering eller Gatekeeper fallerade med "code object is not signed at all" för `libnode.dylib` inuti `nwjs Framework.framework`.
-  * *Remediation*: Korrigerade signeringsordningen i `make_binaries/scripts/sign_app.sh` så att alla `.dylib` och hjälparappar signeras *före* `nwjs Framework.framework`, och hjälparappar signeras utan förälderns entitlements.
-* **Bug**: `build_dmg.sh` tappade bort felkoder vid pipeline med `tee`.
-  * *Remediation*: Sparade loggar via temporära filer och säkrade `${PIPESTATUS[0]}` så att misslyckade byggen inte rapporterar falsk framgång.
+* **Bug**: Grupprubriken i Repository-tabellen tappade ordet "Group" när ett filter sattes och visade bara gruppens namn (t.ex. "Jan").
+  * *Remediation*: Implementerat `.groupHeaderWrapper` med `#groupHeaderLabel` som dynamiskt växlar mellan "Group (All)" och "Group (filtered)" med tooltip.
+* **Bug**: Knapparnas teckenstorlek krymptes oavsiktligt till 11px vid åtgärdande av kolumnkollisioner.
+  * *Remediation*: Tog bort teckenstorleksregeln, återställde knapparnas standardfont och gav `.repoAction` 76px marginal.
+* **Bug**: Vid smalt fönster överlappade text från Local folder radioknapparna, rubrikerna Remote och Action kolliderade, samt knapparna Set och Forget krockade.
+  * *Remediation*: Låst kolumnbredder för radioknapp (28px), Web (36px), Set (60px) och Action (76px), fixat klassnamn i `<th>` och `<td>`, samt gett `.remoteURL textarea` 100% box-sizing.
+* **Bug**: Stort tomrum mellan rubriken "Pragma-git info" och texten, samt för brett avstånd mellan kolumn 1 och 2.
+  * *Remediation*: Flexbox-layout eliminerade glappet från float; `table-layout: auto` och `width: auto` håller kolumnerna tätt intill varandra.
+* **Bug**: Branch-tabellen var för bred (spände över 100% så Delete-knapparna hamnade längst ut till höger).
+  * *Remediation*: Sänkt `#branchesTable` bredd till 50%, i linje med Software-tabben.
+* **Bug**: Textfält i Software-tabben var för breda eller för långt ifrån varandra.
+  * *Remediation*: `.authorTable` håller ihop namn och e-post; `.systemToolsTable` (50% bredd) matchar fälten under Clone.
+* **Bug**: Repomenyn fallerade när inga grupper var satta (t.ex. vid nyinstallation eller om alla repon saknade gruppnamn).
+  * *Remediation*: Helt tätat i `app.js` och `settings.js`: ren flack fallback-meny, säker hantering av oinitierad statuscache och automatisk anpassning av UI i inställningar.
+* **Bug**: Grupper skrevs över vid appstängning på grund av in-memory state.
+  * *Remediation*: Återställt `settings.json` med alla 14 grupper medan processen är avstängd, committat till `~/.Pragma-git`.
+* **Bug**: Kolumnen med branch-namn i inställningarnas Branch-tabb var för smal.
+  * *Remediation*: Löst med `#branchesTable` (width: 100%), `.hiddenBranch` (50px), `.branchAction` (110px), och `.branchName` (auto).
+* **Bug**: Textfälten för serverdetaljer under AddRepo och Clone var trånga.
+  * *Remediation*: Löst med `.serverDetailsContainer` flexbox (`flex: 1 : 1.5 : 2.2` och `flex-wrap: wrap`).

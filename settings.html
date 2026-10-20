@@ -52,13 +52,30 @@
     /* Style settings-page */
     /*                     */
     
+        .keyValueTable {
+            width: auto !important;
+            table-layout: auto !important;
+        }
+    
         .keyValueTable td {
             min-width: fit-content;
             /* font-size: 9pt; */
             font-weight: unset;
             color: var(--code-text);
-            padding: unset;
-            width: max-content;
+            padding: 1px 0px;
+            width: auto !important;
+            white-space: nowrap;
+        }
+
+        .keyValueTable td:first-child {
+            padding-right: 6px;
+            width: auto !important;
+            white-space: nowrap;
+        }
+
+        .keyValueTable td:last-child {
+            padding-left: 0px;
+            width: auto !important;
             white-space: nowrap;
         }
     
@@ -98,15 +115,36 @@
             
         /* Repository list */  
         
+            .repoRadioCol {
+                width: 28px;
+                min-width: 28px;
+                max-width: 28px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 4px 2px;
+            }
+            th.repoRadioCol, td.repoRadioCol {
+                width: 28px;
+                min-width: 28px;
+                max-width: 28px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 4px 2px;
+            }
+
             .localFolderRadioButton{
-                margin-top: 0px;
+                margin: 0px;
+                cursor: pointer;
+                vertical-align: middle;
             }
         
             .localFolder {
-                width: 32%;
+                width: 28%;
+                min-width: 110px;
                 /* Force text to wrap to a second row instead of clipping */
                 word-break: break-all; 
                 white-space: normal !important; 
+                vertical-align: middle;
             }
                         
             /* 1. Hide the path span inside the localFolder cell by default */
@@ -140,22 +178,90 @@
                 user-select: none;                    /* Keeps the badge itself unselectable */
             }
             
-            .remoteIcon{
-              width: 20px;
-              filter: none;
-              /* width: 40px; */
-              padding-right: 10px;
-              padding-left: 5px;
+            th.remoteIcon, td.remoteIcon {
+                width: 36px;
+                min-width: 36px;
+                max-width: 36px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 2px 2px;
+            }
+
+            img.remoteIcon {
+                width: 20px;
+                height: 20px;
+                filter: none;
+                vertical-align: middle;
+                display: inline-block;
             }
             
             .remoteURL {
-              width: 36%;
+                width: auto;
+                min-width: 110px;
+                vertical-align: middle;
+            }
+
+            .remoteURL textarea {
+                box-sizing: border-box;
+                width: 100%;
+                height: 24px;
+                resize: none;
+                vertical-align: middle;
+                font-family: inherit;
+                font-size: 10pt;
+                padding: 3px 6px;
             }
 
             /* Repo Group column */
             .repoGroupCol {
-                width: 16%;
+                width: 17%;
+                min-width: 105px;
                 vertical-align: middle;
+            }
+            .groupHeaderWrapper {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                cursor: pointer;
+                border: 1px solid transparent;
+                border-radius: 3px;
+                padding: 2px 2px;
+                box-sizing: border-box;
+            }
+            .groupHeaderWrapper:hover, .groupHeaderWrapper:focus-within {
+                border-color: #777;
+                background-color: var(--input-background);
+            }
+            #groupHeaderLabel {
+                font-weight: bold;
+                color: inherit;
+                font-family: inherit;
+                font-size: 11pt;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                pointer-events: none;
+                flex: 1 1 auto;
+            }
+            .groupHeaderArrow {
+                font-size: 10px;
+                color: inherit;
+                opacity: 0.8;
+                margin-left: 2px;
+                pointer-events: none;
+                flex: 0 0 auto;
+            }
+            .groupHeaderFilter {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+                z-index: 2;
             }
             td.repoGroupCol {
                 padding-right: 6px;
@@ -185,6 +291,12 @@
             td.repoGroupCol:focus-within .groupEdit {
                 display: flex !important;
             }
+            td.repoGroupCol.editing-done .groupDisplay {
+                display: block !important;
+            }
+            td.repoGroupCol.editing-done .groupEdit {
+                display: none !important;
+            }
             .groupInput {
                 background-color: var(--input-background);
                 color: var(--text);
@@ -205,32 +317,31 @@
                 cursor: pointer;
                 width: 22px;
             }
-            .groupHeaderFilter {
-                background-color: transparent;
-                color: inherit;
-                font-weight: bold;
-                font-family: inherit;
-                font-size: inherit;
-                border: 1px solid transparent;
-                border-radius: 3px;
-                padding: 2px 2px;
-                cursor: pointer;
-                width: 100%;
-                outline: none;
-            }
-            .groupHeaderFilter:hover, .groupHeaderFilter:focus {
-                border-color: #777;
-                background-color: var(--input-background);
-            }
+
             
             .setURL {
-              width: 8%;
-              text-align:center;
-            }   
+                width: 60px;
+                min-width: 60px;
+                max-width: 60px;
+                text-align: center;
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+            th.setURL {
+                text-align: center;
+            }
             
             .repoAction {
-              width: 8%;
-              text-align:right; 
+                width: 76px;
+                min-width: 76px;
+                max-width: 76px;
+                text-align: center;
+                vertical-align: middle;
+                white-space: nowrap;
+                padding-right: 4px;
+            }
+            th.repoAction {
+                text-align: center;
             } 
 
         
@@ -249,24 +360,113 @@
         
      /* Settings : Branch-table */       
         
-        .hiddenBranch{
+        #branchesTable {
+            width: 50% !important;
+        }
+        .hiddenBranch {
             width: 50px;
+            text-align: center;
         } 
+        th.hiddenBranch, td.hiddenBranch {
+            text-align: center;
+        }
         .branchAction {
-            width: fit-content;
-            text-align:right; 
+            width: 110px;
+            text-align: right; 
         }  
-        .branchName{
-            width: fit-content;
-            padding-right: 50px;
+        th.branchAction, td.branchAction {
+            text-align: right;
+            padding-right: 6px;
+        }
+        .branchName {
+            width: auto;
+            padding-right: 15px;
+        }
+        #branchNameTextarea {
+            width: 100%;
+            height: 24px;
+            box-sizing: border-box;
+            resize: none;
+            vertical-align: middle;
+            font-family: inherit;
+            font-size: 10pt;
+            padding: 3px 6px;
+        }
+
+     /* Settings : Server repository input details */
+        .serverDetailsContainer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+        .serverInput {
+            box-sizing: border-box;
+            height: 26px;
+            padding: 2px 6px;
+            font-size: 11px;
+        }
+        .serverUsername {
+            flex: 1 1 120px;
+            min-width: 100px;
+        }
+        .serverAt {
+            flex: 0 0 auto;
+            font-weight: bold;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .serverHost {
+            flex: 1.5 1 150px;
+            min-width: 130px;
+        }
+        .serverFolder {
+            flex: 2.2 1 200px;
+            min-width: 160px;
         }
         
-        .indented{
-            padding-left: 50px;
+     /* Settings : Software tab layout */
+        .authorTable {
+            width: auto !important;
+            table-layout: auto !important;
+        }
+        .authorTable td {
+            padding-right: 20px;
+            padding-left: 0px;
+            vertical-align: top;
+            width: auto !important;
+        }
+
+        .systemToolsTable {
+            width: 50% !important;
+        }
+        .systemToolsTable input, 
+        .systemToolsTable textarea {
+            box-sizing: border-box;
         }
         
-    
-    
+     /* Settings : System Info tab layout */
+        .systemInfoTopContainer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .systemInfoLeft {
+            flex: 0 1 auto;
+        }
+        .systemInfoRight {
+            flex: 0 0 auto;
+        }
+        .starFeedbackBox {
+            border-style: solid;
+            border-color: var(--header-color);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
      /* Settings : Text colors */         
         
         .green{
@@ -444,7 +644,7 @@
                 <h3>Git Settings</h3>  
                    
                     <!--  Author info -->
-                    <table>            
+                    <table class="authorTable">            
                       <tr style="border: none;">
                             <td>
                                 <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
@@ -514,7 +714,7 @@
                   
                 <h3>Git & system tools (built-in if empty)</h3>  
     
-                    <table>
+                    <table class="systemToolsTable">
                         <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
@@ -547,7 +747,7 @@
                                 <label for="terminal"> Terminal (open when clicking                                    
                                     <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" onClick="opener._callback('clicked-terminal')"> ) : 
                                 </label><br>
-                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
+                                <input id="terminal" type="text" style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
                             </td>
                         </tr>
                         
@@ -569,19 +769,23 @@
                         
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
-                        <th class=""></th>
+                        <th class="repoRadioCol"></th>
                         <th class="localFolder">Local folder &nbsp;&nbsp;
                         </th>
                         <th class="repoGroupCol">
-                            <select id="repoTableGroupFilter" class="groupHeaderFilter" onchange="filterRepoTableByGroup(this.value)" title="Filter repositories by group">
-                                <option value="ALL">Group (All)</option>
-                                <option value="__UNGROUPED__">Ungrouped</option>
-                            </select>
+                            <div class="groupHeaderWrapper" id="groupHeaderWrapper">
+                                <span id="groupHeaderLabel">Group (All)</span>
+                                <span class="groupHeaderArrow">&#x25BE;</span>
+                                <select id="repoTableGroupFilter" class="groupHeaderFilter" onchange="filterRepoTableByGroup(this.value)" title="Filter repositories by group">
+                                    <option value="ALL">Group (All)</option>
+                                    <option value="__UNGROUPED__">Ungrouped</option>
+                                </select>
+                            </div>
                         </th>
-                        <th class="remoteIcon"> Web Link <!-- icon column --></th>
+                        <th class="remoteIcon" title="Web Link">Web</th>
                         <th class="remoteURL">Remote repository ("origin")</th>
-                        <th class="testURL"  style="text-align: center">Remote</th>
-                        <th class="repoAction"  style="text-align: center">Action</th>
+                        <th class="setURL">Remote</th>
+                        <th class="repoAction">Action</th>
                     </tr></thead>
                     <tbody id="settingsTableBody">
                     </tbody>
@@ -615,7 +819,7 @@
                         (For selected repository) <br><br>
                         
                         <!--  Author info -->
-                        <table>            
+                        <table class="authorTable">            
                           <tr style="border: none;">
                                 <td>
                                     <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
@@ -706,10 +910,14 @@
                                            
                                             <table>
                                                 <tr class="tool">
-                                                    <td><input type="text" name="username_clone" placeholder="username on server" style="width:150px;" /></td>
-                                                    <td>@</td>
-                                                    <td><input type="text" name="server_clone" placeholder="server ip or address" style="width:200px;" /></td>
-                                                    <td><input type="text" name="folder_clone" placeholder="absolute folder path" style="width:350px;" /></td>
+                                                    <td colspan="100%">
+                                                        <div class="serverDetailsContainer">
+                                                            <input type="text" name="username_clone" placeholder="username on server" class="serverInput serverUsername" />
+                                                            <span class="serverAt">@</span>
+                                                            <input type="text" name="server_clone" placeholder="server ip or address" class="serverInput serverHost" />
+                                                            <input type="text" name="folder_clone" placeholder="absolute folder path" class="serverInput serverFolder" />
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                                 
                                                 <tr class="tool">
@@ -719,7 +927,7 @@
                                                             checked=''
                                                         />
                                                              
-                                                        <label for="cloneServerRepoTable" id="setupRemoteKeyLogin_clone_label"> Make passwordless login (deploy key pair)</label>
+                                                        <label for="setupRemoteKeyLogin_clone" id="setupRemoteKeyLogin_clone_label"> Make passwordless login (deploy key pair)</label>
                                                     </td>
                                                 </tr>
                     
@@ -819,10 +1027,14 @@
                             Add repository on server :
                             <table>
                                 <tr class="tool">
-                                    <td><input type="text" name="username" placeholder="username on server" style="width:150px;" /></td>
-                                    <td>@</td>
-                                    <td><input type="text" name="server" placeholder="server ip or address" style="width:200px;" /></td>
-                                    <td><input type="text" name="folder" placeholder="absolute folder path" style="width:350px;" /></td>
+                                    <td colspan="100%">
+                                        <div class="serverDetailsContainer">
+                                            <input type="text" name="username" placeholder="username on server" class="serverInput serverUsername" />
+                                            <span class="serverAt">@</span>
+                                            <input type="text" name="server" placeholder="server ip or address" class="serverInput serverHost" />
+                                            <input type="text" name="folder" placeholder="absolute folder path" class="serverInput serverFolder" />
+                                        </div>
+                                    </td>
                                 </tr>
                                 
                                 <tr class="tool">
@@ -832,7 +1044,7 @@
                                             checked=''
                                         />
                                              
-                                        <label for="onAllWorkspaces" id="setupRemoteKeyLogin"> Make passwordless login (deploy key pair)</label>
+                                        <label for="setupRemoteKeyLogin" id="setupRemoteKeyLogin_label"> Make passwordless login (deploy key pair)</label>
                                     </td>
                                 </tr>
     
@@ -1040,7 +1252,7 @@
                 
                     
                 <!--  BRANCH TABLE -->  
-                <table style="width:fit-content;"> 
+                <table id="branchesTable"> 
                     <thead>
                         <tr>
                             <th class="hiddenBranch">Hide</th>
@@ -1055,125 +1267,111 @@
             </div>     
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
-
-                <div style='float:right; position: relative; top: 0px;
-                    border-style: solid;border-color: var(--header-color);border-radius: 10px;
-                    padding: 15px;' >
-                    
-                                   
-                    <!--  Star button from GitHub -->
-                    <div id="givePragmaGitStarDiv" style="content-visibility: visible;">
-                        <span id="givePragmaGitStarText">Give Pragma-git a star :</span> <br> <br>
-                        <button onclick="_callback('starPragmaGit', this);" 
-                            style="margin-left: 40px">
-                            <img id="star-icon"  height="17" width="17"  
-                                src="images/github_star_off.png" >
-                            Star
-                        </button>
-                        <br><br>
+                <div class="systemInfoTopContainer">
+                    <div class="systemInfoLeft">
+                        <h3 style="margin-top: 0;">Pragma-git info :</h3>                
+                        <code>
+                            <table class="keyValueTable">
+                                <tbody>
+                                    <tr> 
+                                        <td> &nbsp; Pragma-git version : &nbsp; </td> 
+                                        <td> <span id='version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Latest version : &nbsp; </td> 
+                                        <td> <span id='latestVersion' style="font-size: 9pt;"></span>
+                                            <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
+                                        </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr><tr> 
+                                        <td> &nbsp; nwjs version : &nbsp; </td> 
+                                        <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; node version : &nbsp; </td> 
+                                        <td> <span id='node-version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Platform : &nbsp; </td> 
+                                        <td> <span id='platform' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Git version : &nbsp; </td> 
+                                        <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr> <tr> 
+                                        <td> &nbsp; Settings folder : &nbsp; </td> 
+                                        <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
+                                            <script>
+                                                 document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                                            </script>   
+                                        </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Log file : &nbsp; </td> 
+                                        <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
+                                            <script>
+                                                 document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                                            </script>  
+                                        </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; nwjs settings : &nbsp; </td> 
+                                        <td> <span id='nwjs-settings-folder' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Install path : &nbsp; </td> 
+                                        <td> <span id='pragmaPath' style="font-size: 9pt;"></span> </td>
+                                            <script>
+                                                 document.getElementById("pragmaPath").innerHTML = opener.CWD_INIT; 
+                                            </script>   
+                                    </tr><tr> 
+                                        <td> &nbsp; Askpass path : &nbsp; </td> 
+                                        <td> <span id='askpassPath' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Pragma-merge command : &nbsp; </td> 
+                                        <td> <span id='pragmaMergePath' style="font-size: 9pt;"></span> </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </code>
                     </div>
-                    
-                    
-                    Feedback : <br> 
-  
-                    <ul style="padding-inline-start: 1em;">
-                        
-                        <li>
-                            <!--  List Issues GitHub -->  
-                            <a href='https://github.com/pragma-git/pragma-git/issues' 
-                               style="padding: 10px; padding-left: 0px;"
-                               onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
-                               Known issues </a>
-                            </li>
-                            
-                        <!--  Report Issues GitHub -->  
-                        <li>
-                            <a href='https://github.com/pragma-git/pragma-git/issues/new/choose' 
-                               style="padding: 10px; padding-left: 0px;"
-                               onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
-                               Report a bug </a>
-                        </li>
-                        
-                    </ul>
-     
-                </div>
 
-                
-                <h3>Pragma-git info :</h3>                
-                <code>
-                    <table class="keyValueTable">
-                        <tbody>
-                            <tr> 
-                                <td>  &nbsp; Pragma-git version : &nbsp; </td> 
-                                <td> <span id='version' style="font-size: 9pt;"> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Latest version : &nbsp; </td> 
-                                <td> <span id='latestVersion' style="font-size: 9pt;"></span>
-                                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
-                                </td>
-                            </tr><tr> 
-								<td><br></td>
-								<td><br></td>
-                            </tr><tr> 
-                                <td> &nbsp; nwjs version : &nbsp; </td> 
-                                <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; node version : &nbsp; </td> 
-                                <td> <span id='node-version' style="font-size: 9pt;"></span>  </td>
-                            </tr><tr> 
-                                <td> &nbsp; Platform : &nbsp; </td> 
-                                <td> <span id='platform' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Git version : &nbsp; </td> 
-                                <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-								<td><br></td>
-								<td><br></td>
-                            </tr> <tr> 
-                                <td> &nbsp; Settings folder : &nbsp; </td> 
-                                <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
-                                    <script>
-                                         document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
-                                    </script>   
-                                </td>
-                            </tr><tr> 
-                                <td> &nbsp; Log file : &nbsp; </td> 
-                                <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
-                                    <script>
-                                         document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                                    </script>  
-                                </td>
-                            </tr><tr> 
-                                <td> &nbsp; nwjs settings : &nbsp; </td> 
-                                <td> <span id='nwjs-settings-folder' style="font-size: 9pt;"></span>  </td>
-                            </tr><tr> 
-								<td><br></td>
-								<td><br></td>
-                            </tr>
+                    <div class="systemInfoRight">
+                        <div class="starFeedbackBox">
+                            <!--  Star button from GitHub -->
+                            <div id="givePragmaGitStarDiv" style="content-visibility: visible;">
+                                <span id="givePragmaGitStarText">Give Pragma-git a star :</span> <br> <br>
+                                <button onclick="_callback('starPragmaGit', this);" 
+                                    style="margin-left: 40px">
+                                    <img id="star-icon"  height="17" width="17"  
+                                        src="images/github_star_off.png" >
+                                    Star
+                                </button>
+                                <br><br>
+                            </div>
                             
-                        </tbody>
-                    </table>                            
-                            
-                            
-                     <table class="keyValueTable">
-                        <tbody>    
-                            <tr> 
-                                <td> &nbsp; Install path : &nbsp; </td> 
-                                <td> <span id='pragmaPath' style="font-size: 9pt;"></span> </td>
-                                    <script>
-                                         document.getElementById("pragmaPath").innerHTML = opener.CWD_INIT; 
-                                    </script>   
-                            </tr><tr> 
-                                <td> &nbsp; Askpass path : &nbsp; </td> 
-                                <td> <span id='askpassPath' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Pragma-merge command : &nbsp; </td> 
-                                <td> <span id='pragmaMergePath' style="font-size: 9pt;"></span> </td>
-                            </tr>
-                            
-                        </tbody>
-                    </table>
-                </code>
+                            Feedback : <br> 
+          
+                            <ul style="padding-inline-start: 1em;">
+                                <li>
+                                    <!--  List Issues GitHub -->  
+                                    <a href='https://github.com/pragma-git/pragma-git/issues' 
+                                       style="padding: 10px; padding-left: 0px;"
+                                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                                       Known issues </a>
+                                </li>
+                                <li>
+                                    <!--  Report Issues GitHub -->  
+                                    <a href='https://github.com/pragma-git/pragma-git/issues/new/choose' 
+                                       style="padding: 10px; padding-left: 0px;"
+                                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                                       Report a bug </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <br>                                          
 
                 <h3>Current Remote :</h3>

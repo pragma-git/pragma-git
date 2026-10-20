@@ -1923,6 +1923,7 @@ async function generateRepoTable(document, table, data) {
     
              //  Into table cell : Column Repo-path with radiobuttons
             cell = row.insertCell();
+            cell.setAttribute("class", 'repoRadioCol');
             
             //
             // LOCAL FOLDER
@@ -1992,23 +1993,28 @@ async function generateRepoTable(document, table, data) {
 
             // Write the most important warning, overriding with more important if multiple ( order: repo, folder, network for ssh-folder)
 
+                let localStatus = opener.cachedLocalStatus || {};
+                let isRepoStatus = localStatus.isRepo ? localStatus.isRepo[index] : true;
+                let existsStatus = localStatus.exists ? localStatus.exists[index] : true;
+                let pingStatus = localStatus.ping ? localStatus.ping[index] : true;
+
                 // Local repo exists / missing   (also for ssh folder)
-                console.log(`Coloring Local Folder --  ${opener.cachedLocalStatus.exists[index] } -- ${element.localFolder}`);   
-                if ( opener.cachedLocalStatus.isRepo[index] == false ){
+                console.log(`Coloring Local Folder --  ${existsStatus} -- ${element.localFolder}`);   
+                if ( isRepoStatus == false ){
                     label.style.color = 'red';
                     label.innerHTML = '<b><i>(not a repo)</i></b> : ' + element.localFolder
                     radiobox.style.visibility = "hidden";
                 }  
                 
                 // Local folder exists / missing   (also for ssh folder)
-                if ( opener.cachedLocalStatus.exists[index] == false){
+                if ( existsStatus == false ){
                     label.style.color = 'red';
                     label.innerHTML = '<b><i>(not a folder)</i></b> : ' + element.localFolder
                     radiobox.style.visibility = "hidden";
                 }     
       
                 // ssh folder missing because of network -- overwrite missing folder and missing repo (we don't know that if missing network)         
-                if ( ( opener.cachedLocalStatus.exists[index] == false ) && ( opener.cachedLocalStatus.ping[index] == false ) ){
+                if ( ( existsStatus == false ) && ( pingStatus == false ) ){
                     label.style.color = 'red';
                     label.innerHTML = '<b><i>(no network)</i></b> : '  + element.localFolder
                     radiobox.style.visibility = "hidden";
@@ -2044,18 +2050,30 @@ async function generateRepoTable(document, table, data) {
             groupInput.setAttribute('id', 'groupInput_' + index);
             groupInput.value = element.group || '';
             groupInput.placeholder = 'Group...';
-            (function(idx) {
+            (function(idx, currentCell) {
                 groupInput.onchange = function() {
                     updateRepoGroup(idx, this.value);
                 };
-            })(index);
+                groupInput.onkeydown = function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        currentCell.classList.add('editing-done');
+                        this.blur();
+                    } else if (e.key === 'Escape' || e.keyCode === 27) {
+                        e.preventDefault();
+                        this.value = state.repos[idx]?.group || '';
+                        currentCell.classList.add('editing-done');
+                        this.blur();
+                    }
+                };
+            })(index, cell);
             groupEdit.appendChild(groupInput);
 
             let groupSelect = document.createElement('select');
             groupSelect.setAttribute('class', 'groupSelect');
             groupSelect.setAttribute('id', 'groupSelect_' + index);
             groupSelect.title = 'Select existing group';
-            (function(idx) {
+            (function(idx, currentCell) {
                 groupSelect.onchange = function() {
                     if (this.value !== '') {
                         let chosen = (this.value === '__CLEAR__') ? '' : this.value;
@@ -2065,12 +2083,24 @@ async function generateRepoTable(document, table, data) {
                         }
                         updateRepoGroup(idx, chosen);
                         this.value = '';
+                        currentCell.classList.add('editing-done');
+                        this.blur();
                     }
                 };
-            })(index);
+            })(index, cell);
             groupEdit.appendChild(groupSelect);
 
             cell.appendChild(groupEdit);
+
+            cell.onmouseleave = function() {
+                this.classList.remove('editing-done');
+            };
+
+            groupDisplay.onclick = function() {
+                cell.classList.remove('editing-done');
+                let inp = document.getElementById('groupInput_' + index);
+                if (inp) inp.focus();
+            };
                 
             //
             // GIT PROVIDER ICON
@@ -2117,7 +2147,7 @@ async function generateRepoTable(document, table, data) {
             cell.appendChild(textarea);
                        
             // Remote URL active / inactive
-            if ( opener.cachedRemoteOrigins.isActiveRemote[index]){
+            if ( opener.cachedRemoteOrigins?.isActiveRemote?.[index] ){
                 document.getElementById(textareaId).classList.add('green');  // Connection has been tested to work
             }else{
                 document.getElementById(textareaId).classList.add('red');  // Connection has been tested to work
@@ -2159,6 +2189,8 @@ async function generateRepoTable(document, table, data) {
 }
 
 function updateAllGroupDropdowns() {
+    if (!state || !state.repos) return;
+
     let groups = new Set();
     for (let r of state.repos) {
         if (r && r.group && r.group.trim().length > 0) {
@@ -2172,6 +2204,12 @@ function updateAllGroupDropdowns() {
         let sel = document.getElementById('groupSelect_' + i);
         if (!sel) continue;
 
+        if (sortedGroups.length === 0) {
+            sel.style.display = 'none';
+            continue;
+        }
+
+        sel.style.display = '';
         sel.innerHTML = '';
         let defaultOpt = document.createElement('option');
         defaultOpt.value = '';
@@ -2195,33 +2233,41 @@ function updateAllGroupDropdowns() {
 
     // 2. Populate table filter dropdown
     let filterSel = document.getElementById('repoTableGroupFilter');
+    let headerLabel = document.getElementById('groupHeaderLabel');
     if (filterSel) {
-        let currentFilter = filterSel.value || 'ALL';
-        filterSel.innerHTML = '';
-
-        let optAll = document.createElement('option');
-        optAll.value = 'ALL';
-        optAll.textContent = 'Group (All)';
-        filterSel.appendChild(optAll);
-
-        let optUngrouped = document.createElement('option');
-        optUngrouped.value = '__UNGROUPED__';
-        optUngrouped.textContent = 'Ungrouped';
-        filterSel.appendChild(optUngrouped);
-
-        for (let g of sortedGroups) {
-            let opt = document.createElement('option');
-            opt.value = g;
-            opt.textContent = g;
-            filterSel.appendChild(opt);
-        }
-
-        // Restore filter if still valid, otherwise ALL
-        filterSel.value = currentFilter;
-        if (filterSel.value !== currentFilter && currentFilter !== '__UNGROUPED__') {
+        if (sortedGroups.length === 0) {
+            filterSel.innerHTML = '<option value="ALL">Group</option>';
             filterSel.value = 'ALL';
+            if (headerLabel) headerLabel.textContent = 'Group';
+            filterRepoTableByGroup('ALL');
+        } else {
+            let currentFilter = filterSel.value || 'ALL';
+            filterSel.innerHTML = '';
+
+            let optAll = document.createElement('option');
+            optAll.value = 'ALL';
+            optAll.textContent = 'Group (All)';
+            filterSel.appendChild(optAll);
+
+            let optUngrouped = document.createElement('option');
+            optUngrouped.value = '__UNGROUPED__';
+            optUngrouped.textContent = 'Ungrouped';
+            filterSel.appendChild(optUngrouped);
+
+            for (let g of sortedGroups) {
+                let opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g;
+                filterSel.appendChild(opt);
+            }
+
+            // Restore filter if still valid, otherwise ALL
+            filterSel.value = currentFilter;
+            if (filterSel.value !== currentFilter && currentFilter !== '__UNGROUPED__') {
+                filterSel.value = 'ALL';
+            }
+            filterRepoTableByGroup(filterSel.value);
         }
-        filterRepoTableByGroup(filterSel.value);
     }
 }
 
@@ -2242,6 +2288,19 @@ function filterRepoTableByGroup(selectedGroup) {
         }
 
         row.style.display = show ? '' : 'none';
+    }
+
+    let headerLabel = document.getElementById('groupHeaderLabel');
+    let filterSel = document.getElementById('repoTableGroupFilter');
+    if (headerLabel) {
+        if (!selectedGroup || selectedGroup === 'ALL') {
+            headerLabel.textContent = 'Group (All)';
+            if (filterSel) filterSel.title = 'Filter repositories by group';
+        } else {
+            headerLabel.textContent = 'Group (filtered)';
+            let filterName = (selectedGroup === '__UNGROUPED__') ? 'Ungrouped' : selectedGroup;
+            if (filterSel) filterSel.title = 'Filter: ' + filterName;
+        }
     }
 }
 
@@ -2629,15 +2688,13 @@ async function updateRemoteInfo( ){
         }
 
         html += '<code> <table class="keyValueTable">';
-        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>` // Style makes it fill width of column
-        
-        html += `   <tr><td> &nbsp;  API output : </td> <td> <button class="smallButton" onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
-        
-        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>` // Style makes it fill width of column
-        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>` // Style makes it fill width of column
-        html +=     `<tr><td> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
-        html +=     `<tr><td> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
-        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>` // Style makes it fill width of column
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API status : &nbsp; </td><td> ${providerApiStatus} </td></tr>`
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; API output : &nbsp; </td> <td> <button class="smallButton" onclick="showJsonInPopup( provider.repoInfoStruct, 'Remote api content', '( ${providerApiUrl} )' )"> Show </button></td></tr>`;
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Provider API URL : &nbsp; </td><td> ${providerApiUrl} </td></tr>`
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Visibility : &nbsp; </td><td> ${visibility} </td></tr>`
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Forked from : &nbsp; </td><td> ${forkParentUrl} </td></tr>` 
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Icon path : &nbsp; </td><td> ${iconLongPath} <img style='vertical-align:middle; filter: none;' height="17" width="17" src="${iconPath}"> </td></tr>` 
+        html +=     `<tr><td style="white-space: nowrap;"> &nbsp; Repo web page URL : &nbsp; </td><td> <a href="${providerWebPageUrl}" onclick="require('nw.gui').Shell.openExternal( this.href );return false;"> ${providerWebPageUrl} </a></td></tr>`
         
         
         html += '</table></code>';   
