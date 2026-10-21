@@ -33,6 +33,19 @@ console.error = function(...args) {
 
 const { YELLOW, NORMAL, assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
+function resolveGitHubToken() {
+    if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
+    if (process.env.GH_TOKEN) return process.env.GH_TOKEN;
+    try {
+        const out = execSync('printf "protocol=https\\nhost=github.com\\n\\n" | git credential fill 2>/dev/null', { timeout: 3000 }).toString();
+        const match = out.match(/^password=(.+)$/m);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+    } catch (e) {}
+    return '';
+}
+
 async function checkInternet() {
     if (process.env.SIMULATE_OFFLINE === 'true') {
         return false;
@@ -59,10 +72,10 @@ async function runTests() {
     const GithubApi = require(path.join(REPO_ROOT, 'apis_github_and_others/github.com.js'));
     const BitbucketApi = require(path.join(REPO_ROOT, 'apis_github_and_others/bitbucket.org.js'));
 
-    // Test 2: GitHub live query against official public repo (octocat/Hello-World)
+    // Test 2: GitHub live query against official public repo (pragma-git/pragma-git)
     try {
-        const ghToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
-        const gh = new GithubApi('https://github.com/octocat/Hello-World.git', 'octocat', ghToken);
+        const ghToken = resolveGitHubToken();
+        const gh = new GithubApi('https://github.com/pragma-git/pragma-git.git', 'pragma-git', ghToken);
         await gh.initialize();
 
         const ghStatus = await gh.getValue('api-status');
@@ -74,11 +87,11 @@ async function runTests() {
         } else {
             const ghPrivate = await gh.getValue('is-private-repo');
             assert.strictEqual(ghStatus, 'ok', 'GitHub API responded with ok');
-            assert.strictEqual(ghPrivate, false, 'octocat/Hello-World is a public repo');
-            assertPass('2.2: Live GitHub query for octocat/Hello-World returns api-status: ok, is-private: false');
+            assert.strictEqual(ghPrivate, false, 'pragma-git/pragma-git is a public repo');
+            assertPass('2.2: Live GitHub query for pragma-git/pragma-git returns api-status: ok, is-private: false');
         }
     } catch (err) {
-        assertFail('2.2: Live GitHub query for octocat/Hello-World', err.message);
+        assertFail('2.2: Live GitHub query for pragma-git/pragma-git', err.message);
     }
 
     // Test 3: Bitbucket live query against official public repo (atlassian/aui)
@@ -105,7 +118,7 @@ async function runTests() {
     // Test 4: Git over HTTPS network protocol check against GitHub, GitLab, and Bitbucket
     try {
         const providers = [
-            { name: 'GitHub', url: 'https://github.com/octocat/Hello-World.git' },
+            { name: 'GitHub', url: 'https://github.com/pragma-git/pragma-git.git' },
             { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-foss.git' },
             { name: 'Bitbucket', url: 'https://bitbucket.org/atlassian/aui.git' }
         ];
