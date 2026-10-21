@@ -1,0 +1,151 @@
+#!/bin/bash
+# _run_tests - Git client and conflict test runner for Pragma-git
+#
+# Usage:
+#   _run_tests [OPTIONS]
+#
+# Description:
+#   Runs automated tests for simple-git proxy wrapper (index.lock retry logic,
+#   exponential backoff, error propagation) and git merge conflict scenarios.
+#
+# Options:
+#   -h, --help       Show this help text and exit
+#   -v, --verbose    Show detailed live output from each test
+#
+# Examples:
+#   ./_run_tests                  Run all git_client tests (concise mode)
+#   ./_run_tests -v               Run all git_client tests with live verbose output
+#
+## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+BOLD=$(tput bold 2>/dev/null || echo "")
+NORMAL=$(tput sgr0 2>/dev/null || echo "")
+GREEN=$(tput setaf 2 2>/dev/null || echo "")
+RED=$(tput setaf 1 2>/dev/null || echo "")
+CYAN=$(tput setaf 6 2>/dev/null || echo "")
+
+VERBOSE=false
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help|'/?')
+            sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'
+            exit 0
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            export VERBOSE=true
+            ;;
+    esac
+done
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}${CYAN}      Pragma-git Automated Tests: Git Client & Merge (Non-GUI)${NORMAL}"
+echo "${BOLD}======================================================================${NORMAL}"
+echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
+function print_suite_description() {
+    local file="$1"
+    case "$file" in
+        test_01_simple_git_retry.js)
+            echo "   Tests simpleGitWithRetry Proxy wrapper for automatic recovery during index.lock."
+            echo "   Verifies exponential backoff retry window, maxRetries error, and fluent chaining."
+            ;;
+        test_02_conflict_markers.sh)
+            echo "   Creates branching scenarios with conflicting edits and tests merge conflict handling."
+            echo "   Verifies git status reports unmerged paths (UU) and embeds diff3 conflict markers."
+            ;;
+    esac
+}
+
+echo "Test dir  : $SCRIPT_DIR"
+[ "$VERBOSE" = true ] && echo "Verbosity : Detailed (-v)"
+echo ""
+
+START_TIME=$(date +%s)
+TOTAL_TESTS=0
+PASSED_TESTS=0
+FAILED_TESTS=0
+
+TEST_FILES=($(find "$SCRIPT_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
+NUM_TESTS=${#TEST_FILES[@]}
+
+for test_path in "${TEST_FILES[@]}"; do
+    test_name=$(basename "$test_path")
+    ((TOTAL_TESTS++))
+
+    if [ "$VERBOSE" = true ]; then
+        echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
+        echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${test_name}${NORMAL}"
+        print_suite_description "$test_name"
+        echo ""
+
+        if [[ "$test_path" == *.js ]]; then
+            node "$test_path"
+        else
+            bash "$test_path"
+        fi
+        exit_code=$?
+
+        if [ $exit_code -eq 0 ]; then
+            ((PASSED_TESTS++))
+            echo "${GREEN}${BOLD}>> Result: SUITE PASSED [OK]${NORMAL}"
+        else
+            ((FAILED_TESTS++))
+            echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
+        fi
+        echo ""
+    else
+        printf ">> [%d/%d] %-38s " "$TOTAL_TESTS" "$NUM_TESTS" "$test_name"
+
+        if [[ "$test_path" == *.js ]]; then
+            OUTPUT=$(node "$test_path" 2>&1)
+        else
+            OUTPUT=$(bash "$test_path" 2>&1)
+        fi
+        exit_code=$?
+
+        pass_count=$(echo "$OUTPUT" | grep -c '\[PASS\]')
+        fail_count=$(echo "$OUTPUT" | grep -c '\[FAIL\]')
+        total_count=$((pass_count + fail_count))
+
+        if [ $exit_code -eq 0 ]; then
+            ((PASSED_TESTS++))
+            echo "${GREEN}[OK]${NORMAL} (${pass_count}/${total_count} passed)"
+        else
+            ((FAILED_TESTS++))
+            echo "${RED}[FAILED]${NORMAL} (${pass_count}/${total_count} passed, ${fail_count} failed)"
+            echo ""
+            echo "${RED}${BOLD}--- Failure Output for ${test_name} ---${NORMAL}"
+            echo "$OUTPUT"
+            echo "${RED}${BOLD}----------------------------------------${NORMAL}"
+            echo ""
+        fi
+    fi
+done
+
+[ "$VERBOSE" = false ] && echo ""
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}Git Client Test Summary:${NORMAL}"
+echo "  Suites run:    $TOTAL_TESTS"
+echo "  Suites passed: ${GREEN}$PASSED_TESTS/$TOTAL_TESTS passed${NORMAL}"
+if [ $FAILED_TESTS -gt 0 ]; then
+    echo "  Suites failed: ${RED}$FAILED_TESTS${NORMAL}"
+else
+    echo "  Suites failed: $FAILED_TESTS"
+fi
+echo "  Duration:      ${DURATION}s"
+echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -eq 0 ] && [ $TOTAL_TESTS -gt 0 ]; then
+    echo "${GREEN}${BOLD}ALL GIT CLIENT TESTS PASSED!${NORMAL}"
+    exit 0
+else
+    echo "${RED}${BOLD}SOME GIT CLIENT TESTS FAILED!${NORMAL}"
+    exit 1
+fi

@@ -96,5 +96,6 @@ else
     rm -rf "$TEST_REPO_DIR"
 fi
 
-echo "Suite Result: $PASS_COUNT passed, $FAIL_COUNT failed"
+TOTAL_COUNT=$((PASS_COUNT + FAIL_COUNT))
+echo "Suite Result: $PASS_COUNT/$TOTAL_COUNT passed, $FAIL_COUNT failed"
 [ $FAIL_COUNT -eq 0 ] && exit 0 || exit 1

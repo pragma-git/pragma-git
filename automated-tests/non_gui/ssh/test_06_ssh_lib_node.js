@@ -70,5 +70,5 @@ try {
     assertFail('6.3: wslToWindowsPath error', err.message);
 }
 
-console.log(`Suite Result: ${passCount} passed, ${failCount} failed`);
+console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
 process.exit(failCount === 0 ? 0 : 1);

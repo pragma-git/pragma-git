@@ -2,6 +2,7 @@
 * **Runtime & Framework**: NW.js (`0.100.1`) med Chromium och Node.js
 * **Core Libraries**: `simple-git`, `@hackolade/keytar`, `chokidar`, `diff-match-patch`, `@toast-ui/editor`
 * **Packaging & Signing**: `create-dmg`, macOS `codesign`, Apple `notarytool` / `stapler`
+* **Coding Standard**: Always write code comments, documentation, and variable/function names in **American English**.
 
 ---
 
@@ -27,18 +28,21 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Automatiserade tester (headless SSH) & SSH Key Selection:
-  - **Automatiserade SSH-tester utan GUI (`automated-tests/non_gui/ssh/`)** på grenen `feature/automated-tests`:
-    - Etablerat katalogstrukturen `automated-tests/non_gui/ssh/` för icke-GUI SSH-tester samt dokumentation i [`automated-tests/README.md`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/README.md).
-    - Skapat 6 testsviter som täcker hela SSH-stacken mot `localhost`:
-      - [`test_01_ssh_login.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_01_ssh_login.sh): Lösenordslös inloggning, anpassade nyckelsökvägar, avvisning av obehöriga nycklar (`STATUS:KEY_NEEDED`), icke-existerande värdar och otillgängliga portar.
-      - [`test_02_ssh_folder_validation.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_02_ssh_folder_validation.sh): `ssh-test-if-file-exists` för existerande mappar, saknade mappar, vanliga kataloger utan git samt fullgoda Git-repon.
-      - [`test_03_ssh_mkdir.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_03_ssh_mkdir.sh): `ssh-mkdir` inklusive nästlade kataloger (`mkdir -p`), idempotens och mappar med mellanslag i namnet.
-      - [`test_04_ssh_git_client.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_04_ssh_git_client.sh): `ssh-git-client` för git init, status, add, commit, log och checkout.
-      - [`test_05_ssh_put_get.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_05_ssh_put_get.sh): `ssh-put` och `ssh-get` för filöverföring till och från server med dataintegritetskontroll.
-      - [`test_06_ssh_lib_node.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js): Node.js enhetstester för `getDefaultSshKey()`, nyckeldetektering i filsystemet och sökvägskonverterare.
-    - Implementerat övergripande testkörare [`_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/_run_tests) i repots rot och i [`automated-tests/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests) med koncis 1-radssammanfattning som standard, detaljerad verbose-utskrift vid `-v` / `--verbose`, felrapportering, filterstöd, `--keep` (`-k`) för visuell granskning i `/tmp`, samt inbyggd `--help` (`cliHelpLine`) med fullständig argumentvidarebefordran.
-    - Gjort [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) importerbar i Node.js (`module.exports`) utan att störa NW.js.
+* **Task Description**: Modulär automatiserad testsvit (Non-GUI) & SSH Key Selection:
+  - **Modulär automatiserad testsvit (`automated-tests/non_gui/`)** på grenen `feature/automated-tests`:
+    - Etablerat katalogstruktur med 6 självständiga testkategorier under `automated-tests/non_gui/`, där varje underkatalog har ett eget [`_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests) som endast kör den katalogens tester.
+    - Alla testkörningar städar upp efter sig fullständigt i `/tmp` (inga kvarlämnade mappar eller `.git`-kataloger).
+    - Alla `_run_tests`-skript är utrustade med användarbeskrivningar och `cliHelpLine`-aktivering (`--help`, `-h`).
+    - Stöd för både kompakt 1-radssammanfattning med exakt pass/total-kvot `(X/X passed)` som standard och detaljerad realtidsutskrift via `-v` / `--verbose` med 2-raders förklaring av varje testsvits syfte.
+    - Skapat 14 testsviter med totalt 60 tester över 6 kategorier:
+      1. **`ssh/`** (6 sviter, 27 tester): Inloggning, nyckelhantering, mapp- och repovalidering, katalogskapande med mellanslag, fjärr-git via `ssh-git-client`, filöverföring via `ssh-put`/`ssh-get`, samt hjälpmodul i Node.js.
+      2. **`utils/`** (2 sviter, 7 tester): Strängvalidering (`isEmptyString`), arraydeduplicering (`cleanDuplicates`), objektindexering (`findObjectIndex`), nyckel-värde-parsning (`parseKeyValuePairsFromString`), branch-sanitering (`branchCharFilter`) och dolda grenar (`isHiddenBranch`).
+      3. **`git_client/`** (2 sviter, 7 tester): `simpleGitWithRetry` med automatisk återhämtning vid `index.lock`, exponential backoff, felutlösning vid lås-exhaustion, samt merge-konfliktsdetektering och standardkonfliktmarkörer.
+      4. **`credentials/`** (1 svit, 3 tester): Keychain- och hemlighetshantering (`pragma-secrets-lib` via `@hackolade/keytar`).
+      5. **`git_configs/`** (1 svit, 9 tester): Syntaxvalidering och direktivtester för plattforms-gitconfigs (Mac, Linux, Windows, SSH-server).
+      6. **`apis/`** (2 sviter, 7 tester): Offline URL-översättning och sanitering, samt live public queries mot officiella publika repon (`octocat/Hello-World`, `atlassian/aui`, `gitlab-org/gitlab-foss`) med förtestad internetkontroll och mjuk `[SKIP]`.
+    - Övergripande master runner i projektroten ([`_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/_run_tests)) och i [`automated-tests/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests) orkestrerar alla kategorier och visar en samlad statusrapport.
+    - Dokumentationen [`automated-tests/README.md`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/README.md) översatt till engelska med strikt kodstandard: alltid skriva kodkommentarer, dokumentation och variabel-/funktionsnamn på amerikansk engelska.
   - **Hjälpfiler i HELP-katalogen & UI-terminologi uppdaterade** ([HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
     - Korrigerat kolumnordningen i `HELP/Settings.html`:
       - 1:a: "Project folder"

@@ -1,39 +1,36 @@
 #!/bin/bash
-# _run_tests - Master test runner for Pragma-git automated tests
+# _run_tests - Master test runner for all Pragma-git automated tests
 #
 # Usage:
-#   _run_tests [OPTIONS] [FILTER]
+#   _run_tests [OPTIONS]
 #
 # Description:
-#   Runs automated regression test suites for Pragma-git (headless / non-GUI).
-#   Verifies SSH authentication, remote folder existence and git validation,
-#   remote directory creation (including paths with spaces), git client commands,
-#   remote file transfers (put/get), and Node.js helper library functions.
+#   Runs all automated test suites across all non-GUI test categories:
+#     - ssh         : SSH authentication, remote folders, git over SSH, file transfers
+#     - utils       : util_module.js string validation, array deduping, branch filtering
+#     - git_client  : simpleGitWithRetry lock recovery, merge conflict markers
+#     - credentials : keytar keychain secrets management via pragma-secrets-lib
+#     - git_configs : platform gitconfig templates syntax & directive verification
+#     - apis        : GitHub, GitLab, Bitbucket git-to-REST API mappings
+#
+#   Each subfolder also has its own independent _run_tests script to run only
+#   its local tests.
 #
 # Options:
 #   -h, --help       Show this help text and exit
-#   -v, --verbose    Show detailed live output from each test suite (default is concise)
-#   -k, --keep       Preserve temporary test directories in /tmp for visual inspection
-#
-# Arguments:
-#   FILTER           Optional substring to run only matching test suites
-#                    (e.g. 'login', 'mkdir', '03', 'git', 'put_get', 'node')
+#   -v, --verbose    Show detailed live output from each test
 #
 # Examples:
-#   ./_run_tests                  Run all test suites (cleans up /tmp)
-#   ./_run_tests -k               Run all suites and keep test files in /tmp
-#   ./_run_tests mkdir            Run only tests matching 'mkdir'
-#   ./_run_tests -k git           Run ssh-git-client tests and preserve the repo in /tmp
-#   ./_run_tests -v               Run all tests with full verbose output
+#   ./_run_tests                  Run all test categories (concise mode)
+#   ./_run_tests -v               Run all test categories with live verbose output
+#   cd automated-tests/non_gui/utils && ./_run_tests   Run only utils tests
 #
 ## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
 
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Styling
 BOLD=$(tput bold 2>/dev/null || echo "")
 NORMAL=$(tput sgr0 2>/dev/null || echo "")
 GREEN=$(tput setaf 2 2>/dev/null || echo "")
@@ -41,10 +38,7 @@ RED=$(tput setaf 1 2>/dev/null || echo "")
 CYAN=$(tput setaf 6 2>/dev/null || echo "")
 YELLOW=$(tput setaf 3 2>/dev/null || echo "")
 
-FILTER=""
-VERBOSE=false
-KEEP_TEMP=false
-
+VERBOSE_ARG=""
 for arg in "$@"; do
     case "$arg" in
         -h|--help|'/?')
@@ -52,140 +46,94 @@ for arg in "$@"; do
             exit 0
             ;;
         -v|--verbose)
-            VERBOSE=true
-            export VERBOSE=true
-            ;;
-        -k|--keep)
-            KEEP_TEMP=true
-            export KEEP_TEMP=true
-            ;;
-        *)
-            if [ -z "$FILTER" ]; then
-                FILTER="$arg"
-            fi
+            VERBOSE_ARG="-v"
             ;;
     esac
 done
 
 echo "${BOLD}======================================================================${NORMAL}"
-echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (Non-GUI / Headless)${NORMAL}"
+echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (All Categories)${NORMAL}"
 echo "${BOLD}======================================================================${NORMAL}"
 echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
 echo "Repo root : $REPO_ROOT"
-[ -n "$FILTER" ] && echo "Filter    : *${FILTER}*"
-[ "$KEEP_TEMP" = true ] && echo "Mode      : Preserving test files in /tmp (--keep)"
-[ "$VERBOSE" = true ] && echo "Verbosity : Detailed (-v)"
+[ -n "$VERBOSE_ARG" ] && echo "Verbosity : Detailed (-v)"
 echo ""
 
 START_TIME=$(date +%s)
-TOTAL_SUITES=0
-PASSED_SUITES=0
-FAILED_SUITES=0
+TOTAL_CATEGORIES=0
+PASSED_CATEGORIES=0
+FAILED_CATEGORIES=0
 
-# Find all test files in non_gui/ssh/
-ALL_TEST_FILES=$(find "$SCRIPT_DIR/non_gui/ssh" -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort)
+# Define subfolder order
+CATEGORIES=(
+    "ssh"
+    "utils"
+    "git_client"
+    "credentials"
+    "git_configs"
+    "apis"
+)
 
-# Pre-filter tests
-TEST_FILES=()
-for test_path in $ALL_TEST_FILES; do
-    test_name=$(basename "$test_path")
-    if [ -z "$FILTER" ] || [[ "$test_name" == *"$FILTER"* ]]; then
-        TEST_FILES+=("$test_path")
+CATEGORY_RESULTS=()
+
+for cat in "${CATEGORIES[@]}"; do
+    cat_dir="$SCRIPT_DIR/non_gui/$cat"
+    cat_runner="$cat_dir/_run_tests"
+
+    if [ ! -f "$cat_runner" ]; then
+        continue
     fi
-done
 
-NUM_TESTS=${#TEST_FILES[@]}
+    ((TOTAL_CATEGORIES++))
+    cat_start=$(date +%s)
 
-if [ "$NUM_TESTS" -eq 0 ]; then
-    echo "${YELLOW}No test suites matched filter: *${FILTER}*${NORMAL}"
-    exit 0
-fi
-
-for test_path in "${TEST_FILES[@]}"; do
-    test_name=$(basename "$test_path")
-    ((TOTAL_SUITES++))
-
-    if [ "$VERBOSE" = true ]; then
-        echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
-        echo "${BOLD}>> Suite $TOTAL_SUITES/$NUM_TESTS: ${test_name}${NORMAL}"
-
-        if [[ "$test_path" == *.js ]]; then
-            node "$test_path"
-        else
-            bash "$test_path"
-        fi
+    if [ -n "$VERBOSE_ARG" ]; then
+        echo "${BOLD}######################################################################${NORMAL}"
+        echo "${BOLD}${YELLOW}>>> CATEGORY: $cat${NORMAL}"
+        echo "${BOLD}######################################################################${NORMAL}"
+        bash "$cat_runner" -v
         exit_code=$?
-
-        if [ $exit_code -eq 0 ]; then
-            ((PASSED_SUITES++))
-            echo "${GREEN}${BOLD}>> Result: SUITE PASSED [OK]${NORMAL}"
-        else
-            ((FAILED_SUITES++))
-            echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
-        fi
-        echo ""
     else
-        printf ">> [%d/%d] %-38s " "$TOTAL_SUITES" "$NUM_TESTS" "$test_name"
-
-        if [[ "$test_path" == *.js ]]; then
-            OUTPUT=$(node "$test_path" 2>&1)
-        else
-            OUTPUT=$(bash "$test_path" 2>&1)
-        fi
+        bash "$cat_runner"
         exit_code=$?
-
-        pass_count=$(echo "$OUTPUT" | grep -c '\[PASS\]')
-        fail_count=$(echo "$OUTPUT" | grep -c '\[FAIL\]')
-
-        if [ $exit_code -eq 0 ]; then
-            ((PASSED_SUITES++))
-            echo "${GREEN}[OK]${NORMAL} (${pass_count} passed)"
-            if [ "$KEEP_TEMP" = true ]; then
-                echo "$OUTPUT" | grep '\[INFO\] Preserved' | sed 's/  \[INFO\]/      /'
-            fi
-        else
-            ((FAILED_SUITES++))
-            echo "${RED}[FAILED]${NORMAL} (${fail_count} failed)"
-            echo ""
-            echo "${RED}${BOLD}--- Failure Output for ${test_name} ---${NORMAL}"
-            echo "$OUTPUT"
-            echo "${RED}${BOLD}----------------------------------------${NORMAL}"
-            echo ""
-        fi
     fi
-done
 
-[ "$VERBOSE" = false ] && echo ""
+    cat_end=$(date +%s)
+    cat_duration=$((cat_end - cat_start))
+
+    if [ $exit_code -eq 0 ]; then
+        ((PASSED_CATEGORIES++))
+        CATEGORY_RESULTS+=("  ${GREEN}[OK]${NORMAL}     ${cat} (${cat_duration}s)")
+    else
+        ((FAILED_CATEGORIES++))
+        CATEGORY_RESULTS+=("  ${RED}[FAILED]${NORMAL} ${cat} (${cat_duration}s)")
+    fi
+    echo ""
+done
 
 END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
+TOTAL_DURATION=$((END_TIME - START_TIME))
 
 echo "${BOLD}======================================================================${NORMAL}"
-echo "${BOLD}Test Summary:${NORMAL}"
-echo "  Suites run:    $TOTAL_SUITES"
-echo "  Suites passed: ${GREEN}$PASSED_SUITES${NORMAL}"
-if [ $FAILED_SUITES -gt 0 ]; then
-    echo "  Suites failed: ${RED}$FAILED_SUITES${NORMAL}"
+echo "${BOLD}Master Test Summary (All Categories):${NORMAL}"
+for res in "${CATEGORY_RESULTS[@]}"; do
+    echo -e "$res"
+done
+echo "----------------------------------------------------------------------"
+echo "  Categories run:    $TOTAL_CATEGORIES"
+echo "  Categories passed: ${GREEN}$PASSED_CATEGORIES/$TOTAL_CATEGORIES passed${NORMAL}"
+if [ $FAILED_CATEGORIES -gt 0 ]; then
+    echo "  Categories failed: ${RED}$FAILED_CATEGORIES${NORMAL}"
 else
-    echo "  Suites failed: $FAILED_SUITES"
+    echo "  Categories failed: $FAILED_CATEGORIES"
 fi
-echo "  Duration:      ${DURATION}s"
+echo "  Total Duration:    ${TOTAL_DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
 
-if [ "$KEEP_TEMP" = true ]; then
-    echo ""
-    echo "${CYAN}${BOLD}Preserved test directories in /tmp for visual inspection:${NORMAL}"
-    ls -ld /tmp/pragma_* 2>/dev/null || echo "  (None found)"
-    echo ""
-    echo "  ${YELLOW}* To inspect in Finder : open /tmp${NORMAL}"
-    echo "  ${YELLOW}* To clean up when done: rm -rf /tmp/pragma_*${NORMAL}"
-    echo ""
-fi
-
-if [ $FAILED_SUITES -eq 0 ] && [ $TOTAL_SUITES -gt 0 ]; then
-    echo "${GREEN}${BOLD}ALL TESTS PASSED!${NORMAL}"
+if [ $FAILED_CATEGORIES -eq 0 ] && [ $TOTAL_CATEGORIES -gt 0 ]; then
+    echo "${GREEN}${BOLD}ALL TEST CATEGORIES PASSED!${NORMAL}"
     exit 0
 else
-    echo "${RED}${BOLD}SOME TESTS FAILED!${NORMAL}"
+    echo "${RED}${BOLD}SOME TEST CATEGORIES FAILED!${NORMAL}"
     exit 1
 fi
