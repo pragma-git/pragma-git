@@ -12,6 +12,7 @@
 #     - credentials : keytar keychain secrets management via pragma-secrets-lib
 #     - git_configs : platform gitconfig templates syntax & directive verification
 #     - apis        : GitHub, GitLab, Bitbucket git-to-REST API mappings
+#     - app_function_calls : repository settings repair and history message formatting from app.js
 #
 #   Each subfolder also has its own independent _run_tests script to run only
 #   its local tests.
@@ -72,6 +73,7 @@ CATEGORIES=(
     "credentials"
     "git_configs"
     "apis"
+    "app_function_calls"
 )
 
 CATEGORY_RESULTS=()

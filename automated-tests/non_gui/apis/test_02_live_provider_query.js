@@ -37,6 +37,9 @@ function assertFail(desc, details) {
 }
 
 async function checkInternet() {
+    if (process.env.SIMULATE_OFFLINE === 'true') {
+        return false;
+    }
     try {
         await dns.lookup('github.com');
         return true;
@@ -48,19 +51,20 @@ async function checkInternet() {
 async function runTests() {
     console.log('Running Suite: Live Git Provider Public Queries');
 
-    // Pre-test: Verify internet connectivity
+    // Test 1: Verify active internet connectivity
     const online = await checkInternet();
     if (!online) {
-        console.log('  [SKIP] 2.1: No active internet connection detected (skipping live queries)');
-        console.log(`Suite Result: 0/0 passed, 0 failed`);
-        process.exit(0);
+        assertFail('2.1: Active internet connection required for live provider tests (DNS resolution to github.com failed)');
+        console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
+        process.exit(1);
     }
+    assertPass('2.1: Verified active internet connectivity via DNS resolution (github.com)');
 
     try {
         const GithubApi = require(path.join(REPO_ROOT, 'apis_github_and_others/github.com.js'));
         const BitbucketApi = require(path.join(REPO_ROOT, 'apis_github_and_others/bitbucket.org.js'));
 
-        // Test 1: GitHub live query against official public repo (octocat/Hello-World)
+        // Test 2: GitHub live query against official public repo (octocat/Hello-World)
         const gh = new GithubApi('https://github.com/octocat/Hello-World.git');
         await gh.initialize();
 
@@ -68,9 +72,9 @@ async function runTests() {
         const ghPrivate = await gh.getValue('is-private-repo');
         assert.strictEqual(ghStatus, 'ok', 'GitHub API responded with ok');
         assert.strictEqual(ghPrivate, false, 'octocat/Hello-World is a public repo');
-        assertPass('2.1: Live GitHub query for octocat/Hello-World returns api-status: ok, is-private: false');
+        assertPass('2.2: Live GitHub query for octocat/Hello-World returns api-status: ok, is-private: false');
 
-        // Test 2: Bitbucket live query against official public repo (atlassian/aui)
+        // Test 3: Bitbucket live query against official public repo (atlassian/aui)
         const bb = new BitbucketApi('https://bitbucket.org/atlassian/aui.git');
         await bb.initialize();
 
@@ -78,9 +82,9 @@ async function runTests() {
         const bbPrivate = await bb.getValue('is-private-repo');
         assert.strictEqual(bbStatus, 'ok', 'Bitbucket API responded with ok');
         assert.strictEqual(bbPrivate, false, 'atlassian/aui is a public repo');
-        assertPass('2.2: Live Bitbucket query for atlassian/aui returns api-status: ok, is-private: false');
+        assertPass('2.3: Live Bitbucket query for atlassian/aui returns api-status: ok, is-private: false');
 
-        // Test 3: Git over HTTPS network protocol check against GitHub, GitLab, and Bitbucket
+        // Test 4: Git over HTTPS network protocol check against GitHub, GitLab, and Bitbucket
         const providers = [
             { name: 'GitHub', url: 'https://github.com/octocat/Hello-World.git' },
             { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-foss.git' },
@@ -91,7 +95,7 @@ async function runTests() {
             const out = execSync(`git ls-remote --heads "${p.url}" 2>&1`, { timeout: 10000 }).toString();
             assert.ok(out.includes('refs/heads/'), `${p.name} responded with valid git branches`);
         }
-        assertPass('2.3: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, and Bitbucket');
+        assertPass('2.4: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, and Bitbucket');
 
     } catch (err) {
         assertFail('Failure during live provider query tests', err.message);

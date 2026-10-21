@@ -73,13 +73,16 @@ FAILED_TESTS=0
 TEST_FILES=($(find "$SCRIPT_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
 NUM_TESTS=${#TEST_FILES[@]}
 
+CATEGORY_NAME=$(basename "$SCRIPT_DIR")
+
 for test_path in "${TEST_FILES[@]}"; do
     test_name=$(basename "$test_path")
+    suite_title="${CATEGORY_NAME}/${test_name}"
     ((TOTAL_TESTS++))
 
     if [ "$VERBOSE" = true ]; then
         echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
-        echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${test_name}${NORMAL}"
+        echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${suite_title}${NORMAL}"
         print_suite_description "$test_name"
         echo ""
 
@@ -99,7 +102,7 @@ for test_path in "${TEST_FILES[@]}"; do
         fi
         echo ""
     else
-        printf ">> [%d/%d] %-38s " "$TOTAL_TESTS" "$NUM_TESTS" "$test_name"
+        printf ">> [%d/%d] %-46s " "$TOTAL_TESTS" "$NUM_TESTS" "$suite_title"
 
         if [[ "$test_path" == *.js ]]; then
             OUTPUT=$(node "$test_path" 2>&1)

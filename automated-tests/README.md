@@ -39,16 +39,23 @@ automated-tests/
     │
     ├── credentials/                            # Credentials & Secrets
     │   ├── _run_tests                          # Runs credentials tests only
-    │   └── test_01_secrets_keytar.js
+    │   ├── test_01_secrets_keytar.js
+    │   └── test_02_credentials_lib_safe.js
     │
     ├── git_configs/                            # Git Config Templates
     │   ├── _run_tests                          # Runs git_configs tests only
     │   └── test_01_git_config_syntax.sh
     │
-    └── apis/                                   # Git Provider REST APIs
-        ├── _run_tests                          # Runs APIs tests only
-        ├── test_01_provider_url_translation.js
-        └── test_02_live_provider_query.js
+    ├── apis/                                   # Git Provider REST APIs
+    │   ├── _run_tests                          # Runs APIs tests only
+    │   ├── test_01_provider_url_translation.js
+    │   ├── test_02_live_provider_query.js
+    │   └── test_03_provider_classes.js
+    │
+    └── app_function_calls/                     # App Core Logic Functions (from app.js)
+        ├── _run_tests                          # Runs app_function_calls tests only
+        ├── test_01_repo_settings.js
+        └── test_02_history_message.js
 ```
 
 ---
