@@ -15,9 +15,8 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 echo ">> SSH-MKDIR  \"$1\" " >> "$PRAGMALOG_FILE"
 
 # Make folder on server
-MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$SERVER_BASE_PATH\""
-echo "    $MKDIR" >> "$PRAGMALOG_FILE"
-eval $MKDIR
+echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS mkdir -p '$SERVER_BASE_PATH'" >> "$PRAGMALOG_FILE"
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS mkdir -p "'$SERVER_BASE_PATH'"
 
 
 # Check result
