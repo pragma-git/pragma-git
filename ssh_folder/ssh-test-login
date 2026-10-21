@@ -1,0 +1,52 @@
+#!/bin/bash
+# Tests if passwordless SSH login is working
+# Usage: ./ssh-test-login <SSH_URL> [KEY_PATH]
+# Example: ./ssh-test-login ssh://jan@localhost/
+# Example: ./ssh-test-login ssh://jan@localhost/ ~/.ssh/id_rsa_jans_mac
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/lib/ssh-functions"
+
+getSshUrlParts "$1"
+
+KEY_OPT=""
+if [ -n "$2" ]; then
+    KEY_INPUT="$2"
+    if [[ "$KEY_INPUT" == /* ]]; then
+        KEY_PATH="$KEY_INPUT"
+    elif [[ "$KEY_INPUT" == ~* ]]; then
+        KEY_PATH="${KEY_INPUT/#\~/$HOME}"
+    else
+        KEY_PATH="$HOME/.ssh/$KEY_INPUT"
+    fi
+    KEY_PATH="${KEY_PATH%.pub}"
+    if [ -f "$KEY_PATH" ]; then
+        KEY_OPT="-i $KEY_PATH -o IdentitiesOnly=yes"
+    fi
+fi
+
+# Run ssh with publickey authentication only, timeout 4 seconds
+OUTPUT=$(ssh $KEY_OPT -T "$SERVER" -p ${PORT} -o BatchMode=yes -o ConnectTimeout=4 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "echo PRAGMA_SSH_OK" 2>&1)
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "PRAGMA_SSH_OK"; then
+    echo "STATUS:OK"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "permission denied"; then
+    echo "STATUS:KEY_NEEDED"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "timed out"; then
+    echo "STATUS:TIMEOUT"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "could not resolve"; then
+    echo "STATUS:ERROR: Could not resolve hostname ($SERVER)"
+    exit 0
+elif echo "$OUTPUT" | grep -qi "connection refused"; then
+    echo "STATUS:ERROR: Connection refused on port ${PORT}"
+    exit 0
+else
+    # Clean output to one line
+    CLEAN_OUTPUT=$(echo "$OUTPUT" | tr '\n' ' ' | sed 's/  */ /g' | cut -c 1-80)
+    echo "STATUS:ERROR: $CLEAN_OUTPUT"
+    exit 0
+fi

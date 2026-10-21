@@ -71,23 +71,35 @@
 
     <h3>The "Repository table"</h3> 
     
-        <p>The rows shows the settings for the repositories you have defined so far. </p>
+        <p>The rows show the settings for the repositories you have defined so far. </p>
         
-        <p><b>The first column</b> "Local folder" shows the path to your active repositories, on your local pc.  The radio-button, can be used to select one 
-        row, and the second table below shows the branches in that selected repository</p>
+        <p><b>The first column</b> "Project folder" shows the path to your active repositories, either on your local PC or on an SSH server (marked with a <span class="ssh">[ssh]</span> badge).
+        Hovering over the folder name expands it to display the full path. The radio-button selects the active repository. 
+        In the <a href="#BranchTab">"Branch" tab</a>  the branches in the selected repository are listed.</p>
         
+        <p><b>Inaccessible repositories and failure reasons:</b> When a repository cannot be accessed or verified, 
+        its "Project folder" path is dimmed and prefixed with a warning indicator <code> ! </code> along with the specific reason:
+            <ul>
+                <li><span style="color: #e67e22; font-weight: bold;">(key rejected)</span> — The SSH server refused connection because your SSH public key is not registered in the server's <code>~/.ssh/authorized_keys</code>, or the wrong key was used.</li>
+                <li><b>(not a folder)</b> — The specified directory does not exist on your computer or the remote server.</li>
+                <li><b>(not a repo)</b> — The directory exists but is not an initialized Git repository (missing <code>.git</code>).</li>
+                <li><b>(no network)</b> — The server hostname or IP address cannot be reached over the network.</li>
+            </ul>
+            <i>Note: The same failure reasons and warning indicators are also displayed directly in the main window repository dropdown menu.</i>
+        </p>
         
-        <p><b>The second column</b> "Remote repository" shows the address to a connected remote repository.  If this is not defined, then you work with a local repository (
-        which is fine as long as you have a backup plan).  
-        If defined, the connection status is shown with <span style="color: var(--red-text)">red color if login fails</span>, or with <span style="color:  var(--green-text)">green color if login works</span></p>
-        
-        <p><b>The third column</b> has the <button>Set</button> button. 
-        The function of this button is to store an edited remote address, and at the same time update the connection status</p>
+        <p><b>The second column</b> "Group" allows you to categorize repositories into named groups (e.g. by project, client, or team).
+        Hovering over a repository's group cell lets you type a new group name or pick an existing group from the dropdown list.
+        The header dropdown allows filtering the repository view by group (e.g. <b>Group (All)</b> or a specific group name).</p>
 
-        <p><b>The forth column</b> has the <button>Forget</button> button, which is used remove the selected repository from the list. 
-        The files remains both locally and in the remote repository, and the repository can be added again by 
-        dropping the folder onto the main window, or with the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Repo</button> tab. 
-        
+        <p><b>The third column</b> "Remote repository" shows the address of a connected remote repository ("origin"). If this is not defined, you are working with a purely local repository.
+        If defined, the connection status is shown with <span style="color: var(--red-text)">red color if login fails</span>, or with <span style="color: var(--green-text)">green color if login works</span>.</p>
+
+        <p><b>The fourth column</b> has the <button>Set</button> button. 
+        The function of this button is to store an edited remote address and update the connection status.</p>
+
+        <p><b>The fifth column</b> has the <button>Forget</button> button, which removes the selected repository from Pragma-git's list. 
+        The files remain completely intact both locally and on the server/remote, and the repository can be re-added at any time by dropping the folder onto the main window or via the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Repo</button> tab. 
         </p>
         <hr>
         
@@ -210,56 +222,162 @@
             </div>
                          
     
-            <p>Instead of starting with a local folder, you may copy from an existing remote repository (this process is called cloning).</p>
+            <p>Instead of starting with an empty folder, you may copy from an existing remote repository (this process is called cloning). Pragma-git supports cloning both to a <b>local folder</b> on your computer and to a <b>server folder</b> over SSH.</p>
          
         
         <dt><h4 id="cloneSection">Cloning </h4></dt> 
         <br> 
             <dd>
-            When cloning from a remote repository to a local folder, the url (remote repository) and the path to a local folder is needed. 
-            In addition, information if the remote repository is writeable can be defined. These settings are specified in the following inputs:
+                <b>Remote URL to clone from:</b><br>
+                <textarea id="urlToClone" placeholder="URL to clone from" style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
+                <br>
+                <i>Use <button>Test URL</button> to verify that the remote repository exists and is accessible.</i>
             </dd>
             <br>
-                                           
-            <dd><textarea id="urlToClone"  placeholder="URL to clone from " style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Test URL</button>
-            </dd>
             <br>
                                          
-            <dd><textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " style="width: 60%; vertical-align:middle"></textarea>  &nbsp; <button>Get Folder</button>
+        <dt><h4>Local folder </h4></dt> 
+            <dd>
+                <p>When cloning to a local folder, specify the destination directory on your PC:</p>
+                
+                <p><b>Cloning to a local folder</b> :</p>
+                
+                <ol>
+                    <li> 
+                        By default, "local" is selected in the switch :       <br>   
+                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                            <span id="local_clone" style="color: var(--text)">local</span> 
+                            <label class="switch">
+                                <input type="checkbox" class="slider round">
+                                <span class="slider round"></span> 
+                            </label> 
+                            <span id="server_clone" style="color: var(--dim-text)">server</span> 
+                        </span>
+                        
+                    <li><button>Get Folder</button> button is used to select the folder. Alternatively an existing folder can be dropped on the text field, or you can enter the path manually:
+                        <br>
+                        <textarea placeholder="Clone to local folder (type path, use button, or drop folder here)" style="width: 60%; vertical-align:middle"></textarea> &nbsp; <button>Get Folder</button>
+                    </li>
+                     
+                    <li><b>The text field </b> displays the selected folder path.</li>
+                    
+                    <li><input type="checkbox" id="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to the cloned repository and plan to push changes back.</li>
+                    
+                    <li><button>Clone</button> initiates the clone operation.</li>
+                </ol>    
             </dd>
             <br>
-            
-            <dd><input type="checkbox" id="allowPushToRemoteClone" > Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password   
             <br>
-            <br>
+
+        <dt><h4>Server folder</h4></dt> 
+            <dd>
+                <p>A server folder (repository on a remote server that you access over SSH) can be cloned directly onto the server using the Clone tool. Pragma-git manages the remote repository transparently over an SSH connection, allowing you to use all GUI features locally while operations run on the server.</p>
+                
+                <p><b>Cloning to a server folder</b> :</p>
+                
+                <ol>
+                    <li>   
+                        Set the switch to <b>server</b> :<br>   
+                        <span class="normal-text" style="display: inline; font-size: 11px">             
+                            <span style="color: var(--dim-text)">local</span> 
+                            <label class="switch">
+                                <input type="checkbox" class="slider round" checked>
+                                <span class="slider round"></span> 
+                            </label> 
+                            <span style="color: var(--text)">server</span> 
+                        </span>
+                        
+                    <li><b>Server connection fields:</b>
+                        <table style="border-collapse: collapse; margin-top: 6px; margin-bottom: 8px; width: 100%; max-width: 620px;">
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div class="serverDetailsContainer" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        <input type="text" placeholder="username on server" style="flex: 1 1 120px; min-width: 100px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                        <span style="font-weight: bold; padding: 0 2px;">@</span>
+                                        <input type="text" placeholder="server ip or address" style="flex: 1.5 1 150px; min-width: 130px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                        <input type="text" placeholder="absolute folder path" style="flex: 2.2 1 200px; min-width: 160px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
+                                        <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
+                                        <input type="text" style="flex: 1 1 auto; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;">Select key...</button>
+                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key">&#x2715;</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Test login</button>
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Deploy public key</button>
+                                        <span style="font-size: 11px; vertical-align: middle; color: var(--green-text); font-weight: bold;">Login works</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 4px 0 2px 0;">
+                                    <button style="font-size: 11px; padding: 2px 12px; height: 26px;">Clone</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </li>
+                    
+                    <li>
+                        Enter the login username, server hostname or IP, and the absolute folder path on the server. If the target folder on the server does not exist yet, Pragma-git will automatically create it for you on the server during the clone operation.
+                        <br>
+                    </li>
+
+                    <li><b>SSH key selection:</b> (Optional step! )
+                        <br>
+                        <br>
+                        Shows the SSH key that will authenticate with the server (e.g. <code>Default (~/.ssh/id_ed25519)</code> or dynamically detected existing SSH keys).
+                        <br>
+                        If you want to use another existing private or public key, press <button class="toolButton">Select key...</button>. Click <button class="toolButton">&#x2715;</button> to restore the default key.
+                        <br>
+                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the public key is sent to the server.</i>
+                    </li>
+
+                    <li style="margin-top: 6px;"><b>Test login:</b>
+                        Click <button>Test login</button> to verify that passwordless SSH authentication works.
+                        When working, <span style="color: var(--green-text); font-weight: bold;">Login works</span> is displayed.
+                    </li>
+
+                    <li style="margin-top: 6px;"><b>Deploy public key / Create key pair:</b>
+                        If Test Login did not work passwordless login is not yet configured. The <button>Deploy public key</button> (or <button>Create key pair</button>) button is then displayed.
+                        Clicking it automatically transfers your public key into the remote server's <code>~/.ssh/authorized_keys</code>, setting up passwordless access without requiring terminal commands.
+                    </li>
+                    
+                    <li style="margin-top: 6px;">
+                        <input type="checkbox"> Allow <code>git push</code>. Enable if you have write access to the cloned repository and plan to push changes back.
+                    </li>
                                 
-            <dd><button>Clone</button> 
+                    <li style="margin-top: 6px;"><b>Clone:</b>
+                        Click <button>Clone</button> initiates the clone operation directly on the server.
+                    </li>
+                </ol>    
+                
+                <p>For a server folder, Pragma-git runs on your local computer, but executes Git operations remotely on the server.
+                   This is ideal when working on another computer over ssh, but you want to keep using the graphical user interface of Pragma-git.
+                   Thus, you use Pragma-git on your local computer, but you do your work in a project folder 
+                   on a remote Linux machine or headless server.</p>
             </dd>
-            
             <br>
             <br>
 
-            
-           <dd>
-                The checkbox tells if it is a writeable remote repository (git push is allowed). Disable if you don't have write access (for instance a cloned public repo).
-            </dd>
-            <br>
-
-            
-            <dd> The <button>Clone</button> initiates the cloning operation.     
-            </dd>
-            <br>
-     
-     
             <dt><h4>Workflow </h4></dt>   
             <br>      
             
             <dd> The workflow is from top to bottom :  
                 <ol>  
-                    <li>Input the remote repository address (url)   
-                    <li>Check that you have access with the <button>Test URL</button> button  
-                    <li>Select local folder with the <button>Get Folder</button> button. Or drop a folder onto second textarea.  Or type path. 
-                    <li><button>Clone</button> makes a copy of the remote repository inside the selected folder, and connects your local copy to the remote repository
+                    <li>Enter the remote repository address (URL) and test access with <button>Test URL</button>.</li>
+                    <li>Choose <b>local</b> or <b>server</b> destination using the switch.</li>
+                    <li>For local: Select destination with <button>Get Folder</button> or drop a folder.</li>
+                    <li>For server: Enter server credentials (username, host, path), choose SSH key if needed, and verify with <button>Test login</button> (deploying public key if prompted).</li>
+                    <li>Click <button>Clone</button> to make a full copy of the repository and connect it in Pragma-git.</li>
                 </ol>   
             </dd>
             <br>       
@@ -322,14 +440,17 @@
                 </div>
         </div>
         
+            <p>Pragma-git allows you to add an existing repository or initialize a new Git repository, either from a <b>local folder</b> on your computer or from a <b>server folder</b> over SSH.</p>
+         
+        <br> 
         
-        <dt><h4>Local folder </h4></dt> 
+        <dt><h4>Add Repo (Local folder)</h4></dt> 
             <dd>
                 <p>A local folder can be added using the add tool. If the local folder is not a repository, a dialog will ask if you want to create
                 a git repository from the selected folder.  If the folder is a repository already, its settings are imported automatically.</p>
                 
                 
-                 <p><b>Adding a local folder </b> :<br>  
+                 <p><b>Adding a local folder </b> :
                 
                 </p>
                 
@@ -360,51 +481,113 @@
             <br>
             <br>
         
-        <dt><h4>Server folder</h4></dt> 
+        <dt><h4>Add Repo (Server folder)</h4></dt> 
             <dd>
-                <p>A server folder (repository on a server which you work on from a terminal over ssh) can be added using the add tool.</p>
+                <p>A server folder (repository on a remote server that you access over SSH) can be added using the Add Repo tool. Pragma-git manages the remote repository transparently over an SSH connection, allowing you to use all GUI features locally while operations run on the server.</p>
                 
-                
-                 <p><b>Adding a server folder </b> :<br>  
-
-                
-                </p>
+                <p><b>Adding a server folder</b> :</p>
                 
                 <ol>
                     <li>   
-                        "Server" is selected in the switch :        <br>   
-                        <span class="normal-text" style="display: inline;font-size: 11px">             
-                                    <span id="local" style="color: var(--dim-text)">local</span> 
-                                    <label class="switch">
-                                        <input id="local_server_switch" type="checkbox" class="slider round" checked>
-                                        <span class="slider round"></span> 
-                                    </label> 
-                                    <span id="server" style="color: var(--text)">server</span> 
+                        Set the switch to <b>server</b> :<br>   
+                        <span class="normal-text" style="display: inline; font-size: 11px">             
+                            <span style="color: var(--dim-text)">local</span> 
+                            <label class="switch">
+                                <input type="checkbox" class="slider round" checked>
+                                <span class="slider round"></span> 
+                            </label> 
+                            <span style="color: var(--text)">server</span> 
                         </span>
                         
-                    <li><b>The text fields </b>  are used to enter login name, server address, and absolute path to folder on server :
-                        <table>
-                                    <tbody><tr class="tool">
-                                        <td><input type="text" name="username" placeholder="username on server" style="width:150px;"></td>
-                                        <td>@</td>
-                                        <td><input type="text" name="server" placeholder="server ip or address" style="width:200px;"></td>
-                                        <td><input type="text" name="folder" placeholder="absolute folder path" style="width:350px;"></td>
-                                    </tr>
-    
-                                </tbody></table>
-                                
-                    <li><button>Add</button> adds the repository inside the selected folder.
-                    If folder is not a repository, a dialog asks permission to create a git repository.
+                    <li><b>Server connection fields:</b>
+                        <table style="border-collapse: collapse; margin-top: 6px; margin-bottom: 8px; width: 100%; max-width: 620px;">
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div class="serverDetailsContainer" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        <input type="text" placeholder="username on server" style="flex: 1 1 120px; min-width: 100px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                        <span style="font-weight: bold; padding: 0 2px;">@</span>
+                                        <input type="text" placeholder="server ip or address" style="flex: 1.5 1 150px; min-width: 130px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                        <input type="text" placeholder="absolute folder path" style="flex: 2.2 1 200px; min-width: 160px; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
+                                        <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
+                                        <input type="text" style="flex: 1 1 auto; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;">Select key...</button>
+                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key">&#x2715;</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 2px 0;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Test login</button>
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Deploy public key</button>
+                                        <span style="font-size: 11px; vertical-align: middle; color: var(--green-text); font-weight: bold;">Login works</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="tool" style="border-bottom: 0;">
+                                <td style="padding: 4px 0 2px 0;">
+                                    <button style="font-size: 11px; padding: 2px 12px; height: 26px;">Add</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </li>
                     
+                    <li>
+                        Enter the login username, server hostname or IP, and the absolute folder path on the server.
+                        
+                        <br>
+                    </li>
+
+                    <li><b>SSH key selection:</b> (Optional step! )
+                        <br>
+                        <br>
+                        Shows the SSH key that will authenticate with the server (e.g. <code>Default (~/.ssh/id_ed25519)</code> or dynamically detected existing SSH keys).
+                        <br>
+                        If you want to use another existing private or public key, press <button class="toolButton">Select key...</button>. Click <button class="toolButton">&#x2715;</button> to restore the default key.
+                        <br>
+                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the public key is sent to the server.</i>
+                    </li>
+
+                    <li style="margin-top: 6px;"><b>Test login:</b>
+                        Click <button>Test login</button> to verify that passwordless SSH authentication works.
+                        When working, <span style="color: var(--green-text); font-weight: bold;">Login works</span> is displayed.
+                    </li>
+
+                    <li style="margin-top: 6px;"><b>Deploy public key / Create key pair:</b>
+                        If Test Login did not work passwordless login is not yet configured. The <button>Deploy public key</button> (or <button>Create key pair</button>) button is then displayed.
+                        Clicking it automatically transfers your public key into the remote server's <code>~/.ssh/authorized_keys</code>, setting up passwordless access without requiring terminal commands.
+                    </li>
+                                
+                    <li style="margin-top: 6px;"><b>Add:</b>
+                        Click <button>Add</button> to add the server folder to your list of active repositories.
+                        If the folder on the server is not yet a Git repository, a dialog asks permission to initialize Git on the server.
+                    </li>
                 </ol>    
                 
-         
-                <p>For a server folder, pragma-git runs on your local computer, but handles git as if you were working on the server.  
-                   This is useful if you are connected to terminal, but still wants to do git work in the graphical pragma-git client</p>
-         
-                <p><b>NOTE :</b> The server must be set up with (password-less) public-key authentication.</p>
+                <p>For a server folder, Pragma-git runs on your local computer, but executes Git operations remotely on the server.
+                   This is ideal when working on another computer over ssh, but you want to keep using the graphical user interface of Pragma-git.
+                   Thus, you use Pragma-git on your local computer, but you do your work in a project folder 
+                   on a remote Linux machine or headless server.</p>
+            </dd>
+            <br>
+            <br>
 
-
+            <dt><h4>Workflow </h4></dt>   
+            <br>      
+            
+            <dd> The workflow is from top to bottom :  
+                <ol>  
+                    <li>Choose <b>local</b> or <b>server</b> using the switch.</li>
+                    <li>For local: Select destination with <button>Get Folder</button>, drop a folder, or enter the path manually.</li>
+                    <li>For server: Enter server credentials (username, host, path), choose SSH key if needed, and verify with <button>Test login</button> (deploying public key if prompted).</li>
+                    <li>Click <button>Add</button> to connect the repository in Pragma-git (if the folder is not yet a Git repository, a dialog asks permission to initialize Git).</li>
+                </ol>   
             </dd>
             <br>
             <br>                   
@@ -890,25 +1073,46 @@
                 </div>
             </div>   
 <!-------------------------------------------------------------------------------------------->  
-    <p>This shows information that can be used for problem solving </p>
+    <p>This tab displays technical details useful for troubleshooting, support, and inspecting active configurations.</p>
     
-    <p>The help is split into sections about Pragma-git, the currently selected Remote Repo,
-    the system's path, and the gitconfig file hierarch.</p>
-    
-    <p>The credential information for the remote repository is shown as a convenience. 
-    The information is not stored by Pragma-git, but is found with the <code>git credential fill</code> command.</p>
-    
-    <p>A few pieces of information is harvested from the remote repository (if github, gitlab, or bitbucket),
-    and is shown under "Git remote info"</p>
+    <p>The information is organized into the following sections:</p>
+    <ul>
+        <li><b>Project folder:</b>
+            Displays the path of the currently selected repository (local folder or SSH server path).
+            For server repositories over SSH, this section also clearly displays:
+            <ul>
+                <li><code>Private key (local)</code> — The absolute path to the local private SSH key used to authenticate.</li>
+                <li><code>Public key (server)</code> — The remote URL path pointing to the server's <code>~/.ssh/authorized_keys</code> where your public key is registered.</li>
+            </ul>
+        </li>
+        <li style="margin-top: 8px;"><b>Current Remote & Git credentials:</b>
+            Shows the active remote origin and credentials retrieved from the operating system's credential manager (via <code>git credential fill</code>).
+            <br><br>
+            <b><code>credential.username</code> in local <code>.git/config</code>:</b>
+            <ul>
+                <li>In normal Git operation, <code>credential.username</code> should be <i>(not set)</i>. This allows the OS Keychain or credential manager to negotiate authentication dynamically without locking the repository to a single hardcoded account.</li>
+                <li>If a repository was previously locked with a stale or incorrect username in its local <code>.git/config</code> (which can cause repeated 401/403 errors and password prompt loops), a <button class="smallButton">Clear</button> button is displayed. Clicking it immediately removes the username override from <code>.git/config</code>.</li>
+            </ul>
+        </li>
+        <li style="margin-top: 8px;"><b>Git remote info:</b>
+            Displays metadata harvested from the remote hosting service (such as GitHub, GitLab, or Bitbucket), including API connection status, API endpoints, and web repository links.
+        </li>
+        <li style="margin-top: 8px;"><b>Pragma-git info & system's path:</b>
+            Shows software versions (Node, NW.js, Git) and the system environment <code>PATH</code> as seen by Pragma-git.
+        </li>
+        <li style="margin-top: 8px;"><b>gitconfig files:</b>
+            Shows the configuration hierarchy (system, global, and local <code>.git/config</code> files).
+        </li>
+    </ul>
      
-    <p>To the right is a few links for bug reporting, or to give ideas for improvements.</p>
+    <p>To the right are links for bug reporting, documentation, or submitting ideas for improvements.</p>
        
-    <p>Please give a star to Pragma-git, by pressing the 
+    <p>Please give a star to Pragma-git by clicking the 
         <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
-             <img id="star-icon"  height="17" width="17"   src="../images/github_star_off.png" >
+             <img id="star-icon" height="17" width="17" src="../images/github_star_off.png">
             Star
         </button>
-        button. The same gitub account owner can only give one star, so that is why all repositories from same owner show the same star status.
+        button on GitHub.
      </p>
     
     <br>

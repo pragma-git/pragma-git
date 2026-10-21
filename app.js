@@ -437,7 +437,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
     // Cached Repo objects (updated in windows.onload )
         var cachedRemoteOrigins = {};  // .isActiveRemote true if remoteURL works, .remoteURL mirrors that of state.repos[].remoteURL
-        var cachedLocalStatus = {};    // .exists  -- true if local or ssh folder exists.  .isRepo  -- true if is git repo
+        var cachedLocalStatus = {};    // .exists  -- true if local or ssh folder exists.  .isRepo  -- true if is git repo.  .reason -- error reason string ('not a folder', 'key rejected', 'not a repo', 'no network')
         
     // Cached Branch list
         var cachedBranchList;  // Keep a cached list of branches to speed up things.  Updated when calling cacheBranchList
@@ -2126,15 +2126,29 @@ async function _callback( name, event){
                         ? ((cachedLocalStatus && cachedLocalStatus.exists && cachedLocalStatus.exists[i] !== undefined) ? cachedLocalStatus.exists[i] : true)
                         : fs.existsSync(localFolder);
 
+                    let isRepoStatus = (cachedLocalStatus && cachedLocalStatus.isRepo && cachedLocalStatus.isRepo[i] !== undefined)
+                        ? cachedLocalStatus.isRepo[i]
+                        : true;
+
+                    let isRepoValid = isFolderExisting && isRepoStatus;
+                    let reason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[i]) ? cachedLocalStatus.reason[i] : '';
+
+                    if (!isFolderExisting && !reason) {
+                        reason = 'not a folder';
+                    } else if (!isRepoStatus && !reason) {
+                        reason = 'not a repo';
+                    }
+
                     let isCurrentRepo = (state.repoNumber == i);
                     let isCurrentInCurrentView = !hasAnyGroup ? isCurrentRepo : (isCurrentRepo && (currentGroupView === groupContext));
-                    let warningSign = isFolderExisting ? '' : ' ! ';
+                    let warningSign = isRepoValid ? '' : ' ! ';
+                    let reasonSuffix = (!isRepoValid && reason) ? ` (${reason})` : '';
 
                     let menuItemConfig = { 
-                        label: warningSign + myEvent.selectedRepo, 
+                        label: warningSign + myEvent.selectedRepo + reasonSuffix, 
                         type: 'checkbox',
                         checked: isCurrentRepo,
-                        enabled: !isCurrentInCurrentView && isFolderExisting,
+                        enabled: !isCurrentInCurrentView && isRepoValid,
                         click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
                     };
 
@@ -6019,6 +6033,9 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     }else{
         cachedLocalStatus = await cachedLocalStatus;  // Copy if subset
     }
+    if ( !cachedLocalStatus.reason || cachedLocalStatus.reason.length !== state.repos.length ){
+        cachedLocalStatus.reason = new Array(state.repos.length).fill('');
+    }
     
     // Parallelize to tests if local folder (or ssh folder) exists 
     let promisesLocal = [];
@@ -6044,47 +6061,67 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     
     // Internal function
     async function testLocalStatus( repoNumber, folder){
-        cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
+        let repoKey = (state.repos[repoNumber] && state.repos[repoNumber].sshKey) ? state.repos[repoNumber].sshKey : '';
+        cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
         cachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
-        let platform = await typeOfRepoServer(folder); 
-        cachedLocalStatus.platform[ repoNumber] = platform;
-        
+        if ( !cachedLocalStatus.reason ){
+            cachedLocalStatus.reason = new Array(state.repos.length).fill('');
+        }
+
         // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
 
         if ( folder.startsWith('ssh:') ){
-            // simpleGit for ssh requires "cachedLocalStatus" to be set (not set, since this function does that)
-            // So lets look for .git/HEAD file manually instead (which indicates that it is a git repository)
-            cachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD` );
-            
-            
-            // Folder missing -- test server connection
             if ( cachedLocalStatus.exists[ repoNumber] ){
                 cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
-            }else{
-                // Did not find folder on ssh-server -- check if ping works
-                let servername = new URL( folder).host;
-                let command = `ping ${servername}`;
-                try {
-                    await runCommandWithTimeout(command, args = [], timeoutMs = 1000);
-                    cachedLocalStatus.ping[ repoNumber] = true;  
-                }catch (err){
-                    cachedLocalStatus.ping[ repoNumber] = false;  
+                cachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD`, repoKey );
+                if ( cachedLocalStatus.isRepo[ repoNumber] ){
+                    cachedLocalStatus.reason[ repoNumber] = '';
+                }else{
+                    cachedLocalStatus.reason[ repoNumber] = 'not a repo';
                 }
+                let platform = await typeOfRepoServer(folder); 
+                cachedLocalStatus.platform[ repoNumber] = platform;
+            }else{
+                cachedLocalStatus.isRepo[ repoNumber] = false;
+                cachedLocalStatus.platform[ repoNumber] = undefined;
+                let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
                 
-                
+                // If key was rejected, SSH actively responded -- ping is unnecessary and must NOT overwrite the reason!
+                if ( reason === 'key rejected' ){
+                    cachedLocalStatus.ping[ repoNumber] = true;
+                }else{
+                    // Check if host responds to ping to differentiate 'no network' from 'not a folder'
+                    try {
+                        let hostname = new URL( folder).hostname;
+                        let pingCmd = (process.platform === 'win32') ? `ping -n 1 ${hostname}` : `ping -c 1 -W 1 ${hostname}`;
+                        await runCommandWithTimeout(pingCmd, args = [], timeoutMs = 1500);
+                        cachedLocalStatus.ping[ repoNumber] = true;  
+                    }catch (err){
+                        cachedLocalStatus.ping[ repoNumber] = false;  
+                        reason = 'no network';
+                    }
+                }
+                cachedLocalStatus.reason[ repoNumber] = reason;
             }
             
         }else{
-             await simpleGit(folder).checkIsRepo(onCheckIsRepo);  
-             function onCheckIsRepo(err, checkResult) { 
-                 if ( checkResult == undefined){
-                     console.warn(`Error calling  testLocalStatus( ${repoNumber}, ${folder} )`);
-                     console.warn(err);
-                     checkResult = false;  // Set to false
-                 }
-                 cachedLocalStatus.isRepo[ repoNumber]  = checkResult;
-             }
+            cachedLocalStatus.platform[ repoNumber] = 'Local';
+            if ( !cachedLocalStatus.exists[ repoNumber] ){
+                cachedLocalStatus.isRepo[ repoNumber] = false;
+                cachedLocalStatus.reason[ repoNumber] = 'not a folder';
+            }else{
+                await simpleGit(folder).checkIsRepo(onCheckIsRepo);  
+                function onCheckIsRepo(err, checkResult) { 
+                    if ( checkResult == undefined || !checkResult){
+                        checkResult = false;  // Set to false
+                        cachedLocalStatus.reason[ repoNumber] = 'not a repo';
+                    }else{
+                        cachedLocalStatus.reason[ repoNumber] = '';
+                    }
+                    cachedLocalStatus.isRepo[ repoNumber]  = checkResult;
+                }
+            }
         }
         
         
@@ -6093,6 +6130,7 @@ async function cacheLocalFolderExistStatus( start = 0 ){
         console.log(`  exists[${repoNumber}] =  ${cachedLocalStatus.exists[ repoNumber]}`);
         console.log(`  platform[${repoNumber}] =  ${cachedLocalStatus.platform[ repoNumber]}`);
         console.log(`  isRepo[${repoNumber}] =  ${cachedLocalStatus.isRepo[ repoNumber]}`);
+        console.log(`  reason[${repoNumber}] =  ${cachedLocalStatus.reason[ repoNumber]}`);
   
     }
 }
@@ -8046,10 +8084,8 @@ function saveSettings(){
     let jsonString = JSON.stringify(state, null, 2);
     fs.writeFileSync(settingsFile, jsonString);
     
-    // Save username of current repo to .git/config
-    if (typeof storeUsernameInLocalGitConfig === 'function' && state.repoNumber >= 0 && state.repos[state.repoNumber]) {
-        storeUsernameInLocalGitConfig( state.repos[ state.repoNumber].remoteURL );
-    }
+    // Note: Automatic writing of credential.username to local .git/config has been removed
+    // because it locks repos to the wrong account and causes authentication/password popup loops.
     
     pragmaLog('Done saving settings');
     pragmaLog('');
@@ -8145,6 +8181,7 @@ function loadSettings(settingsFile){
             state.tools.terminal = setting( state_in.tools.terminal, "");
             state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
+            state.tools.defaultSshKey = setting( state_in.tools.defaultSshKey, "");
             
             console.log('State after amending non-existing with defaults ');
             console.log(state);
@@ -8307,6 +8344,7 @@ function loadSettings(settingsFile){
         repoState.localFolder = setting( repoStateIn.localFolder, '' );
         repoState.remoteURL = setting( repoStateIn.remoteURL, '' ); // This will be corrected with the git origin URL in cacheRemoteOriginStatus()
         repoState.forkedFromURL = setting( repoStateIn.forkedFromURL, '' );  // Note : this is not actively used, but is a way to document the original upstream from a Fork operation
+        repoState.sshKey = setting( repoStateIn.sshKey, '' ); // Path to local private SSH key if custom key used
         
         // Group name
         repoState.group = setting( repoStateIn.group, '' );
@@ -8580,6 +8618,7 @@ window.onload = async function() {
   cachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
   cachedLocalStatus.platform = new Array(state.repos.length).fill(null);
   cachedLocalStatus.ping = new Array(state.repos.length).fill(null);  // For ssh-folder, this tests ssh-server online.  null if not ssh-server, false if ping fails, true if ping ok.
+  cachedLocalStatus.reason = new Array(state.repos.length).fill('');
         
   await cacheLocalFolderExistStatus();
   await cacheRemoteOriginStatus();

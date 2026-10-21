@@ -307,22 +307,89 @@ async function _callback( name, event){
             
             let folder = document.getElementById('cloneFolder').value;  
             let url = document.getElementById('urlToClone').value; 
+
+            if (!url || !url.trim()){
+                displayAlert('Clone failed', 'Please enter a repository URL to clone');
+                return;
+            }
+            if (!folder || !folder.trim()){
+                displayAlert('Clone failed', 'Please specify a folder to clone to');
+                return;
+            }
+            folder = folder.trim();
+            url = url.trim();
+
+            setCloneStatus('Cloning in progress ');
+
+            // If SSH server folder
+            if ( folder.startsWith('ssh:') ){
+                // Setup password-less login
+                let setupKeyCheckbox = document.getElementById('setupRemoteKeyLogin_clone');
+                if ( setupKeyCheckbox && setupKeyCheckbox.checked ){
+                    try{
+                        let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
+                        let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
+                        if (username && server) {
+                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
+                        }
+                    }catch (err){
+                        console.error('Error in password-less login');
+                        opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
+                        console.error(err);
+                        
+                        // Close Credential windows 
+                        opener.closeWindowsByTitle( 'Credentials');
+                        
+                        // Remove signal file
+                        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+                        const ASKPASSSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';  
+                        opener.rmLocalFile( ASKPASSSIGNALFILE);
+
+                        setCloneStatus('');
+                        return;
+                    }
+                }
+
+                // Create folder on server if missing
+                try {
+                    await opener.mkdir(folder);
+                } catch (err) {
+                    console.error('Error creating folder on server:', err);
+                    opener.displayLongAlert('Clone Repository Error', `Could not create folder on server: ${err}`, 'error');
+                    setCloneStatus('');
+                    return;
+                }
+            } else {
+                // Local folder - create if missing
+                try {
+                    await opener.mkdir(folder);
+                } catch (err) {
+                    console.error('Error creating local folder:', err);
+                }
+            }
             
-            document.getElementById('cloneStatus').innerHTML = 'Cloning in progress ';
-            const dummy = await gitClone( folder, url);
-            document.getElementById('cloneStatus').innerHTML = '';
+            const success = await gitClone( folder, url);
+            setCloneStatus('');
+            if (!success) {
+                return;
+            }
             
             // Update latest
             await opener.cacheRemoteOriginStatus(id);  // Needs to be updated
-            await opener.cacheFolderStatus(id);  
+            if (opener.cacheFolderStatus) {
+                await opener.cacheFolderStatus(id);
+            } else if (opener.cacheLocalFolderExistStatus) {
+                await opener.cacheLocalFolderExistStatus(id);
+            }
 
-            
             // Replace table 
             document.getElementById("settingsTableBody").innerHTML = ""; 
             await createHtmlTable(document);
             drawBranchTab(document);
                
-            
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
             try{
@@ -334,20 +401,13 @@ async function _callback( name, event){
             }
             
             // If forked -- set upstream
-            
             if (forkParentUrl !== undefined) {
-                
                 await opener.addUpstream( forkParentUrl);
                 updateRemoteRepos();
-                
             }
             
-            
-            // Switch to Remote  tab
+            // Switch to Remote tab
             document.getElementById('gitHubTab').click()
-            
-            // Simulate callback for changed repo (fill in some checkboxes specific for current repo)
-            //_callback('repoRadiobuttonChanged', {id: state.repoNumber});
 
             break;
         }   
@@ -381,8 +441,10 @@ async function _callback( name, event){
                     if ( document.getElementById('setupRemoteKeyLogin').checked ){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
-                            let server = document.querySelector('input[name="server"]').value.trim()
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            let server = document.querySelector('input[name="server"]').value.trim();
+                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
                             await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
                         }catch (err){
                             console.error('Error in password-less login');
@@ -431,6 +493,14 @@ async function _callback( name, event){
 				
 				// Add repo as is 
 				await opener.addExistingRepo( folder); 
+				if (folder.startsWith('ssh:')) {
+					let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+					let idx = util.findObjectIndex(state.repos, 'localFolder', folder);
+					if (!isNaN(idx) && state.repos[idx]) {
+						state.repos[idx].sshKey = selectedKey;
+						opener.saveSettings();
+					}
+				}
 				// Replace table 
 				document.getElementById("settingsTableBody").innerHTML = ""; 
 				createHtmlTable(document);
@@ -482,7 +552,15 @@ async function _callback( name, event){
             
             await opener._callback('initializeRepoOK', event);
             
-            let folder = document.getElementById('addFolder').value; 
+            let folder = document.getElementById('addFolder').value;
+            if (folder && folder.startsWith('ssh:')) {
+                let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+                let idx = util.findObjectIndex(state.repos, 'localFolder', folder);
+                if (!isNaN(idx) && state.repos[idx]) {
+                    state.repos[idx].sshKey = selectedKey;
+                    opener.saveSettings();
+                }
+            }
  
             // update list
             try {
@@ -606,6 +684,9 @@ async function _callback( name, event){
                 
                 // Update starred button
                 await updateStarredButton();
+
+                // Update project folder in system info
+                updateProjectFolderInfo();
 
             }catch(err){
                 console.warn(err);
@@ -1030,6 +1111,7 @@ async function _callback( name, event){
         }
 
         case 'systemInfoClicked': {
+            updateProjectFolderInfo();
             updateGitconfigs(); 
             updateRemoteInfo( )
             updateStarredButton();
@@ -1297,6 +1379,13 @@ async function closeWindow(){
 }
 
 
+function setCloneStatus(text) {
+    let s1 = document.getElementById('cloneStatus');
+    let s2 = document.getElementById('cloneStatus_server');
+    if (s1) s1.innerHTML = text;
+    if (s2) s2.innerHTML = text;
+}
+
 // Git
 async function gitClone( folderName, repoURL){
      
@@ -1304,43 +1393,38 @@ async function gitClone( folderName, repoURL){
     // /Users/jan/Desktop/TEMP/cloned-TestJanAxelssonTest/
     // https://github.com/JanAxelssonTest/test3.git
     
-    
     // Combine URL and folder name => repo folder
-    let repoWithExtension = repoURL.replace(/^.*[\\\/]/, '');
-    let repoName = repoWithExtension.split('.').slice(0, -1).join('.');
-    let topFolder = folderName + pathsep + repoName;
-    topFolder = topFolder.replace(/[\\\/]$/, '')
-
+    let repoWithExtension = repoURL.trim().replace(/^.*[\\\/]/, '');
+    let repoName = repoWithExtension.endsWith('.git') ? repoWithExtension.slice(0, -4) : repoWithExtension;
+    
+    let isSsh = folderName.startsWith('ssh:');
+    let sep = isSsh ? '/' : pathsep;
+    let cleanFolderName = folderName.replace(/[\\\/]+$/, '');
+    let topFolder = cleanFolderName + sep + repoName;
 
     // Clone
-
     try{
-        // 1) mkdir 
+        // 1) mkdir parent folder if missing
         let options = [];
-        opener.pragmaLog(`Create folder : ${folderName}`);
-        await opener.mkdir(topFolder);  // Create local folder if it does not exist
-        
+        opener.pragmaLog(`Create folder : ${cleanFolderName}`);
+        await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
         
         // 2) Clone
         let topFolderValidOnServer = topFolder;
-        if (topFolder.startsWith('ssh:')){
+        if (isSsh){
             // Clean to make it local on the server
             let url = new URL(topFolder);
-            topFolderValidOnServer = url.pathName;
+            topFolderValidOnServer = decodeURIComponent(url.pathname);
         }
         
-        opener.pragmaLog(`Clone : "${repoURL}"  to "${folderName}"`);
-        await simpleGitLog(folderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
+        opener.pragmaLog(`Clone : "${repoURL}"  to "${cleanFolderName}"`);
+        await simpleGitLog(cleanFolderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
         function onClone(error, result ){}; 
         
         // 3) Checkout default branch
         await simpleGitLog(topFolder).checkout( onCheckout);
         function onCheckout(err, result){
-            // if err =="Error: fatal: You are on a branch yet to be born"
-            // This happens for instance when a Github repo is created, but no commits exist.
-            // Reuse dialog : document.getElementById('doYouWantToInitializeRepoDialog').showModal(); ?
-            // which asks permisson to init repo
-            if ( err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
+            if ( err && err.toString().includes('to be born') ) {  // if err == "Error: fatal: You are on a branch yet to be born"
                 localState.droppedRepoFolder = topFolder;
                 document.getElementById('doYouWantToInitializeRepoDialog').showModal();  // handle in _callback('initializeRepoOK')
                 return
@@ -1350,16 +1434,12 @@ async function gitClone( folderName, repoURL){
     }catch(err){ 
         console.log(err);
         opener.pragmaLog(err);
-        
-        //displayAlert('Failed cloning', err)
-        displayAlert('Clone failed', err)
-        return
+        displayAlert('Clone failed', err);
+        return false;
     }
         
     // Add this repo to state
     try{
-
-        
         // Add folder last in  state array
         var index = state.repos.length;
         state.repos[index] = {}; 
@@ -1397,12 +1477,20 @@ async function gitClone( folderName, repoURL){
         state.repos[state.repoNumber].autoPushToRemote = true;
         state.repos[state.repoNumber].NoFF_merge = true;
 
+        if (topFolder.startsWith('ssh:')) {
+            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+            if (selectedKey) {
+                state.repos[state.repoNumber].sshKey = selectedKey;
+            }
+        }
+
         // Change to Software tab (In repo tab, where we already are)
         Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
-
+        return true;
     }catch(err){
         console.log(err);
-        return
+        displayAlert('Failed cloning (settings)', err);
+        return false;
     }
 
 
@@ -1535,6 +1623,7 @@ async function injectIntoSettingsJs(document) {
     await drawRepoTab(document);
     await drawSoftwareTab(document);
     await drawPath() // Write path to System info
+    await updateProjectFolderInfo();
     
     
     
@@ -1997,26 +2086,24 @@ async function generateRepoTable(document, table, data) {
                 let isRepoStatus = localStatus.isRepo ? localStatus.isRepo[index] : true;
                 let existsStatus = localStatus.exists ? localStatus.exists[index] : true;
                 let pingStatus = localStatus.ping ? localStatus.ping[index] : true;
+                let reason = (localStatus.reason && localStatus.reason[index]) ? localStatus.reason[index] : '';
 
-                // Local repo exists / missing   (also for ssh folder)
-                console.log(`Coloring Local Folder --  ${existsStatus} -- ${element.localFolder}`);   
-                if ( isRepoStatus == false ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a repo)</i></b> : ' + element.localFolder
-                    radiobox.style.visibility = "hidden";
-                }  
-                
-                // Local folder exists / missing   (also for ssh folder)
-                if ( existsStatus == false ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(not a folder)</i></b> : ' + element.localFolder
-                    radiobox.style.visibility = "hidden";
-                }     
-      
-                // ssh folder missing because of network -- overwrite missing folder and missing repo (we don't know that if missing network)         
-                if ( ( existsStatus == false ) && ( pingStatus == false ) ){
-                    label.style.color = 'red';
-                    label.innerHTML = '<b><i>(no network)</i></b> : '  + element.localFolder
+                // Fallback to legacy checks if reason not directly set
+                if (!reason) {
+                    if ( ( existsStatus == false ) && ( pingStatus == false ) ){
+                        reason = 'no network';
+                    } else if ( existsStatus == false ){
+                        reason = 'not a folder';
+                    } else if ( isRepoStatus == false ){
+                        reason = 'not a repo';
+                    }
+                }
+
+                // Local repo status warning (also for ssh folder)
+                console.log(`Coloring Local Folder -- exists:${existsStatus} isRepo:${isRepoStatus} reason:${reason} -- ${element.localFolder}`);   
+                if ( reason ){
+                    label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
+                    label.innerHTML = '<b><i>(' + reason + ')</i></b> : ' + element.localFolder;
                     radiobox.style.visibility = "hidden";
                 }                           
             
@@ -2618,6 +2705,61 @@ async function displayLocalAuthorInfo(){ // Display based on git-config author i
   
 }
 
+async function updateProjectFolderInfo() {
+    let html = '';
+    let el = document.getElementById('projectFolderInfo');
+    if (!el) return;
+
+    if (state.repoNumber < 0 || !state.repos || !state.repos[state.repoNumber]) {
+        html = '<code><table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp; Project path : &nbsp; </td><td> (No repository selected) </td></tr></table></code>';
+        el.innerHTML = html;
+        return;
+    }
+
+    let repo = state.repos[state.repoNumber];
+    let folder = repo.localFolder || '';
+
+    html += '<code><table class="keyValueTable">';
+    html += `<tr><td style="white-space: nowrap;"> &nbsp; Project path : &nbsp; </td><td> ${folder} </td></tr>`;
+
+    if (folder.startsWith('ssh:')) {
+        let username = '';
+        let hostname = '';
+        let port = '';
+        try {
+            let parsed = new URL(folder);
+            username = parsed.username || '';
+            hostname = parsed.hostname || '';
+            port = parsed.port ? `:${parsed.port}` : '';
+        } catch (e) {
+            let clean = folder.replace(/^ssh:\/\//, '');
+            let hostPart = clean.split('/')[0];
+            if (hostPart.includes('@')) {
+                username = hostPart.split('@')[0];
+                hostname = hostPart.split('@')[1];
+            } else {
+                hostname = hostPart;
+            }
+        }
+
+        let defaultKey = (typeof getDefaultSshKey === 'function') ? getDefaultSshKey() : path.join(os.homedir(), '.ssh', 'id_ed25519');
+        let privKey = repo.sshKey || (state.tools && state.tools.defaultSshKey) || defaultKey;
+        if (privKey.endsWith('.pub')) {
+            privKey = privKey.slice(0, -4);
+        }
+
+        let userPrefix = username ? `${username}@` : '';
+        let remotePublicPath = `ssh://${userPrefix}${hostname}${port}/~/.ssh/authorized_keys`;
+
+        html += `<tr><td style="white-space: nowrap;"> &nbsp; Private key (local) : &nbsp; </td><td> ${privKey} </td></tr>`;
+        html += `<tr><td style="white-space: nowrap;"> &nbsp; Public key (server) : &nbsp; </td><td> ${remotePublicPath} </td></tr>`;
+    }
+
+    html += '</table></code>';
+    el.innerHTML = html;
+    return html;
+}
+
 async function updateRemoteInfo( ){
     let html = '';
     let creds = {};
@@ -2639,18 +2781,24 @@ async function updateRemoteInfo( ){
     
         let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
         
-        // Prepare for a clear button
-        let clearButton = `<button class="smallButton" onclick=
-        " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
-        _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
-        > Clear </button>`;
-        //let clearButton = "";
-        
-        html +=  
-            `<tr> 
-                <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
-                <td> ${ config_credential_username} (in local .git/config) ${clearButton}</td>
-            </tr>`   // Style "white-space: nowrap" makes it fill width of column
+        if (config_credential_username && config_credential_username.trim().length > 0) {
+            let clearButton = `<button class="smallButton" onclick=
+            " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
+            _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
+            > Clear </button>`;
+            
+            html +=  
+                `<tr> 
+                    <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
+                    <td> ${config_credential_username} (in local .git/config) ${clearButton}</td>
+                </tr>`;
+        } else {
+            html +=  
+                `<tr> 
+                    <td style="white-space: nowrap;"> &nbsp; credential.username : &nbsp; </td> 
+                    <td> <i>(not set)</i> </td>
+                </tr>`;
+        }
         
         html += '</table></code>';       
     }catch (err){

@@ -13,17 +13,23 @@ source $(dirname $0)/lib/ssh-functions
 
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+KEY_PATH="$2"
 
 # Setup paths
 SERVER_PATH="${SERVER_BASE_PATH}"
 
+KEY_OPT=""
+if [ -n "$KEY_PATH" ] && [ -f "$KEY_PATH" ]; then
+    KEY_OPT="-i \"$KEY_PATH\" -o IdentitiesOnly=yes"
+fi
+
 # Execute the test command 
-ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS  "test -e \"$SERVER_PATH\""
+ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS $KEY_OPT "test -e \"$SERVER_PATH\""
 exit_code=$?
 
 case $exit_code in
     0) echo 'File exists'; exit 0 ;;    # File exists
-    1) echo 'File missing'; exit 1 ;;    # File doesn't exist
+    1) echo 'File missing' >&2; exit 1 ;;    # File doesn't exist
     *) 
         echo "SSH ERROR in 'ssh-test-if-file-exists' (code $exit_code) for $SERVER:$PORT$SERVER_PATH" >&2
         
