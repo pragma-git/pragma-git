@@ -9,6 +9,7 @@ on:
 env:
   FORCE_COLOR: '1'
   TERM: 'xterm-256color'
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   test:
