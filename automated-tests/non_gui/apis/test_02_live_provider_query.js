@@ -72,10 +72,10 @@ async function runTests() {
     const GithubApi = require(path.join(REPO_ROOT, 'apis_github_and_others/github.com.js'));
     const BitbucketApi = require(path.join(REPO_ROOT, 'apis_github_and_others/bitbucket.org.js'));
 
-    // Test 2: GitHub live query against official public repo (pragma-git/pragma-git)
+    // Test 2: GitHub live query against official public repo (octocat/Hello-World)
     try {
         const ghToken = resolveGitHubToken();
-        const gh = new GithubApi('https://github.com/pragma-git/pragma-git.git', 'pragma-git', ghToken);
+        const gh = new GithubApi('https://github.com/octocat/Hello-World.git', 'octocat', ghToken);
         await gh.initialize();
 
         const ghStatus = await gh.getValue('api-status');
@@ -87,11 +87,11 @@ async function runTests() {
         } else {
             const ghPrivate = await gh.getValue('is-private-repo');
             assert.strictEqual(ghStatus, 'ok', 'GitHub API responded with ok');
-            assert.strictEqual(ghPrivate, false, 'pragma-git/pragma-git is a public repo');
-            assertPass('2.2: Live GitHub query for pragma-git/pragma-git returns api-status: ok, is-private: false');
+            assert.strictEqual(ghPrivate, false, 'octocat/Hello-World is a public repo');
+            assertPass('2.2: Live GitHub query for octocat/Hello-World returns api-status: ok, is-private: false');
         }
     } catch (err) {
-        assertFail('2.2: Live GitHub query for pragma-git/pragma-git', err.message);
+        assertFail('2.2: Live GitHub query for octocat/Hello-World', err.message);
     }
 
     // Test 3: Bitbucket live query against official public repo (atlassian/aui)
@@ -118,7 +118,7 @@ async function runTests() {
     // Test 4: Git over HTTPS network protocol check against GitHub, GitLab, and Bitbucket
     try {
         const providers = [
-            { name: 'GitHub', url: 'https://github.com/pragma-git/pragma-git.git' },
+            { name: 'GitHub', url: 'https://github.com/octocat/Hello-World.git' },
             { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-foss.git' },
             { name: 'Bitbucket', url: 'https://bitbucket.org/atlassian/aui.git' }
         ];
