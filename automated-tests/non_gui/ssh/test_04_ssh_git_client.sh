@@ -36,6 +36,8 @@ mkdir -p "$TEST_REPO_DIR"
 OUTPUT=$("$GIT_CLIENT_BIN" -c "SSHURL=$SSH_URL" init 2>&1)
 EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ] && [ -d "$TEST_REPO_DIR/.git" ]; then
+    git -C "$TEST_REPO_DIR" config user.name "Pragma-git SSH Test"
+    git -C "$TEST_REPO_DIR" config user.email "test@pragma-git.test"
     assert_pass "4.1: git init over SSH"
 else
     assert_fail "4.1: git init over SSH" "Exit: $EXIT_CODE, Output: $OUTPUT"

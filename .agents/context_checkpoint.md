@@ -29,7 +29,7 @@
 
 ### 📋 Current Status & Tasks
 * **Task Description**: Modulär automatiserad testsvit (Non-GUI) & SSH Key Selection:
-  - **Modulär automatiserad testsvit (`automated-tests/non_gui/`)** på grenen `feature/automated-tests` (committad i `21b6f9d`):
+  - **Modulär automatiserad testsvit (`automated-tests/non_gui/`)** på grenen `feature/automated-tests` (committad i `14172f6`):
     - Etablerat katalogstruktur med 7 självständiga testkategorier under `automated-tests/non_gui/`, där varje underkatalog har ett eget [`_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests) som endast kör den katalogens tester.
     - Alla testkörningar städar upp efter sig fullständigt i `/tmp` (inga kvarlämnade mappar eller `.git`-kataloger).
     - Alla `_run_tests`-skript är utrustade med användarbeskrivningar och `cliHelpLine`-aktivering (`--help`, `-h`).
@@ -44,6 +44,7 @@
       7. **`app_function_calls/`** (2 sviter, 9 tester): Icke-grafisk affärslogik ur `app.js`: repo-inställningsreparation (`fixRepoSettingWithDefault`), decimal- och strängvalidering (`isDecimal`, `isNullOrWhitespace`), servertypidentifiering (`typeOfRepoServer`) och historikmeddelandeformatering (`formatHistoryMessage`).
     - Övergripande master runner i projektroten ([`_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/_run_tests)) och i [`automated-tests/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests) orkestrerar alla kategorier och visar en samlad statusrapport.
     - Dokumentationen [`automated-tests/README.md`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/README.md) översatt till engelska med strikt kodstandard: alltid skriva kodkommentarer, dokumentation och variabel-/funktionsnamn på amerikansk engelska.
+    - Etablerat GitHub Actions CI-pipeline ([`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml)) för automatisk körning vid push/PR på macOS och Linux, samt integrerat `"test": "./_run_tests"` i [`package.json`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/package.json).
   - **Hjälpfiler i HELP-katalogen & UI-terminologi uppdaterade** ([HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
     - Korrigerat kolumnordningen i `HELP/Settings.html`:
       - 1:a: "Project folder"
@@ -89,6 +90,10 @@
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug**: `Author identity unknown` (exit 128) under `test_04_ssh_git_client.sh` på nya CI-runners.
+  * *Root Cause & Remediation*: Nya GitHub Actions-runners har varken global eller lokal `user.name`/`user.email` konfigurerad. Vid `git commit` över SSH misslyckades kommandot. Åtgärdat genom att konfigurera lokal testanvändare i testets temporära repo samt sätta global Git-användare i [`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml).
+* **Bug**: `unix_listener: cannot bind to path ~/.Pragma-git/.tmp/...: No such file or directory` under headless SSH-tester på CI (Ubuntu).
+  * *Root Cause & Remediation*: I [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L290-L291) skapas `~/.Pragma-git/.tmp` automatiskt vid appstart, men i headless CI körs testerna utan att appen startats först. OpenSSH misslyckades med felkod 255 när socketen i `ControlPath` skulle bindas. Åtgärdat genom att förbereda katalogen (`mkdir -p ~/.Pragma-git/.tmp /tmp/pragma-git-ssh-folders`) i [`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml).
 * **Bug**: `ssh_folder/ssh-mkdir` misslyckades med att skapa fjärrkataloger vars namn innehöll mellanslag (t.ex. `repo with spaces`).
   * *Root Cause & Remediation*: I [`ssh_folder/ssh-mkdir`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir) kördes `eval $MKDIR` där stränginterpoleringen skalade bort citattecknen innan kommandot nådde den fjärranslutna shell-instansen över SSH. Det ledde till att kommandot delades upp i flera separata kataloger (t.ex. `repo`, `with`, `spaces`). Åtgärdat genom att omsluta sökvägen med säkra enkla citattecken (`'${SERVER_BASE_PATH}'`) som överlever överföringen till fjärrskalet. Upptäcktes och verifierades direkt av testsviten i [`test_03_ssh_mkdir.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_03_ssh_mkdir.sh).
 * **Bug**: `credential.username` skrevs automatiskt och felaktigt in i lokala `.git/config` på repon, vilket låste kontot och orsakade lösenordsdialoger vid URL-test / Set.
