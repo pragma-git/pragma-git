@@ -23,11 +23,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-BOLD=$(tput bold 2>/dev/null || echo "")
-NORMAL=$(tput sgr0 2>/dev/null || echo "")
-GREEN=$(tput setaf 2 2>/dev/null || echo "")
-RED=$(tput setaf 1 2>/dev/null || echo "")
-CYAN=$(tput setaf 6 2>/dev/null || echo "")
+source "$REPO_ROOT/automated-tests/test_setup.sh"
 
 VERBOSE=false
 for arg in "$@"; do
@@ -63,6 +59,7 @@ function print_suite_description() {
 }
 
 echo "Test dir  : $SCRIPT_DIR"
+echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
 [ "$VERBOSE" = true ] && echo "Verbosity : Detailed (-v)"
 echo ""
 
@@ -113,29 +110,21 @@ for test_path in "${TEST_FILES[@]}"; do
             exit_code=$?
         fi
 
-        PASSED_COUNT=$(echo "$OUTPUT" | grep -o 'PASSED [0-9]*/[0-9]*' | tail -1 | awk '{print $2}')
-        if [ -z "$PASSED_COUNT" ]; then
-            PASSED_COUNT=$(echo "$OUTPUT" | grep -c "PASS:")
-            TOTAL_IN_SUITE=$(echo "$OUTPUT" | grep -c -E "(PASS|FAIL):")
-            if [ "$TOTAL_IN_SUITE" -gt 0 ]; then
-                PASSED_COUNT="${PASSED_COUNT}/${TOTAL_IN_SUITE}"
-            fi
-        fi
+        pass_count=$(echo "$OUTPUT" | grep -c '\[PASS\]')
+        fail_count=$(echo "$OUTPUT" | grep -c '\[FAIL\]')
+        total_count=$((pass_count + fail_count))
 
         if [ $exit_code -eq 0 ]; then
             ((PASSED_TESTS++))
-            if [ -n "$PASSED_COUNT" ]; then
-                printf "${GREEN}[OK] (%s passed)${NORMAL}\n" "$PASSED_COUNT"
-            else
-                printf "${GREEN}[OK]${NORMAL}\n"
-            fi
+            echo "${GREEN}[OK]${NORMAL} (${pass_count}/${total_count} passed)"
         else
             ((FAILED_TESTS++))
-            if [ -n "$PASSED_COUNT" ]; then
-                printf "${RED}[FAIL] (%s passed)${NORMAL}\n" "$PASSED_COUNT"
-            else
-                printf "${RED}[FAIL]${NORMAL}\n"
-            fi
+            echo "${RED}[FAILED]${NORMAL} (${pass_count}/${total_count} passed, ${fail_count} failed)"
+            echo ""
+            echo "${RED}${BOLD}--- Failure Output for ${test_name} ---${NORMAL}"
+            echo "$OUTPUT"
+            echo "${RED}${BOLD}----------------------------------------${NORMAL}"
+            echo ""
         fi
     fi
 done
@@ -144,10 +133,14 @@ DURATION=$(( $(date +%s) - START_TIME ))
 
 echo ""
 echo "${BOLD}======================================================================${NORMAL}"
-echo "App Function Calls Test Summary:"
+echo "${BOLD}App Function Calls Test Summary:${NORMAL}"
 echo "  Suites run:    $TOTAL_TESTS"
-echo "  Suites passed: ${PASSED_TESTS}/${TOTAL_TESTS} passed"
-echo "  Suites failed: $FAILED_TESTS"
+echo "  Suites passed: ${GREEN}${PASSED_TESTS}/${TOTAL_TESTS} passed${NORMAL}"
+if [ $FAILED_TESTS -gt 0 ]; then
+    echo "  Suites failed: ${RED}$FAILED_TESTS${NORMAL}"
+else
+    echo "  Suites failed: $FAILED_TESTS"
+fi
 echo "  Duration:      ${DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
 

@@ -32,12 +32,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-BOLD=$(tput bold 2>/dev/null || echo "")
-NORMAL=$(tput sgr0 2>/dev/null || echo "")
-GREEN=$(tput setaf 2 2>/dev/null || echo "")
-RED=$(tput setaf 1 2>/dev/null || echo "")
-CYAN=$(tput setaf 6 2>/dev/null || echo "")
-YELLOW=$(tput setaf 3 2>/dev/null || echo "")
+source "$SCRIPT_DIR/test_setup.sh"
 
 VERBOSE_ARG=""
 for arg in "$@"; do
@@ -56,6 +51,7 @@ echo "${BOLD}===================================================================
 echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (All Categories)${NORMAL}"
 echo "${BOLD}======================================================================${NORMAL}"
 echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
+echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
 echo "Repo root : $REPO_ROOT"
 [ -n "$VERBOSE_ARG" ] && echo "Verbosity : Detailed (-v)"
 echo ""

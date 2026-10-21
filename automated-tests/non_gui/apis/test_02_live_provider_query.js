@@ -17,24 +17,12 @@ global.warn = function() {};
 // Filter noisy internal logs from provider libraries while preserving test outputs
 const origLog = console.log;
 console.log = function(...args) {
-    if (typeof args[0] === 'string' && (args[0].startsWith('Running Suite:') || args[0].startsWith('  [PASS]') || args[0].startsWith('  [FAIL]') || args[0].startsWith('  [SKIP]') || args[0].startsWith('Suite Result:'))) {
+    if (typeof args[0] === 'string' && (args[0].includes('Running Suite:') || args[0].includes('[PASS]') || args[0].includes('[FAIL]') || args[0].includes('[SKIP]') || args[0].includes('Suite Result:'))) {
         origLog.apply(console, args);
     }
 };
 
-let passCount = 0;
-let failCount = 0;
-
-function assertPass(desc) {
-    console.log(`  [PASS] ${desc}`);
-    passCount++;
-}
-
-function assertFail(desc, details) {
-    console.log(`  [FAIL] ${desc}`);
-    if (details) console.log(`         ${details}`);
-    failCount++;
-}
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 async function checkInternet() {
     if (process.env.SIMULATE_OFFLINE === 'true') {
@@ -55,8 +43,7 @@ async function runTests() {
     const online = await checkInternet();
     if (!online) {
         assertFail('2.1: Active internet connection required for live provider tests (DNS resolution to github.com failed)');
-        console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
-        process.exit(1);
+        printSuiteResult();
     }
     assertPass('2.1: Verified active internet connectivity via DNS resolution (github.com)');
 
@@ -101,8 +88,7 @@ async function runTests() {
         assertFail('Failure during live provider query tests', err.message);
     }
 
-    console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
-    process.exit(failCount === 0 ? 0 : 1);
+    printSuiteResult();
 }
 
 runTests();

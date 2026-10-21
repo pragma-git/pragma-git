@@ -27,20 +27,7 @@ const { execSync } = require('child_process');
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const util = require(path.join(REPO_ROOT, 'util_module.js'));
 const credLibPath = path.join(REPO_ROOT, 'lib/pragma-credentials-lib.js');
-
-let passCount = 0;
-let failCount = 0;
-
-function assertPass(desc) {
-    console.log(`  [PASS] ${desc}`);
-    passCount++;
-}
-
-function assertFail(desc, details) {
-    console.log(`  [FAIL] ${desc}`);
-    if (details) console.log(`         ${details}`);
-    failCount++;
-}
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 // Create isolated temporary test directory
 const testDir = path.join(os.tmpdir(), `pragma_cred_safe_test_${process.pid}`);
@@ -171,11 +158,7 @@ async function runTests() {
         } catch (e) {}
     }
 
-    console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
-
-    if (failCount > 0) {
-        process.exit(1);
-    }
+    printSuiteResult();
 }
 
 runTests();

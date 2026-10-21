@@ -9,19 +9,7 @@ const REPO_ROOT = path.resolve(__dirname, '../../..');
 process.env.NODE_PATH = REPO_ROOT;
 require('module').Module._initPaths();
 
-let passCount = 0;
-let failCount = 0;
-
-function assertPass(desc) {
-    console.log(`  [PASS] ${desc}`);
-    passCount++;
-}
-
-function assertFail(desc, details) {
-    console.log(`  [FAIL] ${desc}`);
-    if (details) console.log(`         ${details}`);
-    failCount++;
-}
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 console.log('Running Suite: Git Provider URL & REST API Mapping');
 
@@ -59,5 +47,4 @@ try {
     assertFail('Failure in provider URL tests', err.stack);
 }
 
-console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
-process.exit(failCount === 0 ? 0 : 1);
+printSuiteResult();

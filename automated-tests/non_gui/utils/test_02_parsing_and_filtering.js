@@ -6,20 +6,7 @@ const assert = require('assert');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const util = require(path.join(REPO_ROOT, 'util_module.js'));
-
-let passCount = 0;
-let failCount = 0;
-
-function assertPass(desc) {
-    console.log(`  [PASS] ${desc}`);
-    passCount++;
-}
-
-function assertFail(desc, details) {
-    console.log(`  [FAIL] ${desc}`);
-    if (details) console.log(`         ${details}`);
-    failCount++;
-}
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 console.log('Running Suite: util_module Parsing & Branch Filtering');
 
@@ -70,5 +57,4 @@ try {
     assertFail('2.3: isHiddenBranch', err.message);
 }
 
-console.log(`Suite Result: ${passCount}/${passCount + failCount} passed, ${failCount} failed`);
-process.exit(failCount === 0 ? 0 : 1);
+printSuiteResult();

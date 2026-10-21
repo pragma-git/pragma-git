@@ -8,22 +8,7 @@ MKDIR_BIN="$SSH_FOLDER_DIR/ssh-mkdir"
 TEST_EXISTS_BIN="$SSH_FOLDER_DIR/ssh-test-if-file-exists"
 
 CURRENT_USER=$(whoami)
-PASS_COUNT=0
-FAIL_COUNT=0
-
-function assert_pass() {
-    local desc="$1"
-    echo "  [PASS] $desc"
-    ((PASS_COUNT++))
-}
-
-function assert_fail() {
-    local desc="$1"
-    local details="$2"
-    echo "  [FAIL] $desc"
-    [ -n "$details" ] && echo "         $details"
-    ((FAIL_COUNT++))
-}
+source "$REPO_ROOT/automated-tests/test_setup.sh"
 
 echo "Running Suite: SSH Remote Directory Creation (ssh-mkdir) Tests"
 
@@ -76,6 +61,5 @@ else
     rm -rf "$TEST_BASE"
 fi
 
-TOTAL_COUNT=$((PASS_COUNT + FAIL_COUNT))
-echo "Suite Result: $PASS_COUNT/$TOTAL_COUNT passed, $FAIL_COUNT failed"
-[ $FAIL_COUNT -eq 0 ] && exit 0 || exit 1
+print_suite_result
+exit $?

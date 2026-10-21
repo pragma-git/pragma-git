@@ -53,18 +53,13 @@ const sandbox = {
 const fnCode = extractFunction('formatHistoryMessage');
 vm.runInNewContext(fnCode, sandbox);
 
-let passed = 0;
-let failed = 0;
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 function assert(condition, message) {
     if (condition) {
-        passed++;
-        if (process.env.VERBOSE === 'true') {
-            console.log(`  PASS: ${message}`);
-        }
+        assertPass(message);
     } else {
-        failed++;
-        console.error(`  FAIL: ${message}`);
+        assertFail(message);
     }
 }
 
@@ -99,15 +94,7 @@ function runTests() {
     const formattedMulti = sandbox.formatHistoryMessage('2024-06-10T18:00:00+00:00', 'Update docs', multiParagraphBody);
     assert(formattedMulti.includes(multiParagraphBody), 'formatHistoryMessage preserves multi-paragraph bodies');
 
-    if (process.env.VERBOSE === 'true') {
-        console.log(`Summary: ${passed}/${passed + failed} passed`);
-    } else {
-        console.log(`PASSED ${passed}/${passed + failed}`);
-    }
-
-    if (failed > 0) {
-        process.exit(1);
-    }
+    printSuiteResult();
 }
 
 runTests();

@@ -5,22 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 CONFIG_DIR="$REPO_ROOT/gitconfigs"
 
-PASS_COUNT=0
-FAIL_COUNT=0
-
-function assert_pass() {
-    local desc="$1"
-    echo "  [PASS] $desc"
-    ((PASS_COUNT++))
-}
-
-function assert_fail() {
-    local desc="$1"
-    local details="$2"
-    echo "  [FAIL] $desc"
-    [ -n "$details" ] && echo "         $details"
-    ((FAIL_COUNT++))
-}
+source "$REPO_ROOT/automated-tests/test_setup.sh"
 
 echo "Running Suite: Git Configuration Templates Syntax & Directives"
 
@@ -71,6 +56,5 @@ else
     assert_fail "1.3: Mac config missing expected directives" "$MAC_DUMP"
 fi
 
-TOTAL_COUNT=$((PASS_COUNT + FAIL_COUNT))
-echo "Suite Result: $PASS_COUNT/$TOTAL_COUNT passed, $FAIL_COUNT failed"
-[ $FAIL_COUNT -eq 0 ] && exit 0 || exit 1
+print_suite_result
+exit $?

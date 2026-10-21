@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ develop, master ]
 
+env:
+  FORCE_COLOR: '1'
+  TERM: 'xterm-256color'
+
 jobs:
   test:
     name: Test on ${{ matrix.os }}

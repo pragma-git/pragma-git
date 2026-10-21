@@ -23,17 +23,13 @@ const GeneralApi = require('apis_github_and_others/general_git_rest_api.js');
 const Github = require('apis_github_and_others/github.com.js');
 const Gitlab = require('apis_github_and_others/gitlab.com.js');
 const Bitbucket = require('apis_github_and_others/bitbucket.org.js');
-
-let passed = 0;
-let failed = 0;
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 function assert(condition, message) {
     if (condition) {
-        passed++;
-        console.log(`  [PASS] ${message}`);
+        assertPass(message);
     } else {
-        failed++;
-        console.error(`  [FAIL] ${message}`);
+        assertFail(message);
     }
 }
 
@@ -89,15 +85,7 @@ async function runTests() {
         'Bitbucket class extracts username, web-url, and icon'
     );
 
-    if (process.env.VERBOSE === 'true') {
-        console.log(`Summary: ${passed}/${passed + failed} passed`);
-    } else {
-        console.log(`PASSED ${passed}/${passed + failed}`);
-    }
-
-    if (failed > 0) {
-        process.exit(1);
-    }
+    printSuiteResult();
 }
 
 runTests();

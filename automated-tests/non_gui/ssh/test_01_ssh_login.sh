@@ -7,22 +7,7 @@ SSH_FOLDER_DIR="$REPO_ROOT/ssh_folder"
 TEST_LOGIN_BIN="$SSH_FOLDER_DIR/ssh-test-login"
 
 CURRENT_USER=$(whoami)
-PASS_COUNT=0
-FAIL_COUNT=0
-
-function assert_pass() {
-    local desc="$1"
-    echo "  [PASS] $desc"
-    ((PASS_COUNT++))
-}
-
-function assert_fail() {
-    local desc="$1"
-    local details="$2"
-    echo "  [FAIL] $desc"
-    [ -n "$details" ] && echo "         $details"
-    ((FAIL_COUNT++))
-}
+source "$REPO_ROOT/automated-tests/test_setup.sh"
 
 echo "Running Suite: SSH Login & Authentication Tests"
 
@@ -54,7 +39,7 @@ if [ -n "$KNOWN_KEY" ]; then
         assert_fail "1.2: Explicit key login using $KNOWN_KEY" "Exit code: $EXIT_CODE, Output: $OUTPUT"
     fi
 else
-    echo "  [SKIP] 1.2: Explicit key login (no known standard key found in ~/.ssh)"
+    echo "  ${YELLOW}[SKIP]${NORMAL} 1.2: Explicit key login (no known standard key found in ~/.ssh)"
 fi
 
 # Test 3: Unauthorized key rejection (against 127.0.0.1)
@@ -85,6 +70,5 @@ else
     assert_fail "1.5: Inaccessible port reports connection refused" "Output: $OUTPUT"
 fi
 
-TOTAL_COUNT=$((PASS_COUNT + FAIL_COUNT))
-echo "Suite Result: $PASS_COUNT/$TOTAL_COUNT passed, $FAIL_COUNT failed"
-[ $FAIL_COUNT -eq 0 ] && exit 0 || exit 1
+print_suite_result
+exit $?
