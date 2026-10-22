@@ -62,6 +62,7 @@
     --titlebar-hover-text: #57606a;
     --titlebar-divider: #d0d7de;
     --titlebar-icon-filter: brightness(0.35);
+    --titlebar-icon-hover-filter: brightness(0.05);
     --message-border: #d0d7de;
     --message-background: #ffffff;
     --message-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); 
@@ -136,6 +137,7 @@
     --titlebar-hover-text: #aaaaaa;
     --titlebar-divider: #2a2c2c;
     --titlebar-icon-filter: none;
+    --titlebar-icon-hover-filter: none;
     --message-border: none;
     --message-background: inherit;
     --message-shadow: none;

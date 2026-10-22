@@ -213,6 +213,12 @@ div#inner-content {
 .top-titlebar img,
 .bottom-titlebar img {
   filter: var(--titlebar-icon-filter);
+  transition: filter 0.1s ease;
+}
+
+.top-titlebar img:hover,
+.bottom-titlebar img:hover {
+  filter: var(--titlebar-icon-hover-filter);
 }
 
 .bottom-titlebar-text {
