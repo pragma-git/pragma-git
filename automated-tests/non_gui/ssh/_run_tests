@@ -83,6 +83,11 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 
+# On Windows, ensure WSL ssh daemon is active for tests
+if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
+    wsl -u root service ssh restart >/dev/null 2>&1 || true
+fi
+
 TEST_FILES=($(find "$SCRIPT_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
 NUM_TESTS=${#TEST_FILES[@]}
 
@@ -100,7 +105,10 @@ for test_path in "${TEST_FILES[@]}"; do
         echo ""
 
         if [[ "$test_path" == *.js ]]; then
-            node "$test_path"
+            (cd "$SCRIPT_DIR" && node "$test_name")
+        elif [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
+            wsl_path=$(echo "$test_path" | sed -E 's|^/([a-zA-Z])/|/mnt/\1/|')
+            MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path"
         else
             bash "$test_path"
         fi
@@ -118,7 +126,10 @@ for test_path in "${TEST_FILES[@]}"; do
         printf ">> [%d/%d] %-46s " "$TOTAL_TESTS" "$NUM_TESTS" "$suite_title"
 
         if [[ "$test_path" == *.js ]]; then
-            OUTPUT=$(node "$test_path" 2>&1)
+            OUTPUT=$(cd "$SCRIPT_DIR" && node "$test_name" 2>&1)
+        elif [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
+            wsl_path=$(echo "$test_path" | sed -E 's|^/([a-zA-Z])/|/mnt/\1/|')
+            OUTPUT=$(MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path" 2>&1)
         else
             OUTPUT=$(bash "$test_path" 2>&1)
         fi

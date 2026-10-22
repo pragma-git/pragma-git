@@ -126,12 +126,16 @@ async function runTests() {
     try {
         const providers = [
             { name: 'GitHub', url: 'https://github.com/octocat/Hello-World.git' },
-            { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-foss.git' },
+            { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-test.git' },
             { name: 'Bitbucket', url: 'https://bitbucket.org/atlassian/aui.git' }
         ];
 
         for (const p of providers) {
-            const out = execSync(`git ls-remote --heads "${p.url}" 2>&1`, { timeout: 10000 }).toString();
+            const out = execSync(`git ls-remote --heads "${p.url}"`, {
+                timeout: 15000,
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: { ...process.env, GIT_TERMINAL_PROMPT: '0' }
+            }).toString();
             assert.ok(out.includes('refs/heads/'), `${p.name} responded with valid git branches`);
         }
         assertPass('2.4: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, and Bitbucket');

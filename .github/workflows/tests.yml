@@ -73,48 +73,17 @@ jobs:
             sudo systemsetup -setremotelogin on 2>/dev/null || true
           fi
 
-      - name: Configure Windows OpenSSH & WSL Services
+      - name: Configure WSL OpenSSH Service (Linux SSH Target)
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          # Link C:\tmp and D:\tmp to user AppData\Local\Temp so Windows OpenSSH sftp-server and Git Bash share /tmp
-          $userTemp = "$env:LOCALAPPDATA\Temp"
-          if (!(Test-Path $userTemp)) { New-Item -ItemType Directory -Path $userTemp -Force | Out-Null }
-          New-Item -ItemType Directory -Path "$userTemp\pragma-git-ssh-folders" -Force | Out-Null
-          if (Test-Path "C:\tmp") {
-            if ((Get-Item "C:\tmp").Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-              [System.IO.Directory]::Delete("C:\tmp")
-            } else {
-              Remove-Item -Path "C:\tmp" -Recurse -Force
-            }
-          }
-          New-Item -ItemType Junction -Path "C:\tmp" -Target $userTemp | Out-Null
-          if (Test-Path "D:\") {
-            if (Test-Path "D:\tmp") {
-              if ((Get-Item "D:\tmp").Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-                [System.IO.Directory]::Delete("D:\tmp")
-              } else {
-                Remove-Item -Path "D:\tmp" -Recurse -Force
-              }
-            }
-            New-Item -ItemType Junction -Path "D:\tmp" -Target $userTemp | Out-Null
-          }
-          New-Item -Path "HKLM:\SOFTWARE\OpenSSH" -Force | Out-Null
-          New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Program Files\Git\bin\bash.exe" -PropertyType String -Force | Out-Null
-          Set-Service -Name sshd -StartupType Automatic
-          Restart-Service sshd
-          $key = Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
-          $adminDir = "$env:ProgramData\ssh"
-          if (!(Test-Path $adminDir)) { New-Item -ItemType Directory -Path $adminDir -Force }
-          $adminKeys = "$adminDir\administrators_authorized_keys"
-          Set-Content -Path $adminKeys -Value $key -Force
-          icacls.exe $adminKeys /inheritance:r
-          icacls.exe $adminKeys /grant "Administrators:F"
-          icacls.exe $adminKeys /grant "SYSTEM:F"
-          # Sync keys into WSL and start WSL sshd
-          wsl bash -c "mkdir -p ~/.ssh /tmp/pragma-git-ssh-folders && chmod 700 ~/.ssh"
-          Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" | wsl bash -c "cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-          wsl bash -c "sudo service ssh start 2>/dev/null || true"
+          Stop-Service sshd -ErrorAction SilentlyContinue
+          Set-Service -Name sshd -StartupType Disabled -ErrorAction SilentlyContinue
+          $drive = $PWD.Drive.Name.ToLower()
+          $rest = $PWD.Path.Substring(2).Replace('\', '/')
+          $wslRepo = "/mnt/$drive$rest"
+          wsl bash "$wslRepo/automated-tests/setup_wsl_ssh.sh" $env:USERNAME
+          Start-Process wsl -ArgumentList "sleep","infinity" -WindowStyle Hidden
 
       - name: Configure Git Author
         run: |
@@ -137,4 +106,6 @@ jobs:
 
       - name: Run Automated Test Suites (Windows)
         if: runner.os == 'Windows'
-        run: bash ./_run_tests -v
+        run: |
+          wsl -u root service ssh restart || true
+          bash ./_run_tests -v

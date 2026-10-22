@@ -34,12 +34,7 @@ fi
 TIMEOUT="1"   # SSH TIMEOUT
 CONNECT_OPTIONS=" -4 -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no " # Connecting
 
-# Git for Windows (MSYS/MinGW) lacks reliable UNIX domain socket multiplexing across child processes
-if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]]; then
-    REUSE_SSH_OPTIONS=""
-else
-    REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${CONTROLPATH} "  # Reuse ssh channel (speed up )
-fi
+REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${CONTROLPATH} "  # Reuse ssh channel (speed up )
 
 # Combine connection and reuse options  
 SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
