@@ -33,8 +33,8 @@ jobs:
       - name: Install System Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-server libsecret-1-dev gnome-keyring dbus-x11
+          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 || \
+            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11)
           sudo systemctl start ssh
 
       - name: Configure Localhost SSH

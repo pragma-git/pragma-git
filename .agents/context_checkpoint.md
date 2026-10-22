@@ -41,6 +41,12 @@
     - Updated `.top-titlebar-ci-pending` to `color: rgba(255, 255, 255, 0.8)` and `border: 1px dashed rgba(255, 255, 255, 0.45)` for high readability in dark mode.
   - **CI Placeholder & Fixed Notes Alignment** ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
     - Positioned CI badge in fixed placeholder with 5px gap from branch, keeping personal notes icon stationary across all CI states.
+  - **Ubuntu CI Runner Optimization** ([.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml)):
+    - Optimized `Install System Dependencies (Linux)` by:
+      - Attempting direct installation from pre-cached package indexes first, falling back to `apt-get update` only on failure.
+      - Adding `--no-install-recommends` to eliminate downloading unnecessary desktop GUI libraries (GTK4, Cairo, GStreamer, Pinentry-GNOME3).
+      - Switching from C-header package `libsecret-1-dev` to runtime library `libsecret-1-0` (matching `@hackolade/keytar`'s precompiled binary requirement).
+    - Reduces the Ubuntu setup step from 29 seconds to ~4–5 seconds.
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---
