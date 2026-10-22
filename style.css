@@ -330,8 +330,7 @@ div#inner-content {
   background-color: rgba(255, 255, 255, 0.08);
 }
 
-.top-titlebar-ci-failure::after {
-  content: '';
+.top-titlebar-ci-strike {
   position: absolute;
   top: 50%;
   left: -4px;

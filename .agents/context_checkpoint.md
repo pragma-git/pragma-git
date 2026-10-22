@@ -29,7 +29,12 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Historical Commit CI Status Display & Navigation Synchronization:
+* **Task Description**: Historical Commit CI Status Display & Strike-Through Rendering:
+  - **CSS Pseudo-element Collision Fix for Failed CI Badge** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js)):
+    - Diagnosed why historical failed commits (such as `c22469`) appeared not to show failed status despite `top-titlebar-ci-failure` and `CI: Failed` tooltip being correctly applied.
+    - `lib/css-tooltip.css` styles `[data-tooltip]:after` with `opacity: 0` and `background: transparent` for the tooltip arrow, which completely collided with and silenced `.top-titlebar-ci-failure::after`.
+    - Resolved by rendering an explicit inner `<span class="top-titlebar-ci-strike"></span>` in `app.js` when `status === 'failure'`, styled in `style.css` with `position: absolute; top: 50%; left: -4px; right: -4px; height: 2px; background-color: #ffffff; transform: translateY(-50%); pointer-events: none;`.
+    - Completely eliminates pseudo-element collision while cleanly extending 4px past both sides of the boxed badge.
   - **Branch Fast-Forward & Code Availability on `feature/automated-tests`**:
     - The branch `feature/automated-tests` had previously stopped at commit `75943b4b` (merged into `develop` at `32d2bc02`, prior to any CI feature work).
     - When checking out or switching to `feature/automated-tests`, the application source files reverted to `75943b4b`, completely lacking `top-titlebar-ci-badge` in `app.html` and `queryCommitCiStatus` in `app.js`.
@@ -43,8 +48,8 @@
       - `clicked-find-button` (search): immediately invokes `queryCommitCiStatus(false, localState.historyHash)` on match.
       - `clicked-pinned-hash`: immediately invokes `queryCommitCiStatus(false, localState.historyHash)` when jumping to pinned commit.
       - `graph.js` (`setHistoricalCommit`): calls `opener.queryCommitCiStatus(false, hash)` on commit click.
-    - **Live CDP Verification on `feature/automated-tests`**:
-      - Navigating to commit `c22469` (commit #17 from HEAD) via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure tooltip-bottom`, text `CI`, strike-line (`::after` 2px bar extending across the box), and tooltip `CI: Failed (click to view)`.
+    - **Live CDP Verification on `develop` and `feature/automated-tests`**:
+      - Navigating to commit `c22469` (commit #17 from HEAD) via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure tooltip-bottom`, text `CI`, strike-line (`.top-titlebar-ci-strike` 2px bar extending 4px outside the box on both sides), and tooltip `CI: Failed (click to view)`.
       - Stepping up to `7b71ee9` displays `top-titlebar-ci-success` (Passed), and stepping back down to `c224690` instantaneously restores `top-titlebar-ci-failure` (Failed).
       - Returning to HEAD immediately restores HEAD CI status (`CI: Passed`).
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
@@ -52,6 +57,9 @@
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug: Failure strike-line invisible on CI badge due to CSS pseudo-element collision with tooltip library**:
+  - *Root Cause*: The failure state was styling `.top-titlebar-ci-failure::after` to render the horizontal strike-line across the badge. However, `#top-titlebar-ci-badge` also uses `class="tooltip-bottom"` and `data-tooltip` from `lib/css-tooltip.css`, which uses `[data-tooltip]:after` for the tooltip triangle arrow and sets `opacity: 0` and `background: transparent`. Because `css-tooltip.css` had higher specificity and was loaded after `style.css`, it completely silenced `::after`, making the failure line 100% invisible. On screen, the user saw a plain boxed `CI`, making failure visually indistinguishable from success.
+  - *Remediation*: Replaced `::after` with a dedicated child element `<span class="top-titlebar-ci-strike"></span>` inside `#top-titlebar-ci-badge` when status is failure. It renders an unmistakable 2px solid horizontal white line extending 4px outside the box on both sides, with `pointer-events: none;`, completely immune to any tooltip CSS pseudo-elements.
 * **Bug: Historical commit c22469 does not show failed CI status**:
   - *Root Cause 1*: In `queryCommitCiStatus`, `if (ciQueryInProgress) return;` was placed at the very top of the function, before checking `getCachedCiStatus`. When navigating past uncached commits, a background API query marked `ciQueryInProgress = true`, causing all subsequent commit checks (including cached failure `c22469`) to abort without checking the cache.
   - *Root Cause 2*: When the background network query finished, it unconditionally called `updateCiBadge`, overwriting the badge with the stale commit's `'none'` status even after the user had moved to `c22469`.

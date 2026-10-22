@@ -218,10 +218,11 @@ async function runTests() {
     sandbox.updateCiBadge({ status: 'failure', url: 'https://ci/fail' });
     assert(
         mockBadge.style.display === 'inline-block' &&
+        mockBadge.innerHTML.includes('top-titlebar-ci-strike') &&
         mockBadge.innerText === 'CI' &&
         mockBadge.className.includes('top-titlebar-ci-failure') &&
         mockBadge.attributes['data-tooltip'].includes('Failed'),
-        'updateCiBadge correctly renders failure badge with top-titlebar-ci-failure class and Failed tooltip'
+        'updateCiBadge correctly renders failure badge with top-titlebar-ci-failure class, strike line, and Failed tooltip'
     );
 
     // Test 7: updateCiBadge hides when status is none or missing
