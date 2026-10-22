@@ -7010,6 +7010,7 @@ async function gitProvider(giturl, initialize = true){
 //
 
 let ciQueryInProgress = false;
+let ciMemoryCache = {};
 
 function loadCiCache() {
     try {
@@ -7037,11 +7038,21 @@ function getCachedCiStatus(repoUrl, commitSha) {
     if (cache[repoUrl] && cache[repoUrl][commitSha]) {
         return cache[repoUrl][commitSha];
     }
+    let memKey = repoUrl + '#' + commitSha;
+    if (ciMemoryCache[memKey]) {
+        return ciMemoryCache[memKey];
+    }
     return null;
 }
 
 function setCachedCiStatus(repoUrl, commitSha, ciData) {
     if (!repoUrl || !commitSha || !ciData) return;
+    let memKey = repoUrl + '#' + commitSha;
+    ciMemoryCache[memKey] = {
+        status: ciData.status,
+        url: ciData.url || null,
+        timestamp: Date.now()
+    };
     if (ciData.status === 'success' || ciData.status === 'failure') {
         let cache = loadCiCache();
         if (!cache[repoUrl]) {
@@ -7098,12 +7109,17 @@ async function queryCommitCiStatus(forceRefresh = false) {
     }
 
     let commitSha = '';
-    try {
-        let result = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
-        commitSha = (result || '').trim();
-    } catch (e) {
-        updateCiBadge({ status: 'none', url: null });
-        return;
+    let currentMode = (typeof getMode === 'function') ? getMode() : (localState.mode || '');
+    if (currentMode === 'HISTORY' && localState.historyHash && localState.historyHash !== '') {
+        commitSha = localState.historyHash.trim();
+    } else {
+        try {
+            let result = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
+            commitSha = (result || '').trim();
+        } catch (e) {
+            updateCiBadge({ status: 'none', url: null });
+            return;
+        }
     }
 
     if (!commitSha) {
@@ -7111,10 +7127,10 @@ async function queryCommitCiStatus(forceRefresh = false) {
         return;
     }
 
-    // Check persistent cache
+    // Check persistent and memory cache
     if (!forceRefresh) {
         let cached = getCachedCiStatus(remoteUrl, commitSha);
-        if (cached && (cached.status === 'success' || cached.status === 'failure')) {
+        if (cached) {
             localState.ciStatus = {
                 repoUrl: remoteUrl,
                 commitSha: commitSha,
@@ -7125,6 +7141,11 @@ async function queryCommitCiStatus(forceRefresh = false) {
             updateCiBadge(localState.ciStatus);
             return;
         }
+    }
+
+    // If active commit changed and is not yet cached, hide badge to prevent displaying previous commit's badge
+    if (localState.ciStatus && localState.ciStatus.commitSha !== commitSha) {
+        updateCiBadge({ status: 'none', url: null });
     }
 
     // Debounce non-cached queries: 30 seconds for the same commit
@@ -7152,6 +7173,7 @@ async function queryCommitCiStatus(forceRefresh = false) {
             };
             updateCiBadge(localState.ciStatus);
         } else {
+            setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
             localState.ciStatus = {
                 repoUrl: remoteUrl,
                 commitSha: commitSha,
@@ -7163,6 +7185,7 @@ async function queryCommitCiStatus(forceRefresh = false) {
         }
     } catch (err) {
         console.warn('Error querying CI status:', err);
+        setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
         localState.ciStatus = {
             repoUrl: remoteUrl,
             commitSha: commitSha,

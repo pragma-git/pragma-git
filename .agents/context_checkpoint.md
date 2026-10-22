@@ -36,7 +36,8 @@
     - [bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js): Queries commit statuses values (`/commit/:ref/statuses`).
   - Implemented two-tier caching in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
     - Persistent cache in `~/.Pragma-git/ci_cache.json` permanently storing immutable terminal results (`'success'`, `'failure'`) keyed by `repoUrl` and `commitSha`, avoiding unnecessary API queries and rate limit exhaustion.
-    - In-memory debouncing (30 seconds) for non-terminal queries (`'pending'`, `'none'`).
+    - Session memory cache (`ciMemoryCache`) for non-terminal / historical queries (`'pending'`, `'none'`).
+    - History-aware query resolution: evaluates `localState.historyHash` when in `HISTORY` mode and `HEAD` otherwise, ensuring historical commits reflect their own CI status (hidden if commit predates CI).
     - Immediate re-queries triggered after push (`gitPush`) or when switching commits.
   - Added CI status badge `#top-titlebar-ci-badge` to top titlebar in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) right next to branch name:
     - Displays green `CI` on success (`top-titlebar-ci-success`).

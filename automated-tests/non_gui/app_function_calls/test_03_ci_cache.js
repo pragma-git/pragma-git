@@ -4,9 +4,10 @@
  *
  * Verifies:
  *   1. loadCiCache & saveCiCache roundtrip data correctly
- *   2. setCachedCiStatus persists terminal states (success, failure) and skips non-terminal (pending, none)
+ *   2. setCachedCiStatus persists terminal states (success, failure) to disk and excludes non-terminal (pending, none)
  *   3. getCachedCiStatus retrieves cached data by repoUrl and commitSha
  *   4. updateCiBadge correctly configures the badge DOM element for all status types
+ *   5. queryCommitCiStatus uses localState.historyHash when in HISTORY mode and HEAD otherwise
  */
 
 const fs = require('fs');
@@ -73,16 +74,52 @@ async function runTests() {
         setAttribute(k, v) { this.attributes[k] = v; }
     };
 
+    let queriedShas = [];
+
     const sandbox = {
         console: { log: () => {}, warn: () => {}, error: () => {} },
         fs: fs,
         ciCacheFile: testCiCacheFile,
+        ciMemoryCache: {},
+        ciQueryInProgress: false,
+        localState: {
+            mode: 'UNKNOWN',
+            historyHash: '',
+            ciStatus: null
+        },
+        state: {
+            repoNumber: 0,
+            repos: [
+                {
+                    remoteURL: 'https://github.com/test/repo.git',
+                    localFolder: '/test/repo'
+                }
+            ]
+        },
         document: {
             getElementById: (id) => {
                 if (id === 'top-titlebar-ci-badge') return mockBadge;
                 return null;
             }
-        }
+        },
+        getMode: () => sandbox.localState.mode,
+        simpleGit: () => ({
+            raw: async (args) => {
+                if (args[0] === 'rev-parse' && args[1] === 'HEAD') {
+                    return 'sha-head-1111\n';
+                }
+                return '';
+            }
+        }),
+        gitProvider: async () => ({
+            getValue: async (param, sha) => {
+                queriedShas.push(sha);
+                if (sha === 'sha-historical-pass') return { status: 'success', url: 'https://ci/hist-pass' };
+                if (sha === 'sha-historical-old') return { status: 'none', url: null };
+                if (sha === 'sha-head-1111') return { status: 'success', url: 'https://ci/head-pass' };
+                return { status: 'none', url: null };
+            }
+        })
     };
 
     vm.createContext(sandbox);
@@ -93,12 +130,14 @@ async function runTests() {
     const getCachedCiStatusFn = extractFunction('getCachedCiStatus');
     const setCachedCiStatusFn = extractFunction('setCachedCiStatus');
     const updateCiBadgeFn = extractFunction('updateCiBadge');
+    const queryCommitCiStatusFn = extractFunction('queryCommitCiStatus');
 
     vm.runInContext(loadCiCacheFn, sandbox);
     vm.runInContext(saveCiCacheFn, sandbox);
     vm.runInContext(getCachedCiStatusFn, sandbox);
     vm.runInContext(setCachedCiStatusFn, sandbox);
     vm.runInContext(updateCiBadgeFn, sandbox);
+    vm.runInContext(queryCommitCiStatusFn, sandbox);
 
     // Test 1: saveCiCache & loadCiCache
     const testData = {
@@ -115,23 +154,20 @@ async function runTests() {
         'saveCiCache persists data and loadCiCache reads it back accurately'
     );
 
-    // Test 2: setCachedCiStatus persists terminal states and filters out non-terminal
+    // Test 2: setCachedCiStatus persists terminal states to file and excludes non-terminal from file
     const repoUrl = 'https://gitlab.com/test/repo.git';
     sandbox.setCachedCiStatus(repoUrl, 'sha-pass', { status: 'success', url: 'https://ci/pass' });
     sandbox.setCachedCiStatus(repoUrl, 'sha-fail', { status: 'failure', url: 'https://ci/fail' });
     sandbox.setCachedCiStatus(repoUrl, 'sha-pending', { status: 'pending', url: 'https://ci/pending' });
     sandbox.setCachedCiStatus(repoUrl, 'sha-none', { status: 'none', url: null });
 
-    const passCached = sandbox.getCachedCiStatus(repoUrl, 'sha-pass');
-    const failCached = sandbox.getCachedCiStatus(repoUrl, 'sha-fail');
-    const pendingCached = sandbox.getCachedCiStatus(repoUrl, 'sha-pending');
-    const noneCached = sandbox.getCachedCiStatus(repoUrl, 'sha-none');
-
+    const diskCache = sandbox.loadCiCache();
     assert(
-        passCached && passCached.status === 'success' &&
-        failCached && failCached.status === 'failure' &&
-        pendingCached === null && noneCached === null,
-        'setCachedCiStatus permanently caches terminal statuses (success, failure) and excludes non-terminal (pending, none)'
+        diskCache[repoUrl] &&
+        diskCache[repoUrl]['sha-pass'] && diskCache[repoUrl]['sha-pass'].status === 'success' &&
+        diskCache[repoUrl]['sha-fail'] && diskCache[repoUrl]['sha-fail'].status === 'failure' &&
+        diskCache[repoUrl]['sha-pending'] === undefined && diskCache[repoUrl]['sha-none'] === undefined,
+        'setCachedCiStatus permanently writes terminal statuses (success, failure) to disk and excludes non-terminal'
     );
 
     // Test 3: updateCiBadge renders success
@@ -162,6 +198,28 @@ async function runTests() {
     assert(
         hiddenNone && hiddenNull,
         'updateCiBadge hides the CI badge when status is none or null'
+    );
+
+    // Test 6: queryCommitCiStatus queries localState.historyHash when in HISTORY mode
+    queriedShas = [];
+    sandbox.localState.mode = 'HISTORY';
+    sandbox.localState.historyHash = 'sha-historical-old';
+    await sandbox.queryCommitCiStatus(true);
+
+    const queriedHistorical = queriedShas.includes('sha-historical-old');
+    const hiddenForOld = mockBadge.style.display === 'none';
+
+    // Test 7: queryCommitCiStatus returns to HEAD when leaving HISTORY mode
+    sandbox.localState.mode = 'NO_FILES_TO_COMMIT';
+    sandbox.localState.historyHash = '';
+    await sandbox.queryCommitCiStatus(true);
+
+    const queriedHead = queriedShas.includes('sha-head-1111');
+    const shownForHead = mockBadge.style.display === 'inline-block' && mockBadge.className.includes('top-titlebar-ci-success');
+
+    assert(
+        queriedHistorical && hiddenForOld && queriedHead && shownForHead,
+        'queryCommitCiStatus evaluates historical commit SHA when in HISTORY mode and reverts to HEAD otherwise'
     );
 
     // Clean up temporary test directory
