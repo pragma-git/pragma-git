@@ -28,6 +28,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Task Description**: SSH Connection & Settings Help Documentation Refinement:
+  - Updated [HELP/SSH Connection.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20Connection.html):
+    - Corrected menu path reference to `Settings → Repository → Add Repo:`.
+    - Renamed modal confirmation button from `Save & Fix` to `Save & Close`.
+  - Updated `#sshConfigSaveBtn` in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) to display `Save & Close`.
+  - Updated [HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html) to reflect all new SSH capabilities:
+    - Repository Table: documented the `<button>Fix</button>` button next to inaccessible SSH repos (e.g. `(key rejected)`) and its workflow with `Save & Close`.
+    - Clone & Add Repo tabs: updated server connection layout to match current single-action row (`Test login`, `Setup SSH...`, and status), explaining the SSH Connection Configuration modal and key deployment workflow.
 * **Task Description**: SSH Connection Help Documentation & Standard Dialog Help Icon:
   - Added standard Help Icon (`#sshConfigHelpIcon`) inside the `#sshConfigDialog` header in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), positioned at the top-right corner (`position: absolute; right: 20px; top: 18px;`) with hover image switching (`images/questionmark_hover.png` / `images/questionmark_black.png`) and invoking `opener._callback('help', { name: 'SSH Connection' })`.
   - Created [HELP/SSH Connection.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20Connection.html) styled identically to [HELP/Modified Files.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Modified%20Files.html) to serve as input for the dynamic help viewer (`TEMPLATE_help.html`). Documents:
@@ -36,7 +44,7 @@
     - SSH key management, default key fallbacks, and security guarantee (private keys strictly remain local; only public keys are deployed to the server).
     - Generating new passphraseless ED25519 key pairs with path suggestions.
     - Non-interactive connection testing (`Test login`) and deploying public keys (`Deploy public key`) to remote `authorized_keys`.
-    - Saving key associations and repairing broken repository entries (`Save & Fix`).
+    - Saving key associations and repairing broken repository entries (`Save & Close`).
 * **Task Description**: SSH Connection Configuration, Manual Key Generation & Repair Dialog:
   - Implemented unified SSH connection configuration dialog (`#sshConfigDialog`) in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) with clean modal styling matching theme variables (`--header-color`, `--body-background`, `--body-text`).
   - Added dedicated manual key generation capabilities:

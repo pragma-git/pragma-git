@@ -20,7 +20,7 @@ This window allows you to configure, test, and repair SSH connections and crypto
 <p>
 You can access this configuration window from several places in Pragma-git:
 <ul>
-    <li><b>Settings &rarr; Repository &rarr; Add:</b> Using the <code>[Setup SSH...]</code> button or after a failed login test when adding a remote repository.</li>
+    <li><b>Settings &rarr; Repository &rarr; Add Repo:</b> Using the <code>[Setup SSH...]</code> button or after a failed login test when adding a remote repository.</li>
     <li><b>Settings &rarr; Repository &rarr; Clone:</b> Using the <code>[Setup SSH...]</code> button or after a failed login test when cloning to or from a remote server.</li>
     <li><b>Repository table:</b> Clicking the <code>[Fix]</code> button in the <b>Project folder</b> column when an SSH repository fails authentication (for instance, when marked with <span style="color: #e67e22; font-weight: bold;">(key rejected)</span>).</li>
 </ul>
@@ -29,7 +29,7 @@ You can access this configuration window from several places in Pragma-git:
 <h4>Target Server</h4>
 <p>
 The <b>Target</b> field specifies the remote SSH user and host (for example, <code>username@server.example.com</code> or <code>git@192.168.1.50</code>).
-When configuring a new repository in Add or Clone, this is entered into the username and server fields. When opened via <code>[Fix]</code> for an existing repository, the target server is automatically detected from the repository URL.
+When configuring a new repository in Add Repo or Clone, this is entered into the username and server fields. When opened via <code>[Fix]</code> for an existing repository, the target server is automatically detected from the repository URL.
 </p>
 
 <h4>SSH Keys &amp; Security</h4>
@@ -72,7 +72,7 @@ The newly generated key is created without a passphrase so that automated Git op
 <h4>Saving Changes</h4>
 <p>
 <ul>
-    <li><button>Save &amp; Fix</button> saves the selected SSH key configuration. If you opened the window from a broken repository in the repository table, it re-verifies the connection and clears the failure warning upon success.</li>
+    <li><button>Save &amp; Close</button> saves the selected SSH key configuration. If you opened the window from a broken repository in the repository table, it re-verifies the connection and clears the failure warning upon success.</li>
     <li><button>Cancel</button> discards any unsaved key selections and closes the dialog.</li>
 </ul>
 </p>

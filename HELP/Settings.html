@@ -88,6 +88,8 @@
             <i>Note: The same failure reasons and warning indicators are also displayed directly in the main window repository dropdown menu.</i>
         </p>
         
+        <p><b>Fixing broken SSH connections:</b> When an SSH repository fails authentication (such as <span style="color: #e67e22; font-weight: bold;">(key rejected)</span>), a <button>Fix</button> button appears next to the failure reason. Clicking <button>Fix</button> opens the <b>SSH Connection Configuration</b> dialog, where you can select an existing SSH key, generate a new ED25519 key pair, deploy your public key to the server, and click <button>Save &amp; Close</button> to immediately re-verify and restore access to the repository.</p>
+        
         <p><b>The second column</b> "Group" allows you to categorize repositories into named groups (e.g. by project, client, or team).
             <ul>
                 <li><b>Assigning or editing a group:</b> Hovering over or clicking a repository's group cell reveals a text input field and a dropdown selector. You can type a new group name (press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel) or pick an existing group from the dropdown list. To remove a repository from a group, select <b>None (Remove from group)</b> from the dropdown or clear the input text.</li>
@@ -309,19 +311,9 @@
                             </tr>
                             <tr class="tool" style="border-bottom: 0;">
                                 <td style="padding: 2px 0;">
-                                    <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
-                                        <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
-                                        <input type="text" style="flex: 1 1 auto; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
-                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;">Select key...</button>
-                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key">&#x2715;</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="tool" style="border-bottom: 0;">
-                                <td style="padding: 2px 0;">
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Test login</button>
-                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Deploy public key</button>
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Setup SSH...</button>
                                         <span style="font-size: 11px; vertical-align: middle; color: var(--green-text); font-weight: bold;">Login works</span>
                                     </div>
                                 </td>
@@ -339,24 +331,20 @@
                         <br>
                     </li>
 
-                    <li><b>SSH key selection:</b> (Optional step! )
-                        <br>
-                        <br>
-                        Shows the SSH key that will authenticate with the server (e.g. <code>Default (~/.ssh/id_ed25519)</code> or dynamically detected existing SSH keys).
-                        <br>
-                        If you want to use another existing private or public key, press <button class="toolButton">Select key...</button>. Click <button class="toolButton">&#x2715;</button> to restore the default key.
-                        <br>
-                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the public key is sent to the server.</i>
-                    </li>
-
                     <li style="margin-top: 6px;"><b>Test login:</b>
                         Click <button>Test login</button> to verify that passwordless SSH authentication works.
                         When working, <span style="color: var(--green-text); font-weight: bold;">Login works</span> is displayed.
                     </li>
 
-                    <li style="margin-top: 6px;"><b>Deploy public key / Create key pair:</b>
-                        If Test Login did not work passwordless login is not yet configured. The <button>Deploy public key</button> (or <button>Create key pair</button>) button is then displayed.
-                        Clicking it automatically transfers your public key into the remote server's <code>~/.ssh/authorized_keys</code>, setting up passwordless access without requiring terminal commands.
+                    <li style="margin-top: 6px;"><b>Setup SSH...:</b>
+                        Click <button>Setup SSH...</button> (or click the setup link that appears if Test login fails) to open the <b>SSH Connection Configuration</b> dialog. Here you can:
+                        <ul>
+                            <li>Select an existing private SSH key using <button>Select key...</button> or revert to default using <b>✕</b>.</li>
+                            <li>Generate a new passphraseless ED25519 key pair via <button>Generate key...</button>.</li>
+                            <li>Automatically install your public key into the remote server's <code>~/.ssh/authorized_keys</code> via <button>Deploy public key</button>.</li>
+                            <li>Save the key settings and return by clicking <button>Save &amp; Close</button>.</li>
+                        </ul>
+                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the matching public key is deployed to the server.</i>
                     </li>
                     
                     <li style="margin-top: 6px;">
@@ -521,19 +509,9 @@
                             </tr>
                             <tr class="tool" style="border-bottom: 0;">
                                 <td style="padding: 2px 0;">
-                                    <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
-                                        <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
-                                        <input type="text" style="flex: 1 1 auto; height: 26px; box-sizing: border-box; padding: 2px 6px; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
-                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;">Select key...</button>
-                                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key">&#x2715;</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="tool" style="border-bottom: 0;">
-                                <td style="padding: 2px 0;">
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Test login</button>
-                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Deploy public key</button>
+                                        <button type="button" style="font-size: 11px; padding: 2px 8px; height: 26px; vertical-align: middle;">Setup SSH...</button>
                                         <span style="font-size: 11px; vertical-align: middle; color: var(--green-text); font-weight: bold;">Login works</span>
                                     </div>
                                 </td>
@@ -548,18 +526,7 @@
                     
                     <li>
                         Enter the login username, server hostname or IP, and the absolute folder path on the server.
-                        
                         <br>
-                    </li>
-
-                    <li><b>SSH key selection:</b> (Optional step! )
-                        <br>
-                        <br>
-                        Shows the SSH key that will authenticate with the server (e.g. <code>Default (~/.ssh/id_ed25519)</code> or dynamically detected existing SSH keys).
-                        <br>
-                        If you want to use another existing private or public key, press <button class="toolButton">Select key...</button>. Click <button class="toolButton">&#x2715;</button> to restore the default key.
-                        <br>
-                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the public key is sent to the server.</i>
                     </li>
 
                     <li style="margin-top: 6px;"><b>Test login:</b>
@@ -567,9 +534,15 @@
                         When working, <span style="color: var(--green-text); font-weight: bold;">Login works</span> is displayed.
                     </li>
 
-                    <li style="margin-top: 6px;"><b>Deploy public key / Create key pair:</b>
-                        If Test Login did not work passwordless login is not yet configured. The <button>Deploy public key</button> (or <button>Create key pair</button>) button is then displayed.
-                        Clicking it automatically transfers your public key into the remote server's <code>~/.ssh/authorized_keys</code>, setting up passwordless access without requiring terminal commands.
+                    <li style="margin-top: 6px;"><b>Setup SSH...:</b>
+                        Click <button>Setup SSH...</button> (or click the setup link that appears if Test login fails) to open the <b>SSH Connection Configuration</b> dialog. Here you can:
+                        <ul>
+                            <li>Select an existing private SSH key using <button>Select key...</button> or revert to default using <b>✕</b>.</li>
+                            <li>Generate a new passphraseless ED25519 key pair via <button>Generate key...</button>.</li>
+                            <li>Automatically install your public key into the remote server's <code>~/.ssh/authorized_keys</code> via <button>Deploy public key</button>.</li>
+                            <li>Save the key settings and return by clicking <button>Save &amp; Close</button>.</li>
+                        </ul>
+                        <i><b>Security notice:</b> Your private SSH key never leaves your local computer. Only the matching public key is deployed to the server.</i>
                     </li>
                                 
                     <li style="margin-top: 6px;"><b>Add:</b>
