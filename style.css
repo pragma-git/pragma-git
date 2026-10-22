@@ -292,6 +292,19 @@ div#inner-content {
     font-style: italic;
 }
 
+.top-titlebar-ci-placeholder {
+  display: inline-block;
+  vertical-align: middle;
+  width: 32px;
+  height: 18px;
+  margin-left: 5px;
+  margin-right: 10px;
+  text-align: center;
+  line-height: 18px;
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
 .top-titlebar-ci-badge {
   display: none;
   position: relative;
@@ -300,8 +313,8 @@ div#inner-content {
   font-weight: bold;
   padding: 1px 5px;
   border-radius: 3px;
-  margin-left: 6px;
-  margin-right: 6px;
+  margin-left: 0px;
+  margin-right: 0px;
   vertical-align: middle;
   cursor: pointer;
   -webkit-app-region: no-drag;
@@ -309,6 +322,7 @@ div#inner-content {
   border: 1px solid rgba(255, 255, 255, 0.4);
   background-color: rgba(255, 255, 255, 0.08);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .top-titlebar-ci-badge:hover {
@@ -365,9 +379,9 @@ div#inner-content {
 }
 
 .top-titlebar-ci-pending {
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-  color: #888888;
-  background-color: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.05);
   font-style: italic;
 }
 

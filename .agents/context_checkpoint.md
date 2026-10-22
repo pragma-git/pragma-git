@@ -29,21 +29,18 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Historical Commit CI Status Display, Diagonal Strike-Through & Indicator Dot:
-  - **Dimmed Text/Line and Upper-Right Red Dot for Failed CI Badge** ([style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
-    - Per user request, updated the failure badge design:
-      - Text (`color: rgba(255, 255, 255, 0.5)`), border (`rgba(255, 255, 255, 0.3)`), and diagonal strike line (`rgba(255, 255, 255, 0.5)`) are dimmed.
-      - Added a small crisp red indicator dot at the upper-right corner (`.top-titlebar-ci-dot` with `width: 5px; height: 5px; background-color: #eb4d4b; border-radius: 50%; top: -2px; right: -2px; box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.25);`).
-      - In `app.js`, `updateCiBadge` injects: `badge.innerHTML = 'CI<span class="top-titlebar-ci-strike"></span><span class="top-titlebar-ci-dot"></span>';`.
-      - On hover, text and strike line brighten to `0.8` opacity for intuitive clickability.
-  - **Diagonal Strike Line `\` for Failed CI Badge** ([style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
-    - Styled via `.top-titlebar-ci-strike` (`position: absolute; top: 50%; left: 50%; width: 28px; height: 2px; transform: translate(-50%, -50%) rotate(34deg); pointer-events: none; border-radius: 1px;`).
-  - **Fixed Credential Resolution for Normalized URLs** ([lib/pragma-credentials-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/pragma-credentials-lib.js)):
-    - Added normalized comparison fallback in `getLocalFolder`, ensuring `getCredential` always retrieves Keychain GitHub tokens and avoids falling back to unauthenticated requests hitting 403 rate limits.
-  - **Comprehensive CI Status Inspection in GitHub Provider** ([apis_github_and_others/github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js)):
-    - Evaluates both Commit Status API and GitHub Actions Check Runs simultaneously. If any check-run or status failed, the commit is reliably resolved as `failure`.
-  - **Unified CI Cache Loading & Pre-population**:
-    - `loadCiCache` automatically unifies normalized and raw URL keys, ensuring historical failure commits (`c2246908`, `e42ceb4b`, `5fc1f5d6`) are persistently available in local cache.
+* **Task Description**: CI Pending / Ongoing Test Polling & Credential Resolution:
+  - **Ongoing Test (Pending) Active Polling & Post-Push Workflow** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Immediately on push, displays the `pending` badge (`CI ...`) and initiates an automated polling sequence (every 3-4 seconds, up to 40 attempts / 2 minutes) until CI check runs are registered and reach terminal status (`success` / `failure`).
+    - Added recursive auto-polling in `queryCommitCiStatus` whenever `ciResult.status === 'pending'`.
+    - Avoided stale 30s debouncing on in-flight / pending checks so state transitions appear dynamically in real time.
+  - **Fixed Credential Lookup for Normalized Provider URLs** ([lib/pragma-credentials-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/pragma-credentials-lib.js), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Fixed a bug where `util.findObjectIndex` returned `null` on URL mismatch, causing `null < 0` to evaluate to `false` and skipping clean normalized URL matching. As a result, unauthenticated API calls were made that failed with `403 Forbidden` and hid the badge.
+    - Updated `getLocalFolder` to properly check `null`/`undefined` and retrieve the Keychain token, and updated `queryCommitCiStatus` to pass `rawRemoteUrl` directly to `gitProvider`.
+  - **Enhanced Visibility for Pending Badge** ([style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
+    - Updated `.top-titlebar-ci-pending` to `color: rgba(255, 255, 255, 0.8)` and `border: 1px dashed rgba(255, 255, 255, 0.45)` for high readability in dark mode.
+  - **CI Placeholder & Fixed Notes Alignment** ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
+    - Positioned CI badge in fixed placeholder with 5px gap from branch, keeping personal notes icon stationary across all CI states.
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---

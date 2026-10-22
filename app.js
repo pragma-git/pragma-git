@@ -5303,7 +5303,18 @@ async function gitPush( forcePush){
     }
     
     await waitTime( 1000);  
-    queryCommitCiStatus(true);
+    updateCiBadge({ status: 'pending', url: null });
+    let pollCount = 0;
+    let pollCi = async () => {
+        pollCount++;
+        await queryCommitCiStatus(true);
+        if (localState.ciStatus && localState.ciStatus.status === 'pending' && pollCount < 40) {
+            setTimeout(pollCi, 4000);
+        } else if (localState.ciStatus && localState.ciStatus.status === 'none' && pollCount < 6) {
+            setTimeout(pollCi, 3000);
+        }
+    };
+    setTimeout(pollCi, 2000);
 
 }
 async function gitEnsureUpstream() { // Set upstream to origin/[same name as branch] -- if not set already
@@ -7244,7 +7255,7 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     // Check persistent and memory cache FIRST (synchronous, instant, zero network delay)
     if (!forceRefresh) {
         let cached = getCachedCiStatus(remoteUrl, commitSha);
-        if (cached) {
+        if (cached && (cached.status === 'success' || cached.status === 'failure')) {
             localState.ciStatus = {
                 repoUrl: remoteUrl,
                 commitSha: commitSha,
@@ -7254,6 +7265,8 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
             };
             updateCiBadge(localState.ciStatus);
             return;
+        } else if (cached && cached.status === 'pending') {
+            updateCiBadge({ status: 'pending', url: cached.url || null });
         }
     }
 
@@ -7262,12 +7275,13 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
         updateCiBadge({ status: 'none', url: null });
     }
 
-    // Debounce non-cached queries: 30 seconds for the same commit
+    // Debounce non-cached queries (30 seconds for immutable states, 5 seconds for pending/none)
     let now = Date.now();
+    let debounceMs = (localState.ciStatus && localState.ciStatus.status === 'pending') ? 4000 : 30000;
     if (!forceRefresh && localState.ciStatus &&
         localState.ciStatus.repoUrl === remoteUrl &&
         localState.ciStatus.commitSha === commitSha &&
-        (now - (localState.ciStatus.lastChecked || 0) < 30000)) {
+        (now - (localState.ciStatus.lastChecked || 0) < debounceMs)) {
         updateCiBadge(localState.ciStatus);
         return;
     }
@@ -7276,12 +7290,18 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     if (ciQueryInProgress) return;
     ciQueryInProgress = true;
     try {
-        let provider = await gitProvider(remoteUrl, true);
+        let provider = await gitProvider(rawRemoteUrl || remoteUrl, true);
         let ciResult = await provider.getValue('ci-status', commitSha);
         if (ciResult && ciResult.status && ciResult.status !== 'none') {
             setCachedCiStatus(remoteUrl, commitSha, ciResult);
         } else if (ciResult && ciResult.status === 'none') {
             setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
+        }
+
+        if (ciResult && ciResult.status === 'pending') {
+            setTimeout(() => {
+                queryCommitCiStatus(true, commitSha);
+            }, 4000);
         }
 
         // Only update UI if the active commit is still this commit!
