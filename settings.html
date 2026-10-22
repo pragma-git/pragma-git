@@ -199,6 +199,11 @@
                 filter: none;
                 vertical-align: middle;
                 display: inline-block;
+                opacity: 0.65;
+                transition: opacity 0.1s ease;
+            }
+            a:hover img.remoteIcon {
+                opacity: 1;
             }
             
             .remoteURL {
@@ -524,6 +529,33 @@
         .providerImage
         {
             filter: none;
+        }
+
+        #CreateRemoteRepoDiv button {
+            cursor: pointer;
+        }
+        #CreateRemoteRepoDiv button img.providerImage {
+            opacity: 0.65;
+            transition: opacity 0.1s ease;
+        }
+        #CreateRemoteRepoDiv button:hover img.providerImage {
+            opacity: 1;
+        }
+
+        /* Remote repositories range buttons */
+        #fileRange span[id*="Down"],
+        #fileRange span[id*="Up"],
+        #fileRange span#down,
+        #fileRange span#up {
+            color: var(--dim-text, #777777);
+            transition: color 0.1s ease;
+            user-select: none;
+        }
+        #fileRange span[id*="Down"]:hover,
+        #fileRange span[id*="Up"]:hover,
+        #fileRange span#down:hover,
+        #fileRange span#up:hover {
+            color: var(--text, #222222);
         }
                 
                
