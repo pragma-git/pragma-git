@@ -30,6 +30,10 @@
 
 ### 📋 Current Status & Tasks
 * **Task Description**: Historical Commit CI Status Display & Navigation Synchronization:
+  - **Branch Fast-Forward & Code Availability on `feature/automated-tests`**:
+    - The branch `feature/automated-tests` had previously stopped at commit `75943b4b` (merged into `develop` at `32d2bc02`, prior to any CI feature work).
+    - When checking out or switching to `feature/automated-tests`, the application source files reverted to `75943b4b`, completely lacking `top-titlebar-ci-badge` in `app.html` and `queryCommitCiStatus` in `app.js`.
+    - Fast-forwarded `feature/automated-tests` to match `develop` (`4ce2f847`) and pushed to `origin/feature/automated-tests`.
   - Fixed historical commit CI status not updating when browsing history (e.g. to failure commit `c22469` / `c2246908cdc38a9727a20a645a7f985775a0f7ca`):
     - **Cache-First Architecture in `queryCommitCiStatus`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)): Synchronous persistent (`ci_cache.json`) and memory cache lookups now execute before checking `ciQueryInProgress`. Cached historical commits resolve and update the UI instantly without being blocked by background network queries.
     - **Stale Response Guard**: When an async provider API call completes, it updates `localState.ciStatus` and calls `updateCiBadge` only if the user is still viewing that exact commit. If the user navigated away, the result is safely written to cache without stomping the active commit's badge.
@@ -39,9 +43,9 @@
       - `clicked-find-button` (search): immediately invokes `queryCommitCiStatus(false, localState.historyHash)` on match.
       - `clicked-pinned-hash`: immediately invokes `queryCommitCiStatus(false, localState.historyHash)` when jumping to pinned commit.
       - `graph.js` (`setHistoricalCommit`): calls `opener.queryCommitCiStatus(false, hash)` on commit click.
-    - **Live CDP Verification**:
-      - Navigating to commit `c22469` via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure`, text `CI`, and tooltip `CI: Failed (click to view)`.
-      - Moving between historical commits (`c22469` failure, `7b71ee9` success) updates instantaneously without lag or stale clobbering.
+    - **Live CDP Verification on `feature/automated-tests`**:
+      - Navigating to commit `c22469` (commit #17 from HEAD) via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure tooltip-bottom`, text `CI`, strike-line (`::after` 2px bar extending across the box), and tooltip `CI: Failed (click to view)`.
+      - Stepping up to `7b71ee9` displays `top-titlebar-ci-success` (Passed), and stepping back down to `c224690` instantaneously restores `top-titlebar-ci-failure` (Failed).
       - Returning to HEAD immediately restores HEAD CI status (`CI: Passed`).
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
