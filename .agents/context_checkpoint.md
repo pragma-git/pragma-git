@@ -28,6 +28,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Task Description**: SSH Connection Configuration & Repair Dialog Architecture:
+  - Formulating unified SSH connection configuration dialog (`#sshConfigDialog`) to resolve post-setup SSH failures.
+  - Dialog scope: server target (`user@host`), SSH key selection (`Select key...`, reset to default `✕`), security explanation (only public key sent to server), connection test (`Test login`), and automated key installation (`Deploy public key` / `Create key pair`).
+  - Access entry points:
+    1. Repository table: `[Fix]` button displayed alongside `(key rejected)` in the Project folder column to repair broken connections and update `state.repos[i].sshKey`.
+    2. Add Repo & Clone tabs: `Test login` button retained inline, accompanied by `Setup SSH...` button and automatic dialog prompt on `KEY_NEEDED`.
+    3. System Info tab: `Configure SSH...` button in the Project folder section for proactive key management.
 * **Task Description**: Repository Group Filter Persistence, Indicator Badge & Help Documentation:
   - **Harmoniserad Filterindikator (`blockTextHighlight`)** ([color_styles.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
     - Infört `.blockTextHighlight` / `.blockTextHighligt` och CSS-variabler i `color_styles.css` som harmoniserar med temats text- och bakgrundsskalor istället för skarp rent vit/svart kontrast.
