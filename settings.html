@@ -229,11 +229,12 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: space-between;
-                width: 100%;
+                width: fit-content;
+                max-width: 100%;
                 cursor: pointer;
                 border: 1px solid transparent;
-                border-radius: 3px;
-                padding: 2px 2px;
+                border-radius: 4px;
+                padding: 1px 5px;
                 box-sizing: border-box;
             }
             .groupHeaderWrapper:hover, .groupHeaderWrapper:focus-within {
@@ -268,6 +269,25 @@
                 opacity: 0;
                 cursor: pointer;
                 z-index: 2;
+            }
+
+            /* Filter applied indicator (uses blockTextHighlight scale from color_styles.css) */
+            .groupHeaderWrapper.filtered {
+                background-color: var(--blockTextHighlight-background) !important;
+                border-color: var(--blockTextHighlight-border) !important;
+                color: var(--blockTextHighlight-text) !important;
+            }
+            .groupHeaderWrapper.filtered #groupHeaderLabel {
+                color: var(--blockTextHighlight-text) !important;
+            }
+            .groupHeaderWrapper.filtered .groupHeaderArrow {
+                color: var(--blockTextHighlight-text) !important;
+                opacity: 0.9 !important;
+            }
+            .groupHeaderWrapper.filtered:hover,
+            .groupHeaderWrapper.filtered:focus-within {
+                background-color: var(--blockTextHighlight-hover) !important;
+                border-color: var(--blockTextHighlight-hover-border) !important;
             }
             td.repoGroupCol {
                 padding-right: 6px;

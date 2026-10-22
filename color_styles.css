@@ -30,6 +30,11 @@
     --code-text: var(--header-color); /* same as header color */
     --tab-selected: #888888;
     --tab-deselected: #CCCCCC;
+    --blockTextHighlight-background: #DCDCDC;
+    --blockTextHighlight-text: var(--text);
+    --blockTextHighlight-border: #888888;
+    --blockTextHighlight-hover: #CBCBCB;
+    --blockTextHighlight-hover-border: #666666;
     
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
@@ -86,6 +91,11 @@
     --code-text: #a2a2a2;             /* (light grey) */
     --tab-selected: #d6b51d;
     --tab-deselected: #DDDDDD;
+    --blockTextHighlight-background: #5E5D5B;
+    --blockTextHighlight-text: var(--text);
+    --blockTextHighlight-border: #807E7B;
+    --blockTextHighlight-hover: #6E6D6A;
+    --blockTextHighlight-hover-border: #A09E9B;
     
     /* Notes */
     --code-background: #505050;
@@ -117,6 +127,24 @@
     /* Tables */
     --hoverBackGroundColor: lch( from var(--body-background) calc(l +  15 ) c h);   /* Workaround because backdrop-filter fails in jsonViewer.html */
 }   
+
+/* Highlight block for text elements (e.g. active filters or badge indicators) */
+.blockTextHighlight,
+.blockTextHighligt {
+    background-color: var(--blockTextHighlight-background);
+    color: var(--blockTextHighlight-text);
+    border: 1px solid var(--blockTextHighlight-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.blockTextHighlight:hover,
+.blockTextHighlight:focus-within,
+.blockTextHighligt:hover,
+.blockTextHighligt:focus-within {
+    background-color: var(--blockTextHighlight-hover);
+    border-color: var(--blockTextHighlight-hover-border);
+}
 
 
 /*                */

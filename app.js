@@ -2246,6 +2246,14 @@ async function _callback( name, event){
                         currentRepos = groupMap[''] || [];
                     }
 
+                    if (currentRepos.length === 0 && currentGroupView !== 'ALL') {
+                        currentGroupView = 'ALL';
+                        localState.activeGroupView = 'ALL';
+                        state.repoGroupFilter = 'ALL';
+                        headerText = 'All repos : ';
+                        currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
+                    }
+
                     cachedRepoMenu.append(new gui.MenuItem({ label: headerText, enabled: false }));
 
                     let addedCurrentCount = 0;
@@ -8221,6 +8229,7 @@ function loadSettings(settingsFile){
         // Repos (default is empty)
             console.log('- setting repos');
             state.repoNumber = setting( state_in.repoNumber, -1);
+            state.repoGroupFilter = setting( state_in.repoGroupFilter, 'ALL');
             //state.repos = setting( state_in.repos, [] );
             state.repos = [];
             
@@ -8279,6 +8288,26 @@ function loadSettings(settingsFile){
         
         if ( state.repoNumber > state.repos.length ){
             state.repoNumber = 0; // Safe, because comparison  (-1 > state.repos.length)  is false
+        }
+        
+        // Validate repoGroupFilter - fall back to 'ALL' if no repos match
+        if (state.repoGroupFilter && state.repoGroupFilter !== 'ALL') {
+            let matchFound = false;
+            if (state.repos && state.repos.length > 0) {
+                for (let r of state.repos) {
+                    let g = (r && r.group) ? r.group.trim() : '';
+                    if (state.repoGroupFilter === '__UNGROUPED__' && g.length === 0) {
+                        matchFound = true;
+                        break;
+                    } else if (g === state.repoGroupFilter) {
+                        matchFound = true;
+                        break;
+                    }
+                }
+            }
+            if (!matchFound) {
+                state.repoGroupFilter = 'ALL';
+            }
         }
         
         

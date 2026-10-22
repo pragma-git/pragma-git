@@ -26,6 +26,26 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Task Description**: Repository Group Filter Persistence, Indicator Badge & Help Documentation:
+  - **Harmoniserad Filterindikator (`blockTextHighlight`)** ([color_styles.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
+    - Infört `.blockTextHighlight` / `.blockTextHighligt` och CSS-variabler i `color_styles.css` som harmoniserar med temats text- och bakgrundsskalor istället för skarp rent vit/svart kontrast.
+    - I light mode: Mjukt grått block (`#DCDCDC`) med mörkgrå kant (`#888888`), mörk text (`#222222`), samt hover/focus (`#CBCBCB`, kant `#666666`).
+    - I dark mode: Balanserat dämpat grått block (`#5E5D5B`) med kant (`#807E7B`), ljus text (`#DDDDDD`), samt hover/focus (`#6E6D6A`, kant `#A09E9B`).
+    - Klasserna `filtered`, `blockTextHighlight`, `blockTextHighligt` sätts dynamiskt på `groupHeaderWrapper` vid aktivt filter. Tooltip och hover synkroniserade.
+  - **Filterpersistens (`settings.json`) & Noll-träffars fallback** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
+    - Infört `state.repoGroupFilter` (standard `'ALL'`) som sparas till `settings.json` via `saveSettings()`.
+    - I `app.js`: `loadSettings()` läser in och validerar `state.repoGroupFilter`. Om filtret inte matchar några befintliga repon återställs det automatiskt till `'ALL'`.
+    - I `settings.js`: `updateAllGroupDropdowns()` återställer aktivt filter från `state.repoGroupFilter`.
+    - I `filterRepoTableByGroup(selectedGroup)`: Om antalet visade rader blir 0 och filtret inte är `'ALL'`, faller vyn automatiskt tillbaka till `'ALL'`, återställer dropdown-valet till `ALL`, visar alla rader, och sparar till `settings.json`.
+    - I repomenyn (`app.js`): Om aktiv gruppvy i `buildRepoMenu()` har 0 tillgängliga repon faller menyn tillbaka till `'ALL'`.
+  - **Hjälpdokumentation för Repository Groups** ([HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html)):
+    - Utökat dokumentationen för "Group"-kolumnen:
+      - Tilldelning och redigering: textinmatning med <kbd>Enter</kbd>/<kbd>Esc</kbd>, befintliga val via dropdown, samt borttagning via `None (Remove from group)`.
+      - Filtrering i tabellhuvudet: `Group (All)`, `Ungrouped`, samt specifika namngivna grupper.
+      - Persistent filter sparat i `settings.json` över sessioner.
+      - Automatisk fallback till `Group (All)` om noll repon matchar.
+      - Integration med huvudfönstrets repomeny och dess gruppindelade undermenyer.
+    - Korrigerat och förtydligat kolumnordningen och dokumenterat "Web"-kolumnen.
 * **Task Description**: SSH Key Selection, Distribution, Default Key & System Info "Project folder":
   - **Hjälpfiler i HELP-katalogen & UI-terminologi uppdaterade** ([HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)):
     - Korrigerat kolumnordningen i `HELP/Settings.html`:

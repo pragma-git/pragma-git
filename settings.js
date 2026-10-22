@@ -2328,7 +2328,7 @@ function updateAllGroupDropdowns() {
             if (headerLabel) headerLabel.textContent = 'Group';
             filterRepoTableByGroup('ALL');
         } else {
-            let currentFilter = filterSel.value || 'ALL';
+            let currentFilter = (state && state.repoGroupFilter) ? state.repoGroupFilter : (filterSel.value || 'ALL');
             filterSel.innerHTML = '';
 
             let optAll = document.createElement('option');
@@ -2350,7 +2350,7 @@ function updateAllGroupDropdowns() {
 
             // Restore filter if still valid, otherwise ALL
             filterSel.value = currentFilter;
-            if (filterSel.value !== currentFilter && currentFilter !== '__UNGROUPED__') {
+            if (filterSel.value !== currentFilter) {
                 filterSel.value = 'ALL';
             }
             filterRepoTableByGroup(filterSel.value);
@@ -2359,9 +2359,11 @@ function updateAllGroupDropdowns() {
 }
 
 function filterRepoTableByGroup(selectedGroup) {
+    if (!selectedGroup) selectedGroup = 'ALL';
     let tbody = document.getElementById('settingsTableBody');
     if (!tbody) return;
 
+    let shownCount = 0;
     for (let row of tbody.rows) {
         let rowGroup = (row.getAttribute('data-group') || '').trim();
         let show = false;
@@ -2375,19 +2377,67 @@ function filterRepoTableByGroup(selectedGroup) {
         }
 
         row.style.display = show ? '' : 'none';
+        if (show) {
+            shownCount++;
+        }
     }
 
-    let headerLabel = document.getElementById('groupHeaderLabel');
     let filterSel = document.getElementById('repoTableGroupFilter');
+    let headerLabel = document.getElementById('groupHeaderLabel');
+    let headerWrapper = document.getElementById('groupHeaderWrapper');
+
+    // If zero shown items and not ALL, fall back to ALL filter!
+    if (shownCount === 0 && selectedGroup !== 'ALL' && tbody.rows.length > 0) {
+        selectedGroup = 'ALL';
+        if (filterSel) {
+            filterSel.value = 'ALL';
+        }
+        for (let row of tbody.rows) {
+            row.style.display = '';
+        }
+    }
+
+    let hasGroups = false;
+    if (state && state.repos) {
+        hasGroups = state.repos.some(r => r && r.group && r.group.trim().length > 0);
+    }
+
+    let isFiltered = (hasGroups && selectedGroup && selectedGroup !== 'ALL');
+    if (headerWrapper) {
+        if (isFiltered) {
+            headerWrapper.classList.add('filtered', 'blockTextHighlight', 'blockTextHighligt');
+        } else {
+            headerWrapper.classList.remove('filtered', 'blockTextHighlight', 'blockTextHighligt');
+        }
+    }
+
     if (headerLabel) {
-        if (!selectedGroup || selectedGroup === 'ALL') {
+        if (!hasGroups) {
+            headerLabel.textContent = 'Group';
+            let titleText = 'Filter repositories by group';
+            if (filterSel) filterSel.title = titleText;
+            if (headerWrapper) headerWrapper.title = titleText;
+        } else if (!selectedGroup || selectedGroup === 'ALL') {
             headerLabel.textContent = 'Group (All)';
-            if (filterSel) filterSel.title = 'Filter repositories by group';
+            let titleText = 'Filter repositories by group';
+            if (filterSel) filterSel.title = titleText;
+            if (headerWrapper) headerWrapper.title = titleText;
         } else {
             headerLabel.textContent = 'Group (filtered)';
             let filterName = (selectedGroup === '__UNGROUPED__') ? 'Ungrouped' : selectedGroup;
-            if (filterSel) filterSel.title = 'Filter: ' + filterName;
+            let titleText = 'Filter: ' + filterName;
+            if (filterSel) filterSel.title = titleText;
+            if (headerWrapper) headerWrapper.title = titleText;
         }
+    }
+
+    let prevFilter = state.repoGroupFilter;
+    state.repoGroupFilter = selectedGroup;
+    if (opener && opener.state) {
+        opener.state.repoGroupFilter = selectedGroup;
+    }
+    if (prevFilter !== selectedGroup && opener && typeof opener.saveSettings === 'function') {
+        opener.saveSettings();
     }
 }
 

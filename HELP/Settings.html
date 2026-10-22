@@ -89,16 +89,24 @@
         </p>
         
         <p><b>The second column</b> "Group" allows you to categorize repositories into named groups (e.g. by project, client, or team).
-        Hovering over a repository's group cell lets you type a new group name or pick an existing group from the dropdown list.
-        The header dropdown allows filtering the repository view by group (e.g. <b>Group (All)</b> or a specific group name).</p>
+            <ul>
+                <li><b>Assigning or editing a group:</b> Hovering over or clicking a repository's group cell reveals a text input field and a dropdown selector. You can type a new group name (press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel) or pick an existing group from the dropdown list. To remove a repository from a group, select <b>None (Remove from group)</b> from the dropdown or clear the input text.</li>
+                <li><b>Filtering by group:</b> The column header features a filter dropdown (<b>Group (All)</b> by default). Selecting a group filters the table view to show only repositories belonging to that group, or choose <b>Ungrouped</b> to view repositories with no group assigned. When a filter is applied, the header text is highlighted with a distinct background block (<code>blockTextHighlight</code>) harmonized with your color theme to clearly indicate that a filter is active.</li>
+                <li><b>Sticky filter:</b> The selected group filter is automatically saved in <code>settings.json</code> and remembered across application sessions.</li>
+                <li><b>Automatic fallback:</b> If the active group filter results in zero shown repositories (for example, if all repositories in that group are removed or reassigned to another group), Pragma-git automatically falls back to the <b>Group (All)</b> filter so you are never left with an empty list.</li>
+                <li><b>Main menu integration:</b> Defined groups also organize the main window repository dropdown menu into dedicated submenus for each group, alongside <b>Recent</b>, <b>Ungrouped</b>, and <b>All</b>.</li>
+            </ul>
+        </p>
 
-        <p><b>The third column</b> "Remote repository" shows the address of a connected remote repository ("origin"). If this is not defined, you are working with a purely local repository.
+        <p><b>The third column</b> "Web" displays the Git provider icon (such as GitHub, GitLab, Bitbucket, Azure, etc.) for repositories with a remote URL. Clicking the icon opens the repository directly in your default web browser.</p>
+
+        <p><b>The fourth column</b> "Remote repository" shows the address of a connected remote repository ("origin"). If this is not defined, you are working with a purely local repository.
         If defined, the connection status is shown with <span style="color: var(--red-text)">red color if login fails</span>, or with <span style="color: var(--green-text)">green color if login works</span>.</p>
 
-        <p><b>The fourth column</b> has the <button>Set</button> button. 
+        <p><b>The fifth column</b> has the <button>Set</button> button. 
         The function of this button is to store an edited remote address and update the connection status.</p>
 
-        <p><b>The fifth column</b> has the <button>Forget</button> button, which removes the selected repository from Pragma-git's list. 
+        <p><b>The sixth column</b> has the <button>Forget</button> button, which removes the selected repository from Pragma-git's list. 
         The files remain completely intact both locally and on the server/remote, and the repository can be re-added at any time by dropping the folder onto the main window or via the <button id="addTab" class="tab-button-small active" data-id="addDiv">Add Repo</button> tab. 
         </p>
         <hr>
