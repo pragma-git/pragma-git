@@ -365,6 +365,9 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
      
     await opener._setMode('HISTORY');
     await opener._update();
+    if (typeof opener.queryCommitCiStatus === 'function') {
+        opener.queryCommitCiStatus(false, hash);
+    }
 }
 function closeWindow(){
     localState.graphWindow = false;  // Show to main program that window is closed

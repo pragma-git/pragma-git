@@ -29,39 +29,31 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Multi-Provider CI Status Indicator, Cache Normalization & Error Resilience:
-  - Implemented provider CI status queries (`getValue('ci-status', commitSha)`) across all three providers:
-    - [github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js): Queries combined commit status API (`/commits/:ref/status`) and falls back to check-runs API (`/commits/:ref/check-runs`) for GitHub Actions. Returns `{ status: 'success'|'failure'|'pending'|'none', url: ... }`. Re-throws on API failure (403 rate limit, network error) instead of silently masking as `'none'`.
-    - [gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js): Queries pipeline commit statuses array (`/repository/commits/:ref/statuses`). Throws on API failure.
-    - [bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js): Queries commit statuses values (`/commit/:ref/statuses`). Throws on API failure.
-  - Implemented canonical repository URL normalization (`normalizeRepoUrl` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
-    - Canonicalizes SSH (`git@github.com:...`, `ssh://git@github.com:...`), embedded user tokens/credentials (`https://user:token@...`), `.git` suffix variations, trailing slashes, and host casing to `https://host/path`.
-    - Ensures cache lookups match seamlessly whether the repository remote is configured with SSH, HTTPS, or credentials.
-    - Enables `queryCommitCiStatus` to check CI for SSH repositories using their canonical HTTPS provider API.
-  - Implemented two-way short SHA prefix matching (`findCachedCommit` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
-    - Symmetrically matches abbreviated hashes (>=6 characters) and full 40-character SHAs in `getCachedCiStatus`.
-  - Upgraded two-tier caching in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
-    - Persistent cache in `~/.Pragma-git/ci_cache.json` permanently storing immutable terminal results (`'success'`, `'failure'`) keyed by canonical URL and `commitSha`, avoiding unnecessary API queries and rate limit exhaustion.
-    - Session memory cache (`ciMemoryCache`) for non-terminal / historical queries (`'pending'`, `'none'`).
-    - History-aware query resolution: evaluates `localState.historyHash` when in `HISTORY` mode and `HEAD` otherwise, ensuring historical commits reflect their own CI status (hidden if commit predates CI).
-    - API error resilience: Network errors, timeouts, or 403 rate limits no longer overwrite existing CI statuses or cache false `'none'` records.
-    - Immediate re-queries triggered after push (`gitPush`) or when switching commits.
-  - Refined CI indicator to boxed monochrome badge with extended strike line on failure ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
-    - Rendered as a compact boxed badge (`8pt`, bold, rounded 3px border, subtle translucent background) matching titlebar monochrome scheme.
-    - Success: Clean, boxed `CI` badge with tooltip `CI: Passed (click to view)`.
-    - Failure: Struck-through boxed `CI` badge featuring an unmistakable horizontal strike line via `::after` that extends 4px outside the box borders on both sides (`CI: Failed (click to view)`).
-    - Pending: Dashed-border badge with italicized `CI ...` (`CI: In progress (click to view)`).
-    - None: Hidden completely.
-    - Clickable via `_callback('clicked-ci-badge')` to open remote build URL in external browser.
-  - Added styling in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) with `-webkit-app-region: no-drag;` for NW.js titlebar clickability.
-  - Added automated tests:
-    - [test_04_ci_status.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/apis/test_04_ci_status.js) in `apis/`.
-    - [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js) in `app_function_calls/`: 8 test cases verifying canonical URL normalization, persistent caching, short SHA resolution, and mode transitions.
+* **Task Description**: Historical Commit CI Status Display & Navigation Synchronization:
+  - Fixed historical commit CI status not updating when browsing history (e.g. to failure commit `c22469` / `c2246908cdc38a9727a20a645a7f985775a0f7ca`):
+    - **Cache-First Architecture in `queryCommitCiStatus`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)): Synchronous persistent (`ci_cache.json`) and memory cache lookups now execute before checking `ciQueryInProgress`. Cached historical commits resolve and update the UI instantly without being blocked by background network queries.
+    - **Stale Response Guard**: When an async provider API call completes, it updates `localState.ciStatus` and calls `updateCiBadge` only if the user is still viewing that exact commit. If the user navigated away, the result is safely written to cache without stomping the active commit's badge.
+    - **Full Bidirectional History Synchronization**:
+      - `downArrowClicked()`: calls `queryCommitCiStatus(false, localState.historyHash)` immediately upon setting `localState.historyHash`.
+      - `upArrowClicked()`: aligned with `downArrowClicked()` by calling `await _setMode('HISTORY')`, updating `localState.historyHash`, `_update()`, and `queryCommitCiStatus(false, localState.historyHash)`. When leaving history mode (`historyNumber < 0`), properly awaits `_setMode('UNKNOWN')` and refreshes HEAD CI status.
+      - `clicked-find-button` (search): immediately invokes `queryCommitCiStatus(false, localState.historyHash)` on match.
+      - `clicked-pinned-hash`: immediately invokes `queryCommitCiStatus(false, localState.historyHash)` when jumping to pinned commit.
+      - `graph.js` (`setHistoricalCommit`): calls `opener.queryCommitCiStatus(false, hash)` on commit click.
+    - **Live CDP Verification**:
+      - Navigating to commit `c22469` via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure`, text `CI`, and tooltip `CI: Failed (click to view)`.
+      - Moving between historical commits (`c22469` failure, `7b71ee9` success) updates instantaneously without lag or stale clobbering.
+      - Returning to HEAD immediately restores HEAD CI status (`CI: Passed`).
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Bug: Historical commit c22469 does not show failed CI status**:
+  - *Root Cause 1*: In `queryCommitCiStatus`, `if (ciQueryInProgress) return;` was placed at the very top of the function, before checking `getCachedCiStatus`. When navigating past uncached commits, a background API query marked `ciQueryInProgress = true`, causing all subsequent commit checks (including cached failure `c22469`) to abort without checking the cache.
+  - *Root Cause 2*: When the background network query finished, it unconditionally called `updateCiBadge`, overwriting the badge with the stale commit's `'none'` status even after the user had moved to `c22469`.
+  - *Root Cause 3*: `upArrowClicked()` never called `_setMode('HISTORY')`, `_update()`, or `queryCommitCiStatus()`, so browsing history with the up arrow never updated the CI indicator.
+  - *Root Cause 4*: `setHistoricalCommit()` in `graph.js` and `clicked-find-button` in `app.js` did not explicitly trigger `queryCommitCiStatus()`.
+  - *Remediation*: Restructured `queryCommitCiStatus` with cache-first lookup, added active-commit validation before UI updates, added bidirectional CI query hooks in `downArrowClicked`, `upArrowClicked`, `clicked-find-button`, `clicked-pinned-hash`, and `setHistoricalCommit`.
 * **Bug: CI badges missing upon application restart**:
   - *Root Cause 1*: The working tree was checked out to `feature/automated-tests` (which diverged prior to the CI badge implementation and therefore lacked `top-titlebar-ci-badge` in `app.html` and `queryCommitCiStatus` in `app.js`).
   - *Root Cause 2*: Discrepancies between remote URL representations (e.g. `.git` suffix, SSH syntax, basic auth credentials) caused exact string key lookup in `ci_cache.json` to miss.

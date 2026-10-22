@@ -920,7 +920,7 @@ async function _callback( name, event){
         localState.historyHash =  history[localState.historyNumber].hash;   
         localState.historyString =  historyMessage(history, localState.historyNumber);
     
-        _setMode('HISTORY');
+        await _setMode('HISTORY');
          
          
         // Update history in graph
@@ -936,6 +936,8 @@ async function _callback( name, event){
         status_data = await gitShowHistorical();
         console.log(status_data);
         await setStatusBar( fileStatusString( status_data));
+        await _update();
+        queryCommitCiStatus(false, localState.historyHash);
         
                   
         break;
@@ -1258,10 +1260,11 @@ async function _callback( name, event){
             
                  
         // Display
-            localState.mode = 'HISTORY';
+            await _setMode('HISTORY');
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data)); 
             await _update();
+            queryCommitCiStatus(false, localState.historyHash);
 
         // Call again if not in history of branch
         
@@ -1269,9 +1272,10 @@ async function _callback( name, event){
                 document.getElementById('down-arrow').click();
                 localState.historyNumber = localState.pinnedHistoryNumber;
                 document.getElementById('bottom-titlebar-pinned-text').click()
-                localState.mode = 'HISTORY';
+                await _setMode('HISTORY');
                 status_data = await gitShowHistorical();
                 await setStatusBar( fileStatusString( status_data)); 
+                queryCommitCiStatus(false, localState.historyHash);
             }
              
         
@@ -2863,6 +2867,7 @@ async function _callback( name, event){
             }catch (err){
                 
             }
+            queryCommitCiStatus(false, localState.historyHash);
             
             
 
@@ -2901,40 +2906,26 @@ async function _callback( name, event){
             textOutput.value = '';
             writeTextOutput( textOutput);
             await _setMode('UNKNOWN');
-            _update()
+            await _update();
+            queryCommitCiStatus(false);
             
         }else{
             // Show history
-            
-            //localState.historyHash = history[localState.historyNumber].hash; // Store hash
-            
-            //// Reformat date ( 2020-07-01T09:15:21+02:00  )  =>  09:15 (2020-07-01)
-            //localState.historyString = ( history[localState.historyNumber].date).substring( 11,11+5) 
-            //+ ' (' + ( history[localState.historyNumber].date).substring( 0,10) + ')'
-            //+ os.EOL 
-            //+ os.EOL 
-            //+ history[localState.historyNumber].message
-            //+ os.EOL 
-            //+ os.EOL 
-            //+ history[localState.historyNumber].body;  
-            
+            localState.historyHash = history[localState.historyNumber].hash;
             localState.historyString = historyMessage(history, localState.historyNumber);
             
             // Display            
-            localState.mode = 'HISTORY';
+            await _setMode('HISTORY');
             //writeMessage( localState.historyString, false);
             textOutput.value = localState.historyString;
             writeTextOutput( textOutput);
             
             status_data = await gitShowHistorical();
             setStatusBar( fileStatusString( status_data));    
-                  
-            // Store hash
-            
-            localState.historyHash = history[localState.historyNumber].hash;
             
             selectInGraph(localState.historyHash);
-            
+            await _update();
+            queryCommitCiStatus(false, localState.historyHash);
         }
     }
     function messageKeyUpEvent() { 
@@ -7194,8 +7185,7 @@ function updateCiBadge(ciData) {
     }
 }
 
-async function queryCommitCiStatus(forceRefresh = false) {
-    if (ciQueryInProgress) return;
+async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     if (!state.repos || state.repos.length === 0 || state.repoNumber === undefined || !state.repos[state.repoNumber]) {
         updateCiBadge({ status: 'none', url: null });
         return;
@@ -7216,17 +7206,19 @@ async function queryCommitCiStatus(forceRefresh = false) {
         return;
     }
 
-    let commitSha = '';
-    let currentMode = (typeof getMode === 'function') ? getMode() : (localState.mode || '');
-    if (currentMode === 'HISTORY' && localState.historyHash && localState.historyHash !== '') {
-        commitSha = localState.historyHash.trim();
-    } else {
-        try {
-            let result = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
-            commitSha = (result || '').trim();
-        } catch (e) {
-            updateCiBadge({ status: 'none', url: null });
-            return;
+    let commitSha = (targetSha && typeof targetSha === 'string') ? targetSha.trim() : '';
+    if (!commitSha) {
+        let currentMode = (typeof getMode === 'function') ? getMode() : (localState.mode || '');
+        if ((currentMode === 'HISTORY' || localState.historyNumber >= 0) && localState.historyHash && localState.historyHash !== '') {
+            commitSha = localState.historyHash.trim();
+        } else {
+            try {
+                let result = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
+                commitSha = (result || '').trim();
+            } catch (e) {
+                updateCiBadge({ status: 'none', url: null });
+                return;
+            }
         }
     }
 
@@ -7235,7 +7227,17 @@ async function queryCommitCiStatus(forceRefresh = false) {
         return;
     }
 
-    // Check persistent and memory cache
+    // Try resolving full SHA if commitSha is short (e.g. "c22469")
+    if (commitSha.length < 40 && localFolder) {
+        try {
+            let fullSha = await simpleGit(localFolder).raw(['rev-parse', commitSha]);
+            if (fullSha && fullSha.trim().length === 40) {
+                commitSha = fullSha.trim();
+            }
+        } catch (e) {}
+    }
+
+    // Check persistent and memory cache FIRST (synchronous, instant, zero network delay)
     if (!forceRefresh) {
         let cached = getCachedCiStatus(remoteUrl, commitSha);
         if (cached) {
@@ -7266,27 +7268,38 @@ async function queryCommitCiStatus(forceRefresh = false) {
         return;
     }
 
+    // Serialize non-cached network requests
+    if (ciQueryInProgress) return;
     ciQueryInProgress = true;
     try {
         let provider = await gitProvider(remoteUrl, true);
         let ciResult = await provider.getValue('ci-status', commitSha);
         if (ciResult && ciResult.status && ciResult.status !== 'none') {
             setCachedCiStatus(remoteUrl, commitSha, ciResult);
-            localState.ciStatus = {
-                repoUrl: remoteUrl,
-                commitSha: commitSha,
-                status: ciResult.status,
-                url: ciResult.url || null,
-                lastChecked: Date.now()
-            };
-            updateCiBadge(localState.ciStatus);
         } else if (ciResult && ciResult.status === 'none') {
             setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
+        }
+
+        // Only update UI if the active commit is still this commit!
+        let activeNow = '';
+        let curModeNow = (typeof getMode === 'function') ? getMode() : (localState.mode || '');
+        if ((curModeNow === 'HISTORY' || localState.historyNumber >= 0) && localState.historyHash && localState.historyHash !== '') {
+            activeNow = localState.historyHash.trim();
+        } else {
+            try {
+                let res = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
+                activeNow = (res || '').trim();
+            } catch (e) {}
+        }
+
+        if (activeNow === commitSha || (activeNow && (activeNow.startsWith(commitSha) || commitSha.startsWith(activeNow)))) {
+            let finalStatus = (ciResult && ciResult.status) ? ciResult.status : 'none';
+            let finalUrl = (ciResult && ciResult.url) ? ciResult.url : null;
             localState.ciStatus = {
                 repoUrl: remoteUrl,
                 commitSha: commitSha,
-                status: 'none',
-                url: null,
+                status: finalStatus,
+                url: finalUrl,
                 lastChecked: Date.now()
             };
             updateCiBadge(localState.ciStatus);
