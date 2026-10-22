@@ -222,43 +222,59 @@ class github extends General_git_rest_api {
                             let statusUrl = `${this.apiurl}/commits/${commitSha}/status`;
                             let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
 
-                            let foundStatus = false;
+                            let hasFailure = false;
+                            let hasPending = false;
+                            let hasSuccess = false;
+                            let bestUrl = null;
+
                             if (statusRes.ok && statusRes.json && statusRes.json.total_count > 0) {
-                                foundStatus = true;
                                 let state = statusRes.json.state; // 'success', 'failure', 'pending'
                                 let targetUrl = (statusRes.json.statuses && statusRes.json.statuses.length > 0) ? statusRes.json.statuses[0].target_url : null;
-                                if (state === 'success') {
-                                    out = { status: 'success', url: targetUrl };
-                                } else if (state === 'failure' || state === 'error') {
-                                    out = { status: 'failure', url: targetUrl };
-                                } else {
-                                    out = { status: 'pending', url: targetUrl };
+                                if (state === 'failure' || state === 'error') {
+                                    hasFailure = true;
+                                    bestUrl = targetUrl;
+                                } else if (state === 'pending') {
+                                    hasPending = true;
+                                    if (!bestUrl) bestUrl = targetUrl;
+                                } else if (state === 'success') {
+                                    hasSuccess = true;
+                                    if (!bestUrl) bestUrl = targetUrl;
                                 }
                             }
 
-                            if (!foundStatus) {
-                                let checkRunsUrl = `${this.apiurl}/commits/${commitSha}/check-runs`;
-                                let checkRunsRes = await this.fetchWithApi(checkRunsUrl, { method: 'GET', headers: headers });
-                                if (checkRunsRes.ok && checkRunsRes.json && checkRunsRes.json.total_count > 0) {
-                                    let runs = checkRunsRes.json.check_runs || [];
-                                    let hasFailure = runs.some(r => r.conclusion === 'failure' || r.conclusion === 'timed_out' || r.conclusion === 'cancelled');
-                                    let hasPending = runs.some(r => r.status !== 'completed');
-                                    let failRun = runs.find(r => r.conclusion === 'failure' || r.conclusion === 'timed_out' || r.conclusion === 'cancelled');
-                                    let firstRun = runs[0];
-                                    let runUrl = (failRun && (failRun.html_url || failRun.details_url)) || (firstRun && (firstRun.html_url || firstRun.details_url)) || null;
+                            // Always inspect check-runs (GitHub Actions workflows) as well
+                            let checkRunsUrl = `${this.apiurl}/commits/${commitSha}/check-runs`;
+                            let checkRunsRes = await this.fetchWithApi(checkRunsUrl, { method: 'GET', headers: headers });
+                            if (checkRunsRes.ok && checkRunsRes.json && checkRunsRes.json.total_count > 0) {
+                                let runs = checkRunsRes.json.check_runs || [];
+                                let failRun = runs.find(r => r.conclusion === 'failure' || r.conclusion === 'timed_out' || r.conclusion === 'cancelled');
+                                let pendingRun = runs.find(r => r.status !== 'completed');
+                                let successRun = runs.find(r => r.conclusion === 'success');
+                                let firstRun = runs[0];
+                                let runUrl = (failRun && (failRun.html_url || failRun.details_url)) || (firstRun && (firstRun.html_url || firstRun.details_url)) || null;
 
-                                    if (hasFailure) {
-                                        out = { status: 'failure', url: runUrl };
-                                    } else if (hasPending) {
-                                        out = { status: 'pending', url: runUrl };
-                                    } else {
-                                        out = { status: 'success', url: runUrl };
-                                    }
-                                } else if (checkRunsRes.ok) {
-                                    out = { status: 'none', url: null };
-                                } else {
-                                    throw new Error(`GitHub check-runs API error (${checkRunsRes.status || 'unknown'})`);
+                                if (failRun) {
+                                    hasFailure = true;
+                                    bestUrl = runUrl;
+                                } else if (pendingRun) {
+                                    hasPending = true;
+                                    if (!bestUrl) bestUrl = runUrl;
+                                } else if (successRun) {
+                                    hasSuccess = true;
+                                    if (!bestUrl) bestUrl = runUrl;
                                 }
+                            }
+
+                            if (hasFailure) {
+                                out = { status: 'failure', url: bestUrl };
+                            } else if (hasPending) {
+                                out = { status: 'pending', url: bestUrl };
+                            } else if (hasSuccess) {
+                                out = { status: 'success', url: bestUrl };
+                            } else if (statusRes.ok || checkRunsRes.ok) {
+                                out = { status: 'none', url: null };
+                            } else {
+                                throw new Error(`GitHub check-runs API error (${checkRunsRes.status || statusRes.status || 'unknown'})`);
                             }
                         }catch (err){
                             global.warn(err);

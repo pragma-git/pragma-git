@@ -29,29 +29,17 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Historical Commit CI Status Display & Strike-Through Rendering:
-  - **CSS Pseudo-element Collision Fix for Failed CI Badge** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js)):
-    - Diagnosed why historical failed commits (such as `c22469`) appeared not to show failed status despite `top-titlebar-ci-failure` and `CI: Failed` tooltip being correctly applied.
-    - `lib/css-tooltip.css` styles `[data-tooltip]:after` with `opacity: 0` and `background: transparent` for the tooltip arrow, which completely collided with and silenced `.top-titlebar-ci-failure::after`.
-    - Resolved by rendering an explicit inner `<span class="top-titlebar-ci-strike"></span>` in `app.js` when `status === 'failure'`, styled in `style.css` with `position: absolute; top: 50%; left: -4px; right: -4px; height: 2px; background-color: #ffffff; transform: translateY(-50%); pointer-events: none;`.
-    - Completely eliminates pseudo-element collision while cleanly extending 4px past both sides of the boxed badge.
-  - **Branch Fast-Forward & Code Availability on `feature/automated-tests`**:
-    - The branch `feature/automated-tests` had previously stopped at commit `75943b4b` (merged into `develop` at `32d2bc02`, prior to any CI feature work).
-    - When checking out or switching to `feature/automated-tests`, the application source files reverted to `75943b4b`, completely lacking `top-titlebar-ci-badge` in `app.html` and `queryCommitCiStatus` in `app.js`.
-    - Fast-forwarded `feature/automated-tests` to match `develop` (`4ce2f847`) and pushed to `origin/feature/automated-tests`.
-  - Fixed historical commit CI status not updating when browsing history (e.g. to failure commit `c22469` / `c2246908cdc38a9727a20a645a7f985775a0f7ca`):
-    - **Cache-First Architecture in `queryCommitCiStatus`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)): Synchronous persistent (`ci_cache.json`) and memory cache lookups now execute before checking `ciQueryInProgress`. Cached historical commits resolve and update the UI instantly without being blocked by background network queries.
-    - **Stale Response Guard**: When an async provider API call completes, it updates `localState.ciStatus` and calls `updateCiBadge` only if the user is still viewing that exact commit. If the user navigated away, the result is safely written to cache without stomping the active commit's badge.
-    - **Full Bidirectional History Synchronization**:
-      - `downArrowClicked()`: calls `queryCommitCiStatus(false, localState.historyHash)` immediately upon setting `localState.historyHash`.
-      - `upArrowClicked()`: aligned with `downArrowClicked()` by calling `await _setMode('HISTORY')`, updating `localState.historyHash`, `_update()`, and `queryCommitCiStatus(false, localState.historyHash)`. When leaving history mode (`historyNumber < 0`), properly awaits `_setMode('UNKNOWN')` and refreshes HEAD CI status.
-      - `clicked-find-button` (search): immediately invokes `queryCommitCiStatus(false, localState.historyHash)` on match.
-      - `clicked-pinned-hash`: immediately invokes `queryCommitCiStatus(false, localState.historyHash)` when jumping to pinned commit.
-      - `graph.js` (`setHistoricalCommit`): calls `opener.queryCommitCiStatus(false, hash)` on commit click.
-    - **Live CDP Verification on `develop` and `feature/automated-tests`**:
-      - Navigating to commit `c22469` (commit #17 from HEAD) via down-arrow, up-arrow, search, or graph selection immediately renders `#top-titlebar-ci-badge` with `display: inline-block`, class `top-titlebar-ci-failure tooltip-bottom`, text `CI`, strike-line (`.top-titlebar-ci-strike` 2px bar extending 4px outside the box on both sides), and tooltip `CI: Failed (click to view)`.
-      - Stepping up to `7b71ee9` displays `top-titlebar-ci-success` (Passed), and stepping back down to `c224690` instantaneously restores `top-titlebar-ci-failure` (Failed).
-      - Returning to HEAD immediately restores HEAD CI status (`CI: Passed`).
+* **Task Description**: Historical Commit CI Status Display & Diagonal Strike-Through Rendering:
+  - **Diagonal Strike Line `\` for Failed CI Badge** ([style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Per user feedback, updated the strike-through line from horizontal to a diagonal backslash `\` across the boxed `[CI]` badge.
+    - Styled in `style.css` via `.top-titlebar-ci-strike` (`position: absolute; top: 50%; left: 50%; width: 28px; height: 2px; background-color: #ffffff; transform: translate(-50%, -50%) rotate(34deg); pointer-events: none; border-radius: 1px;`), perfectly spanning top-left to bottom-right and extending cleanly outside the box corners.
+  - **Fixed Credential Resolution for Normalized URLs** ([lib/pragma-credentials-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/pragma-credentials-lib.js)):
+    - `getLocalFolder` crashed with `TypeError: Cannot read properties of undefined (reading 'localFolder')` when `remoteUrl` was passed without `.git` (while `state.repos` stores `remoteURL` with `.git`).
+    - Added normalized comparison fallback in `getLocalFolder`, ensuring `getCredential` always retrieves Keychain GitHub tokens and avoids falling back to unauthenticated requests hitting 403 rate limits.
+  - **Comprehensive CI Status Inspection in GitHub Provider** ([apis_github_and_others/github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js)):
+    - Evaluates both Commit Status API and GitHub Actions Check Runs simultaneously. If any check-run or status failed, the commit is reliably resolved as `failure`.
+  - **Unified CI Cache Loading & Pre-population**:
+    - `loadCiCache` automatically unifies normalized and raw URL keys, ensuring historical failure commits (`c2246908`, `e42ceb4b`, `5fc1f5d6`) are persistently available in local cache.
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---

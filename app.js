@@ -7061,7 +7061,18 @@ function loadCiCache() {
     try {
         if (fs.existsSync(ciCacheFile)) {
             let data = fs.readFileSync(ciCacheFile, 'utf8');
-            return JSON.parse(data);
+            let cache = JSON.parse(data);
+            let unified = {};
+            for (let url of Object.keys(cache)) {
+                let norm = normalizeRepoUrl(url) || url;
+                if (!unified[norm]) unified[norm] = {};
+                Object.assign(unified[norm], cache[url]);
+                if (url !== norm) {
+                    if (!unified[url]) unified[url] = {};
+                    Object.assign(unified[url], cache[url]);
+                }
+            }
+            return unified;
         }
     } catch (e) {
         console.error('Failed to load ci_cache.json:', e);
@@ -7146,13 +7157,6 @@ function setCachedCiStatus(repoUrl, commitSha, ciData) {
             status: ciData.status,
             url: ciData.url || null
         };
-        // If raw repoUrl exists with prior entries, keep it synchronized
-        if (repoUrl !== normUrl && cache[repoUrl]) {
-            cache[repoUrl][commitSha] = {
-                status: ciData.status,
-                url: ciData.url || null
-            };
-        }
         saveCiCache(cache);
     }
 }
