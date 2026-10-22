@@ -57,4 +57,33 @@ try {
     assertFail('6.3: wslToWindowsPath error', err.message);
 }
 
+// Test 4: parseSshUrl decomposes SSH URLs accurately
+try {
+    const url1 = 'ssh://gituser@example.com:2222/var/git/repo.git';
+    const parsed1 = sshLib.parseSshUrl(url1);
+    if (parsed1.username === 'gituser' && parsed1.host === 'example.com' && parsed1.port === '2222' && parsed1.folder === '/var/git/repo.git') {
+        assertPass('6.4: parseSshUrl handles full SSH URL with port');
+    } else {
+        assertFail('6.4: parseSshUrl full SSH URL', JSON.stringify(parsed1));
+    }
+
+    const url2 = 'ssh://devuser@192.168.1.50/home/devuser/project';
+    const parsed2 = sshLib.parseSshUrl(url2);
+    if (parsed2.username === 'devuser' && parsed2.host === '192.168.1.50' && !parsed2.port && parsed2.folder === '/home/devuser/project') {
+        assertPass('6.5: parseSshUrl handles IP-based SSH URL without port');
+    } else {
+        assertFail('6.5: parseSshUrl IP-based SSH URL', JSON.stringify(parsed2));
+    }
+
+    const url3 = 'ssh://myserver.org/opt/repo';
+    const parsed3 = sshLib.parseSshUrl(url3);
+    if (!parsed3.username && parsed3.host === 'myserver.org' && parsed3.folder === '/opt/repo') {
+        assertPass('6.6: parseSshUrl handles URL without username');
+    } else {
+        assertFail('6.6: parseSshUrl URL without username', JSON.stringify(parsed3));
+    }
+} catch (err) {
+    assertFail('6.4-6.6: parseSshUrl threw error', err.message);
+}
+
 printSuiteResult();

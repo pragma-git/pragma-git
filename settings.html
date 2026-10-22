@@ -948,24 +948,15 @@
 
                                                 <tr class="tool">
                                                     <td colspan="100%">
-                                                        <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
-                                                            <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
-                                                            <input type="text" id="sshKeyInput_clone" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
-                                                            <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;" onclick="selectSshKey('clone')">Select key...</button>
-                                                            <button type="button" id="resetSshKeyButton_clone" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key" onclick="resetSshKeyToDefault('clone')">&#x2715;</button>
-                                                        </div>
-                                                        <div id="sshKeyNotice_clone" style="font-size: 10px; margin-top: 3px; display: none;"></div>
-                                                        <input type="file" id="sshKeyFileInput_clone" style="display: none;" onchange="onSshKeyFileSelected('clone', this)" />
-                                                    </td>
-                                                </tr>
-                                                
-                                                <tr class="tool">
-                                                    <td colspan="100%">
                                                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                                             <button type="button" id="testSshLoginButton_clone" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('clone')">Test login</button>
+                                                            <button type="button" id="setupSshButton_clone" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="openSshConfigDialog({ mode: 'clone' })">Setup SSH...</button>
                                                             <button type="button" id="deploySshKeyButton_clone" style="display: none; font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="deploySshKey('clone')">Create key pair</button>
                                                             <span id="testSshStatus_clone" style="font-size: 11px; vertical-align: middle;"></span>
                                                         </div>
+                                                        <input type="hidden" id="sshKeyInput_clone" />
+                                                        <input type="file" id="sshKeyFileInput_clone" style="display: none;" onchange="onSshKeyFileSelected('clone', this)" />
+                                                        <div id="sshKeyNotice_clone" style="display: none;"></div>
                                                         <input type="checkbox" id="setupRemoteKeyLogin_clone" style="display: none;" />
                                                     </td>
                                                 </tr>
@@ -1062,24 +1053,15 @@
 
                                                 <tr class="tool">
                                                     <td colspan="100%">
-                                                        <div class="sshKeyContainer" style="display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box;">
-                                                            <span style="font-size: 11px; white-space: nowrap; user-select: none;">SSH key:</span>
-                                                            <input type="text" id="sshKeyInput_add" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
-                                                            <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; width: auto; height: 26px; white-space: nowrap;" onclick="selectSshKey('add')">Select key...</button>
-                                                            <button type="button" id="resetSshKeyButton_add" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; width: auto; height: 26px;" title="Reset to default key" onclick="resetSshKeyToDefault('add')">&#x2715;</button>
-                                                        </div>
-                                                        <div id="sshKeyNotice_add" style="font-size: 10px; margin-top: 3px; display: none;"></div>
-                                                        <input type="file" id="sshKeyFileInput_add" style="display: none;" onchange="onSshKeyFileSelected('add', this)" />
-                                                    </td>
-                                                </tr>
-                                                
-                                                <tr class="tool">
-                                                    <td colspan="100%">
                                                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                                             <button type="button" id="testSshLoginButton_add" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('add')">Test login</button>
+                                                            <button type="button" id="setupSshButton_add" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="openSshConfigDialog({ mode: 'add' })">Setup SSH...</button>
                                                             <button type="button" id="deploySshKeyButton_add" style="display: none; font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="deploySshKey('add')">Create key pair</button>
                                                             <span id="testSshStatus_add" style="font-size: 11px; vertical-align: middle;"></span>
                                                         </div>
+                                                        <input type="hidden" id="sshKeyInput_add" />
+                                                        <input type="file" id="sshKeyFileInput_add" style="display: none;" onchange="onSshKeyFileSelected('add', this)" />
+                                                        <div id="sshKeyNotice_add" style="display: none;"></div>
                                                         <input type="checkbox" id="setupRemoteKeyLogin" style="display: none;" />
                                                     </td>
                                                 </tr>
@@ -1534,6 +1516,52 @@
             Cancel
         </button>  
     </dialog>     
+
+    <!-- Unified SSH Configuration Dialog -->
+    <dialog id="sshConfigDialog" style="border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); min-width: 500px; max-width: 620px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+        <h3 id="sshConfigTitle" style="margin-top: 0; margin-bottom: 14px; color: var(--header-color);">SSH Connection Configuration</h3>
+        
+        <table class="keyValueTable" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Target:</b></td>
+                <td style="width: 100%;">
+                    <div id="sshConfigTargetDisplay" style="font-weight: bold; font-family: monospace; font-size: 11pt; padding: 3px 0;"></div>
+                    <div id="sshConfigTargetInputs" style="display: none; align-items: center; gap: 6px; width: 100%;">
+                        <input type="text" id="sshConfigUsername" placeholder="username" class="serverInput" style="flex: 1 1 120px;" />
+                        <span style="font-weight: bold;">@</span>
+                        <input type="text" id="sshConfigHost" placeholder="server ip or address" class="serverInput" style="flex: 1.5 1 180px;" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>SSH key:</b></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigSelectKey()">Select key...</button>
+                        <button type="button" id="sshConfigResetKeyButton" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; height: 26px;" title="Reset to default key" onclick="sshConfigResetKey()">&#x2715;</button>
+                    </div>
+                    <input type="file" id="sshConfigKeyFileInput" style="display: none;" onchange="onSshConfigFilePicked(this)" />
+                    <div id="sshConfigKeyNotice" style="font-size: 11px; margin-top: 6px; display: none; line-height: 1.35;"></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Status:</b></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="sshConfigTestBtn" class="smallButton" style="padding: 2px 10px; vertical-align: middle;" onclick="sshConfigTestLogin()">Test login</button>
+                        <button type="button" id="sshConfigDeployBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigDeployKey()">Create key pair</button>
+                        <span id="sshConfigStatusText" style="font-size: 11px; vertical-align: middle;"></span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" id="sshConfigCancelBtn" class="smallButton" style="padding: 4px 14px;" onclick="closeSshConfigDialog(false)">Cancel</button>
+            <button type="button" id="sshConfigSaveBtn" class="smallButton" style="padding: 4px 14px; font-weight: bold;" onclick="closeSshConfigDialog(true)">Save & Fix</button>
+        </div>
+    </dialog>
 
     <!-- Scripts  -->       
     <script>  <!--  Store selectedBranch used in dialog   -->

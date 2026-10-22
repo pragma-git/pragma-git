@@ -28,13 +28,21 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: SSH Connection Configuration & Repair Dialog Architecture:
-  - Formulating unified SSH connection configuration dialog (`#sshConfigDialog`) to resolve post-setup SSH failures.
-  - Dialog scope: server target (`user@host`), SSH key selection (`Select key...`, reset to default `✕`), security explanation (only public key sent to server), connection test (`Test login`), and automated key installation (`Deploy public key` / `Create key pair`).
-  - Access entry points:
-    1. Repository table: `[Fix]` button displayed alongside `(key rejected)` in the Project folder column to repair broken connections and update `state.repos[i].sshKey`.
-    2. Add Repo & Clone tabs: `Test login` button retained inline, accompanied by `Setup SSH...` button and automatic dialog prompt on `KEY_NEEDED`.
-    3. System Info tab: `Configure SSH...` button in the Project folder section for proactive key management.
+* **Task Description**: SSH Connection Configuration & Repair Dialog Implementation:
+  - Implemented unified SSH connection configuration dialog (`#sshConfigDialog`) in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) with clean modal styling matching theme variables (`--header-color`, `--body-background`, `--body-text`).
+  - Added full SSH configuration state, handlers, and key helpers in [ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js):
+    - `parseSshUrl(sshUrl)`: Robust parser breaking down `ssh://user@host:port/path`.
+    - `openSshConfigDialog(options)`: Opens dialog preconfigured for either an existing repository (`options.repoIndex`) or Add/Clone tabs (`options.mode`).
+    - `updateSshConfigKeyDisplay(keyPath)`: Real-time key display, default key placeholder resolution, reset button visibility, and safety explanation (private key stays local; only public key is deployed to server).
+    - `sshConfigSelectKey()`, `onSshConfigFilePicked()`, `sshConfigResetKey()`: Local key selection and reset.
+    - `sshConfigTestLogin()`, `sshConfigDeployKey()`: Connection testing and automated public key installation with immediate re-verification.
+    - `closeSshConfigDialog(save)`: Saves chosen key to `state.repos[idx].sshKey` (or Add/Clone inputs), persists `settings.json`, and triggers instant status re-check.
+  - Added entry points across the application:
+    1. **Repository table** in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js): For broken SSH repositories (`reason` present on `ssh:` folder), standard `.smallButton` `Fix` button (no custom orange border) is rendered next to the warning label.
+    2. **Immediate repair via `recheckRepoStatus(repoIndex)`** in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js): Re-checks `fs_existsSync` with updated `sshKey`, updates `opener.cachedLocalStatus`, and immediately redraws the table, removing the warning and restoring the active radio button.
+    3. **System Info tab** in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js): Added `Configure SSH...` button under "Project folder" for proactive key management on active SSH repositories.
+    4. **Add Repo & Clone tabs** in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html): Replaced cluttered multi-line key rows with clean single-row controls (`Test login` and `Setup SSH...` buttons). `Test login` reporting `KEY_NEEDED` dynamically presents a `[Setup SSH]` link opening the dialog.
+  - Automated tests updated in [automated-tests/non_gui/ssh/test_06_ssh_lib_node.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js): All 81 tests across all 7 categories and 18 suites passing.
 * **Task Description**: Repository Group Filter Persistence, Indicator Badge & Help Documentation:
   - **Harmoniserad Filterindikator (`blockTextHighlight`)** ([color_styles.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
     - Infört `.blockTextHighlight` / `.blockTextHighligt` och CSS-variabler i `color_styles.css` som harmoniserar med temats text- och bakgrundsskalor istället för skarp rent vit/svart kontrast.

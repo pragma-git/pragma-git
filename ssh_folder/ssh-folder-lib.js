@@ -188,6 +188,37 @@ async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file fr
 }
 
 // SSH login test
+function parseSshUrl(sshUrl) {
+    let username = '';
+    let host = '';
+    let port = '';
+    let folder = '';
+    if (!sshUrl || typeof sshUrl !== 'string') return { username, host, port, folder };
+    try {
+        let parsed = new URL(sshUrl);
+        username = parsed.username || '';
+        host = parsed.hostname || '';
+        port = parsed.port || '';
+        folder = parsed.pathname || '';
+    } catch (e) {
+        let clean = sshUrl.replace(/^ssh:\/\//, '');
+        let slashIdx = clean.indexOf('/');
+        let hostPart = slashIdx >= 0 ? clean.substring(0, slashIdx) : clean;
+        folder = slashIdx >= 0 ? clean.substring(slashIdx) : '';
+        if (hostPart.includes('@')) {
+            username = hostPart.split('@')[0];
+            hostPart = hostPart.split('@').slice(1).join('@');
+        }
+        if (hostPart.includes(':')) {
+            host = hostPart.split(':')[0];
+            port = hostPart.split(':')[1];
+        } else {
+            host = hostPart;
+        }
+    }
+    return { username, host, port, folder };
+}
+
 function getDefaultSshKey() {
     let os = require('os');
     let path = require('path');
@@ -410,7 +441,7 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
             if (submitBtn) submitBtn.disabled = false;
         } else if (result && result.includes('STATUS:KEY_NEEDED')) {
             statusEl.style.color = 'var(--warn-color, orange)';
-            statusEl.textContent = 'ℹ Key needed (login not permitted)';
+            statusEl.innerHTML = `ℹ Key needed &nbsp;<a href="javascript:void(0)" class="linkLike" style="font-size: 11px;" onclick="openSshConfigDialog({ mode: '${mode}' })">[Setup SSH]</a>`;
             if (deployBtn) {
                 let fs = require('fs');
                 let keyExists = fs.existsSync(selectedKey) || fs.existsSync(selectedKey + '.pub');
@@ -532,6 +563,393 @@ function onServerInputsChanged( mode ) {                        // Resets valida
     if (submitBtn) submitBtn.disabled = true;
 }
 
+// =============================================
+// UNIFIED SSH CONFIGURATION DIALOG (#sshConfigDialog)
+// =============================================
+
+let currentSshConfigState = {
+    repoIndex: -1,
+    mode: '',
+    username: '',
+    server: '',
+    selectedKey: ''
+};
+
+function openSshConfigDialog( options = {} ) {
+    let dialog = document.getElementById('sshConfigDialog');
+    if (!dialog) return;
+
+    let targetDisplay = document.getElementById('sshConfigTargetDisplay');
+    let targetInputs = document.getElementById('sshConfigTargetInputs');
+    let titleEl = document.getElementById('sshConfigTitle');
+    let saveBtn = document.getElementById('sshConfigSaveBtn');
+    let statusEl = document.getElementById('sshConfigStatusText');
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let testBtn = document.getElementById('sshConfigTestBtn');
+
+    if (statusEl) statusEl.textContent = '';
+    if (deployBtn) deployBtn.style.display = 'none';
+    if (testBtn) testBtn.disabled = false;
+
+    if (options.repoIndex !== undefined && options.repoIndex >= 0) {
+        currentSshConfigState.repoIndex = options.repoIndex;
+        currentSshConfigState.mode = '';
+        let repo = (state && state.repos && state.repos[options.repoIndex]) ? state.repos[options.repoIndex] : {};
+        let parsed = parseSshUrl(repo.localFolder || '');
+        currentSshConfigState.username = parsed.username;
+        currentSshConfigState.server = parsed.host + (parsed.port ? ':' + parsed.port : '');
+        currentSshConfigState.selectedKey = repo.sshKey || '';
+
+        if (titleEl) titleEl.textContent = 'Configure SSH Connection';
+        if (saveBtn) saveBtn.textContent = 'Save & Fix';
+
+        if (targetDisplay && targetInputs) {
+            targetDisplay.textContent = (parsed.username ? parsed.username + '@' : '') + currentSshConfigState.server;
+            targetDisplay.style.display = 'block';
+            targetInputs.style.display = 'none';
+        }
+    } else if (options.mode) {
+        currentSshConfigState.repoIndex = -1;
+        currentSshConfigState.mode = options.mode;
+
+        let uInp = document.querySelector(options.mode === 'clone' ? 'input[name="username_clone"]' : 'input[name="username"]');
+        let sInp = document.querySelector(options.mode === 'clone' ? 'input[name="server_clone"]' : 'input[name="server"]');
+        currentSshConfigState.username = (uInp?.value || '').trim();
+        currentSshConfigState.server = (sInp?.value || '').trim();
+        currentSshConfigState.selectedKey = getSelectedSshKey(options.mode);
+
+        if (titleEl) titleEl.textContent = 'SSH Connection Setup';
+        if (saveBtn) saveBtn.textContent = 'Save & Close';
+
+        if (targetDisplay && targetInputs) {
+            if (currentSshConfigState.username && currentSshConfigState.server) {
+                targetDisplay.textContent = currentSshConfigState.username + '@' + currentSshConfigState.server;
+                targetDisplay.style.display = 'block';
+                targetInputs.style.display = 'none';
+            } else {
+                let uBox = document.getElementById('sshConfigUsername');
+                let hBox = document.getElementById('sshConfigHost');
+                if (uBox) uBox.value = currentSshConfigState.username;
+                if (hBox) hBox.value = currentSshConfigState.server;
+                targetDisplay.style.display = 'none';
+                targetInputs.style.display = 'flex';
+            }
+        }
+    }
+
+    updateSshConfigKeyDisplay(currentSshConfigState.selectedKey);
+    dialog.showModal();
+}
+
+function updateSshConfigKeyDisplay( keyPath ) {
+    let fs = require('fs');
+    let path = require('path');
+    let keyInput = document.getElementById('sshConfigKeyInput');
+    let resetBtn = document.getElementById('sshConfigResetKeyButton');
+    let noticeEl = document.getElementById('sshConfigKeyNotice');
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+
+    let defaultKey = getDefaultSshKey();
+    let hasExplicitKey = (keyPath && typeof keyPath === 'string' && keyPath.trim().length > 0);
+
+    if (keyInput) {
+        if (hasExplicitKey) {
+            keyInput.value = keyPath.trim();
+        } else {
+            keyInput.value = '';
+            keyInput.placeholder = `Default (~/.ssh/${path.basename(defaultKey)})`;
+        }
+    }
+
+    if (resetBtn) {
+        resetBtn.style.display = hasExplicitKey ? 'inline-block' : 'none';
+    }
+
+    if (noticeEl) {
+        noticeEl.style.display = 'block';
+        if (hasExplicitKey) {
+            let privPath = keyPath.trim();
+            let pubPath = '';
+            let isPubSelected = privPath.endsWith('.pub');
+            if (isPubSelected) {
+                pubPath = privPath;
+                privPath = privPath.slice(0, -4);
+            } else {
+                pubPath = privPath + '.pub';
+            }
+
+            if (isPubSelected) {
+                if (fs.existsSync(privPath)) {
+                    noticeEl.style.color = 'var(--green-text, green)';
+                    noticeEl.textContent = `✓ Public key chosen: ${path.basename(pubPath)}. Matching private key found locally. Only public key will be deployed to server; private key stays local.`;
+                } else {
+                    noticeEl.style.color = 'var(--warn-color, orange)';
+                    noticeEl.textContent = `⚠ Public key chosen: ${path.basename(pubPath)}, but private key (${path.basename(privPath)}) was not found locally. SSH login requires the matching private key.`;
+                }
+            } else {
+                if (fs.existsSync(pubPath)) {
+                    noticeEl.style.color = 'var(--green-text, green)';
+                    noticeEl.textContent = `✓ Key pair confirmed. Public key (${path.basename(pubPath)}) will be deployed to server; private key stays local.`;
+                } else {
+                    noticeEl.style.color = 'var(--dim-text, #888)';
+                    noticeEl.textContent = `ℹ Private key chosen. Public key will be derived locally via ssh-keygen before deploying. Only the public key will be deployed to server.`;
+                }
+            }
+        } else {
+            if (fs.existsSync(defaultKey)) {
+                noticeEl.style.color = 'var(--dim-text, #888)';
+                noticeEl.textContent = `ℹ Using default local key (${path.basename(defaultKey)}). Private key stays local.`;
+            } else {
+                noticeEl.style.color = 'var(--dim-text, #888)';
+                noticeEl.textContent = `ℹ No standard key found at ~/.ssh/id_ed25519. You can select an existing key or create a new key pair.`;
+            }
+        }
+    }
+
+    let activeKey = hasExplicitKey ? keyPath.trim() : defaultKey;
+    if (deployBtn) {
+        let keyExists = fs.existsSync(activeKey) || fs.existsSync(activeKey + '.pub');
+        deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
+    }
+}
+
+function sshConfigSelectKey() {
+    let fileInput = document.getElementById('sshConfigKeyFileInput');
+    if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+    }
+}
+
+function onSshConfigFilePicked( inputEl ) {
+    if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+    let selectedPath = inputEl.files[0].path || inputEl.value || '';
+    selectedPath = selectedPath.trim();
+    if (!selectedPath) return;
+
+    let privPath = selectedPath;
+    if (selectedPath.endsWith('.pub')) {
+        privPath = selectedPath.slice(0, -4);
+    }
+    currentSshConfigState.selectedKey = privPath;
+    updateSshConfigKeyDisplay(privPath);
+
+    let statusEl = document.getElementById('sshConfigStatusText');
+    if (statusEl) statusEl.textContent = '';
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+    if (deployBtn) deployBtn.style.display = 'none';
+}
+
+function sshConfigResetKey() {
+    currentSshConfigState.selectedKey = '';
+    updateSshConfigKeyDisplay('');
+    let fileInput = document.getElementById('sshConfigKeyFileInput');
+    if (fileInput) fileInput.value = '';
+
+    let statusEl = document.getElementById('sshConfigStatusText');
+    if (statusEl) statusEl.textContent = '';
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+    if (deployBtn) deployBtn.style.display = 'none';
+}
+
+async function sshConfigTestLogin() {
+    let statusEl = document.getElementById('sshConfigStatusText');
+    let testBtn = document.getElementById('sshConfigTestBtn');
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let targetInputs = document.getElementById('sshConfigTargetInputs');
+
+    if (targetInputs && targetInputs.style.display !== 'none') {
+        currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
+        currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    }
+
+    let username = currentSshConfigState.username;
+    let server = currentSshConfigState.server;
+
+    if (!username || !server) {
+        if (statusEl) {
+            statusEl.style.color = 'var(--warn-color, orange)';
+            statusEl.textContent = 'Please enter username and server first';
+        }
+        return;
+    }
+
+    let keyToTest = currentSshConfigState.selectedKey || getDefaultSshKey();
+
+    if (testBtn) testBtn.disabled = true;
+    if (deployBtn) deployBtn.disabled = true;
+    if (statusEl) {
+        statusEl.style.color = 'var(--dim-text, #888)';
+        statusEl.textContent = 'Testing connection...';
+    }
+
+    try {
+        let fakeFolder = `ssh://${username}@${server}/`;
+        let result = await sshTestLogin(fakeFolder, keyToTest);
+        console.log('sshConfigTestLogin result:', result);
+
+        if (result && result.includes('STATUS:OK')) {
+            statusEl.style.color = 'var(--green-text, green)';
+            statusEl.textContent = '✓ Login works (key already set up)';
+            if (deployBtn) deployBtn.style.display = 'none';
+        } else if (result && result.includes('STATUS:KEY_NEEDED')) {
+            statusEl.style.color = 'var(--warn-color, orange)';
+            statusEl.textContent = 'ℹ Key needed (login not permitted)';
+            if (deployBtn) {
+                let fs = require('fs');
+                let keyExists = fs.existsSync(keyToTest) || fs.existsSync(keyToTest + '.pub');
+                deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
+                deployBtn.style.display = 'inline-block';
+                deployBtn.disabled = false;
+            }
+        } else if (result && result.includes('STATUS:TIMEOUT')) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ Connection timed out';
+            if (deployBtn) deployBtn.style.display = 'none';
+        } else if (result && result.includes('STATUS:ERROR:')) {
+            let errorMsg = result.split('STATUS:ERROR:')[1]?.trim() || 'Unknown error';
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ ' + errorMsg;
+            if (deployBtn) deployBtn.style.display = 'none';
+        } else {
+            statusEl.style.color = 'var(--red-text, red)';
+            let cleanRes = (result || 'No response').toString().trim().replace(/[\r\n]+/g, ' ').substring(0, 80);
+            statusEl.textContent = '✗ ' + cleanRes;
+            if (deployBtn) deployBtn.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('sshConfigTestLogin error:', err);
+        if (statusEl) {
+            statusEl.style.color = 'var(--red-text, red)';
+            let msg = (err?.message || err?.toString() || 'Execution failed').replace(/[\r\n]+/g, ' ').substring(0, 80);
+            statusEl.textContent = '✗ ' + msg;
+        }
+        if (deployBtn) deployBtn.style.display = 'none';
+    } finally {
+        if (testBtn) testBtn.disabled = false;
+    }
+}
+
+async function sshConfigDeployKey() {
+    let statusEl = document.getElementById('sshConfigStatusText');
+    let testBtn = document.getElementById('sshConfigTestBtn');
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+
+    let username = currentSshConfigState.username;
+    let server = currentSshConfigState.server;
+    let keyToDeploy = currentSshConfigState.selectedKey || getDefaultSshKey();
+
+    if (!username || !server) return;
+
+    if (testBtn) testBtn.disabled = true;
+    if (deployBtn) deployBtn.disabled = true;
+    if (statusEl) {
+        statusEl.style.color = 'var(--dim-text, #888)';
+        statusEl.textContent = 'Deploying public key to remote server...';
+    }
+
+    let fakeFolder = `ssh://${username}@${server}/`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${keyToDeploy}"`;
+    let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+
+    try {
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+    } catch (err) {
+        console.error('sshConfigDeployKey error:', err);
+        if (MAIN.displayLongAlert) {
+            MAIN.displayLongAlert('Error when setting up password-less login', err, 'error');
+        }
+        if (MAIN.closeWindowsByTitle) {
+            MAIN.closeWindowsByTitle('Credentials');
+        }
+        try {
+            const os = require('os');
+            const pathsep = require('path').sep;
+            const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git' + pathsep + '.tmp';
+            const ASKPASSSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';
+            if (MAIN.rmLocalFile) MAIN.rmLocalFile(ASKPASSSIGNALFILE);
+        } catch (e) {}
+
+        if (statusEl) {
+            statusEl.style.color = 'var(--red-text, red)';
+            let msg = (err?.message || err?.toString() || 'Key deployment failed').replace(/[\r\n]+/g, ' ').substring(0, 80);
+            statusEl.textContent = '✗ ' + msg;
+        }
+        if (testBtn) testBtn.disabled = false;
+        if (deployBtn) deployBtn.disabled = false;
+        return;
+    } finally {
+        if (testBtn) testBtn.disabled = false;
+        if (deployBtn) deployBtn.disabled = false;
+    }
+
+    // Automatically re-test login after deployment
+    await sshConfigTestLogin();
+}
+
+async function closeSshConfigDialog( save = false ) {
+    let dialog = document.getElementById('sshConfigDialog');
+    if (!dialog) return;
+
+    if (!save) {
+        dialog.close();
+        return;
+    }
+
+    let targetInputs = document.getElementById('sshConfigTargetInputs');
+    if (targetInputs && targetInputs.style.display !== 'none') {
+        currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
+        currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    }
+
+    let chosenKey = currentSshConfigState.selectedKey || '';
+
+    if (currentSshConfigState.repoIndex >= 0) {
+        let idx = currentSshConfigState.repoIndex;
+        if (typeof state !== 'undefined' && state.repos && state.repos[idx]) {
+            state.repos[idx].sshKey = chosenKey;
+            if (typeof opener !== 'undefined' && opener.saveSettings) {
+                opener.saveSettings();
+            }
+            if (typeof recheckRepoStatus === 'function') {
+                await recheckRepoStatus(idx);
+            }
+            if (state.repoNumber === idx && typeof updateProjectFolderInfo === 'function') {
+                updateProjectFolderInfo();
+            }
+        }
+    } else if (currentSshConfigState.mode) {
+        let mode = currentSshConfigState.mode;
+        let keyInput = document.getElementById(mode === 'clone' ? 'sshKeyInput_clone' : 'sshKeyInput_add');
+        if (keyInput) {
+            keyInput.value = chosenKey;
+            keyInput.dataset.keyPath = chosenKey;
+        }
+
+        if (currentSshConfigState.username) {
+            let uInp = document.querySelector(mode === 'clone' ? 'input[name="username_clone"]' : 'input[name="username"]');
+            if (uInp) uInp.value = currentSshConfigState.username;
+        }
+        if (currentSshConfigState.server) {
+            let sInp = document.querySelector(mode === 'clone' ? 'input[name="server_clone"]' : 'input[name="server"]');
+            if (sInp) sInp.value = currentSshConfigState.server;
+        }
+
+        let dlgStatus = document.getElementById('sshConfigStatusText')?.textContent || '';
+        let tabStatus = document.getElementById(mode === 'clone' ? 'testSshStatus_clone' : 'testSshStatus_add');
+        let submitBtn = document.getElementById(mode === 'clone' ? 'cloneServerRepoButton' : 'addServerRepoButton');
+        if (dlgStatus.includes('Login works')) {
+            if (tabStatus) {
+                tabStatus.style.color = 'var(--green-text, green)';
+                tabStatus.textContent = '✓ Login works';
+            }
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    }
+
+    dialog.close();
+}
+
 // WINDOWS specific helpers
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
@@ -567,9 +985,13 @@ function getAndCreateWinTempFolder(){                           // Returns windo
 
 // Export for Node.js environments / automated tests
 if (typeof module !== 'undefined' && module.exports) {
+	module.exports.parseSshUrl = parseSshUrl;
 	module.exports.getDefaultSshKey = getDefaultSshKey;
 	module.exports.getSelectedSshKey = getSelectedSshKey;
 	module.exports.resetSshKeyToDefault = resetSshKeyToDefault;
+	module.exports.openSshConfigDialog = openSshConfigDialog;
+	module.exports.updateSshConfigKeyDisplay = updateSshConfigKeyDisplay;
+	module.exports.closeSshConfigDialog = closeSshConfigDialog;
 	module.exports.wslToWindowsPath = wslToWindowsPath;
 	module.exports.windowsToWslPath = windowsToWslPath;
 	module.exports.getAndCreateWinTempFolder = getAndCreateWinTempFolder;

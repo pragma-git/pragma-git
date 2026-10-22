@@ -594,7 +594,8 @@ async function _callback( name, event){
             try{                    
                 
                 // Check that repo (both normal and ssh-folder)
-                isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD` ); 
+                let repoKey = (global.state.repos[ Number(id)] && global.state.repos[ Number(id)].sshKey) ? global.state.repos[ Number(id)].sshKey : '';
+                isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD`, repoKey ); 
                 if ( isRepo == false ){
                         // Set to previous    
                         id = origRepoNumber;  
@@ -2105,6 +2106,27 @@ async function generateRepoTable(document, table, data) {
                     label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
                     label.innerHTML = '<b><i>(' + reason + ')</i></b> : ' + element.localFolder;
                     radiobox.style.visibility = "hidden";
+
+                    if ( element.localFolder && element.localFolder.startsWith('ssh:') ) {
+                        let fixBtn = document.createElement('button');
+                        fixBtn.type = 'button';
+                        fixBtn.className = 'smallButton';
+                        fixBtn.style.padding = '1px 6px';
+                        fixBtn.style.marginLeft = '8px';
+                        fixBtn.style.verticalAlign = 'middle';
+                        fixBtn.textContent = 'Fix';
+                        fixBtn.title = 'Configure SSH connection and fix login';
+                        (function(idx) {
+                            fixBtn.onclick = function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (typeof openSshConfigDialog === 'function') {
+                                    openSshConfigDialog({ repoIndex: idx });
+                                }
+                            };
+                        })(index);
+                        cell.insertBefore(fixBtn, newline);
+                    }
                 }                           
             
 
@@ -2465,6 +2487,65 @@ function updateRepoGroup(index, newGroup) {
     updateAllGroupDropdowns();
 }
 
+async function recheckRepoStatus(repoIndex) {
+    if (repoIndex < 0 || !state.repos || !state.repos[repoIndex]) return;
+    let repo = state.repos[repoIndex];
+    let folder = repo.localFolder;
+    let repoKey = repo.sshKey || '';
+
+    if (!opener.cachedLocalStatus) {
+        opener.cachedLocalStatus = { exists: [], isRepo: [], ping: [], reason: [], localFolder: [], platform: [] };
+    }
+    if (!opener.cachedLocalStatus.exists) opener.cachedLocalStatus.exists = new Array(state.repos.length).fill(false);
+    if (!opener.cachedLocalStatus.isRepo) opener.cachedLocalStatus.isRepo = new Array(state.repos.length).fill(false);
+    if (!opener.cachedLocalStatus.ping) opener.cachedLocalStatus.ping = new Array(state.repos.length).fill(null);
+    if (!opener.cachedLocalStatus.reason) opener.cachedLocalStatus.reason = new Array(state.repos.length).fill('');
+    if (!opener.cachedLocalStatus.localFolder) opener.cachedLocalStatus.localFolder = new Array(state.repos.length).fill(null);
+    if (!opener.cachedLocalStatus.platform) opener.cachedLocalStatus.platform = new Array(state.repos.length).fill(null);
+
+    if (folder.startsWith('ssh:')) {
+        let exists = await fs_existsSync(folder, repoKey);
+        opener.cachedLocalStatus.exists[repoIndex] = exists;
+        opener.cachedLocalStatus.localFolder[repoIndex] = folder;
+        if (exists) {
+            opener.cachedLocalStatus.ping[repoIndex] = true;
+            let isRepo = await fs_existsSync(`${folder}/.git/HEAD`, repoKey);
+            opener.cachedLocalStatus.isRepo[repoIndex] = isRepo;
+            opener.cachedLocalStatus.reason[repoIndex] = isRepo ? '' : 'not a repo';
+            try {
+                if (typeof opener.typeOfRepoServer === 'function') {
+                    opener.cachedLocalStatus.platform[repoIndex] = await opener.typeOfRepoServer(folder);
+                }
+            } catch (e) {}
+        } else {
+            opener.cachedLocalStatus.isRepo[repoIndex] = false;
+            let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
+            opener.cachedLocalStatus.reason[repoIndex] = reason;
+        }
+    } else {
+        let exists = fs.existsSync(folder);
+        opener.cachedLocalStatus.exists[repoIndex] = exists;
+        opener.cachedLocalStatus.localFolder[repoIndex] = folder;
+        opener.cachedLocalStatus.platform[repoIndex] = 'Local';
+        if (!exists) {
+            opener.cachedLocalStatus.isRepo[repoIndex] = false;
+            opener.cachedLocalStatus.reason[repoIndex] = 'not a folder';
+        } else {
+            await simpleGit(folder).checkIsRepo((err, checkResult) => {
+                opener.cachedLocalStatus.isRepo[repoIndex] = !!checkResult;
+                opener.cachedLocalStatus.reason[repoIndex] = checkResult ? '' : 'not a repo';
+            });
+        }
+    }
+
+    // Refresh repo table to update the status text and radio buttons
+    let tbody = document.getElementById("settingsTableBody");
+    if (tbody) {
+        tbody.innerHTML = "";
+        await createHtmlTable(document);
+    }
+}
+
 async function generateBranchTable(document, table, branchlist) {
     var index = 0; // Used to create button-IDs
     let cell, text, button, checkbox;
@@ -2803,6 +2884,7 @@ async function updateProjectFolderInfo() {
 
         html += `<tr><td style="white-space: nowrap;"> &nbsp; Private key (local) : &nbsp; </td><td> ${privKey} </td></tr>`;
         html += `<tr><td style="white-space: nowrap;"> &nbsp; Public key (server) : &nbsp; </td><td> ${remotePublicPath} </td></tr>`;
+        html += `<tr><td style="white-space: nowrap;"> &nbsp; SSH configuration : &nbsp; </td><td> <button type="button" class="smallButton" style="padding: 1px 8px; vertical-align: middle;" onclick="openSshConfigDialog({ repoIndex: state.repoNumber })">Configure SSH...</button> </td></tr>`;
     }
 
     html += '</table></code>';
