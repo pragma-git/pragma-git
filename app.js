@@ -7179,15 +7179,15 @@ function updateCiBadge(ciData) {
 
     if (ciData.status === 'success') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-success tooltip-bottom';
-        badge.innerHTML = 'CI';
+        badge.innerText = 'CI';
         badge.setAttribute('data-tooltip', 'CI: Passed (click to view)');
     } else if (ciData.status === 'failure') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-failure tooltip-bottom';
-        badge.innerHTML = '<span class="top-titlebar-ci-strike">CI</span>';
+        badge.innerText = 'CI';
         badge.setAttribute('data-tooltip', 'CI: Failed (click to view)');
     } else if (ciData.status === 'pending') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-pending tooltip-bottom';
-        badge.innerHTML = 'CI ...';
+        badge.innerText = 'CI ...';
         badge.setAttribute('data-tooltip', 'CI: In progress (click to view)');
     } else {
         badge.style.display = 'none';

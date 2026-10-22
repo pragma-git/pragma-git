@@ -296,36 +296,56 @@ div#inner-content {
   display: none;
   position: relative;
   font-family: Arial, sans-serif;
-  font-size: 11pt;
-  font-weight: normal;
-  color: #ffffff;
-  padding: 0 2px;
+  font-size: 8pt;
+  font-weight: bold;
+  padding: 1px 5px;
+  border-radius: 3px;
   margin-left: 6px;
-  margin-right: 4px;
-  vertical-align: baseline;
+  margin-right: 6px;
+  vertical-align: middle;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.08);
+  line-height: 1.2;
 }
 
 .top-titlebar-ci-badge:hover {
-  color: #aaaaaa;
+  border-color: #ffffff;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.16);
 }
 
 .top-titlebar-ci-success {
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .top-titlebar-ci-failure {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
-.top-titlebar-ci-strike {
-  text-decoration: line-through;
-  text-decoration-thickness: 1.5px;
+.top-titlebar-ci-failure::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  right: -4px;
+  height: 2px;
+  background-color: #ffffff;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .top-titlebar-ci-pending {
+  border: 1px dashed rgba(255, 255, 255, 0.3);
   color: #888888;
+  background-color: transparent;
   font-style: italic;
 }
 
