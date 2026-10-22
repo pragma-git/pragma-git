@@ -58,6 +58,10 @@ function print_suite_description() {
             echo "   Tests provider class instantiation and static getters across GitHub, GitLab, and Bitbucket."
             echo "   Verifies General_git_rest_api base methods and provider-specific icon and username extraction."
             ;;
+        test_04_ci_status.js)
+            echo "   Tests commit CI status extraction across GitHub, GitLab, and Bitbucket provider classes."
+            echo "   Verifies status normalization (success, failure, pending, none) and build target URLs."
+            ;;
     esac
 }
 

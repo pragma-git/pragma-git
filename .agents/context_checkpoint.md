@@ -12,6 +12,7 @@
 * **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info, Clone ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
 * **SSH Folder Integration**: Hjälpskript och wrappers för fjärr-git över SSH ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [ssh_folder/ssh-mkdir](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login), [ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login))
 * **Automated Testing Suite (Headless/CLI)**: Master test runner och automatiserade tester för backend och filsystemsintegration utan GUI ([_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/_run_tests), [automated-tests/_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests), [automated-tests/test_setup.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/test_setup.sh), [automated-tests/test_setup.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/test_setup.js), [automated-tests/non_gui/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/))
+* **Git Provider APIs & CI Status**: Abstraktionslager och klasser för GitHub, GitLab och Bitbucket REST APIs med commit CI-statusfrågor och 2-stegs persistent cache ([apis_github_and_others/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/), [apis_github_and_others/github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js), [apis_github_and_others/gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js), [apis_github_and_others/bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js))
 * **Build Orchestration**: Master-byggskript för plattformsoberoende paketering ([make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build))
 * **Code Signing Engine**: Inside-out djupkodsignering för NW.js och dess hjälparappar/moduler ([make_binaries/scripts/sign_app.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/sign_app.sh))
 * **DMG Builder**: Genererar monterbara DMG-paket med live-loggning ([make_binaries/scripts/build_dmg.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh))
@@ -28,6 +29,26 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Task Description**: Multi-Provider CI Status Indicator & Persistent Cache:
+  - Implemented provider CI status queries (`getValue('ci-status', commitSha)`) across all three providers:
+    - [github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js): Queries combined commit status API (`/commits/:ref/status`) and falls back to check-runs API (`/commits/:ref/check-runs`) for GitHub Actions. Returns `{ status: 'success'|'failure'|'pending'|'none', url: ... }`.
+    - [gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js): Queries pipeline commit statuses array (`/repository/commits/:ref/statuses`).
+    - [bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js): Queries commit statuses values (`/commit/:ref/statuses`).
+  - Implemented two-tier caching in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Persistent cache in `~/.Pragma-git/ci_cache.json` permanently storing immutable terminal results (`'success'`, `'failure'`) keyed by `repoUrl` and `commitSha`, avoiding unnecessary API queries and rate limit exhaustion.
+    - In-memory debouncing (30 seconds) for non-terminal queries (`'pending'`, `'none'`).
+    - Immediate re-queries triggered after push (`gitPush`) or when switching commits.
+  - Added CI status badge `#top-titlebar-ci-badge` to top titlebar in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) right next to branch name:
+    - Displays green `CI` on success (`top-titlebar-ci-success`).
+    - Displays red `CI` on failure (`top-titlebar-ci-failure`).
+    - Displays amber `CI` on pending (`top-titlebar-ci-pending`).
+    - Hidden completely if no CI is configured (`'none'`) or in `DEFAULT` mode / non-repo.
+    - Clickable via `_callback('clicked-ci-badge')` to open remote build URL in external browser.
+  - Added styling in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) with `-webkit-app-region: no-drag;` for NW.js titlebar clickability.
+  - Added automated tests:
+    - [test_04_ci_status.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/apis/test_04_ci_status.js) in `apis/`.
+    - [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js) in `app_function_calls/`.
+  - Master test suite passing 100% across all 7 categories (19 suites, 89 passed tests).
 * **Task Description**: SSH Connection & Settings Help Documentation Refinement:
   - Updated [HELP/SSH Connection.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20Connection.html):
     - Corrected menu path reference to `Settings → Repository → Add Repo:`.

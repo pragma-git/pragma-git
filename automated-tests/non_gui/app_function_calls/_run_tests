@@ -55,6 +55,10 @@ function print_suite_description() {
             echo "   Tests commit history message formatting and timestamp parsing from app.js."
             echo "   Verifies formatHistoryMessage with ISO dates, multi-line bodies, and line separators."
             ;;
+        test_03_ci_cache.js)
+            echo "   Tests CI cache persistence and badge DOM updates from app.js."
+            echo "   Verifies setCachedCiStatus, getCachedCiStatus, and updateCiBadge across all status types."
+            ;;
     esac
 }
 

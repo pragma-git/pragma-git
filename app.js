@@ -281,6 +281,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         mkdir( settingsDir);
         
         var settingsFile = settingsDir + pathsep + 'settings.json';    
+        var ciCacheFile = settingsDir + pathsep + 'ci_cache.json';    
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
         mkdir(notesDir);
@@ -347,6 +348,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         
         localState.pinnedCommit = '';  // Empty signals no commit is pinned (pinned commits used to compare current history to the pinned)
+        localState.ciStatus = { repoUrl: '', commitSha: '', status: 'none', url: null, lastChecked: 0 };
         
     // Display text
         var textOutput = {
@@ -726,6 +728,17 @@ async function _callback( name, event){
                     
         
         localState.notesWindow.open = true;
+        break;
+      }
+      case 'clicked-ci-badge': {
+        let ciUrl = localState.ciStatus && localState.ciStatus.url;
+        if (ciUrl) {
+            try {
+                gui.Shell.openExternal(ciUrl);
+            } catch (err) {
+                console.error('Failed to open CI URL:', err);
+            }
+        }
         break;
       }
       case 'clicked-push-button': {
@@ -3502,7 +3515,7 @@ async function _update2(){
         }
         
     // All buttons if DEFAULT mode
-        if (modeName == 'DEFAULT'){                        
+        if (modeName == 'DEFAULT' || !folderExists || !isRepo){                        
             // Hide icons
             document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden';
@@ -3518,10 +3531,12 @@ async function _update2(){
             // Notes and folder icon hidden if no repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'hidden';  
+            updateCiBadge({ status: 'none', url: null });
         }else{
             // Notes and folder icon shown if repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'visible'; // Notes icon
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'visible'; // Folder icon
+            queryCommitCiStatus(false);
         }
                
                         
@@ -5297,6 +5312,7 @@ async function gitPush( forcePush){
     }
     
     await waitTime( 1000);  
+    queryCommitCiStatus(true);
 
 }
 async function gitEnsureUpstream() { // Set upstream to origin/[same name as branch] -- if not set already
@@ -6988,6 +7004,184 @@ async function gitProvider(giturl, initialize = true){
     }
     
 }
+
+//
+// CI Status Cache & Query Functions
+//
+
+let ciQueryInProgress = false;
+
+function loadCiCache() {
+    try {
+        if (fs.existsSync(ciCacheFile)) {
+            let data = fs.readFileSync(ciCacheFile, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Failed to load ci_cache.json:', e);
+    }
+    return {};
+}
+
+function saveCiCache(cache) {
+    try {
+        fs.writeFileSync(ciCacheFile, JSON.stringify(cache, null, 2), 'utf8');
+    } catch (e) {
+        console.error('Failed to save ci_cache.json:', e);
+    }
+}
+
+function getCachedCiStatus(repoUrl, commitSha) {
+    if (!repoUrl || !commitSha) return null;
+    let cache = loadCiCache();
+    if (cache[repoUrl] && cache[repoUrl][commitSha]) {
+        return cache[repoUrl][commitSha];
+    }
+    return null;
+}
+
+function setCachedCiStatus(repoUrl, commitSha, ciData) {
+    if (!repoUrl || !commitSha || !ciData) return;
+    if (ciData.status === 'success' || ciData.status === 'failure') {
+        let cache = loadCiCache();
+        if (!cache[repoUrl]) {
+            cache[repoUrl] = {};
+        }
+        cache[repoUrl][commitSha] = {
+            status: ciData.status,
+            url: ciData.url || null
+        };
+        saveCiCache(cache);
+    }
+}
+
+function updateCiBadge(ciData) {
+    let badge = document.getElementById('top-titlebar-ci-badge');
+    if (!badge) return;
+
+    if (!ciData || ciData.status === 'none' || !ciData.status) {
+        badge.style.display = 'none';
+        return;
+    }
+
+    badge.style.display = 'inline-block';
+    badge.innerText = 'CI';
+
+    if (ciData.status === 'success') {
+        badge.className = 'top-titlebar-ci-badge top-titlebar-ci-success tooltip-bottom';
+        badge.setAttribute('data-tooltip', 'CI: Passed (click to view)');
+    } else if (ciData.status === 'failure') {
+        badge.className = 'top-titlebar-ci-badge top-titlebar-ci-failure tooltip-bottom';
+        badge.setAttribute('data-tooltip', 'CI: Failed (click to view)');
+    } else if (ciData.status === 'pending') {
+        badge.className = 'top-titlebar-ci-badge top-titlebar-ci-pending tooltip-bottom';
+        badge.setAttribute('data-tooltip', 'CI: In progress (click to view)');
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+async function queryCommitCiStatus(forceRefresh = false) {
+    if (ciQueryInProgress) return;
+    if (!state.repos || state.repos.length === 0 || state.repoNumber === undefined || !state.repos[state.repoNumber]) {
+        updateCiBadge({ status: 'none', url: null });
+        return;
+    }
+
+    let repo = state.repos[state.repoNumber];
+    let remoteUrl = repo.remoteURL;
+    let localFolder = repo.localFolder;
+
+    if (!remoteUrl || !remoteUrl.startsWith('http')) {
+        updateCiBadge({ status: 'none', url: null });
+        return;
+    }
+
+    let commitSha = '';
+    try {
+        let result = await simpleGit(localFolder).raw(['rev-parse', 'HEAD']);
+        commitSha = (result || '').trim();
+    } catch (e) {
+        updateCiBadge({ status: 'none', url: null });
+        return;
+    }
+
+    if (!commitSha) {
+        updateCiBadge({ status: 'none', url: null });
+        return;
+    }
+
+    // Check persistent cache
+    if (!forceRefresh) {
+        let cached = getCachedCiStatus(remoteUrl, commitSha);
+        if (cached && (cached.status === 'success' || cached.status === 'failure')) {
+            localState.ciStatus = {
+                repoUrl: remoteUrl,
+                commitSha: commitSha,
+                status: cached.status,
+                url: cached.url,
+                lastChecked: Date.now()
+            };
+            updateCiBadge(localState.ciStatus);
+            return;
+        }
+    }
+
+    // Debounce non-cached queries: 30 seconds for the same commit
+    let now = Date.now();
+    if (!forceRefresh && localState.ciStatus &&
+        localState.ciStatus.repoUrl === remoteUrl &&
+        localState.ciStatus.commitSha === commitSha &&
+        (now - (localState.ciStatus.lastChecked || 0) < 30000)) {
+        updateCiBadge(localState.ciStatus);
+        return;
+    }
+
+    ciQueryInProgress = true;
+    try {
+        let provider = await gitProvider(remoteUrl, true);
+        let ciResult = await provider.getValue('ci-status', commitSha);
+        if (ciResult && ciResult.status) {
+            setCachedCiStatus(remoteUrl, commitSha, ciResult);
+            localState.ciStatus = {
+                repoUrl: remoteUrl,
+                commitSha: commitSha,
+                status: ciResult.status,
+                url: ciResult.url || null,
+                lastChecked: Date.now()
+            };
+            updateCiBadge(localState.ciStatus);
+        } else {
+            localState.ciStatus = {
+                repoUrl: remoteUrl,
+                commitSha: commitSha,
+                status: 'none',
+                url: null,
+                lastChecked: Date.now()
+            };
+            updateCiBadge(localState.ciStatus);
+        }
+    } catch (err) {
+        console.warn('Error querying CI status:', err);
+        localState.ciStatus = {
+            repoUrl: remoteUrl,
+            commitSha: commitSha,
+            status: 'none',
+            url: null,
+            lastChecked: Date.now()
+        };
+        updateCiBadge(localState.ciStatus);
+    } finally {
+        ciQueryInProgress = false;
+    }
+}
+
+global.loadCiCache = loadCiCache;
+global.saveCiCache = saveCiCache;
+global.getCachedCiStatus = getCachedCiStatus;
+global.setCachedCiStatus = setCachedCiStatus;
+global.updateCiBadge = updateCiBadge;
+global.queryCommitCiStatus = queryCommitCiStatus;
 listUnstarredGithub = async function( state, owner, repo) {
     // state is state for pragma-git
     // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo

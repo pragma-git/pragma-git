@@ -259,6 +259,49 @@ class bitbucket extends General_git_rest_api {
                         }catch (err){ global.warn(err);}
                         break;   
                     }    
+                    case 'ci-status': {  // Returns { status: 'success'|'failure'|'pending'|'none', url: string|null }
+                        try{
+                            let commitSha = secondParameter;
+                            if (!commitSha) {
+                                out = { status: 'none', url: null };
+                                break;
+                            }
+                            let headers = {
+                                'Accept': 'application/json'
+                            };
+                            if (!super.isEmptyString(this.TOKEN)) {
+                                if (this.username == 'x-token-auth'){
+                                    headers['Authorization'] = 'Bearer ' + btoa(this.TOKEN);
+                                } else {
+                                    headers['Authorization'] = 'Basic ' + btoa(this.username + ':' + this.TOKEN);
+                                }
+                            }
+                            let statusUrl = `${this.apiurl}/commit/${commitSha}/statuses`;
+                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
+
+                            if (statusRes.ok && statusRes.json && Array.isArray(statusRes.json.values) && statusRes.json.values.length > 0) {
+                                let statuses = statusRes.json.values;
+                                let hasFailure = statuses.some(s => s.state === 'FAILED' || s.state === 'STOPPED');
+                                let hasPending = statuses.some(s => s.state === 'INPROGRESS');
+                                let failedItem = statuses.find(s => s.state === 'FAILED' || s.state === 'STOPPED');
+                                let targetUrl = (failedItem && failedItem.url) || statuses[0].url || null;
+
+                                if (hasFailure) {
+                                    out = { status: 'failure', url: targetUrl };
+                                } else if (hasPending) {
+                                    out = { status: 'pending', url: targetUrl };
+                                } else {
+                                    out = { status: 'success', url: targetUrl };
+                                }
+                            } else {
+                                out = { status: 'none', url: null };
+                            }
+                        }catch (err){
+                            global.warn(err);
+                            out = { status: 'none', url: null };
+                        }
+                        break;
+                    }    
                     default:  {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }

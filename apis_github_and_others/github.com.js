@@ -206,6 +206,64 @@ class github extends General_git_rest_api {
                         }catch (err){ global.warn(err);}
                         break;   
                     }    
+                    case 'ci-status': {  // Returns { status: 'success'|'failure'|'pending'|'none', url: string|null }
+                        try{
+                            let commitSha = secondParameter;
+                            if (!commitSha) {
+                                out = { status: 'none', url: null };
+                                break;
+                            }
+                            let headers = {
+                                'Accept': 'application/vnd.github.v3+json'
+                            };
+                            if (!super.isEmptyString(this.TOKEN)) {
+                                headers['Authorization'] = `token ${this.TOKEN}`;
+                            }
+                            let statusUrl = `${this.apiurl}/commits/${commitSha}/status`;
+                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
+
+                            let foundStatus = false;
+                            if (statusRes.ok && statusRes.json && statusRes.json.total_count > 0) {
+                                foundStatus = true;
+                                let state = statusRes.json.state; // 'success', 'failure', 'pending'
+                                let targetUrl = (statusRes.json.statuses && statusRes.json.statuses.length > 0) ? statusRes.json.statuses[0].target_url : null;
+                                if (state === 'success') {
+                                    out = { status: 'success', url: targetUrl };
+                                } else if (state === 'failure' || state === 'error') {
+                                    out = { status: 'failure', url: targetUrl };
+                                } else {
+                                    out = { status: 'pending', url: targetUrl };
+                                }
+                            }
+
+                            if (!foundStatus) {
+                                let checkRunsUrl = `${this.apiurl}/commits/${commitSha}/check-runs`;
+                                let checkRunsRes = await this.fetchWithApi(checkRunsUrl, { method: 'GET', headers: headers });
+                                if (checkRunsRes.ok && checkRunsRes.json && checkRunsRes.json.total_count > 0) {
+                                    let runs = checkRunsRes.json.check_runs || [];
+                                    let hasFailure = runs.some(r => r.conclusion === 'failure' || r.conclusion === 'timed_out' || r.conclusion === 'cancelled');
+                                    let hasPending = runs.some(r => r.status !== 'completed');
+                                    let failRun = runs.find(r => r.conclusion === 'failure' || r.conclusion === 'timed_out' || r.conclusion === 'cancelled');
+                                    let firstRun = runs[0];
+                                    let runUrl = (failRun && (failRun.html_url || failRun.details_url)) || (firstRun && (firstRun.html_url || firstRun.details_url)) || null;
+
+                                    if (hasFailure) {
+                                        out = { status: 'failure', url: runUrl };
+                                    } else if (hasPending) {
+                                        out = { status: 'pending', url: runUrl };
+                                    } else {
+                                        out = { status: 'success', url: runUrl };
+                                    }
+                                } else {
+                                    out = { status: 'none', url: null };
+                                }
+                            }
+                        }catch (err){
+                            global.warn(err);
+                            out = { status: 'none', url: null };
+                        }
+                        break;
+                    }    
                     default:  {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }

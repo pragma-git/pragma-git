@@ -268,6 +268,46 @@ class gitlab extends General_git_rest_api {
                         }catch (err){ global.warn(err);}
                         break;   
                     }    
+                    case 'ci-status': {  // Returns { status: 'success'|'failure'|'pending'|'none', url: string|null }
+                        try{
+                            let commitSha = secondParameter;
+                            if (!commitSha) {
+                                out = { status: 'none', url: null };
+                                break;
+                            }
+                            let headers = {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            };
+                            if (!super.isEmptyString(this.TOKEN)) {
+                                headers['PRIVATE-TOKEN'] = this.TOKEN;
+                            }
+                            let statusUrl = `${this.apiurl}/repository/commits/${commitSha}/statuses`;
+                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
+
+                            if (statusRes.ok && Array.isArray(statusRes.json) && statusRes.json.length > 0) {
+                                let statuses = statusRes.json;
+                                let hasFailure = statuses.some(s => s.status === 'failed' || s.status === 'canceled');
+                                let hasPending = statuses.some(s => s.status === 'running' || s.status === 'pending');
+                                let failedItem = statuses.find(s => s.status === 'failed' || s.status === 'canceled');
+                                let targetUrl = (failedItem && failedItem.target_url) || statuses[0].target_url || null;
+
+                                if (hasFailure) {
+                                    out = { status: 'failure', url: targetUrl };
+                                } else if (hasPending) {
+                                    out = { status: 'pending', url: targetUrl };
+                                } else {
+                                    out = { status: 'success', url: targetUrl };
+                                }
+                            } else {
+                                out = { status: 'none', url: null };
+                            }
+                        }catch (err){
+                            global.warn(err);
+                            out = { status: 'none', url: null };
+                        }
+                        break;
+                    }    
                     default: {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }
