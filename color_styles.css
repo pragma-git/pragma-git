@@ -10,7 +10,8 @@
     --body-text: var(--text);
     --input-background: #EEEEEE;
     --input-placeholder: #777777;
-    --image-invert: 0%;               /* do not invert black-transparent images to white  */
+    --image-invert: 35%;              /* soften black icons to dark charcoal */
+    --image-hover-filter: brightness(0); /* deepen to black on hover in light mode */
     --header-color: #2F5496;        /* header */
     --warn-color: #d6b51d;          /* for instance border of dialogs */
     --err-color: #C0401A;           /* for instance border of dialogs */
@@ -79,6 +80,7 @@
     --link-color: #f3da67a6;            /* in html windows */
     --link-pressed-color: #a3a040;
     --image-invert: 80%;               /* invert black-transparent images to white */
+    --image-hover-filter: none;
     --header-color: #d6b51d;
     --warn-color: #d6b51d;          /* for instance border of dialogs */
     --err-color: #C0401A;           /* for instance border of dialogs */
@@ -228,6 +230,13 @@
         img{
            filter: invert( var(--image-invert) );
            -webkit-user-drag: none;
+        }
+        
+        .light img[src*="_black"]:hover,
+        .light img[src*="_hover"],
+        .light #about-icon:hover,
+        .light #find-icon:hover {
+           filter: var(--image-hover-filter) !important;
         }
 
         
