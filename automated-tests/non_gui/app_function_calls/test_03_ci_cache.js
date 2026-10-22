@@ -214,16 +214,16 @@ async function runTests() {
         'updateCiBadge correctly renders success badge with clean monochrome CI and Passed tooltip'
     );
 
-    // Test 6: updateCiBadge renders failure with crossed-over CI
+    // Test 6: updateCiBadge renders failure with cracked CI pieces
     sandbox.updateCiBadge({ status: 'failure', url: 'https://ci/fail' });
     assert(
         mockBadge.style.display === 'inline-block' &&
-        mockBadge.innerHTML.includes('top-titlebar-ci-strike') &&
-        mockBadge.innerHTML.includes('top-titlebar-ci-dot') &&
+        mockBadge.innerHTML.includes('ci-piece-left') &&
+        mockBadge.innerHTML.includes('ci-piece-right') &&
         mockBadge.innerText === 'CI' &&
         mockBadge.className.includes('top-titlebar-ci-failure') &&
         mockBadge.attributes['data-tooltip'].includes('Failed'),
-        'updateCiBadge correctly renders failure badge with top-titlebar-ci-failure class, strike line, red dot, and Failed tooltip'
+        'updateCiBadge correctly renders failure badge with top-titlebar-ci-failure class, split cracked pieces, and Failed tooltip'
     );
 
     // Test 7: updateCiBadge hides when status is none or missing

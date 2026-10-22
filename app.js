@@ -7185,15 +7185,15 @@ function updateCiBadge(ciData) {
 
     if (ciData.status === 'success') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-success tooltip-bottom';
-        badge.innerText = 'CI';
+        badge.innerHTML = '<svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">I</text></svg>';
         badge.setAttribute('data-tooltip', 'CI: Passed (click to view)');
     } else if (ciData.status === 'failure') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-failure tooltip-bottom';
-        badge.innerHTML = 'CI<span class="top-titlebar-ci-strike"></span><span class="top-titlebar-ci-dot"></span>';
+        badge.innerHTML = '<svg width="34" height="19" viewBox="0 0 34 19"><g class="ci-piece-left"><path d="M 3.5,0.5 L 16,0.5 L 18,5 L 15,11 L 17,16.5 L 3.5,16.5 A 3,3 0 0 1 0.5,13.5 L 0.5,3.5 A 3,3 0 0 1 3.5,0.5 Z" stroke-linejoin="round"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">C</text></g><g class="ci-piece-right" transform="translate(8, 1.2) rotate(7 23.5 8.5)"><path d="M 18.5,0.5 L 28.5,0.5 A 3,3 0 0 1 31.5,3.5 L 31.5,13.5 A 3,3 0 0 1 28.5,16.5 L 19.5,16.5 L 17.5,11 L 20.5,5 L 18.5,0.5 Z" stroke-linejoin="round"/><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">I</text></g></svg>';
         badge.setAttribute('data-tooltip', 'CI: Failed (click to view)');
     } else if (ciData.status === 'pending') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-pending tooltip-bottom';
-        badge.innerText = 'CI ...';
+        badge.innerHTML = '<svg width="42" height="19" viewBox="0 0 42 19"><rect x="0.5" y="0.5" width="39" height="16" rx="3" stroke-dasharray="3,2" fill-opacity="0.05"/><text x="9" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic">C</text><text x="18" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic">I</text><text x="29" y="7.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold">...</text></svg>';
         badge.setAttribute('data-tooltip', 'CI: In progress (click to view)');
     } else {
         badge.style.display = 'none';
@@ -8175,7 +8175,16 @@ function updateImageUrl(image_id, new_image_url) {
     image.src = new_image_url;
 }
 function focusTitlebars(focus) {
-  var bg_color = focus ? "#404040" : "#303030";
+  if (focus === undefined) {
+    focus = (typeof document !== 'undefined' && document.hasFocus && document.hasFocus());
+  }
+  let isDark = document.body.classList.contains('dark') || (typeof localState !== 'undefined' && localState.dark);
+  let bg_color;
+  if (isDark) {
+    bg_color = focus ? "#404040" : "#303030";
+  } else {
+    bg_color = focus ? "#ebedf0" : "#e0e2e6";
+  }
     
   var titlebar = document.getElementById("top-titlebar");
   if (titlebar)
@@ -8808,6 +8817,20 @@ function updateWithNewSettings(){                   // Call from window that mod
         break;
       }
     }
+
+    // Apply immediately to current main window synchronously
+    if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.remove('light');
+        document.body.classList.remove('dark');
+        if (localState.dark) {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.add('light');
+        }
+        if (typeof focusTitlebars === 'function') {
+            focusTitlebars();
+        }
+    }
     
     // Set mode on all opened windows (this is used when settings dark/light mode is changed)
     gui.Window.getAll( 
@@ -8845,6 +8868,13 @@ function updateWithNewSettings(){                   // Call from window that mod
                         if ( iframe_handle != null ){ 
                            iframe_handle.contentWindow.document.body.classList.add('light');
                         }                
+                    }
+
+                    // Refresh titlebar colors immediately when theme changes
+                    if (win_handle.window.focusTitlebars) {
+                        try {
+                            win_handle.window.focusTitlebars();
+                        } catch(e) {}
                     }
                     
                                     

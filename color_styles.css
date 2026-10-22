@@ -56,7 +56,15 @@
     --message-placeholder: var(--dim-text);
     --history-icon-brightness: 1;     /* keep original */
     --history-image-invert: 20%;
-    --middle-background: #CCCCCC; 
+    --middle-background: #f6f8fa; 
+    --titlebar-background: #ebedf0;
+    --titlebar-text: #24292f;
+    --titlebar-hover-text: #57606a;
+    --titlebar-divider: #d0d7de;
+    --titlebar-icon-filter: brightness(0.2);
+    --message-border: #d0d7de;
+    --message-background: #ffffff;
+    --message-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); 
     
     /* Tables */
     --hoverBackGroundColor: lch( from var(--body-background) calc(l - 8 ) c h);  /* Workaround because backdrop-filter fails in jsonViewer.html */
@@ -122,7 +130,15 @@
     --message-placeholder: var(--dim-text);        /* message field: non-editable texts */
     --history-icon-brightness: 10;                 /* make white */
     --history-image-invert: 100%;
-    --middle-background: unset;
+    --middle-background: #404040;
+    --titlebar-background: #7a7c7c;
+    --titlebar-text: #ffffff;
+    --titlebar-hover-text: #aaaaaa;
+    --titlebar-divider: #2a2c2c;
+    --titlebar-icon-filter: none;
+    --message-border: none;
+    --message-background: inherit;
+    --message-shadow: none;
     
     /* Tables */
     --hoverBackGroundColor: lch( from var(--body-background) calc(l +  15 ) c h);   /* Workaround because backdrop-filter fails in jsonViewer.html */

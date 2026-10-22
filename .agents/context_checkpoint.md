@@ -29,7 +29,14 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: CI Pending / Ongoing Test Polling & Credential Resolution:
+* **Titlebar Icon Alignments & CI Badge**:
+  - Resolved a CSS syntax error (an extra `}`) in `style.css` which had caused the browser to ignore subsequent titlebar icon rules (`top-titlebar-tag-icon`, `top-titlebar-close-field`, minimize, and close icons).
+  - Restored exact horizontal and vertical positions for close (`x`), minimize (`-`), and action buttons (`tag`, `push`, `pull`, `merge`, `branch`).
+  - Verified exact vertical centering of the CI badge with the notes icon (`centerY = 15.7px`).
+  - All 92 automated tests across 7 categories pass 100%. Pushed to `origin/develop` (`298ae6a7`).
+* **Cracked CI Badge (V2 Split Fracture)**:
+  - Implemented the V2 broken CI design split into two independent SVG pieces with a stroked fracture line, matched typography, subpixel geometry, light/dark mode support, and removed the red dot and strike line.
+  - Verified locally (100% test pass rate, 92/92 tests) and pushed to `develop`.
   - **Ongoing Test (Pending) Active Polling & Post-Push Workflow** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
     - Immediately on push, displays the `pending` badge (`CI ...`) and initiates an automated polling sequence (every 3-4 seconds, up to 40 attempts / 2 minutes) until CI check runs are registered and reach terminal status (`success` / `failure`).
     - Added recursive auto-polling in `queryCommitCiStatus` whenever `ciResult.status === 'pending'`.
@@ -70,7 +77,13 @@
       - Added [`automated-tests/setup_wsl_ssh.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/setup_wsl_ssh.sh) to configure matching user (`runneradmin`) in WSL Ubuntu 22.04 with passwordless sudo, ED25519 authentication keys, `/etc/wsl.conf` boot command (`service ssh start`), and start Linux OpenSSH service inside WSL as the authentic Linux SSH server target.
       - Added persistent detached background process in Windows workflow (`Start-Process wsl -ArgumentList "sleep","infinity" -WindowStyle Hidden`) so WSL VM and its daemons remain alive across steps without idle timeout.
       - Updated `ssh/_run_tests` on Windows to explicitly refresh WSL SSH daemon via `wsl -u root service ssh restart`, route `.sh` test scripts through `MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path"`, and execute `.js` unit tests (`test_06_ssh_lib_node.js`) in native Node.js without MSYS path collision.
-    - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests) across all three OS runners (`macos-latest`, `ubuntu-latest`, `windows-latest`) in GitHub Actions (Run `39835987768`, commit `0ebf3a6c` preserving baseline `952bb213`).
+  - **Cracked / Split CI Failure Icon & Theme Support** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [automated-tests/non_gui/app_function_calls/test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js)):
+    - Implemented vector SVG representation for CI status badges:
+      - **Unbroken (Success / Pending)**: Solid rounded box (`rx="3"`) with matched 6.5px outer margins and 8.5px inner corridor between C and I, aligned on identical vertical centerline (`dominant-baseline="central"`).
+      - **Broken (Failure)**: Split into two independent pieces (`ci-piece-left` holding C, `ci-piece-right` holding I) with an authentic zigzag fracture line matching the 1px border stroke and fill. The right piece is dropped (1.2px) and tilted (1.8°) to create a cracked effect.
+      - Removed the legacy diagonal strike-line (`.top-titlebar-ci-strike`) and red dot (`.top-titlebar-ci-dot`).
+      - Full Light & Dark Mode support: Uses `currentColor` with `fill-opacity` and `stroke-opacity` to adapt dynamically to titlebar themes across both dark and light modes.
+    - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---
 

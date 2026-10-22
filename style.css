@@ -161,7 +161,8 @@ div#inner-content {
   top: 0px;
   width: 100%;
   height: 28px;
-  background-color: #7a7c7c;
+  background-color: var(--titlebar-background);
+  color: var(--titlebar-text);
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
@@ -172,12 +173,21 @@ div#inner-content {
   bottom: 0px;
   width: 100%;
   height: 28px;
-  background-color: #7a7c7c;
+  background-color: var(--titlebar-background);
+  color: var(--titlebar-text);
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
 
-.top-titlebar-notes-icon, .top-titlebar-pinned-icon, .bottom-titlebar-more-icon{
+.top-titlebar-notes-icon {
+  display: inline;
+  vertical-align: middle;
+  position: relative;
+  margin-left: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-pinned-icon, .bottom-titlebar-more-icon{
   display:inline;
   vertical-align:middle;
   position: relative;
@@ -200,6 +210,11 @@ div#inner-content {
   -webkit-app-region: no-drag;
 }
 
+.top-titlebar img,
+.bottom-titlebar img {
+  filter: var(--titlebar-icon-filter);
+}
+
 .bottom-titlebar-text {
   position: absolute;
   left: 56px;
@@ -208,7 +223,7 @@ div#inner-content {
   margin-bottom: 6px;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
 }
 
@@ -264,7 +279,7 @@ div#inner-content {
   margin-bottom: 6px;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   text-align: left
 }
 
@@ -273,7 +288,7 @@ div#inner-content {
   font-size: 10pt;
   position: relative;
   display:inline-block;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
 }
 
@@ -284,8 +299,13 @@ div#inner-content {
   display:inline-block;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
+}
+
+.link-text-hover:hover {
+  color: var(--titlebar-hover-text);
+  cursor: pointer;
 }
 
 .top-titlebar-branch-text{
@@ -295,94 +315,78 @@ div#inner-content {
 .top-titlebar-ci-placeholder {
   display: inline-block;
   vertical-align: middle;
-  width: 32px;
-  height: 18px;
+  width: 36px;
+  height: 19px;
   margin-left: 5px;
   margin-right: 10px;
   text-align: center;
-  line-height: 18px;
+  line-height: 19px;
   position: relative;
+  top: 1.5px;
   -webkit-app-region: no-drag;
 }
 
 .top-titlebar-ci-badge {
   display: none;
   position: relative;
-  font-family: Arial, sans-serif;
-  font-size: 8pt;
-  font-weight: bold;
-  padding: 1px 5px;
-  border-radius: 3px;
-  margin-left: 0px;
-  margin-right: 0px;
   vertical-align: middle;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  padding: 0;
+  border: none;
+  background: transparent;
+  line-height: 0;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background-color: rgba(255, 255, 255, 0.08);
-  line-height: 1.2;
-  white-space: nowrap;
+  transition: opacity 0.15s;
 }
 
-.top-titlebar-ci-badge:hover {
-  border-color: #ffffff;
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.16);
+.top-titlebar-ci-badge svg {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
 }
 
-.top-titlebar-ci-success {
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.08);
+.top-titlebar-ci-badge svg rect,
+.top-titlebar-ci-badge svg path {
+  fill: currentColor;
+  fill-opacity: 0.08;
+  stroke: currentColor;
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+  transition: stroke-opacity 0.15s, fill-opacity 0.15s;
+}
+
+.top-titlebar-ci-badge svg text {
+  fill: currentColor;
+  transition: fill 0.15s;
+}
+
+.top-titlebar-ci-badge:hover svg rect,
+.top-titlebar-ci-badge:hover svg path {
+  fill-opacity: 0.16;
+  stroke-opacity: 0.9;
 }
 
 .top-titlebar-ci-failure {
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.5);
-  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0.9;
 }
 
 .top-titlebar-ci-failure:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-  color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(255, 255, 255, 0.12);
+  opacity: 1;
 }
 
-.top-titlebar-ci-failure:hover .top-titlebar-ci-strike {
-  background-color: rgba(255, 255, 255, 0.8);
+.top-titlebar-ci-failure:hover svg path {
+  stroke-opacity: 0.95;
+  fill-opacity: 0.18;
 }
 
-.top-titlebar-ci-strike {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 28px;
-  height: 2px;
-  background-color: rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%) rotate(34deg);
-  pointer-events: none;
-  border-radius: 1px;
+/* Light & dark mode theme support */
+body.light .top-titlebar-ci-badge {
+  color: var(--titlebar-text);
 }
 
-.top-titlebar-ci-dot {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 5px;
-  height: 5px;
-  background-color: #eb4d4b;
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.25);
-}
-
-.top-titlebar-ci-pending {
-  border: 1px dashed rgba(255, 255, 255, 0.45);
-  color: rgba(255, 255, 255, 0.8);
-  background-color: rgba(255, 255, 255, 0.05);
-  font-style: italic;
+body.dark .top-titlebar-ci-badge {
+  color: var(--titlebar-text);
 }
 
 .top-titlebar-tag-icon
@@ -475,7 +479,7 @@ div#inner-content {
   top: 27px;
   width: 100%;
   height: 1px;
-  background-color: #2a2c2c;
+  background-color: var(--titlebar-divider);
 }
 
 .bottom-titlebar-divider {
@@ -484,7 +488,7 @@ div#inner-content {
   bottom: 27px;
   width: 100%;
   height: 1px;
-  background-color: #2a2c2c;
+  background-color: var(--titlebar-divider);
 }
 
 dialog{
