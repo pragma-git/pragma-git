@@ -1,0 +1,78 @@
+<style>        
+    img{
+        filter: invert( 0% );
+    }
+
+    img[src="../images/find_black.png"] 
+    {
+        filter: invert( var(--image-invert) );
+    }
+</style>        
+
+
+<h2>SSH Connection Configuration</h2>
+
+<p>
+This window allows you to configure, test, and repair SSH connections and cryptographic authentication keys for remote Git repositories accessed over SSH.
+</p>
+
+<h4>When is this window opened?</h4>
+<p>
+You can access this configuration window from several places in Pragma-git:
+<ul>
+    <li><b>Settings &rarr; Repository &rarr; Add:</b> Using the <code>[Setup SSH...]</code> button or after a failed login test when adding a remote repository.</li>
+    <li><b>Settings &rarr; Repository &rarr; Clone:</b> Using the <code>[Setup SSH...]</code> button or after a failed login test when cloning to or from a remote server.</li>
+    <li><b>Repository table:</b> Clicking the <code>[Fix]</code> button in the <b>Project folder</b> column when an SSH repository fails authentication (for instance, when marked with <span style="color: #e67e22; font-weight: bold;">(key rejected)</span>).</li>
+</ul>
+</p>
+
+<h4>Target Server</h4>
+<p>
+The <b>Target</b> field specifies the remote SSH user and host (for example, <code>username@server.example.com</code> or <code>git@192.168.1.50</code>).
+When configuring a new repository in Add or Clone, this is entered into the username and server fields. When opened via <code>[Fix]</code> for an existing repository, the target server is automatically detected from the repository URL.
+</p>
+
+<h4>SSH Keys &amp; Security</h4>
+<p>
+Pragma-git uses standard public-key cryptography to communicate securely with your remote Git server without requiring you to repeatedly enter your password:
+<ul>
+    <li><b>Default key:</b> If no custom key is selected, Pragma-git defaults to your standard personal SSH key (typically <code>~/.ssh/id_ed25519</code> or <code>~/.ssh/id_rsa</code>).</li>
+    <li><b>Select key...:</b> Click <button>Select key...</button> to pick an existing private SSH key stored on your local computer.</li>
+    <li><b>Reset to default:</b> Clicking the <b>✕</b> button removes the custom key selection and reverts back to the default key.</li>
+</ul>
+</p>
+
+<p>
+<b>Important security note:</b> Your private SSH key <i>never</i> leaves your local computer. Pragma-git never uploads, transmits, or exposes your private key. When deploying authentication credentials to a remote server, Pragma-git exclusively copies the matching <i>public key</i> (the <code>.pub</code> file) to the server's <code>~/.ssh/authorized_keys</code> list.
+</p>
+
+<h4>Generating a New SSH Key</h4>
+<p>
+If you do not have an SSH key pair or want a dedicated key for this server:
+<ol>
+    <li>Click <button>Generate key...</button> to open the key generation panel.</li>
+    <li>Pragma-git suggests a recommended file path in your <code>~/.ssh/</code> folder (for example, <code>~/.ssh/id_ed25519</code>, or a host-specific path if that key already exists).</li>
+    <li>Click <button>Create</button> to generate a new modern, high-security <b>ED25519</b> key pair.</li>
+</ol>
+The newly generated key is created without a passphrase so that automated Git operations (fetch, pull, push, and remote status checks) can run without interruption.
+</p>
+
+<h4>Testing and Deploying Keys</h4>
+<p>
+<dl>
+    <dt><b>Test login</b></dt>
+    <dd>Click <button>Test login</button> to test passwordless authentication to the target server using the active SSH key. Pragma-git performs a non-interactive test with a 4-second timeout to confirm whether the server accepts your key.</dd>
+    <dt><b>Deploy public key</b></dt>
+    <dd>If the test fails because your public key is not registered on the remote server (<span style="color: #e67e22; font-weight: bold;">key rejected</span>), the <button>Deploy public key</button> button appears. Clicking it prompts for your remote user password once and securely installs your public key into the remote server's <code>~/.ssh/authorized_keys</code> file.</dd>
+    <dt><b>Generate new key</b></dt>
+    <dd>If no usable SSH key is found on your computer, the <button>Generate new key</button> button appears as an immediate shortcut to generate one.</dd>
+</dl>
+</p>
+
+<h4>Saving Changes</h4>
+<p>
+<ul>
+    <li><button>Save &amp; Fix</button> saves the selected SSH key configuration. If you opened the window from a broken repository in the repository table, it re-verifies the connection and clears the failure warning upon success.</li>
+    <li><button>Cancel</button> discards any unsaved key selections and closes the dialog.</li>
+</ul>
+</p>

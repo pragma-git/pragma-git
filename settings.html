@@ -1518,8 +1518,16 @@
     </dialog>     
 
     <!-- Unified SSH Configuration Dialog -->
-    <dialog id="sshConfigDialog" style="border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); min-width: 500px; max-width: 620px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-        <h3 id="sshConfigTitle" style="margin-top: 0; margin-bottom: 14px; color: var(--header-color);">SSH Connection Configuration</h3>
+    <dialog id="sshConfigDialog" style="position: relative; border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); min-width: 500px; max-width: 620px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+        
+        <!-- Help icon -->
+        <img id="sshConfigHelpIcon" style='vertical-align: middle; position: absolute; right: 20px; top: 18px; cursor: pointer;' height="17" width="17"  
+            onclick="let evt = {}; evt.name='SSH Connection';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('sshConfigHelpIcon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('sshConfigHelpIcon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+
+        <h3 id="sshConfigTitle" style="margin-top: 0; margin-bottom: 14px; color: var(--header-color); padding-right: 30px;">SSH Connection Configuration</h3>
         
         <table class="keyValueTable" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
             <tr>
