@@ -296,37 +296,37 @@ div#inner-content {
   display: none;
   position: relative;
   font-family: Arial, sans-serif;
-  font-size: 8pt;
-  font-weight: bold;
-  padding: 1px 6px;
-  border-radius: 3px;
+  font-size: 11pt;
+  font-weight: normal;
+  color: #ffffff;
+  padding: 0 2px;
   margin-left: 6px;
   margin-right: 4px;
-  vertical-align: middle;
+  vertical-align: baseline;
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
 
+.top-titlebar-ci-badge:hover {
+  color: #aaaaaa;
+}
+
 .top-titlebar-ci-success {
-  color: #3fb950;
-  border: 1px solid #3fb950;
-  background-color: rgba(46, 160, 67, 0.2);
+  color: #ffffff;
 }
 
 .top-titlebar-ci-failure {
-  color: #f85149;
-  border: 1px solid #f85149;
-  background-color: rgba(248, 81, 73, 0.2);
+  color: #ffffff;
+}
+
+.top-titlebar-ci-strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
 }
 
 .top-titlebar-ci-pending {
-  color: #d29922;
-  border: 1px solid #d29922;
-  background-color: rgba(210, 153, 34, 0.2);
-}
-
-.top-titlebar-ci-badge:hover {
-  filter: brightness(1.2);
+  color: #888888;
+  font-style: italic;
 }
 
 .top-titlebar-tag-icon

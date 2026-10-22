@@ -69,6 +69,9 @@ async function runTests() {
     const mockBadge = {
         style: { display: 'none' },
         className: '',
+        _html: '',
+        get innerHTML() { return this._html; },
+        set innerHTML(v) { this._html = v; this.innerText = (v || '').replace(/<[^>]*>/g, ''); },
         innerText: '',
         attributes: {},
         setAttribute(k, v) { this.attributes[k] = v; }
@@ -205,20 +208,21 @@ async function runTests() {
     sandbox.updateCiBadge({ status: 'success', url: 'https://ci/pass' });
     assert(
         mockBadge.style.display === 'inline-block' &&
-        mockBadge.innerText === 'CI' &&
+        mockBadge.innerHTML === 'CI' &&
         mockBadge.className.includes('top-titlebar-ci-success') &&
         mockBadge.attributes['data-tooltip'].includes('Passed'),
-        'updateCiBadge correctly renders success badge with green style and Passed tooltip'
+        'updateCiBadge correctly renders success badge with clean monochrome CI and Passed tooltip'
     );
 
-    // Test 6: updateCiBadge renders failure
+    // Test 6: updateCiBadge renders failure with crossed-over CI
     sandbox.updateCiBadge({ status: 'failure', url: 'https://ci/fail' });
     assert(
         mockBadge.style.display === 'inline-block' &&
+        mockBadge.innerHTML.includes('top-titlebar-ci-strike') &&
         mockBadge.innerText === 'CI' &&
         mockBadge.className.includes('top-titlebar-ci-failure') &&
         mockBadge.attributes['data-tooltip'].includes('Failed'),
-        'updateCiBadge correctly renders failure badge with red style and Failed tooltip'
+        'updateCiBadge correctly renders failure badge with crossed-over strike-through and Failed tooltip'
     );
 
     // Test 7: updateCiBadge hides when status is none or missing

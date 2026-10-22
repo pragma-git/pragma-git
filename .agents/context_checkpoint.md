@@ -46,11 +46,12 @@
     - History-aware query resolution: evaluates `localState.historyHash` when in `HISTORY` mode and `HEAD` otherwise, ensuring historical commits reflect their own CI status (hidden if commit predates CI).
     - API error resilience: Network errors, timeouts, or 403 rate limits no longer overwrite existing CI statuses or cache false `'none'` records.
     - Immediate re-queries triggered after push (`gitPush`) or when switching commits.
-  - Added CI status badge `#top-titlebar-ci-badge` to top titlebar in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) right next to branch name:
-    - Displays green `CI` on success (`top-titlebar-ci-success`).
-    - Displays red `CI` on failure (`top-titlebar-ci-failure`).
-    - Displays amber `CI` on pending (`top-titlebar-ci-pending`).
-    - Hidden completely if no CI is configured (`'none'`) or in `DEFAULT` mode / non-repo.
+  - Refined CI indicator to monochrome Design B ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
+    - Replaced high-contrast colored pills with harmonious monochrome styling matching top titlebar typography (`11pt`, `#ffffff` / `#aaaaaa` on hover).
+    - Success: Clean, unobtrusive `CI` label with tooltip `CI: Passed (click to view)`.
+    - Failure: Crossed-over `CI` with horizontal strike-through (`.top-titlebar-ci-strike`) and tooltip `CI: Failed (click to view)`.
+    - Pending: Italicized `CI ...` (`#888888`) with tooltip `CI: In progress (click to view)`.
+    - None: Hidden completely.
     - Clickable via `_callback('clicked-ci-badge')` to open remote build URL in external browser.
   - Added styling in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) with `-webkit-app-region: no-drag;` for NW.js titlebar clickability.
   - Added automated tests:
