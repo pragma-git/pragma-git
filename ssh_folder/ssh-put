@@ -31,9 +31,8 @@ if [ ! -f "$LOCAL_PATH" ]; then
 fi
 
 # Make folder on server
-MKDIR="ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS  mkdir -p \"$(dirname "$SERVER_PATH")\""
-echo "    $MKDIR" >> "$MERGE_LOG"
-eval $MKDIR
+echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS mkdir -p '$(dirname "$SERVER_PATH")'" >> "$MERGE_LOG"
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS mkdir -p "'$(dirname "$SERVER_PATH")'"
 
 # Copy to server
 SCP="scp -P ${PORT} $SSH_OPTIONS \"$LOCAL_PATH\" \"${SERVER}:${SERVER_PATH}\" "

@@ -27,7 +27,7 @@ mkdir -p "$LOCAL_DIR"
 
 # Copy from server
 SCP="scp -P ${PORT} $SSH_OPTIONS  \"${SERVER}:${SERVER_PATH}\" \"$LOCAL_PATH\" "
-echo "$SCP"
+echo "    $SCP" >> "$MERGE_LOG"
 eval $SCP
 
 

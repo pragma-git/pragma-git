@@ -6,8 +6,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SSH_FOLDER_DIR="$REPO_ROOT/ssh_folder"
 GIT_CLIENT_BIN="$SSH_FOLDER_DIR/ssh-git-client"
 
-CURRENT_USER=$(whoami)
 source "$REPO_ROOT/automated-tests/test_setup.sh"
+CURRENT_USER="${CURRENT_USER##*\\}"
 
 echo "Running Suite: SSH Git Client (ssh-git-client) Operations Tests"
 

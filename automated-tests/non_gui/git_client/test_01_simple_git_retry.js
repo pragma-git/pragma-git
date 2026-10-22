@@ -2,6 +2,7 @@
 // test_01_simple_git_retry.js - Tests simpleGitWithRetry wrapper proxy & lock retry logic
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 
@@ -12,7 +13,7 @@ const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT
 async function runTests() {
     console.log('Running Suite: simpleGitWithRetry Wrapper & Lock Recovery');
 
-    const tempDir = path.join('/tmp', `pragma_git_retry_test_${process.pid}`);
+    const tempDir = path.join(os.tmpdir(), `pragma_git_retry_test_${process.pid}`);
     fs.mkdirSync(tempDir, { recursive: true });
 
     try {

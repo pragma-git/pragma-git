@@ -18,9 +18,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
 
     steps:
+      - name: Configure Git Line Endings (Windows)
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -37,6 +44,17 @@ jobs:
             (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11)
           sudo systemctl start ssh
 
+      - name: Set up WSL (Windows)
+        if: runner.os == 'Windows'
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-22.04
+          use-cache: true
+          additional-packages: |
+            openssh-server
+            git
+            curl
+
       - name: Configure Localhost SSH
         run: |
           mkdir -p ~/.ssh ~/.Pragma-git/.tmp /tmp/pragma-git-ssh-folders
@@ -44,10 +62,59 @@ jobs:
           ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
           cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
           chmod 600 ~/.ssh/authorized_keys
-          ssh-keyscan -H localhost >> ~/.ssh/known_hosts 2>/dev/null || true
+          cat << 'EOF' > ~/.ssh/config
+          Host localhost 127.0.0.1
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
           if [ "${{ runner.os }}" = "macOS" ]; then
             sudo systemsetup -setremotelogin on 2>/dev/null || true
           fi
+
+      - name: Configure Windows OpenSSH & WSL Services
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          # Link C:\tmp and D:\tmp to user AppData\Local\Temp so Windows OpenSSH sftp-server and Git Bash share /tmp
+          $userTemp = "$env:LOCALAPPDATA\Temp"
+          if (!(Test-Path $userTemp)) { New-Item -ItemType Directory -Path $userTemp -Force | Out-Null }
+          New-Item -ItemType Directory -Path "$userTemp\pragma-git-ssh-folders" -Force | Out-Null
+          if (Test-Path "C:\tmp") {
+            if ((Get-Item "C:\tmp").Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+              [System.IO.Directory]::Delete("C:\tmp")
+            } else {
+              Remove-Item -Path "C:\tmp" -Recurse -Force
+            }
+          }
+          New-Item -ItemType Junction -Path "C:\tmp" -Target $userTemp | Out-Null
+          if (Test-Path "D:\") {
+            if (Test-Path "D:\tmp") {
+              if ((Get-Item "D:\tmp").Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+                [System.IO.Directory]::Delete("D:\tmp")
+              } else {
+                Remove-Item -Path "D:\tmp" -Recurse -Force
+              }
+            }
+            New-Item -ItemType Junction -Path "D:\tmp" -Target $userTemp | Out-Null
+          }
+          New-Item -Path "HKLM:\SOFTWARE\OpenSSH" -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Program Files\Git\bin\bash.exe" -PropertyType String -Force | Out-Null
+          Set-Service -Name sshd -StartupType Automatic
+          Restart-Service sshd
+          $key = Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+          $adminDir = "$env:ProgramData\ssh"
+          if (!(Test-Path $adminDir)) { New-Item -ItemType Directory -Path $adminDir -Force }
+          $adminKeys = "$adminDir\administrators_authorized_keys"
+          Set-Content -Path $adminKeys -Value $key -Force
+          icacls.exe $adminKeys /inheritance:r
+          icacls.exe $adminKeys /grant "Administrators:F"
+          icacls.exe $adminKeys /grant "SYSTEM:F"
+          # Sync keys into WSL and start WSL sshd
+          wsl bash -c "mkdir -p ~/.ssh /tmp/pragma-git-ssh-folders && chmod 700 ~/.ssh"
+          Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" | wsl bash -c "cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+          wsl bash -c "sudo service ssh start 2>/dev/null || true"
 
       - name: Configure Git Author
         run: |
@@ -67,3 +134,7 @@ jobs:
           eval $(dbus-launch --sh-syntax)
           echo "" | gnome-keyring-daemon --unlock || true
           npm test -- -v
+
+      - name: Run Automated Test Suites (Windows)
+        if: runner.os == 'Windows'
+        run: bash ./_run_tests -v

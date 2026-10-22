@@ -35,10 +35,11 @@ fs.mkdirSync(testDir, { recursive: true });
 
 // Create isolated dummy credential helper script
 const mockHelperScript = path.join(testDir, 'mock_helper.sh');
+const testDirPosix = testDir.replaceAll('\\', '/');
 fs.writeFileSync(
     mockHelperScript,
     `#!/bin/sh
-STORE="${testDir}/creds_store.txt"
+STORE="${testDirPosix}/creds_store.txt"
 if [ "$1" = "get" ]; then
     if [ -f "$STORE" ]; then
         cat "$STORE"
@@ -54,11 +55,12 @@ fi
 
 // Create isolated gitconfig clearing all inherited helpers and specifying ONLY mock helper
 const testConfigPath = path.join(testDir, 'test.gitconfig');
+const normalizedHelperPath = mockHelperScript.replaceAll('\\', '/');
 fs.writeFileSync(
     testConfigPath,
     `[credential]
     helper = 
-    helper = "${mockHelperScript}"
+    helper = "!sh \\"${normalizedHelperPath}\\""
 `
 );
 
@@ -68,6 +70,8 @@ const credCode = fs.readFileSync(credLibPath, 'utf8');
 const dummyRemoteUrl = 'https://dummy-isolated.local/owner/repo.git';
 const dummyUser = 'testAutomationUser';
 const dummyPassword = 'mockSecretPassword123';
+
+const nullDevice = process.platform === 'win32' ? 'NUL' : '/dev/null';
 
 const sandbox = {
     console: {
@@ -82,15 +86,21 @@ const sandbox = {
     pathsep: path.sep,
     configFilePath: () => testConfigPath,
     multiPlatformExecSync: async (folder, cmd) => {
-        return execSync(cmd, {
+        let options = {
             env: {
                 ...process.env,
-                GIT_CONFIG_GLOBAL: '/dev/null',
-                GIT_CONFIG_SYSTEM: '/dev/null',
+                GIT_CONFIG_GLOBAL: nullDevice,
+                GIT_CONFIG_SYSTEM: nullDevice,
                 GIT_TERMINAL_PROMPT: '0',
                 GIT_ASKPASS: ''
             }
-        }).toString().trim();
+        };
+        if (process.platform === 'win32') {
+            options.shell = fs.existsSync('C:\\Program Files\\git\\usr\\bin\\bash.exe')
+                ? 'C:\\Program Files\\git\\usr\\bin\\bash.exe'
+                : (fs.existsSync('C:\\Program Files\\git\\bin\\bash.exe') ? 'C:\\Program Files\\git\\bin\\bash.exe' : 'bash.exe');
+        }
+        return execSync(cmd, options).toString().trim();
     },
     state: {
         repoNumber: 0,

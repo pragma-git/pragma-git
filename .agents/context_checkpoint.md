@@ -47,6 +47,22 @@
       - Adding `--no-install-recommends` to eliminate downloading unnecessary desktop GUI libraries (GTK4, Cairo, GStreamer, Pinentry-GNOME3).
       - Switching from C-header package `libsecret-1-dev` to runtime library `libsecret-1-0` (matching `@hackolade/keytar`'s precompiled binary requirement).
     - Reduces the Ubuntu setup step from 29 seconds to ~4–5 seconds.
+  - **Windows CI Runner with WSL & OpenSSH** ([.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml)):
+    - Verified codebase Windows git vs WSL execution model:
+      - Local repository operations execute via Windows Git (`git.exe` / `bash.exe` in `C:\Program Files\Git`).
+      - SSH remote repository operations execute via WSL (`wsl` running `ssh_folder/ssh-git-client`).
+    - Added `windows-latest` to GitHub Actions workflow matrix.
+    - Integrated `Vampire/setup-wsl@v7` installing Ubuntu-22.04 with `openssh-server`, `git`, and `curl` with rootfs caching enabled.
+    - Automated Windows OpenSSH Server (`sshd`) and WSL SSH service startup with administrator ACL configuration for passwordless local testing.
+    - Fixed PowerShell 5.1 compatibility on Windows runner by removing bash `||` operator from PowerShell script and piping SSH keys directly to `wsl bash -c`.
+    - Updated `.gitattributes` to enforce LF line endings on `*.sh` and `_run_tests` scripts to prevent CRLF parsing errors on Windows checkouts.
+    - Cross-platform test enhancements:
+      - Sanitized `CURRENT_USER` across all test suites to strip Windows domain prefixes (`DOMAIN\user` -> `user`).
+      - Updated `test_01_simple_git_retry.js` to use `os.tmpdir()` instead of hardcoded `/tmp`.
+      - Updated `test_02_credentials_lib_safe.js` to normalize temp store paths to forward slashes, invoke Git Bash on Windows via `options.shell`, and use `!sh` command wrapper with `NUL` device.
+      - Configured Windows OpenSSH server to launch incoming SSH sessions into `C:\Program Files\Git\bin\bash.exe` and added `~/.ssh/config` with `UserKnownHostsFile /dev/null` for localhost loopback reliability.
+      - Fixed OpenSSH multiplexing on Windows (`ssh_folder/lib/ssh-functions`): Git for Windows (MSYS/MinGW) child processes cannot reliably share UNIX domain sockets on NTFS (`mux_client_request_session: read from master failed: Connection reset by peer`); disabled `REUSE_SSH_OPTIONS` exclusively on `MINGW*` / `MSYS*` while retaining full multiplexing speed on macOS, Linux, and WSL.
+      - Fixed SFTP `/tmp` path resolution on Windows CI (`.github/workflows/tests.yml`, `ssh_folder/ssh-put`, `ssh_folder/ssh-get`): Windows OpenSSH native `sftp-server.exe` resolves `/tmp` to `C:\tmp` (or `D:\tmp`), whereas Git Bash routes `/tmp` to `%LOCALAPPDATA%\Temp`; created NTFS directory junctions at `C:\tmp` and `D:\tmp` pointing directly to `$env:LOCALAPPDATA\Temp`, eliminated stdout pollution in `ssh-get`, and safely quoted remote mkdir in `ssh-put`.
   - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
 
 ---

@@ -9,8 +9,8 @@ GET_BIN="$SSH_FOLDER_DIR/ssh-get"
 
 source "$SSH_FOLDER_DIR/lib/ssh-functions"
 
-CURRENT_USER=$(whoami)
 source "$REPO_ROOT/automated-tests/test_setup.sh"
+CURRENT_USER="${CURRENT_USER##*\\}"
 
 echo "Running Suite: SSH File Transfer (ssh-put / ssh-get) Tests"
 

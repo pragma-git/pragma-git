@@ -7,8 +7,8 @@ SSH_FOLDER_DIR="$REPO_ROOT/ssh_folder"
 MKDIR_BIN="$SSH_FOLDER_DIR/ssh-mkdir"
 TEST_EXISTS_BIN="$SSH_FOLDER_DIR/ssh-test-if-file-exists"
 
-CURRENT_USER=$(whoami)
 source "$REPO_ROOT/automated-tests/test_setup.sh"
+CURRENT_USER="${CURRENT_USER##*\\}"
 
 echo "Running Suite: SSH Remote Directory Creation (ssh-mkdir) Tests"
 

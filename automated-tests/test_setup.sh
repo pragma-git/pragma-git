@@ -21,6 +21,11 @@ else
     MAGENTA=$'\033[35m'
 fi
 
+# Normalize CURRENT_USER across platforms (stripping Windows DOMAIN\ if present)
+CURRENT_USER="${USER:-${USERNAME:-$(id -un 2>/dev/null || whoami)}}"
+CURRENT_USER="${CURRENT_USER##*\\}"
+export CURRENT_USER
+
 PASS_COUNT=0
 FAIL_COUNT=0
 
