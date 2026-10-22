@@ -325,9 +325,19 @@ div#inner-content {
 
 .top-titlebar-ci-failure {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.top-titlebar-ci-failure:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.top-titlebar-ci-failure:hover .top-titlebar-ci-strike {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .top-titlebar-ci-strike {
@@ -336,10 +346,22 @@ div#inner-content {
   left: 50%;
   width: 28px;
   height: 2px;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.5);
   transform: translate(-50%, -50%) rotate(34deg);
   pointer-events: none;
   border-radius: 1px;
+}
+
+.top-titlebar-ci-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 5px;
+  height: 5px;
+  background-color: #eb4d4b;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 
 .top-titlebar-ci-pending {

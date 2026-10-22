@@ -7178,7 +7178,7 @@ function updateCiBadge(ciData) {
         badge.setAttribute('data-tooltip', 'CI: Passed (click to view)');
     } else if (ciData.status === 'failure') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-failure tooltip-bottom';
-        badge.innerHTML = 'CI<span class="top-titlebar-ci-strike"></span>';
+        badge.innerHTML = 'CI<span class="top-titlebar-ci-strike"></span><span class="top-titlebar-ci-dot"></span>';
         badge.setAttribute('data-tooltip', 'CI: Failed (click to view)');
     } else if (ciData.status === 'pending') {
         badge.className = 'top-titlebar-ci-badge top-titlebar-ci-pending tooltip-bottom';
