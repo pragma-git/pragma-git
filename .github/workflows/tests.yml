@@ -1,0 +1,69 @@
+name: Automated Non-GUI Tests
+
+on:
+  push:
+    branches: [ develop, master, feature/** ]
+  pull_request:
+    branches: [ develop, master ]
+
+env:
+  FORCE_COLOR: '1'
+  TERM: 'xterm-256color'
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server libsecret-1-dev gnome-keyring dbus-x11
+          sudo systemctl start ssh
+
+      - name: Configure Localhost SSH
+        run: |
+          mkdir -p ~/.ssh ~/.Pragma-git/.tmp /tmp/pragma-git-ssh-folders
+          chmod 700 ~/.ssh
+          ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
+          cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          ssh-keyscan -H localhost >> ~/.ssh/known_hosts 2>/dev/null || true
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            sudo systemsetup -setremotelogin on 2>/dev/null || true
+          fi
+
+      - name: Configure Git Author
+        run: |
+          git config --global user.name "Pragma-git CI"
+          git config --global user.email "ci@pragma-git.local"
+
+      - name: Install NPM Dependencies
+        run: npm install
+
+      - name: Run Automated Test Suites (macOS)
+        if: runner.os == 'macOS'
+        run: npm test -- -v
+
+      - name: Run Automated Test Suites (Linux with D-Bus)
+        if: runner.os == 'Linux'
+        run: |
+          eval $(dbus-launch --sh-syntax)
+          echo "" | gnome-keyring-daemon --unlock || true
+          npm test -- -v

@@ -564,3 +564,13 @@ function getAndCreateWinTempFolder(){                           // Returns windo
 	}
 	return tempPath;  
 }
+
+// Export for Node.js environments / automated tests
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports.getDefaultSshKey = getDefaultSshKey;
+	module.exports.getSelectedSshKey = getSelectedSshKey;
+	module.exports.resetSshKeyToDefault = resetSshKeyToDefault;
+	module.exports.wslToWindowsPath = wslToWindowsPath;
+	module.exports.windowsToWslPath = windowsToWslPath;
+	module.exports.getAndCreateWinTempFolder = getAndCreateWinTempFolder;
+}

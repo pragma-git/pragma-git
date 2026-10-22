@@ -19,7 +19,8 @@
     "icon": "./images/icon.png"
   },
   "scripts": {
-    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 ."
+    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 .",
+    "test": "./_run_tests"
   },
   "dependencies": {
     "@hackolade/keytar": "^7.9.0-2",
