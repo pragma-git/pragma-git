@@ -86,4 +86,56 @@ try {
     assertFail('6.4-6.6: parseSshUrl threw error', err.message);
 }
 
+// Test 5: getSuggestedNewKeyPath produces valid non-colliding path
+try {
+    const suggested = sshLib.getSuggestedNewKeyPath('server.example.com');
+    if (typeof suggested === 'string' && suggested.includes('.ssh') && suggested.includes('id_ed25519')) {
+        assertPass(`6.7: getSuggestedNewKeyPath produces valid candidate (${path.basename(suggested)})`);
+    } else {
+        assertFail('6.7: getSuggestedNewKeyPath candidate format', suggested);
+    }
+} catch (err) {
+    assertFail('6.7: getSuggestedNewKeyPath error', err.message);
+}
+
+// Test 6: generateLocalSshKey creates valid ED25519 key pair and prevents overwrite
+try {
+    const tmpKeyDir = path.join(os.tmpdir(), `pragma_test_keygen_${Date.now()}`);
+    const tmpKeyPath = path.join(tmpKeyDir, 'test_id_ed25519');
+
+    const createdPath = sshLib.generateLocalSshKey(tmpKeyPath);
+    if (fs.existsSync(createdPath) && fs.existsSync(createdPath + '.pub')) {
+        const pubContent = fs.readFileSync(createdPath + '.pub', 'utf8');
+        if (pubContent.startsWith('ssh-ed25519 ')) {
+            assertPass('6.8: generateLocalSshKey creates valid ED25519 key pair');
+        } else {
+            assertFail('6.8: Public key header format', pubContent);
+        }
+    } else {
+        assertFail('6.8: Key files missing after generation', createdPath);
+    }
+
+    // Overwrite prevention test
+    let overwriteBlocked = false;
+    try {
+        sshLib.generateLocalSshKey(tmpKeyPath);
+    } catch (e) {
+        overwriteBlocked = true;
+    }
+    if (overwriteBlocked) {
+        assertPass('6.9: generateLocalSshKey rejects overwriting existing key');
+    } else {
+        assertFail('6.9: Key overwrite was unexpectedly permitted');
+    }
+
+    // Cleanup temporary test keys
+    try {
+        if (fs.existsSync(createdPath)) fs.unlinkSync(createdPath);
+        if (fs.existsSync(createdPath + '.pub')) fs.unlinkSync(createdPath + '.pub');
+        if (fs.existsSync(tmpKeyDir)) fs.rmdirSync(tmpKeyDir);
+    } catch (e) {}
+} catch (err) {
+    assertFail('6.8-6.9: generateLocalSshKey execution error', err.message);
+}
+
 printSuiteResult();

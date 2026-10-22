@@ -28,8 +28,12 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: SSH Connection Configuration & Repair Dialog Implementation:
+* **Task Description**: SSH Connection Configuration, Manual Key Generation & Repair Dialog:
   - Implemented unified SSH connection configuration dialog (`#sshConfigDialog`) in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) with clean modal styling matching theme variables (`--header-color`, `--body-background`, `--body-text`).
+  - Added dedicated manual key generation capabilities:
+    - User can explicitly generate a new key pair at any time via `[Generate key...]` in `#sshConfigDialog`, which opens an inline panel `#sshConfigGeneratePanel` suggesting a unique non-colliding key path (e.g. `~/.ssh/id_ed25519_<server>` or `id_ed25519` if missing).
+    - When connection test fails / returns `KEY_NEEDED`, both `[Deploy public key]` and `[Generate new key]` buttons are presented, ensuring the user is never restricted to merely deploying an existing key.
+    - Implemented `generateLocalSshKey(keyPath)` and `getSuggestedNewKeyPath(targetServer)` in [ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), generating modern ED25519 keys with secure permissions (`0o600`/`0o644`) and strict overwrite prevention.
   - Added full SSH configuration state, handlers, and key helpers in [ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js):
     - `parseSshUrl(sshUrl)`: Robust parser breaking down `ssh://user@host:port/path`.
     - `openSshConfigDialog(options)`: Opens dialog preconfigured for either an existing repository (`options.repoIndex`) or Add/Clone tabs (`options.mode`).
@@ -42,7 +46,7 @@
     2. **Immediate repair via `recheckRepoStatus(repoIndex)`** in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js): Re-checks `fs_existsSync` with updated `sshKey`, updates `opener.cachedLocalStatus`, and immediately redraws the table, removing the warning and restoring the active radio button.
     3. **System Info tab** in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js): Added `Configure SSH...` button under "Project folder" for proactive key management on active SSH repositories.
     4. **Add Repo & Clone tabs** in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html): Replaced cluttered multi-line key rows with clean single-row controls (`Test login` and `Setup SSH...` buttons). `Test login` reporting `KEY_NEEDED` dynamically presents a `[Setup SSH]` link opening the dialog.
-  - Automated tests updated in [automated-tests/non_gui/ssh/test_06_ssh_lib_node.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js): All 81 tests across all 7 categories and 18 suites passing.
+  - Automated tests updated in [automated-tests/non_gui/ssh/test_06_ssh_lib_node.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js): All 84 tests across all 7 categories and 18 suites passing.
 * **Task Description**: Repository Group Filter Persistence, Indicator Badge & Help Documentation:
   - **Harmoniserad Filterindikator (`blockTextHighlight`)** ([color_styles.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)):
     - Infört `.blockTextHighlight` / `.blockTextHighligt` och CSS-variabler i `color_styles.css` som harmoniserar med temats text- och bakgrundsskalor istället för skarp rent vit/svart kontrast.

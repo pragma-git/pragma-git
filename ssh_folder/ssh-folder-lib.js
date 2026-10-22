@@ -567,6 +567,89 @@ function onServerInputsChanged( mode ) {                        // Resets valida
 // UNIFIED SSH CONFIGURATION DIALOG (#sshConfigDialog)
 // =============================================
 
+function generateLocalSshKey( keyPath ) {
+    let fs = require('fs');
+    let path = require('path');
+    let os = require('os');
+    const { execSync } = require('child_process');
+
+    if (!keyPath || typeof keyPath !== 'string' || keyPath.trim().length === 0) {
+        throw new Error('Key path cannot be empty');
+    }
+
+    let resolvedPath = keyPath.trim();
+    if (resolvedPath.startsWith('~')) {
+        resolvedPath = path.join(os.homedir(), resolvedPath.slice(1));
+    }
+    resolvedPath = path.resolve(resolvedPath);
+    if (resolvedPath.endsWith('.pub')) {
+        resolvedPath = resolvedPath.slice(0, -4);
+    }
+
+    if (fs.existsSync(resolvedPath)) {
+        throw new Error(`Key already exists at ${resolvedPath}`);
+    }
+
+    let dir = path.dirname(resolvedPath);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    }
+
+    let hostname = os.hostname() || 'local';
+    let comment = `pragma-git@${hostname}`;
+    let cmd = `ssh-keygen -t ed25519 -f "${resolvedPath}" -N "" -C "${comment}"`;
+
+    let options = {};
+    if (process.platform === 'win32') {
+        options.shell = 'C:\\Program Files\\git\\usr\\bin\\bash.exe';
+        options.env = Object.assign({}, process.env, { PATH: process.env.PATH + ';C:\\Program Files\\git\\usr\\bin' });
+    }
+
+    execSync(cmd, options);
+
+    if (process.platform !== 'win32') {
+        try {
+            fs.chmodSync(resolvedPath, 0o600);
+            if (fs.existsSync(resolvedPath + '.pub')) {
+                fs.chmodSync(resolvedPath + '.pub', 0o644);
+            }
+        } catch (e) {}
+    }
+
+    return resolvedPath;
+}
+
+function getSuggestedNewKeyPath( targetServer ) {
+    let fs = require('fs');
+    let path = require('path');
+    let os = require('os');
+    let sshDir = path.join(os.homedir(), '.ssh');
+    let standardKey = path.join(sshDir, 'id_ed25519');
+
+    if (!fs.existsSync(standardKey)) {
+        return standardKey;
+    }
+
+    let suffix = 'pragma';
+    if (targetServer && typeof targetServer === 'string' && targetServer.trim().length > 0) {
+        let cleanServer = targetServer.replace(/^.*@/, '').replace(/:.*$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        if (cleanServer.length > 0) {
+            suffix = cleanServer;
+        }
+    }
+
+    let candidate = path.join(sshDir, `id_ed25519_${suffix}`);
+    if (!fs.existsSync(candidate)) {
+        return candidate;
+    }
+
+    let counter = 2;
+    while (fs.existsSync(path.join(sshDir, `id_ed25519_${suffix}_${counter}`))) {
+        counter++;
+    }
+    return path.join(sshDir, `id_ed25519_${suffix}_${counter}`);
+}
+
 let currentSshConfigState = {
     repoIndex: -1,
     mode: '',
@@ -585,11 +668,14 @@ function openSshConfigDialog( options = {} ) {
     let saveBtn = document.getElementById('sshConfigSaveBtn');
     let statusEl = document.getElementById('sshConfigStatusText');
     let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
     let testBtn = document.getElementById('sshConfigTestBtn');
 
     if (statusEl) statusEl.textContent = '';
     if (deployBtn) deployBtn.style.display = 'none';
+    if (genPromptBtn) genPromptBtn.style.display = 'none';
     if (testBtn) testBtn.disabled = false;
+    sshConfigToggleGeneratePanel(false);
 
     if (options.repoIndex !== undefined && options.repoIndex >= 0) {
         currentSshConfigState.repoIndex = options.repoIndex;
@@ -639,6 +725,85 @@ function openSshConfigDialog( options = {} ) {
 
     updateSshConfigKeyDisplay(currentSshConfigState.selectedKey);
     dialog.showModal();
+}
+
+function sshConfigToggleGeneratePanel( show ) {
+    let panel = document.getElementById('sshConfigGeneratePanel');
+    if (!panel) return;
+
+    if (show === undefined) {
+        show = (panel.style.display === 'none');
+    }
+
+    panel.style.display = show ? 'block' : 'none';
+    let statusEl = document.getElementById('sshConfigGenerateStatus');
+    if (statusEl) {
+        statusEl.textContent = '';
+        statusEl.style.display = 'none';
+    }
+
+    if (show) {
+        let inputEl = document.getElementById('sshConfigNewKeyPath');
+        if (inputEl) {
+            let suggested = getSuggestedNewKeyPath(currentSshConfigState.server);
+            inputEl.value = suggested;
+            inputEl.focus();
+        }
+    }
+}
+
+function sshConfigDoGenerateKey() {
+    let inputEl = document.getElementById('sshConfigNewKeyPath');
+    let statusEl = document.getElementById('sshConfigGenerateStatus');
+    let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+
+    let keyPath = (inputEl?.value || '').trim();
+    if (!keyPath) {
+        if (statusEl) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = 'Please specify a file path for the new key.';
+            statusEl.style.display = 'block';
+        }
+        return;
+    }
+
+    try {
+        let createdPath = generateLocalSshKey(keyPath);
+        currentSshConfigState.selectedKey = createdPath;
+        updateSshConfigKeyDisplay(createdPath);
+        sshConfigToggleGeneratePanel(false);
+
+        let noticeEl = document.getElementById('sshConfigKeyNotice');
+        if (noticeEl) {
+            let pathMod = require('path');
+            noticeEl.style.display = 'block';
+            noticeEl.style.color = 'var(--green-text, green)';
+            noticeEl.textContent = `✓ Generated new ED25519 key pair: ${pathMod.basename(createdPath)}. Public key is ready to be deployed to the server; private key stays local.`;
+        }
+
+        if (deployBtn) {
+            deployBtn.textContent = 'Deploy public key';
+            deployBtn.style.display = 'inline-block';
+            deployBtn.disabled = false;
+        }
+        if (genPromptBtn) {
+            genPromptBtn.style.display = 'none';
+        }
+
+        let mainStatus = document.getElementById('sshConfigStatusText');
+        if (mainStatus) {
+            mainStatus.style.color = 'var(--dim-text, #888)';
+            mainStatus.textContent = 'New key ready. Click "Deploy public key" to install on server.';
+        }
+    } catch (err) {
+        console.error('sshConfigDoGenerateKey error:', err);
+        if (statusEl) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ ' + (err?.message || err?.toString() || 'Generation failed');
+            statusEl.style.display = 'block';
+        }
+    }
 }
 
 function updateSshConfigKeyDisplay( keyPath ) {
@@ -792,30 +957,40 @@ async function sshConfigTestLogin() {
             statusEl.style.color = 'var(--green-text, green)';
             statusEl.textContent = '✓ Login works (key already set up)';
             if (deployBtn) deployBtn.style.display = 'none';
+            let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+            if (genPromptBtn) genPromptBtn.style.display = 'none';
         } else if (result && result.includes('STATUS:KEY_NEEDED')) {
             statusEl.style.color = 'var(--warn-color, orange)';
             statusEl.textContent = 'ℹ Key needed (login not permitted)';
             if (deployBtn) {
-                let fs = require('fs');
-                let keyExists = fs.existsSync(keyToTest) || fs.existsSync(keyToTest + '.pub');
-                deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
+                deployBtn.textContent = 'Deploy public key';
                 deployBtn.style.display = 'inline-block';
                 deployBtn.disabled = false;
+            }
+            let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+            if (genPromptBtn) {
+                genPromptBtn.style.display = 'inline-block';
             }
         } else if (result && result.includes('STATUS:TIMEOUT')) {
             statusEl.style.color = 'var(--red-text, red)';
             statusEl.textContent = '✗ Connection timed out';
             if (deployBtn) deployBtn.style.display = 'none';
+            let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+            if (genPromptBtn) genPromptBtn.style.display = 'none';
         } else if (result && result.includes('STATUS:ERROR:')) {
             let errorMsg = result.split('STATUS:ERROR:')[1]?.trim() || 'Unknown error';
             statusEl.style.color = 'var(--red-text, red)';
             statusEl.textContent = '✗ ' + errorMsg;
             if (deployBtn) deployBtn.style.display = 'none';
+            let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+            if (genPromptBtn) genPromptBtn.style.display = 'none';
         } else {
             statusEl.style.color = 'var(--red-text, red)';
             let cleanRes = (result || 'No response').toString().trim().replace(/[\r\n]+/g, ' ').substring(0, 80);
             statusEl.textContent = '✗ ' + cleanRes;
             if (deployBtn) deployBtn.style.display = 'none';
+            let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+            if (genPromptBtn) genPromptBtn.style.display = 'none';
         }
     } catch (err) {
         console.error('sshConfigTestLogin error:', err);
@@ -825,6 +1000,8 @@ async function sshConfigTestLogin() {
             statusEl.textContent = '✗ ' + msg;
         }
         if (deployBtn) deployBtn.style.display = 'none';
+        let genPromptBtn = document.getElementById('sshConfigGenPromptBtn');
+        if (genPromptBtn) genPromptBtn.style.display = 'none';
     } finally {
         if (testBtn) testBtn.disabled = false;
     }
@@ -989,6 +1166,8 @@ if (typeof module !== 'undefined' && module.exports) {
 	module.exports.getDefaultSshKey = getDefaultSshKey;
 	module.exports.getSelectedSshKey = getSelectedSshKey;
 	module.exports.resetSshKeyToDefault = resetSshKeyToDefault;
+	module.exports.generateLocalSshKey = generateLocalSshKey;
+	module.exports.getSuggestedNewKeyPath = getSuggestedNewKeyPath;
 	module.exports.openSshConfigDialog = openSshConfigDialog;
 	module.exports.updateSshConfigKeyDisplay = updateSshConfigKeyDisplay;
 	module.exports.closeSshConfigDialog = closeSshConfigDialog;
