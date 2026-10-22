@@ -254,13 +254,15 @@ class github extends General_git_rest_api {
                                     } else {
                                         out = { status: 'success', url: runUrl };
                                     }
-                                } else {
+                                } else if (checkRunsRes.ok) {
                                     out = { status: 'none', url: null };
+                                } else {
+                                    throw new Error(`GitHub check-runs API error (${checkRunsRes.status || 'unknown'})`);
                                 }
                             }
                         }catch (err){
                             global.warn(err);
-                            out = { status: 'none', url: null };
+                            throw err;
                         }
                         break;
                     }    

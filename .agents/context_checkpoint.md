@@ -29,15 +29,22 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Task Description**: Multi-Provider CI Status Indicator & Persistent Cache:
+* **Task Description**: Multi-Provider CI Status Indicator, Cache Normalization & Error Resilience:
   - Implemented provider CI status queries (`getValue('ci-status', commitSha)`) across all three providers:
-    - [github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js): Queries combined commit status API (`/commits/:ref/status`) and falls back to check-runs API (`/commits/:ref/check-runs`) for GitHub Actions. Returns `{ status: 'success'|'failure'|'pending'|'none', url: ... }`.
-    - [gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js): Queries pipeline commit statuses array (`/repository/commits/:ref/statuses`).
-    - [bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js): Queries commit statuses values (`/commit/:ref/statuses`).
-  - Implemented two-tier caching in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
-    - Persistent cache in `~/.Pragma-git/ci_cache.json` permanently storing immutable terminal results (`'success'`, `'failure'`) keyed by `repoUrl` and `commitSha`, avoiding unnecessary API queries and rate limit exhaustion.
+    - [github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js): Queries combined commit status API (`/commits/:ref/status`) and falls back to check-runs API (`/commits/:ref/check-runs`) for GitHub Actions. Returns `{ status: 'success'|'failure'|'pending'|'none', url: ... }`. Re-throws on API failure (403 rate limit, network error) instead of silently masking as `'none'`.
+    - [gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js): Queries pipeline commit statuses array (`/repository/commits/:ref/statuses`). Throws on API failure.
+    - [bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js): Queries commit statuses values (`/commit/:ref/statuses`). Throws on API failure.
+  - Implemented canonical repository URL normalization (`normalizeRepoUrl` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Canonicalizes SSH (`git@github.com:...`, `ssh://git@github.com:...`), embedded user tokens/credentials (`https://user:token@...`), `.git` suffix variations, trailing slashes, and host casing to `https://host/path`.
+    - Ensures cache lookups match seamlessly whether the repository remote is configured with SSH, HTTPS, or credentials.
+    - Enables `queryCommitCiStatus` to check CI for SSH repositories using their canonical HTTPS provider API.
+  - Implemented two-way short SHA prefix matching (`findCachedCommit` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Symmetrically matches abbreviated hashes (>=6 characters) and full 40-character SHAs in `getCachedCiStatus`.
+  - Upgraded two-tier caching in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Persistent cache in `~/.Pragma-git/ci_cache.json` permanently storing immutable terminal results (`'success'`, `'failure'`) keyed by canonical URL and `commitSha`, avoiding unnecessary API queries and rate limit exhaustion.
     - Session memory cache (`ciMemoryCache`) for non-terminal / historical queries (`'pending'`, `'none'`).
     - History-aware query resolution: evaluates `localState.historyHash` when in `HISTORY` mode and `HEAD` otherwise, ensuring historical commits reflect their own CI status (hidden if commit predates CI).
+    - API error resilience: Network errors, timeouts, or 403 rate limits no longer overwrite existing CI statuses or cache false `'none'` records.
     - Immediate re-queries triggered after push (`gitPush`) or when switching commits.
   - Added CI status badge `#top-titlebar-ci-badge` to top titlebar in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) right next to branch name:
     - Displays green `CI` on success (`top-titlebar-ci-success`).
@@ -48,8 +55,18 @@
   - Added styling in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) with `-webkit-app-region: no-drag;` for NW.js titlebar clickability.
   - Added automated tests:
     - [test_04_ci_status.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/apis/test_04_ci_status.js) in `apis/`.
-    - [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js) in `app_function_calls/`.
-  - Master test suite passing 100% across all 7 categories (19 suites, 89 passed tests).
+    - [test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js) in `app_function_calls/`: 8 test cases verifying canonical URL normalization, persistent caching, short SHA resolution, and mode transitions.
+  - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
+
+---
+
+### 🐛 Open / Historical Bugs
+* **Bug: CI badges missing upon application restart**:
+  - *Root Cause 1*: The working tree was checked out to `feature/automated-tests` (which diverged prior to the CI badge implementation and therefore lacked `top-titlebar-ci-badge` in `app.html` and `queryCommitCiStatus` in `app.js`).
+  - *Root Cause 2*: Discrepancies between remote URL representations (e.g. `.git` suffix, SSH syntax, basic auth credentials) caused exact string key lookup in `ci_cache.json` to miss.
+  - *Root Cause 3*: Short SHA queries failed against 40-character SHA cache entries.
+  - *Root Cause 4*: 403 rate-limit or network errors caught during API queries were erroneously caching `{ status: 'none' }`.
+  - *Remediation*: Checked out `develop` where all CI features reside, implemented `normalizeRepoUrl` for universal canonical keying, implemented `findCachedCommit` with short SHA prefix matching, and updated API handlers so errors are isolated and never falsely cached as `'none'`.
 * **Task Description**: SSH Connection & Settings Help Documentation Refinement:
   - Updated [HELP/SSH Connection.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20Connection.html):
     - Corrected menu path reference to `Settings → Repository → Add Repo:`.

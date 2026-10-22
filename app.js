@@ -7012,6 +7012,60 @@ async function gitProvider(giturl, initialize = true){
 let ciQueryInProgress = false;
 let ciMemoryCache = {};
 
+function normalizeRepoUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    let clean = url.trim();
+
+    // Convert scp-style SSH: git@host:owner/repo(.git) or ssh://git@host:owner/repo
+    clean = clean.replace(/^ssh:\/\//, '');
+    if (clean.startsWith('git@')) {
+        let afterAt = clean.substring(4);
+        let colonIdx = afterAt.indexOf(':');
+        let slashIdx = afterAt.indexOf('/');
+        if (colonIdx !== -1 && (slashIdx === -1 || colonIdx < slashIdx)) {
+            let host = afterAt.substring(0, colonIdx);
+            let path = afterAt.substring(colonIdx + 1);
+            clean = 'https://' + host + '/' + path;
+        } else if (slashIdx !== -1) {
+            clean = 'https://' + afterAt;
+        }
+    }
+
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+        clean = 'https://' + clean;
+    }
+
+    try {
+        let parsed = new URL(clean);
+        let host = parsed.hostname.toLowerCase();
+        let pathname = parsed.pathname.replace(/\/+$/, '');
+        if (pathname.endsWith('.git')) {
+            pathname = pathname.slice(0, -4);
+        }
+        return 'https://' + host + pathname;
+    } catch (e) {
+        clean = clean.replace(/\.git\/?$/, '').replace(/\/+$/, '');
+        return clean;
+    }
+}
+
+function findCachedCommit(commitMap, commitSha) {
+    if (!commitMap || !commitSha) return null;
+    if (commitMap[commitSha]) {
+        return commitMap[commitSha];
+    }
+    let shaLower = commitSha.toLowerCase();
+    if (shaLower.length >= 6) {
+        for (let key of Object.keys(commitMap)) {
+            let keyLower = key.toLowerCase();
+            if (keyLower.startsWith(shaLower) || (keyLower.length >= 6 && shaLower.startsWith(keyLower))) {
+                return commitMap[key];
+            }
+        }
+    }
+    return null;
+}
+
 function loadCiCache() {
     try {
         if (fs.existsSync(ciCacheFile)) {
@@ -7034,20 +7088,59 @@ function saveCiCache(cache) {
 
 function getCachedCiStatus(repoUrl, commitSha) {
     if (!repoUrl || !commitSha) return null;
+    let normUrl = normalizeRepoUrl(repoUrl);
     let cache = loadCiCache();
-    if (cache[repoUrl] && cache[repoUrl][commitSha]) {
-        return cache[repoUrl][commitSha];
+
+    // 1. Check normalized URL in persistent cache
+    let found = null;
+    if (normUrl && cache[normUrl]) {
+        found = findCachedCommit(cache[normUrl], commitSha);
     }
-    let memKey = repoUrl + '#' + commitSha;
-    if (ciMemoryCache[memKey]) {
-        return ciMemoryCache[memKey];
+    // 2. Check raw repoUrl in persistent cache (backward compatibility)
+    if (!found && cache[repoUrl]) {
+        found = findCachedCommit(cache[repoUrl], commitSha);
     }
+    // 3. Check any key whose normalized form matches normUrl
+    if (!found && normUrl) {
+        for (let key of Object.keys(cache)) {
+            if (normalizeRepoUrl(key) === normUrl) {
+                found = findCachedCommit(cache[key], commitSha);
+                if (found) break;
+            }
+        }
+    }
+    if (found) {
+        return found;
+    }
+
+    // 4. Check memory cache (exact and prefix)
+    let keysToCheck = [
+        (normUrl || repoUrl) + '#' + commitSha,
+        repoUrl + '#' + commitSha
+    ];
+    for (let k of keysToCheck) {
+        if (ciMemoryCache[k]) return ciMemoryCache[k];
+    }
+    if (commitSha.length >= 6) {
+        let prefix = (normUrl || repoUrl) + '#';
+        let shaLower = commitSha.toLowerCase();
+        for (let k of Object.keys(ciMemoryCache)) {
+            if (k.startsWith(prefix)) {
+                let kSha = k.substring(prefix.length).toLowerCase();
+                if (kSha.startsWith(shaLower) || (kSha.length >= 6 && shaLower.startsWith(kSha))) {
+                    return ciMemoryCache[k];
+                }
+            }
+        }
+    }
+
     return null;
 }
 
 function setCachedCiStatus(repoUrl, commitSha, ciData) {
     if (!repoUrl || !commitSha || !ciData) return;
-    let memKey = repoUrl + '#' + commitSha;
+    let normUrl = normalizeRepoUrl(repoUrl) || repoUrl;
+    let memKey = normUrl + '#' + commitSha;
     ciMemoryCache[memKey] = {
         status: ciData.status,
         url: ciData.url || null,
@@ -7055,13 +7148,20 @@ function setCachedCiStatus(repoUrl, commitSha, ciData) {
     };
     if (ciData.status === 'success' || ciData.status === 'failure') {
         let cache = loadCiCache();
-        if (!cache[repoUrl]) {
-            cache[repoUrl] = {};
+        if (!cache[normUrl]) {
+            cache[normUrl] = {};
         }
-        cache[repoUrl][commitSha] = {
+        cache[normUrl][commitSha] = {
             status: ciData.status,
             url: ciData.url || null
         };
+        // If raw repoUrl exists with prior entries, keep it synchronized
+        if (repoUrl !== normUrl && cache[repoUrl]) {
+            cache[repoUrl][commitSha] = {
+                status: ciData.status,
+                url: ciData.url || null
+            };
+        }
         saveCiCache(cache);
     }
 }
@@ -7100,9 +7200,15 @@ async function queryCommitCiStatus(forceRefresh = false) {
     }
 
     let repo = state.repos[state.repoNumber];
-    let remoteUrl = repo.remoteURL;
+    let rawRemoteUrl = repo.remoteURL;
     let localFolder = repo.localFolder;
 
+    if (!rawRemoteUrl) {
+        updateCiBadge({ status: 'none', url: null });
+        return;
+    }
+
+    let remoteUrl = normalizeRepoUrl(rawRemoteUrl);
     if (!remoteUrl || !remoteUrl.startsWith('http')) {
         updateCiBadge({ status: 'none', url: null });
         return;
@@ -7135,7 +7241,7 @@ async function queryCommitCiStatus(forceRefresh = false) {
                 repoUrl: remoteUrl,
                 commitSha: commitSha,
                 status: cached.status,
-                url: cached.url,
+                url: cached.url || null,
                 lastChecked: Date.now()
             };
             updateCiBadge(localState.ciStatus);
@@ -7162,7 +7268,7 @@ async function queryCommitCiStatus(forceRefresh = false) {
     try {
         let provider = await gitProvider(remoteUrl, true);
         let ciResult = await provider.getValue('ci-status', commitSha);
-        if (ciResult && ciResult.status) {
+        if (ciResult && ciResult.status && ciResult.status !== 'none') {
             setCachedCiStatus(remoteUrl, commitSha, ciResult);
             localState.ciStatus = {
                 repoUrl: remoteUrl,
@@ -7172,7 +7278,7 @@ async function queryCommitCiStatus(forceRefresh = false) {
                 lastChecked: Date.now()
             };
             updateCiBadge(localState.ciStatus);
-        } else {
+        } else if (ciResult && ciResult.status === 'none') {
             setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
             localState.ciStatus = {
                 repoUrl: remoteUrl,
@@ -7185,20 +7291,17 @@ async function queryCommitCiStatus(forceRefresh = false) {
         }
     } catch (err) {
         console.warn('Error querying CI status:', err);
-        setCachedCiStatus(remoteUrl, commitSha, { status: 'none', url: null });
-        localState.ciStatus = {
-            repoUrl: remoteUrl,
-            commitSha: commitSha,
-            status: 'none',
-            url: null,
-            lastChecked: Date.now()
-        };
-        updateCiBadge(localState.ciStatus);
+        // Do not cache 'none' on API or network errors!
+        if (!localState.ciStatus || localState.ciStatus.commitSha !== commitSha) {
+            updateCiBadge({ status: 'none', url: null });
+        }
     } finally {
         ciQueryInProgress = false;
     }
 }
 
+global.normalizeRepoUrl = normalizeRepoUrl;
+global.findCachedCommit = findCachedCommit;
 global.loadCiCache = loadCiCache;
 global.saveCiCache = saveCiCache;
 global.getCachedCiStatus = getCachedCiStatus;

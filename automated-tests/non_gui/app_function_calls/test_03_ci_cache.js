@@ -79,6 +79,7 @@ async function runTests() {
     const sandbox = {
         console: { log: () => {}, warn: () => {}, error: () => {} },
         fs: fs,
+        URL: URL,
         ciCacheFile: testCiCacheFile,
         ciMemoryCache: {},
         ciQueryInProgress: false,
@@ -125,6 +126,8 @@ async function runTests() {
     vm.createContext(sandbox);
 
     // Extract functions from app.js
+    const normalizeRepoUrlFn = extractFunction('normalizeRepoUrl');
+    const findCachedCommitFn = extractFunction('findCachedCommit');
     const loadCiCacheFn = extractFunction('loadCiCache');
     const saveCiCacheFn = extractFunction('saveCiCache');
     const getCachedCiStatusFn = extractFunction('getCachedCiStatus');
@@ -132,6 +135,8 @@ async function runTests() {
     const updateCiBadgeFn = extractFunction('updateCiBadge');
     const queryCommitCiStatusFn = extractFunction('queryCommitCiStatus');
 
+    vm.runInContext(normalizeRepoUrlFn, sandbox);
+    vm.runInContext(findCachedCommitFn, sandbox);
     vm.runInContext(loadCiCacheFn, sandbox);
     vm.runInContext(saveCiCacheFn, sandbox);
     vm.runInContext(getCachedCiStatusFn, sandbox);
@@ -139,22 +144,44 @@ async function runTests() {
     vm.runInContext(updateCiBadgeFn, sandbox);
     vm.runInContext(queryCommitCiStatusFn, sandbox);
 
-    // Test 1: saveCiCache & loadCiCache
+    // Test 1: normalizeRepoUrl handles various URL schemes and credentials
+    const norm1 = sandbox.normalizeRepoUrl('git@github.com:JanAxelsson/cliHelpLine.git');
+    const norm2 = sandbox.normalizeRepoUrl('https://user:token@github.com/JanAxelsson/cliHelpLine.git');
+    const norm3 = sandbox.normalizeRepoUrl('ssh://git@github.com:JanAxelsson/cliHelpLine.git/');
+    const norm4 = sandbox.normalizeRepoUrl('https://GitHub.com/JanAxelsson/cliHelpLine');
+    assert(
+        norm1 === 'https://github.com/JanAxelsson/cliHelpLine' &&
+        norm2 === 'https://github.com/JanAxelsson/cliHelpLine' &&
+        norm3 === 'https://github.com/JanAxelsson/cliHelpLine' &&
+        norm4 === 'https://github.com/JanAxelsson/cliHelpLine',
+        'normalizeRepoUrl canonicalizes SSH, credentials, trailing .git/slash, and host casing'
+    );
+
+    // Test 2: saveCiCache & loadCiCache
     const testData = {
         'https://github.com/test/repo.git': {
-            'sha123': { status: 'success', url: 'https://ci.example.com/1' }
+            'sha1234567890abcdef': { status: 'success', url: 'https://ci.example.com/1' }
         }
     };
     sandbox.saveCiCache(testData);
     const loaded = sandbox.loadCiCache();
     assert(
         loaded['https://github.com/test/repo.git'] &&
-        loaded['https://github.com/test/repo.git']['sha123'].status === 'success' &&
-        loaded['https://github.com/test/repo.git']['sha123'].url === 'https://ci.example.com/1',
+        loaded['https://github.com/test/repo.git']['sha1234567890abcdef'].status === 'success' &&
+        loaded['https://github.com/test/repo.git']['sha1234567890abcdef'].url === 'https://ci.example.com/1',
         'saveCiCache persists data and loadCiCache reads it back accurately'
     );
 
-    // Test 2: setCachedCiStatus persists terminal states to file and excludes non-terminal from file
+    // Test 3: getCachedCiStatus matches across URL formats and supports short SHA prefix
+    const matchSsh = sandbox.getCachedCiStatus('git@github.com:test/repo.git', 'sha1234567890abcdef');
+    const matchShortSha = sandbox.getCachedCiStatus('https://github.com/test/repo', 'sha1234');
+    assert(
+        matchSsh && matchSsh.status === 'success' &&
+        matchShortSha && matchShortSha.status === 'success',
+        'getCachedCiStatus matches canonical normalized URLs and resolves short commit SHAs'
+    );
+
+    // Test 4: setCachedCiStatus persists terminal states to file and excludes non-terminal from file
     const repoUrl = 'https://gitlab.com/test/repo.git';
     sandbox.setCachedCiStatus(repoUrl, 'sha-pass', { status: 'success', url: 'https://ci/pass' });
     sandbox.setCachedCiStatus(repoUrl, 'sha-fail', { status: 'failure', url: 'https://ci/fail' });
@@ -162,15 +189,19 @@ async function runTests() {
     sandbox.setCachedCiStatus(repoUrl, 'sha-none', { status: 'none', url: null });
 
     const diskCache = sandbox.loadCiCache();
+    const canonGitlab = sandbox.normalizeRepoUrl(repoUrl);
     assert(
-        diskCache[repoUrl] &&
-        diskCache[repoUrl]['sha-pass'] && diskCache[repoUrl]['sha-pass'].status === 'success' &&
-        diskCache[repoUrl]['sha-fail'] && diskCache[repoUrl]['sha-fail'].status === 'failure' &&
-        diskCache[repoUrl]['sha-pending'] === undefined && diskCache[repoUrl]['sha-none'] === undefined,
+        (diskCache[canonGitlab] || diskCache[repoUrl]) &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-pass'] &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-pass'].status === 'success' &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-fail'] &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-fail'].status === 'failure' &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-pending'] === undefined &&
+        (diskCache[canonGitlab] || diskCache[repoUrl])['sha-none'] === undefined,
         'setCachedCiStatus permanently writes terminal statuses (success, failure) to disk and excludes non-terminal'
     );
 
-    // Test 3: updateCiBadge renders success
+    // Test 5: updateCiBadge renders success
     sandbox.updateCiBadge({ status: 'success', url: 'https://ci/pass' });
     assert(
         mockBadge.style.display === 'inline-block' &&
@@ -180,7 +211,7 @@ async function runTests() {
         'updateCiBadge correctly renders success badge with green style and Passed tooltip'
     );
 
-    // Test 4: updateCiBadge renders failure
+    // Test 6: updateCiBadge renders failure
     sandbox.updateCiBadge({ status: 'failure', url: 'https://ci/fail' });
     assert(
         mockBadge.style.display === 'inline-block' &&
@@ -190,7 +221,7 @@ async function runTests() {
         'updateCiBadge correctly renders failure badge with red style and Failed tooltip'
     );
 
-    // Test 5: updateCiBadge hides when status is none or missing
+    // Test 7: updateCiBadge hides when status is none or missing
     sandbox.updateCiBadge({ status: 'none', url: null });
     const hiddenNone = mockBadge.style.display === 'none';
     sandbox.updateCiBadge(null);
@@ -200,7 +231,7 @@ async function runTests() {
         'updateCiBadge hides the CI badge when status is none or null'
     );
 
-    // Test 6: queryCommitCiStatus queries localState.historyHash when in HISTORY mode
+    // Test 8: queryCommitCiStatus queries localState.historyHash when in HISTORY mode
     queriedShas = [];
     sandbox.localState.mode = 'HISTORY';
     sandbox.localState.historyHash = 'sha-historical-old';
@@ -209,7 +240,7 @@ async function runTests() {
     const queriedHistorical = queriedShas.includes('sha-historical-old');
     const hiddenForOld = mockBadge.style.display === 'none';
 
-    // Test 7: queryCommitCiStatus returns to HEAD when leaving HISTORY mode
+    // Test 9: queryCommitCiStatus returns to HEAD when leaving HISTORY mode
     sandbox.localState.mode = 'NO_FILES_TO_COMMIT';
     sandbox.localState.historyHash = '';
     await sandbox.queryCommitCiStatus(true);

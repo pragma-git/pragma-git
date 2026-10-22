@@ -299,12 +299,14 @@ class gitlab extends General_git_rest_api {
                                 } else {
                                     out = { status: 'success', url: targetUrl };
                                 }
-                            } else {
+                            } else if (statusRes.ok) {
                                 out = { status: 'none', url: null };
+                            } else {
+                                throw new Error(`GitLab commit statuses API error (${statusRes.status || 'unknown'})`);
                             }
                         }catch (err){
                             global.warn(err);
-                            out = { status: 'none', url: null };
+                            throw err;
                         }
                         break;
                     }    
