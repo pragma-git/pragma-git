@@ -8877,6 +8877,13 @@ function updateWithNewSettings(){                   // Call from window that mod
                         } catch(e) {}
                     }
                     
+                    // Notify window of theme change (e.g. settings icon swap and layout refresh)
+                    if (win_handle.window.onThemeChanged) {
+                        try {
+                            win_handle.window.onThemeChanged();
+                        } catch(e) {}
+                    }
+                    
                                     
                 
                 // Zoom level

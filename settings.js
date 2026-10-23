@@ -3206,3 +3206,32 @@ function displayAlert(title, message){
     document.getElementById('alertDialog').showModal();
 }
 
+
+// Handle instant theme update for icons and table text
+function onThemeChanged() {
+    let isDark = document.body.classList.contains('dark');
+    
+    // 1. Force layout reflow on content sections to update CSS inherited colors
+    let contents = document.querySelectorAll('.content, .tool-content, table');
+    contents.forEach(el => {
+        let orig = el.style.display;
+        el.style.display = 'none';
+        let _ = el.offsetHeight;
+        el.style.display = orig;
+    });
+    
+    // 2. Update provider icons for light/dark theme
+    let imgs = document.querySelectorAll('img.remoteIcon');
+    imgs.forEach(img => {
+        if (isDark) {
+            if (img.src.includes('github-mark.png')) {
+                img.src = img.src.replace('github-mark.png', 'github-mark-white.png');
+            }
+        } else {
+            if (img.src.includes('github-mark-white.png')) {
+                img.src = img.src.replace('github-mark-white.png', 'github-mark.png');
+            }
+        }
+    });
+}
+window.onThemeChanged = onThemeChanged;

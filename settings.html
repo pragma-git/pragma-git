@@ -594,6 +594,7 @@
        
     <script>                <!-- Dark mode on/off , zoom--> 
         if (localState.dark){
+            document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
         window.document.body.style.zoom = global.state.zoom;
