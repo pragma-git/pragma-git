@@ -62,6 +62,10 @@ function print_suite_description() {
             echo "   Tests commit CI status extraction across GitHub, GitLab, and Bitbucket provider classes."
             echo "   Verifies status normalization (success, failure, pending, none) and build target URLs."
             ;;
+        test_05_live_ci_status.js)
+            echo "   Live CI status for known success/failure commits on GitHub, GitLab, and Bitbucket."
+            echo "   Covers GitLab Pipelines API, legacy statuses API (GITLAB_TOKEN), web and SVG badge fallbacks."
+            ;;
     esac
 }
 

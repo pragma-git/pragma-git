@@ -433,6 +433,28 @@ class gitlab extends General_git_rest_api {
                         }
                         break;
                     }    
+                    case 'ci-status-web': {  // Direct access to fallback 3 (web pipelines.json, no token). secondParameter = commit SHA
+                        if (!secondParameter) {
+                            out = { status: 'none', url: null };
+                            break;
+                        }
+                        out = await this.#ciStatusFromWebPipelines(secondParameter);
+                        if (!out) {
+                            throw new Error(`GitLab web pipelines.json did not return CI status (private repo or endpoint unavailable)`);
+                        }
+                        break;
+                    }
+                    case 'ci-status-badge': {  // Direct access to fallback 4 (SVG pipeline badge, branch level). secondParameter = branch name
+                        if (super.isEmptyString(secondParameter)) {
+                            out = { status: 'none', url: null };
+                            break;
+                        }
+                        out = await this.#ciStatusFromSvgBadge(secondParameter);
+                        if (!out) {
+                            throw new Error(`GitLab SVG badge did not return CI status for branch '${secondParameter}'`);
+                        }
+                        break;
+                    }
                     default: {
                          throw new Error(`getInfoValue error: 'unknown parameterName'`);
                     }

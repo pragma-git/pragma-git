@@ -5,8 +5,14 @@
  * Verifies:
  *   1. Missing commitSha gracefully returns { status: 'none', url: null }
  *   2. GitHub ci-status handling (Commit Status API & Check Runs API)
- *   3. GitLab ci-status handling (Commit statuses array)
+ *   3. GitLab ci-status handling (legacy commit statuses API)
  *   4. Bitbucket ci-status handling (Commit statuses values)
+ *   5. GitLab modern Pipelines API and status mapping
+ *   6. GitLab project API URL (project ID vs URL-encoded path)
+ *   7. GitLab PRIVATE-TOKEN header for private repos
+ *   8. GitLab web pipelines.json fallback (no token, no API)
+ *   9. GitLab SVG badge fallback (branch level)
+ *  10. GitLab error when all sources are unavailable
  */
 
 const path = require('path');
@@ -158,7 +164,7 @@ async function runTests() {
         glSuccess.status === 'success' && glSuccess.url === 'https://gitlab.com/ci/1' &&
         glFail.status === 'failure' && glFail.url === 'https://gitlab.com/ci/fail' &&
         glEmpty.status === 'none',
-        'GitLab ci-status correctly resolves pipeline status array'
+        'GitLab ci-status falls back to legacy commit statuses API when no pipelines exist'
     );
 
     // Test 4: Bitbucket ci-status parsing
@@ -199,6 +205,138 @@ async function runTests() {
         bbEmpty.status === 'none',
         'Bitbucket ci-status correctly resolves commit statuses values'
     );
+
+    // Test 5: GitLab modern Pipelines API (/pipelines?sha=) and status mapping
+    const glModern = new Gitlab('https://gitlab.com/gitlab-org/gitlab-foss.git');
+    const pipelineStatusBySha = {
+        'sha-p-success': 'success',
+        'sha-p-warn': 'success-with-warnings',
+        'sha-p-failed': 'failed',
+        'sha-p-canceled': 'canceled',
+        'sha-p-running': 'running',
+        'sha-p-skipped': 'skipped'
+    };
+    const calledUrls = [];
+    glModern.fetchWithApi = async (url) => {
+        calledUrls.push(url);
+        const match = url.match(/\/pipelines\?sha=([^&]+)/);
+        if (match && pipelineStatusBySha[match[1]]) {
+            return {
+                ok: true,
+                status: 200,
+                json: [
+                    { status: pipelineStatusBySha[match[1]], web_url: `https://gitlab.com/p/${match[1]}` },
+                    { status: 'success', web_url: 'https://gitlab.com/p/older' }  // older pipeline must be ignored
+                ]
+            };
+        }
+        return { ok: true, status: 200, json: [] };
+    };
+    const modern = {};
+    for (const sha of Object.keys(pipelineStatusBySha)) {
+        modern[sha] = await glModern.getValue('ci-status', sha);
+    }
+    assert(
+        modern['sha-p-success'].status === 'success' && modern['sha-p-success'].url === 'https://gitlab.com/p/sha-p-success' &&
+        modern['sha-p-warn'].status === 'success' &&
+        modern['sha-p-failed'].status === 'failure' && modern['sha-p-failed'].url === 'https://gitlab.com/p/sha-p-failed' &&
+        modern['sha-p-canceled'].status === 'failure' &&
+        modern['sha-p-running'].status === 'pending' &&
+        modern['sha-p-skipped'].status === 'none' &&
+        !calledUrls.some(u => u.includes('/statuses')),
+        'GitLab ci-status uses modern Pipelines API (newest pipeline) and maps success/warnings/failed/canceled/running/skipped'
+    );
+
+    // Test 6: GitLab project API URL -- ID-based (after initialize) and URL-encoded path (group-owned, initialize failed)
+    calledUrls.length = 0;
+    await glModern.getValue('ci-status', 'sha-p-success');               // apiurl still the users/... search url
+    const encodedUrl = calledUrls[0];
+    glModern.apiurl = 'https://gitlab.com/api/v4/projects/13083';        // as set by a successful initialize()
+    calledUrls.length = 0;
+    await glModern.getValue('ci-status', 'sha-p-success');
+    const idUrl = calledUrls[0];
+    assert(
+        encodedUrl === 'https://gitlab.com/api/v4/projects/gitlab-org%2Fgitlab-foss/pipelines?sha=sha-p-success' &&
+        idUrl === 'https://gitlab.com/api/v4/projects/13083/pipelines?sha=sha-p-success',
+        'GitLab ci-status builds project API URL from encoded path (group-owned) or project ID (after initialize)'
+    );
+
+    // Test 7: GitLab token is sent as PRIVATE-TOKEN header (private repos)
+    const glPrivate = new Gitlab('https://gitlab.com/someone/private-repo.git', 'someone', 'glpat-secret');
+    let sentHeaders = null;
+    glPrivate.fetchWithApi = async (url, options) => {
+        sentHeaders = options.headers;
+        return { ok: true, status: 200, json: [{ status: 'failed', web_url: 'https://gitlab.com/p/private' }] };
+    };
+    const privResult = await glPrivate.getValue('ci-status', 'sha-private');
+    assert(
+        sentHeaders && sentHeaders['PRIVATE-TOKEN'] === 'glpat-secret' && privResult.status === 'failure',
+        'GitLab ci-status sends PRIVATE-TOKEN header when a token is provided'
+    );
+
+    // Tests 8-10 replace global fetch (used by the web and SVG badge fallbacks)
+    const realFetch = global.fetch;
+    const apiDown = async () => ({ ok: false, status: 503, json: undefined });
+    const fakeResponse = (body, contentType, status = 200) =>
+        new Response(body, { status: status, headers: { 'content-type': contentType } });
+
+    // Test 8: GitLab legacy web endpoint fallback (/-/commit/SHA/pipelines.json, no token, no API)
+    try {
+        global.fetch = async (url) => {
+            if (url.includes('/-/commit/sha-web-fail/pipelines.json')) {
+                return fakeResponse(JSON.stringify({ pipelines: [{ path: '/gitlab-org/gitlab-foss/-/pipelines/2', details: { status: { group: 'failed', text: 'Failed' } } }] }), 'application/json');
+            }
+            if (url.includes('/-/commit/sha-web-pass/pipelines.json')) {
+                return fakeResponse(JSON.stringify({ pipelines: [{ path: '/gitlab-org/gitlab-foss/-/pipelines/1', details: { status: { group: 'success', text: 'Passed' } } }] }), 'application/json');
+            }
+            if (url.includes('/-/commit/sha-web-empty/pipelines.json')) {
+                return fakeResponse(JSON.stringify({ pipelines: [] }), 'application/json');
+            }
+            return fakeResponse('<html>sign in</html>', 'text/html');
+        };
+        const glWeb = new Gitlab('https://gitlab.com/gitlab-org/gitlab-foss.git');
+        glWeb.fetchWithApi = apiDown;
+        const webPass = await glWeb.getValue('ci-status', 'sha-web-pass');
+        const webFail = await glWeb.getValue('ci-status', 'sha-web-fail');
+        const webEmpty = await glWeb.getValue('ci-status', 'sha-web-empty');
+        assert(
+            webPass.status === 'success' && webPass.url === 'https://gitlab.com/gitlab-org/gitlab-foss/-/pipelines/1' &&
+            webFail.status === 'failure' && webFail.url === 'https://gitlab.com/gitlab-org/gitlab-foss/-/pipelines/2' &&
+            webEmpty.status === 'none',
+            'GitLab ci-status falls back to web pipelines.json when the API is unavailable'
+        );
+
+        // Test 9: GitLab SVG badge fallback (only when branch is given)
+        global.fetch = async (url) => {
+            if (url.endsWith('/badges/main/pipeline.svg')) {
+                return fakeResponse('<svg><text>pipeline</text><text>passed</text></svg>', 'image/svg+xml');
+            }
+            if (url.endsWith('/badges/broken/pipeline.svg')) {
+                return fakeResponse('<svg><text>pipeline</text><text>failed</text></svg>', 'image/svg+xml');
+            }
+            return fakeResponse('<html>sign in</html>', 'text/html');
+        };
+        const glBadge = new Gitlab('https://gitlab.com/inkscape/inkscape.git');
+        glBadge.fetchWithApi = apiDown;
+        const badgePass = await glBadge.getValue('ci-status', 'sha-any', 'main');
+        const badgeFail = await glBadge.getValue('ci-status', 'sha-any', 'broken');
+        assert(
+            badgePass.status === 'success' && badgePass.url === 'https://gitlab.com/inkscape/inkscape/-/pipelines?ref=main' &&
+            badgeFail.status === 'failure',
+            'GitLab ci-status falls back to SVG pipeline badge when a branch is given'
+        );
+
+        // Test 10: Without branch, and with all sources unavailable, ci-status throws
+        let threw = false;
+        try {
+            await glBadge.getValue('ci-status', 'sha-any');
+        } catch (e) {
+            threw = true;
+        }
+        assert(threw, 'GitLab ci-status throws when API, web and badge sources are all unavailable');
+    } finally {
+        global.fetch = realFetch;
+    }
 
     printSuiteResult();
 }
