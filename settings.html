@@ -955,7 +955,7 @@
                                 </tr>
                                         
                                 <!--  folder to clone to-->
-                                <tr class="tool">
+                                <tr  id="cloneFolderRow" class="tool">
                                     <td>
                                         <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " 
                                             ondrop="_callback('droppedFolder',event)" 
@@ -964,7 +964,16 @@
                                         ></textarea>
                                         
                                         
+                                    </td>
+                                    <td class="toolButtonField">
+                                        <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
+                                    </td>
                                         
+                                        
+                                  
+                                </tr>
+                                <tr class="tool"> 
+                                    <td>     
                                         <div  id='cloneServerRepoTable' style="display: none">
                                            
                                             <table>
@@ -1754,7 +1763,7 @@
             if (typeof initSshKeyInputs === 'function') initSshKeyInputs();
             document.getElementById('server_clone').setAttribute('style','color: var(--text)');
             document.getElementById('local_clone').setAttribute('style','color: var(--dim-text)');
-            document.getElementById('cloneFolder').style.display='none';
+            document.getElementById('cloneFolderRow').style.visibility='collapse';
             document.getElementById('cloneServerRepoTable').style.display='block';
             document.getElementById('cloneButtonLocalRow').style.display='none';
             let status = document.getElementById('testSshStatus_clone')?.textContent || '';
@@ -1763,7 +1772,7 @@
             // Local
             document.getElementById('server_clone').setAttribute('style','color: var(--dim-text)');
             document.getElementById('local_clone').setAttribute('style','color: var(--text)');
-            document.getElementById('cloneFolder').style.display='block';
+            document.getElementById('cloneFolderRow').style.visibility='visible';
             document.getElementById('cloneServerRepoTable').style.display='none';
             document.getElementById('cloneButtonLocalRow').style.display='block';
             document.getElementById('cloneButton').disabled = false;
