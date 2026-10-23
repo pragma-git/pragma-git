@@ -194,7 +194,88 @@ class gitlab extends General_git_rest_api {
             
             return this.repoInfoStruct;  // Useful for debugging
         } 
-        async getValue( parameterName, secondParameter){  // Get provider-specific parameter 
+        #projectPath(){                 // 'group/subgroup/repo' from giturl (credentials and .git removed)
+            let urlParts = new URL(this.giturl);
+            return urlParts.pathname.replace(/^\/+/, '').replace(/\.git$/, '').replace(/\/+$/, '');
+        }
+        #projectApiUrl(){               // Project API url that works for both user- and group-owned projects
+            // Prefer ID-based url set by initialize(), otherwise use the URL-encoded project path
+            // (the users/<name>/projects?search= lookup in initialize() fails for group-owned projects)
+            if ( /\/api\/v4\/projects\/[^/?]+$/.test(this.apiurl || '') ){
+                return this.apiurl;
+            }
+            let host = new URL(this.giturl).host;
+            return `https://${host}/api/v4/projects/${encodeURIComponent(this.#projectPath())}`;
+        }
+        #mapCiStatus( gitlabStatus){    // Map GitLab pipeline/job/badge status to 'success'|'failure'|'pending'|'none'
+            let s = String(gitlabStatus || '').toLowerCase().trim();
+            if ( ['success', 'passed', 'success-with-warnings', 'success_with_warnings', 'warning', 'passed with warnings'].includes(s) ){
+                return 'success';
+            }
+            if ( ['failed', 'canceled', 'cancelled', 'canceling'].includes(s) ){
+                return 'failure';
+            }
+            if ( ['running', 'pending', 'created', 'preparing', 'waiting_for_resource', 'waiting_for_callback', 'scheduled'].includes(s) ){
+                return 'pending';
+            }
+            return 'none';  // 'skipped', 'manual', 'unknown', ...
+        }
+        async #ciStatusFromWebPipelines( commitSha){  // Web endpoint (same as get-status.js prototype). Returns {status,url} or null
+            try{
+                let urlParts = new URL(this.giturl);
+                let webBase = `${urlParts.protocol}//${urlParts.host}`;
+                let url = `${webBase}/${this.#projectPath()}/-/commit/${commitSha}/pipelines.json`;
+
+                let res = await fetch(url, {
+                    method: 'GET',
+                    redirect: 'follow',
+                    headers: { 'Accept': 'application/json' }
+                });
+                let contentType = res.headers.get('content-type') || '';
+                if ( !res.ok || !contentType.includes('json') ){
+                    return null;  // e.g. private repo redirecting to the sign-in page
+                }
+                let json = await res.json();
+                if ( !json || !Array.isArray(json.pipelines) ){
+                    return null;
+                }
+                if ( json.pipelines.length === 0 ){
+                    return { status: 'none', url: null };
+                }
+                let pipeline = json.pipelines[0];
+                let details = pipeline.details || {};
+                let statusInfo = details.status || {};
+                let rawStatus = statusInfo.group || statusInfo.text || pipeline.status;
+                let pipelineUrl = pipeline.path ? `${webBase}${pipeline.path}` : (statusInfo.details_path ? `${webBase}${statusInfo.details_path}` : null);
+                return { status: this.#mapCiStatus(rawStatus), url: pipelineUrl };
+            }catch (err){
+                global.warn(err);
+                return null;
+            }
+        }
+        async #ciStatusFromSvgBadge( branchName){  // SVG badge (same as get-svg-status.js prototype). Branch level only. Returns {status,url} or null
+            try{
+                let urlParts = new URL(this.giturl);
+                let webBase = `${urlParts.protocol}//${urlParts.host}`;
+                let projectWebUrl = `${webBase}/${this.#projectPath()}`;
+                let url = `${projectWebUrl}/badges/${encodeURIComponent(branchName)}/pipeline.svg`;
+
+                let res = await fetch(url, { method: 'GET', redirect: 'follow' });
+                if ( !res.ok ){
+                    return null;
+                }
+                let svg = await res.text();
+                let match = svg.match(/(passed with warnings|passed|failed|running|pending|canceled|skipped|manual|created|unknown)/i);
+                if ( !match ){
+                    return null;
+                }
+                return { status: this.#mapCiStatus(match[0]), url: `${projectWebUrl}/-/pipelines?ref=${encodeURIComponent(branchName)}` };
+            }catch (err){
+                global.warn(err);
+                return null;
+            }
+        }
+        async getValue( parameterName, secondParameter, thirdParameter){  // Get provider-specific parameter 
             // Uses:
             //      this.repoInfoStruct     storage for json returned by API call (creates if not set yet)
             //
@@ -269,12 +350,21 @@ class gitlab extends General_git_rest_api {
                         break;   
                     }    
                     case 'ci-status': {  // Returns { status: 'success'|'failure'|'pending'|'none', url: string|null }
+                        // secondParameter = commit SHA (required)
+                        // thirdParameter  = branch name (optional; enables the SVG badge as a last-resort fallback)
+                        //
+                        // Strategy (works without TOKEN for public repos, and with TOKEN for private repos):
+                        //   1) REST API pipelines for the commit    : /api/v4/projects/:id/pipelines?sha=SHA   (public repos need no token)
+                        //   2) REST API external commit statuses    : /api/v4/projects/:id/repository/commits/SHA/statuses (requires token)
+                        //   3) Web endpoint (no API, no token)      : https://host/group/repo/-/commit/SHA/pipelines.json
+                        //   4) SVG pipeline badge (branch level)    : https://host/group/repo/badges/BRANCH/pipeline.svg  (only if branch given)
                         try{
                             let commitSha = secondParameter;
                             if (!commitSha) {
                                 out = { status: 'none', url: null };
                                 break;
                             }
+
                             let headers = {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
@@ -282,28 +372,61 @@ class gitlab extends General_git_rest_api {
                             if (!super.isEmptyString(this.TOKEN)) {
                                 headers['PRIVATE-TOKEN'] = this.TOKEN;
                             }
-                            let statusUrl = `${this.apiurl}/repository/commits/${commitSha}/statuses`;
-                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
+                            let projectApiUrl = this.#projectApiUrl();
 
+                            // 1) Pipelines API (newest pipeline first)
+                            let pipelinesUrl = `${projectApiUrl}/pipelines?sha=${encodeURIComponent(commitSha)}`;
+                            let pipelinesRes = await this.fetchWithApi(pipelinesUrl, { method: 'GET', headers: headers });
+                            if (pipelinesRes.ok && Array.isArray(pipelinesRes.json) && pipelinesRes.json.length > 0) {
+                                let pipeline = pipelinesRes.json[0];
+                                out = { status: this.#mapCiStatus(pipeline.status), url: pipeline.web_url || null };
+                                break;
+                            }
+
+                            // 2) External commit statuses API (needs token, also for public repos)
+                            let statusUrl = `${projectApiUrl}/repository/commits/${commitSha}/statuses`;
+                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
                             if (statusRes.ok && Array.isArray(statusRes.json) && statusRes.json.length > 0) {
                                 let statuses = statusRes.json;
-                                let hasFailure = statuses.some(s => s.status === 'failed' || s.status === 'canceled');
-                                let hasPending = statuses.some(s => s.status === 'running' || s.status === 'pending');
-                                let failedItem = statuses.find(s => s.status === 'failed' || s.status === 'canceled');
+                                let mapped = statuses.map(s => this.#mapCiStatus(s.status));
+                                let failedItem = statuses.find((s, i) => mapped[i] === 'failure');
                                 let targetUrl = (failedItem && failedItem.target_url) || statuses[0].target_url || null;
 
-                                if (hasFailure) {
+                                if (mapped.includes('failure')) {
                                     out = { status: 'failure', url: targetUrl };
-                                } else if (hasPending) {
+                                } else if (mapped.includes('pending')) {
                                     out = { status: 'pending', url: targetUrl };
-                                } else {
+                                } else if (mapped.includes('success')) {
                                     out = { status: 'success', url: targetUrl };
+                                } else {
+                                    out = { status: 'none', url: null };
                                 }
-                            } else if (statusRes.ok) {
-                                out = { status: 'none', url: null };
-                            } else {
-                                throw new Error(`GitLab commit statuses API error (${statusRes.status || 'unknown'})`);
+                                break;
                             }
+
+                            // An API answered OK but there is no CI for this commit
+                            if (pipelinesRes.ok || statusRes.ok) {
+                                out = { status: 'none', url: null };
+                                break;
+                            }
+
+                            // 3) Web endpoint fallback (public repos, no token, no API)
+                            let webResult = await this.#ciStatusFromWebPipelines(commitSha);
+                            if (webResult) {
+                                out = webResult;
+                                break;
+                            }
+
+                            // 4) SVG badge fallback (branch level -- not commit specific)
+                            if (!super.isEmptyString(thirdParameter)) {
+                                let badgeResult = await this.#ciStatusFromSvgBadge(thirdParameter);
+                                if (badgeResult) {
+                                    out = badgeResult;
+                                    break;
+                                }
+                            }
+
+                            throw new Error(`GitLab CI status could not be determined (pipelines API: ${pipelinesRes.status || 'unknown'}, statuses API: ${statusRes.status || 'unknown'})`);
                         }catch (err){
                             global.warn(err);
                             throw err;
