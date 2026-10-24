@@ -319,6 +319,7 @@ div#inner-content {
 }
 
 .top-titlebar-ci-placeholder {
+  visibility: hidden;
   display: inline-block;
   vertical-align: middle;
   width: 36px;

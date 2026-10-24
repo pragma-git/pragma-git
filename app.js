@@ -7174,7 +7174,7 @@ function setCachedCiStatus(repoUrl, commitSha, ciData) {
 
 function updateCiBadge(ciData) {
     let badge = document.getElementById('top-titlebar-ci-badge');
-    if (!badge) return;
+    if (!badge) return;  
 
     if (!ciData || ciData.status === 'none' || !ciData.status) {
         badge.style.display = 'none';
@@ -9056,6 +9056,8 @@ window.onload = async function() {
   pragmaLog('Done starting app');
   pragmaLog('');
   
+  // Fix that is it hidden when starting (was misplaced in GUI at start)
+  document.getElementById('top-titlebar-ci-placeholder').style.visibility = 'visible';
   
 
 };
