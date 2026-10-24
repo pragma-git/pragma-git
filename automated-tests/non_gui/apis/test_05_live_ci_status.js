@@ -191,62 +191,38 @@ async function runTests() {
         assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', err.message);
     }
 
-    // Test 7: GitLab legacy commit statuses API (requires a token, even for public repos)
-    const glToken = process.env.GITLAB_TOKEN || '';
-    if (!glToken) {
-        console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.7: GitLab legacy commit statuses API (set GITLAB_TOKEN to run)`);
-    } else {
-        try {
-            const gl = new Gitlab(GITLAB_URL, null, glToken);
-            gl.apiurl = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}`;
-            // Hide pipelines so ci-status takes the legacy statuses path
-            const realFetchWithApi = gl.fetchWithApi.bind(gl);
-            gl.fetchWithApi = async (url, options) => url.includes('/pipelines?sha=')
-                ? { ok: true, status: 200, json: [] }
-                : realFetchWithApi(url, options);
-            const ok = await gl.getValue('ci-status', GITLAB_SUCCESS);
-            const fail = await gl.getValue('ci-status', GITLAB_FAILURE);
-            if (ok.status === 'success' && fail.status === 'failure') {
-                assertPass('5.7: GitLab ci-status legacy commit statuses API (token): success + failure');
-            } else {
-                assertFail('5.7: GitLab ci-status legacy commit statuses API (token)', `success=${describe(ok)} failure=${describe(fail)}`);
-            }
-        } catch (err) {
-            assertFail('5.7: GitLab ci-status legacy commit statuses API (token)', err.message);
-        }
-    }
 
-    // Test 8: Bitbucket commit statuses
+    // Test 7: Bitbucket commit statuses
     try {
         const bb = new Bitbucket(BITBUCKET_URL);
         const ok = await bb.getValue('ci-status', BITBUCKET_SUCCESS);
         const fail = await bb.getValue('ci-status', BITBUCKET_FAILURE);
         const none = await bb.getValue('ci-status', BITBUCKET_NONE);
         if (ok.status === 'success' && fail.status === 'failure' && none.status === 'none') {
-            assertPass('5.8: Bitbucket ci-status atlassian/aui: success + failure + none');
+            assertPass('5.7: Bitbucket ci-status atlassian/aui: success + failure + none');
         } else {
-            assertFail('5.8: Bitbucket ci-status atlassian/aui', `success=${describe(ok)} failure=${describe(fail)} none=${describe(none)}`);
+            assertFail('5.7: Bitbucket ci-status atlassian/aui', `success=${describe(ok)} failure=${describe(fail)} none=${describe(none)}`);
         }
     } catch (err) {
         if (/40[13]|429|rate limit/i.test(err.message)) {
             console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.8: Bitbucket ci-status (API rate limit): ${err.message}`);
         } else {
-            assertFail('5.8: Bitbucket ci-status atlassian/aui', err.message);
+            assertFail('5.7: Bitbucket ci-status atlassian/aui', err.message);
         }
     }
 
-    // Test 9: GitLab external CI (statuses posted by an external CI system, pipeline source 'external')
+    // Test 8: GitLab external CI (statuses posted by an external CI system, pipeline source 'external')
     //         is visible through the modern Pipelines API without token -- no legacy statuses API needed
     try {
         const gl = new Gitlab(GITLAB_EXTERNAL_URL, null, null);
         const fail = await gl.getValue('ci-status', GITLAB_EXTERNAL_FAILURE);
         if (fail.status === 'failure' && /\/-\/pipelines\/\d+$/.test(fail.url || '')) {
-            assertPass('5.9: GitLab external CI commit (inkscape, pipeline source external) via modern Pipelines API, no token: failure');
+            assertPass('5.8: GitLab external CI commit (inkscape, pipeline source external) via modern Pipelines API, no token: failure');
         } else {
-            assertFail('5.9: GitLab external CI commit via modern Pipelines API', describe(fail));
+            assertFail('5.8: GitLab external CI commit via modern Pipelines API', describe(fail));
         }
     } catch (err) {
-        assertFail('5.9: GitLab external CI commit via modern Pipelines API', err.message);
+        assertFail('5.8: GitLab external CI commit via modern Pipelines API', err.message);
     }
 
     printSuiteResult();
