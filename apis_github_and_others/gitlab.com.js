@@ -292,6 +292,27 @@ class gitlab extends General_git_rest_api {
                     //
                     // Static methods, NOT requiring initialize() call
                     // 
+                    case 'provider-name': {  // Template replacement name used in create_remote_repository.html ('Gitlab')
+                        out = 'Gitlab';
+                        break;
+                    }
+                    case 'display-name': {  // UI button label ('GitLab')
+                        out = 'GitLab';
+                        break;
+                    }
+                    case 'create-repo-labels': {  // Labels and external links for create_remote_repository.html
+                        out = {
+                            accountPreText: 'Gitlab username (',
+                            accountPostText: ')',
+                            accountLinkText: 'Register a Gitlab account',
+                            accountLinkUrl: 'https://gitlab.com/users/sign_up',
+                            tokenPreText: 'Token (',
+                            tokenPostText: ')',
+                            tokenLinkText: 'Create personal access token',
+                            tokenLinkUrl: 'https://gitlab.com/-/user_settings/personal_access_tokens'
+                        };
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"

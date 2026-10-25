@@ -205,6 +205,27 @@ class bitbucket extends General_git_rest_api {
                     //
                     // Static methods, NOT requiring initialize() call
                     // 
+                    case 'provider-name': {  // Template replacement name used in create_remote_repository.html ('Bitbucket')
+                        out = 'Bitbucket';
+                        break;
+                    }
+                    case 'display-name': {  // UI button label ('Bitbucket')
+                        out = 'Bitbucket';
+                        break;
+                    }
+                    case 'create-repo-labels': {  // Labels and external links for create_remote_repository.html
+                        out = {
+                            accountPreText: 'Bitbucket workspace-name (',
+                            accountPostText: ')',
+                            accountLinkText: 'Register a Bitbucket account',
+                            accountLinkUrl: 'https://bitbucket.org/',
+                            tokenPreText: 'Username : app-password (',
+                            tokenPostText: ')',
+                            tokenLinkText: 'Create a Bitbucket app-password',
+                            tokenLinkUrl: 'https://bitbucket.org/account/settings/app-passwords/'
+                        };
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             //out = 'x-token-auth';   // If default git oauth token
@@ -314,7 +335,29 @@ class bitbucket extends General_git_rest_api {
               
                 global.log(`getValue('${parameterName}') = ${out} `);
                 return out  // return value for parameterName (from json), or undefined
-        }             
+        }
+
+        formatTokenForDisplay(username, password) {
+            if (!password) {
+                return '';
+            }
+            if (username === 'x-token-auth' || !username) {
+                return password;
+            }
+            return `${username}:${password}`;
+        }
+
+        parseTokenForCredential(owner, token) {
+            // Guess OAuth by default; use user:app-password if colon-delimited
+            let username = 'x-token-auth';
+            let password = token;
+            let splitToken = String(token || '').split(':');
+            if (splitToken.length === 2) {
+                username = splitToken[0];
+                password = splitToken[1];
+            }
+            return { username: username, password: password };
+        }
 }
 
 module.exports = bitbucket;

@@ -18,64 +18,42 @@ async function runWhenDOMContentLoaded() {
             // Read data transferred 
             let provider_url = localState.gitCreateRemoteRepoWindow.data.provider;
             
-            // Change text to correct provider (replace Github from original file)
-            replaceInText( document.body, 'Github', name); 
-            
-            // Change to provider's icon
+            // Resolve provider instance and template replacement name
             try{
                 provider = await opener.opener.gitProvider(provider_url,  initialize = false); // Unknown owner so far, just use static functions
-                let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
-                document.getElementById( 'providerImage').src = iconPath;
+                if (!name) {
+                    name = await provider.getValue('provider-name');
+                }
             }catch (err){
-                console.warn('Failed getting image :');
+                console.warn('Failed resolving provider :');
                 console.warn(err);
             }
+
+            // Change text to correct provider (replace Github placeholder from create_remote_repository.html)
+            replaceInText( document.body, 'Github', name); 
             
-            // Change texts and links for providers
-            let labelStruct = {};
-            switch (name) {
-                
-                case 'Github': {
-                    labelStruct.accountName_label = makeLabel( 
-                        'Github username (', ')', 
-                        'Register Github account', 'https://github.com/join'
-                    );
-                    labelStruct.token_label = makeLabel( 
-                        'Token (', ')', 
-                        'Create personal access token', 'https://github.com/settings/tokens'
-                    );
+            // Change to provider's icon and provider-specific labels/links
+            try{
+                let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+                document.getElementById( 'providerImage').src = iconPath;
 
+                let labels = await provider.getValue('create-repo-labels');
+                if (labels) {
+                    let labelStruct = {
+                        accountName_label: makeLabel(
+                            labels.accountPreText, labels.accountPostText,
+                            labels.accountLinkText, labels.accountLinkUrl
+                        ),
+                        token_label: makeLabel(
+                            labels.tokenPreText, labels.tokenPostText,
+                            labels.tokenLinkText, labels.tokenLinkUrl
+                        )
+                    };
                     setLabels( labelStruct);
-                    break;
-                };
-                
-                case 'Gitlab': {
-                    labelStruct.accountName_label = makeLabel( 
-                        'Gitlab username (', ')', 
-                        'Register a Gitlab account', 'https://gitlab.com/users/sign_up'
-                    );
-                    labelStruct.token_label = makeLabel( 
-                        'Token (', ')', 
-                        'Create personal access token', 'https://gitlab.com/-/user_settings/personal_access_tokens'
-                    );
-
-                    setLabels( labelStruct);
-                    break;
-                };
-                
-                case 'Bitbucket': {
-                    labelStruct.accountName_label = makeLabel( 
-                        'Bitbucket workspace-name (', ')', 
-                        'Register a Bitbucket account', 'https://bitbucket.org/'
-                    );
-                    labelStruct.token_label = makeLabel( 
-                        'Username : app-password (', ')', 
-                        'Create a Bitbucket app-password', 'https://bitbucket.org/account/settings/app-passwords/'
-                    );
-
-                    setLabels( labelStruct);
-                    break;
-                };
+                }
+            }catch (err){
+                console.warn('Failed getting provider icon or labels :');
+                console.warn(err);
             }
             
 
@@ -206,21 +184,12 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
         if (displayedRepoMax > 0){
             guessedUsername = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].username;
             guessedPassword = allCredentials[ matchedRepoIndeces[ displayedRepoIndex - 1] ].password;
-    
+            if (provider && typeof provider.formatTokenForDisplay === 'function') {
+                guessedPassword = provider.formatTokenForDisplay(guessedUsername, guessedPassword);
+            }
         }else{
             guessedUsername = '';
             guessedPassword = '';
-        }
-        
-        // Bitbucket special (modify guessedPassword)
-        if (name == 'Bitbucket'){
-            if (guessedUsername == 'x-token-auth'){
-                // Oauth
-                guessedPassword = guessedPassword; 
-            }else{
-                // App-password on format user:password 
-                guessedPassword = `${guessedUsername}:${guessedPassword}`
-            }
         }
         
         // Update html
@@ -272,36 +241,10 @@ async function createRepo(){// Create Repo
         console.log('rememberCredential');
         
         try{
-                switch (name) {
-                    
-                    case 'Github': {
-                        await opener.opener.setCredential( giturl, OWNER, TOKEN);
-                        break;
-                    };
-                    
-                    case 'Gitlab': {
-                        await opener.opener.setCredential( giturl, OWNER, TOKEN);
-                        break;
-                    };
-                    
-                    case 'Bitbucket': {
-                        // Recommended to use app-password
-                        
-                        // Guess OAuth
-                        let username = 'x-token-auth';
-                        let password = TOKEN;
-                        
-                        // Corect if App-password (which is what I recommend)
-                        let splitToken = TOKEN.split(':');
-                        if ( splitToken.length == 2){
-                            username = splitToken[0];
-                            password = splitToken[1];
-                        }
-                        
-                        await opener.opener.setCredential( giturl, username, password);
-                        break;
-                    };
-                }
+            let cred = (provider && typeof provider.parseTokenForCredential === 'function')
+                ? provider.parseTokenForCredential(OWNER, TOKEN)
+                : { username: OWNER, password: TOKEN };
+            await opener.opener.setCredential( giturl, cred.username, cred.password);
         }catch(err){
             console.err(err);
         }

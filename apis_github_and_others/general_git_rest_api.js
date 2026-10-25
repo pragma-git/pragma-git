@@ -234,6 +234,22 @@ class git_rest_api {
             return null;
         }
 
+        static async getProviders(themeMode = 'lightmode') {
+            // Returns metadata for all supported remote providers for UI button rendering
+            const defaultUrls = ['https://github.com', 'https://gitlab.com', 'https://bitbucket.org'];
+            const providers = [];
+            for (const url of defaultUrls) {
+                const inst = new git_rest_api(url);
+                providers.push({
+                    name: await inst.getValue('provider-name'),
+                    displayName: await inst.getValue('display-name'),
+                    provider: url,
+                    icon: await inst.getValue('icon', themeMode)
+                });
+            }
+            return providers;
+        }
+
     // Public methods
         async #resolveDelegate() {
             if (!this.#delegate) {
@@ -270,6 +286,24 @@ class git_rest_api {
         async createRepo(owner, token, newRepoName, description, isPrivate, projectKey) {
             let delegate = await this.#resolveDelegate();
             return await delegate.createRepo(owner, token, newRepoName, description, isPrivate, projectKey);
+        }
+
+        formatTokenForDisplay(username, password) {
+            // Formats stored git credential username/password for display in the Create Remote Repository token field.
+            // Overridden by providers that combine username:password (e.g. Bitbucket app-passwords).
+            if (this.#delegate) {
+                return this.#delegate.formatTokenForDisplay(username, password);
+            }
+            return password || '';
+        }
+
+        parseTokenForCredential(owner, token) {
+            // Parses owner and token input from Create Remote Repository into { username, password } for setCredential().
+            // Overridden by providers with special token formats (e.g. Bitbucket).
+            if (this.#delegate) {
+                return this.#delegate.parseTokenForCredential(owner, token);
+            }
+            return { username: owner, password: token };
         }
     
         async fetchWithApi( apiurl, options){

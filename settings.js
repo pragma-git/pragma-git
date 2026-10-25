@@ -1622,6 +1622,7 @@ async function injectIntoSettingsJs(document) {
        
     _callback('repoRadiobuttonChanged', {id: state.repoNumber});  //draws branchTab too
     await drawRepoTab(document);
+    await drawCreateRemoteRepoButtons(document);
     await drawSoftwareTab(document);
     await drawPath() // Write path to System info
     await updateProjectFolderInfo();
@@ -1854,15 +1855,36 @@ async function drawRepoTab(document){
     let table = document.getElementById("settingsTableBody");
     generateRepoTable(document, table, data);
 }
+async function drawCreateRemoteRepoButtons(document){
+    let container = document.getElementById("CreateRemoteRepoDiv");
+    if (!container) return;
+    try{
+        let General_git_rest_api = require('apis_github_and_others/general_git_rest_api.js');
+        let providers = await General_git_rest_api.getProviders('lightmode');
+        let html = 'Or create new repository : ';
+        for (let p of providers){
+            html += `<button onclick="_callback('openProviderWindow', {name: '${p.name}', provider: '${p.provider}'});">
+                <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="${p.icon}">
+                ${p.displayName}
+            </button> `;
+        }
+        container.innerHTML = html;
+    }catch (err){
+        console.warn('Failed drawing CreateRemoteRepoDiv buttons:', err);
+    }
+}
 async function  drawProviderIcon( iconId, newUrl){
      // Provider icon
                              
     let iconPath = '/apis_github_and_others/git-provider-icons/Blank.png';
     let webUrl = '';
+    let isDark = (typeof document !== 'undefined' && document.body)
+        ? document.body.classList.contains('dark')
+        : !!localState.dark;
                     
     try{
         let provider = await opener.gitProvider( newUrl, false); // Run static (second argument = false) to get icon quicker
-        iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
+        iconPath =  await provider.getValue('icon', isDark ? 'darkmode' : 'lightmode' );
         webUrl = await provider.getValue('web-url');
     }catch (err){
         
@@ -2982,7 +3004,7 @@ async function updateRemoteInfo( ){
           
     }catch (err){
 		html += '<code> <table class="keyValueTable"><tr><td style="white-space: nowrap;"> &nbsp';
-		if ( err.toString().includes('unknown scriptName') ){
+		if ( err.toString().includes('unknown scriptName') || err.toString().includes('unknown provider') ){
 			html += 'Unknown git provider  <br>';
 		}else{        
 			html += 'Error reading git remote info  <br>';
@@ -3209,8 +3231,6 @@ function displayAlert(title, message){
 
 // Handle instant theme update for icons and table text
 function onThemeChanged() {
-    let isDark = document.body.classList.contains('dark');
-    
     // 1. Force layout reflow on content sections to update CSS inherited colors
     let contents = document.querySelectorAll('.content, .tool-content, table');
     contents.forEach(el => {
@@ -3220,18 +3240,11 @@ function onThemeChanged() {
         el.style.display = orig;
     });
     
-    // 2. Update provider icons for light/dark theme
-    let imgs = document.querySelectorAll('img.remoteIcon');
-    imgs.forEach(img => {
-        if (isDark) {
-            if (img.src.includes('github-mark.png')) {
-                img.src = img.src.replace('github-mark.png', 'github-mark-white.png');
-            }
-        } else {
-            if (img.src.includes('github-mark-white.png')) {
-                img.src = img.src.replace('github-mark-white.png', 'github-mark.png');
-            }
+    // 2. Update provider icons for light/dark theme via provider classes
+    if (state && Array.isArray(state.repos)) {
+        for (let i = 0; i < state.repos.length; i++) {
+            drawProviderIcon(i + 30000, state.repos[i].remoteURL);
         }
-    });
+    }
 }
 window.onThemeChanged = onThemeChanged;

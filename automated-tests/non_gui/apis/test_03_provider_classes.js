@@ -162,6 +162,37 @@ async function runTests() {
         GeneralApi.hostProviderCache = {};
     }
 
+    // Test 8: Provider metadata (getProviders, create-repo-labels, formatTokenForDisplay, parseTokenForCredential)
+    const providersList = await GeneralApi.getProviders('lightmode');
+    const ghInst = new GeneralApi('https://github.com/org/repo.git');
+    const glInst = new GeneralApi('https://gitlab.com/org/repo.git');
+    const bbInst = new GeneralApi('https://bitbucket.org/org/repo.git');
+
+    const ghLabels = await ghInst.getValue('create-repo-labels');
+    const glLabels = await glInst.getValue('create-repo-labels');
+    const bbLabels = await bbInst.getValue('create-repo-labels');
+
+    const ghCred = ghInst.parseTokenForCredential('octocat', 'ghp_123');
+    const bbOauthCred = bbInst.parseTokenForCredential('workspace', 'oauth_tok');
+    const bbAppPassCred = bbInst.parseTokenForCredential('workspace', 'myuser:app_secret');
+
+    assert(
+        providersList.length === 3 &&
+        providersList[0].name === 'Github' && providersList[0].displayName === 'GitHub' &&
+        providersList[1].name === 'Gitlab' && providersList[1].displayName === 'GitLab' &&
+        providersList[2].name === 'Bitbucket' && providersList[2].displayName === 'Bitbucket' &&
+        ghLabels.accountLinkUrl === 'https://github.com/join' &&
+        glLabels.tokenLinkUrl.includes('personal_access_tokens') &&
+        bbLabels.tokenLinkUrl.includes('app-passwords') &&
+        ghInst.formatTokenForDisplay('octocat', 'ghp_123') === 'ghp_123' &&
+        bbInst.formatTokenForDisplay('x-token-auth', 'oauth_tok') === 'oauth_tok' &&
+        bbInst.formatTokenForDisplay('myuser', 'app_secret') === 'myuser:app_secret' &&
+        ghCred.username === 'octocat' && ghCred.password === 'ghp_123' &&
+        bbOauthCred.username === 'x-token-auth' && bbOauthCred.password === 'oauth_tok' &&
+        bbAppPassCred.username === 'myuser' && bbAppPassCred.password === 'app_secret',
+        'Provider classes supply UI metadata, create-repo labels, and credential token formatting/parsing'
+    );
+
     printSuiteResult();
 }
 

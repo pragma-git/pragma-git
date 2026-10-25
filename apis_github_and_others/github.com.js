@@ -154,6 +154,27 @@ class github extends General_git_rest_api {
                     //
                     // Static methods, NOT requiring initialize() call
                     // 
+                    case 'provider-name': {  // Template replacement name used in create_remote_repository.html ('Github')
+                        out = 'Github';
+                        break;
+                    }
+                    case 'display-name': {  // UI button label ('GitHub')
+                        out = 'GitHub';
+                        break;
+                    }
+                    case 'create-repo-labels': {  // Labels and external links for create_remote_repository.html
+                        out = {
+                            accountPreText: 'Github username (',
+                            accountPostText: ')',
+                            accountLinkText: 'Register Github account',
+                            accountLinkUrl: 'https://github.com/join',
+                            tokenPreText: 'Token (',
+                            tokenPostText: ')',
+                            tokenLinkText: 'Create personal access token',
+                            tokenLinkUrl: 'https://github.com/settings/tokens'
+                        };
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);   // "https://github.com/pragma-git/pragma-git.git"
