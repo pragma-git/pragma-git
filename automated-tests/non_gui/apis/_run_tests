@@ -36,7 +36,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#
 #    5.4  | GitLab Modern Pipelines API (by numeric project ID 13083) | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No
 #    5.5  | GitLab Web pipelines.json (/-/commit/SHA/pipelines.json)  | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No (ci-status-web)
 #    5.6  | GitLab SVG Badge (/badges/master/pipeline.svg)            | gitlab-org/gitlab-foss  | Live master branch status                  | --                                         | No (ci-status-badge)
-#    5.7  | Bitbucket Commit Statuses API (/commit/SHA/statuses)      | atlassian/aui           | 592af90b018b2d35fac96129e5fbeec1ed826fe2   | 9c19f07ff461fdc970bd0e2a093414b9a3db61bc   | No (+ dfeff30e for none)
+#    5.7  | Bitbucket Commit Statuses API (/commit/SHA/statuses)      | atlassian/aui           | 592af90b018b2d35fac96129e5fbeec1ed826fe2   | e99b3d8eb588e253c562b7c4014a97cd3d8b3301   | No (+ dfeff30e for none)
 #    5.8  | GitLab External CI Statuses via Modern Pipelines API      | inkscape/inkscape       | 7935678476697f9ccc6a6b7881e9430d27e5a184   | 000dddd8d3bd7eb08ec9916d456acb61313e80c0   | No (source: external)
 #    5.9  | Live self-hosted auto-detection (no provider name in URL) | code.videolan.org (GL)  | Auto-detects GitLab via /api/v4/version    | --                                         | No (new GeneralApi)
 #         |                                                           | gits-15.sys.kth.se (GH) | Auto-detects GitHub via /api/v3/meta       | --                                         | No (new GeneralApi)

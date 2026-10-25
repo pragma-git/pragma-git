@@ -61,7 +61,7 @@ const GITLAB_EXTERNAL_FAILURE = '000dddd8d3bd7eb08ec9916d456acb61313e80c0'; // p
 
 const BITBUCKET_URL = 'https://bitbucket.org/atlassian/aui.git';
 const BITBUCKET_SUCCESS = '592af90b018b2d35fac96129e5fbeec1ed826fe2'; // 3 x SUCCESSFUL
-const BITBUCKET_FAILURE = '9c19f07ff461fdc970bd0e2a093414b9a3db61bc'; // FAILED
+const BITBUCKET_FAILURE = 'e99b3d8eb588e253c562b7c4014a97cd3d8b3301'; // historical master commit with FAILED statuses
 const BITBUCKET_NONE = 'dfeff30ea5e2aa95d1c1e3c5011f7cd0e7ba7b41';    // no statuses
 
 function resolveGitHubToken() {

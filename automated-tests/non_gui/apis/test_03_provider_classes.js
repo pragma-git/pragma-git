@@ -10,9 +10,14 @@
  *   5. General_git_rest_api direct constructor returns the matching subclass (github, gitlab, bitbucket)
  *   6. General_git_rest_api URL & path heuristics for self-hosted GitLab, GitHub Enterprise, and Bitbucket Server
  *   7. General_git_rest_api.detectProvider live HTTP probing and host caching for custom self-hosted domains
+ *   8. Provider metadata (getProviders, create-repo-labels, formatTokenForDisplay, parseTokenForCredential)
+ *   9. settings.js provider UI functions (drawCreateRemoteRepoButtons, drawProviderIcon, onThemeChanged)
+ *  10. create_remote_repository.js provider dialog & credential functions (runWhenDOMContentLoaded, replaceInText, updateCredentialsText, rememberCredential)
  */
 
+const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 process.env.NODE_PATH = REPO_ROOT;
@@ -191,6 +196,173 @@ async function runTests() {
         bbOauthCred.username === 'x-token-auth' && bbOauthCred.password === 'oauth_tok' &&
         bbAppPassCred.username === 'myuser' && bbAppPassCred.password === 'app_secret',
         'Provider classes supply UI metadata, create-repo labels, and credential token formatting/parsing'
+    );
+
+    // Helper to extract a named function from a source file for VM execution
+    function extractFunction(sourceCode, name) {
+        const match = sourceCode.match(new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\([^)]*\\)\\s*\\{'));
+        if (!match) throw new Error('Could not find function ' + name);
+        const start = match.index;
+        let openBraces = 0;
+        let started = false;
+        for (let i = start; i < sourceCode.length; i++) {
+            if (sourceCode[i] === '{') {
+                openBraces++;
+                started = true;
+            } else if (sourceCode[i] === '}') {
+                openBraces--;
+                if (started && openBraces === 0) {
+                    return sourceCode.substring(start, i + 1);
+                }
+            }
+        }
+        throw new Error('Unbalanced braces in function ' + name);
+    }
+
+    // Test 9: settings.js provider UI functions (drawCreateRemoteRepoButtons, drawProviderIcon, onThemeChanged)
+    const settingsJsCode = fs.readFileSync(path.join(REPO_ROOT, 'settings.js'), 'utf8');
+    const createRepoDiv = { innerHTML: '' };
+    const iconAnchor = {
+        href: '',
+        attrs: {},
+        setAttribute(k, v) { this.attrs[k] = v; },
+        removeAttribute(k) { delete this.attrs[k]; this[k] = ''; }
+    };
+    const iconImg = { src: '', parentElement: iconAnchor };
+
+    const settingsSandbox = {
+        require,
+        console: { log: () => {}, warn: () => {}, error: () => {} },
+        localState: { dark: false },
+        state: {
+            repos: [
+                { remoteURL: 'https://github.com/octocat/Hello-World.git' }
+            ]
+        },
+        opener: {
+            gitProvider: async (url) => new GeneralApi(url)
+        },
+        document: {
+            body: {
+                _dark: false,
+                classList: {
+                    contains(cls) { return cls === 'dark' ? settingsSandbox.document.body._dark : false; }
+                }
+            },
+            getElementById(id) {
+                if (id === 'CreateRemoteRepoDiv') return createRepoDiv;
+                if (id === 30000) return iconImg;
+                return null;
+            },
+            querySelectorAll() { return []; }
+        }
+    };
+    vm.createContext(settingsSandbox);
+    vm.runInContext(extractFunction(settingsJsCode, 'drawCreateRemoteRepoButtons'), settingsSandbox);
+    vm.runInContext(extractFunction(settingsJsCode, 'drawProviderIcon'), settingsSandbox);
+    vm.runInContext(extractFunction(settingsJsCode, 'onThemeChanged'), settingsSandbox);
+
+    await settingsSandbox.drawCreateRemoteRepoButtons(settingsSandbox.document);
+    await settingsSandbox.drawProviderIcon(30000, 'https://github.com/octocat/Hello-World.git');
+    const lightIconSrc = iconImg.src;
+    const webHref = iconAnchor.href;
+
+    // Simulate switching to dark mode and calling onThemeChanged()
+    settingsSandbox.document.body._dark = true;
+    settingsSandbox.onThemeChanged();
+    // Wait for async drawProviderIcon triggered by onThemeChanged
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const darkIconSrc = iconImg.src;
+
+    assert(
+        createRepoDiv.innerHTML.includes("name: 'Github', provider: 'https://github.com'") &&
+        createRepoDiv.innerHTML.includes("name: 'Gitlab', provider: 'https://gitlab.com'") &&
+        createRepoDiv.innerHTML.includes("name: 'Bitbucket', provider: 'https://bitbucket.org'") &&
+        createRepoDiv.innerHTML.includes('GitHub') &&
+        createRepoDiv.innerHTML.includes('GitLab') &&
+        createRepoDiv.innerHTML.includes('Bitbucket') &&
+        lightIconSrc.includes('github-mark.png') &&
+        darkIconSrc.includes('github-mark-white.png') &&
+        webHref === 'https://github.com/octocat/Hello-World',
+        'settings.js drawCreateRemoteRepoButtons, drawProviderIcon, and onThemeChanged dynamically render buttons and theme icons'
+    );
+
+    // Test 10: create_remote_repository.js provider dialog & credential functions
+    const createRepoJsCode = fs.readFileSync(path.join(REPO_ROOT, 'create_remote_repository.js'), 'utf8');
+    const domElements = {
+        providerImage: { src: '' },
+        accountName_label: { innerHTML: '' },
+        token_label: { innerHTML: '' },
+        token: { value: '' },
+        matchedCurrentPos: { innerText: '' },
+        matchedMax: { innerText: '' }
+    };
+    const titleTextNode = { nodeType: 3, textContent: 'Create Github repository' };
+    const textareaNode = { nodeType: 1, type: 'textarea', placeholder: 'Enter Github token', childNodes: [] };
+    const bodyElement = { nodeType: 1, childNodes: [titleTextNode, textareaNode] };
+
+    let savedCred = null;
+    const createRepoSandbox = {
+        console: { log: () => {}, warn: () => {}, err: () => {}, error: () => {} },
+        setTimeout: () => {},
+        runWhenPageLoaded: () => {},
+        Node: { ELEMENT_NODE: 1, TEXT_NODE: 3, DOCUMENT_NODE: 9 },
+        localState: {
+            dark: false,
+            gitCreateRemoteRepoWindow: {
+                data: { name: 'Bitbucket', provider: 'https://bitbucket.org' }
+            }
+        },
+        name: 'Bitbucket',
+        provider: null,
+        allCredentials: [
+            { username: 'bbuser', password: 'bb_app_password' },
+            { username: 'x-token-auth', password: 'bb_oauth_token' }
+        ],
+        matchedRepoIndeces: [0, 1],
+        displayedRepoIndex: 1,
+        displayedRepoMax: 2,
+        opener: {
+            opener: {
+                gitProvider: async (url) => new GeneralApi(url),
+                setCredential: async (url, username, password) => {
+                    savedCred = { url, username, password };
+                }
+            }
+        },
+        document: {
+            body: bodyElement,
+            getElementById(id) { return domElements[id] || null; }
+        }
+    };
+    vm.createContext(createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'replaceInText'), createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'runWhenDOMContentLoaded'), createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'updateCredentialsText'), createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'rememberCredential'), createRepoSandbox);
+
+    await createRepoSandbox.runWhenDOMContentLoaded();
+
+    // Test credential display for App Password (index 1 -> 'bbuser:bb_app_password') and OAuth (index 2 -> 'bb_oauth_token')
+    createRepoSandbox.updateCredentialsText();
+    const displayedAppPass = domElements.token.value;
+    createRepoSandbox.displayedRepoIndex = 2;
+    createRepoSandbox.updateCredentialsText();
+    const displayedOauth = domElements.token.value;
+
+    // Test rememberCredential parsing 'bbuser:bb_app_password' into username + password
+    await createRepoSandbox.rememberCredential('https://bitbucket.org/bbuser/newrepo.git', 'bbuser', 'bbuser:bb_app_password');
+
+    assert(
+        titleTextNode.textContent === 'Create Bitbucket repository' &&
+        textareaNode.placeholder === 'Enter Bitbucket token' &&
+        domElements.providerImage.src.includes('bitbucket_blue.png') &&
+        domElements.accountName_label.innerHTML.includes('Bitbucket workspace-name') &&
+        domElements.token_label.innerHTML.includes('app-passwords') &&
+        displayedAppPass === 'bbuser:bb_app_password' &&
+        displayedOauth === 'bb_oauth_token' &&
+        savedCred && savedCred.username === 'bbuser' && savedCred.password === 'bb_app_password',
+        'create_remote_repository.js replaces Github placeholder, sets provider labels, and formats/saves credentials via provider API'
     );
 
     printSuiteResult();
