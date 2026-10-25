@@ -13,7 +13,7 @@
  *   5. GitLab    web pipelines.json, called directly (ci-status-web)       success + failure
  *   6. GitLab    SVG pipeline badge, called directly (ci-status-badge)     valid status
  *   7. Bitbucket atlassian/aui           (commit statuses)                  success + failure + none
- *   8. GitLab    inkscape/inkscape external CI pipeline via modern API      failure (no token)
+ *   8. GitLab    inkscape/inkscape external CI pipeline via modern API      success + failure (no token)
  *
  * NOTE: If a provider purges old pipelines, update the hashes below.
  */
@@ -56,6 +56,7 @@ const GITLAB_SUCCESS = 'd7b9a6176ab4e279465ba3ee09922cde2b74de47';   // master p
 const GITLAB_FAILURE = '4d25d51356d8d855381ab9ab90b56cb63a338075';   // master pipeline 2968873877: failed
 
 const GITLAB_EXTERNAL_URL = 'https://gitlab.com/inkscape/inkscape.git';
+const GITLAB_EXTERNAL_SUCCESS = '7935678476697f9ccc6a6b7881e9430d27e5a184'; // pipeline 290189805, source 'external': success
 const GITLAB_EXTERNAL_FAILURE = '000dddd8d3bd7eb08ec9916d456acb61313e80c0'; // pipeline 327349010, source 'external': failed
 
 const BITBUCKET_URL = 'https://bitbucket.org/atlassian/aui.git';
@@ -204,7 +205,7 @@ async function runTests() {
         }
     } catch (err) {
         if (/40[13]|429|rate limit/i.test(err.message)) {
-            console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.8: Bitbucket ci-status (API rate limit): ${err.message}`);
+            console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.7: Bitbucket ci-status (API rate limit): ${err.message}`);
         } else {
             assertFail('5.7: Bitbucket ci-status atlassian/aui', err.message);
         }
@@ -214,14 +215,16 @@ async function runTests() {
     //         is visible through the modern Pipelines API without token -- no legacy statuses API needed
     try {
         const gl = new Gitlab(GITLAB_EXTERNAL_URL, null, null);
+        const ok = await gl.getValue('ci-status', GITLAB_EXTERNAL_SUCCESS);
         const fail = await gl.getValue('ci-status', GITLAB_EXTERNAL_FAILURE);
-        if (fail.status === 'failure' && /\/-\/pipelines\/\d+$/.test(fail.url || '')) {
-            assertPass('5.8: GitLab external CI commit (inkscape, pipeline source external) via modern Pipelines API, no token: failure');
+        if (ok.status === 'success' && fail.status === 'failure' &&
+            /\/-\/pipelines\/\d+$/.test(ok.url || '') && /\/-\/pipelines\/\d+$/.test(fail.url || '')) {
+            assertPass('5.8: GitLab external CI commits (inkscape, pipeline source external) via modern Pipelines API, no token: success + failure');
         } else {
-            assertFail('5.8: GitLab external CI commit via modern Pipelines API', describe(fail));
+            assertFail('5.8: GitLab external CI commits via modern Pipelines API', `success=${describe(ok)} failure=${describe(fail)}`);
         }
     } catch (err) {
-        assertFail('5.8: GitLab external CI commit via modern Pipelines API', err.message);
+        assertFail('5.8: GitLab external CI commits via modern Pipelines API', err.message);
     }
 
     printSuiteResult();

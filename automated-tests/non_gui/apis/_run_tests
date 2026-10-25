@@ -20,6 +20,43 @@
 ## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
 
+# ==============================================================================
+# CI STATUS TEST REFERENCE (Live vs. Mocked)
+# ==============================================================================
+#
+# 1. LIVE TESTS (Zero Mocking) -- test_05_live_ci_status.js
+#    Makes real HTTPS requests against public repos without requiring GitLab or
+#    Bitbucket tokens (and with automatic unauthenticated fallback for GitHub).
+#
+#    Test | Provider & Endpoint                                       | Public Repo             | Success Commit Hash                        | Failure Commit Hash                        | Mocked?
+#    -----+-----------------------------------------------------------+-------------------------+--------------------------------------------+--------------------------------------------+--------
+#    5.1  | DNS connectivity check                                    | gitlab.com              | --                                         | --                                         | No
+#    5.2  | GitHub Check Runs API (/commits/SHA/check-runs)           | pragma-git/pragma-git   | 11f50c6fa77d76c80ae9f493d6e3c9ee1abff68a   | cbccde8611342a8c78fb9c8bc0a3c09dc713f035   | No
+#    5.3  | GitLab Modern Pipelines API (encoded project path)        | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No
+#    5.4  | GitLab Modern Pipelines API (by numeric project ID 13083) | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No
+#    5.5  | GitLab Web pipelines.json (/-/commit/SHA/pipelines.json)  | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No (ci-status-web)
+#    5.6  | GitLab SVG Badge (/badges/master/pipeline.svg)            | gitlab-org/gitlab-foss  | Live master branch status                  | --                                         | No (ci-status-badge)
+#    5.7  | Bitbucket Commit Statuses API (/commit/SHA/statuses)      | atlassian/aui           | 592af90b018b2d35fac96129e5fbeec1ed826fe2   | 9c19f07ff461fdc970bd0e2a093414b9a3db61bc   | No (+ dfeff30e for none)
+#    5.8  | GitLab External CI Statuses via Modern Pipelines API      | inkscape/inkscape       | 7935678476697f9ccc6a6b7881e9430d27e5a184   | 000dddd8d3bd7eb08ec9916d456acb61313e80c0   | No (source: external)
+#
+# 2. MOCKED UNIT TESTS (Offline) -- test_04_ci_status.js & app_function_calls/test_03_ci_cache.js
+#    Runs offline (<1s) to verify status mapping, fallback chaining when an API
+#    is down (simulated 503), and stale-while-revalidate cache updates.
+#
+#    Test          | Provider             | What is Tested                                                         | How the Mock is Done
+#    --------------+----------------------+------------------------------------------------------------------------+-------------------------------------------------------------------------
+#    test_04 #1    | All 3 providers      | Missing/empty SHA returns { status: 'none', url: null }                | No mock needed (returns before any network call).
+#    test_04 #2    | GitHub               | Commit Status API (/status) & Check Runs API (/check-runs) pass/fail   | Stubs gh.fetchWithApi to return canned JSON by SHA in URL.
+#    test_04 #3    | Bitbucket            | Commit statuses SUCCESSFUL, FAILED, and empty [] -> none               | Stubs bb.fetchWithApi to return canned { values: [...] } per SHA.
+#    test_04 #4    | GitLab               | Status mapping (success/warnings/failed/canceled/running/skipped)      | Stubs glModern.fetchWithApi with 2 pipelines (newest first must win).
+#    test_04 #5    | GitLab               | URL construction: encoded path vs. numeric project ID                  | Records exact URL passed to glModern.fetchWithApi.
+#    test_04 #6    | GitLab               | Private repo token forwarding (PRIVATE-TOKEN header)                   | Captures options.headers passed into glPrivate.fetchWithApi.
+#    test_04 #7    | GitLab               | Fallback from REST API (503) -> web pipelines.json                     | fetchWithApi returns 503; global.fetch returns canned JSON Response.
+#    test_04 #8    | GitLab               | Fallback from REST API (503) -> web (HTML) -> SVG badge                | fetchWithApi returns 503; global.fetch returns HTML + canned SVG text.
+#    test_04 #9    | GitLab               | Throws error when API, web, and badge sources all fail                 | fetchWithApi returns 503; global.fetch returns HTML; no branch given.
+#    test_03 #1-9  | app.js CI Cache      | Disk/memory cache, short SHA, badge DOM, stale-while-revalidate rerun  | Runs app.js functions in Node vm with temp ci_cache.json & stub provider.
+# ==============================================================================
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
