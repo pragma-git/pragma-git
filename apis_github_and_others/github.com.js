@@ -49,8 +49,11 @@ class github extends General_git_rest_api {
             
             // --- Provider-specific code :
                 
-                // That is : replace "github.com" with "api.github.com/repos", AND remove  ".git" at end
-                let url = giturl.replace( '.git', '').replace( 'github.com', 'api.github.com/repos')        
+                // Standard github.com uses api.github.com/repos; GitHub Enterprise uses <host>/api/v3/repos
+                let urlParts = new URL(giturl);
+                let host = urlParts.host;
+                let apiHost = (host.toLowerCase() === 'github.com') ? 'api.github.com/repos' : `${host}/api/v3/repos`;
+                let url = giturl.replace( '.git', '').replace( host, apiHost);        
                 
                 // Clean URL, if REST URL contains login info (not permitted)
                 if (url.includes('@') ){

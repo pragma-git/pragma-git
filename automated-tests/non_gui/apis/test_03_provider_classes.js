@@ -7,6 +7,9 @@
  *   2. github.com.js class instantiation, username, web-url, and icon getters
  *   3. gitlab.com.js class instantiation, username, web-url, and icon getters
  *   4. bitbucket.org.js class instantiation, username, web-url, and icon getters
+ *   5. General_git_rest_api direct constructor returns the matching subclass (github, gitlab, bitbucket)
+ *   6. General_git_rest_api URL & path heuristics for self-hosted GitLab, GitHub Enterprise, and Bitbucket Server
+ *   7. General_git_rest_api.detectProvider live HTTP probing and host caching for custom self-hosted domains
  */
 
 const path = require('path');
@@ -84,6 +87,80 @@ async function runTests() {
         bbIcon.includes('bitbucket_blue.png'),
         'Bitbucket class extracts username, web-url, and icon'
     );
+
+    // Test 5: Calling 'new General_git_rest_api(giturl, ...)' directly returns the matching provider subclass instance
+    const autoGh = new GeneralApi('https://github.com/octocat/Hello-World.git', 'octocat', 'gh-tok');
+    const autoGl = new GeneralApi('https://gitlab.com/gitlab-org/gitlab-foss.git', 'gitlab-org', 'gl-tok');
+    const autoBb = new GeneralApi('https://bitbucket.org/atlassian/aui.git', 'atlassian', 'bb-tok');
+    assert(
+        autoGh instanceof Github && autoGh instanceof GeneralApi && autoGh.TOKEN === 'gh-tok' &&
+        autoGl instanceof Gitlab && autoGl instanceof GeneralApi && autoGl.TOKEN === 'gl-tok' &&
+        autoBb instanceof Bitbucket && autoBb instanceof GeneralApi && autoBb.TOKEN === 'bb-tok',
+        'new General_git_rest_api(giturl) returns the matching Github, Gitlab, or Bitbucket subclass instance'
+    );
+
+    // Test 6: Self-hosted URL & path heuristics (without network calls)
+    const selfGlHost = new GeneralApi('https://gitlab.mycompany.internal/team/app.git');
+    const selfGlSubgroup = new GeneralApi('https://git.mycompany.internal/dept/subdept/project.git');
+    const selfGhHost = new GeneralApi('https://github.mycompany.internal/org/service.git');
+    const selfBbScm = new GeneralApi('https://git.mycompany.internal/scm/proj/repo.git');
+    assert(
+        selfGlHost instanceof Gitlab &&
+        selfGlSubgroup instanceof Gitlab &&
+        selfGhHost instanceof Github &&
+        selfGhHost.apiurl === 'https://github.mycompany.internal/api/v3/repos/org/service' &&
+        selfBbScm instanceof Bitbucket,
+        'General_git_rest_api resolves self-hosted GitLab (host/subgroup), GitHub Enterprise (/api/v3), and Bitbucket Server (/scm/)'
+    );
+
+    // Test 7: detectProvider probes unknown custom domains for GitLab / GitHub / Bitbucket and caches the host
+    const realFetch = global.fetch;
+    try {
+        GeneralApi.hostProviderCache = {};
+        let probeCalls = 0;
+        global.fetch = async (url) => {
+            probeCalls++;
+            if (String(url).startsWith('https://code.local-company.lan/api/v4/version')) {
+                // Typical unauthenticated response from a self-hosted GitLab instance
+                return new Response(JSON.stringify({ message: '401 Unauthorized' }), {
+                    status: 401,
+                    headers: { 'content-type': 'application/json', 'x-gitlab-meta': '{" correlation_id":"123"}' }
+                });
+            }
+            if (String(url).startsWith('https://ghe.local-company.lan/api/v3/meta')) {
+                return new Response(JSON.stringify({ verifiable_password_authentication: true, installed_version: '3.12.0' }), {
+                    status: 200,
+                    headers: { 'content-type': 'application/json', 'x-github-enterprise-version': '3.12.0' }
+                });
+            }
+            return new Response('Not Found', { status: 404 });
+        };
+
+        const customGitlabUrl = 'https://code.local-company.lan/team/backend.git';
+        // Direct instantiation WITHOUT calling detectProvider first -- getValue/initialize triggers auto-detection automatically!
+        const directUnknownGl = new GeneralApi(customGitlabUrl, 'dev', 'glpat-local');
+        const directGlIcon = await directUnknownGl.getValue('icon', 'darkmode');
+        const callsAfterFirst = probeCalls;
+        // Now that the host is cached, 'new GeneralApi(customGitlabUrl)' returns a Gitlab instance directly and makes 0 network calls
+        const cachedGlInstance = new GeneralApi('https://code.local-company.lan/other/repo.git', 'dev', 'glpat-local');
+        const callsAfterCached = probeCalls;
+
+        const customGheUrl = 'https://ghe.local-company.lan/team/frontend.git';
+        const directUnknownGhe = new GeneralApi(customGheUrl);
+        const directGheUser = await directUnknownGhe.getValue('git-username');
+
+        assert(
+            directGlIcon.includes('gitlab-logo') &&
+            cachedGlInstance instanceof Gitlab &&
+            callsAfterFirst === 1 &&
+            callsAfterCached === 1 &&
+            directGheUser === 'team',
+            'new General_git_rest_api(unknownUrl) auto-detects custom-domain GitLab & GitHub Enterprise servers on first use and caches the host'
+        );
+    } finally {
+        global.fetch = realFetch;
+        GeneralApi.hostProviderCache = {};
+    }
 
     printSuiteResult();
 }

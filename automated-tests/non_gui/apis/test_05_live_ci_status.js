@@ -227,6 +227,41 @@ async function runTests() {
         assertFail('5.8: GitLab external CI commits via modern Pipelines API', err.message);
     }
 
+    // Test 9: Live auto-detection of real self-hosted GitLab, GitHub Enterprise, and Bitbucket Server instances
+    //         whose domain names do NOT contain 'gitlab', 'github', or 'bitbucket' (no mocking, no manual detectProvider call)
+    try {
+        const GeneralApi = require('apis_github_and_others/general_git_rest_api.js');
+        GeneralApi.hostProviderCache = {};
+
+        // 1. Self-hosted GitLab (VideoLAN: code.videolan.org)
+        const glSelfUrl = 'https://code.videolan.org/videolan/vlc.git';
+        const glSelf = new GeneralApi(glSelfUrl);
+        const glIcon = await glSelf.getValue('icon', 'darkmode');
+        const glCached = new GeneralApi(glSelfUrl);
+
+        // 2. Self-hosted GitHub Enterprise Server (KTH: gits-15.sys.kth.se)
+        const ghSelfUrl = 'https://gits-15.sys.kth.se/kth/repo.git';
+        const ghSelf = new GeneralApi(ghSelfUrl);
+        const ghIcon = await ghSelf.getValue('icon', 'darkmode');
+        const ghCached = new GeneralApi(ghSelfUrl);
+
+        // 3. Self-hosted Bitbucket Server / Data Center (ECMWF: git.ecmwf.int)
+        const bbSelfUrl = 'https://git.ecmwf.int/ecsdk/ecbuild.git';
+        const bbSelf = new GeneralApi(bbSelfUrl);
+        const bbIcon = await bbSelf.getValue('icon', 'darkmode');
+        const bbCached = new GeneralApi(bbSelfUrl);
+
+        if (glIcon.includes('gitlab-logo') && glCached instanceof Gitlab &&
+            ghIcon.includes('github-mark') && ghCached instanceof Github &&
+            bbIcon.includes('bitbucket') && bbCached instanceof Bitbucket) {
+            assertPass('5.9: Live self-hosted auto-detection without provider name in URL (code.videolan.org -> GitLab, gits-15.sys.kth.se -> GitHub, git.ecmwf.int -> Bitbucket)');
+        } else {
+            assertFail('5.9: Live self-hosted auto-detection', `gl=${glIcon} gh=${ghIcon} bb=${bbIcon}`);
+        }
+    } catch (err) {
+        assertFail('5.9: Live self-hosted auto-detection', err.message);
+    }
+
     printSuiteResult();
 }
 

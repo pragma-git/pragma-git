@@ -6949,62 +6949,34 @@ async function multiPlatformStartApp( folder, cmd, append){  // Start cmd in 'fo
 // Git provider function
 
 async function gitProvider(giturl, initialize = true){
-    // Returns the provider class for giturl
-    // If optional parameter 'intitialize' = false, then provider is not initialized.
-    // This is useful, for static calls, such as provider.getValue('git-username'), or provider.getValue('icon')
+    // Returns the provider instance (github, gitlab, or bitbucket) for giturl via General_git_rest_api.
+    // If optional parameter 'initialize' = false, then provider is not initialized (useful for static calls like 'icon' or 'git-username').
     
     global.log( `gitProvider( ${giturl}) `)
-    
-    // Find host (github.com, gitlab.com, ...)
-    let urlParts = new URL(giturl);
-    let host = urlParts.host; 
-    
-    let scriptName  = `${CWD_INIT}/apis_github_and_others/${host}.js`;
-    
-    // Get scriptName if self-hosted Gitlab
-    if ( host.includes('gitlab') ){
-        let hostForScriptName = 'gitlab.com';
-        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
-    }
-     
-    // Get scriptName if self-hosted Bitbucket
-    if ( urlParts.pathname.includes('/scm/') ){
-        let hostForScriptName = 'bitbucket.org';
-        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
-    }
-    if ( host.includes('bitbucket') ){
-        let hostForScriptName = 'bitbucket.org';
-        scriptName  = `${CWD_INIT}/apis_github_and_others/${hostForScriptName}.js`;
-    }       
-    
-    
-    
-    
-    // Get upstream with provider-specific methods
-    if (fs_existsSync(scriptName) ) {
-        let a = require(scriptName);
-        let provider;
-        try{
-            if (initialize){
-                let creds = await getCredential(giturl);
-                console.log(creds);
-                let TOKEN = creds.password;
-                let username = creds.username;
-                provider = new a(giturl, username, TOKEN);
-                await provider.initialize( initialize);
-            }else{
-                provider = new a(giturl);
-            }
-        }catch (err){
-            provider = new a(giturl);
+
+    let General_git_rest_api = require(`${CWD_INIT}/apis_github_and_others/general_git_rest_api.js`);
+
+    let provider;
+    try{
+        if (initialize){
+            let creds = await getCredential(giturl);
+            console.log(creds);
+            let TOKEN = creds.password;
+            let username = creds.username;
+            provider = new General_git_rest_api(giturl, username, TOKEN);
+            await provider.initialize( initialize);
+        }else{
+            await General_git_rest_api.detectProvider(giturl);
+            provider = new General_git_rest_api(giturl);
+        }
+    }catch (err){
+        provider = new General_git_rest_api(giturl);
+        if (initialize){
             await provider.initialize( initialize);
         }
-        
-        return provider
-    }else{
-        throw new Error(`gitProvider error: 'unknown scriptName' = ${scriptName}`);
     }
     
+    return provider;
 }
 
 //
