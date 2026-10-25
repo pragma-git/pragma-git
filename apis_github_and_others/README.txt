@@ -1,6 +1,6 @@
 INTRODUCTION
 
-    This folder is where a new provider (cloud or self-hosted git provider, such as GitHub, GitLab, Bitbucket, etc.) is created, to be used inside pragma-git.
+    This folder is where a new provider (cloud or self-hosted git provider, such as GitHub, GitLab, Bitbucket, Gitea, etc.) is created, to be used inside pragma-git.
 
     All provider discovery, self-hosted detection, settings UI buttons, and "Create remote repository" dialog configuration are handled automatically through "general_git_rest_api.js" and the provider class files in this directory. No changes to "app.js", "settings.html", "settings.js", or "create_remote_repository.js" are needed when adding a new provider.
 
@@ -11,7 +11,7 @@ INTRODUCTION
 INSTRUCTIONS
 
     1) The JavaScript file:
-    Use one of "github.com.js", "gitlab.com.js", or "bitbucket.org.js" as a template,
+    Use one of "github.com.js", "gitlab.com.js", "bitbucket.org.js", or "gitea.com.js" as a template,
     subclassing "general_git_rest_api.js", and make sure all functionality is coded to work for the new provider:
     - Repository metadata & operations: initialize(), getValue(), setValue(), createRepo()
     - Provider UI metadata in getValue():

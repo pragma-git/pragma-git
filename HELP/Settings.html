@@ -100,7 +100,7 @@
             </ul>
         </p>
 
-        <p><b>The third column</b> "Web" displays the Git provider icon (such as GitHub, GitLab, Bitbucket, Azure, etc.) for repositories with a remote URL. Clicking the icon opens the repository directly in your default web browser.</p>
+        <p><b>The third column</b> "Web" displays the Git provider icon (such as GitHub, GitLab, Bitbucket, Gitea, etc.) for repositories with a remote URL. Clicking the icon opens the repository directly in your default web browser.</p>
 
         <p><b>The fourth column</b> "Remote repository" shows the address of a connected remote repository ("origin"). If this is not defined, you are working with a purely local repository.
         If defined, the connection status is shown with <span style="color: var(--red-text)">red color if login fails</span>, or with <span style="color: var(--green-text)">green color if login works</span>.</p>
@@ -645,7 +645,7 @@
             
             <dd>         
                  
-                <p>Creating a new remote repository can be done directly for Github, Gitlab or Bitbucket providers, by pressing
+                <p>Creating a new remote repository can be done directly for Github, Gitlab, Bitbucket, or Gitea providers, by pressing
                 their respective dialog button :
                 
                     <div id="CreateRemoteRepoDiv" style="filter: none;"> 
@@ -660,6 +660,10 @@
                                 <button>
                                     <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="../apis_github_and_others/git-provider-icons/Free-icons.github.io/bitbucket_blue.png">
                                     Bitbucket
+                                </button> 
+                                <button>
+                                    <img class="providerImage" style="vertical-align:bottom;" height="17" width="17" src="../apis_github_and_others/git-provider-icons/Gitea/gitea.png">
+                                    Gitea
                                 </button> 
                             </div>
                                             
@@ -1076,7 +1080,7 @@
             </ul>
         </li>
         <li style="margin-top: 8px;"><b>Git remote info:</b>
-            Displays metadata harvested from the remote hosting service (such as GitHub, GitLab, or Bitbucket), including API connection status, API endpoints, and web repository links.
+            Displays metadata harvested from the remote hosting service (such as GitHub, GitLab, Bitbucket, or Gitea), including API connection status, API endpoints, and web repository links.
         </li>
         <li style="margin-top: 8px;"><b>Pragma-git info & system's path:</b>
             Shows software versions (Node, NW.js, Git) and the system environment <code>PATH</code> as seen by Pragma-git.

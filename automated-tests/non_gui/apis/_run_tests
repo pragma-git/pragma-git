@@ -5,7 +5,7 @@
 #   _run_tests [OPTIONS]
 #
 # Description:
-#   Runs automated tests for GitHub, GitLab, and Bitbucket provider classes
+#   Runs automated tests for GitHub, GitLab, Bitbucket, and Gitea provider classes
 #   in apis_github_and_others, verifying git-to-API URL conversions, credential
 #   sanitization, and provider initialization.
 #
@@ -41,6 +41,8 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#
 #    5.9  | Live self-hosted auto-detection (no provider name in URL) | code.videolan.org (GL)  | Auto-detects GitLab via /api/v4/version    | --                                         | No (new GeneralApi)
 #         |                                                           | gits-15.sys.kth.se (GH) | Auto-detects GitHub via /api/v3/meta       | --                                         | No (new GeneralApi)
 #         |                                                           | git.ecmwf.int (BB)      | Auto-detects Bitbucket via /status         | --                                         | No (new GeneralApi)
+#         |                                                           | opendev.org (GT)        | Auto-detects Gitea via /api/v1/version     | --                                         | No (new GeneralApi)
+#    5.10 | Gitea Combined Status API (/commits/SHA/status)           | gitea/tea               | 2727270931cad7b28189dd155eaad706d29705e0   | dfe89dfb6bf22dcbd2a6203bef8aa262e65ea085   | No (+ 4233ebcb for none)
 #
 # 2. MOCKED UNIT TESTS (Offline) -- test_04_ci_status.js & app_function_calls/test_03_ci_cache.js
 #    Runs offline (<1s) to verify status mapping, fallback chaining when an API
@@ -57,7 +59,8 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#
 #    test_04 #7    | GitLab               | Fallback from REST API (503) -> web pipelines.json                     | fetchWithApi returns 503; global.fetch returns canned JSON Response.
 #    test_04 #8    | GitLab               | Fallback from REST API (503) -> web (HTML) -> SVG badge                | fetchWithApi returns 503; global.fetch returns HTML + canned SVG text.
 #    test_04 #9    | GitLab               | Throws error when API, web, and badge sources all fail                 | fetchWithApi returns 503; global.fetch returns HTML; no branch given.
-#    test_03 #1-9  | app.js CI Cache      | Disk/memory cache, short SHA, badge DOM, stale-while-revalidate rerun  | Runs app.js functions in Node vm with temp ci_cache.json & stub provider.
+#    test_04 #10   | Gitea                | Combined status relative URL resolution, pass/fail, and total_count=0  | Stubs gt.fetchWithApi to return canned Gitea status JSON per SHA.
+#    test_03 #1-10 | app.js CI Cache      | Disk/memory cache, short SHA, badge DOM, stale-while-revalidate rerun  | Runs app.js functions in Node vm with temp ci_cache.json & stub provider.
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -87,23 +90,23 @@ function print_suite_description() {
     local file="$1"
     case "$file" in
         test_01_provider_url_translation.js)
-            echo "   Tests provider classes (GitHub, GitLab, Bitbucket) translating git URLs to REST APIs."
+            echo "   Tests provider classes (GitHub, GitLab, Bitbucket, Gitea) translating git URLs to REST APIs."
             echo "   Verifies automatic stripping of credentials from REST endpoints and slug parsing."
             ;;
         test_02_live_provider_query.js)
-            echo "   Checks network connectivity, then tests live public queries against GitHub & Bitbucket."
-            echo "   Verifies git ls-remote over HTTPS against official repos (GitHub, GitLab, Bitbucket)."
+            echo "   Checks network connectivity, then tests live public queries against GitHub, Bitbucket, & Gitea."
+            echo "   Verifies git ls-remote over HTTPS against official repos (GitHub, GitLab, Bitbucket, Gitea)."
             ;;
         test_03_provider_classes.js)
-            echo "   Tests provider class instantiation and static getters across GitHub, GitLab, and Bitbucket."
+            echo "   Tests provider class instantiation and static getters across GitHub, GitLab, Bitbucket, and Gitea."
             echo "   Verifies General_git_rest_api base methods and provider-specific icon and username extraction."
             ;;
         test_04_ci_status.js)
-            echo "   Tests commit CI status extraction across GitHub, GitLab, and Bitbucket provider classes."
+            echo "   Tests commit CI status extraction across GitHub, GitLab, Bitbucket, and Gitea provider classes."
             echo "   Verifies status normalization (success, failure, pending, none) and build target URLs."
             ;;
         test_05_live_ci_status.js)
-            echo "   Live CI status for known success/failure commits on GitHub, GitLab, and Bitbucket."
+            echo "   Live CI status for known success/failure commits on GitHub, GitLab, Bitbucket, and Gitea."
             echo "   Covers GitLab Pipelines API, web pipelines.json, and SVG badge fallbacks without tokens."
             ;;
     esac

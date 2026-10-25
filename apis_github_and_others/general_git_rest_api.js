@@ -103,6 +103,9 @@ class git_rest_api {
             if (hostname.includes('bitbucket')) {
                 return 'bitbucket.org.js';
             }
+            if (hostname.includes('gitea')) {
+                return 'gitea.com.js';
+            }
 
             // 4. URL path structure heuristics
             // Bitbucket Server / Data Center uses /scm/<project>/<repo>.git
@@ -231,14 +234,41 @@ class git_rest_api {
                 }
             } catch (e) {}
 
+            // Probe 5: Gitea (/api/v1/version or i_like_gitea cookie)
+            try {
+                let res = await fetchWithTimeout(`${origin}/api/v1/version`);
+                if (hasHeader(res, 'i_like_gitea')) {
+                    git_rest_api.hostProviderCache[host] = 'gitea.com.js';
+                    return 'gitea.com.js';
+                }
+                let contentType = (res.headers && res.headers.get && res.headers.get('content-type')) || '';
+                if (res.ok && contentType.includes('json')) {
+                    let body = await res.json();
+                    if (body && typeof body.version === 'string' && body.version.length > 0) {
+                        git_rest_api.hostProviderCache[host] = 'gitea.com.js';
+                        return 'gitea.com.js';
+                    }
+                }
+            } catch (e) {}
+
             return null;
         }
 
         static async getProviders(themeMode = 'lightmode') {
-            // Returns metadata for all supported remote providers for UI button rendering
-            const defaultUrls = ['https://github.com', 'https://gitlab.com', 'https://bitbucket.org'];
+            // Returns metadata for all supported remote providers in apis_github_and_others/ for UI button rendering
+            const preferredOrder = ['github.com.js', 'gitlab.com.js', 'bitbucket.org.js'];
+            const allFiles = fs.readdirSync(__dirname)
+                .filter(f => f.endsWith('.js') && f !== 'general_git_rest_api.js')
+                .sort();
+            const scripts = [
+                ...preferredOrder.filter(f => allFiles.includes(f)),
+                ...allFiles.filter(f => !preferredOrder.includes(f))
+            ];
+
             const providers = [];
-            for (const url of defaultUrls) {
+            for (const scriptFile of scripts) {
+                const host = scriptFile.slice(0, -3);
+                const url = `https://${host}`;
                 const inst = new git_rest_api(url);
                 providers.push({
                     name: await inst.getValue('provider-name'),

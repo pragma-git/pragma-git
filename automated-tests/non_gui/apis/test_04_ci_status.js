@@ -27,6 +27,7 @@ global.warn = () => {};
 const Github = require('apis_github_and_others/github.com.js');
 const Gitlab = require('apis_github_and_others/gitlab.com.js');
 const Bitbucket = require('apis_github_and_others/bitbucket.org.js');
+const Gitea = require('apis_github_and_others/gitea.com.js');
 const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 function assert(condition, message) {
@@ -301,6 +302,53 @@ async function runTests() {
     } finally {
         global.fetch = realFetch;
     }
+
+    // Test 10: Gitea ci-status parsing (relative target_url resolution, failure priority, and empty total_count -> none)
+    const gt = new Gitea('https://gitea.com/gitea/tea.git', 'gitea', 'gt-token');
+    gt.fetchWithApi = async (url) => {
+        if (url.includes('/commits/sha-gt-pass/status')) {
+            return {
+                ok: true,
+                status: 200,
+                json: {
+                    state: 'success',
+                    total_count: 1,
+                    statuses: [{ status: 'success', target_url: '/gitea/tea/actions/runs/100/jobs/1' }]
+                }
+            };
+        }
+        if (url.includes('/commits/sha-gt-fail/status')) {
+            return {
+                ok: true,
+                status: 200,
+                json: {
+                    state: 'failure',
+                    total_count: 2,
+                    statuses: [
+                        { status: 'success', target_url: '/gitea/tea/actions/runs/100/jobs/1' },
+                        { status: 'failure', target_url: '/gitea/tea/actions/runs/100/jobs/2' }
+                    ]
+                }
+            };
+        }
+        // Gitea returns state: 'pending' with total_count: 0 when a commit has no statuses
+        return {
+            ok: true,
+            status: 200,
+            json: { state: 'pending', total_count: 0, statuses: null }
+        };
+    };
+
+    const gtPass = await gt.getValue('ci-status', 'sha-gt-pass');
+    const gtFail = await gt.getValue('ci-status', 'sha-gt-fail');
+    const gtEmpty = await gt.getValue('ci-status', 'sha-gt-empty');
+
+    assert(
+        gtPass.status === 'success' && gtPass.url === 'https://gitea.com/gitea/tea/actions/runs/100/jobs/1' &&
+        gtFail.status === 'failure' && gtFail.url === 'https://gitea.com/gitea/tea/actions/runs/100/jobs/2' &&
+        gtEmpty.status === 'none' && gtEmpty.url === null,
+        'Gitea ci-status resolves relative action URLs, maps success/failure, and treats total_count=0 as none'
+    );
 
     printSuiteResult();
 }

@@ -31,6 +31,7 @@ const GeneralApi = require('apis_github_and_others/general_git_rest_api.js');
 const Github = require('apis_github_and_others/github.com.js');
 const Gitlab = require('apis_github_and_others/gitlab.com.js');
 const Bitbucket = require('apis_github_and_others/bitbucket.org.js');
+const Gitea = require('apis_github_and_others/gitea.com.js');
 const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 function assert(condition, message) {
@@ -81,27 +82,36 @@ async function runTests() {
         'GitLab class extracts username, web-url, and icon'
     );
 
-    // Test 4: bitbucket class instantiation and getters
+    // Test 4: bitbucket and gitea class instantiation and getters
     const bb = new Bitbucket('https://bitbucket.org/atlassian/aui.git', 'atlassian');
     const bbUser = await bb.getValue('git-username');
     const bbWeb = await bb.getValue('web-url');
     const bbIcon = await bb.getValue('icon', 'darkmode');
+    const gt = new Gitea('https://gitea.com/gitea/tea.git', 'gitea');
+    const gtUser = await gt.getValue('git-username');
+    const gtWeb = await gt.getValue('web-url');
+    const gtIcon = await gt.getValue('icon', 'darkmode');
     assert(
         bbUser === 'atlassian' &&
         bbWeb === 'https://bitbucket.org/atlassian/aui' &&
-        bbIcon.includes('bitbucket_blue.png'),
-        'Bitbucket class extracts username, web-url, and icon'
+        bbIcon.includes('bitbucket_blue.png') &&
+        gtUser === 'gitea' &&
+        gtWeb === 'https://gitea.com/gitea/tea' &&
+        gtIcon.includes('gitea.png'),
+        'Bitbucket and Gitea classes extract username, web-url, and icon'
     );
 
     // Test 5: Calling 'new General_git_rest_api(giturl, ...)' directly returns the matching provider subclass instance
     const autoGh = new GeneralApi('https://github.com/octocat/Hello-World.git', 'octocat', 'gh-tok');
     const autoGl = new GeneralApi('https://gitlab.com/gitlab-org/gitlab-foss.git', 'gitlab-org', 'gl-tok');
     const autoBb = new GeneralApi('https://bitbucket.org/atlassian/aui.git', 'atlassian', 'bb-tok');
+    const autoGt = new GeneralApi('https://gitea.com/gitea/tea.git', 'gitea', 'gt-tok');
     assert(
         autoGh instanceof Github && autoGh instanceof GeneralApi && autoGh.TOKEN === 'gh-tok' &&
         autoGl instanceof Gitlab && autoGl instanceof GeneralApi && autoGl.TOKEN === 'gl-tok' &&
-        autoBb instanceof Bitbucket && autoBb instanceof GeneralApi && autoBb.TOKEN === 'bb-tok',
-        'new General_git_rest_api(giturl) returns the matching Github, Gitlab, or Bitbucket subclass instance'
+        autoBb instanceof Bitbucket && autoBb instanceof GeneralApi && autoBb.TOKEN === 'bb-tok' &&
+        autoGt instanceof Gitea && autoGt instanceof GeneralApi && autoGt.TOKEN === 'gt-tok',
+        'new General_git_rest_api(giturl) returns the matching Github, Gitlab, Bitbucket, or Gitea subclass instance'
     );
 
     // Test 6: Self-hosted URL & path heuristics (without network calls)
@@ -109,16 +119,19 @@ async function runTests() {
     const selfGlSubgroup = new GeneralApi('https://git.mycompany.internal/dept/subdept/project.git');
     const selfGhHost = new GeneralApi('https://github.mycompany.internal/org/service.git');
     const selfBbScm = new GeneralApi('https://git.mycompany.internal/scm/proj/repo.git');
+    const selfGtHost = new GeneralApi('https://gitea.mycompany.internal/org/service.git');
     assert(
         selfGlHost instanceof Gitlab &&
         selfGlSubgroup instanceof Gitlab &&
         selfGhHost instanceof Github &&
         selfGhHost.apiurl === 'https://github.mycompany.internal/api/v3/repos/org/service' &&
-        selfBbScm instanceof Bitbucket,
-        'General_git_rest_api resolves self-hosted GitLab (host/subgroup), GitHub Enterprise (/api/v3), and Bitbucket Server (/scm/)'
+        selfBbScm instanceof Bitbucket &&
+        selfGtHost instanceof Gitea &&
+        selfGtHost.apiurl === 'https://gitea.mycompany.internal/api/v1/repos/org/service',
+        'General_git_rest_api resolves self-hosted GitLab (host/subgroup), GitHub Enterprise (/api/v3), Bitbucket Server (/scm/), and Gitea (/api/v1)'
     );
 
-    // Test 7: detectProvider probes unknown custom domains for GitLab / GitHub / Bitbucket and caches the host
+    // Test 7: detectProvider probes unknown custom domains for GitLab / GitHub / Bitbucket / Gitea and caches the host
     const realFetch = global.fetch;
     try {
         GeneralApi.hostProviderCache = {};
@@ -138,6 +151,12 @@ async function runTests() {
                     headers: { 'content-type': 'application/json', 'x-github-enterprise-version': '3.12.0' }
                 });
             }
+            if (String(url).startsWith('https://tea.local-company.lan/api/v1/version')) {
+                return new Response(JSON.stringify({ version: '1.22.0' }), {
+                    status: 200,
+                    headers: { 'content-type': 'application/json' }
+                });
+            }
             return new Response('Not Found', { status: 404 });
         };
 
@@ -154,13 +173,20 @@ async function runTests() {
         const directUnknownGhe = new GeneralApi(customGheUrl);
         const directGheUser = await directUnknownGhe.getValue('git-username');
 
+        const customGiteaUrl = 'https://tea.local-company.lan/team/cli.git';
+        const directUnknownGitea = new GeneralApi(customGiteaUrl);
+        const directGiteaIcon = await directUnknownGitea.getValue('icon', 'darkmode');
+        const cachedGiteaInstance = new GeneralApi('https://tea.local-company.lan/other/repo.git');
+
         assert(
             directGlIcon.includes('gitlab-logo') &&
             cachedGlInstance instanceof Gitlab &&
             callsAfterFirst === 1 &&
             callsAfterCached === 1 &&
-            directGheUser === 'team',
-            'new General_git_rest_api(unknownUrl) auto-detects custom-domain GitLab & GitHub Enterprise servers on first use and caches the host'
+            directGheUser === 'team' &&
+            directGiteaIcon.includes('gitea.png') &&
+            cachedGiteaInstance instanceof Gitea,
+            'new General_git_rest_api(unknownUrl) auto-detects custom-domain GitLab, GitHub Enterprise, and Gitea servers on first use and caches the host'
         );
     } finally {
         global.fetch = realFetch;
@@ -172,23 +198,27 @@ async function runTests() {
     const ghInst = new GeneralApi('https://github.com/org/repo.git');
     const glInst = new GeneralApi('https://gitlab.com/org/repo.git');
     const bbInst = new GeneralApi('https://bitbucket.org/org/repo.git');
+    const gtInst = new GeneralApi('https://gitea.com/org/repo.git');
 
     const ghLabels = await ghInst.getValue('create-repo-labels');
     const glLabels = await glInst.getValue('create-repo-labels');
     const bbLabels = await bbInst.getValue('create-repo-labels');
+    const gtLabels = await gtInst.getValue('create-repo-labels');
 
     const ghCred = ghInst.parseTokenForCredential('octocat', 'ghp_123');
     const bbOauthCred = bbInst.parseTokenForCredential('workspace', 'oauth_tok');
     const bbAppPassCred = bbInst.parseTokenForCredential('workspace', 'myuser:app_secret');
 
     assert(
-        providersList.length === 3 &&
+        providersList.length === 4 &&
         providersList[0].name === 'Github' && providersList[0].displayName === 'GitHub' &&
         providersList[1].name === 'Gitlab' && providersList[1].displayName === 'GitLab' &&
         providersList[2].name === 'Bitbucket' && providersList[2].displayName === 'Bitbucket' &&
+        providersList[3].name === 'Gitea' && providersList[3].displayName === 'Gitea' &&
         ghLabels.accountLinkUrl === 'https://github.com/join' &&
         glLabels.tokenLinkUrl.includes('personal_access_tokens') &&
         bbLabels.tokenLinkUrl.includes('app-passwords') &&
+        gtLabels.tokenLinkUrl.includes('gitea.com/user/settings/applications') &&
         ghInst.formatTokenForDisplay('octocat', 'ghp_123') === 'ghp_123' &&
         bbInst.formatTokenForDisplay('x-token-auth', 'oauth_tok') === 'oauth_tok' &&
         bbInst.formatTokenForDisplay('myuser', 'app_secret') === 'myuser:app_secret' &&

@@ -44,6 +44,7 @@ const { YELLOW, NORMAL, assertPass, assertFail, printSuiteResult } = require(pat
 const Github = require('apis_github_and_others/github.com.js');
 const Gitlab = require('apis_github_and_others/gitlab.com.js');
 const Bitbucket = require('apis_github_and_others/bitbucket.org.js');
+const Gitea = require('apis_github_and_others/gitea.com.js');
 
 // Known public commits with finished CI results
 const GITHUB_URL = 'https://github.com/pragma-git/pragma-git.git';
@@ -63,6 +64,11 @@ const BITBUCKET_URL = 'https://bitbucket.org/atlassian/aui.git';
 const BITBUCKET_SUCCESS = '592af90b018b2d35fac96129e5fbeec1ed826fe2'; // 3 x SUCCESSFUL
 const BITBUCKET_FAILURE = 'e99b3d8eb588e253c562b7c4014a97cd3d8b3301'; // historical master commit with FAILED statuses
 const BITBUCKET_NONE = 'dfeff30ea5e2aa95d1c1e3c5011f7cd0e7ba7b41';    // no statuses
+
+const GITEA_URL = 'https://gitea.com/gitea/tea.git';
+const GITEA_SUCCESS = '2727270931cad7b28189dd155eaad706d29705e0';     // Gitea Actions: success
+const GITEA_FAILURE = 'dfe89dfb6bf22dcbd2a6203bef8aa262e65ea085';     // Gitea Actions: failure
+const GITEA_NONE = '4233ebcbb1b580907cb23fe3ab6399193475701e';        // no statuses (total_count: 0)
 
 function resolveGitHubToken() {
     if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
@@ -251,15 +257,39 @@ async function runTests() {
         const bbIcon = await bbSelf.getValue('icon', 'darkmode');
         const bbCached = new GeneralApi(bbSelfUrl);
 
+        // 4. Self-hosted Gitea Server (OpenDev: opendev.org)
+        const gtSelfUrl = 'https://opendev.org/openstack/nova.git';
+        const gtSelf = new GeneralApi(gtSelfUrl);
+        const gtIcon = await gtSelf.getValue('icon', 'darkmode');
+        const gtCached = new GeneralApi(gtSelfUrl);
+
         if (glIcon.includes('gitlab-logo') && glCached instanceof Gitlab &&
             ghIcon.includes('github-mark') && ghCached instanceof Github &&
-            bbIcon.includes('bitbucket') && bbCached instanceof Bitbucket) {
-            assertPass('5.9: Live self-hosted auto-detection without provider name in URL (code.videolan.org -> GitLab, gits-15.sys.kth.se -> GitHub, git.ecmwf.int -> Bitbucket)');
+            bbIcon.includes('bitbucket') && bbCached instanceof Bitbucket &&
+            gtIcon.includes('gitea') && gtCached instanceof Gitea) {
+            assertPass('5.9: Live self-hosted auto-detection without provider name in URL (code.videolan.org -> GitLab, gits-15.sys.kth.se -> GitHub, git.ecmwf.int -> Bitbucket, opendev.org -> Gitea)');
         } else {
-            assertFail('5.9: Live self-hosted auto-detection', `gl=${glIcon} gh=${ghIcon} bb=${bbIcon}`);
+            assertFail('5.9: Live self-hosted auto-detection', `gl=${glIcon} gh=${ghIcon} bb=${bbIcon} gt=${gtIcon}`);
         }
     } catch (err) {
         assertFail('5.9: Live self-hosted auto-detection', err.message);
+    }
+
+    // Test 10: Gitea commit statuses (gitea.com/gitea/tea)
+    try {
+        const gt = new Gitea(GITEA_URL);
+        const ok = await gt.getValue('ci-status', GITEA_SUCCESS);
+        const fail = await gt.getValue('ci-status', GITEA_FAILURE);
+        const none = await gt.getValue('ci-status', GITEA_NONE);
+        if (ok.status === 'success' && fail.status === 'failure' && none.status === 'none' &&
+            (ok.url || '').startsWith('https://gitea.com/gitea/tea/actions/') &&
+            (fail.url || '').startsWith('https://gitea.com/gitea/tea/actions/')) {
+            assertPass('5.10: Gitea ci-status gitea/tea (no token): success + failure + none');
+        } else {
+            assertFail('5.10: Gitea ci-status gitea/tea', `success=${describe(ok)} failure=${describe(fail)} none=${describe(none)}`);
+        }
+    } catch (err) {
+        assertFail('5.10: Gitea ci-status gitea/tea', err.message);
     }
 
     printSuiteResult();

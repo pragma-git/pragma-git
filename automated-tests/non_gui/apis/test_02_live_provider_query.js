@@ -71,6 +71,7 @@ async function runTests() {
 
     const GithubApi = require(path.join(REPO_ROOT, 'apis_github_and_others/github.com.js'));
     const BitbucketApi = require(path.join(REPO_ROOT, 'apis_github_and_others/bitbucket.org.js'));
+    const GiteaApi = require(path.join(REPO_ROOT, 'apis_github_and_others/gitea.com.js'));
 
     // Test 2: GitHub live query against official public repo (octocat/Hello-World)
     try {
@@ -122,12 +123,34 @@ async function runTests() {
         assertFail('2.3: Live Bitbucket query for atlassian/aui', err.message);
     }
 
-    // Test 4: Git over HTTPS network protocol check against GitHub, GitLab, and Bitbucket
+    // Test 4: Gitea live query against official public repo (gitea/tea)
+    try {
+        const gt = new GiteaApi('https://gitea.com/gitea/tea.git');
+        await gt.initialize();
+
+        const gtStatus = await gt.getValue('api-status');
+        const isRateLimit = gtStatus !== 'ok' && gt.repoInfoStruct &&
+            (gt.repoInfoStruct.status === 403 || gt.repoInfoStruct.status === 429);
+
+        if (isRateLimit) {
+            console.log(`  ${YELLOW}[SKIP]${NORMAL} 2.4: Live Gitea query (API rate limit exceeded for this IP)`);
+        } else {
+            const gtPrivate = await gt.getValue('is-private-repo');
+            assert.strictEqual(gtStatus, 'ok', 'Gitea API responded with ok');
+            assert.strictEqual(gtPrivate, false, 'gitea/tea is a public repo');
+            assertPass('2.4: Live Gitea query for gitea/tea returns api-status: ok, is-private: false');
+        }
+    } catch (err) {
+        assertFail('2.4: Live Gitea query for gitea/tea', err.message);
+    }
+
+    // Test 5: Git over HTTPS network protocol check against GitHub, GitLab, Bitbucket, and Gitea
     try {
         const providers = [
             { name: 'GitHub', url: 'https://github.com/octocat/Hello-World.git' },
             { name: 'GitLab', url: 'https://gitlab.com/gitlab-org/gitlab-test.git' },
-            { name: 'Bitbucket', url: 'https://bitbucket.org/atlassian/aui.git' }
+            { name: 'Bitbucket', url: 'https://bitbucket.org/atlassian/aui.git' },
+            { name: 'Gitea', url: 'https://gitea.com/gitea/tea.git' }
         ];
 
         for (const p of providers) {
@@ -138,9 +161,9 @@ async function runTests() {
             }).toString();
             assert.ok(out.includes('refs/heads/'), `${p.name} responded with valid git branches`);
         }
-        assertPass('2.4: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, and Bitbucket');
+        assertPass('2.5: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, Bitbucket, and Gitea');
     } catch (err) {
-        assertFail('2.4: Live Git HTTPS protocol (ls-remote)', err.message);
+        assertFail('2.5: Live Git HTTPS protocol (ls-remote)', err.message);
     }
 
     printSuiteResult();
