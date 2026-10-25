@@ -5,14 +5,13 @@
  * Verifies:
  *   1. Missing commitSha gracefully returns { status: 'none', url: null }
  *   2. GitHub ci-status handling (Commit Status API & Check Runs API)
- *   3. GitLab ci-status handling (legacy commit statuses API)
- *   4. Bitbucket ci-status handling (Commit statuses values)
- *   5. GitLab modern Pipelines API and status mapping
- *   6. GitLab project API URL (project ID vs URL-encoded path)
- *   7. GitLab PRIVATE-TOKEN header for private repos
- *   8. GitLab web pipelines.json fallback (no token, no API)
- *   9. GitLab SVG badge fallback (branch level)
- *  10. GitLab error when all sources are unavailable
+ *   3. Bitbucket ci-status handling (Commit statuses values)
+ *   4. GitLab modern Pipelines API and status mapping
+ *   5. GitLab project API URL (project ID vs URL-encoded path)
+ *   6. GitLab PRIVATE-TOKEN header for private repos
+ *   7. GitLab web pipelines.json fallback (no token, no API)
+ *   8. GitLab SVG badge fallback (branch level)
+ *   9. GitLab error when all sources are unavailable
  */
 
 const path = require('path');
@@ -132,42 +131,7 @@ async function runTests() {
         'GitHub ci-status correctly resolves status and check-runs API responses'
     );
 
-    // Test 3: GitLab ci-status parsing
-    gl.fetchWithApi = async (url) => {
-        if (url.includes('/commits/sha-gl-pass/statuses')) {
-            return {
-                ok: true,
-                status: 200,
-                json: [
-                    { status: 'success', target_url: 'https://gitlab.com/ci/1' }
-                ]
-            };
-        }
-        if (url.includes('/commits/sha-gl-fail/statuses')) {
-            return {
-                ok: true,
-                status: 200,
-                json: [
-                    { status: 'success', target_url: 'https://gitlab.com/ci/1' },
-                    { status: 'failed', target_url: 'https://gitlab.com/ci/fail' }
-                ]
-            };
-        }
-        return { ok: true, status: 200, json: [] };
-    };
-
-    const glSuccess = await gl.getValue('ci-status', 'sha-gl-pass');
-    const glFail = await gl.getValue('ci-status', 'sha-gl-fail');
-    const glEmpty = await gl.getValue('ci-status', 'sha-gl-empty');
-
-    assert(
-        glSuccess.status === 'success' && glSuccess.url === 'https://gitlab.com/ci/1' &&
-        glFail.status === 'failure' && glFail.url === 'https://gitlab.com/ci/fail' &&
-        glEmpty.status === 'none',
-        'GitLab ci-status falls back to legacy commit statuses API when no pipelines exist'
-    );
-
-    // Test 4: Bitbucket ci-status parsing
+    // Test 3: Bitbucket ci-status parsing
     bb.fetchWithApi = async (url) => {
         if (url.includes('/commit/sha-bb-pass/statuses')) {
             return {

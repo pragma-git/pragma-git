@@ -52,7 +52,7 @@ automated-tests/
     │   ├── test_02_live_provider_query.js
     │   ├── test_03_provider_classes.js
     │   ├── test_04_ci_status.js                # CI status parsing (mocked, offline)
-    │   └── test_05_live_ci_status.js           # CI status for known success/failure commits (live; GITLAB_TOKEN optional)
+    │   └── test_05_live_ci_status.js           # CI status for known success/failure commits (live)
     │
     └── app_function_calls/                     # App Core Logic Functions (from app.js)
         ├── _run_tests                          # Runs app_function_calls tests only

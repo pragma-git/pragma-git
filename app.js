@@ -7252,36 +7252,28 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
         } catch (e) {}
     }
 
-    // Check persistent and memory cache FIRST (synchronous, instant, zero network delay)
-    if (!forceRefresh) {
-        let cached = getCachedCiStatus(remoteUrl, commitSha);
-        if (cached && (cached.status === 'success' || cached.status === 'failure')) {
-            localState.ciStatus = {
-                repoUrl: remoteUrl,
-                commitSha: commitSha,
-                status: cached.status,
-                url: cached.url || null,
-                lastChecked: Date.now()
-            };
-            updateCiBadge(localState.ciStatus);
-            return;
-        } else if (cached && cached.status === 'pending') {
+    // Check persistent and memory cache FIRST for an instant initial display (stale-while-revalidate)
+    let cached = getCachedCiStatus(remoteUrl, commitSha);
+    if (!forceRefresh && cached) {
+        if (cached.status === 'success' || cached.status === 'failure') {
+            updateCiBadge(cached);
+        } else if (cached.status === 'pending') {
             updateCiBadge({ status: 'pending', url: cached.url || null });
         }
-    }
-
-    // If active commit changed and is not yet cached, hide badge to prevent displaying previous commit's badge
-    if (localState.ciStatus && localState.ciStatus.commitSha !== commitSha) {
+    } else if (localState.ciStatus && localState.ciStatus.commitSha !== commitSha) {
+        // If active commit changed and is not yet cached, hide badge to prevent displaying previous commit's badge
         updateCiBadge({ status: 'none', url: null });
     }
 
-    // Debounce non-cached queries (30 seconds for immutable states, 5 seconds for pending/none)
+    // Debounce live network queries (30 seconds for terminal states, 4 seconds for pending/none)
+    // Only skip the network request if we already performed a live query for this commit in this session
     let now = Date.now();
     let debounceMs = (localState.ciStatus && localState.ciStatus.status === 'pending') ? 4000 : 30000;
     if (!forceRefresh && localState.ciStatus &&
         localState.ciStatus.repoUrl === remoteUrl &&
         localState.ciStatus.commitSha === commitSha &&
-        (now - (localState.ciStatus.lastChecked || 0) < debounceMs)) {
+        localState.ciStatus.lastChecked &&
+        (now - localState.ciStatus.lastChecked < debounceMs)) {
         updateCiBadge(localState.ciStatus);
         return;
     }
@@ -7331,7 +7323,10 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     } catch (err) {
         console.warn('Error querying CI status:', err);
         // Do not cache 'none' on API or network errors!
-        if (!localState.ciStatus || localState.ciStatus.commitSha !== commitSha) {
+        // Keep displaying the cached status if available; otherwise hide if commit changed
+        if (cached && (cached.status === 'success' || cached.status === 'failure' || cached.status === 'pending')) {
+            updateCiBadge(cached);
+        } else if (!localState.ciStatus || localState.ciStatus.commitSha !== commitSha) {
             updateCiBadge({ status: 'none', url: null });
         }
     } finally {

@@ -355,9 +355,8 @@ class gitlab extends General_git_rest_api {
                         //
                         // Strategy (works without TOKEN for public repos, and with TOKEN for private repos):
                         //   1) REST API pipelines for the commit    : /api/v4/projects/:id/pipelines?sha=SHA   (public repos need no token)
-                        //   2) REST API external commit statuses    : /api/v4/projects/:id/repository/commits/SHA/statuses (requires token)
-                        //   3) Web endpoint (no API, no token)      : https://host/group/repo/-/commit/SHA/pipelines.json
-                        //   4) SVG pipeline badge (branch level)    : https://host/group/repo/badges/BRANCH/pipeline.svg  (only if branch given)
+                        //   2) Web endpoint (no API, no token)      : https://host/group/repo/-/commit/SHA/pipelines.json
+                        //   3) SVG pipeline badge (branch level)    : https://host/group/repo/badges/BRANCH/pipeline.svg  (only if branch given)
                         try{
                             let commitSha = secondParameter;
                             if (!commitSha) {
@@ -383,41 +382,20 @@ class gitlab extends General_git_rest_api {
                                 break;
                             }
 
-                            // 2) External commit statuses API (needs token, also for public repos)
-                            let statusUrl = `${projectApiUrl}/repository/commits/${commitSha}/statuses`;
-                            let statusRes = await this.fetchWithApi(statusUrl, { method: 'GET', headers: headers });
-                            if (statusRes.ok && Array.isArray(statusRes.json) && statusRes.json.length > 0) {
-                                let statuses = statusRes.json;
-                                let mapped = statuses.map(s => this.#mapCiStatus(s.status));
-                                let failedItem = statuses.find((s, i) => mapped[i] === 'failure');
-                                let targetUrl = (failedItem && failedItem.target_url) || statuses[0].target_url || null;
-
-                                if (mapped.includes('failure')) {
-                                    out = { status: 'failure', url: targetUrl };
-                                } else if (mapped.includes('pending')) {
-                                    out = { status: 'pending', url: targetUrl };
-                                } else if (mapped.includes('success')) {
-                                    out = { status: 'success', url: targetUrl };
-                                } else {
-                                    out = { status: 'none', url: null };
-                                }
-                                break;
-                            }
-
-                            // An API answered OK but there is no CI for this commit
-                            if (pipelinesRes.ok || statusRes.ok) {
+                            // The API answered OK but there is no CI pipeline for this commit
+                            if (pipelinesRes.ok) {
                                 out = { status: 'none', url: null };
                                 break;
                             }
 
-                            // 3) Web endpoint fallback (public repos, no token, no API)
+                            // 2) Web endpoint fallback (public repos, no token, no API)
                             let webResult = await this.#ciStatusFromWebPipelines(commitSha);
                             if (webResult) {
                                 out = webResult;
                                 break;
                             }
 
-                            // 4) SVG badge fallback (branch level -- not commit specific)
+                            // 3) SVG badge fallback (branch level -- not commit specific)
                             if (!super.isEmptyString(thirdParameter)) {
                                 let badgeResult = await this.#ciStatusFromSvgBadge(thirdParameter);
                                 if (badgeResult) {
@@ -426,7 +404,7 @@ class gitlab extends General_git_rest_api {
                                 }
                             }
 
-                            throw new Error(`GitLab CI status could not be determined (pipelines API: ${pipelinesRes.status || 'unknown'}, statuses API: ${statusRes.status || 'unknown'})`);
+                            throw new Error(`GitLab CI status could not be determined (pipelines API: ${pipelinesRes.status || 'unknown'})`);
                         }catch (err){
                             global.warn(err);
                             throw err;

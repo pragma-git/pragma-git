@@ -10,7 +10,6 @@ env:
   FORCE_COLOR: '1'
   TERM: 'xterm-256color'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}  # Optional: enables GitLab legacy commit statuses API test (skipped if empty)
 
 jobs:
   test:

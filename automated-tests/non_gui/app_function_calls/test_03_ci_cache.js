@@ -258,6 +258,53 @@ async function runTests() {
         'queryCommitCiStatus evaluates historical commit SHA when in HISTORY mode and reverts to HEAD otherwise'
     );
 
+    // Test 10: Stale-while-revalidate -- displays cached failure immediately, then revalidates via API and updates badge & disk cache to success
+    const rerunSha = '6090b4a6b0414703285ad8bcbf9fe2ca2222885f';
+    const testRepoUrl = sandbox.state.repos[0].remoteURL;
+    sandbox.setCachedCiStatus(testRepoUrl, rerunSha, { status: 'failure', url: 'https://ci/old-failed-run' });
+    sandbox.localState.ciStatus = null; // Simulate visiting the commit (not yet live-checked in this session)
+    sandbox.localState.mode = 'HISTORY';
+    sandbox.localState.historyHash = rerunSha;
+
+    let badgeClassesDuringCall = [];
+    const origGetId = sandbox.document.getElementById;
+    const trackingBadge = Object.create(mockBadge);
+    Object.defineProperty(trackingBadge, 'className', {
+        get() { return mockBadge.className; },
+        set(v) {
+            mockBadge.className = v;
+            badgeClassesDuringCall.push(v);
+        }
+    });
+    sandbox.document.getElementById = (id) => (id === 'top-titlebar-ci-badge' ? trackingBadge : origGetId(id));
+
+    const origGitProvider = sandbox.gitProvider;
+    sandbox.gitProvider = async () => ({
+        getValue: async (param, sha) => {
+            queriedShas.push(sha);
+            if (sha === rerunSha) return { status: 'success', url: 'https://ci/new-rerun-pass' };
+            return { status: 'none', url: null };
+        }
+    });
+
+    queriedShas = [];
+    await sandbox.queryCommitCiStatus(false, rerunSha); // forceRefresh = false (normal navigation)
+
+    const updatedCacheEntry = sandbox.getCachedCiStatus(testRepoUrl, rerunSha);
+    assert(
+        queriedShas.includes(rerunSha) &&
+        badgeClassesDuringCall.length >= 2 &&
+        badgeClassesDuringCall[0].includes('top-titlebar-ci-failure') &&
+        badgeClassesDuringCall[badgeClassesDuringCall.length - 1].includes('top-titlebar-ci-success') &&
+        mockBadge.className.includes('top-titlebar-ci-success') &&
+        updatedCacheEntry && updatedCacheEntry.status === 'success' &&
+        updatedCacheEntry.url === 'https://ci/new-rerun-pass',
+        'queryCommitCiStatus shows cached status immediately as initial guess, then revalidates from API and updates both badge and cache (e.g. failed -> rerun success)'
+    );
+
+    sandbox.document.getElementById = origGetId;
+    sandbox.gitProvider = origGitProvider;
+
     // Clean up temporary test directory
     try {
         fs.rmSync(testTmpDir, { recursive: true, force: true });

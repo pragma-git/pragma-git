@@ -12,9 +12,8 @@
  *   4. GitLab    same, ID-based project API URL (as after initialize())     success + failure
  *   5. GitLab    web pipelines.json, called directly (ci-status-web)       success + failure
  *   6. GitLab    SVG pipeline badge, called directly (ci-status-badge)     valid status
- *   7. GitLab    legacy commit statuses API (requires GITLAB_TOKEN)         success + failure (SKIP without token)
- *   8. Bitbucket atlassian/aui           (commit statuses)                  success + failure + none
- *   9. GitLab    inkscape/inkscape external CI pipeline via modern API      failure (no token)
+ *   7. Bitbucket atlassian/aui           (commit statuses)                  success + failure + none
+ *   8. GitLab    inkscape/inkscape external CI pipeline via modern API      failure (no token)
  *
  * NOTE: If a provider purges old pipelines, update the hashes below.
  */

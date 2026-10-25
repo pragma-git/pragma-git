@@ -64,7 +64,7 @@ function print_suite_description() {
             ;;
         test_05_live_ci_status.js)
             echo "   Live CI status for known success/failure commits on GitHub, GitLab, and Bitbucket."
-            echo "   Covers GitLab Pipelines API, legacy statuses API (GITLAB_TOKEN), web and SVG badge fallbacks."
+            echo "   Covers GitLab Pipelines API, web pipelines.json, and SVG badge fallbacks without tokens."
             ;;
     esac
 }
