@@ -217,15 +217,23 @@ async function runTests() {
         providersList[3].name === 'Gitea' && providersList[3].displayName === 'Gitea' &&
         ghLabels.accountLinkUrl === 'https://github.com/join' &&
         glLabels.tokenLinkUrl.includes('personal_access_tokens') &&
-        bbLabels.tokenLinkUrl.includes('app-passwords') &&
+        bbLabels.tokenLinkUrl.includes('api-tokens') &&
         gtLabels.tokenLinkUrl.includes('gitea.com/user/settings/applications') &&
         ghInst.formatTokenForDisplay('octocat', 'ghp_123') === 'ghp_123' &&
         bbInst.formatTokenForDisplay('x-token-auth', 'oauth_tok') === 'oauth_tok' &&
         bbInst.formatTokenForDisplay('myuser', 'app_secret') === 'myuser:app_secret' &&
         ghCred.username === 'octocat' && ghCred.password === 'ghp_123' &&
         bbOauthCred.username === 'x-token-auth' && bbOauthCred.password === 'oauth_tok' &&
-        bbAppPassCred.username === 'myuser' && bbAppPassCred.password === 'app_secret',
-        'Provider classes supply UI metadata, create-repo labels, and credential token formatting/parsing'
+        bbAppPassCred.username === 'myuser' && bbAppPassCred.password === 'app_secret' &&
+        bbInst.isCredentialRevokedError('remote: CHANGE-3222 - Functionality has been deprecated') === true &&
+        bbInst.isCredentialRevokedError('fatal: unable to access: Could not resolve host') === false &&
+        ghInst.isCredentialRevokedError('remote: Support for password authentication was removed') === true &&
+        ghInst.isCredentialRevokedError('fatal: unable to access: Connection timed out') === false &&
+        new Gitlab('https://gitlab.com/u/r.git').isCredentialRevokedError('remote: The provided password or token is invalid or has expired') === true &&
+        new Gitea('https://gitea.com/u/r.git').isCredentialRevokedError('remote: User permission denied') === true &&
+        GeneralApi.isCredentialRevokedError('https://bitbucket.org/u/r.git', 'remote: App passwords are deprecated') === true &&
+        GeneralApi.isCredentialRevokedError('https://github.com/u/r.git', 'fatal: unable to access: HTTP 502') === false,
+        'Provider classes supply UI metadata, create-repo labels, credential token formatting/parsing, and isCredentialRevokedError checks'
     );
 
     // Helper to extract a named function from a source file for VM execution
@@ -404,7 +412,7 @@ async function runTests() {
         textareaNode.placeholder === 'Enter Bitbucket token' &&
         domElements.providerImage.src.includes('bitbucket_blue.png') &&
         domElements.accountName_label.innerHTML.includes('Bitbucket workspace-name') &&
-        domElements.token_label.innerHTML.includes('app-passwords') &&
+        domElements.token_label.innerHTML.includes('api-tokens') &&
         displayedAppPass === 'bbuser:bb_app_password' &&
         displayedOauth === 'bb_oauth_token' &&
         savedCred && savedCred.username === 'bbuser' && savedCred.password === 'new_app_password' &&

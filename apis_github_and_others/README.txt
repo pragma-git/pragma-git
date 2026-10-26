@@ -19,9 +19,10 @@ INSTRUCTIONS
       * 'display-name' (e.g., 'Github', used for buttons in Settings and the Create Remote Repository window)
       * 'create-repo-labels' (tokenLabel, tokenPlaceholder, tokenHelpHtml, userLabel)
       * 'lightmode-icon' and 'darkmode-icon'
-    - Optional credential token formatting overrides if needed:
+    - Optional credential token formatting & revocation checks:
       * formatTokenForDisplay(username, password)
       * parseTokenForCredential(owner, token)
+      * isCredentialRevokedError(errorMessage)
     - Optional self-hosted server detection in "general_git_rest_api.js" (findProviderScript / detectProvider) if the provider supports self-hosted instances on custom domains.
 
     2) The icon file:

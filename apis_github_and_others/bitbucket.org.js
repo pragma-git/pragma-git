@@ -68,9 +68,9 @@ class bitbucket extends General_git_rest_api {
         async createRepo( owner, myCredentials, newRepoName, description, isPrivate, PROJECT_KEY = undefined ){  // Create Github repository
             
             // owner  -- bitbucket workspace = account.  For instance janaxelsson in 'https://bitbucket.org/janaxelsson'
-            // myCredentials -- ${BITBUCKET_USER_NAME}:${APP_PASSWORD}  // Use App Password instead of Token (because it is very complex to set up an Oauth token)
+            // myCredentials -- ${BITBUCKET_USER_NAME}:${API_TOKEN}  // Atlassian API token (App passwords deprecated per CHANGE-3222)
             //                  BITBUCKET_USER_NAME -- found from "https://bitbucket.org/account/settings/"
-            //                  APP_PASSWORD        -- set from "https://bitbucket.org/account/settings/app-passwords/"
+            //                  API_TOKEN           -- set from "https://id.atlassian.com/manage-profile/security/api-tokens"
             //
             // Bitbucket has the concept of PROJECT.  If not specified, the new repo lands in first project.
             // I have prepared this function for PROJECT_KEY (which can be found in "https://bitbucket.org/${owner}/workspace/projects/")
@@ -219,17 +219,17 @@ class bitbucket extends General_git_rest_api {
                             accountPostText: ')',
                             accountLinkText: 'Register a Bitbucket account',
                             accountLinkUrl: 'https://bitbucket.org/',
-                            tokenPreText: 'Username : app-password (',
+                            tokenPreText: 'Username : API token (',
                             tokenPostText: ')',
-                            tokenLinkText: 'Create a Bitbucket app-password',
-                            tokenLinkUrl: 'https://bitbucket.org/account/settings/app-passwords/'
+                            tokenLinkText: 'Create an Atlassian API token',
+                            tokenLinkUrl: 'https://id.atlassian.com/manage-profile/security/api-tokens'
                         };
                         break;
                     }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             //out = 'x-token-auth';   // If default git oauth token
-                            out = this.username;               // Unknown if app-password (cannot be deduced from url path, as for gihub or gitlab).
+                            out = this.username;               // Unknown if API token (cannot be deduced from url path, as for github or gitlab).
                         }catch (err){ global.warn(err);}
                         break;     
                     }
@@ -348,7 +348,7 @@ class bitbucket extends General_git_rest_api {
         }
 
         parseTokenForCredential(owner, token) {
-            // Guess OAuth by default; use user:app-password if colon-delimited
+            // Guess OAuth by default; use user:api-token if colon-delimited
             let username = 'x-token-auth';
             let password = token;
             let splitToken = String(token || '').split(':');
@@ -357,6 +357,13 @@ class bitbucket extends General_git_rest_api {
                 password = splitToken[1];
             }
             return { username: username, password: password };
+        }
+
+        isCredentialRevokedError(errorMessage) {
+            if (!errorMessage || typeof errorMessage !== 'string') return false;
+            return errorMessage.includes('CHANGE-3222') ||
+                   errorMessage.includes('App passwords are deprecated') ||
+                   super.isCredentialRevokedError(errorMessage);
         }
 }
 

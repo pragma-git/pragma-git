@@ -320,7 +320,7 @@ class git_rest_api {
 
         formatTokenForDisplay(username, password) {
             // Formats stored git credential username/password for display in the Create Remote Repository token field.
-            // Overridden by providers that combine username:password (e.g. Bitbucket app-passwords).
+            // Overridden by providers that combine username:password (e.g. Bitbucket API tokens).
             if (this.#delegate) {
                 return this.#delegate.formatTokenForDisplay(username, password);
             }
@@ -334,6 +334,30 @@ class git_rest_api {
                 return this.#delegate.parseTokenForCredential(owner, token);
             }
             return { username: owner, password: token };
+        }
+
+        static isCredentialRevokedError(giturl, errorMessage) {
+            if (!errorMessage || typeof errorMessage !== 'string') return false;
+            try {
+                let inst = new git_rest_api(giturl);
+                if (inst && typeof inst.isCredentialRevokedError === 'function') {
+                    return inst.isCredentialRevokedError(errorMessage);
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        isCredentialRevokedError(errorMessage) {
+            // Checks if a Git remote error string specifically indicates an invalid, expired, or permanently deprecated token/credential.
+            // Overridden by provider subclasses to recognize provider-specific deprecation/revocation messages.
+            if (this.#delegate) {
+                return this.#delegate.isCredentialRevokedError(errorMessage);
+            }
+            if (!errorMessage || typeof errorMessage !== 'string') return false;
+            let msg = errorMessage.toLowerCase();
+            return msg.includes('token is invalid or has expired') ||
+                   msg.includes('support for password authentication was removed') ||
+                   msg.includes('invalid username or token');
         }
     
         async fetchWithApi( apiurl, options){

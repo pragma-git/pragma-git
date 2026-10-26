@@ -1246,11 +1246,79 @@ async function testURL( textareaId, event){
 
     }catch(err){
         
-        outputColor = 'red'
+        let errStr = (err && (err.message || String(err))) || '';
+        let isCredentialRevoked = false;
+        try {
+            let provider = (typeof opener !== 'undefined' && opener && typeof opener.gitProvider === 'function')
+                ? await opener.gitProvider(remoteURL)
+                : (typeof gitProvider === 'function' ? await gitProvider(remoteURL) : null);
+            if (provider && typeof provider.isCredentialRevokedError === 'function') {
+                isCredentialRevoked = provider.isCredentialRevokedError(errStr);
+            }
+        } catch (e) {}
+
+        // If failure was specifically due to revoked/deprecated credentials, prompt for new token via AskPass without clearing Keychain first
+        if (isCredentialRevoked && event.type !== 'no_askpass') {
+            try {
+                const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git' + pathsep + '.tmp';
+                const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';
+                try { if (fs.existsSync(EXITMESSAGEFILE)) fs.unlinkSync(EXITMESSAGEFILE); } catch (e) {}
+
+                // Override credential helper to empty string for this command, forcing Git to prompt via AskPass
+                await simpleGit(folder).raw(['-c', 'credential.helper=', 'ls-remote', remoteURL], onListRemote);
+
+                // Read the new token entered into AskPass dialog
+                let newToken = '';
+                try {
+                    if (fs.existsSync(EXITMESSAGEFILE)) {
+                        newToken = fs.readFileSync(EXITMESSAGEFILE, 'utf8').trim();
+                    }
+                } catch (e) {}
+
+                // Accept new token: update Keychain ONLY after new token is verified and accepted
+                if (newToken && typeof opener !== 'undefined' && opener) {
+                    let user = '';
+                    if (typeof opener.getCredential === 'function') {
+                        try {
+                            let cred = await opener.getCredential(remoteURL);
+                            if (cred && cred.username) user = cred.username;
+                        } catch (e) {}
+                    }
+                    if (!user && remoteURL.includes('://')) {
+                        try {
+                            let u = new URL(remoteURL);
+                            if (u.username) user = decodeURIComponent(u.username);
+                        } catch (e) {}
+                    }
+                    if (typeof opener.setCredential === 'function') {
+                        await opener.setCredential(remoteURL, user, newToken);
+                    }
+                }
+
+                outputColor = 'green';
+                let area = document.getElementById(textareaId);
+                if (area) {
+                    area.classList.remove('red', 'grey');
+                    area.classList.add('green');
+                }
+                let realIndex = Number(textareaId) - 10000;
+                if (opener && opener.cachedRemoteOrigins && opener.cachedRemoteOrigins.isActiveRemote) {
+                    opener.cachedRemoteOrigins.isActiveRemote[realIndex] = true;
+                    if (opener.cachedRemoteOrigins.reason) {
+                        opener.cachedRemoteOrigins.reason[realIndex] = '';
+                    }
+                }
+                return true;
+            } catch (retryErr) {
+                err = retryErr;
+            }
+        }
+
+        outputColor = 'red';
         document.getElementById(textareaId).classList.add('red');
         console.log('Repository test failed ' + remoteURL);
         
-        let extraText = ''
+        let extraText = '';
         if ( folder.startsWith('ssh:') ){
             extraText = ' (on ssh server)';
         }

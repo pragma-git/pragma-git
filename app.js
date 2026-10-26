@@ -2148,18 +2148,27 @@ async function _callback( name, event){
                         : true;
 
                     let isRepoValid = isFolderExisting && isRepoStatus;
-                    let reason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[i]) ? cachedLocalStatus.reason[i] : '';
+                    let localReason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[i]) ? cachedLocalStatus.reason[i] : '';
 
-                    if (!isFolderExisting && !reason) {
-                        reason = 'not a folder';
-                    } else if (!isRepoStatus && !reason) {
-                        reason = 'not a repo';
+                    if (!isFolderExisting && !localReason) {
+                        localReason = 'not a folder';
+                    } else if (!isRepoStatus && !localReason) {
+                        localReason = 'not a repo';
+                    }
+
+                    // Check remote origin status
+                    let remoteHasError = false;
+                    let remoteReason = '';
+                    if (isRepoValid && state.repos[i].remoteURL && cachedRemoteOrigins && cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[i] === false) {
+                        remoteHasError = true;
+                        remoteReason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[i]) ? cachedRemoteOrigins.reason[i] : 'remote error';
                     }
 
                     let isCurrentRepo = (state.repoNumber == i);
                     let isCurrentInCurrentView = !hasAnyGroup ? isCurrentRepo : (isCurrentRepo && (currentGroupView === groupContext));
-                    let warningSign = isRepoValid ? '' : ' ! ';
-                    let reasonSuffix = (!isRepoValid && reason) ? ` (${reason})` : '';
+                    let warningSign = (!isRepoValid || remoteHasError) ? ' ! ' : '';
+                    let reason = !isRepoValid ? localReason : remoteReason;
+                    let reasonSuffix = reason ? ` (${reason})` : '';
 
                     let menuItemConfig = { 
                         label: warningSign + myEvent.selectedRepo + reasonSuffix, 
@@ -5891,6 +5900,7 @@ async function cacheRemoteOriginStatus( start = 0 ){
     if ( start == 0){  
         newCachedRemoteOrigins.remoteURL = new Array(state.repos.length).fill(null);        // original remoteURL (to make a trace)
         newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(false);  // true if remote works, false if not    
+        newCachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
     }else{
         newCachedRemoteOrigins = cachedRemoteOrigins;  // Copy if subset
     }
@@ -5914,6 +5924,9 @@ async function cacheRemoteOriginStatus( start = 0 ){
     // First time
     if (cachedRemoteOrigins.isActiveRemote == undefined){
         cachedRemoteOrigins = newCachedRemoteOrigins;
+    }
+    if (cachedRemoteOrigins.reason == undefined){
+        cachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
     }
     
     
@@ -5992,6 +6005,9 @@ async function cacheRemoteOriginStatus( start = 0 ){
                                         
                     // Immediate update
                     cachedRemoteOrigins.isActiveRemote[repoNumber] = newCachedRemoteOrigins.isActiveRemote[repoNumber];
+                    if (cachedRemoteOrigins.reason && newCachedRemoteOrigins.reason) {
+                        cachedRemoteOrigins.reason[repoNumber] = newCachedRemoteOrigins.reason[repoNumber];
+                    }
                     
                     console.log(`cacheRemoteOriginStatus.getRemoteOrigin( ${repoNumber}, ${folder} ).onRemote : `);
                     console.log(`  folder[${repoNumber}] =  ${folder}`);
@@ -6009,13 +6025,31 @@ async function cacheRemoteOriginStatus( start = 0 ){
                     
                     const commands = [ 'ls-remote', state.repos[repoNumber].remoteURL ];
         
-                    // const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                    const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
                     const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
                     try {
-                        await simpleGit( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT }).raw(  commands, onListRemote); // Do not log -- very long output
+                        await simpleGit( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT, GIT_ASKPASS }).raw(  commands, onListRemote); // Do not log -- very long output
+                        if (newCachedRemoteOrigins && newCachedRemoteOrigins.reason) {
+                            newCachedRemoteOrigins.reason[repoNumber] = '';
+                        }
                     }catch (err){
                         console.error(err);
                         console.log(repoNumber);
+                        isActive = false;
+                        let errStr = (err && (err.message || String(err))) || '';
+                        let isRevoked = false;
+                        let rUrl = state.repos[repoNumber] && state.repos[repoNumber].remoteURL;
+                        if (rUrl && typeof gitProvider === 'function') {
+                            try {
+                                let provider = await gitProvider(rUrl, false);
+                                if (provider && typeof provider.isCredentialRevokedError === 'function') {
+                                    isRevoked = provider.isCredentialRevokedError(errStr);
+                                }
+                            } catch (e) {}
+                        }
+                        if (newCachedRemoteOrigins && newCachedRemoteOrigins.reason) {
+                            newCachedRemoteOrigins.reason[repoNumber] = isRevoked ? 'credential error' : 'remote error';
+                        }
                     }
                     
                     function onListRemote(err, result ){

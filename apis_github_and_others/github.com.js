@@ -348,7 +348,16 @@ class github extends General_git_rest_api {
             // --- End Provider-specific code   
                   
                 return out  // return value for parameterName (from json), or undefined
-        }  
+        }
+
+        isCredentialRevokedError(errorMessage) {
+            if (!errorMessage || typeof errorMessage !== 'string') return false;
+            let msg = errorMessage.toLowerCase();
+            return msg.includes('support for password authentication was removed') ||
+                   msg.includes('invalid username or token') ||
+                   msg.includes('bad credentials') ||
+                   super.isCredentialRevokedError(errorMessage);
+        }
 }
 
 module.exports = github;

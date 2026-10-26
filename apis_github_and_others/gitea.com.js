@@ -285,6 +285,13 @@ class gitea extends General_git_rest_api {
             }
             return out;
         }
+
+        isCredentialRevokedError(errorMessage) {
+            if (!errorMessage || typeof errorMessage !== 'string') return false;
+            let msg = errorMessage.toLowerCase();
+            return msg.includes('user permission denied') ||
+                   super.isCredentialRevokedError(errorMessage);
+        }
 }
 
 module.exports = gitea;
