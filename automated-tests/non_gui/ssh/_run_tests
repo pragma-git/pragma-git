@@ -104,15 +104,18 @@ for test_path in "${TEST_FILES[@]}"; do
         print_suite_description "$test_name"
         echo ""
 
+        TMP_OUT=$(mktemp)
         if [[ "$test_path" == *.js ]]; then
-            (cd "$SCRIPT_DIR" && node "$test_name")
+            (cd "$SCRIPT_DIR" && node "$test_name" 2>&1 | tee "$TMP_OUT")
         elif [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
             wsl_path=$(echo "$test_path" | sed -E 's|^/([a-zA-Z])/|/mnt/\1/|')
-            MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path"
+            (MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path" 2>&1 | tee "$TMP_OUT")
         else
-            bash "$test_path"
+            bash "$test_path" 2>&1 | tee "$TMP_OUT"
         fi
-        exit_code=$?
+        exit_code=${PIPESTATUS[0]}
+        OUTPUT=$(cat "$TMP_OUT")
+        rm -f "$TMP_OUT"
 
         if [ $exit_code -eq 0 ]; then
             ((PASSED_TESTS++))
@@ -120,6 +123,7 @@ for test_path in "${TEST_FILES[@]}"; do
         else
             ((FAILED_TESTS++))
             echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
         fi
         echo ""
     else
@@ -150,6 +154,7 @@ for test_path in "${TEST_FILES[@]}"; do
             echo "$OUTPUT"
             echo "${RED}${BOLD}----------------------------------------${NORMAL}"
             echo ""
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
         fi
     fi
 done
@@ -169,6 +174,10 @@ else
 fi
 echo "  Duration:      ${DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -gt 0 ]; then
+    print_failed_tests_summary "Failed Tests in ${CATEGORY_NAME}"
+fi
 
 if [ $FAILED_TESTS -eq 0 ] && [ $TOTAL_TESTS -gt 0 ]; then
     echo "${GREEN}${BOLD}ALL SSH TESTS PASSED!${NORMAL}"

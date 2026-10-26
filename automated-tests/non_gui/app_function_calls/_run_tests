@@ -88,12 +88,15 @@ for test_path in "${TEST_FILES[@]}"; do
         print_suite_description "$test_name"
         echo ""
 
+        TMP_OUT=$(mktemp)
         if [[ "$test_path" == *.js ]]; then
-            node "$test_path"
+            node "$test_path" 2>&1 | tee "$TMP_OUT"
         else
-            bash "$test_path"
+            bash "$test_path" 2>&1 | tee "$TMP_OUT"
         fi
-        exit_code=$?
+        exit_code=${PIPESTATUS[0]}
+        OUTPUT=$(cat "$TMP_OUT")
+        rm -f "$TMP_OUT"
 
         if [ $exit_code -eq 0 ]; then
             ((PASSED_TESTS++))
@@ -101,6 +104,7 @@ for test_path in "${TEST_FILES[@]}"; do
         else
             ((FAILED_TESTS++))
             echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
         fi
         echo ""
     else
@@ -129,6 +133,7 @@ for test_path in "${TEST_FILES[@]}"; do
             echo "$OUTPUT"
             echo "${RED}${BOLD}----------------------------------------${NORMAL}"
             echo ""
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
         fi
     fi
 done
@@ -147,6 +152,10 @@ else
 fi
 echo "  Duration:      ${DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -gt 0 ]; then
+    print_failed_tests_summary "Failed Tests in ${CATEGORY_NAME}"
+fi
 
 if [ $FAILED_TESTS -eq 0 ]; then
     echo "${GREEN}${BOLD}ALL APP FUNCTION CALLS TESTS PASSED!${NORMAL}"

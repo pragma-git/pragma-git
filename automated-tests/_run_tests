@@ -61,6 +61,10 @@ TOTAL_CATEGORIES=0
 PASSED_CATEGORIES=0
 FAILED_CATEGORIES=0
 
+FAILED_TESTS_LOG=$(mktemp)
+export FAILED_TESTS_LOG
+trap 'rm -f "$FAILED_TESTS_LOG"' EXIT
+
 # Define subfolder order
 CATEGORIES=(
     "ssh"
@@ -127,6 +131,13 @@ else
 fi
 echo "  Total Duration:    ${TOTAL_DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
+
+if [ -s "$FAILED_TESTS_LOG" ]; then
+    echo ""
+    echo "${BOLD}${RED}Summary of Failed Tests (Total Run):${NORMAL}"
+    cat "$FAILED_TESTS_LOG"
+    echo "${BOLD}======================================================================${NORMAL}"
+fi
 
 if [ $FAILED_CATEGORIES -eq 0 ] && [ $TOTAL_CATEGORIES -gt 0 ]; then
     echo "${GREEN}${BOLD}ALL TEST CATEGORIES PASSED!${NORMAL}"

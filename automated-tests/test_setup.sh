@@ -53,3 +53,64 @@ function print_suite_result() {
         return 1
     fi
 }
+
+FAILED_SUITE_ENTRIES=()
+
+function record_failed_test() {
+    local suite_title="$1"
+    local output="$2"
+    local exit_code="$3"
+
+    local fail_lines
+    fail_lines=$(echo "$output" | awk '
+    /\[FAIL\]/ {
+        sub(/^[[:space:]]+/, "", $0);
+        print "  " $0;
+        in_fail = 1;
+        next;
+    }
+    /\[PASS\]/ {
+        in_fail = 0;
+        next;
+    }
+    in_fail && /^[[:space:]]{4,}/ {
+        print "     " $0;
+        next;
+    }
+    {
+        in_fail = 0;
+    }
+    ')
+
+    if [ -z "$fail_lines" ]; then
+        local err_msg
+        err_msg=$(echo "$output" | grep -E 'Error:|AssertionError|fatal:|SyntaxError|ReferenceError|TypeError' | head -n 2)
+        if [ -n "$err_msg" ]; then
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${suite_title}: $err_msg"
+        else
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${suite_title}: Suite failed with exit code $exit_code"
+        fi
+    fi
+
+    FAILED_SUITE_ENTRIES+=("$fail_lines")
+
+    if [ -n "$FAILED_TESTS_LOG" ]; then
+        echo "$fail_lines" >> "$FAILED_TESTS_LOG"
+    fi
+}
+
+function print_failed_tests_summary() {
+    local title="${1:-Summary of Failed Tests}"
+    # If running as part of the master test runner, let the master runner print the total summary at the end
+    if [ -n "$FAILED_TESTS_LOG" ]; then
+        return 0
+    fi
+    if [ ${#FAILED_SUITE_ENTRIES[@]} -gt 0 ]; then
+        echo ""
+        echo "${BOLD}${RED}${title}:${NORMAL}"
+        for entry in "${FAILED_SUITE_ENTRIES[@]}"; do
+            echo -e "$entry"
+        done
+        echo "${BOLD}======================================================================${NORMAL}"
+    fi
+}
