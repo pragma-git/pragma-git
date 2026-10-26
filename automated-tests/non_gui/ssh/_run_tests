@@ -70,6 +70,10 @@ function print_suite_description() {
             echo "   Tests Node.js helper methods in ssh-folder-lib.js for resolving SSH identities."
             echo "   Verifies ~/.ssh key scanning, fallback selection, and WSL path conversions."
             ;;
+        test_07_ssh_key_generation.js)
+            echo "   Tests isolated ED25519 key generation, permissions, derivation, and overwrite protection."
+            echo "   Verifies local sandbox isolation (safeguarding ~/.ssh) and CI-guarded deployment."
+            ;;
     esac
 }
 
