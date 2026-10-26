@@ -59,6 +59,10 @@ function print_suite_description() {
             echo "   Tests CI cache persistence and badge DOM updates from app.js."
             echo "   Verifies setCachedCiStatus, getCachedCiStatus, and updateCiBadge across all status types."
             ;;
+        test_04_draft_message.js)
+            echo "   Tests repository-specific mental note / draft message persistence from app.js."
+            echo "   Verifies getRepoDraftMessage, saveCurrentRepoDraftMessage, and restoreRepoDraftMessage."
+            ;;
     esac
 }
 

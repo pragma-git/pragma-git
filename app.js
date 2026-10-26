@@ -514,6 +514,7 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-repo': {
+        saveCurrentRepoDraftMessage(true);
         repoClicked(event);  // Menu or click to switch -- if Menu, then mode is kept until menu-select
         clearFindFields();
         
@@ -528,8 +529,6 @@ async function _callback( name, event){
             await _update2();
         }
         
-        writeTextOutput( { value: '' } );  // Clean message
-        
         break;
       }
       case 'clickedRepoContextualMenu': {
@@ -542,6 +541,7 @@ async function _callback( name, event){
         }
         
         let origRepoNumber = state.repoNumber ;
+        saveCurrentRepoDraftMessage(true, origRepoNumber);
         state.repoNumber = event.selectedRepoNumber;
         if (state.repos[state.repoNumber]) {
             state.repos[state.repoNumber].lastOpened = new Date().toISOString();
@@ -625,12 +625,15 @@ async function _callback( name, event){
         await gitStashMap(state.repos[state.repoNumber].localFolder);
 
         
+        // Restore draft note for the newly selected repository
+        restoreRepoDraftMessage();
+
         //if (getMode() !== 'HISTORY'){
             await _setMode('UNKNOWN');
             await _update2();
         //}
         
-        writeTextOutput( { value: '' } );  // Clean message
+        restoreRepoDraftMessage();
         
         
         await updateGraphWindow();
@@ -666,6 +669,8 @@ async function _callback( name, event){
         let branchName = event.selectedBranch;
         pragmaLog('   branchname = ' + branchName);
         
+        saveCurrentRepoDraftMessage(true);
+
         // Checkout local branch
         try{
             await simpleGitLog(state.repos[state.repoNumber].localFolder).checkout( branchName, onCheckout);
@@ -688,6 +693,7 @@ async function _callback( name, event){
         cacheBranchList();
         
         await gitSwitchBranch(branchName);
+        restoreRepoDraftMessage();
         
 
         await updateChangedListWindow();
@@ -809,6 +815,10 @@ async function _callback( name, event){
       // Middle field
       case 'message_key_up': {
         messageKeyUpEvent();
+        break;
+      }
+      case 'message_blur': {
+        saveCurrentRepoDraftMessage(true);
         break;
       }
       case 'message_dblclick': {
@@ -2430,6 +2440,7 @@ async function _callback( name, event){
                         }
                         branchName = await getBranchName();
                         await gitSwitchBranch(branchName);
+        restoreRepoDraftMessage();
 
                         
                     }catch(err){        
@@ -2796,7 +2807,10 @@ async function _callback( name, event){
         
         console.log('down arrow clicked');
         
-        
+        // Save draft note if currently at HEAD before moving to history
+        if (localState.historyNumber < 0 && getMode() !== 'HISTORY') {
+            saveCurrentRepoDraftMessage(true);
+        }
         
         localState.historyNumber = localState.historyNumber + 1;
         
@@ -2912,11 +2926,10 @@ async function _callback( name, event){
             
             selectInGraph(localState.historyHash);
             
-            //writeMessage( '', false);  // empty message -- needed off for setMode to understand UNKNOWN mode
-            textOutput.value = '';
-            writeTextOutput( textOutput);
+            restoreRepoDraftMessage();
             await _setMode('UNKNOWN');
             await _update();
+            restoreRepoDraftMessage();
             queryCommitCiStatus(false);
             
         }else{
@@ -2942,11 +2955,15 @@ async function _callback( name, event){
  
         // Bail out if read-only
         if ( textOutput.readOnly == true ){
-            return
+            return;
         }
         
         textOutput.value = readMessage();
+        saveCurrentRepoDraftMessage(false);
 
+        if (getMode() === 'NO_FILES_TO_COMMIT') {
+            return;
+        }
         
         // It should be safe to assume that CHANGED_FILES of some sort -- otherwise
         if (textOutput.value.length > 0){
@@ -3767,6 +3784,19 @@ async function _setMode( inputModeName){
                 let copyOfLocalState = localState;  // Backup localState
                 localState.historyNumber = -1;      // Guess that not in history browsing mode
                 
+                // Clean values that destroy working-out mode
+                if (currentMode == 'HISTORY'){
+                    let draft = getRepoDraftMessage();
+                    textOutput.value = draft;
+                    textOutput.placeholder = 
+                        "You may write what is ongoing here," + os.EOL + os.EOL + 
+                        "Change text to commit message (or stash name) when done";
+                    textOutput.readOnly = false;
+                    writeTextOutput(textOutput);
+                    localState.historyString = "";
+                    localState.historyHash = "";
+                }
+
                 // Sources used to determinine mode
                 let messageLength = readMessage().length;
                 let numberOfRepos = state.repos.length;
@@ -3780,14 +3810,6 @@ async function _setMode( inputModeName){
                     //console.log(' status_data, localState.historyNumber, messageLength, numberOfRepos, historyNumberPointer ');
                 }catch(err){
                     status_data.changedFiles = false;  // No changed files, if status fails (probably because no repos)
-                }
-
-                
-                // Clean values that destroy working-out mode
-                if (currentMode == 'HISTORY'){
-                    textOutput.value = "";  // Text length is used to determine 'CHANGED_FILES_TEXT_ENTERED'
-                    localState.historyString = "";
-                    localState.historyHash = "";
                 }
        
                 // DEFAULT
@@ -3854,19 +3876,28 @@ async function _setMode( inputModeName){
         case 'NO_FILES_TO_COMMIT': {
             // set by _mainLoop
             
-            // Store button should be disabled if no text entered
-			if (textOutput.value.length == 0){
-				document.getElementById('store-button').disabled = true;
-			}
-            
             newModeName = 'NO_FILES_TO_COMMIT';
-            textOutput.placeholder = '"' + HEAD_title + '"'; //+ os.EOL + "- is not changed" + os.EOL + "- nothing to Store"  ;
+            textOutput.placeholder = 
+                "You may write what is ongoing here," + os.EOL + os.EOL + 
+                "Change text to commit message (or stash name) when done"; 
             textOutput.readOnly = false;
             if (HEAD_title == undefined){
                 textOutput.placeholder = "No modified files" ;
                 
                 // Hide amend checkbox
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
+            }
+
+            let draft = getRepoDraftMessage();
+            textOutput.value = draft;
+            writeTextOutput(textOutput);
+
+            // Store button should be disabled if no modified files to commit (unless amending)
+            let isAmending = (document.getElementById('amend_commit_checkbox') && document.getElementById('amend_commit_checkbox').checked) || !window._msgAllowAction;
+            if (!isAmending) {
+                document.getElementById('store-button').disabled = true;
+            } else {
+                document.getElementById('store-button').disabled = false;
             }
             
             // Detached HEAD
@@ -3914,14 +3945,8 @@ async function _setMode( inputModeName){
             newModeName = 'CHANGED_FILES';
 
             textOutput.placeholder = 
-                "Type description here ... and press Store" + os.EOL + os.EOL + 
-                'Last commit : "' + HEAD_short_title + '"' + os.EOL + 
-                "- is MODIFIED";  
-                
-
-            textOutput.placeholder = 
-                "Type description here ... and press Store" + os.EOL + os.EOL + 
-                "(or give name to stash, and press Stash button)";  
+                "You may write what is ongoing here," + os.EOL + os.EOL + 
+                "Change text to commit message (or stash name) when done";  
                 
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
@@ -3943,10 +3968,20 @@ async function _setMode( inputModeName){
 
             // Alternative message if no previous commit
             if (HEAD_title == undefined){
-                textOutput.placeholder = "There are modified files - type description here,  and press Store"  ;
+                textOutput.placeholder = 
+                    "You may write what is ongoing here," + os.EOL + os.EOL + 
+                    "Change text to commit message (or stash name) when done";
             }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
+            let draft = getRepoDraftMessage();
+            if (draft && draft.length > 0) {
+                textOutput.value = draft;
+                textOutput.readOnly = false;
+                writeTextOutput(textOutput);
+                await _setMode('CHANGED_FILES_TEXT_ENTERED');
+                return;
+            }
             textOutput.value = "";          
             textOutput.readOnly = false;
             writeTextOutput(textOutput);
@@ -5022,6 +5057,10 @@ async function gitAddCommitAndPush( message){
         localState.unstaged = [];
         textOutput.value = '';
         writeTextOutput( textOutput);
+        if (state.repoNumber >= 0 && state.repos && state.repos[state.repoNumber]) {
+            state.repos[state.repoNumber].draftMessage = '';
+            saveSettings();
+        }
         _setMode('UNKNOWN');  
         await _update()
         _setMode('UNKNOWN');  
@@ -5120,7 +5159,10 @@ async function gitStash(){
             // Write latest commit to message area placeholder (because there is nothing uncommited now)
             let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
             commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
-            writeTextOutput( { placeholder: commitMessage, value: '' } ); 
+            writeTextOutput( { 
+                placeholder: "You may write what is ongoing here," + os.EOL + os.EOL + "Change text to commit message (or stash name) when done", 
+                value: '' 
+            } ); 
         }
         
         
@@ -8336,6 +8378,55 @@ function readMessage(){
     
 }
 
+let _saveDraftTimeout = null;
+
+function saveCurrentRepoDraftMessage(syncSave = false, repoIdx = state.repoNumber) {
+    if (repoIdx >= 0 && state.repos && state.repos[repoIdx]) {
+        if (localState.historyNumber < 0 && getMode() !== 'HISTORY') {
+            state.repos[repoIdx].draftMessage = readMessage();
+            if (syncSave) {
+                if (_saveDraftTimeout) {
+                    clearTimeout(_saveDraftTimeout);
+                    _saveDraftTimeout = null;
+                }
+                saveSettings();
+            } else {
+                if (_saveDraftTimeout) {
+                    clearTimeout(_saveDraftTimeout);
+                }
+                _saveDraftTimeout = setTimeout(() => {
+                    _saveDraftTimeout = null;
+                    saveSettings();
+                }, 800);
+            }
+        }
+    }
+}
+
+function getRepoDraftMessage(repoIdx = state.repoNumber) {
+    if (repoIdx >= 0 && state.repos && state.repos[repoIdx] && state.repos[repoIdx].draftMessage) {
+        return state.repos[repoIdx].draftMessage;
+    }
+    return '';
+}
+
+function restoreRepoDraftMessage(repoIdx = state.repoNumber) {
+    if (localState.historyNumber < 0) {
+        let draft = getRepoDraftMessage(repoIdx);
+        textOutput.value = draft;
+        textOutput.readOnly = false;
+        textOutput.placeholder = 
+            "You may write what is ongoing here," + os.EOL + os.EOL + 
+            "Change text to commit message (or stash name) when done";
+        writeTextOutput(textOutput);
+        if (draft.length > 0) {
+            if (getMode() === 'CHANGED_FILES' || getMode() === 'CHANGED_FILES_TEXT_ENTERED') {
+                _setMode('CHANGED_FILES_TEXT_ENTERED');
+            }
+        }
+    }
+}
+
 function setStoreButtonEnableStatus( enableStatus) {
     document.getElementById('store-button').disabled = !enableStatus;
 }
@@ -8822,6 +8913,9 @@ function loadSettings(settingsFile){
         // Hidden branches
         repoState.hiddenBranches = setting( repoStateIn.hiddenBranches, [] );
         
+        // Draft message / Mental note
+        repoState.draftMessage = setting( repoStateIn.draftMessage, '' );
+
         return repoState;
     }
     function setting( input, defaultValue){             // Utility function to set a single undefined value to its default
@@ -9040,6 +9134,7 @@ window.onload = async function() {
       win.showDevTools();  // WARNING : causes redraw issues on startup
   }
   
+  restoreRepoDraftMessage();
   _setMode('UNKNOWN');
   _update();
 
@@ -9154,6 +9249,7 @@ async function closeWindow(a){
     state.position.height = gui.Window.get().height;
     state.position.width = gui.Window.get().width;
     
+    saveCurrentRepoDraftMessage(true);
     saveSettings();
 
     // After closing the new window, close the main window.

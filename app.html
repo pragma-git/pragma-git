@@ -275,10 +275,11 @@
             
                 onmousedown="if (event.detail === 1) { window._messageHadFocus = (document.activeElement === this); }"
                 onkeyup="_callback('message_key_up');"
+                oninput="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
-                onblur="window._messageHadFocus = false; window._msgAllowAction = true;"
+                onblur="window._messageHadFocus = false; window._msgAllowAction = true; _callback('message_blur');"
             
-                placeholder="&quot;Fix issue #5 (https://github.com/pragma-git/pragma-git/issues/5)&quot;"
+                placeholder="You may write what is ongoing here,&#10;&#10;Change text to commit message (or stash name) when done"
                 readonly
             ></textarea>
             

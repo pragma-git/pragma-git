@@ -29,6 +29,17 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Repository-Specific Mental Note Memory (`draftMessage`)**:
+  - Implemented per-repository draft mental notes in `#message` ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
+  - Updated empty-state placeholder in `#message` to direct prompt: `"You may write what is ongoing here,\n\nChange text to commit message (or stash name) when done"`.
+  - Fixed returning to HEAD from historical commits (`upArrowClicked`): cleared historical commit text from DOM before computing mode in `_setMode('UNKNOWN')`, ensured `NO_FILES_TO_COMMIT` always synchronizes placeholder and value, and updated `restoreRepoDraftMessage` to immediately restore draft note/placeholder without requiring a second up-arrow click.
+  - Mental notes persist per repository across repo switches, branch changes, and app restarts (`settings.json`).
+  - Browsing `HISTORY` displays past commit log messages; returning to `HEAD` (via `▲` or up-arrow) restores the repo's mental note.
+  - Making a commit (`gitAddCommitAndPush`) clears the active repo draft note.
+  - Added full test coverage in [test_01_repo_settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_01_repo_settings.js) and [test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js). All 109 automated tests pass across all 7 categories.
+* **Automated Test Runner & SSH Key Generation Test Suites**:
+  - Added failed test collection and end-of-run summary in `automated-tests/_run_tests`.
+  - Added isolated SSH key generation automated tests (`test_07_ssh_key_generation.js`), passing 100/100 tests across all 7 categories.
 * **Titlebar Icon Alignments & CI Badge**:
   - Resolved a CSS syntax error (an extra `}`) in `style.css` which had caused the browser to ignore subsequent titlebar icon rules (`top-titlebar-tag-icon`, `top-titlebar-close-field`, minimize, and close icons).
   - Restored exact horizontal and vertical positions for close (`x`), minimize (`-`), and action buttons (`tag`, `push`, `pull`, `merge`, `branch`).

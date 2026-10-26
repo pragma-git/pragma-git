@@ -8,6 +8,7 @@
  *   3. isDecimal validates valid numeric strings and rejects invalid inputs
  *   4. isNullOrWhitespace correctly identifies empty, null, and whitespace inputs
  *   5. typeOfRepoServer classifies local repository paths as 'Local'
+ *   6. draftMessage maintains per-repo isolation and survives JSON serialization roundtrip
  */
 
 const fs = require('fs');
@@ -95,8 +96,9 @@ async function runTests() {
         emptySettings.allowPushToRemote === true &&
         emptySettings.autoPushToRemote === true &&
         emptySettings.NoFF_merge === true &&
+        emptySettings.draftMessage === '' &&
         Array.isArray(emptySettings.hiddenBranches) && emptySettings.hiddenBranches.length === 0,
-        'fixRepoSettingWithDefault populates default values for all missing keys'
+        'fixRepoSettingWithDefault populates default values for all missing keys including draftMessage'
     );
 
     // Test 2: fixRepoSettingWithDefault preserves existing customized values
@@ -105,6 +107,7 @@ async function runTests() {
         remoteURL: 'https://github.com/example/custom.git',
         sshKey: '~/.ssh/custom_id_rsa',
         group: 'Personal',
+        draftMessage: 'Mental note: implement feature X',
         allowPushToRemote: false,
         hiddenBranches: ['wip', 'experiment']
     };
@@ -114,11 +117,12 @@ async function runTests() {
         customized.remoteURL === 'https://github.com/example/custom.git' &&
         customized.sshKey === '~/.ssh/custom_id_rsa' &&
         customized.group === 'Personal' &&
+        customized.draftMessage === 'Mental note: implement feature X' &&
         customized.allowPushToRemote === false &&
         customized.hiddenBranches.length === 2 &&
         customized.hiddenBranches[0] === 'wip' &&
         customized.NoFF_merge === true,
-        'fixRepoSettingWithDefault preserves customized fields and injects missing defaults'
+        'fixRepoSettingWithDefault preserves customized fields including draftMessage and injects missing defaults'
     );
 
     // Test 3: isDecimal validation
@@ -139,6 +143,19 @@ async function runTests() {
     const localType1 = await sandbox.typeOfRepoServer('/Users/jan/repo');
     const localType2 = await sandbox.typeOfRepoServer('C:\\Users\\jan\\repo');
     assert(localType1 === 'Local' && localType2 === 'Local', 'typeOfRepoServer identifies local filesystem paths as "Local"');
+
+    // Test 6: draftMessage per-repo isolation and JSON serialization roundtrip
+    const repoA = sandbox.fixRepoSettingWithDefault({ localFolder: '/repoA', draftMessage: 'Note for repo A' });
+    const repoB = sandbox.fixRepoSettingWithDefault({ localFolder: '/repoB', draftMessage: '' });
+    const serialized = JSON.stringify([repoA, repoB]);
+    const parsed = JSON.parse(serialized).map(r => sandbox.fixRepoSettingWithDefault(r));
+    assert(
+        parsed[0].draftMessage === 'Note for repo A' &&
+        parsed[1].draftMessage === '' &&
+        parsed[0].localFolder === '/repoA' &&
+        parsed[1].localFolder === '/repoB',
+        'draftMessage maintains per-repo isolation and survives JSON serialization roundtrip'
+    );
 
     printSuiteResult();
 }
