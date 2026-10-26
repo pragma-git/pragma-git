@@ -332,9 +332,13 @@ async function runTests() {
     const bodyElement = { nodeType: 1, childNodes: [titleTextNode, textareaNode] };
 
     let savedCred = null;
+    let savedCredCalls = [];
     const createRepoSandbox = {
         console: { log: () => {}, warn: () => {}, err: () => {}, error: () => {} },
+        URL: global.URL,
         setTimeout: () => {},
+        clearTimeout: () => {},
+        accountLookupTimer: null,
         runWhenPageLoaded: () => {},
         Node: { ELEMENT_NODE: 1, TEXT_NODE: 3, DOCUMENT_NODE: 9 },
         localState: {
@@ -346,17 +350,23 @@ async function runTests() {
         name: 'Bitbucket',
         provider: null,
         allCredentials: [
-            { username: 'bbuser', password: 'bb_app_password' },
-            { username: 'x-token-auth', password: 'bb_oauth_token' }
+            { username: 'bbuser', password: 'bb_app_password', url: 'https://bitbucket.org/bbuser/existing-repo.git' },
+            { username: 'x-token-auth', password: 'bb_oauth_token', url: 'https://bitbucket.org/bbuser/other-repo.git' }
         ],
         matchedRepoIndeces: [0, 1],
         displayedRepoIndex: 1,
         displayedRepoMax: 2,
         opener: {
             opener: {
+                state: {
+                    repos: [
+                        { remoteURL: 'https://bbuser@bitbucket.org/bbuser/existing-repo.git', localFolder: '/tmp/existing' }
+                    ]
+                },
                 gitProvider: async (url) => new GeneralApi(url),
                 setCredential: async (url, username, password) => {
                     savedCred = { url, username, password };
+                    savedCredCalls.push({ url, username, password });
                 }
             }
         },
@@ -368,6 +378,8 @@ async function runTests() {
     vm.createContext(createRepoSandbox);
     vm.runInContext(extractFunction(createRepoJsCode, 'replaceInText'), createRepoSandbox);
     vm.runInContext(extractFunction(createRepoJsCode, 'runWhenDOMContentLoaded'), createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'getIndecesToUniqueCredentials'), createRepoSandbox);
+    vm.runInContext(extractFunction(createRepoJsCode, 'processAccountName'), createRepoSandbox);
     vm.runInContext(extractFunction(createRepoJsCode, 'updateCredentialsText'), createRepoSandbox);
     vm.runInContext(extractFunction(createRepoJsCode, 'rememberCredential'), createRepoSandbox);
 
@@ -380,8 +392,12 @@ async function runTests() {
     createRepoSandbox.updateCredentialsText();
     const displayedOauth = domElements.token.value;
 
-    // Test rememberCredential parsing 'bbuser:bb_app_password' into username + password
-    await createRepoSandbox.rememberCredential('https://bitbucket.org/bbuser/newrepo.git', 'bbuser', 'bbuser:bb_app_password');
+    // Test rememberCredential parsing 'bbuser:new_app_password' and saving account URL + new repo URL without overwriting other repos
+    await createRepoSandbox.rememberCredential('https://bitbucket.org/bbuser/newrepo.git', 'bbuser', 'bbuser:new_app_password');
+
+    // Test case-insensitive processAccountName lookup after rememberCredential updated credentials
+    createRepoSandbox.processAccountName('BBUser', true);
+    const updatedDisplayedToken = domElements.token.value;
 
     assert(
         titleTextNode.textContent === 'Create Bitbucket repository' &&
@@ -391,8 +407,12 @@ async function runTests() {
         domElements.token_label.innerHTML.includes('app-passwords') &&
         displayedAppPass === 'bbuser:bb_app_password' &&
         displayedOauth === 'bb_oauth_token' &&
-        savedCred && savedCred.username === 'bbuser' && savedCred.password === 'bb_app_password',
-        'create_remote_repository.js replaces Github placeholder, sets provider labels, and formats/saves credentials via provider API'
+        savedCred && savedCred.username === 'bbuser' && savedCred.password === 'new_app_password' &&
+        savedCredCalls.some(c => c.url === 'https://bitbucket.org/bbuser' && c.password === 'new_app_password') &&
+        savedCredCalls.some(c => c.url === 'https://bitbucket.org/bbuser/newrepo.git' && c.password === 'new_app_password') &&
+        !savedCredCalls.some(c => c.url === 'https://bitbucket.org/bbuser/existing-repo.git') &&
+        updatedDisplayedToken === 'bbuser:new_app_password',
+        'create_remote_repository.js replaces Github placeholder, sets provider labels, and saves account & repo credentials without overwriting existing repos'
     );
 
     printSuiteResult();

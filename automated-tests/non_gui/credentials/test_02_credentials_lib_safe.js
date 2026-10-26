@@ -150,13 +150,54 @@ async function runTests() {
             assertFail('2.3: getCredential failed to parse expected credentials', JSON.stringify(creds));
         }
 
-        // Test 4: clearCredential rejects and erases credentials
+        // Test 4: setCredential overwrites an existing password (clears before approving)
+        const updatedPassword = 'updatedSecretPassword456';
+        await sandbox.setCredential(dummyRemoteUrl, dummyUser, updatedPassword);
+        const updatedCreds = await sandbox.getCredential(dummyRemoteUrl);
+        if (updatedCreds && updatedCreds.username === dummyUser && updatedCreds.password === updatedPassword) {
+            assertPass('2.4: setCredential updates existing password in credential helper');
+        } else {
+            assertFail('2.4: setCredential failed to update existing password', JSON.stringify(updatedCreds));
+        }
+
+        // Test 5: getCredential normalizes URLs containing embedded username@ and still queries helper
+        const embeddedUserUrl = 'https://embeddedUser@dummy-isolated.local/owner/repo.git';
+        const embeddedCreds = await sandbox.getCredential(embeddedUserUrl);
+        if (
+            embeddedCreds &&
+            embeddedCreds.password === updatedPassword &&
+            embeddedCreds.url === dummyRemoteUrl
+        ) {
+            assertPass('2.5: getCredential strips embedded username@ so helper password is used and url is normalized');
+        } else {
+            assertFail('2.5: getCredential failed on URL with embedded username@', JSON.stringify(embeddedCreds));
+        }
+
+        // Test 6: getLocalFolder preserves a newly created remoteUrl not yet in state.repos and prefers local over ssh:
+        sandbox.state.repos.push({
+            localFolder: 'ssh://user@127.0.0.1/remote/path',
+            remoteURL: dummyRemoteUrl
+        });
+        const brandNewUrl = 'https://dummy-isolated.local/owner/brand-new-repo.git';
+        const resolvedNew = sandbox.getLocalFolder(brandNewUrl);
+        const resolvedExisting = sandbox.getLocalFolder(dummyRemoteUrl);
+        if (
+            resolvedNew.remoteUrl === brandNewUrl &&
+            resolvedNew.localFolder === testDir &&
+            resolvedExisting.localFolder === testDir
+        ) {
+            assertPass('2.6: getLocalFolder preserves unindexed remoteUrl and prefers local folder over ssh:');
+        } else {
+            assertFail('2.6: getLocalFolder failed URL preservation or local preference', JSON.stringify({ resolvedNew, resolvedExisting }));
+        }
+
+        // Test 7: clearCredential rejects and erases credentials
         await sandbox.clearCredential(dummyRemoteUrl);
         const storeStillExists = fs.existsSync(path.join(testDir, 'creds_store.txt'));
         if (!storeStillExists) {
-            assertPass('2.4: clearCredential sends rejection command pipe to mock helper, erasing credentials');
+            assertPass('2.7: clearCredential sends rejection command pipe to mock helper, erasing credentials');
         } else {
-            assertFail('2.4: clearCredential did not remove stored credentials file');
+            assertFail('2.7: clearCredential did not remove stored credentials file');
         }
 
     } catch (err) {

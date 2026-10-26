@@ -82,7 +82,7 @@ async function runWhenDOMContentLoaded() {
             console.log('create_remote_repository.html :DOM fully loaded and parsed');
             
             // Run after page displayed (get credentials, etc)
-            setTimeout( runWhenPageLoaded, 1000 );
+            setTimeout( runWhenPageLoaded, 10 );
 
         } 
     function replaceInText(element, pattern, replacement) { 
@@ -111,24 +111,52 @@ async function runWhenPageLoaded(){
             console.log('allCredentials : ');
             console.log(allCredentials);
             
-            // Update finding password
-            accountText = document.getElementById('accountName').value;
-            processAccountName( accountText);
+            // Update finding password if accountName has already been typed
+            let accountEl = document.getElementById('accountName');
+            let tokenEl = document.getElementById('token');
+            let accountText = accountEl ? accountEl.value : '';
+            if (accountText.trim() !== '') {
+                let existingToken = tokenEl ? tokenEl.value : '';
+                processAccountName( accountText);
+                if (tokenEl && tokenEl.value === '' && existingToken !== '') {
+                    tokenEl.value = existingToken;
+                }
+            }
         }catch(err){
-            console.err(err);
+            console.error(err);
         }
             
 
 }
 
+let accountLookupTimer = null;
+
 // Update from credential
-function processAccountName( accountText){  // Looks up credentials by accountText
+function processAccountName( accountText, skipAccountLookup = false){  // Looks up credentials by accountText
     // Check if known url, and get password etc into token field
+    let cleanAccount = (accountText || '').trim();
+    if (!provider || !provider.giturl || cleanAccount === '') {
+        matchedRepoIndeces = [];
+        displayedRepoIndex = 0;
+        displayedRepoMax = 0;
+        let rangeEl = document.getElementById('matchedRepoRange');
+        if (rangeEl) rangeEl.style.display = 'none';
+        updateCredentialsText();
+        return;
+    }
     
-    let urlToMatch = provider.giturl + '/' + accountText +'/';  // Finds github repos with JanAxelsson, but not JanAxelssonTest
-    console.log(`Account name = ${accountText},  url = ${urlToMatch}`);
-    matchedRepoIndeces = util.findOAllbjectsIndexStartsWith( allCredentials, 'url', urlToMatch);  
-    matchedRepoIndeces = getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces);  // Get indeces with unique credentials
+    let baseGitUrl = provider.giturl.replace(/\/+$/, '');
+    let urlToMatch = (baseGitUrl + '/' + cleanAccount + '/').toLowerCase();  // Finds github repos with JanAxelsson, but not JanAxelssonTest
+    console.log(`Account name = ${cleanAccount},  url = ${urlToMatch}`);
+
+    let credsList = Array.isArray(allCredentials) ? allCredentials : [];
+    matchedRepoIndeces = [];
+    for (let i = 0; i < credsList.length; i++) {
+        if (credsList[i] && typeof credsList[i].url === 'string' && credsList[i].url.toLowerCase().startsWith(urlToMatch)) {
+            matchedRepoIndeces.push(i);
+        }
+    }
+    matchedRepoIndeces = getIndecesToUniqueCredentials( credsList, matchedRepoIndeces);  // Get indeces with unique credentials
     
     // If empty
     if (displayedRepoMax <= 0 ){
@@ -142,13 +170,39 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
         displayedRepoIndex = 1;
     }
     
-    if (displayedRepoMax > 1 ){
-        document.getElementById('matchedRepoRange').style.display = 'block';  // Show arrow buttons (to switch between credentials)
-    }else{
-        document.getElementById('matchedRepoRange').style.display = 'none'    // Hide arrow buttons (to switch between credentials)
-    }    
+    let rangeEl = document.getElementById('matchedRepoRange');
+    if (rangeEl) {
+        if (displayedRepoMax > 1 ){
+            rangeEl.style.display = 'block';  // Show arrow buttons (to switch between credentials)
+        }else{
+            rangeEl.style.display = 'none';   // Hide arrow buttons (to switch between credentials)
+        }
+    }
     
     updateCredentialsText();
+
+    // Also query the account-level credential in the password manager so accounts without repos in state.repos are found
+    if (!skipAccountLookup && typeof opener !== 'undefined' && opener && opener.opener && typeof opener.opener.getCredential === 'function') {
+        if (accountLookupTimer) clearTimeout(accountLookupTimer);
+        accountLookupTimer = setTimeout(async () => {
+            try {
+                let accountEl = document.getElementById('accountName');
+                let currentInput = (accountEl ? accountEl.value : '').trim();
+                if (currentInput.toLowerCase() !== cleanAccount.toLowerCase()) return;
+
+                let accountUrl = baseGitUrl + '/' + cleanAccount;
+                let acctCred = await opener.opener.getCredential(accountUrl);
+                if (acctCred && acctCred.password !== undefined) {
+                    acctCred.url = accountUrl + '/';
+                    if (!Array.isArray(allCredentials)) {
+                        allCredentials = [];
+                    }
+                    allCredentials.unshift(acctCred);
+                    processAccountName(currentInput, true);
+                }
+            } catch (e) {}
+        }, 150);
+    }
    
 }
     function getIndecesToUniqueCredentials( allCredentials, matchedRepoIndeces) { 
@@ -159,6 +213,7 @@ function processAccountName( accountText){  // Looks up credentials by accountTe
         // Loop for the array elements 
         for (let i in matchedRepoIndeces) { 
             let index = matchedRepoIndeces[i];
+            if (!allCredentials || !allCredentials[index]) continue;
             let creds = allCredentials[index].username + allCredentials[index].password;  // Make a compound string with both
             
             // Skip showing undefined passwords
@@ -205,9 +260,9 @@ async function createRepo(){// Create Repo
     //
     // Assume just creating a remote repo
     //   
-    let OWNER = document.getElementById('accountName').value;               
-    let NEW_REPO = document.getElementById('newRepoName').value;
-    let TOKEN = document.getElementById('token').value;
+    let OWNER = document.getElementById('accountName').value.trim();               
+    let NEW_REPO = document.getElementById('newRepoName').value.trim();
+    let TOKEN = document.getElementById('token').value.trim();
     let DESCRIPTION = document.getElementById('repoDescription').value;
     let PRIVATE = document.getElementById('privateRepo').checked;
     
@@ -220,13 +275,13 @@ async function createRepo(){// Create Repo
         document.getElementById('newRepoStatus').innerHTML = `Successfully created repository =  ${giturl}`;
         document.getElementById('newRepoStatus').classList.add('green');
         document.getElementById('newRepoStatus').classList.remove('red');
-        
-        document.getElementById('ok2').style="display: block;" ;
  
         outputURL = giturl;
         
-        // Set credential
+        // Set credential in password manager before showing '2) Set as Remote'
         await rememberCredential( giturl, OWNER, TOKEN);
+        
+        document.getElementById('ok2').style="display: block;" ;
 
     } else {
         document.getElementById('newRepoStatus').innerHTML = `Failed creating repository =  ${giturl} `;
@@ -241,12 +296,40 @@ async function createRepo(){// Create Repo
         console.log('rememberCredential');
         
         try{
+            let cleanOwner = (OWNER || '').trim();
+            let cleanToken = (TOKEN || '').trim();
             let cred = (provider && typeof provider.parseTokenForCredential === 'function')
-                ? provider.parseTokenForCredential(OWNER, TOKEN)
-                : { username: OWNER, password: TOKEN };
+                ? provider.parseTokenForCredential(cleanOwner, cleanToken)
+                : { username: cleanOwner, password: cleanToken };
+
+            let baseGitUrl = (provider && provider.giturl) ? provider.giturl.replace(/\/+$/, '') : '';
+            if (!baseGitUrl && giturl) {
+                try {
+                    let u = new URL(giturl);
+                    baseGitUrl = `${u.protocol}//${u.host}`;
+                } catch (e) {}
+            }
+
+            // 1. Store account-level credential in password manager so the latest Create Repo token is always remembered first (1 of N)
+            //    without overwriting repo-specific fine-grained PATs on other existing repositories
+            if (baseGitUrl && cleanOwner) {
+                let accountUrl = `${baseGitUrl}/${cleanOwner}`;
+                await opener.opener.setCredential(accountUrl, cred.username, cred.password);
+            }
+
+            // 2. Store credential for the newly created repository URL
             await opener.opener.setCredential( giturl, cred.username, cred.password);
+
+            // 3. Prepend to in-memory allCredentials so this token is first (1 of N) while keeping other unique repo tokens accessible
+            if (Array.isArray(allCredentials)) {
+                allCredentials.unshift({
+                    username: cred.username,
+                    password: cred.password,
+                    url: giturl
+                });
+            }
         }catch(err){
-            console.err(err);
+            console.error(err);
         }
     }
 function finalizeAndClose(){ 
