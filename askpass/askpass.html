@@ -53,7 +53,7 @@
     <!-- Dark mode on/off --> 
 
     <script>
-        if (opener.localState.dark){
+        if (typeof opener !== 'undefined' && opener && opener.localState && opener.localState.dark){
             document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
@@ -110,7 +110,15 @@
             <div class="input-container">
                 <textarea id="pwd" class="masked" rows="1" cols="50"></textarea>
                 <img id="toggleBtn" src="../images/eye-off.svg" class="eye-icon" alt="Visa/Dölj">
-            </div><br>
+            </div>
+            
+            <div id="matchedRepoRange" style="display:none; margin-bottom: 10px; font-size: 0.85em; user-select: none;">
+                <span>Stored token: </span>
+                <span id="matchedRepoDown" style="font-weight: bold; padding: 0 4px; user-select: none;" title="Previous token">&#x25C0;</span>
+                <span id="matchedCurrentPos" style="font-weight: bold;">0</span> of <span id="matchedMax">0</span>
+                <span id="matchedRepoUp" style="font-weight: bold; padding: 0 4px; user-select: none;" title="Next token">&#x25B6;</span>
+                <span id="matchedRepoSource" style="color: gray; margin-left: 8px;"></span>
+            </div>
             
             <div id="descriptiveText" style="font-size: 0.8em"></div><br>
             
@@ -124,7 +132,7 @@
                 const toggleBtn = document.getElementById('toggleBtn');
                 
                 // NW.js fönster-instans
-                const win = nw.Window.get();
+                const win = (typeof nw !== 'undefined' && nw.Window) ? nw.Window.get() : null;
                 
                 // 1. Växla visa/dölj (din befintliga kod)
                 toggleBtn.addEventListener('click', () => {
@@ -134,13 +142,52 @@
                 
                 // 2. Automatiskt fönster-resize när användaren drar i textarean
                 // Vi använder en ResizeObserver för att detektera när elementet ändrar storlek
-                const resizeObserver = new ResizeObserver(() => {
-                // NW.js metod för att anpassa fönstret efter dess innehåll (DOM)
-                // Detta gör att fönstret växer om textarean blir större
-                /* win.setMinimumSize(window.outerWidth, window.outerHeight); // Valfritt: hindra fönstret från att bli mindre än innehållet */
+                if (typeof ResizeObserver !== 'undefined') {
+                    const resizeObserver = new ResizeObserver(() => {
+                    // NW.js metod för att anpassa fönstret efter dess innehåll (DOM)
+                    // Detta gör att fönstret växer om textarean blir större
+                    /* win.setMinimumSize(window.outerWidth, window.outerHeight); // Valfritt: hindra fönstret från att bli mindre än innehållet */
+                    });
+                    
+                    resizeObserver.observe(pwdArea);
+                }
+
+                // 3. Stored token navigation and input handlers
+                const downBtn = document.getElementById('matchedRepoDown');
+                const upBtn = document.getElementById('matchedRepoUp');
+                if (downBtn) {
+                    downBtn.addEventListener('click', () => {
+                        if (typeof storedTokenCandidates !== 'undefined' && storedTokenCandidates.length > 1) {
+                            selectCandidate(displayedTokenIndex - 1);
+                        }
+                    });
+                }
+                if (upBtn) {
+                    upBtn.addEventListener('click', () => {
+                        if (typeof storedTokenCandidates !== 'undefined' && storedTokenCandidates.length > 1) {
+                            selectCandidate(displayedTokenIndex + 1);
+                        }
+                    });
+                }
+                pwdArea.addEventListener('input', () => {
+                    let sourceEl = document.getElementById('matchedRepoSource');
+                    if (sourceEl && typeof storedTokenCandidates !== 'undefined' && storedTokenCandidates.length > 0) {
+                        let currentCand = storedTokenCandidates[displayedTokenIndex - 1];
+                        if (currentCand && pwdArea.value === currentCand.token) {
+                            sourceEl.innerText = currentCand.source ? `(${currentCand.source})` : '';
+                        } else {
+                            sourceEl.innerText = '(Custom)';
+                        }
+                    }
                 });
-                
-                resizeObserver.observe(pwdArea);
+                pwdArea.addEventListener('focus', () => {
+                    if (typeof storedTokenCandidates !== 'undefined' && storedTokenCandidates.length > 0 && displayedTokenIndex > 0) {
+                        let currentCand = storedTokenCandidates[displayedTokenIndex - 1];
+                        if (currentCand && pwdArea.value === currentCand.token) {
+                            pwdArea.select();
+                        }
+                    }
+                });
             </script>
             
                 
@@ -180,10 +227,151 @@
         
         // Assume git, otherwise correct lower down
         [type, , url] = ARG1.split(' ');    // 'Username'  'for'  "'https://github.com/JanAxelssonTest/Remote_branch_test_repo.git':"  "\n"
-        url = url.split("'")[1];    // ['', 'https://pragma-git@github.com/pragma-git2/pragma-git.git', ':']
+        url = url ? url.split("'")[1] : '';    // ['', 'https://pragma-git@github.com/pragma-git2/pragma-git.git', ':']
         
         var isPassword = false;
+        var storedTokenCandidates = [];
+        var displayedTokenIndex = 0;
 
+        function adjustWindowSize() {
+            try {
+                if (typeof nw === 'undefined' || !nw.Window) return;
+                let outer = document.getElementById('outerContent');
+                if (!outer) return;
+                let padding = Number(outer.style.padding.replace('px', '')) || 10;
+                let dx = outer.scrollWidth;
+                let dy = outer.scrollHeight;
+                let hx = window.outerWidth - window.innerWidth;
+                let hy = window.outerHeight - window.innerHeight;
+                window.resizeTo(dx + hx + 2 * padding, dy + hy + padding + 16);
+            } catch (e) {}
+        }
+
+        function selectCandidate(newIndex) {
+            if (!storedTokenCandidates || storedTokenCandidates.length === 0) return;
+            if (newIndex < 1) newIndex = storedTokenCandidates.length;
+            if (newIndex > storedTokenCandidates.length) newIndex = 1;
+            displayedTokenIndex = newIndex;
+            let cand = storedTokenCandidates[displayedTokenIndex - 1];
+            let pwd = document.getElementById('pwd');
+            if (pwd && cand) {
+                pwd.value = cand.token;
+                pwd.select();
+            }
+            let posEl = document.getElementById('matchedCurrentPos');
+            if (posEl) posEl.innerText = displayedTokenIndex;
+            let maxEl = document.getElementById('matchedMax');
+            if (maxEl) maxEl.innerText = storedTokenCandidates.length;
+            let sourceEl = document.getElementById('matchedRepoSource');
+            if (sourceEl) {
+                sourceEl.innerText = cand.source ? `(${cand.source})` : '';
+            }
+        }
+
+        async function loadStoredTokensForUrl(targetUrl) {
+            let candidates = [];
+            if (!targetUrl || typeof targetUrl !== 'string' || !targetUrl.startsWith('http')) {
+                return candidates;
+            }
+            if (typeof opener === 'undefined' || !opener) {
+                return candidates;
+            }
+
+            let parsedUrl;
+            try {
+                parsedUrl = new URL(targetUrl.trim());
+            } catch (e) {
+                return candidates;
+            }
+
+            let protocol = parsedUrl.protocol;
+            let host = parsedUrl.host;
+            let pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
+            let account = pathSegments.length > 0 ? pathSegments[0] : (parsedUrl.username || '');
+            if (!account) {
+                return candidates;
+            }
+
+            let seenTokens = new Set();
+            let queriedUrls = new Set();
+
+            // 1. Account-level credential (e.g. https://github.com/JanAxelsson)
+            let accountUrl = `${protocol}//${host}/${account}`;
+            if (typeof opener.getCredential === 'function') {
+                try {
+                    queriedUrls.add(accountUrl.toLowerCase());
+                    let acctCred = await opener.getCredential(accountUrl);
+                    if (acctCred && acctCred.password) {
+                        let token = acctCred.password;
+                        if (token && !seenTokens.has(token)) {
+                            seenTokens.add(token);
+                            candidates.push({
+                                token: token,
+                                source: 'Account default',
+                                url: accountUrl
+                            });
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Exact repo credential (if distinct from account URL)
+            let cleanRepoUrl = `${protocol}//${host}/${pathSegments.join('/')}`;
+            if (cleanRepoUrl.toLowerCase() !== accountUrl.toLowerCase() && typeof opener.getCredential === 'function') {
+                try {
+                    queriedUrls.add(cleanRepoUrl.toLowerCase());
+                    let repoCred = await opener.getCredential(targetUrl);
+                    if (repoCred && repoCred.password) {
+                        let token = repoCred.password;
+                        if (token && !seenTokens.has(token)) {
+                            seenTokens.add(token);
+                            let label = pathSegments.length > 1 ? pathSegments.slice(0, 2).join('/').replace(/\.git$/i, '') : 'This repo';
+                            candidates.push({
+                                token: token,
+                                source: label,
+                                url: cleanRepoUrl
+                            });
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 3. Other repos belonging to this account in opener.state.repos
+            if (opener.state && Array.isArray(opener.state.repos) && typeof opener.getCredential === 'function') {
+                for (let repo of opener.state.repos) {
+                    if (!repo || !repo.remoteURL || typeof repo.remoteURL !== 'string' || !repo.remoteURL.startsWith('http')) {
+                        continue;
+                    }
+                    try {
+                        let rUrl = new URL(repo.remoteURL.trim());
+                        if (rUrl.host.toLowerCase() === host.toLowerCase()) {
+                            let rPathParts = rUrl.pathname.split('/').filter(Boolean);
+                            if (rPathParts.length > 0 && rPathParts[0].toLowerCase() === account.toLowerCase()) {
+                                let cleanRUrl = `${rUrl.protocol}//${rUrl.host}/${rPathParts.join('/')}`.toLowerCase();
+                                if (queriedUrls.has(cleanRUrl)) continue;
+                                queriedUrls.add(cleanRUrl);
+
+                                let cred = await opener.getCredential(repo.remoteURL);
+                                if (cred && cred.password) {
+                                    let token = cred.password;
+                                    if (token && !seenTokens.has(token)) {
+                                        seenTokens.add(token);
+                                        let label = rPathParts.length > 1 ? `${rPathParts[0]}/${rPathParts[1].replace(/\.git$/i, '')}` : (repo.localFolder ? repo.localFolder.split('/').pop() : rPathParts[0]);
+                                        candidates.push({
+                                            token: token,
+                                            source: label,
+                                            url: repo.remoteURL
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            return candidates;
+        }
 
         //
         // GIT USERNAME DIALOG 
@@ -214,11 +402,44 @@
         // GIT PASSWORD DIALOG 
         //
         if ( ARG1.startsWith('Password') ){
-			nw.Window.get().show();
+            if (typeof nw !== 'undefined' && nw.Window) {
+                nw.Window.get().show();
+            }
             document.getElementById('pwdlabel').innerHTML = 'Access Token / Password <br>';	
             document.getElementById('descriptiveText').innerHTML= '(for repository : "' + url + '" )';
             
             isPassword = true;
+
+            if (url && url.startsWith('http')) {
+                loadStoredTokensForUrl(url).then(cands => {
+                    storedTokenCandidates = cands || [];
+                    if (storedTokenCandidates.length > 0) {
+                        let rangeEl = document.getElementById('matchedRepoRange');
+                        let downBtn = document.getElementById('matchedRepoDown');
+                        let upBtn = document.getElementById('matchedRepoUp');
+                        if (rangeEl) rangeEl.style.display = 'block';
+                        if (downBtn && upBtn) {
+                            if (storedTokenCandidates.length > 1) {
+                                downBtn.style.cursor = 'pointer';
+                                downBtn.style.opacity = '1';
+                                upBtn.style.cursor = 'pointer';
+                                upBtn.style.opacity = '1';
+                            } else {
+                                downBtn.style.cursor = 'default';
+                                downBtn.style.opacity = '0.3';
+                                upBtn.style.cursor = 'default';
+                                upBtn.style.opacity = '0.3';
+                            }
+                        }
+                        selectCandidate(1);
+                        adjustWindowSize();
+                    }
+                }).catch(err => {
+                    if (typeof global !== 'undefined' && global.log) {
+                        global.log(err);
+                    }
+                });
+            }
         }
         
         //
@@ -229,7 +450,9 @@
             const isSshPassword = prompt.toLowerCase().includes("password:"); 
 
             if (isSshPassword){
-                nw.Window.get().show();
+                if (typeof nw !== 'undefined' && nw.Window) {
+                    nw.Window.get().show();
+                }
                 
                 url = ARG1.split(' ')[0].split("'")[0]; // "jan@192.168.2.213's password: \n"  => url = jan@192.168.2.213
                 document.getElementById('pwdlabel').innerHTML = 'SSH Password <br>';
@@ -245,7 +468,9 @@
             if ( ARG1.includes('fingerprint') ){
                 console.log('fingerprint dialog');
                 
-                nw.Window.get().show();
+                if (typeof nw !== 'undefined' && nw.Window) {
+                    nw.Window.get().show();
+                }
                 document.getElementById('pwdlabel').innerHTML = `${ ARG1.replaceAll('\n','<br><br>') } <br>`;
                 document.getElementById('descriptiveText').innerHTML= '(Type yes / no in textarea above)';
             }            
@@ -268,13 +493,17 @@
             
             ExitMessage( message); 
             EXITCODE = 0;
-            nw.Window.get().close(); //See nwjs issue #7808
+            if (typeof nw !== 'undefined' && nw.Window) {
+                nw.Window.get().close(); //See nwjs issue #7808
+            }
         }   
         
         
         function Cancel_clicked(){
             EXITCODE = 1;
-            nw.Window.get().close(); //See nwjs issue #7808
+            if (typeof nw !== 'undefined' && nw.Window) {
+                nw.Window.get().close(); //See nwjs issue #7808
+            }
         }
          
 
@@ -314,7 +543,9 @@
             } catch(err) {
                 console.error(err)
             }
-            nw.Window.get().close(); //See nwjs issue #7808
+            if (typeof nw !== 'undefined' && nw.Window) {
+                nw.Window.get().close(); //See nwjs issue #7808
+            }
         }
 
  
@@ -347,16 +578,12 @@
     <script>
             
         // Set size to match content
-        let padding = Number(document.getElementById('outerContent').style.padding.replace('px','') );
-        let dx = document.getElementById('outerContent').scrollWidth;
-        let dy = document.getElementById('outerContent').scrollHeight;
-        
-        let hx = window.outerWidth - window.innerWidth;
-        let hy = window.outerHeight - window.innerHeight;
-        window.resizeTo(dx + hx + 2 * padding , dy + hy + padding + 16);
+        adjustWindowSize();
         
         // Set ontop
-        nw.Window.get().setAlwaysOnTop( true );
+        if (typeof nw !== 'undefined' && nw.Window) {
+            nw.Window.get().setAlwaysOnTop( true );
+        }
        
     </script>
     
