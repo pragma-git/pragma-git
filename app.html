@@ -429,7 +429,7 @@
         
                 <!-- Text status  -->  
                 <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;"
-                        onclick="_callback('clicked-status-text'); changed_win.focus()">           
+                        onclick="_callback('clicked-status-text'); if (typeof changed_win !== 'undefined' && changed_win) { try { changed_win.focus(); } catch(e){} }">           
     
                     <div id="bottom-titlebar-text" class="bottom-titlebar-status-text link-text-hover" >
                     </div>

@@ -1137,8 +1137,8 @@ async function _callback( name, event){
       case 'clicked-status-text' : {
         if (localState.fileListWindow == true) {          
             try{ 
-                resolve_win.focus();
-                return
+                changed_win.focus();
+                return;
             }catch(err){ 
             }    
         }
@@ -3140,7 +3140,7 @@ async function _callback( name, event){
                         updateWindowMenu( title, 'changed_win');
                         showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                         
-                        win.on('close', function() { fixNwjsBug7973( win)  } );
+                        win.on('close', function() { fixNwjsBug7973( win); changed_win = undefined; } );
                     })
             ); 
         }
@@ -4426,6 +4426,34 @@ async function gitStatus(){
         }else{
             status_data.not_added = status_data2.split('\n');    // Make array of output from ls-files
             status_data.not_added.pop();                         // Remove last line which is empty
+        }     
+          
+        // Reconcile: If a file is staged deleted in index, but physically exists on disk,
+        // unstage the deletion (git reset HEAD -- file) so index and worktree are in sync
+        if (status_data && status_data.deleted && status_data.deleted.length > 0) {
+            let localFolder = state.repos[state.repoNumber].localFolder;
+            if (localFolder && !localFolder.startsWith('ssh:')) {
+                let reconciledAny = false;
+                for (let delFile of status_data.deleted) {
+                    try {
+                        if (fs.existsSync(localFolder + pathsep + delFile)) {
+                            await simpleGit(localFolder).raw(['reset', 'HEAD', '--', delFile]);
+                            reconciledAny = true;
+                        }
+                    } catch (e) {}
+                }
+                if (reconciledAny) {
+                    status_data = await simpleGit(localFolder).status(['--untracked-files=no']);
+                    let refreshedUntracked = await simpleGit(localFolder).raw(['ls-files', '--others', '--exclude-standard']);
+                    status_data2 = refreshedUntracked || '';
+                    if (status_data2.length == 0) {
+                        status_data.not_added = [];
+                    } else {
+                        status_data.not_added = status_data2.split('\n');
+                        status_data.not_added.pop();
+                    }
+                }
+            }
         }     
           
         // New files can be not_added (user created them) or created (git merge created them)

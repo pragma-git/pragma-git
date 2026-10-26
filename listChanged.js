@@ -74,7 +74,7 @@ async function injectIntoJs(document) {
     
  
     // Draw table
-    origFiles = createFileTable(status_data);
+    origFiles = await createFileTable(status_data);
        
     
     // Change text that does not match History mode 
@@ -431,7 +431,7 @@ async function _callback( name, event, event2){
                     function onReset(err, result) {console.log(result) }
              
                 // Checkout, to discard changes
-                simpleGit( state.repos[state.repoNumber].localFolder)
+                await simpleGit( state.repos[state.repoNumber].localFolder)
                     .checkout(file, onGitCheckout );
                     function onGitCheckout(err, result){ console.log(result); console.log(err);  };
 
@@ -456,7 +456,7 @@ async function _callback( name, event, event2){
             }
             
 
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }
         case 'restoreRenameLink': {
@@ -531,7 +531,7 @@ async function _callback( name, event, event2){
                 return
             }
 
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
         case 'ignoreLink': {
@@ -620,7 +620,7 @@ async function _callback( name, event, event2){
             await injectIntoJs(document)
 
             // Finish
-                origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+                origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
         case 'radioButtonChanged' : {
@@ -735,9 +735,13 @@ async function listGitStatus(){
     let status_data = await opener.gitStatus(); 
       
     // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
+    let existingPaths = new Set((status_data.files || []).map(f => f.path));
     for (var i = 0; i < status_data.not_added.length; ++i) {              
         let fileName = status_data.not_added[i];            
-        status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+        if (!existingPaths.has(fileName)) {
+            status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+            existingPaths.add(fileName);
+        }
     }  
     
     return status_data;
@@ -844,40 +848,46 @@ async function createFileTable(status_data) {
             // Label
             let typeOfChanged;
             
-            var label = document.createElement('label')
+            var label = document.createElement('label');
             label.htmlFor = index;
-            switch (XY) {
-                case "D " :
-                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
-                    typeOfChanged = 'deleted';
-                    break;
-                case " D" :
-                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
-                    typeOfChanged = 'deleted';
-                    break;
-                    
-                case "M " :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
-                case " M" :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
-                case "MM" :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
 
-                case "A " :
-                    label.setAttribute("class","added"); // index+work_dir "A " "??"
+            let fileFolder = state.repos[state.repoNumber].localFolder;
+            let fileExistsOnDisk = false;
+            try {
+                if (fileFolder && !fileFolder.startsWith('ssh:')) {
+                    fileExistsOnDisk = fs.existsSync(fileFolder + pathsep + file);
+                }
+            } catch(e) {}
+
+            let isDeleted = !fileExistsOnDisk && (Y === 'D' || X === 'D' || (status_data.deleted && status_data.deleted.includes(file)));
+            let isRenamed = (X === 'R' || Y === 'R' || (status_data.renamed && status_data.renamed.some(r => r.to === file || r.from === file)));
+            let isAdded = (Y === '?' || X === '?' || XY === '??' || Y === 'A' || X === 'A' || (status_data.not_added && status_data.not_added.includes(file)) || (status_data.created && status_data.created.includes(file)));
+            let isModified = (Y === 'M' || X === 'M' || XY === 'MM' || (status_data.modified && status_data.modified.includes(file)));
+
+            if (isDeleted) {
+                label.setAttribute("class", "deleted");
+                typeOfChanged = 'deleted';
+            } else if (isRenamed) {
+                label.setAttribute("class", "renamed");
+                typeOfChanged = 'renamed';
+            } else if (isAdded) {
+                label.setAttribute("class", "added");
+                typeOfChanged = 'added';
+            } else if (isModified) {
+                label.setAttribute("class", "modified");
+                typeOfChanged = 'modified';
+            } else {
+                // Fallback matching to guarantee an icon is never empty
+                if (XY.includes('D') && !fileExistsOnDisk) {
+                    label.setAttribute("class", "deleted");
+                    typeOfChanged = 'deleted';
+                } else if (XY.includes('A') || XY.includes('?')) {
+                    label.setAttribute("class", "added");
                     typeOfChanged = 'added';
-                    break;
-                case "??" :
-                    label.setAttribute("class","added"); // untracked (lets view it as added)
-                    typeOfChanged = 'added';
-                    break;
-            
+                } else {
+                    label.setAttribute("class", "modified");
+                    typeOfChanged = 'modified';
+                }
             }
             
             
