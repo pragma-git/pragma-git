@@ -247,6 +247,15 @@
             } catch (e) {}
         }
 
+        function setInputValue(val) {
+            let el = document.getElementById('pwd');
+            if (el) {
+                el.value = val;
+                el.focus();
+                el.select();
+            }
+        }
+
         function selectCandidate(newIndex) {
             if (!storedTokenCandidates || storedTokenCandidates.length === 0) return;
             if (newIndex < 1) newIndex = storedTokenCandidates.length;
@@ -377,6 +386,9 @@
         // GIT USERNAME DIALOG 
         //
         if ( ARG1.startsWith('Username') ){
+            if (typeof nw !== 'undefined' && nw.Window) {
+                nw.Window.get().show();
+            }
             document.getElementById('pwdlabel').innerHTML= 'Username / Account name <br>';	
             document.getElementById('descriptiveText').innerHTML= '(for repository : "' + url + '" )';
 
@@ -385,13 +397,19 @@
              
             async function getUsername(){
                 try{ 
-                    global.log(`askpass, url =  ${url}`)
                     let provider = await opener.gitProvider(url);
-                    global.log(`askpass, provider =  ${provider}`)
+                    let help = await provider.getValue('askpass-help', 'username');
+                    if (help) {
+                        if (help.title) document.getElementById('pwdlabel').innerHTML = `${help.title} <br>`;
+                        if (help.text) document.getElementById('descriptiveText').innerHTML = `${help.text}<br><span style="color:gray;font-size:0.85em;">(${url})</span>`;
+                    }
                     let userName = await provider.getValue('git-username');
-                    document.getElementById('pwd').value = userName;
+                    if (userName) {
+                        document.getElementById('pwd').value = userName;
+                        document.getElementById('pwd').select();
+                    }
+                    adjustWindowSize();
                 }catch (err){
-                    global.log(err)
                     // unknown provider
                 }
             }
@@ -411,6 +429,19 @@
             isPassword = true;
 
             if (url && url.startsWith('http')) {
+                async function getPasswordHelp() {
+                    try {
+                        let provider = await opener.gitProvider(url);
+                        let help = await provider.getValue('askpass-help', 'password');
+                        if (help) {
+                            if (help.title) document.getElementById('pwdlabel').innerHTML = `${help.title} <br>`;
+                            if (help.text) document.getElementById('descriptiveText').innerHTML = `${help.text}<br><span style="color:gray;font-size:0.85em;">(${url})</span>`;
+                        }
+                        adjustWindowSize();
+                    } catch (e) {}
+                }
+                getPasswordHelp();
+
                 loadStoredTokensForUrl(url).then(cands => {
                     storedTokenCandidates = cands || [];
                     if (storedTokenCandidates.length > 0) {
@@ -493,17 +524,15 @@
             
             ExitMessage( message); 
             EXITCODE = 0;
-            if (typeof nw !== 'undefined' && nw.Window) {
-                nw.Window.get().close(); //See nwjs issue #7808
-            }
+            Exit(0);
         }   
         
         
+        var isExiting = false;
         function Cancel_clicked(){
             EXITCODE = 1;
-            if (typeof nw !== 'undefined' && nw.Window) {
-                nw.Window.get().close(); //See nwjs issue #7808
-            }
+            ExitMessage('');
+            Exit(1);
         }
          
 
@@ -517,12 +546,14 @@
             }catch(err){
                 console.log('FAILED SAVING EXIT MESSAGE TO FILE = ' + EXITMESSAGEFILE);
                 console.log(err);
-                fs.writeFileSync(EXITMESSAGEFILE,'FAILED SAVING EXIT MESSAGE TO FILE','utf8');// Special message if failed
+                try { fs.writeFileSync(EXITMESSAGEFILE,'FAILED SAVING EXIT MESSAGE TO FILE','utf8'); } catch(e) {}
             }
         }       
         
         
         function Exit( exitCode){
+            if (isExiting) return;
+            isExiting = true;
             
             let exitCodeString = parseInt( exitCode, 10).toString();
             //opener.pragmaLog( `ASKPASS EXIT CODE = ${exitCodeString}`)
@@ -533,18 +564,21 @@
             }catch(err){
                 console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
                 console.log(err);
-                fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+                try { fs.writeFileSync(EXITSIGNALFILE, '2', 'utf8'); } catch(e) {}
             }
             
             // Remove file, to let script know it has stopped
             try {
-                fs.unlinkSync(SIGNALFILE)
-            
+                if (fs.existsSync(SIGNALFILE)) {
+                    fs.unlinkSync(SIGNALFILE);
+                }
             } catch(err) {
-                console.error(err)
+                console.error(err);
             }
             if (typeof nw !== 'undefined' && nw.Window) {
-                nw.Window.get().close(); //See nwjs issue #7808
+                try {
+                    nw.Window.get().close(true);
+                } catch(e) {}
             }
         }
 

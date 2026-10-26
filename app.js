@@ -380,6 +380,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         
         // Flags blocking simultaneous runs of slow functions
         var updateIsRunning = false;
+        var updateIsQueued = false;
         var cacheFolderStatusIsRunning = false;
 
 
@@ -3198,7 +3199,8 @@ async function cacheFolderStatus(){
 
 async function _update(){ 
     if (updateIsRunning){
-        console.log('skipped _update -- because was already running' );  // One option would be to try to queue updates, and skip if more than N updates
+        updateIsQueued = true;
+        console.log('queued _update -- because was already running' );
         return;
     }
     updateIsRunning = true;
@@ -3208,6 +3210,10 @@ async function _update(){
         
     }
     updateIsRunning = false;
+    if (updateIsQueued) {
+        updateIsQueued = false;
+        setTimeout(_update, 50);
+    }
 }
     
 async function _update2(){ 
@@ -3433,9 +3439,13 @@ async function _update2(){
         }        
     
         try{
+            let remoteTextEl = document.getElementById('bottom-titlebar-remote-text');
             if ( (modeName == 'HISTORY') || ( currentBranch == 'HEAD' ) ){
                 document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible'
                 document.getElementById('bottom-titlebar-pinned-text').style.visibility = 'visible'
+                if (remoteTextEl) {
+                    remoteTextEl.style.display = 'none';
+                }
 
                 // Replace icon with image = ▲ 
                 //document.getElementById('top-titlebar-branch-arrow').innerHTML= '&#x25B2;';  // ▲
@@ -3472,6 +3482,21 @@ async function _update2(){
                 queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                 document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
+                // Show remote error indicator if remote is defined and not accessible
+                if (remoteTextEl) {
+                    let rUrl = (state.repos[state.repoNumber] && state.repos[state.repoNumber].remoteURL) || '';
+                    let isActive = (cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[state.repoNumber]);
+                    if (rUrl && rUrl.trim().length > 0 && isActive === false) {
+                        let reason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[state.repoNumber]) ? cachedRemoteOrigins.reason[state.repoNumber] : 'remote error';
+                        let displayText = `Remote : ${reason}`;
+                        if (remoteTextEl.innerText !== displayText) {
+                            remoteTextEl.innerText = displayText;
+                        }
+                        remoteTextEl.style.display = 'inline-block';
+                    } else {
+                        remoteTextEl.style.display = 'none';
+                    }
+                }
                 
                 // Replace icon with original image = ▾
                 id = 'top-titlebar-branch-arrow';
@@ -5382,11 +5407,17 @@ function gitFetch( longUpstreamBranch){ // Fetch
     // Fetch
     //
      try{
+        let fetchEnv = {
+            ...process.env,
+            GIT_TERMINAL_PROMPT: '0',
+            GIT_ASKPASS: 'true'
+        };
+        let fetchCommands = ['-c', 'core.askpass=', 'fetch'];
 
         if ( longUpstreamBranch == undefined){
             
             // Fetch from default (origin)
-            simpleGit( state.repos[state.repoNumber].localFolder ).fetch( onFetch, ['origin']);
+            simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, 'origin'], onFetch);
             function onFetch(err, result) {
             };
             
@@ -5409,7 +5440,7 @@ function gitFetch( longUpstreamBranch){ // Fetch
                 
                 setStatusBar('fetching from remote ' );
                 
-                simpleGit( state.repos[state.repoNumber].localFolder ).fetch( upstreamName, upstreamBranch, onFetch);
+                simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch], onFetch);
                 function onFetch(err, result) {
                     console.log(result);
                     updateBranchListWithUpstream(); // Update ahead flags
@@ -5434,9 +5465,14 @@ function gitFetch( longUpstreamBranch){ // Fetch
     //
     
     try{
+        let fetchEnv = {
+            ...process.env,
+            GIT_TERMINAL_PROMPT: '0',
+            GIT_ASKPASS: 'true'
+        };
 
         // Fetch
-        simpleGit( state.repos[state.repoNumber].localFolder ).fetch( 'origin', 'refs/notes/*:refs/notes/*', onFetch);
+        simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw(['-c', 'core.askpass=', 'fetch', 'origin', 'refs/notes/*:refs/notes/*'], onFetch);
         function onFetch(err, result) {
             //console.log(result) 
         };        
@@ -5842,7 +5878,7 @@ async function cacheBranchList(){
             // Sets upstreamAhead flag
             
             let INCLUDE_PATH = `include.path = ${configFile}` ;
-            RUN = `cd '${state.repos[state.repoNumber].localFolder}' && git -c '${INCLUDE_PATH}' fetch --dry-run ${branchName}`;
+            RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git -c '${INCLUDE_PATH}' -c core.askpass= fetch --dry-run ${branchName}`;
         
             let child = await exec( RUN , 
                 (error, stdout, stderr) => { 
@@ -6023,9 +6059,9 @@ async function cacheRemoteOriginStatus( start = 0 ){
                async function testRemoteOrigin( repoNumber){
                     let isActive = true;
                     
-                    const commands = [ 'ls-remote', state.repos[repoNumber].remoteURL ];
+                    const commands = [ '-c', 'core.askpass=', 'ls-remote', state.repos[repoNumber].remoteURL ];
         
-                    const GIT_ASKPASS='';  // GIT_ASKPASS='' inhibits askpass dialog window
+                    const GIT_ASKPASS='true';  // GIT_ASKPASS='true' inhibits askpass dialog window
                     const GIT_TERMINAL_PROMPT=0;  // Makes git ls-remote fail with error instead of showing terminal password question
                     try {
                         await simpleGit( state.repos[ repoNumber].localFolder) .env({ ...process.env, GIT_TERMINAL_PROMPT, GIT_ASKPASS }).raw(  commands, onListRemote); // Do not log -- very long output
@@ -6781,14 +6817,15 @@ async function getLatestRelease( url,  wantPreRelease){
 
 async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
 /**
- * Runs any shell command with a timeout, simulating execSync behavior.
+ * Runs any shell command with a timeout, simulating execSync behavior without blocking the event loop.
  * @param {string} command - The command to run (e.g., 'ssh', 'ls', 'curl')
- * @param {string[]} args - Array of arguments for the command
+ * @param {object|array} args - Options or array of arguments for the command
  * @param {number} timeoutMs - Timeout in milliseconds
  * @returns {Promise<string>} - Resolves with stdout or throws with stderr
  */
+  let execOptions = Array.isArray(args) ? {} : (args || {});
   return new Promise((resolve, reject) => {
-    const proc = exec(command, args);
+    const proc = exec(command, execOptions);
 
     let stdout = '';
     let stderr = '';
@@ -6839,7 +6876,6 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
      // Output
      //     string output of command, trimmed  (without leading and trailing spaces)
 	console.log(cmd.toString())
-	const { execSync } = require('child_process');
     let options = {};
     let out;
     
@@ -6852,9 +6888,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     
     // Set time-out if defined
     if (mode == 'timeout'){
-        // With time out of subprocess
-        options = {cwd: folder, timeout: timeoutInMs, detached: true};  
-        options = {cwd: folder, timeout: timeoutInMs, detached: true, stdio: ['ignore']};  // With time out of subprocess
+        options = {cwd: folder, timeout: timeoutInMs};  
     }
 
     //
@@ -6869,7 +6903,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         if ( folder.startsWith('ssh:') ) {
             
             try{
-                return  runCommandWithTimeout(cmd, [], timeoutInMs);
+                return await runCommandWithTimeout(cmd, {}, timeoutInMs);
             }catch (err){
                 console.error( err);
                 return err.toString();
@@ -6877,7 +6911,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         }
         
         // Local (not ssh) if here
-        return  execSync( cmd, options ).toString().trim();
+        return await runCommandWithTimeout( cmd, options, timeoutInMs );
 
 	}
 	
@@ -6893,14 +6927,13 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		// So, always run this if forcelocal==true
 			
 		try{
-			out = execSync( cmd, {
-				env: { PATH: 'PATH:/mingw64/bin/' },
-				shell: 'C:\\Program Files\\git\\usr\\bin\\bash.exe'}, 
-				(err, stdout) => {
-					console.log(stdout);
-					console.log(err);
-				}
-			).toString().trim()
+            let winOptions = {
+                ...options,
+                env: { ...(options.env || {}), PATH: 'PATH:/mingw64/bin/' },
+                shell: 'C:\\Program Files\\git\\usr\\bin\\bash.exe'
+            };
+			out = await runCommandWithTimeout( cmd, winOptions, timeoutInMs );
+            return out;
 
 		} catch (err) {
 			  console.warn('Warning :', err.message);
@@ -6923,16 +6956,15 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 
 		try{
 
-			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, [], timeoutInMs);
+			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, {}, timeoutInMs);
 			 
 			 console.log('Output:', out);
+             return out;
 		} catch (err) {
 			  console.warn('Warning:', err.message);
 			  console.warn('stderr:', err.stderr?.toString());
 			  throw new Error( `multiPlatformExecSync error: = ${err}`);
 		}
-
-		return  out;
 
 	}
 

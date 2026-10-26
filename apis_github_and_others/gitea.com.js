@@ -149,6 +149,20 @@ class gitea extends General_git_rest_api {
                         };
                         break;
                     }
+                    case 'askpass-help': {
+                        if (secondParameter === 'username') {
+                            out = {
+                                title: 'Gitea Username',
+                                text: 'Enter your Gitea username or account name.'
+                            };
+                        } else {
+                            out = {
+                                title: 'Gitea Access Token',
+                                text: 'Enter your Gitea Access Token or account password.'
+                            };
+                        }
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);

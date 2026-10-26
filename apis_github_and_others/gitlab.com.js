@@ -313,6 +313,20 @@ class gitlab extends General_git_rest_api {
                         };
                         break;
                     }
+                    case 'askpass-help': {
+                        if (secondParameter === 'username') {
+                            out = {
+                                title: 'GitLab Username',
+                                text: 'Enter your GitLab username (or <code>oauth2</code> for deploy tokens).'
+                            };
+                        } else {
+                            out = {
+                                title: 'GitLab Personal Access Token (PAT)',
+                                text: 'Enter your GitLab Personal Access Token.'
+                            };
+                        }
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);   // "https://gitlab.com/pragma-git/pragma-git.git"

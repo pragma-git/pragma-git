@@ -786,22 +786,28 @@ async function _callback( name, event){
             
   
             
-            testURL('additionalRemoteURL', event);
+            testURL('additionalRemoteURL', event).catch(err => console.warn(err));
             
             // Update the remote in the table if needed
             if ( alias == 'origin' ){
                 let id = 10000 + state.repoNumber;  // textAreaId in table
                 document.getElementById(id).value = newUrl;
                 state.repos[state.repoNumber].remoteURL = newUrl;
-                testURL( id, event);
+                testURL( id, event).then(async (workingRemote) => {
+                    if (workingRemote) {
+                        await opener.cacheBranchList(); 
+                        remoteRepos.fetch.pos = remoteRepos.fetch.names.indexOf(setAliasName) + 1;
+                        getRemoteRepoInfo(); 
+                        updateRemoteRepos();
+                    }
+                }).catch(err => console.warn(err));
                 
                 await drawProviderIcon( state.repoNumber + 30000, newUrl);
-            }
-
-            await opener.cacheBranchList(); 
-            remoteRepos.fetch.pos = remoteRepos.fetch.names.indexOf(setAliasName) + 1;            // Set position
-            getRemoteRepoInfo(); 
-            updateRemoteRepos();            
+            } else {
+                remoteRepos.fetch.pos = remoteRepos.fetch.names.indexOf(setAliasName) + 1;
+                getRemoteRepoInfo(); 
+                updateRemoteRepos();
+            }            
 
             break;   
         } 
@@ -1038,6 +1044,11 @@ async function _callback( name, event){
                             state.repos[realId].remoteURL = newUrl;
                         };
 
+                        // Clear any legacy local credential.username when setting a remote URL
+                        try {
+                            await gitRemoveConfigKey(realId, 'credential.username', 'local');
+                        } catch(e) {}
+
                         await drawProviderIcon( iconId, newUrl);
                         
                     }else{
@@ -1094,19 +1105,20 @@ async function _callback( name, event){
                 
                           
             }
-            let workingRemote = testURL(textareaId, event);
-            
-            // TODO : Bail out -- avoid updating remote if Set button was on wrong repo
-            
-            // Update Remote tab 
-            if ( document.getElementById('newRepoAliasTextarea').value == 'origin' ){
-                await opener.cacheBranchList(); 
-                getRemoteRepoInfo();
-                updateRemoteRepos();
-                
-                let repoTabUrl = state.repos[ state.repoNumber].remoteURL;  // The url active from radio button
-                document.getElementById('additionalRemoteURL').value = repoTabUrl;
-            }
+            // Run testURL in the background (parallel) so the settings UI is never blocked
+            testURL(textareaId, event).then(async (workingRemote) => {
+                // Update Remote tab (only if remote is valid/working)
+                if ( workingRemote && document.getElementById('newRepoAliasTextarea').value == 'origin' ){
+                    await opener.cacheBranchList(); 
+                    getRemoteRepoInfo();
+                    updateRemoteRepos();
+                    
+                    let repoTabUrl = state.repos[ state.repoNumber].remoteURL;  // The url active from radio button
+                    document.getElementById('additionalRemoteURL').value = repoTabUrl;
+                }
+            }).catch((err) => {
+                console.warn('testURL background check error:', err);
+            });
 
             break;
         }
@@ -1196,13 +1208,14 @@ async function testURL( textareaId, event){
     // To summmarize, if textAreaId is a number: derive repoNumber from number.  If not a number, use repoNumber = state.repoNumber.
     
     let folder;
+    let repoIndex;
     
     if ( isNaN(textareaId) ){
-        // textAreaId is a named html-element-id, and radiobutton (and hence state.repoNumber) is used to get folder:
+        repoIndex = state.repoNumber;
         folder = state.repos[ state.repoNumber].localFolder;
     }else{
-        // textAreaId is a number (as well as a html-element-id) which can be used to get folder:
-        folder = state.repos[ Number(textareaId) - 10000].localFolder;
+        repoIndex = Number(textareaId) - 10000;
+        folder = state.repos[ repoIndex].localFolder;
     }
     
     console.log(`Local folder = ${folder}`);
@@ -1217,8 +1230,15 @@ async function testURL( textareaId, event){
     try{
             remoteURL = document.getElementById(textareaId).value;
         
-            //console.log('textareaId = ' + textareaId);
-            //console.log('remoteURL = ' + remoteURL);
+            // Bitbucket Cloud requires x-token-auth or email; a legacy personal username in .git/config forces 401
+            if (remoteURL && remoteURL.includes('bitbucket.org') && !isNaN(repoIndex) && state.repos[repoIndex]) {
+                try {
+                    let localUser = await gitReadConfigKey(repoIndex, 'credential.username', '--local');
+                    if (localUser && localUser !== 'x-token-auth' && !localUser.includes('@')) {
+                        await gitRemoveConfigKey(repoIndex, 'credential.username', 'local');
+                    }
+                } catch (e) {}
+            }
     
              
             const commands = [ 'ls-remote', remoteURL];
@@ -1245,6 +1265,67 @@ async function testURL( textareaId, event){
 
 
     }catch(err){
+        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git' + pathsep + '.tmp';
+        const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-askpass';
+        let wasCancelled = false;
+        try {
+            if (fs.existsSync(EXITSIGNALFILE) && fs.readFileSync(EXITSIGNALFILE, 'utf8').trim() === '1') {
+                wasCancelled = true;
+            }
+        } catch (e) {}
+
+        function syncOpenerRemoteStatus(color) {
+            if (!isNaN(repoIndex) && opener && opener.cachedRemoteOrigins) {
+                if (color === 'green') {
+                    if (opener.cachedRemoteOrigins.isActiveRemote) {
+                        opener.cachedRemoteOrigins.isActiveRemote[repoIndex] = true;
+                    }
+                    if (opener.cachedRemoteOrigins.reason) {
+                        opener.cachedRemoteOrigins.reason[repoIndex] = '';
+                    }
+                } else if (color === 'red') {
+                    if (opener.cachedRemoteOrigins.isActiveRemote) {
+                        opener.cachedRemoteOrigins.isActiveRemote[repoIndex] = false;
+                    }
+                }
+            }
+            if (opener) {
+                let isCurrentRepo = !isNaN(repoIndex) && repoIndex === (opener.state && opener.state.repoNumber);
+                try {
+                    if (opener.document && isCurrentRepo) {
+                        let el = opener.document.getElementById('bottom-titlebar-remote-text');
+                        if (el) {
+                            if (color === 'green') {
+                                el.style.display = 'none';
+                            } else if (color === 'red') {
+                                let reason = (opener.cachedRemoteOrigins && opener.cachedRemoteOrigins.reason && opener.cachedRemoteOrigins.reason[repoIndex]) || 'remote error';
+                                el.innerText = `Remote : ${reason}`;
+                                el.style.display = 'inline-block';
+                            }
+                        }
+                    }
+                } catch (e) {}
+                if (typeof opener.updateWindowMenu === 'function') {
+                    opener.updateWindowMenu();
+                }
+                // Only trigger _update() if this is the currently active repository in the main window
+                if (isCurrentRepo && typeof opener._update === 'function') {
+                    opener._update();
+                }
+            }
+        }
+
+        // If the user explicitly cancelled the AskPass dialog, exit cleanly without retrying or opening alerts
+        if (wasCancelled) {
+            outputColor = 'red';
+            let area = document.getElementById(textareaId);
+            if (area) {
+                area.classList.remove('green', 'grey');
+                area.classList.add('red');
+            }
+            syncOpenerRemoteStatus('red');
+            return false;
+        }
         
         let errStr = (err && (err.message || String(err))) || '';
         let isCredentialRevoked = false;
@@ -1260,9 +1341,10 @@ async function testURL( textareaId, event){
         // If failure was specifically due to revoked/deprecated credentials, prompt for new token via AskPass without clearing Keychain first
         if (isCredentialRevoked && event.type !== 'no_askpass') {
             try {
-                const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git' + pathsep + '.tmp';
                 const EXITMESSAGEFILE = SIGNALDIR + pathsep + 'exit-message-pragma-askpass';
+                const RUNNINGFILE = SIGNALDIR + pathsep + 'pragma-askpass-running';
                 try { if (fs.existsSync(EXITMESSAGEFILE)) fs.unlinkSync(EXITMESSAGEFILE); } catch (e) {}
+                try { if (fs.existsSync(RUNNINGFILE)) fs.unlinkSync(RUNNINGFILE); } catch (e) {}
 
                 // Override credential helper to empty string for this command, forcing Git to prompt via AskPass
                 await simpleGit(folder).raw(['-c', 'credential.helper=', 'ls-remote', remoteURL], onListRemote);
@@ -1301,16 +1383,26 @@ async function testURL( textareaId, event){
                     area.classList.remove('red', 'grey');
                     area.classList.add('green');
                 }
-                let realIndex = Number(textareaId) - 10000;
-                if (opener && opener.cachedRemoteOrigins && opener.cachedRemoteOrigins.isActiveRemote) {
-                    opener.cachedRemoteOrigins.isActiveRemote[realIndex] = true;
-                    if (opener.cachedRemoteOrigins.reason) {
-                        opener.cachedRemoteOrigins.reason[realIndex] = '';
-                    }
-                }
+                syncOpenerRemoteStatus('green');
                 return true;
             } catch (retryErr) {
                 err = retryErr;
+                let retryCancelled = false;
+                try {
+                    if (fs.existsSync(EXITSIGNALFILE) && fs.readFileSync(EXITSIGNALFILE, 'utf8').trim() === '1') {
+                        retryCancelled = true;
+                    }
+                } catch (e) {}
+                if (retryCancelled) {
+                    outputColor = 'red';
+                    let area = document.getElementById(textareaId);
+                    if (area) {
+                        area.classList.remove('green', 'grey');
+                        area.classList.add('red');
+                    }
+                    syncOpenerRemoteStatus('red');
+                    return false;
+                }
             }
         }
 
@@ -1331,6 +1423,31 @@ async function testURL( textareaId, event){
     document.getElementById(textareaId).classList.remove('grey');
     document.getElementById(textareaId).classList.remove('red');
     document.getElementById(textareaId).classList.add(outputColor);
+
+    if (typeof syncOpenerRemoteStatus === 'function') {
+        syncOpenerRemoteStatus(outputColor);
+    } else if (!isNaN(repoIndex) && opener && opener.cachedRemoteOrigins) {
+        if (outputColor === 'green') {
+            if (opener.cachedRemoteOrigins.isActiveRemote) {
+                opener.cachedRemoteOrigins.isActiveRemote[repoIndex] = true;
+            }
+            if (opener.cachedRemoteOrigins.reason) {
+                opener.cachedRemoteOrigins.reason[repoIndex] = '';
+            }
+        } else if (outputColor === 'red') {
+            if (opener.cachedRemoteOrigins.isActiveRemote) {
+                opener.cachedRemoteOrigins.isActiveRemote[repoIndex] = false;
+            }
+        }
+        if (opener && typeof opener._update === 'function') {
+            opener._update();
+        }
+        if (opener && typeof opener.updateWindowMenu === 'function') {
+            opener.updateWindowMenu();
+        }
+    }
+
+    return outputColor === 'green';
  }
 async function forgetButtonClicked(event){
     let index = event.currentTarget.getAttribute('id');
@@ -1642,13 +1759,16 @@ async function gitWriteConfigKey( key, value, scope){
 }
 async function gitRemoveConfigKey( repoNumber, key, scope){
     try{  
-        commands = [ 'config', '--' + scope, '--unset', key];
+        let commands = [ 'config', '--' + scope, '--unset', key];
         await simpleGit(  state.repos[ repoNumber].localFolder  ).raw(commands ,onConfig);
         function onConfig(err, result ){ }
     }catch(err){
         console.error('Failed removing key = ' + key + ' from ' + scope + ' scope');
     }
-                       
+}
+async function clearLocalCredentialUsername(repoNumber) {
+    await gitRemoveConfigKey(repoNumber, 'credential.username', 'local');
+    await _callback('systemInfoClicked', { id: repoNumber });
 }
 
 async function fixEmptyLocalAuthors(){ // Empty local author info removed
@@ -3004,10 +3124,7 @@ async function updateRemoteInfo( ){
         let config_credential_username = await gitReadConfigKey( state.repoNumber, 'credential.username', '--local');
         
         if (config_credential_username && config_credential_username.trim().length > 0) {
-            let clearButton = `<button class="smallButton" onclick=
-            " gitRemoveConfigKey( ${state.repoNumber}, 'credential.username', 'local'); 
-            _callback('systemInfoClicked', {id: ${state.repoNumber} })" 
-            > Clear </button>`;
+            let clearButton = `<button class="smallButton" onclick="clearLocalCredentialUsername(${state.repoNumber})"> Clear </button>`;
             
             html +=  
                 `<tr> 

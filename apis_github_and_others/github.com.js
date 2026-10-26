@@ -175,6 +175,20 @@ class github extends General_git_rest_api {
                         };
                         break;
                     }
+                    case 'askpass-help': {
+                        if (secondParameter === 'username') {
+                            out = {
+                                title: 'GitHub Username',
+                                text: 'Enter your GitHub username or organization name.'
+                            };
+                        } else {
+                            out = {
+                                title: 'GitHub Personal Access Token (PAT)',
+                                text: 'Enter your GitHub Personal Access Token (classic or fine-grained).'
+                            };
+                        }
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
                             let urlParts = new URL( this.giturl);   // "https://github.com/pragma-git/pragma-git.git"

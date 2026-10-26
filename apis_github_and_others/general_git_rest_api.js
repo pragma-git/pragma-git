@@ -357,7 +357,19 @@ class git_rest_api {
             let msg = errorMessage.toLowerCase();
             return msg.includes('token is invalid or has expired') ||
                    msg.includes('support for password authentication was removed') ||
-                   msg.includes('invalid username or token');
+                   msg.includes('invalid username or token') ||
+                   msg.includes('authentication failed') ||
+                   msg.includes('could not read username') ||
+                   msg.includes('could not read password') ||
+                   msg.includes('terminal prompts disabled') ||
+                   msg.includes('make sure you are authenticated') ||
+                   msg.includes('not authorized') ||
+                   msg.includes('unauthorized') ||
+                   msg.includes('bad credentials') ||
+                   msg.includes('401') ||
+                   msg.includes('403') ||
+                   msg.includes('permission denied') ||
+                   msg.includes('access denied');
         }
     
         async fetchWithApi( apiurl, options){

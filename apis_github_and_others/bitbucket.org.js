@@ -226,10 +226,23 @@ class bitbucket extends General_git_rest_api {
                         };
                         break;
                     }
+                    case 'askpass-help': {
+                        if (secondParameter === 'username') {
+                            out = {
+                                title: 'Bitbucket Username',
+                                text: 'Default for Bitbucket Access Tokens: <a href="javascript:void(0)" onclick="setInputValue(\'x-token-auth\');" style="color:var(--focus-color, #388bfd); text-decoration:underline; font-weight:bold;">x-token-auth</a> (<a href="javascript:void(0)" onclick="setInputValue(\'x-token-auth\');" style="color:var(--focus-color, #388bfd); text-decoration:underline;">Use</a>)<br>For Atlassian Account API tokens, enter your registered email address instead.'
+                            };
+                        } else {
+                            out = {
+                                title: 'Bitbucket Access Token / API Token',
+                                text: 'Enter your Bitbucket Repository Access Token or Atlassian API token.'
+                            };
+                        }
+                        break;
+                    }
                     case 'git-username': {  // Returns default username (not requiring json)
                         try{
-                            //out = 'x-token-auth';   // If default git oauth token
-                            out = this.username;               // Unknown if API token (cannot be deduced from url path, as for github or gitlab).
+                            out = this.username || 'x-token-auth';
                         }catch (err){ global.warn(err);}
                         break;     
                     }
@@ -361,8 +374,11 @@ class bitbucket extends General_git_rest_api {
 
         isCredentialRevokedError(errorMessage) {
             if (!errorMessage || typeof errorMessage !== 'string') return false;
-            return errorMessage.includes('CHANGE-3222') ||
-                   errorMessage.includes('App passwords are deprecated') ||
+            let msg = errorMessage.toLowerCase();
+            return msg.includes('change-3222') ||
+                   msg.includes('app passwords are deprecated') ||
+                   msg.includes('make sure you are authenticated') ||
+                   msg.includes('you may not have access to this repository') ||
                    super.isCredentialRevokedError(errorMessage);
         }
 }
