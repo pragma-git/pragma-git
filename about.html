@@ -631,6 +631,7 @@
     <!-- Dark Mode & Zoom Initialization -->
     <script>
         if (typeof global !== 'undefined' && global.localState && global.localState.dark) {
+            document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
         if (typeof global !== 'undefined' && global.state && global.state.zoom) {
