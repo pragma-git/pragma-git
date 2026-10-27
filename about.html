@@ -1,961 +1,1581 @@
+ <!DOCTYPE html>
 <html>
-    <head>
-      <title>About</title>
-      
-        <link rel="stylesheet" type="text/css" href="color_styles.css" />
-    </head>
-    
+<head>
+    <meta charset="utf-8">
+    <title>About & Help — Pragma-git</title>
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="slider_switch.css" />
+    <link rel="stylesheet" href="lib/css-tooltip.css" />
     <style>
-        body{ 
-            font-family: Arial;
-            font-size: 12pt;
+        :root {
+            --help-sidebar-bg: rgba(0, 0, 0, 0.03);
+            --help-sidebar-border: rgba(0, 0, 0, 0.12);
+            --help-card-bg: rgba(255, 255, 255, 0.65);
+            --help-card-border: rgba(0, 0, 0, 0.08);
+            --help-highlight-bg: #fff3c4;
+            --help-highlight-border: #f59f00;
+            --help-tag-bg: rgba(47, 84, 150, 0.1);
+            --help-tag-color: var(--header-color);
+        }
+
+        body.dark {
+            --help-sidebar-bg: rgba(255, 255, 255, 0.04);
+            --help-sidebar-border: rgba(255, 255, 255, 0.12);
+            --help-card-bg: rgba(255, 255, 255, 0.05);
+            --help-card-border: rgba(255, 255, 255, 0.1);
+            --help-highlight-bg: #3f3718;
+            --help-highlight-border: #ffd43b;
+            --help-tag-bg: rgba(214, 181, 29, 0.15);
+            --help-tag-color: #ffd43b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
             background-color: var(--body-background);
             color: var(--body-text);
-            margin: 20px;
-        }
-        
-        h4{
-            text-align:left;   
-        }        
-        h2, h3{
-            text-align:center;   
-        }       
-        code{
-            color: var(--code-text);
-            font-size: 11pt;  
-        }
-        
-        th{
-            border-collapse: collapse;
-            text-align:left;
-            font-size: 12pt;
-            padding: 6px;
-        }
-        table{
-            border-collapse: collapse;
-            text-align:left;
-        }
-        tr{
-            border-bottom: 2px solid #ccc;
-            font-size: 10pt;
-        }
-        td{
-            padding: 6px;
-        }
-        
-        dd{
-            padding-top: 6px;
-            text-indent: -22px ;
-        }
-                
-        img{
-            filter: invert( var(--image-invert) );
-        }        
-        
-        img[src="images/Cheat-sheet.png"],
-        img[src="images/Cheat-sheet-advanced.png"], 
-        img[src="images/top-title-bar.png"] , 
-        img[src="images/bottom-status-bar.png"] , 
-        img[src="images/conflict-status-bar.png"] , 
-        img[src="images/top-title-bar.png"] 
-        {
-            filter: invert( 0% );
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-
-
-        
-    </style>
-    
-        <!-- https://www.w3schools.com/howto/howto_js_collapsible.asp -->
-    <style> 
-        .collapsible {
-          background-color: #FFF;
-          //color: white;
-          cursor: pointer;
-          padding: 8px;
-          width: 100%;
-          border: none;
-          text-align: left;
-          outline: none;
-          font-size: 15px;
-        }
-        
-        .active, .collapsible:hover {
-          //background-color: #555;
-        }
-        
-        .collapsible:after {
-          content: '\002B'; # Unicode character for "plus" sign (+) 
-          //color: white;
-          font-weight: bold;
-          float: left;
-          margin-left: 5px;
-        }
-        
-        .active:after {
-          content: "\2212"; # Unicode character for "plus" sign (-) 
-        }
-        
-        .content {
-          padding: 0 18px;
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.2s ease-out; 
-        }
-        
-        .quickUnfold {
-          transition: max-height 0.0s ease-out; 
+        /* Top Banner & Live Inspector Bar */
+        #help-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--help-sidebar-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--body-background);
+            flex-shrink: 0;
+            gap: 12px;
         }
 
-    </style>
-                       
-                         
-    <style>
-        .visibleText {
-          display: block; 
+        .header-title-group {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
         }
-        .hiddenText {
-          display: none; 
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--header-color);
+            margin: 0;
         }
-        
-        p, .indent, .visibleText, .visibleTextLink, .hiddenTextLink{
-          position: relative;
-          left: 20px;
+
+        .header-version {
+            font-size: 11px;
+            color: var(--notes-popup-text);
+            font-weight: 600;
         }
-        .visibleTextLink{
-            text-decoration: underline; 
-            background-color: grey;
+
+        .inspector-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .hiddenTextLink{
-            text-decoration: unset;
-            background-color: unset;
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background: var(--help-tag-bg);
+            color: var(--help-tag-color);
+            border: 1px solid var(--help-card-border);
         }
-    
-        img{
+
+        .switch-container input {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: var(--help-card-bg);
+            border: 1px solid var(--help-card-border);
+            color: var(--notes-popup-text);
+            white-space: nowrap;
+        }
+
+        .status-badge.active {
+            background: #2b8a3e;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Search bar */
+        #search-container {
+            padding: 8px 16px;
+            background: var(--help-sidebar-bg);
+            border-bottom: 1px solid var(--help-sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        #filter-input {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--help-sidebar-border);
+            background: var(--input-background);
+            color: var(--text);
+            outline: none;
+        }
+
+        #filter-input:focus {
+            border-color: var(--header-color);
+        }
+
+        /* Layout Container */
+        #help-layout {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        #help-sidebar {
+            width: 210px;
+            border-right: 1px solid var(--help-sidebar-border);
+            background: var(--help-sidebar-bg);
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding: 10px 0;
+        }
+
+        .nav-group-title {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 12px 16px 4px 16px;
+            color: var(--header-color);
+            opacity: 0.95;
+        }
+
+        body.dark .nav-group-title {
+            color: var(--header-color);
+            opacity: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            color: var(--body-text);
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 12px;
+            border-left: 3px solid transparent;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .nav-item:hover {
+            background: var(--help-card-bg);
+        }
+
+        .nav-item.active {
+            background: var(--help-card-bg);
+            border-left-color: var(--header-color);
+            color: var(--header-color);
+            font-weight: 600;
+        }
+
+        .nav-item img {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        .nav-item img[src*="dropdown-arrow"] {
+            width: auto;
+            height: 14px;
+            object-fit: contain;
+        }
+
+        body.dark .nav-item img {
+            filter: none;
+        }
+
+        body.dark .nav-item img[src*="find_black.png"] {
+            filter: invert(var(--history-image-invert, 100%));
+        }
+
+        .nav-ci-badge {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0;
+            position: relative;
+            top: -1.5px;
+            left: -3px;
+            margin-right: -4px;
+        }
+
+        .nav-ci-badge svg {
+            display: inline-block;
             vertical-align: middle;
         }
+
+        /* Main Content View */
+        #help-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 28px;
+            scroll-behavior: smooth;
+        }
+
+        .content-section {
+            margin-bottom: 32px;
+        }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--header-color);
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--help-sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            color: var(--header-color);
+        }
+
+        p {
+            margin: 0 0 10px 0;
+        }
+
+        /* Help Cards for Widgets & Controls */
+        .help-card {
+            background: var(--help-card-bg);
+            border: 1px solid var(--help-card-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .help-card.highlighted {
+            background: var(--help-highlight-bg) !important;
+            border-color: var(--help-highlight-border) !important;
+            box-shadow: 0 0 10px rgba(245, 159, 0, 0.35);
+            transform: translateX(4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title img {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        .card-title img[src*="dropdown-arrow"] {
+            width: auto;
+            height: 16px;
+            object-fit: contain;
+        }
+
+        #help-content img:not(.ci-badge-demo img) {
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        body.dark .card-title img,
+        body.dark #help-content img {
+            filter: none;
+        }
+
+        body.dark #help-content img[src*="find_black.png"] {
+            filter: invert(var(--history-image-invert, 100%));
+        }
+
+        .card-tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--help-tag-bg);
+            color: var(--help-tag-color);
+        }
+
+        .card-desc {
+            font-size: 12.5px;
+            color: var(--body-text);
+            margin-bottom: 6px;
+        }
+
+        .card-tips {
+            font-size: 11.5px;
+            color: var(--notes-popup-text);
+            background: rgba(0, 0, 0, 0.03);
+            border-left: 3px solid var(--header-color);
+            padding: 4px 8px;
+            margin-top: 6px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        body.dark .card-tips {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .card-title-button {
+            display: inline-block;
+            background: #2b70ca;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-right: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark .card-title-button {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: 1px solid #cccccc;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            vertical-align: middle;
+            color: var(--header-color);
+        }
+
+        .card-title-checkbox input[type="checkbox"] {
+            margin: 0;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        .ci-badge-demo {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0;
+            margin-right: 4px;
+        }
+
+        .ci-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+            padding: 6px 10px;
+            background: var(--input-background);
+            border-radius: 6px;
+        }
+
+        .history-nav-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            background: var(--input-background);
+            border-radius: 6px;
+        }
+
+        /* Keyboard shortcuts badge */
+        .kbd {
+            display: inline-block;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-family: inherit;
+            line-height: 1;
+            color: var(--body-text);
+            background-color: var(--input-background);
+            border: 1px solid var(--help-card-border);
+            border-radius: 3px;
+            box-shadow: inset 0 -1px 0 var(--help-card-border);
+        }
+
+        /* Dictionary Table */
+        table.dict-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        table.dict-table th {
+            text-align: left;
+            padding: 6px 8px;
+            background: var(--help-sidebar-bg);
+            border-bottom: 2px solid var(--help-sidebar-border);
+            font-weight: 700;
+            color: var(--header-color);
+        }
+
+        table.dict-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--help-card-border);
+            vertical-align: top;
+        }
+
+        table.dict-table tr:hover {
+            background: var(--help-card-bg);
+        }
+
+                /* Interactive UI Map Showcase (Standalone Window on Matched Background) */
+        #interactive-map-panel {
+            background: rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid var(--help-sidebar-border);
+            padding: 14px 20px 16px 20px;
+        }
+
+        body.dark #interactive-map-panel {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .map-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 780px;
+            margin: 0 auto 10px auto;
+        }
+
+        .map-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--header-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-instruction {
+            font-size: 11px;
+            color: var(--dim-text);
+            background: var(--help-tag-bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* Standalone Window Container */
+        .mockup-window-wrapper {
+            max-width: 780px;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--titlebar-divider);
+            overflow: hidden;
+            background-color: var(--middle-background);
+            position: relative;
+        }
+
+        #mockup-frame {
+            position: relative;
+            height: 148px;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--middle-background);
+            font-family: Arial, sans-serif;
+            line-height: normal;
+        }
+
+        #mockup-frame #grid-container {
+            position: relative;
+            width: 100%;
+            height: 148px !important;
+            user-select: none;
+            background-color: var(--middle-background);
+            font-family: Arial, sans-serif;
+            line-height: normal;
+        }
+
+        #mockup-frame * {
+            line-height: normal;
+        }
+
+        #mockup-frame .top-titlebar,
+        #mockup-frame .bottom-titlebar {
+            cursor: default;
+            width: 100% !important;
+            background-color: var(--titlebar-background) !important;
+            color: var(--titlebar-text) !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        body.dark #mockup-frame .top-titlebar,
+        body.dark #mockup-frame .bottom-titlebar {
+            background-color: #303030 !important;
+        }
+
+        body.light #mockup-frame .top-titlebar,
+        body.light #mockup-frame .bottom-titlebar {
+            background-color: #ebedf0 !important;
+        }
+
+        #mockup-frame .top-titlebar img,
+        #mockup-frame .bottom-titlebar img {
+            filter: var(--titlebar-icon-filter) !important;
+            transition: filter 0.2s ease;
+        }
+
+        #mockup-frame #top-titlebar-ci-badge {
+            color: var(--titlebar-text) !important;
+        }
+
+        #mockup-frame .top-titlebar-text {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: normal;
+            margin-top: 6px;
+        }
+
+        #mockup-frame #message {
+            height: 100% !important;
+            border-style: solid;
+            border-width: thin;
+            border-color: var(--message-border);
+            background-color: var(--message-background);
+            border-radius: 6px;
+            box-shadow: var(--message-shadow);
+            line-height: 1.4;
+        }
+
+        #mockup-frame #bottom-titlebar-find-icon {
+            position: absolute !important;
+            bottom: 6px !important;
+            left: 8px !important;
+            cursor: pointer;
+            filter: invert(var(--history-image-invert, 100%)) !important;
+        }
+
+        #mockup-frame #top-titlebar-repo-arrow,
+        #mockup-frame #top-titlebar-branch-arrow {
+            vertical-align: middle;
+            height: 16px !important;
+            width: auto !important;
+            object-fit: contain;
+        }
+
+        #mockup-frame img,
+        #mockup-frame .link-text-hover,
+        #mockup-frame .top-titlebar-ci-badge,
+        #mockup-frame button,
+        #mockup-frame textarea,
+        #mockup-frame input,
+        #mockup-frame label {
+            cursor: pointer !important;
+            transition: transform 0.1s ease, filter 0.15s ease, outline 0.15s ease;
+        }
+
+        #mockup-frame img:hover,
+        #mockup-frame .top-titlebar-ci-badge:hover,
+        #mockup-frame button:hover {
+            transform: scale(1.12);
+            filter: drop-shadow(0 0 3px var(--accent-color, #2F5496));
+        }
     </style>
-        
+</head>
+
+<body class="light">
+    <!-- Dark Mode & Zoom Initialization -->
     <script>
-        function showClickedText( clickedId, linkClassName) {
-            
-            let elements = document.getElementsByClassName(linkClassName);  // Find from textLinks, then derive text id's from textLink id's
-            
-            // Reset all views
-            for (var i = 0; i < elements.length; i++) {
-    
-                // Set all links to hidden
-                elements[i].classList.remove('visibleTextLink');
-                elements[i].classList.add('hiddenTextLink');
-                
-                // Set all texts to unused
-                let viewId = elements[i].id + '_div';
-                document.getElementById(viewId).classList.remove('visibleText');
-                document.getElementById(viewId).classList.add('hiddenText');
-            }
-            
-            // Set this textlink to visible
-            document.getElementById(clickedId).classList.remove('hiddenTextLink');
-            document.getElementById(clickedId).classList.add('visibleTextLink');
-            
-            // Set this text to visible
-            let thisViewId = clickedId + '_div';
-            document.getElementById(thisViewId).classList.remove('hiddenText');
-            document.getElementById(thisViewId).classList.add('visibleText');
-        } 
-    </script> 
-    
-<body class='light'> 
-    
-    <!-- Dark mode on/off , zoom--> 
-    <script>
-        if (global.localState.dark){
+        if (typeof global !== 'undefined' && global.localState && global.localState.dark) {
             document.body.classList.add('dark');
         }
-        window.document.body.style.zoom = global.state.zoom;
-    </script>    
-    
+        if (typeof global !== 'undefined' && global.state && global.state.zoom) {
+            window.document.body.style.zoom = global.state.zoom;
+        }
+    </script>
 
-   
-      
-<div id="content">
-    
-        
-    <div id="inner-content">
- <!-------------------------------------------------------------------------------------------->  
-        <p style="text-align:right;">Pragma-git  <span id='version'></span> &nbsp;&nbsp;
-         </p>                              
-            
-        <h2>About Pragma-git
-                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
-                onclick="findInNw.showSearchBox();" 
-                onmouseover="document.getElementById('about-icon').src='images/find_hover.png' " 
-                onmouseout="document.getElementById('about-icon').src='images/find_black.png' " 
-                src="images/find_black.png" >
-        
-        </h2>
-        
-    
-        <hr>
-        
-    <!-------------------------------------------------------------------------------------------->                                  
-    <h3>Git started</h3>   
-    <!-------------------------------------------------------------------------------------------->                                  
-    <hr>           
-        
-        <!-------------------------------------------------------------------------------------------->             
-        <h4>Intro</h4>
-                               
-            <p>Pragma-git aims to be a user-friendly revision control software. 
-                It fits people working on their own projects, in groups, or those who find git overwhelming. 
-            </p>
-                               
-            <p> The app uses "git" behind the scene, and is therefore fully compatible and 
-                can be used interchangeably with other git softwares. It requires set-up of git (see <a href="#INSTALLATION">Installation</a>).
-            </p>  
-                               
-            <p> Pragma-git is licensed with the 
-            <a href="#" onclick="window.open('License.html','name','width=800,height=600')" style="cursor:pointer">MIT license</a>.
-            </p>  
-            <hr>          
+    <!-- Top Bar with Header Information -->
+    <div id="help-header">
+        <div class="header-title-group">
+            <h1 class="header-title">Pragma-git Help & Guide</h1>
+            <span class="header-version">v<span id="version">...</span></span>
+        </div>
+        <div style="font-size: 11px; color: var(--dim-text);">
+            Click any icon or control on the visual interface map below to jump directly to its guide.
+        </div>
+    </div>
 
-        <!-------------------------------------------------------------------------------------------->             
-        <h4>Help</h4>
-                               
-            <p>Help is found from the  <img style='vertical-align:middle;' src="images/questionmark_black.png"  height="17" width="17">  icon. 
-            This icon appears in most windows, giving help specific to that window.
-            </p>
+                <!-- Interactive Pragma-git UI Map (Standalone Window Mockup on Showcase Canvas) -->
+    <div id="interactive-map-panel">
+        <div class="map-header-row">
+            <div class="map-title">
+                <span>Interactive UI Map:</span>
+            </div>
+            <span class="map-instruction">Click any button, label, or icon below to jump to its guide</span>
+        </div>
 
-            <hr>          
+        <div class="mockup-window-wrapper">
+            <div id="mockup-frame">
+<div id="grid-container" style="
+        height: 100%;
+        display: grid;
+        grid-template-columns: 31px 1fr auto;
+        grid-template-rows: 33px auto 0px 33px;
+        align-items: center;
+        text-align: center;
+        background-color: var(--middle-background);
+        position: relative;">
 
+        <!-- Top titlebar -->
+        <div id="top-titlebar" class="top-titlebar" style="grid-column: 1 / 4;">
+            <!-- Icon About -->
+            <div class="about-icon">
+                <img id="about-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-about')" src="images/questionmark.png">
+            </div>
 
-        <!-------------------------------------------------------------------------------------------->             
-         <h4>Start working</h4>           
-            
-            <ul>
-                <li>Drag and drop a project's folder onto the app's window. </li> 
-                <li>If the folder is not already prepared (as a git repository), please allow the program to initialize the folder for git. </li> 
-            </ul>
-            
-            <p>Alternatively, if you want to work on a cloned project, cloning is performed from the settings menu.
-            </p>              
-            <hr>  
-                  
-         <!-------------------------------------------------------------------------------------------->             
-         <h4>Beginner's workflow (steps 1 - 4 in next section)</h4>
-         
-            <p>For git first-timers, the workflow would simply be: 
-             <ul>
-                <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the <button>Store</button> button to store a snapshot of your files</li>
-                <li>Work on your files</li>
-                <li>When finished with some task: write a description in the text area, and press the  <button>Store</button> button</li>
-                <li>...</li>
-             </ul>  
-            </p>    
-             
-            <p>The beauty of a revision control software is, that you may check out an old version later
-            </p>          
-            <hr>  
-            
-            
-         <!-------------------------------------------------------------------------------------------->             
-         <h4>Some git terminology</h4>
-         
-            <p>For git first-timers, the following definitions may be useful to know:
-            
-            <ol>
-                <li>You work on a <u>project</u> in a <u>folder</u>   
-                </li><li>That folder can be made into a <u>repository</u> (which tracks different versions of the files) <br>
-                In pragma-git, just drop the folder on the program window to make it a repository.
-                </li><li>A <u>revision</u> (sometimes called a <u>commit</u>) is a snapshot in time, which you may go back to, or inspect.
-                </li><li>A revision is created by making a <u>commit</u> (<button>Store</button> button), adding a descriptive <u>message</u> (such as "Fixed bug xyz")
-                </li><li>Files that are commited are safe, and the project folder can always be recovered to the state of that point in time
-                
-                <br><br>
-                
-                </li><li>A <u>branch</u> is simply a way to organize your work, so that work is grouped together in a logical fashion (by state of the code, by subproject, etc).  
-                </li><li>It is considered good practice to have at least two branches, where for instance working code is stored in the "main" branch, 
-                and code being worked on is stored in another branch (for instance "develop")
-                </li><li><u>Switching</u> (changing) branch modifies the files in the project folder to the latest revision within that branch
-                </li><li>Changes in files from one branch (for instance "develop") can be <u>merged</u> into another branch, for instance the "main" branch
-                
-                <br><br>
-                
-                </li><li>A repository can also have a <u>remote</u> counterpart.  This can be used as a cloud <u>backup</u> (for instance on github.com)
-                Other use cases includes to keep folders on multiple computers in sync, or as a means to collaborate between more than one developer
-                </li><li>If a remote repository has chaged, the changes may be <u>pulled</u> to the project folder of the local computer (and changes merged with the local files)
-                </li><li>If the same place in a file has been changed in different ways (local/remote, or when merging two local branches), this is called a <u>conflict</u>
-                </li><li>A conflict is <u>resolved</u> by the user telling the software which of the two versions to keep
-                
-                <br><br>
-                
-                </li><li><u>Pragma-git</u> helps with all above, and also supports a number of more git operations
-                    
-                </li>
-                </li>
-            </ol>
-                    
-            
-            
-            </p>     
-            
-            
-            <h4>Extensive git dictionary</h4>  
-                
-            <p>     
-                Click below, to view a more extensive dictionary of terms used in git, and also how they can be understood in Pragma-git
-            </p>
-                
-            <button class="collapsible indent" style="background-color: var(--body-background); color: var(--header-color);" id="repoSettings">&nbsp; (click to view / hide) </button> 
+            <div id="top-titlebar-text" class="top-titlebar-text">
+                <!-- Text Repo -->
+                <div class="tooltip-bottom-left" data-tooltip="Repositories" style="font-size: var(--tooltip_font_size); position: relative;">
+                    <div class="top-titlebar-repo-text">
+                        <img id="top-titlebar-repo-arrow" onclick="highlightHelpTopic('clicked-repo')" src="images/dropdown-arrow.png">
+                    </div>
+                    <div id="top-titlebar-repo-text" class="top-titlebar-repo-text link-text-hover" onclick="highlightHelpTopic('clicked-repo')">Hello World</div>
+                </div>
 
-             <div  class="content indent">
-    
-                  <p>Here follows a number of concepts that can be described in many ways, both as "git" words, and more generally as concepts for revision control : </p>
-                  
-                  <table>
-                    <tr> <th>Word</th> <th>Meaning</th></hr>
+                &nbsp;
+
+                <!-- Text Branch -->
+                (
+                <div class="tooltip-bottom-left" data-tooltip="Branches" style="font-size: var(--tooltip_font_size); position: relative;">
+                    <div class="top-titlebar-branch-text">
+                        <img id="top-titlebar-branch-arrow" onclick="highlightHelpTopic('clicked-branch')" src="images/dropdown-arrow.png">
+                    </div>
+                    <div id="top-titlebar-branch-text" class="top-titlebar-branch-text link-text-hover" onclick="highlightHelpTopic('clicked-branch')"><u>main</u></div>
+                </div>
+                )
+
+                <!-- CI Status Badge -->
+                <span id="top-titlebar-ci-placeholder" class="top-titlebar-ci-placeholder" style="visibility: visible;"><span id="top-titlebar-ci-badge" class="top-titlebar-ci-badge top-titlebar-ci-success tooltip-bottom" data-tooltip="CI: Passed (click to view)" onclick="highlightHelpTopic('clicked-ci-badge')" style="display: inline-block;"><svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3"></rect><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">I</text></svg></span></span>
+
+                <!-- Icon Notes -->
+                <div class="top-titlebar-notes-icon tooltip-bottom" data-tooltip="Personal notes">
+                    <img id="top-titlebar-notes-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-notes')" src="images/notes.png" style="visibility: visible;">
+                </div>
+            </div>
+
+            <!-- Top Titlebar Actions -->
+            <div class="top-titlebar-branch-icon tooltip-bottom" data-tooltip="Create branch">
+                <img id="top-titlebar-branch-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-branch-button')" src="images/branch.png">
+            </div>
+
+            <div class="top-titlebar-merge-icon tooltip-bottom" data-tooltip="Merge">
+                <img id="top-titlebar-merge-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-merge-button')" src="images/merge.png">
+            </div>
+
+            <div class="top-titlebar-pull-icon tooltip-bottom-right" data-tooltip="Pull from remote">
+                <img id="top-titlebar-pull-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-pull-button')" src="images/pull.png">
+            </div>
+
+            <div class="top-titlebar-push-icon tooltip-bottom-right" data-tooltip="Push to remote">
+                <img id="top-titlebar-push-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-push-button')" src="images/push.png">
+            </div>
+
+            <div class="top-titlebar-tag-icon tooltip-bottom-right" data-tooltip="Tag">
+                <img id="top-titlebar-tag-icon" height="17" width="auto" onclick="highlightHelpTopic('clicked-tag-button')" src="images/tag.png">
+            </div>
+
+            <div class="top-titlebar-close-field">
+                <img id="top-titlebar-minimize-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-minimize-button')" src="images/minimize.png">
+                <img id="top-titlebar-close-icon" onclick="highlightHelpTopic('clicked-close-button')" src="images/button_close.png">
+            </div>
+
+            <div class="top-titlebar-divider"></div>
+        </div>
+
+        <!-- Left Navigation Arrows -->
+        <div class="draggable" style="grid-row: 2; grid-column: 1; height: 100%; position: relative;">
+            <img id="up-arrow" class="non-draggable" height="17" width="17" onclick="highlightHelpTopic('clicked-up-arrow')" src="images/up-arrow_black.png">
+            <img id="down-arrow" class="non-draggable" height="17" width="17" onclick="highlightHelpTopic('clicked-down-arrow')" src="images/down-arrow_black.png">
+            <img id="bottom-titlebar-find-icon" class="non-draggable" height="15" width="15" onclick="highlightHelpTopic('clicked-find')" src="images/find_black.png" style="visibility: visible;">
+        </div>
+
+        <!-- Middle Column: Message Textarea & Pop-up Amend Checkbox -->
+        <div style="grid-row: 2; grid-column: 2; position: relative; height: 100%;">
+            <textarea
+                style="resize: none; color: var(--text);"
+                class="message"
+                id="message"
+                onclick="highlightHelpTopic('topic-message')"
+                placeholder="You may write what is ongoing here,&#10;&#10;Change text to commit message (or stash name) when done"
+                readonly></textarea>
+
+            <!-- Amend Checkbox (positioned in bottom-right corner inside textarea container) -->
+            <div id="amend_commit_div" class="tooltip-top-right" style="visibility: visible;">
+                <div>
+                    <input type="checkbox" id="amend_commit_checkbox" data-tooltip="Amend to last commit" onclick="highlightHelpTopic('amend_commit_checkbox')">
+                    <label for="amend_commit_checkbox" style="display: inline; vertical-align: middle;">Store in same </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Store Button (Only single Store button) -->
+        <div class="draggable" style="grid-row: 2; grid-column: 3; padding: 0px; height: 100%;">
+            <button id="store-button" class="non-draggable" onclick="highlightHelpTopic('clicked-store-button')" style="margin: 6px; position: relative; top: calc(50% - 17px);">Store</button>
+        </div>
+
+        <!-- Bottom Titlebar (Spans full width: grid-column: 1 / 4) -->
+        <div id="bottom-titlebar" class="bottom-titlebar" style="grid-row: 4; grid-column: 1 / 4;">
+            <!-- Icon Folder -->
+            <div class="bottom-titlebar-folder-icon tooltip-top-left" data-tooltip="Repository folder">
+                <img id="bottom-titlebar-folder-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-folder')" src="images/folder.png">
+            </div>
+
+            <!-- Icon Terminal -->
+            <div class="bottom-titlebar-terminal-icon tooltip-top-left" data-tooltip="Command line">
+                <img id="bottom-titlebar-terminal-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-terminal')" src="images/terminal.png">
+            </div>
+
+            <!-- Bottom Titlebar Status & Pinned Text -->
+            <div id="bottom-titlebar-div" class="bottom-titlebar-text">
+                <!-- Text status: Modified Files -->
+                <div class="tooltip-top-left" data-tooltip="Modified files (click for tools)" style="font-size: var(--tooltip_font_size); position: relative;" onclick="highlightHelpTopic('clicked-status-text')">
+                    <div id="bottom-titlebar-text" class="bottom-titlebar-status-text link-text-hover">Modified = 2 |  New = 0 |  Deleted = 0</div>
+                </div>
+                &nbsp;
+
+                <!-- Icon Graph -->
+                <div class="bottom-titlebar-more-icon tooltip-top-left" data-tooltip="Commit graph">
+                    <img id="more" style="vertical-align: middle;" height="17" width="17" onclick="highlightHelpTopic('clicked-graph')" src="images/more.png">
+                </div>
+                &nbsp;
+
+                <!-- Icon Pinned -->
+                <div class="top-titlebar-pinned-icon tooltip-top-left" data-tooltip="Fixed commit to compare with">
+                    <img id="top-titlebar-pinned-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-pinned-icon')" src="images/pinned_disabled.png" style="visibility: visible;">
+                </div>
+                &nbsp;
+
+                <!-- Commit Hash Field (Always displayed in Help Browser) -->
+                <div class="tooltip-top-left" id="commit_tool_tip" data-tooltip="Hash, click to copy (shift click long hash)" style="font-size: var(--tooltip_font_size); position: relative;" onclick="highlightHelpTopic('clicked-pinned-hash')">
+                    <div id="bottom-titlebar-pinned-text" class="bottom-titlebar-status-text link-text-hover" style="visibility: visible; display: inline-block;">#a1b2c3d</div>
+                </div>
+            </div>
+
+            <!-- Bottom Titlebar Actions: Revert, Cherry-pick, Stash, Stash Pop, Settings -->
+            <div class="bottom-titlebar-revert-icon tooltip-top-right" data-tooltip="Revert (undo) changes in this commit">
+                <img id="bottom-titlebar-revert-icon" height="17" width="auto" onclick="highlightHelpTopic('clicked-revert-button')" src="images/revert.png">
+            </div>
+
+            <div class="bottom-titlebar-cherry-pick-icon tooltip-top-right" data-tooltip="cherry-pick this commit (to other branch)">
+                <img id="bottom-titlebar-cherry-pick-icon" height="17" width="auto" onclick="highlightHelpTopic('clicked-cherry-pick-button')" src="images/cherry-pick.png">
+            </div>
+
+            <div class="bottom-titlebar-stash-icon tooltip-top-right" data-tooltip="Stash uncommitted">
+                <img id="bottom-titlebar-stash-icon" height="17" width="auto" onclick="highlightHelpTopic('clicked-stash-button')" src="images/stash.png">
+            </div>
+
+            <div class="bottom-titlebar-stash_pop-icon tooltip-top-right" data-tooltip="Retrieve latest stash">
+                <img id="bottom-titlebar-stash_pop-icon" height="17" width="auto" onclick="highlightHelpTopic('clicked-stash_pop-button')" src="images/stash_pop.png">
+            </div>
+
+            <div class="bottom-titlebar-settings-field tooltip-top-right" data-tooltip="Settings">
+                <img id="bottom-titlebar-settings-icon" height="17" width="17" onclick="highlightHelpTopic('clicked-settings')" src="images/settings.png">
+            </div>
+
+            <div class="bottom-titlebar-divider"></div>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Filter -->
+    <div id="search-container">
+        <input type="text" id="filter-input" placeholder="🔍 Search help topics (e.g., store, stash, branch, ci, history, ssh)..." oninput="filterHelpTopics(this.value)">
+    </div>
+
+    <!-- 2-Panel Layout -->
+    <div id="help-layout">
+        <!-- Sidebar Navigation -->
+        <nav id="help-sidebar">
+            <div class="nav-group-title">Getting Started</div>
+            <a class="nav-item active" href="#section-intro" onclick="selectNav(this)">
+                <span>🚀 Quick Start</span>
+            </a>
+            <a class="nav-item" href="#section-workflow" onclick="selectNav(this)">
+                <span>🔄 Everyday Workflow</span>
+            </a>
+
+            <div class="nav-group-title">User Interface Guide</div>
+            <a class="nav-item" href="#topic-repo" onclick="selectNav(this)">
+                <img src="images/dropdown-arrow.png"> <span>Repositories</span>
+            </a>
+            <a class="nav-item" href="#topic-branch" onclick="selectNav(this)">
+                <img src="images/dropdown-arrow.png"> <span>Branches</span>
+            </a>
+            <a class="nav-item" href="#topic-ci" onclick="selectNav(this)">
+                <span class="nav-ci-badge">
+                    <span class="top-titlebar-ci-badge top-titlebar-ci-success" style="display: inline-block;">
+                        <svg width="34" height="19" viewBox="0 -3 34 19">
+                            <rect x="0.5" y="0.5" width="31" height="16" rx="3"></rect>
+                            <text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">C</text>
+                            <text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">I</text>
+                        </svg>
+                    </span>
+                </span>
+                <span>CI Status Badge</span>
+            </a>
+            <a class="nav-item" href="#topic-notes" onclick="selectNav(this)">
+                <img src="images/notes.png"> <span>Personal Notes</span>
+            </a>
+            <a class="nav-item" href="#topic-create-branch" onclick="selectNav(this)">
+                <img src="images/branch.png"> <span>Create Branch</span>
+            </a>
+            <a class="nav-item" href="#topic-merge" onclick="selectNav(this)">
+                <img src="images/merge.png"> <span>Merge</span>
+            </a>
+            <a class="nav-item" href="#topic-pull" onclick="selectNav(this)">
+                <img src="images/pull.png"> <span>Pull</span>
+            </a>
+            <a class="nav-item" href="#topic-push" onclick="selectNav(this)">
+                <img src="images/push.png"> <span>Push</span>
+            </a>
+            <a class="nav-item" href="#topic-tag" onclick="selectNav(this)">
+                <img src="images/tag.png"> <span>Tags</span>
+            </a>
+
+            <div class="nav-group-title">Message & Commit Area</div>
+            <a class="nav-item" href="#topic-message" onclick="selectNav(this)">
+                <span>Central Message Area</span>
+            </a>
+            <a class="nav-item" href="#topic-find" onclick="selectNav(this)">
+                <img src="images/find_black.png"> <span>Find in History</span>
+            </a>
+            <a class="nav-item" href="#topic-store" onclick="selectNav(this)">
+                <span><span class="card-title-button" style="padding: 1px 6px; font-size: 10px;">Store</span> Button</span>
+            </a>
+            <a class="nav-item" href="#topic-amend" onclick="selectNav(this)">
+                <span><span style="font-family: monospace; font-size: 11px;"><input type="checkbox" disabled> </span> Store in same</span>
+            </a>
+
+            <div class="nav-group-title">Bottom Bar & Tools</div>
+            <a class="nav-item" href="#topic-folder" onclick="selectNav(this)">
+                <img src="images/folder.png"> <span>Project Folder</span>
+            </a>
+            <a class="nav-item" href="#topic-terminal" onclick="selectNav(this)">
+                <img src="images/terminal.png"> <span>Terminal / CLI</span>
+            </a>
+            <a class="nav-item" href="#topic-modified" onclick="selectNav(this)">
+                <span><span class="card-status-dot"></span> Modified Files List</span>
+            </a>
+            <a class="nav-item" href="#topic-graph" onclick="selectNav(this)">
+                <img src="images/more.png"> <span>Commit Graph</span>
+            </a>
+            <a class="nav-item" href="#topic-pinned" onclick="selectNav(this)">
+                <img src="images/pinned_enabled.png"> <span>Mark / Pin Commit</span>
+            </a>
+            <a class="nav-item" href="#topic-hash" onclick="selectNav(this)">
+                <span>#️⃣ Commit Hash</span>
+            </a>
+            <a class="nav-item" href="#topic-revert" onclick="selectNav(this)">
+                <img src="images/revert.png"> <span>Revert</span>
+            </a>
+            <a class="nav-item" href="#topic-cherry-pick" onclick="selectNav(this)">
+                <img src="images/cherry-pick.png"> <span>Cherry-pick</span>
+            </a>
+            <a class="nav-item" href="#topic-stash" onclick="selectNav(this)">
+                <img src="images/stash.png"> <span>Stash & Pop</span>
+            </a>
+            <a class="nav-item" href="#topic-settings" onclick="selectNav(this)">
+                <img src="images/settings.png"> <span>Settings</span>
+            </a>
+
+            <div class="nav-group-title">Reference</div>
+            <a class="nav-item" href="#section-dictionary" onclick="selectNav(this)">
+                <span>📖 Git Dictionary</span>
+            </a>
+            <a class="nav-item" href="#section-credits" onclick="selectNav(this)">
+                <span>ℹ️ License & Credits</span>
+            </a>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="help-content">
+
+            <!-- SECTION: INTRO -->
+            <section id="section-intro" class="content-section">
+                <h2>🚀 Getting Started with Pragma-git</h2>
+                <p>
+                    Pragma-git is designed to make version control friendly, visual, and reliable.
+                    Whether you are an experienced developer or find traditional command-line Git overwhelming,
+                    Pragma-git keeps your work safe with an intuitive single-click mental model.
+                </p>
+                <div class="help-card">
+                    <div class="card-title">How to open your project</div>
+                    <div class="card-desc">
+                        Drag and drop your project's folder directly onto the Pragma-git main window.
+                        If it's not yet a Git repository, Pragma-git will ask if you want to initialize it automatically.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: WORKFLOW -->
+            <section id="section-workflow" class="content-section">
+                <h2>🔄 Everyday Workflow</h2>
+                <div class="help-card">
+                    <div class="card-title">1. Write ongoing notes as you work</div>
+                    <div class="card-desc">
+                        At any point while working, write thoughts, tasks, or bug IDs in the message scratchpad. 
+                        Your notes stay preserved even when you switch branches, explore other repositories, or close the app.
+                    </div>
+                </div>
+                <div class="help-card">
+                    <div class="card-title">2. Store your work snapshot</div>
+                    <div class="card-desc">
+                        When you are done with a task, finalize your message and press <button class="card-title-button">Store</button>.
+                        Pragma-git stages modified files, creates a Git commit, and automatically pushes to your remote server if auto-push is on.
+                    </div>
+                </div>
+                <div class="help-card">
+                    <div class="card-title">3. Explore past history with arrows</div>
+                    <div class="card-desc">
+                        Use the left <span class="kbd">▼</span> down arrow to step back in time through historical revisions, and <span class="kbd">▲</span> up arrow to go forward toward newer commits.
+                        When in historical mode, click <span class="kbd">^HEAD</span> in the top header to instantly return to HEAD and resume editing your active working notes.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: TOP TITLEBAR -->
+            <section id="section-top-bar" class="content-section">
+                <h2>Top Titlebar & Navigation</h2>
+
+                <div id="topic-repo" class="help-card" data-topics="repo repository clicked-repo clickedRepoContextualMenu">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/dropdown-arrow.png"> Repository Switcher</span>
+                        <span class="card-tag">Top Bar</span>
+                    </div>
+                    <div class="card-desc">
+                        Clicking the repository name opens the repository list menu.
+                        You can quickly switch between active projects or manage repository groups.
+                    </div>
+                </div>
+
+                <div id="topic-branch" class="help-card" data-topics="branch clicked-branch clickedBranchContextualMenu">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/dropdown-arrow.png"> Branch Switcher</span>
+                        <span class="card-tag">Top Bar</span>
+                    </div>
+                    <div class="card-desc">
+                        Shows the active Git branch (for instance, <code>main</code> or <code>develop</code>).
+                        Click to switch to any local branch, fetch from remotes, or inspect branch statuses. Typically you can not switch branch when you have uncommitted files.
+                    </div>
+                </div>
+
+                                <div id="topic-ci" class="help-card" data-topics="ci ci-badge clicked-ci-badge">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span class="ci-badge-demo">
+                                <svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></svg>
+                            </span>
+                            Continuous Integration (CI) Status Badge
+                        </span>
+                        <span class="card-tag">Live Pipeline Status</span>
+                    </div>
+                    <div class="card-desc">
+                        Monitors and displays live build & test results from GitHub Actions, GitLab CI, or Bitbucket Pipelines for the active commit.
+                        <p style="margin: 6px 0 10px 0; font-size: 12px; color: var(--dim-text);">
+                            <i>Note: The CI pipeline state is communicated through distinct icon shapes:</i>
+                        </p>
+                        
+                        <div class="ci-badge-row">
+                            <svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></svg>
+                            <div><b>Solid Rectangle (Passed):</b> Continuous Integration tests completed successfully. Clicking the badge opens the pipeline run in your web browser.</div>
+                        </div>
+
+                        <div class="ci-badge-row">
+                            <svg width="34" height="19" viewBox="0 0 34 19"><g class="ci-piece-left"><path d="M 3.5,0.5 L 16,0.5 L 18,5 L 15,11 L 17,16.5 L 3.5,16.5 A 3,3 0 0 1 0.5,13.5 L 0.5,3.5 A 3,3 0 0 1 3.5,0.5 Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text></g><g class="ci-piece-right" transform="translate(8, 1.2) rotate(7 23.5 8.5)"><path d="M 18.5,0.5 L 28.5,0.5 A 3,3 0 0 1 31.5,3.5 L 31.5,13.5 A 3,3 0 0 1 28.5,16.5 L 19.5,16.5 L 17.5,11 L 20.5,5 L 18.5,0.5 Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round"/><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></g></svg>
+                            <div><b>Cracked / Fractured (Failed):</b> Pipeline failed or reported errors. Click to inspect failed workflow logs in your web browser.</div>
+                        </div>
+
+                        <div class="ci-badge-row">
+                            <svg width="42" height="19" viewBox="0 0 42 19"><rect x="0.5" y="0.5" width="39" height="16" rx="3" stroke-dasharray="3,2" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><text x="9" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic" fill="currentColor">C</text><text x="18" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic" fill="currentColor">I</text><text x="29" y="7.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="currentColor">...</text></svg>
+                            <div><b>Dashed with Ellipsis (In Progress):</b> Continuous integration build or test pipeline is currently pending / executing.</div>
+                        </div>
+                    </div>
+                </div>
+
+<div id="topic-notes" class="help-card" data-topics="notes clicked-notes">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/notes.png"> Personal Project Notes</span>
+                        <span class="card-tag">Tool</span>
+                    </div>
+                    <div class="card-desc">
+                        Opens the dedicated notebook for the active repository.
+                        Notes are stored locally in the <code>.Pragma-git/Notes</code> folder. Notes are not stored on the remote git server (to avoid leaks of sensitive information.)
+                    </div>
+                </div>
+
+                <div id="topic-create-branch" class="help-card" data-topics="create-branch addBranchButtonPressed">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/branch.png"> Create New Branch</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Creates and checks out a new branch from your current revision.
+                        Useful for starting experimental features or side-tracks without affecting your main work.
+                    </div>
+                </div>
+
+                <div id="topic-merge" class="help-card" data-topics="merge clicked-merge-button">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/merge.png"> Merge Branches</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Incorporates changes from another branch into your current branch.
+                        If conflicts occur, Pragma-git shows that there are conflicts in the lower part of the window.  Click that text to open the conflict resolution tool to assist you.
+                    </div>
+                </div>
+
+                <div id="topic-pull" class="help-card" data-topics="pull clicked-pull-button">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/pull.png"> Pull from Remote</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Downloads the latest commits from your remote server (e.g., GitHub, GitLab) and merges them into your local branch.
+                    </div>
+                </div>
+
+                <div id="topic-push" class="help-card" data-topics="push clicked-push-button">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/push.png"> Push to Remote</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Uploads local commits to the matching remote branch.
+                        Active when auto-push is disabled in Settings, or after manual rebases.
+                        If auto-push is enabled (default) it shows that push to remote is ongoing.
+                    </div>
+                </div>
+
+                <div id="topic-tag" class="help-card" data-topics="tag clicked-tag-button addTagButtonPressed">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/tag.png"> Tag Revisions</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Creates an alias or release marker (e.g., <code>v1.0.0</code>) pointing permanently to a specific commit.
+                        <p style="margin: 6px 0 0 0;">
+                            <b>Checkout any old tag:</b> Opening the Tag Manager lets you inspect, search, and directly check out any existing tag to explore or build past released versions.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: MESSAGE & COMMIT AREA -->
+            <section id="section-message-area" class="content-section">
+                <h2>Message Area & Commit Flow</h2>
+
+                                <div id="topic-message" class="help-card" data-topics="message notes scratchpad working history draft">
+                    <div class="card-header">
+                        <span class="card-title">📝 Central Message Area (Two Operating Modes)</span>
+                        <span class="card-tag">Core Workflow</span>
+                    </div>
+                    <div class="card-desc">
+                        The central textarea operates in two distinctly different modes depending on whether you are at your <b>Active Working State (HEAD)</b> or browsing a <b>Historical Commit</b>:
+                        
+                        <div style="margin: 10px 0; padding: 10px 12px; background: var(--input-background); border-left: 3px solid var(--accent-color); border-radius: 4px;">
+                            <h4 style="margin: 0 0 4px 0; color: var(--header-color);">1. Active Working State (at HEAD)</h4>
+                            <p style="margin: 0 0 6px 0;">
+                                When working at HEAD, this box serves as your <b>personal scratchpad and mental note memory</b>. You can write your ongoing thoughts, plans, or next steps here as you work.
+                            </p>
+                            <ul style="margin: 0; padding-left: 18px;">
+                                <li><b>Persistent Per-Repository:</b> Your draft notes stay saved specifically for this repository even if you switch branches, switch to other repositories, or restart Pragma-git.</li>
+                                <li><b>Committing:</b> When you are ready to snapshot your code, simply replace or refine your notes with your descriptive commit message (or stash name) and press <b>Store</b>.</li>
+                            </ul>
+                        </div>
+
+                        <div style="margin: 10px 0; padding: 10px 12px; background: var(--input-background); border-left: 3px solid var(--dim-text); border-radius: 4px;">
+                            <h4 style="margin: 0 0 4px 0; color: var(--header-color);">2. Historical Commit Mode (Navigating Past Revisions)</h4>
+                            <p style="margin: 0 0 6px 0;">
+                                When you navigate backward in git history using the <b>▼ (Down)</b> arrow on the left, the message box becomes read-only and displays the permanent commit log message of that historical revision.
+                            </p>
+                            <ul style="margin: 0; padding-left: 18px;">
+                                <li><b>Navigating History:</b> Use <b>▼ (Down Arrow)</b> to navigate backward into past commits, and <b>▲ (Up Arrow)</b> to step forward toward newer commits.</li>
+                                <li><b>Returning to HEAD:</b> When in historical mode, click <b><img style="height: 14px;vertical-align: text-bottom;" src="images/top-of-branch-arrow.png">main</b>
+                                (where the current branch is shown in front of the <img style="height: 14px;vertical-align: text-bottom;" src="images/top-of-branch-arrow.png"> symbol)</li>
+                                <li><b>Double-Click to Edit (Amend):</b> Double-clicking an existing historical commit message allows you to edit or amend the commit text.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="topic-store" class="help-card" data-topics="store commit push checkout clicked-store-button">
+                    <div class="card-header">
+                        <span class="card-title"><span class="card-title-button">Store</span> Commit & Push (or Checkout)</span>
+                        <span class="card-tag">Primary Action</span>
+                    </div>
+                    <div class="card-desc">
+                        The primary action button on the right adapts to your current context:
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><b>At Working State (HEAD):</b> Stages all modified and new files, creates a new commit using the text in the message area, and pushes to remote.</li>
+                            <li><b>When Historical Commit is Selected:</b> Changes to <b>Checkout</b>, allowing you to view and test that past point in time.</li>
+                        </ul>
+                    </div>
+                </div>
+
+<div id="topic-amend" class="help-card" data-topics="amend amend_commit_checkbox">
+                    <div class="card-header">
+                        <span class="card-title"><span class="card-title-checkbox"><input type="checkbox" disabled> Store in same</span> (Amend Last Commit)</span>
+                        <span class="card-tag">Option</span>
+                    </div>
+                    <div class="card-desc">
+                        Check the "<b><input type="checkbox" disabled> Store in same</b>" check- box to combine newly modified files into the most recent commit instead of creating a brand new commit.
+                    </div>
+                </div>
+
+                <div id="topic-find" class="help-card" data-topics="find search history filter query clicked-find">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/find_black.png"> Find in History (Search)</span>
+                        <span class="card-tag">Search Tool</span>
+                    </div>
+                    <div class="card-desc">
+                        Clicking the magnifying glass in the left navigation column opens or collapses the <b>Find Toolbar</b> directly above the status bar:
+                        <ul style="margin: 6px 0 0 16px; padding: 0;">
+                            <li><b>Search Commit Messages or Code Changes:</b> Toggle between searching through commit log messages or searching through actual diff code changes.</li>
+                            <li><b>File Pattern Filtering:</b> Narrow your search down to specific files or path patterns.</li>
+                            <li><b>Date Range:</b> Optionally specify <i>After</i> and <i>Before</i> dates to filter commits within a given time window.</li>
+                            <li><b>Step Through Results:</b> Navigating results lets you browse matching past commits instantly.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: BOTTOM STATUS BAR -->
+            <section id="section-bottom-bar" class="content-section">
+                <h2>Bottom Bar Tools & Status</h2>
+
+                <div id="topic-folder" class="help-card" data-topics="folder clicked-folder">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/folder.png"> Project Folder</span>
+                        <span class="card-tag">Bottom Tool</span>
+                    </div>
+                    <div class="card-desc">
+                        Opens your project folder directly in Finder (macOS) or Explorer (Windows).
+                    </div>
+                </div>
+
+                <div id="topic-terminal" class="help-card" data-topics="terminal clicked-terminal">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/terminal.png"> Command Line Terminal</span>
+                        <span class="card-tag">Bottom Tool</span>
+                    </div>
+                    <div class="card-desc">
+                        Launches your native system terminal with the current working directory preset to the repository folder.
+                    </div>
+                </div>
+
+                                <div id="topic-modified" class="help-card" data-topics="modified status files list changed clicked-status-text">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span style="display: inline-block; padding: 2px 8px; background: var(--header-background); border: 1px solid var(--help-card-border); border-radius: 4px; font-family: Arial; font-size: 11px; margin-right: 4px;">
+                                <b>Modified = 2 | New = 0 | Deleted = 0</b>
+                            </span>
+                            Modified Files List & Tools
+                        </span>
+                        <span class="card-tag">Working Tree Status</span>
+                    </div>
+                    <div class="card-desc">
+                        Shows the live count of modified, new (untracked), and deleted files in your project. 
+                        Clicking this label opens the <b>Changed Files Window</b> with interactive diff viewers, selective file staging checkboxes.
+                        In history browsing mode, it shows the number of modified files etc compared to previous commit.
+                    </div>
+                </div>
+
+<div id="topic-graph" class="help-card" data-topics="graph clicked-graph more">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/more.png"> Commit Graph</span>
+                        <span class="card-tag">Visualizer</span>
+                    </div>
+                    <div class="card-desc">
+                        Opens the visual commit history graph showing branch lanes, merges, stash points, and commit ancestry across the entire project.
+                    </div>
+                </div>
+
+                <div id="topic-pinned" class="help-card" data-topics="pinned clicked-pinned-icon clicked-pinned-hash">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/pinned_enabled.png"> Mark / Pin Commit</span>
+                        <span class="card-tag">Comparison</span>
+                    </div>
+                    <div class="card-desc">
+                        Pins the historical commit, so that the modified file count and diff viewers compare to this reference point.  
+                    </div>
+                </div>
+
+                
+                <div id="topic-hash" class="help-card" data-topics="hash commit-hash clicked-pinned-hash">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span style="display: inline-block; padding: 2px 7px; background: var(--header-background); border: 1px solid var(--help-card-border); border-radius: 4px; font-family: monospace; font-size: 11px; margin-right: 4px;">
+                                #a1b2c3d
+                            </span>
+                            Commit Hash Identifier
+                        </span>
+                        <span class="card-tag">Revision Reference</span>
+                    </div>
+                    <div class="card-desc">
+                        Displays the short SHA-1 hash of the currently selected commit.
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><b>Click:</b> Copies the 7-character short hash to your clipboard.</li>
+                            <li><b>Shift + Click:</b> Copies the complete 40-character full git commit-hash.</li>
+                            <li><b>Comparison Mode:</b> When a commit is pinned, this field indicates which commit your working files are currently being compared against.</li>
+                        </ul>
+                    </div>
+                </div>
+
+<div id="topic-revert" class="help-card" data-topics="revert clicked-revert-button">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/revert.png"> Revert Commit</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Creates an inverse commit that undoes the changes introduced by the selected historical revision without destroying git history.
+                    </div>
+                </div>
+
+                <div id="topic-cherry-pick" class="help-card" data-topics="cherry-pick clicked-cherry-pick-button">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/cherry-pick.png"> Cherry-pick</span>
+                        <span class="card-tag">Action</span>
+                    </div>
+                    <div class="card-desc">
+                        Applies the specific changes from an individual commit on another branch directly onto your current branch.
+                    </div>
+                </div>
+
+                                <div id="topic-stash" class="help-card" data-topics="stash stash-pop pop clicked-stash-button clicked-stash_pop-button">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <img src="images/stash.png"> <img src="images/stash_pop.png"> Stash & Stash Pop
+                        </span>
+                        <span class="card-tag">Temporary Storage</span>
+                    </div>
+                    <div class="card-desc">
+                        Temporarily shelve uncommitted work without making a permanent commit:
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><img src="images/stash.png" style="vertical-align: middle; width: 14px; height: 14px;"> <b>Stash:</b> Shelves your modified files to a temporary stack and reverts your working directory to a clean HEAD state.</li>
+                            <li><img src="images/stash_pop.png" style="vertical-align: middle; width: 14px; height: 14px;"> <b>Stash Pop:</b> Restores your most recently shelved stash changes back into your working tree.</li>
+                        </ul>
+                    </div>
+                </div>
+
+<div id="topic-settings" class="help-card" data-topics="settings clicked-settings">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/settings.png"> Settings Window</span>
+                        <span class="card-tag">Configuration</span>
+                    </div>
+                    <div class="card-desc">
+                        Manage repositories, clone new remotes, configure SSH credentials, adjust font zoom, and view system diagnostic information.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: GIT DICTIONARY -->
+            <section id="section-dictionary" class="content-section">
+                <h2>📖 Git & Pragma-git Dictionary</h2>
+                <table class="dict-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Concept</th>
+                            <th>What it means in Pragma-git</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <tr>
-                            <td>Git </td>
-                            <td>The <i>de facto </i> standard for software revision control </td>
+                            <td><b>Repository</b></td>
+                            <td>A project folder tracked by Git. Drop any folder onto Pragma-git to start tracking it.</td>
                         </tr>
-                        
                         <tr>
-                            <td>Snapshot </td> 
-                            <td>A version of all your project files, freezed to exactly this state forever</td>
+                            <td><b>Commit</b></td>
+                            <td>A permanent snapshot of your project at a specific moment in time with a descriptive message.</td>
                         </tr>
-                                                   
-                         <tr>
-                            <td>Project folder </td> 
-                            <td>A location for storing the files. See "Repository" below</td>
+                        <tr>
+                            <td><b>Store</b></td>
+                            <td>The single-click Pragma-git command that stages files, commits them, and pushes to remote.</td>
                         </tr>
-                                                          
                         <tr>
-                            <td>Repository </td> 
-                            <td>A location for storing the files. See "Project folder" above</td>
+                            <td><b>Branch</b></td>
+                            <td>An independent timeline of commits. Keep clean code in <code>main</code> and work in feature branches.</td>
                         </tr>
-                        
                         <tr>
-                            <td>Local repository</td>
-                            <td>A folder on your computer which has been assigned for version control.  In Pragma-git, you drop the folder onto the main window.</td>
+                            <td><b>Merge</b></td>
+                            <td>Combines two branches together. Overlapping file conflicts can be resolved with the merge tool.</td>
                         </tr>
-                        
                         <tr>
-                            <td>Remote repository</td>
-                            <td>A location normally on another computer.  Git can send data to (push) and retrieve data from (pull) the remote repository</td>
+                            <td><b>Pull / Push</b></td>
+                            <td><b>Pull</b> downloads changes from the cloud/server. <b>Push</b> uploads your local commits.</td>
                         </tr>
-                                                                       
-                         <tr>
-                            <td>Initialize</td> 
-                            <td>A project folder has to be initialized to become a git repository. 
-                            This places a hidden folder ".git" in your project folder, which keeps track of all revisions.  Do not delete this folder!!</td>
+                        <tr>
+                            <td><b>Stash</b></td>
+                            <td>Temporarily shelving uncommitted edits so you can pull, switch branches, or test cleanly.</td>
                         </tr>
-                                
-                                                                        
-                         <tr>
-                            <td>Clone</td> 
-                            <td>This means making a copy of a remote repository on your local computer.  You can then work with this, as your own. 
-                            One good use case, is if you work on more than one computer.  
-                            Then, you can clone from a remote repository to your second computer, to get a copy of your complete remote repository.  
-                            Cloning is only done once, after that you work with Commit, Push, Pull operations, or in Pragma-git, with the "Store"-button and Pull.
-                            </td>
+                        <tr>
+                            <td><b>HEAD</b></td>
+                            <td>The current revision or top commit of the branch you are actively working on.</td>
                         </tr>
-                                                  
                         <tr>
-                            <td>Commit</td>
-                            <td>The "git" word for storing a snaphshot of your work, with a descriptive name.</td>
+                            <td><b>Detached HEAD</b></td>
+                            <td>Looking at an old historical snapshot without being on a branch. Pragma-git guides you on safe branching.</td>
                         </tr>
-                                           
-                        <tr>
-                            <td>Add, Commit</td>
-                            <td>In git, storing a snapshot is a two step procedure: 1) select files and 2) commit the files, see above. 
-                            The <button>Commit</button> button in Pragma-git does this.
-                            This mode, not auto-pushing, is configured in the settings menu of Pragma-git.
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Add, Commit, Push </td>
-                            <td>The "git" way to store a snapshot in your local repository, <i>and</i> to send a copy to a remote repository. 
-                            The  <button>Store</button> button in Pragma-git does this.
-                            See "Store" below
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Store</td>
-                            <td>The "Pragma-git" way to (with one click) store a snapshot of the files at this time-point in a repository, <i>and</i> 
-                            to send a copy to the remote repository.
-                            
-                            This mode, auto-pushing, is default in Pragma-git, and is configured in the settings menu of Pragma-git.
-                            
-                            </td>
-                        </tr>
-     
-                         
-                        <tr>
-                            <td>Branch</td>
-                            <td>You may work on several versions of your project simultaneously, keeping track of them in different branches. For instance,
-                            performing something that is experimental, or implementing something which is a side-track from your project can be done in a separate branch.
-                            You can create a new branch from where you are, or from a historical snapshot (see section "Log, History", below). 
-                            You cannot create a new branch if you have changed files that are not stored.  
-                            If this side-track is successful you may wish to incorporate that into the main project -- see "merge", below.</td>
-                        </tr>  
-                         
-                        <tr>
-                            <td>Merge</td>
-                            <td>Incorporating changes from one branch into another branch. Git does this very cleverly, so that changes that do not overlap will be combined from both branches.
-                            If you are unlucky, the same line of text has been changed differently in both branches.  Then, git needs your help to resolve which version you wish to keep
-                            -- called to resolve a merge conflict</td>
-                        </tr>   
-                        
-                        <tr>
-                            <td>Conflict</td>
-                            <td>See above. A conflict can occur when merging two snapshots from for instance two branches, but also between a remote and a local repository.
-                            There are two different types of conflicts: 1) a file was deleted in one of the two places, and 2) a file was changed in the same place on both places.
-                            For both this cases, git needs your help to decide on what you wish to do.  This process is called "resolving a conflict", and in Pragma-git there is a tool
-                            that aids you in doing this</td>
-                        </tr>           
-    
-                        <tr>
-                            <td>Pull</td>
-                            <td>Retrieving the latest snapshot from the remote repository, and merging that with your local project folder.  
-                            If you work on multiple computers, or are many people in the team, some work may have been performed and stored on the remote repository.
-                            "Pull" is a way to update your local project folder to the latest state. It is good practice to do this before you start working on your local project.</td>
-                        </tr>          
-    
-                        <tr>
-                            <td>Push</td>
-                            <td>Send a copy of your snapshots to the remote repository.  
-                            In Pragma-git, the default is to do a "push" when pressing the  <button>Store</button> button.  
-                            This may be turned off in the settings, and then you need to do a manual push when ready to copy to the remote repository.
-                            In Pragma-git, you send the data to a remote branch with the same name as your local branch.</td>
-                        </tr>    
-                        <tr>
-                            <td>Stash</td>
-                            <td>Like a clipboard copy, where you can "cut" (and  remember) the file changes since the last stored snapshot.  
-                            A stash takes you back to a clean last-snapshot, and keeps the changes in memory. Sometimes this can be useful. 
-                            One such occasion is if you forgot to "pull" from the remote repository,
-                            before starting to work in your local folder.  Doing a "stash", then "pull", and then "stash-pop" would be a workflow to solve such problem.
-                            In Pragma-git "stash" works  as the computer clipboard's copy command, and can hold only one stash. </td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Stash-pop</td>
-                            <td>Like a clipboard "paste", where you retrieve the stashed (see above) changed files. 
-                            In Pragma-git "stash" works  as the computer clipboard's cut and paste command, and can hold only one stash at a time </td>
-                        </tr>
-                         
-                        <tr>
-                            <td>Log, History</td>
-                            <td>The log (History) shows all stored snapshots.  In Pragma-git, you walk down in history with the arrow buttons.  
-                            You can set your project folder to any snapshot from the history, by doing a "checkout"   </td>
-                        </tr>
-                                
-                        <tr>
-                            <td>Checkout</td>
-                            <td>This command sets your project folder to the state it was in at the point in time of the snapshot.  
-                            You may play with the project in that state, but should be careful not to make any changes. </td>
-                        </tr>
-                            
-                        <tr>
-                            <td>Detached HEAD</td>
-                            <td>A checkout of a snapshot is in  a state called "detached HEAD".  That means that it does not belong to any branch, and if you make changes,
-                            they will be dangling without being easy to retrieve.  Pragma-git advice you if this happens.  The best way is to create a new branch from the checkout
-                            and work from there, and end your work by merging it to another branch.</td>
-                        </tr>
-                        
-                        <tr>
-                            <td>Tag</td>
-                            <td>An alias for a commit.  This is often used for version numbering of softwares, but can be used for anything. You may view it as a sort of permanent bookmark</td>
-                        </tr>
-                                                   
                     </tbody>
-                  </table>
-            </div>
-                
-            
-            
-                 
-            <hr>  
-                    
-    <!-------------------------------------------------------------------------------------------->  
-    <h3>The basic use</h3>   
-    <!--------------------------------------------------------------------------------------------> 
-        <hr>    
+                </table>
+            </section>
 
-        <p>
-            <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet.png" width="80%">
-        </p>
-        
-            
-            
-                          
-        <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Title (top) and status bar (bottom)</h4>
+            <!-- SECTION: CREDITS & LICENSE -->
+            <section id="section-credits" class="content-section">
+                <h2>ℹ️ License & Credits</h2>
+                <p>
+                    Pragma-git is open-source software licensed under the 
+                    <a href="#" onclick="window.open('License.html','license','width=800,height=600'); return false;">MIT License</a>.
+                </p>
+                <p>Built with NW.js, simple-git, Toast-UI Editor, and CodeMirror.</p>
+            </section>
+        </main>
+    </div>
 
-            <p class="indent"> <img style='vertical-align:middle;' src="images/top-title-bar.png"  height="24"> (the top title bar)<br>
-            displays the name of your current repository (in this example "MyFolder"), and the name of the current branch (in this case "master"). In case you have more than one repository or branch, 
-            the arrow next to the name can be clicked to select another repository or branch.  Clicking on name will change into the next repository and branch.
-            </p>
-                        
-            <p class="indent"> <img style='vertical-align:middle;' src="images/bottom-status-bar.png"  height="24"> (the bottom status bar) <br>
-            shows the number of modified files. In normal mode, it is the difference since the last Store operation.  In history mode, it is the change from the previous revision in history.
-            Clicking on this area opens a list of modified files in a new window.
-            In this new window, you can see if a file was added, modified or deleted. In the normal mode (before the "Store"-button is pressed) you can delete or restore a modified file.
-            You may also investigate how the files were changed clicking the "diff" link, which works both in normal mode, and when viewing historical revisions.
-            </p>
-                                   
-            <p class="indent"> <img style='vertical-align:middle;' src="images/conflict-status-bar.png"  height="24"> (the bottom status bar) <br>
-            can show up instead of above status of changed files. 
-            This may happen under special circumstances after a "merge", "pull" or "stash retrieve" action.  
-            What it means is that Pragma-git needs your help to clarify what is your intention with files that have been changed in different ways in two different revisions.
-            Click on this text to open a "conflict resolution window", that guides you through this process.
-            </p>    
+    <!-- Scripts -->
+    <script>
+                // Match mockup titlebars to the authentic runtime colors of the main Pragma-git window
+        function updateMockupTitlebarColors() {
+            var topBar = document.querySelector("#mockup-frame #top-titlebar");
+            var bottomBar = document.querySelector("#mockup-frame #bottom-titlebar");
+            if (!topBar || !bottomBar) return;
 
-         <h4>The Store button, and message area</h4>
-         
-            <p class="indent">
-                <button>Store</button> Begin with writing a short description in the message area; then press the Store-button to save the current state of your work as a revision.  
-                <a href="#STORE">Learn more.</a>
-            <p/>      
-            
-            <hr>
-            
-        <!-------------------------------------------------------------------------------------------->  
-        <h3 id="ADVANCED_USE">Advanced use</h3>   
-        <!--------------------------------------------------------------------------------------------> 
-            <hr>           
-            <p>
-                <img class="image_background" style='vertical-align:middle;' src="images/Cheat-sheet-advanced.png" width="80%">
-            </p>
-            
-            <h4>Title bar / top icons (click icon for explanation):</h4> 
-            <br>
-    
-            <span id="notes"  class="textLink visibleTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/notes_black.png"   height="17" width="17"> notes,  </span> 
-            <span id="branch" class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/branch_black.png"   height="17" width="17"> branch, </span>
-            <span id="merge"  class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/merge_black.png"    height="17" width="17"> merge, </span> 
-            <span id="pull"   class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/pull_black.png"     height="17" width="17"> pull, </span> 
-            <span id="push"   class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/push_black.png"     height="17" width="17"> push, </span> 
-            <span id="tag"    class="textLink hiddenTextLink" onclick="showClickedText(this.id, 'textLink')"> <img src="images/tag_black.png"      height="17" width="17"> tag </span>
-            
-            <br>
-            <br>
-            
-            <i style="left:20px">
-                <div id="notes_div" class="visibleText" >
-                    Keep personal project notes here.  Notes can be written either in rich text or markdown. Notes are stored in .Pragma-git/Notes folder
-                </div>
-                
-                <div id="branch_div" class="hiddenText" >
-                    Create a new branch from your position
-                </div>
-                 
-                <div id="merge_div" class="hiddenText" >
-                    Merge branch selected from dropdown menu, into current branch
-                </div>
-                 
-                <div id="pull_div" class="hiddenText">
-                    Manual updates are available to be pulled from remote repository. Click to pull (download) from remote repository
-                </div>
-                 
-                 
-                <div id="push_div" class="hiddenText">
-                    Manual push to remote repository.  This is only visible if auto-push is disabled in settings.
-                </div>
-                 
-                 
-                <div id="tag_div" class="hiddenText">
-                    Create a "tag" from this commit.  A tag is a named alias that refers to the current revision
-                </div>
-            </i>
-     
-            <br> 
-     
-           
-           
-            <h4>Status bar / lower icons (click icon for explanation):</h4> 
-            <br>
-            
-            <span id="folder"   class="textLink2 visibleTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/folder_black.png"     height="17" width="17"> folder, </span>
-            <span id="terminal"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/terminal_black.png"      height="17" width="17"> terminal, </span>
-             
-            <span id="graph"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')">  <img src="images/more_black.png"  height="17" width="17"> graph, </span>
-            <span id="pinned"    class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')">  <img src="images/pinned_enabled_black.png"  height="17" width="17"> marked, </span>
-     
-            <span id="revert" class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/revert_black.png"   height="17" width="17"> revert,</span> 
-            <span id="cherry" class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/cherry-pick_black.png"   height="17" width="17"> cherry-pick, </span>
-            <span id="stash"  class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/stash_black.png"    height="17" width="17"> stash, </span> 
-            <span id="stash_pop"   class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/stash_pop_black.png"     height="17" width="17"> stash-pop, </span>
-             
-            <span id="settings"   class="textLink2 hiddenTextLink" onclick="showClickedText(this.id, 'textLink2')"> <img src="images/settings_black.png"     height="17" width="17"> settings </span> 
-          
-            <br>
-            <br>
-        
-            <i> 
-                
-                <div id="folder_div" class="visibleText" >
-                    Show project folder
-                </div>
-                 
-                <div id="terminal_div" class="hiddenText" >
-                    Open terminal in project folder
-                </div>
-                 
-                 
-                <div id="graph_div" class="hiddenText" >
-                    Shows a graphical view of the commit history
-                </div>
-                
-                <div id="pinned_div" class="hiddenText" >
-                    <img src="images/pinned_disabled_black.png"  height="17" width="17">
-                    Not marked, means that history is compared with previous commit. 
-                    <img src="images/pinned_enabled_black.png"  height="17" width="17">
-                    Marked checkbox, means that other commits are compared to the marked commit            
-                </div>
-                    
-                
-                <div id="revert_div" class="hiddenText" >
-                    "Revert" (undo changes) introduced in this commit. Commit these changes or keep editing
-                </div>
-                 
-                <div id="cherry_div" class="hiddenText" >
-                    "Cherry-pick" (copy changes) introduced in this commit to branch selected from dropdown menu. Commit these changes or keep editing
-                </div>
-            
-                 
-                <div id="stash_div" class="hiddenText">
-                    "Stash" (hide away) your working files. See this as a temporary Store, which leaves no trace in the revision history <br>
-                    You may give a "stash" a name.  This is done by writing a message before pressing the stash button.  Name can be seen in graph window.
-                </div>
-                 
-                 
-                <div id="stash_pop_div" class="hiddenText">
-                    "Stash pop" (retrieve) your stashed files into our working folder
-                </div>
-                 
-                <div id="settings_div" class="hiddenText">
-                    Settings dialog.  Here you can manage repositories, branches, software settings etc
-                </div>
-                
-            </i>
-            <br>
-            
-            
-            
-            
-                      
-            <h4>History browsing / left icons (click icon for explanation):</h4> 
-            <br>
-            
-            <span id="downHistory"    class="textLink3 visibleTextLink" onclick="showClickedText(this.id, 'textLink3')"> <img src="images/down-arrow_black.png" height="17" width="17"> older, </span> 
-            <span id="upHistory"      class="textLink3 hiddenTextLink" onclick="showClickedText(this.id, 'textLink3')"> <img src="images/up-arrow_black.png"    height="17" width="17"> newer, </span>
-            <span id="seachHistory"   class="textLink3 hiddenTextLink" onclick="showClickedText(this.id, 'textLink3')">  <img src="images/find_black.png"       height="17" width="17"> find   </span>
-            <br>
-            <br>
-        
-            <i> 
-                
-                <div id="downHistory_div" class="visibleText" >
-                    Show older historical commit
-                </div>
-                 
-                <div id="upHistory_div" class="hiddenText" >
-                    Show newer historical commit
-                </div>
-                 
-                <div id="seachHistory_div" class="hiddenText" >
-                    Enables a search dialog for historical commits
-                </div>
-          
-                
-            </i>
-            <br>
-            
-         <h4>The Checkout button</h4>
-            <div>
-  
-            <p class="indent"> 
-                <button>Checkout</button> Check out an older revison (shown when browsing history with the 
-                <img src="images/down-arrow_black.png"  height="17" width="17">, <img src="images/up-arrow_black.png"  height="17" width="17"> buttons; see <a href="#ADVANCED_USE">advanced use</a>)
-            </p>              
-            </div>
-            
-            
-         
-            <hr>
-        
-        <!-------------------------------------------------------------------------------------------->                                  
-        <h3>Learn more</h3>   
-        <!--------------------------------------------------------------------------------------------> 
-        <hr>  
-       
- 
+            var isDark = document.body.classList.contains('dark') || (typeof global !== 'undefined' && global.localState && global.localState.dark);
+            var color = isDark ? "#303030" : "#ebedf0";
 
- <!-------------------------------------------------------------------------------------------->                                  
-         <h4 id="STORE">Store version with short description </h4>
-             <p>
-                When you feel you have reached an important point in your work (or are just afraid you will get lost if you continue) 
-                you may store a named revision of the project. The nice thing about the revision control system is, 
-                that you can later retrieve your whole project as it was at this point in time. There is no harm to store revisions often.
-            </p>
-                    
-            <p>
-                To store a revision of the changed files, you click in the text field, and type a descriptive text. The  <button>Store</button> button  
-                becomes active when you start typing.  Press this button to store your revision.
-            </p> 
-        <hr>  
-            
- <!-------------------------------------------------------------------------------------------->                                  
-         <h4>Store version with longer description </h4>                    
-            <p> The description may be more than one line. If you use multiple lines, 
-                the first line is a brief description (like a title). The next line is an empty line. 
-                The following lines contain a more specific description. Example :<br>
-            </p> 
-            
-             <p><code  style = "margin-left: 15px">My message title </code><br>
-                <code  style = "margin-left: 15px"> </code><br>
-                <code  style = "margin-left: 15px">my long description that goes on and on ....  </code>
-            </p>     
-         <hr>    
-            
- <!-------------------------------------------------------------------------------------------->                                  
-           <h4 id="NOTES">Project Notes</h4>                    
-            <p> You may write personal notes for each repository.  
-            The notes are accessed by clicking the  <img src="images/notes_black.png"  height="17" width="17"> icon, in the top titlebar.
-            </p>
-            
-            <p>The notes are written using the built-in editor, which support both visual editing and editing with "markdown" rich text format.
-            At the bottom of the editor, you can chose to change between editing in WYSIWYG (what-you-see-is-what-you-get), or Markdown.
-            </p> 
-            
-             <p>The notes-file is stored in your home folder's <code>.Pragma-git/Notes</code> directory.  
-             Files are auto-saved every 30 seconds, and when you close the window.
-            </p>     
-         <hr>    
-            
- <!-------------------------------------------------------------------------------------------->                                  
-                
-         <h3 id="Advanced">Advanced </h3>  
-        <hr>     
- 
- <!-------------------------------------------------------------------------------------------->                                           
-         <h4>Multiple repositories and branches </h4>    
-             
-            <p><u>Repositories</u> : You can have multiple active project folders (repositories), added by drag-and drop as described above. 
-                You switch by clicking the name (the first text in the title bar), to change to next project in the list.
-            </p>
-            
-            <p>Repositories can be created by cloning from an existing remote repository (see Instructions section, at the 
-            settings page).
-            </p>
-            
-            <p>Repositories can also be removed from the list in the program, also that from the settings window.
-            </p>
-                                      
-            <p><u>Branches</u> : You can have multiple branches of your work, that you can switch between. 
-                You switch by clicking the name (the second text in the title bar between parentheses), to change to next project in the list.
-            </p>           
-             <p>Branches can be created from the Settings dialog icon <img style='vertical-align:middle;' src="images/settings_black.png"  height="17" width="17">,
-                where a new branch can be created from the top of your current branch, or from a checked-out historical commit.
-             </p> 
-             
-             <p>  
-                Branching can also be performed with the <img src="images/branch_black.png"  height="17" width="17">  button (which is available if all working files are stored). 
-                With this button, a branch may be created starting from the commit displayed in the main window (the latest Store, or a historical commit)
-                
-                
-                
-                
-                <!-- TODO: branches may also be hidden, which makes sense if you have many branches you don't use.  -->   
-            </p>     
-        <hr>               
-     
- <!-------------------------------------------------------------------------------------------->                                  
-          <h4>History, and checkout </h4>    
-             
-            <p><u>Browsing history</u> : As described above, the arrow buttons 
-            (<img style='vertical-align:middle;' src="images/down-arrow_black.png"  height="17" width="17"><img style='vertical-align:middle;' src="images/up-arrow_black.png"  height="17" width="17">) 
-            let you browse back in time.
-            Also, a graphical representation can be viewed by clicking the icon  <img style='vertical-align:middle;' src="images/more_black.png"  height="17" width="17">
-            </p>
-            
-            <p>When you view an old commit, the <button>Store</button> button
-            is changed into a  <button>Checkout</button> button
-             
-            Pressing "Checkout" sets the files in the project to the same state as it was once, when Stored. This is useful if you wish to test your work as it was at this time point.
-            If you don't modify any of the files, you are fine to change branch, and you will be back to where your project was before.
-            </p>
-            
-            <p><u>Peculiarity with git</u> : If you change any of the files in a historical checkout, your files will be in a strange state called "detached HEAD"
-            </p>
-                       
-            <p><u>Detached HEAD branch</u> : The branch-name in the title bar is changed to "HEAD", which in git language is referred to as a "detached HEAD".
-            That means, that once you move to another branch, the detached branch can't be easily found again.  
-            </p>
-            
-            <p><u>Modified files in HEAD branch</u> : 
-            If you have modified any files after this checkout and want to keep your changes, you need to move those changes to another branch.
-            </p>
-                        
-            <p><u>Not Stored files</u> : The easiest way to move modified (which are not Stored) files from a detached HEAD is : 
-                <ol>
-                    <li>Press the stash button <img 'vertical-align:middle;' src="images/stash_black.png"  height="17" width="17"> </li><br>
-                    <li>Click on the branch name (HEAD), until you are at the branch where you wish to add your changes to</li><br>
-                    <li>Press the retrieve stash button <img 'vertical-align:middle;' src="images/stash_pop_black.png"  height="17" width="17"></li>
-                </ol>
-            </p>
-            
-            <p><u>Stored files</u> : If you have modified and Stored files originating from a checked-out historical commit (what git calls "from a detached HEAD") : 
-                <ol type='i'>
-                    <li>Click on the branch name (HEAD) </li><br>
-                    
-                    <li>A dialog pops up, and asks if you wish to <br>
-                        1) Create a temporary branch, to save the files, or <br>
-                        2) Delete your changes
-                    </li><br>
-                    
-                    <li>If you select to 1) create a temporary branch, you will be asked to give a name for the new branch. </li><br>
-                    
-                    <li>Change branch to where you wish the new work to be added, and 
-                    then click the merge button <img src="images/merge_black.png"  height="17" width="17"> </li>
-                </ol>
-            </p> 
-                        
-        <br>
-        <hr> 
-                      
- <!-------------------------------------------------------------------------------------------->   
+            // If opener window is accessible, read its active computed color directly
+            try {
+                if (window.opener && window.opener.document) {
+                    var openerTop = window.opener.document.getElementById("top-titlebar");
+                    if (openerTop) {
+                        var cs = window.opener.getComputedStyle(openerTop);
+                        if (cs && cs.backgroundColor && cs.backgroundColor !== 'transparent') {
+                            color = cs.backgroundColor;
+                        }
+                    }
+                }
+            } catch(e) {}
 
-        <iframe id="Iframe" src='about_search.html' style="border-width: 0px">
-        </iframe>
-    
-        <script>
-            var frame = document.getElementById("Iframe");
-              
-            // Adjusting the iframe onload 
-            frame.onload = function()
-            {
-              // set the height of the iframe as its content (with a few pixels margin to stop iframe scrolling to occur)
-                frame.style.height =  frame.contentWindow.document.body.scrollHeight + 6 + 'px';                  
-            }
-        </script>
- 
-          <hr>
- <!-------------------------------------------------------------------------------------------->             
-
-         <h4 id="SEARCH2">History - comparing with fixed commit </h4>            
-         
-         
-        <p>When in history mode, either by clicking down arrow, or search, the difference in the status bar is shown relative previous commit.
-        </p>
-        
-        <p>Enabling the checkbox 
-            <img src="images/pinned_disabled_black.png"  height="17" width="17"> <img src="images/pinned_enabled_black.png"  height="17" width="17">
-            sets the current commit as the reference, and when moving in history the differences are relative this commit.
-        </p>        
-              
-        <p>The difference is always shown as a comparison between the newest to the oldest commit, 
-        regardless if the current commit is newer or older than the fixed commit.  This eliminates the 
-        problem that the same file can be marked as new or deleted in a comparison between two commits, depending on which of the two commits was fixed.
-        </p>       
-            
-      
-        
-        <br>
-        <br>
-        
-        <hr> 
-
- <!-------------------------------------------------------------------------------------------->             
-         <h2 id="INSTALLATION">Installation </h2>
-        <hr>             
- <!-------------------------------------------------------------------------------------------->                  
-            <p><u>Git</u> : The code relies on a standard installation of git 
-                (<a href='https://git-scm.com/downloads' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">download link</a>). 
-            </p>
-            
-            <p><u>Setup</u> : 
-                Your name and email should also be added, which you do from the "Software section" on the
-                settings page <img src="images/settings_black.png"  height="17" width="17">.
-            </p>    
-                    
-            <p><u>Diff and Merge tool</u> : 
-            Pragma-git contains its own diff and merge tool.
-            If you have your favorite Diff and Merge tool it may be used instead.  
-            The tool is added to Pragma-git in the settings window.</p>
-                
-            
-        <hr>             
- <!-------------------------------------------------------------------------------------------->                                  
-        <h2>Credits</h2>
-        <hr>  
-            
-            <dl>
-              <dt>This program could not have been written without the following libraries </dt>
-                <dd>- <a href='https://nwjs.io' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">NW.js</a></dd>
-                <dd>- <a href='https://github.com/steveukx/git-js' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Simple-git</a></dd> 
-                <dd>- <a href='https://codemirror.net' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">CodeMirror editor</a></dd>
-                <dd>- <a href='https://ui.toast.com/tui-editor/' onclick="require('nw.gui').Shell.openExternal( this.href );return false;">Toast-ui editor</a></dd>
-           
-              <dt></dt>
-            </dl>    
-           
-        <hr>
-         
-
- <!-------------------------------------------------------------------------------------------->                                  
-
-
-<!--  Collapsible headers  (https://www.w3schools.com/howto/howto_js_collapsible.asp)  --> 
-<script>
-    var coll = document.getElementsByClassName("collapsible");
-    var i;
-    
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener(
-        "click", 
-        function() {
-            this.classList.toggle("active");
-            var content = this.nextElementSibling;
-            if (content.style.maxHeight){
-                content.style.maxHeight = null;
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-            } 
-            
-        });
-    }
-</script>
-
-<script>
-        var VERSION = require('./package.json').version; 
-        document.getElementById('version').innerText = VERSION;
-</script>
-  
-  
-          
-<!--  Add find  -->    
-<script src="node_modules/findinnw/dist/find-in-nw.js"></script>
-<script src="extend_find-in-nw.js"></script>
-<script>
-    findInNw.initialize();
-    extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
-</script> 
-
-    
-<!-- Event listeners--> 
-<script>
-
-    window.addEventListener('unload', (event) => {
-        opener.updateWindowMenu('About');
+            topBar.style.backgroundColor = color;
+            bottomBar.style.backgroundColor = color;
         }
-    );
-</script>
-  
+
+        // NW.js multi-window theme update callback
+        window.onThemeChanged = function() {
+            updateMockupTitlebarColors();
+        };
+
+        // MutationObserver to automatically detect class changes (e.g. 'dark' <-> 'light') on document.body
+        try {
+            var themeObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        updateMockupTitlebarColors();
+                    }
+                });
+            });
+            themeObserver.observe(document.body, { attributes: true });
+        } catch(e) {}
+
+        // Initialize on load and on visibility changes
+        window.addEventListener('DOMContentLoaded', updateMockupTitlebarColors);
+        window.addEventListener('load', updateMockupTitlebarColors);
+        updateMockupTitlebarColors();
+
+        // Set Version dynamically
+        try {
+            var VERSION = require('./package.json').version;
+            document.getElementById('version').innerText = VERSION;
+        } catch(e) {
+            document.getElementById('version').innerText = '0.9.x';
+        }
+
+        // Callback handler invoked when UI map element or sidebar link is clicked
+        window.highlightHelpTopic = function(actionName) {
+            var targetId = mapActionToTopicId(actionName) || actionName;
+            if (!targetId) return;
+
+            var targetEl = document.getElementById(targetId);
+            if (!targetEl) return;
+
+            // Remove existing highlight from all cards and sections
+            document.querySelectorAll('.help-card.highlighted, .content-section.highlighted').forEach(function(el) {
+                el.classList.remove('highlighted');
+            });
+
+            // Target can be either a help card or a top-level section
+            var cardToHighlight = targetEl.classList.contains('help-card') ? targetEl : targetEl.querySelector('.help-card');
+            if (cardToHighlight) {
+                // Force reflow so re-clicking pulses animation
+                void cardToHighlight.offsetWidth;
+                cardToHighlight.classList.add('highlighted');
+            } else {
+                void targetEl.offsetWidth;
+                targetEl.classList.add('highlighted');
+            }
+
+            // Scroll into view smoothly
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Sync sidebar selection
+            document.querySelectorAll('.nav-item').forEach(function(item) {
+                if (item.getAttribute('href') === '#' + targetId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        };
+
+        // Mapping from app.js callback / action names to help topic element IDs
+        function mapActionToTopicId(name) {
+            var mapping = {
+                'clicked-repo': 'topic-repo',
+                'clickedRepoContextualMenu': 'topic-repo',
+                'clicked-branch': 'topic-branch',
+                'clickedBranchContextualMenu': 'topic-branch',
+                'clicked-ci-badge': 'topic-ci',
+                'clicked-notes': 'topic-notes',
+                'clicked-branch-button': 'topic-create-branch',
+                'addBranchButtonPressed': 'topic-create-branch',
+                'clicked-merge-button': 'topic-merge',
+                'clicked-pull-button': 'topic-pull',
+                'clicked-push-button': 'topic-push',
+                'clicked-tag-button': 'topic-tag',
+                'addTagButtonPressed': 'topic-tag',
+                'message_key_up': 'topic-message',
+                'message_blur': 'topic-message',
+                'message_dblclick': 'topic-message',
+                'clicked-store-button': 'topic-store',
+                'amend_commit_checkbox': 'topic-amend',
+                'clicked-folder': 'topic-folder',
+                'clicked-terminal': 'topic-terminal',
+                'clicked-status-text': 'topic-modified',
+                'clicked-graph': 'topic-graph',
+                'clicked-pinned-icon': 'topic-pinned',
+                'clicked-pinned-hash': 'topic-hash',
+                'clicked-revert-button': 'topic-revert',
+                'clicked-cherry-pick-button': 'topic-cherry-pick',
+                'clicked-stash-button': 'topic-stash',
+                'clicked-stash_pop-button': 'topic-stash',
+                'clicked-settings': 'topic-settings',
+                'clicked-find': 'topic-find',
+                'clicked-up-arrow': 'topic-message',
+                'clicked-down-arrow': 'topic-message'
+            };
+            return mapping[name] || null;
+        }
+
+        // Sidebar Navigation click
+        function selectNav(element) {
+            document.querySelectorAll('.nav-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // Trigger the identical highlight and scroll as the visual mockup
+            var href = element.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                var targetId = href.substring(1);
+                highlightHelpTopic(targetId);
+            }
+        }
+
+        // Fuzzy Filter
+        function filterHelpTopics(query) {
+            var q = query.trim().toLowerCase();
+            var cards = document.querySelectorAll('.help-card');
+            var sections = document.querySelectorAll('.content-section');
+
+            if (!q) {
+                cards.forEach(function(c) { c.style.display = ''; });
+                sections.forEach(function(s) { s.style.display = ''; });
+                return;
+            }
+
+            cards.forEach(function(card) {
+                var text = card.textContent.toLowerCase();
+                var data = (card.getAttribute('data-topics') || '').toLowerCase();
+                if (text.indexOf(q) !== -1 || data.indexOf(q) !== -1) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            sections.forEach(function(sec) {
+                var visibleCards = sec.querySelectorAll('.help-card:not([style*="display: none"])');
+                var headingMatch = sec.querySelector('h2') && sec.querySelector('h2').textContent.toLowerCase().indexOf(q) !== -1;
+                if (visibleCards.length > 0 || headingMatch) {
+                    sec.style.display = '';
+                } else {
+                    sec.style.display = 'none';
+                }
+            });
+        }
+
+        // Clean up window menu on unload
+        window.addEventListener('unload', function() {
+            if (window.opener && typeof window.opener.updateWindowMenu === 'function') {
+                window.opener.updateWindowMenu('About');
+            }
+        });
+    </script>
 </body>
 </html>
