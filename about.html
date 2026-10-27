@@ -157,7 +157,7 @@
 
         /* Sidebar Navigation */
         #help-sidebar {
-            width: 210px;
+            width: 230px;
             border-right: 1px solid var(--help-sidebar-border);
             background: var(--help-sidebar-bg);
             overflow-y: auto;
@@ -893,15 +893,23 @@
             <a class="nav-item" href="#topic-message" onclick="selectNav(this)">
                 <span>Central Message Area</span>
             </a>
-            <a class="nav-item" href="#topic-find" onclick="selectNav(this)">
-                <img src="images/find_black.png"> <span>Find in History</span>
-            </a>
             <a class="nav-item" href="#topic-store" onclick="selectNav(this)">
                 <span><span class="card-title-button" style="padding: 1px 6px; font-size: 10px;">Store</span> Button</span>
             </a>
             <a class="nav-item" href="#topic-amend" onclick="selectNav(this)">
                 <span><span style="font-family: monospace; font-size: 11px;"><input type="checkbox" disabled> </span> Store in same</span>
             </a>
+            
+            <a class="nav-item" href="#topic-rewrite_message" onclick="selectNav(this)">
+                <span><span style="font-family: monospace; font-size: 11px;"><input type="checkbox" disabled> </span> Rewrite commit message</span>
+            </a>
+            
+            
+            <a class="nav-item" href="#topic-find" onclick="selectNav(this)">
+                <img src="images/find_black.png"> <span>Find in History</span>
+            </a>
+            
+            
 
             <div class="nav-group-title">Bottom Bar & Tools</div>
             <a class="nav-item" href="#topic-folder" onclick="selectNav(this)">
@@ -1122,7 +1130,7 @@
             <section id="section-message-area" class="content-section">
                 <h2>Message Area & Commit Flow</h2>
 
-                                <div id="topic-message" class="help-card" data-topics="message notes scratchpad working history draft">
+                <div id="topic-message" class="help-card" data-topics="message notes scratchpad working history draft">
                     <div class="card-header">
                         <span class="card-title">📝 Central Message Area (Two Operating Modes)</span>
                         <span class="card-tag">Core Workflow</span>
@@ -1170,13 +1178,23 @@
                     </div>
                 </div>
 
-<div id="topic-amend" class="help-card" data-topics="amend amend_commit_checkbox">
+                <div id="topic-amend" class="help-card" data-topics="amend amend_commit_checkbox">
                     <div class="card-header">
                         <span class="card-title"><span class="card-title-checkbox"><input type="checkbox" disabled> Store in same</span> (Amend Last Commit)</span>
                         <span class="card-tag">Option</span>
                     </div>
                     <div class="card-desc">
-                        Check the "<b><input type="checkbox" disabled> Store in same</b>" check- box to combine newly modified files into the most recent commit instead of creating a brand new commit.
+                        Check the "<b><input type="checkbox" disabled> Store in same</b>" check-box to combine newly modified files into the most recent commit instead of creating a brand new commit.
+                    </div>
+                </div>
+                
+                <div id="topic-rewrite_message" class="help-card" data-topics="amend rewrite_message amend_commit_checkbox">
+                    <div class="card-header">
+                        <span class="card-title"><span class="card-title-checkbox">Double-click to change</span> (Rewrite Commit message)</span>
+                        <span class="card-tag">Option</span>
+                    </div>
+                    <div class="card-desc">
+                        Rewrite commit message for latest commit (not shown in preview above).  It comes with a warning if you auto-push to a remote repository, since it changes history.
                     </div>
                 </div>
 
