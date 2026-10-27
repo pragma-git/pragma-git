@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -166,12 +166,18 @@
         }
 
         .nav-group-title {
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 10px 16px 4px 16px;
-            color: var(--notes-popup-text);
+            letter-spacing: 0.6px;
+            padding: 12px 16px 4px 16px;
+            color: var(--header-color);
+            opacity: 0.95;
+        }
+
+        body.dark .nav-group-title {
+            color: var(--header-color);
+            opacity: 1;
         }
 
         .nav-item {
@@ -201,8 +207,38 @@
         .nav-item img {
             width: 14px;
             height: 14px;
-            filter: invert(var(--image-invert));
             flex-shrink: 0;
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        .nav-item img[src*="dropdown-arrow"] {
+            width: auto;
+            height: 14px;
+            object-fit: contain;
+        }
+
+        body.dark .nav-item img {
+            filter: none;
+        }
+
+        body.dark .nav-item img[src*="find_black.png"] {
+            filter: invert(var(--history-image-invert, 100%));
+        }
+
+        .nav-ci-badge {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0;
+            position: relative;
+            top: -1.5px;
+            left: -3px;
+            margin-right: -4px;
+        }
+
+        .nav-ci-badge svg {
+            display: inline-block;
+            vertical-align: middle;
         }
 
         /* Main Content View */
@@ -276,8 +312,27 @@
         .card-title img {
             width: 16px;
             height: 16px;
-            filter: invert(var(--image-invert));
             vertical-align: middle;
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        .card-title img[src*="dropdown-arrow"] {
+            width: auto;
+            height: 16px;
+            object-fit: contain;
+        }
+
+        #help-content img:not(.ci-badge-demo img) {
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        body.dark .card-title img,
+        body.dark #help-content img {
+            filter: none;
+        }
+
+        body.dark #help-content img[src*="find_black.png"] {
+            filter: invert(var(--history-image-invert, 100%));
         }
 
         .card-tag {
@@ -309,6 +364,71 @@
 
         body.dark .card-tips {
             background: rgba(255, 255, 255, 0.04);
+        }
+
+        .card-title-button {
+            display: inline-block;
+            background: #2b70ca;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-right: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark .card-title-button {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: 1px solid #cccccc;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            vertical-align: middle;
+            color: var(--header-color);
+        }
+
+        .card-title-checkbox input[type="checkbox"] {
+            margin: 0;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        .ci-badge-demo {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0;
+            margin-right: 4px;
+        }
+
+        .ci-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+            padding: 6px 10px;
+            background: var(--input-background);
+            border-radius: 6px;
+        }
+
+        .history-nav-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            background: var(--input-background);
+            border-radius: 6px;
         }
 
         /* Keyboard shortcuts badge */
@@ -428,6 +548,29 @@
         #mockup-frame .bottom-titlebar {
             cursor: default;
             width: 100% !important;
+            background-color: var(--titlebar-background) !important;
+            color: var(--titlebar-text) !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        body.dark #mockup-frame .top-titlebar,
+        body.dark #mockup-frame .bottom-titlebar {
+            background-color: #303030 !important;
+        }
+
+        body.light #mockup-frame .top-titlebar,
+        body.light #mockup-frame .bottom-titlebar {
+            background-color: #ebedf0 !important;
+        }
+
+        #mockup-frame .top-titlebar img,
+        #mockup-frame .bottom-titlebar img {
+            filter: var(--titlebar-icon-filter) !important;
+            transition: filter 0.2s ease;
+        }
+
+        #mockup-frame #top-titlebar-ci-badge {
+            color: var(--titlebar-text) !important;
         }
 
         #mockup-frame .top-titlebar-text {
@@ -446,6 +589,22 @@
             border-radius: 6px;
             box-shadow: var(--message-shadow);
             line-height: 1.4;
+        }
+
+        #mockup-frame #bottom-titlebar-find-icon {
+            position: absolute !important;
+            bottom: 6px !important;
+            left: 8px !important;
+            cursor: pointer;
+            filter: invert(var(--history-image-invert, 100%)) !important;
+        }
+
+        #mockup-frame #top-titlebar-repo-arrow,
+        #mockup-frame #top-titlebar-branch-arrow {
+            vertical-align: middle;
+            height: 16px !important;
+            width: auto !important;
+            object-fit: contain;
         }
 
         #mockup-frame img,
@@ -494,7 +653,7 @@
     <div id="interactive-map-panel">
         <div class="map-header-row">
             <div class="map-title">
-                <span>🗺️ Interactive UI Map</span>
+                <span>Interactive UI Map:</span>
             </div>
             <span class="map-instruction">Click any button, label, or icon below to jump to its guide</span>
         </div>
@@ -699,7 +858,16 @@
                 <img src="images/dropdown-arrow.png"> <span>Branches</span>
             </a>
             <a class="nav-item" href="#topic-ci" onclick="selectNav(this)">
-                <span>🏷️ CI Status Badge</span>
+                <span class="nav-ci-badge">
+                    <span class="top-titlebar-ci-badge top-titlebar-ci-success" style="display: inline-block;">
+                        <svg width="34" height="19" viewBox="0 -3 34 19">
+                            <rect x="0.5" y="0.5" width="31" height="16" rx="3"></rect>
+                            <text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">C</text>
+                            <text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold">I</text>
+                        </svg>
+                    </span>
+                </span>
+                <span>CI Status Badge</span>
             </a>
             <a class="nav-item" href="#topic-notes" onclick="selectNav(this)">
                 <img src="images/notes.png"> <span>Personal Notes</span>
@@ -722,13 +890,16 @@
 
             <div class="nav-group-title">Message & Commit Area</div>
             <a class="nav-item" href="#topic-message" onclick="selectNav(this)">
-                <span>📝 Notes & Scratchpad</span>
+                <span>Central Message Area</span>
+            </a>
+            <a class="nav-item" href="#topic-find" onclick="selectNav(this)">
+                <img src="images/find_black.png"> <span>Find in History</span>
             </a>
             <a class="nav-item" href="#topic-store" onclick="selectNav(this)">
-                <span>💾 Store / Checkout</span>
+                <span><span class="card-title-button" style="padding: 1px 6px; font-size: 10px;">Store</span> Button</span>
             </a>
             <a class="nav-item" href="#topic-amend" onclick="selectNav(this)">
-                <span>✏️ Amend Commit</span>
+                <span><span style="font-family: monospace; font-size: 11px;"><input type="checkbox" disabled> </span> Store in same</span>
             </a>
 
             <div class="nav-group-title">Bottom Bar & Tools</div>
@@ -739,13 +910,16 @@
                 <img src="images/terminal.png"> <span>Terminal / CLI</span>
             </a>
             <a class="nav-item" href="#topic-modified" onclick="selectNav(this)">
-                <span>📄 Modified Files</span>
+                <span><span class="card-status-dot"></span> Modified Files List</span>
             </a>
             <a class="nav-item" href="#topic-graph" onclick="selectNav(this)">
                 <img src="images/more.png"> <span>Commit Graph</span>
             </a>
             <a class="nav-item" href="#topic-pinned" onclick="selectNav(this)">
                 <img src="images/pinned_enabled.png"> <span>Mark / Pin Commit</span>
+            </a>
+            <a class="nav-item" href="#topic-hash" onclick="selectNav(this)">
+                <span>#️⃣ Commit Hash</span>
             </a>
             <a class="nav-item" href="#topic-revert" onclick="selectNav(this)">
                 <img src="images/revert.png"> <span>Revert</span>
@@ -754,7 +928,7 @@
                 <img src="images/cherry-pick.png"> <span>Cherry-pick</span>
             </a>
             <a class="nav-item" href="#topic-stash" onclick="selectNav(this)">
-                <img src="images/stash.png"> <span>Stash & Stash Pop</span>
+                <img src="images/stash.png"> <span>Stash & Pop</span>
             </a>
             <a class="nav-item" href="#topic-settings" onclick="selectNav(this)">
                 <img src="images/settings.png"> <span>Settings</span>
@@ -802,15 +976,15 @@
                 <div class="help-card">
                     <div class="card-title">2. Store your work snapshot</div>
                     <div class="card-desc">
-                        When you are done with a task, finalize your message and press <button class="help-btn">Store</button>.
+                        When you are done with a task, finalize your message and press <button class="card-title-button">Store</button>.
                         Pragma-git stages modified files, creates a Git commit, and automatically pushes to your remote server if auto-push is on.
                     </div>
                 </div>
                 <div class="help-card">
                     <div class="card-title">3. Explore past history with arrows</div>
                     <div class="card-desc">
-                        Use the left <span class="kbd">▼</span> down arrow to step back through historical revisions.
-                        Return to <span class="kbd">▲</span> HEAD at any time to resume editing without losing your active notes.
+                        Use the left <span class="kbd">▼</span> down arrow to step back in time through historical revisions, and <span class="kbd">▲</span> up arrow to go forward toward newer commits.
+                        When in historical mode, click <span class="kbd">^HEAD</span> in the top header to instantly return to HEAD and resume editing your active working notes.
                     </div>
                 </div>
             </section>
@@ -828,9 +1002,6 @@
                         Clicking the repository name opens the repository list menu.
                         You can quickly switch between active projects or manage repository groups.
                     </div>
-                    <div class="card-tips">
-                        💡 <b>Tip:</b> Switching repositories saves your current draft note and restores the note you were working on in the target repository.
-                    </div>
                 </div>
 
                 <div id="topic-branch" class="help-card" data-topics="branch clicked-branch clickedBranchContextualMenu">
@@ -839,34 +1010,52 @@
                         <span class="card-tag">Top Bar</span>
                     </div>
                     <div class="card-desc">
-                        Shows the active Git branch (e.g., <code>main</code> or <code>develop</code>).
-                        Click to switch to any local branch, fetch from remotes, or inspect branch statuses.
+                        Shows the active Git branch (for instance, <code>main</code> or <code>develop</code>).
+                        Click to switch to any local branch, fetch from remotes, or inspect branch statuses. Typically you can not switch branch when you have uncommitted files.
                     </div>
                 </div>
 
-                <div id="topic-ci" class="help-card" data-topics="ci ci-badge clicked-ci-badge">
+                                <div id="topic-ci" class="help-card" data-topics="ci ci-badge clicked-ci-badge">
                     <div class="card-header">
-                        <span class="card-title">🏷️ Continuous Integration (CI) Badge</span>
-                        <span class="card-tag">Status Indicator</span>
+                        <span class="card-title">
+                            <span class="ci-badge-demo">
+                                <svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></svg>
+                            </span>
+                            Continuous Integration (CI) Status Badge
+                        </span>
+                        <span class="card-tag">Live Pipeline Status</span>
                     </div>
                     <div class="card-desc">
-                        Displays live CI pipeline status (GitHub Actions, GitLab CI, Bitbucket Pipelines) for the current commit:
-                        <ul style="margin: 4px 0 0 16px; padding: 0;">
-                            <li><b>Green CI:</b> All pipeline checks passed successfully.</li>
-                            <li><b>Cracked / Fractured CI:</b> Pipeline failed. Click the badge to open the failure report in your browser.</li>
-                            <li><b>Dashed / Pending CI:</b> Pipeline checks are currently in progress. Pragma-git automatically polls until done.</li>
-                        </ul>
+                        Monitors and displays live build & test results from GitHub Actions, GitLab CI, or Bitbucket Pipelines for the active commit.
+                        <p style="margin: 6px 0 10px 0; font-size: 12px; color: var(--dim-text);">
+                            <i>Note: The CI pipeline state is communicated through distinct icon shapes:</i>
+                        </p>
+                        
+                        <div class="ci-badge-row">
+                            <svg width="34" height="19" viewBox="0 0 34 19"><rect x="0.5" y="0.5" width="31" height="16" rx="3" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></svg>
+                            <div><b>Solid Rectangle (Passed):</b> Continuous Integration tests completed successfully. Clicking the badge opens the pipeline run in your web browser.</div>
+                        </div>
+
+                        <div class="ci-badge-row">
+                            <svg width="34" height="19" viewBox="0 0 34 19"><g class="ci-piece-left"><path d="M 3.5,0.5 L 16,0.5 L 18,5 L 15,11 L 17,16.5 L 3.5,16.5 A 3,3 0 0 1 0.5,13.5 L 0.5,3.5 A 3,3 0 0 1 3.5,0.5 Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round"/><text x="10.25" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">C</text></g><g class="ci-piece-right" transform="translate(8, 1.2) rotate(7 23.5 8.5)"><path d="M 18.5,0.5 L 28.5,0.5 A 3,3 0 0 1 31.5,3.5 L 31.5,13.5 A 3,3 0 0 1 28.5,16.5 L 19.5,16.5 L 17.5,11 L 20.5,5 L 18.5,0.5 Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.45" stroke-width="1" stroke-linejoin="round"/><text x="23.5" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="currentColor">I</text></g></svg>
+                            <div><b>Cracked / Fractured (Failed):</b> Pipeline failed or reported errors. Click to inspect failed workflow logs in your web browser.</div>
+                        </div>
+
+                        <div class="ci-badge-row">
+                            <svg width="42" height="19" viewBox="0 0 42 19"><rect x="0.5" y="0.5" width="39" height="16" rx="3" stroke-dasharray="3,2" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/><text x="9" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic" fill="currentColor">C</text><text x="18" y="8.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" font-style="italic" fill="currentColor">I</text><text x="29" y="7.5" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="currentColor">...</text></svg>
+                            <div><b>Dashed with Ellipsis (In Progress):</b> Continuous integration build or test pipeline is currently pending / executing.</div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="topic-notes" class="help-card" data-topics="notes clicked-notes">
+<div id="topic-notes" class="help-card" data-topics="notes clicked-notes">
                     <div class="card-header">
                         <span class="card-title"><img src="images/notes.png"> Personal Project Notes</span>
                         <span class="card-tag">Tool</span>
                     </div>
                     <div class="card-desc">
-                        Opens the dedicated rich-text / markdown notebook for the active repository.
-                        Notes are stored locally in the <code>.Pragma-git/Notes</code> folder.
+                        Opens the dedicated notebook for the active repository.
+                        Notes are stored locally in the <code>.Pragma-git/Notes</code> folder. Notes are not stored on the remote git server (to avoid leaks of sensitive information.)
                     </div>
                 </div>
 
@@ -888,7 +1077,7 @@
                     </div>
                     <div class="card-desc">
                         Incorporates changes from another branch into your current branch.
-                        If conflicts occur, Pragma-git automatically opens the conflict resolution tool to assist you.
+                        If conflicts occur, Pragma-git shows that there are conflicts in the lower part of the window.  Click that text to open the conflict resolution tool to assist you.
                     </div>
                 </div>
 
@@ -910,6 +1099,7 @@
                     <div class="card-desc">
                         Uploads local commits to the matching remote branch.
                         Active when auto-push is disabled in Settings, or after manual rebases.
+                        If auto-push is enabled (default) it shows that push to remote is ongoing.
                     </div>
                 </div>
 
@@ -919,7 +1109,10 @@
                         <span class="card-tag">Action</span>
                     </div>
                     <div class="card-desc">
-                        Creates an alias or release marker (e.g., <code>v1.0.0</code>) pointing permanently to the current commit.
+                        Creates an alias or release marker (e.g., <code>v1.0.0</code>) pointing permanently to a specific commit.
+                        <p style="margin: 6px 0 0 0;">
+                            <b>Checkout any old tag:</b> Opening the Tag Manager lets you inspect, search, and directly check out any existing tag to explore or build past released versions.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -928,39 +1121,77 @@
             <section id="section-message-area" class="content-section">
                 <h2>Message Area & Commit Flow</h2>
 
-                <div id="topic-message" class="help-card" data-topics="message message_key_up message_blur message_dblclick">
+                                <div id="topic-message" class="help-card" data-topics="message notes scratchpad working history draft">
                     <div class="card-header">
-                        <span class="card-title">📝 Message Scratchpad & Draft Notes</span>
-                        <span class="card-tag">Center View</span>
+                        <span class="card-title">📝 Central Message Area (Two Operating Modes)</span>
+                        <span class="card-tag">Core Workflow</span>
                     </div>
                     <div class="card-desc">
-                        <b>Dual Purpose Area:</b>
-                        <p>1. <b>Ongoing Mental Note:</b> Type notes or tasks here anytime while coding. Each repository remembers its own draft note.</p>
-                        <p>2. <b>Commit / Stash Message:</b> When you are ready to commit or stash, this text is used as your message.</p>
-                    </div>
-                    <div class="card-tips">
-                        💡 <b>Double-click:</b> When at a clean working directory with no modified files, double-click to recall the previous commit message for editing or amending.
+                        The central textarea operates in two distinctly different modes depending on whether you are at your <b>Active Working State (HEAD)</b> or browsing a <b>Historical Commit</b>:
+                        
+                        <div style="margin: 10px 0; padding: 10px 12px; background: var(--input-background); border-left: 3px solid var(--accent-color); border-radius: 4px;">
+                            <h4 style="margin: 0 0 4px 0; color: var(--header-color);">1. Active Working State (at HEAD)</h4>
+                            <p style="margin: 0 0 6px 0;">
+                                When working at HEAD, this box serves as your <b>personal scratchpad and mental note memory</b>. You can write your ongoing thoughts, plans, or next steps here as you work.
+                            </p>
+                            <ul style="margin: 0; padding-left: 18px;">
+                                <li><b>Persistent Per-Repository:</b> Your draft notes stay saved specifically for this repository even if you switch branches, switch to other repositories, or restart Pragma-git.</li>
+                                <li><b>Committing:</b> When you are ready to snapshot your code, simply replace or refine your notes with your descriptive commit message (or stash name) and press <b>Store</b>.</li>
+                            </ul>
+                        </div>
+
+                        <div style="margin: 10px 0; padding: 10px 12px; background: var(--input-background); border-left: 3px solid var(--dim-text); border-radius: 4px;">
+                            <h4 style="margin: 0 0 4px 0; color: var(--header-color);">2. Historical Commit Mode (Navigating Past Revisions)</h4>
+                            <p style="margin: 0 0 6px 0;">
+                                When you navigate backward in git history using the <b>▼ (Down)</b> arrow on the left, the message box becomes read-only and displays the permanent commit log message of that historical revision.
+                            </p>
+                            <ul style="margin: 0; padding-left: 18px;">
+                                <li><b>Navigating History:</b> Use <b>▼ (Down Arrow)</b> to navigate backward into past commits, and <b>▲ (Up Arrow)</b> to step forward toward newer commits.</li>
+                                <li><b>Returning to HEAD:</b> When in historical mode, click <b><img style="height: 14px;vertical-align: text-bottom;" src="images/top-of-branch-arrow.png">main</b>
+                                (where the current branch is shown in front of the <img style="height: 14px;vertical-align: text-bottom;" src="images/top-of-branch-arrow.png"> symbol)</li>
+                                <li><b>Double-Click to Edit (Amend):</b> Double-clicking an existing historical commit message allows you to edit or amend the commit text.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
-                <div id="topic-store" class="help-card" data-topics="store clicked-store-button">
+                <div id="topic-store" class="help-card" data-topics="store commit push checkout clicked-store-button">
                     <div class="card-header">
-                        <span class="card-title">💾 The Store Button</span>
+                        <span class="card-title"><span class="card-title-button">Store</span> Commit & Push (or Checkout)</span>
                         <span class="card-tag">Primary Action</span>
                     </div>
                     <div class="card-desc">
-                        The heart of Pragma-git's single-click workflow.
-                        When files are modified, pressing <button class="help-btn">Store</button> automatically stages your changes, commits them with your message, clears the draft note, and pushes to remote.
+                        The primary action button on the right adapts to your current context:
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><b>At Working State (HEAD):</b> Stages all modified and new files, creates a new commit using the text in the message area, and pushes to remote.</li>
+                            <li><b>When Historical Commit is Selected:</b> Changes to <b>Checkout</b>, allowing you to view and test that past point in time.</li>
+                        </ul>
                     </div>
                 </div>
 
-                <div id="topic-amend" class="help-card" data-topics="amend amend_commit_checkbox">
+<div id="topic-amend" class="help-card" data-topics="amend amend_commit_checkbox">
                     <div class="card-header">
-                        <span class="card-title">✏️ Amend Last Commit</span>
+                        <span class="card-title"><span class="card-title-checkbox"><input type="checkbox" disabled> Store in same</span> (Amend Last Commit)</span>
                         <span class="card-tag">Option</span>
                     </div>
                     <div class="card-desc">
-                        Check the "Amend" box to combine newly modified files or an updated message into the most recent commit instead of creating a brand new commit.
+                        Check the "<b><input type="checkbox" disabled> Store in same</b>" check- box to combine newly modified files into the most recent commit instead of creating a brand new commit.
+                    </div>
+                </div>
+
+                <div id="topic-find" class="help-card" data-topics="find search history filter query clicked-find">
+                    <div class="card-header">
+                        <span class="card-title"><img src="images/find_black.png"> Find in History (Search)</span>
+                        <span class="card-tag">Search Tool</span>
+                    </div>
+                    <div class="card-desc">
+                        Clicking the magnifying glass in the left navigation column opens or collapses the <b>Find Toolbar</b> directly above the status bar:
+                        <ul style="margin: 6px 0 0 16px; padding: 0;">
+                            <li><b>Search Commit Messages or Code Changes:</b> Toggle between searching through commit log messages or searching through actual diff code changes.</li>
+                            <li><b>File Pattern Filtering:</b> Narrow your search down to specific files or path patterns.</li>
+                            <li><b>Date Range:</b> Optionally specify <i>After</i> and <i>Before</i> dates to filter commits within a given time window.</li>
+                            <li><b>Step Through Results:</b> Navigating results lets you browse matching past commits instantly.</li>
+                        </ul>
                     </div>
                 </div>
             </section>
@@ -989,18 +1220,24 @@
                     </div>
                 </div>
 
-                <div id="topic-modified" class="help-card" data-topics="modified clicked-status-text">
+                                <div id="topic-modified" class="help-card" data-topics="modified status files list changed clicked-status-text">
                     <div class="card-header">
-                        <span class="card-title">📄 Modified Files List</span>
-                        <span class="card-tag">Status & Inspection</span>
+                        <span class="card-title">
+                            <span style="display: inline-block; padding: 2px 8px; background: var(--header-background); border: 1px solid var(--help-card-border); border-radius: 4px; font-family: Arial; font-size: 11px; margin-right: 4px;">
+                                <b>Modified = 2 | New = 0 | Deleted = 0</b>
+                            </span>
+                            Modified Files List & Tools
+                        </span>
+                        <span class="card-tag">Working Tree Status</span>
                     </div>
                     <div class="card-desc">
-                        Click the modified counter text (e.g., <i>"2 modified files"</i>) to open the Modified Files window.
-                        From there, you can view file diffs, select individual files to stage, or restore/discard changes.
+                        Shows the live count of modified, new (untracked), and deleted files in your project. 
+                        Clicking this label opens the <b>Changed Files Window</b> with interactive diff viewers, selective file staging checkboxes.
+                        In history browsing mode, it shows the number of modified files etc compared to previous commit.
                     </div>
                 </div>
 
-                <div id="topic-graph" class="help-card" data-topics="graph clicked-graph more">
+<div id="topic-graph" class="help-card" data-topics="graph clicked-graph more">
                     <div class="card-header">
                         <span class="card-title"><img src="images/more.png"> Commit Graph</span>
                         <span class="card-tag">Visualizer</span>
@@ -1016,11 +1253,32 @@
                         <span class="card-tag">Comparison</span>
                     </div>
                     <div class="card-desc">
-                        Pins a specific historical commit so that all other revisions and working changes are diffed against that pinned reference point.
+                        Pins the historical commit, so that the modified file count and diff viewers compare to this reference point.  
                     </div>
                 </div>
 
-                <div id="topic-revert" class="help-card" data-topics="revert clicked-revert-button">
+                
+                <div id="topic-hash" class="help-card" data-topics="hash commit-hash clicked-pinned-hash">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span style="display: inline-block; padding: 2px 7px; background: var(--header-background); border: 1px solid var(--help-card-border); border-radius: 4px; font-family: monospace; font-size: 11px; margin-right: 4px;">
+                                #a1b2c3d
+                            </span>
+                            Commit Hash Identifier
+                        </span>
+                        <span class="card-tag">Revision Reference</span>
+                    </div>
+                    <div class="card-desc">
+                        Displays the short SHA-1 hash of the currently selected commit.
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><b>Click:</b> Copies the 7-character short hash to your clipboard.</li>
+                            <li><b>Shift + Click:</b> Copies the complete 40-character full git commit-hash.</li>
+                            <li><b>Comparison Mode:</b> When a commit is pinned, this field indicates which commit your working files are currently being compared against.</li>
+                        </ul>
+                    </div>
+                </div>
+
+<div id="topic-revert" class="help-card" data-topics="revert clicked-revert-button">
                     <div class="card-header">
                         <span class="card-title"><img src="images/revert.png"> Revert Commit</span>
                         <span class="card-tag">Action</span>
@@ -1040,19 +1298,23 @@
                     </div>
                 </div>
 
-                <div id="topic-stash" class="help-card" data-topics="stash clicked-stash-button clicked-stash_pop-button">
+                                <div id="topic-stash" class="help-card" data-topics="stash stash-pop pop clicked-stash-button clicked-stash_pop-button">
                     <div class="card-header">
-                        <span class="card-title"><img src="images/stash.png"> Stash & Stash Pop</span>
-                        <span class="card-tag">Clipboard</span>
+                        <span class="card-title">
+                            <img src="images/stash.png"> <img src="images/stash_pop.png"> Stash & Stash Pop
+                        </span>
+                        <span class="card-tag">Temporary Storage</span>
                     </div>
                     <div class="card-desc">
-                        Like a clipboard for file changes:
-                        <p><b>Stash:</b> Saves your uncommitted working changes into memory and returns your working tree to a clean state.</p>
-                        <p><b>Stash Pop:</b> Restores your stashed changes back into your working files.</p>
+                        Temporarily shelve uncommitted work without making a permanent commit:
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            <li><img src="images/stash.png" style="vertical-align: middle; width: 14px; height: 14px;"> <b>Stash:</b> Shelves your modified files to a temporary stack and reverts your working directory to a clean HEAD state.</li>
+                            <li><img src="images/stash_pop.png" style="vertical-align: middle; width: 14px; height: 14px;"> <b>Stash Pop:</b> Restores your most recently shelved stash changes back into your working tree.</li>
+                        </ul>
                     </div>
                 </div>
 
-                <div id="topic-settings" class="help-card" data-topics="settings clicked-settings">
+<div id="topic-settings" class="help-card" data-topics="settings clicked-settings">
                     <div class="card-header">
                         <span class="card-title"><img src="images/settings.png"> Settings Window</span>
                         <span class="card-tag">Configuration</span>
@@ -1154,6 +1416,23 @@
             bottomBar.style.backgroundColor = color;
         }
 
+        // NW.js multi-window theme update callback
+        window.onThemeChanged = function() {
+            updateMockupTitlebarColors();
+        };
+
+        // MutationObserver to automatically detect class changes (e.g. 'dark' <-> 'light') on document.body
+        try {
+            var themeObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        updateMockupTitlebarColors();
+                    }
+                });
+            });
+            themeObserver.observe(document.body, { attributes: true });
+        } catch(e) {}
+
         // Initialize on load and on visibility changes
         window.addEventListener('DOMContentLoaded', updateMockupTitlebarColors);
         window.addEventListener('load', updateMockupTitlebarColors);
@@ -1172,17 +1451,27 @@
             var targetId = mapActionToTopicId(actionName) || actionName;
             if (!targetId) return;
 
-            var targetCard = document.getElementById(targetId);
-            if (!targetCard) return;
+            var targetEl = document.getElementById(targetId);
+            if (!targetEl) return;
 
-            // Remove existing highlight
-            document.querySelectorAll('.help-card.highlighted').forEach(function(el) {
+            // Remove existing highlight from all cards and sections
+            document.querySelectorAll('.help-card.highlighted, .content-section.highlighted').forEach(function(el) {
                 el.classList.remove('highlighted');
             });
 
-            // Highlight and scroll into view smoothly
-            targetCard.classList.add('highlighted');
-            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Target can be either a help card or a top-level section
+            var cardToHighlight = targetEl.classList.contains('help-card') ? targetEl : targetEl.querySelector('.help-card');
+            if (cardToHighlight) {
+                // Force reflow so re-clicking pulses animation
+                void cardToHighlight.offsetWidth;
+                cardToHighlight.classList.add('highlighted');
+            } else {
+                void targetEl.offsetWidth;
+                targetEl.classList.add('highlighted');
+            }
+
+            // Scroll into view smoothly
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             // Sync sidebar selection
             document.querySelectorAll('.nav-item').forEach(function(item) {
@@ -1220,14 +1509,15 @@
                 'clicked-status-text': 'topic-modified',
                 'clicked-graph': 'topic-graph',
                 'clicked-pinned-icon': 'topic-pinned',
-                'clicked-pinned-hash': 'topic-pinned',
+                'clicked-pinned-hash': 'topic-hash',
                 'clicked-revert-button': 'topic-revert',
                 'clicked-cherry-pick-button': 'topic-cherry-pick',
                 'clicked-stash-button': 'topic-stash',
                 'clicked-stash_pop-button': 'topic-stash',
                 'clicked-settings': 'topic-settings',
-                'clicked-up-arrow': 'section-workflow',
-                'clicked-down-arrow': 'section-workflow'
+                'clicked-find': 'topic-find',
+                'clicked-up-arrow': 'topic-message',
+                'clicked-down-arrow': 'topic-message'
             };
             return mapping[name] || null;
         }
@@ -1238,6 +1528,13 @@
                 item.classList.remove('active');
             });
             element.classList.add('active');
+
+            // Trigger the identical highlight and scroll as the visual mockup
+            var href = element.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                var targetId = href.substring(1);
+                highlightHelpTopic(targetId);
+            }
         }
 
         // Fuzzy Filter
