@@ -29,6 +29,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Remote Status Startup Flashing Fix (`cacheRemoteOriginStatus`)**:
+  - Fixed premature display of red `"Remote : remote error"` indicator in the bottom footer on startup ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
+  - Initialized `newCachedRemoteOrigins.isActiveRemote` with `null` instead of `false` so unverified/checking remotes are not treated as failed.
+  - When background verification completes (`testRemoteOrigin` or error handling), `cachedRemoteOrigins.isActiveRemote` is updated and calls `_update()` if the repository is the currently selected active repo (`state.repoNumber`), ensuring the footer updates only when an actual result is known.
+  - All 109 automated tests pass 100% across all 7 test categories.
 * **Interactive Visual Map & Modern Help Guide (`about.html`)**:
   - Overhauled [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) with an authentic **Interactive UI Map** embedding the real CSS stylesheets ([`color_styles.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [`style.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [`slider_switch.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/slider_switch.css), and [`lib/css-tooltip.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/css-tooltip.css)) and the exact `#grid-container` structure directly derived from [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html).
   - Encapsulated the mockup in a standalone window frame (`.mockup-window-wrapper`) with rounded corners, subtle drop shadow, and a contrasting inset canvas background so it clearly reads as a miniaturized standalone window.

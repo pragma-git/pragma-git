@@ -6005,7 +6005,7 @@ async function cacheRemoteOriginStatus( start = 0 ){
     
     if ( start == 0){  
         newCachedRemoteOrigins.remoteURL = new Array(state.repos.length).fill(null);        // original remoteURL (to make a trace)
-        newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(false);  // true if remote works, false if not    
+        newCachedRemoteOrigins.isActiveRemote = new Array(state.repos.length).fill(null);   // true if remote works, false if not, null if checking/untested    
         newCachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
     }else{
         newCachedRemoteOrigins = cachedRemoteOrigins;  // Copy if subset
@@ -6080,6 +6080,10 @@ async function cacheRemoteOriginStatus( start = 0 ){
             // If err, bail out
             if (result == undefined){
                 newCachedRemoteOrigins.isActiveRemote[repoNumber] = false;
+                cachedRemoteOrigins.isActiveRemote[repoNumber] = false;
+                if (repoNumber === state.repoNumber) {
+                    _update();
+                }
                 // Do not update state.repos[repoNumber].remoteURL
                 console.error( 'configFilePath = ' + configFilePath( folder ) );
                 console.error( 'folder = ' + folder );
@@ -6113,6 +6117,9 @@ async function cacheRemoteOriginStatus( start = 0 ){
                     cachedRemoteOrigins.isActiveRemote[repoNumber] = newCachedRemoteOrigins.isActiveRemote[repoNumber];
                     if (cachedRemoteOrigins.reason && newCachedRemoteOrigins.reason) {
                         cachedRemoteOrigins.reason[repoNumber] = newCachedRemoteOrigins.reason[repoNumber];
+                    }
+                    if (repoNumber === state.repoNumber) {
+                        _update();
                     }
                     
                     console.log(`cacheRemoteOriginStatus.getRemoteOrigin( ${repoNumber}, ${folder} ).onRemote : `);
