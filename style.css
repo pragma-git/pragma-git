@@ -101,8 +101,8 @@ div#inner-content {
 
 #edit_commit_text_div, #amend_commit_div{
   position: absolute;
-  bottom: 5;
-  right: 5;
+  bottom: 5px;
+  right: 5px;
   visibility: hidden; 
 }
 #edit_message_button, #amend_button{
@@ -236,7 +236,7 @@ div#inner-content {
 .bottom-titlebar-stash_pop-icon
  {
   position: absolute;
-  right: 80;
+  right: 80px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -248,7 +248,7 @@ div#inner-content {
  {
   FONT-WEIGHT: 200;
   position: absolute;
-  right: 115;
+  right: 115px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -259,7 +259,7 @@ div#inner-content {
 .bottom-titlebar-revert-icon
  {
   position: absolute;
-  right: 175;
+  right: 175px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -270,7 +270,7 @@ div#inner-content {
 .bottom-titlebar-cherry-pick-icon
  {
   position: absolute;
-  right: 150;
+  right: 150px;
   width: auto;
   height: 17px;
   margin-top: 6px;

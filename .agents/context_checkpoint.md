@@ -29,6 +29,16 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Interactive Visual Map & Modern Help Guide (`about.html`)**:
+  - Overhauled [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) with an authentic **Interactive UI Map** embedding the real CSS stylesheets ([`color_styles.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [`style.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [`slider_switch.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/slider_switch.css), and [`lib/css-tooltip.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/css-tooltip.css)) and the exact `#grid-container` structure directly derived from [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html).
+  - Encapsulated the mockup in a standalone window frame (`.mockup-window-wrapper`) with rounded corners, subtle drop shadow, and a contrasting inset canvas background so it clearly reads as a miniaturized standalone window.
+  - Dynamically synchronizes titlebar colors via `updateMockupTitlebarColors()` in [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) to match the runtime `focusTitlebars()` color (`rgb(48, 48, 48)` in dark mode) directly from the opener window.
+  - Fixed CSS parsing bugs in [`style.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) where unit-less numbers (`right: 80`, `right: 115`, `right: 150`, `right: 175`, and `bottom: 5; right: 5` on `#amend_commit_div`) caused Chromium to discard offsets; added `px` units to restore exact bottom-right alignment for Revert, Cherry-pick, Stash, Stash Pop, and Amend checkbox.
+  - Corrected DOM and computed CSS: matched the exact 148px height (`grid-template-rows: 33px 82px 0px 33px`), resolved grid-container hierarchy so `#bottom-titlebar` spans full width (`grid-column: 1 / 4`), applied textarea border and background tokens (`--message-border`, `--message-background`, `--message-shadow`), and populated authentic SVG CI badge, branch name (`main`), repository name (`Hello World`), commit hash (`#a1b2c3d`), and modified files status (`Modified = 2 | New = 0 | Deleted = 0`).
+  - Clicking any element on the visual map instantly scrolls and pulses the corresponding help card below.
+  - Keeps [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) 100% unharmed and standard; main window operations remain completely uninhibited.
+  - Added responsive two-column layout (sidebar navigation + live search + categorized cards).
+  - All 109 automated tests pass 100% across all 7 test categories.
 * **Repository-Specific Mental Note Memory (`draftMessage`)**:
   - Implemented per-repository draft mental notes in `#message` ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
   - Updated empty-state placeholder in `#message` to direct prompt: `"You may write what is ongoing here,\n\nChange text to commit message (or stash name) when done"`.
