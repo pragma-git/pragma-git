@@ -374,7 +374,67 @@
             backdrop-filter: none;
         }
 
+        /* ==========================================================================
+           CodeMirror Text Selection Contrast Enhancement
+           ==========================================================================
+           1. Architecture:
+              CodeMirror renders selected text using two complementary layers:
+                a) Background overlay rectangles (<div class="CodeMirror-selected">)
+                b) Native browser selection pseudo-elements (::selection, ::-moz-selection)
+              Both must be styled simultaneously to guarantee consistent text highlighting.
 
+           2. Specificity Override:
+              Bundled CodeMirror themes (e.g. hopscotch, isotope, duotone-light, railscasts)
+              specify hardcoded, low-contrast selection colors with '!important':
+                e.g. .cm-s-hopscotch div.CodeMirror-selected { background: #433b42 !important; }
+              Matching the theme class prefix '[class*="cm-s-"]' with '!important' ensures
+              our rule achieves equal or higher specificity and cleanly overrides them.
+
+           3. Color Tuning:
+              Using a radiant sky/azure tint with higher luminosity (rgba(75, 165, 255, 0.55))
+              ensures selections illuminate sharply against black/dark backgrounds (isotope,
+              liquibyte, zenburn, railscasts) while remaining clear and legible on light themes.
+           ========================================================================== */
+        .CodeMirror div.CodeMirror-selected,
+        .CodeMirror.CodeMirror-focused div.CodeMirror-selected,
+        .CodeMirror[class*="cm-s-"] div.CodeMirror-selected,
+        .CodeMirror[class*="cm-s-"].CodeMirror-focused div.CodeMirror-selected {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        .CodeMirror .CodeMirror-line::selection,
+        .CodeMirror .CodeMirror-line > span::selection,
+        .CodeMirror .CodeMirror-line > span > span::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span > span::selection {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        .CodeMirror .CodeMirror-line::-moz-selection,
+        .CodeMirror .CodeMirror-line > span::-moz-selection,
+        .CodeMirror .CodeMirror-line > span > span::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span > span::-moz-selection {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+           Yeti Theme Exception:
+           The Yeti theme uses very faint pastel text (#d1c9c0) on an off-white editor
+           background (#ECEAE8). A semi-transparent selection makes the pastel font
+           wash out. We explicitly supply a solid deep blue with crisp white text.
+           -------------------------------------------------------------------------- */
+        .CodeMirror.cm-s-yeti .CodeMirror-line::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span > span::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line::-moz-selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span::-moz-selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span > span::-moz-selection {
+            background-color: #2b6cb0 !important;
+            color: #ffffff !important;
+        }
 
   </style>
   

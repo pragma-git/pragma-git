@@ -409,7 +409,14 @@ function themeSelected( themeName){
     for (var i = 0; i < cm.length; i++) {
       let themeString = 'cm-s-' + themeName;
       let classString = themeString + ' editorBackground';
-      cm[i].className = cm[i].className.replace('cm-s-default', classString);
+      if (cm[i].className.match(/cm-s-[\w-]+/)) {
+        cm[i].className = cm[i].className.replace(/cm-s-[\w-]+/, themeString);
+        if (!cm[i].className.includes('editorBackground')) {
+          cm[i].className += ' editorBackground';
+        }
+      } else {
+        cm[i].className += ' ' + classString;
+      }
     }
     
     // Read chunk color from html option-tag
