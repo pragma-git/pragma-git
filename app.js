@@ -8130,24 +8130,88 @@ function createMacMenu(){  // Creates MacOS menu (or ignores if not MacOS)
 }
 function createTrayMenu(){  // Creates Tray menu
     tray = new nw.Tray( { icon: 'images/iconx32.png' ,  iconsAreTemplates: false } );
+    tray.tooltip = 'Pragma-git';
     updateTrayMenu();
+    showWindowsTrayHintIfFirstTime();
+}
+
+function showWindowsTrayHintIfFirstTime() {
+    // Only execute on Windows OS
+    if (process.platform !== 'win32') {
+        return;
+    }
+
+    // Check if user has already seen the hint via settings.json
+    if (state.hasSeenTrayHint === true) {
+        return;
+    }
+
+    try {
+        nw.Screen.Init();
+    } catch (e) {
+        // Safe to ignore if already initialized
+    }
+
+    const screens = nw.Screen.screens;
+    if (!screens || screens.length === 0) {
+        return;
+    }
+
+    const primaryScreen = screens.find(s => s.is_primary) || screens[0];
+    const bounds = primaryScreen.bounds;
+    const workArea = primaryScreen.work_area;
+
+    const HINT_WIDTH = 350;
+    const HINT_HEIGHT = 345;
+    const marginFromTaskbar = 10;
+    const arrowOffsetFromRight = 260; // Offset from right edge (shifted ~1 icon width to the left)
+
+    let posX = Math.round(bounds.x + bounds.width - arrowOffsetFromRight - (HINT_WIDTH / 2));
+    let posY = Math.round(workArea.y + workArea.height - HINT_HEIGHT - marginFromTaskbar);
+
+    posX = Math.max(bounds.x + 10, Math.min(posX, bounds.x + bounds.width - HINT_WIDTH - 10));
+    posY = Math.max(bounds.y + 10, posY);
+
+    const windowOptions = {
+        frame: false,
+        transparent: true,
+        always_on_top: true,
+        show_in_taskbar: false,
+        resizable: false,
+        width: HINT_WIDTH,
+        height: HINT_HEIGHT,
+        x: posX,
+        y: posY,
+        show: true
+    };
+
+    // Slight delay so main window startup settles before hint appears
+    setTimeout(() => {
+        nw.Window.open('hint.html', windowOptions, function(hintWin) {
+            // Window stays open until user interacts with it (no auto-dismiss timer)
+        });
+    }, 800);
 }
 
 async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with additional 'Quit')
-    tray.menu = makeWindowMenu()
+    tray.menu = makeWindowMenu(true);
     
     // Only in tray-menu ( Somehow 
     tray.menu.append(new gui.MenuItem({ type: 'separator' }));
        
     let click = () =>  {  _callback('clicked-close-button') } ;
-    tray.menu.append(new gui.MenuItem( {  label: "Quit",  click: click }  )); 
+    let quitLabel = (process.platform === 'win32') ? 'Quit    ' : 'Quit';
+    tray.menu.append(new gui.MenuItem( {  label: quitLabel,  click: click }  )); 
     tray.menu.append(new gui.MenuItem({ type: 'separator' }));
     
     // Linux fix
     await window.setTimeout( () =>{tray.menu = tray.menu}, 100 ); // Any short delay seems to work (even 0)
 }
-    function makeWindowMenu(){ // Generates the "Window" Menu 
+    function makeWindowMenu(isTrayMenu = false){ // Generates the "Window" Menu 
         let newWindowMenu = new nw.Menu();
+        
+        // On Windows tray menus, add ~4 characters of trailing padding so text doesn't look cut off next to the wide left gutter
+        const pad = (text) => (isTrayMenu && process.platform === 'win32') ? text + '    ' : text;
         
         //
         // Show, Hide, Close window items
@@ -8155,13 +8219,13 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
         
         // Menu : Show all
         let click = `() =>  { showAllWindows( ) } `;
-        newWindowMenu.append(new gui.MenuItem( {  label: "Show Windows",  click: eval(click) }  )); 
+        newWindowMenu.append(new gui.MenuItem( {  label: pad("Show Windows"),  click: eval(click) }  )); 
         
         click = `() =>  { hideAllWindows( ) } `;
-        newWindowMenu.append(new gui.MenuItem( {  label: "Hide Windows",  click: eval(click) }  ));
+        newWindowMenu.append(new gui.MenuItem( {  label: pad("Hide Windows"),  click: eval(click) }  ));
         
         click = `() =>  { closeAllWindows( ) } `; 
-        newWindowMenu.append(new gui.MenuItem( {  label: "Close Windows",  click: eval(click) }  )); 
+        newWindowMenu.append(new gui.MenuItem( {  label: pad("Close Windows"),  click: eval(click) }  )); 
          
         // Add separator
         newWindowMenu.append(new gui.MenuItem({ type: 'separator' }));
@@ -8190,7 +8254,7 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
                             
                         // Add to menu 
                         let click = `() => { ${winHandleNameAsString}.focus(); }`;
-                        newWindowMenu.append(  new gui.MenuItem( {  label: title, click: eval(click)  }  )); 
+                        newWindowMenu.append(  new gui.MenuItem( {  label: pad(title), click: eval(click)  }  )); 
                         
                     }catch (err){
                         
@@ -8674,6 +8738,7 @@ function loadSettings(settingsFile){
         // Visual
             console.log('- setting visual settings');
             state.darkmode = setting( state_in.darkmode, 'dark');
+            state.hasSeenTrayHint = setting( state_in.hasSeenTrayHint, false);
             
             state.alwaysOnTop = setting( state_in.alwaysOnTop, false);
             state.onAllWorkspaces = setting( state_in.onAllWorkspaces, true);

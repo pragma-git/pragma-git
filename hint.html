@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Tray Hint</title>
+  <style>
+    /* --------------------------------------------------------------------------
+       Theme CSS Variables (Windows 11 Fluent Design Ethics)
+       -------------------------------------------------------------------------- */
+    :root {
+      --bg-color: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(0, 0, 0, 0.12);
+      --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08);
+      --text-primary: #1c1c1c;
+      --text-secondary: #5c5c5c;
+      --close-hover: rgba(0, 0, 0, 0.06);
+      --taskbar-bg: #d7dbe0;
+      --taskbar-border: #bcc2cb;
+      --popover-bg: #ffffff;
+      --popover-border: #b8bec7;
+      --accent-color: #0067c0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: rgba(32, 32, 32, 0.95);
+        --card-border: rgba(255, 255, 255, 0.14);
+        --card-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+        --text-primary: #f3f3f3;
+        --text-secondary: #a0a0a0;
+        --close-hover: rgba(255, 255, 255, 0.1);
+        --taskbar-bg: #14161a;
+        --taskbar-border: #2b2f38;
+        --popover-bg: #262930;
+        --popover-border: #3d434f;
+        --accent-color: #4cc2ff;
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       Window & Card Layout
+       -------------------------------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif;
+    }
+
+    .bubble-wrapper {
+      position: relative;
+      width: calc(100% - 16px);
+      height: calc(100% - 20px);
+      margin: 8px 8px 12px 8px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Bottom downward arrow pointing at the taskbar overflow chevron */
+    .card-pointer {
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 14px;
+      height: 14px;
+      background: var(--bg-color);
+      border-right: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    /* --------------------------------------------------------------------------
+       Header & Typography
+       -------------------------------------------------------------------------- */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title-row svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--accent-color);
+    }
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .close-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .close-btn:hover {
+      background: var(--close-hover);
+      color: var(--text-primary);
+    }
+
+    .description {
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--text-secondary);
+      margin: 4px 0 3px 0;
+    }
+
+    .description-sub {
+      font-size: 11.5px;
+      line-height: 1.35;
+      color: var(--text-secondary);
+      margin: 0 0 8px 0;
+    }
+
+    .description-sub strong {
+      color: var(--text-primary);
+    }
+
+    /* --------------------------------------------------------------------------
+       Animation Stage: Fixed Coordinate Reference Frame
+       -------------------------------------------------------------------------- */
+    .stage {
+      flex: 1;
+      width: 100%;
+      min-height: 126px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      position: relative;
+      background: radial-gradient(circle at 50% 30%, rgba(76, 194, 255, 0.08), transparent 70%);
+    }
+
+    /* Simulated Taskbar docked at bottom */
+    .sim-taskbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 38px;
+      background: var(--taskbar-bg);
+      border-top: 1px solid var(--taskbar-border);
+    }
+
+    /* Overflow Caret Button '^' */
+    .sim-caret {
+      position: absolute;
+      bottom: 8px;
+      right: 130px;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: rgba(128, 128, 128, 0.12);
+    }
+
+    /* Target Dropzone on Taskbar */
+    .sim-dropzone {
+      position: absolute;
+      bottom: 7px;
+      right: 90px;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px dashed var(--accent-color);
+      animation: pulseDropzone 4s infinite;
+    }
+
+    /* System Clock */
+    .sim-clock {
+      position: absolute;
+      bottom: 6px;
+      right: 14px;
+      font-size: 9px;
+      color: var(--text-secondary);
+      line-height: 1.1;
+      text-align: right;
+    }
+
+    /* Simulated Overflow Panel (^ popup) */
+    .sim-overflow-panel {
+      position: absolute;
+      bottom: 46px;
+      right: 96px;
+      width: 90px;
+      height: 50px;
+      background: var(--popover-bg);
+      border: 1px solid var(--popover-border);
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      animation: overflowPanelAnim 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Base slots inside overflow panel */
+    .sim-slot-slot1 {
+      position: absolute;
+      top: 13px;
+      left: 13px;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: rgba(128, 128, 128, 0.15);
+    }
+
+    .sim-slot-slot2 {
+      position: absolute;
+      top: 13px;
+      left: 53px;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: rgba(128, 128, 128, 0.15);
+    }
+
+    /* App Icon */
+    .sim-app-icon {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #0078d4, #004578);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: iconDragAnim 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      z-index: 5;
+    }
+
+    .sim-app-icon img {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+
+    /* Simulated Mouse Cursor */
+    .sim-cursor {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+      z-index: 10;
+      animation: cursorAnim 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .sim-cursor svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    /* Footer: 'Don't show again' and Got it button */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 4px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .checkbox-label input {
+      cursor: pointer;
+      accent-color: var(--accent-color);
+    }
+
+    .ok-btn {
+      padding: 4px 14px;
+      font-size: 11.5px;
+      font-weight: 500;
+      background: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .ok-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* --------------------------------------------------------------------------
+       Synchronized 4-Second Animation Timeline
+       0% - 15%: Cursor clicks caret
+       20% - 75%: Overflow panel is visible
+       40% - 70%: Icon dragged to taskbar dropzone
+       75% - 90%: Icon settles in dropzone
+       92% - 100%: Fade out & loop reset
+       -------------------------------------------------------------------------- */
+    @keyframes overflowPanelAnim {
+      0%, 15% { opacity: 0; transform: translateY(6px) scale(0.92); }
+      20%, 75% { opacity: 1; transform: translateY(0) scale(1); }
+      82%, 100% { opacity: 0; transform: translateY(6px) scale(0.92); }
+    }
+
+    @keyframes iconDragAnim {
+      /* Sits squarely inside right slot of overflow panel: bottom:46+13=59px from bottom -> top = 43px; right: 96+13=109px from right */
+      0%, 18% {
+        bottom: 59px;
+        right: 109px;
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      22%, 38% {
+        bottom: 59px;
+        right: 109px;
+        opacity: 1;
+        transform: scale(1);
+      }
+      /* Grabbed by cursor */
+      42% {
+        bottom: 59px;
+        right: 109px;
+        opacity: 1;
+        transform: scale(1.15);
+      }
+      /* Dragged into taskbar dropzone: bottom: 7px, right: 90px */
+      68% {
+        bottom: 7px;
+        right: 90px;
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      /* Lands perfectly centered in dropzone */
+      75%, 88% {
+        bottom: 7px;
+        right: 90px;
+        opacity: 1;
+        transform: scale(1);
+      }
+      94%, 100% {
+        bottom: 7px;
+        right: 90px;
+        opacity: 0;
+      }
+    }
+
+    @keyframes cursorAnim {
+      /* Starts moving toward caret (bottom:8px, right:130px) */
+      0% { bottom: -10px; right: 180px; opacity: 0; }
+      8% { bottom: 10px; right: 132px; opacity: 1; transform: scale(1); }
+      /* Click caret */
+      14% { bottom: 10px; right: 132px; transform: scale(0.85); }
+      18% { bottom: 10px; right: 132px; transform: scale(1); }
+      /* Moves onto icon inside overflow panel (bottom: 59px, right: 109px) */
+      38% { bottom: 61px; right: 111px; transform: scale(1); }
+      /* Presses down on icon */
+      42% { bottom: 61px; right: 111px; transform: scale(0.85); }
+      /* Drags icon down to dropzone */
+      68% { bottom: 9px; right: 92px; transform: scale(0.85); }
+      /* Releases icon */
+      75% { bottom: 9px; right: 92px; transform: scale(1); }
+      85% { bottom: 4px; right: 86px; opacity: 1; }
+      92%, 100% { bottom: 4px; right: 86px; opacity: 0; }
+    }
+
+    @keyframes pulseDropzone {
+      0%, 40% { opacity: 0.3; border-color: var(--card-border); }
+      50%, 75% { opacity: 1; border-color: var(--accent-color); }
+      85%, 100% { opacity: 0.3; border-color: var(--card-border); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bubble-wrapper">
+    <div class="card">
+      <div class="card-pointer"></div>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="title-row">
+          <svg viewBox="0 0 16 16">
+            <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.283.282-.544.446-.654.52v3.705l1.854 1.853a.5.5 0 0 1 .146.353V9a.5.5 0 0 1-.5.5h-4v5.5a.5.5 0 0 1-1 0V9.5h-4a.5.5 0 0 1-.5-.5v-.59a.5.5 0 0 1 .146-.353L4.854 6.204V2.499c-.11-.074-.371-.238-.654-.52C3.896 1.674 3.554 1.18 3.554.5a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          <span class="title">Pin Pragma-git to Taskbar</span>
+        </div>
+        <button id="hint-close-btn" class="close-btn" title="Dismiss">✕</button>
+      </div>
+
+      <!-- Instruction with clear motivation -->
+      <p class="description">
+        Keep Pragma-git easily accessible when minimized. Right-clicking its icon lets you quickly bring up or close all windows, or quit the app.
+      </p>
+      <p class="description-sub">
+        Click the <strong>^</strong> arrow by your clock, then <strong>drag the icon</strong> onto your taskbar to keep it permanently visible.
+      </p>
+
+      <!-- Animation Stage -->
+      <div class="stage">
+        <!-- Simulated Overflow Panel (^ popup) with placeholder slots -->
+        <div class="sim-overflow-panel">
+          <div class="sim-slot-slot1"></div>
+          <div class="sim-slot-slot2"></div>
+        </div>
+
+        <!-- App Icon being dragged (starts exactly on sim-slot-slot2, drops on sim-dropzone) -->
+        <div class="sim-app-icon">
+          <img src="images/iconx32.png" alt="Pragma-git" onerror="this.style.display='none';">
+        </div>
+
+        <!-- Animated Mouse Cursor -->
+        <div class="sim-cursor">
+          <svg viewBox="0 0 24 24">
+            <path fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2" d="M3.5 1.5l14 11.5-6.5.8 4 7.2-2.8 1.5-4-7.3-4.7 4.3z"/>
+          </svg>
+        </div>
+
+        <!-- Mock Taskbar -->
+        <div class="sim-taskbar">
+          <div class="sim-caret">^</div>
+          <div class="sim-dropzone"></div>
+          <div class="sim-clock">12:00<br>PM</div>
+        </div>
+      </div>
+
+      <!-- Footer with 'Don't show again' and Close button -->
+      <div class="footer">
+        <label class="checkbox-label">
+          <input type="checkbox" id="dont-show-checkbox">
+          Don't show again
+        </label>
+        <button id="hint-ok-btn" class="ok-btn">Got it</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Suppress default Chromium / NW.js developer context menu
+    window.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+
+    function dismissHint() {
+      const checkbox = document.getElementById('dont-show-checkbox');
+      const shouldRemember = checkbox ? checkbox.checked : false;
+
+      // Update state in opener (app.js) and persist strictly to settings.json
+      try {
+        const opener = window.opener || (window.parent && window.parent.state ? window.parent : null);
+        if (opener && opener.state) {
+          opener.state.hasSeenTrayHint = shouldRemember;
+          if (typeof opener.saveSettings === 'function') {
+            opener.saveSettings();
+          }
+        }
+      } catch (err) {
+        console.warn('Error saving hasSeenTrayHint to settings.json:', err);
+      }
+
+      try {
+        nw.Window.get().close(true);
+      } catch (e) {}
+    }
+
+    document.getElementById('hint-close-btn').addEventListener('click', dismissHint);
+    document.getElementById('hint-ok-btn').addEventListener('click', dismissHint);
+  </script>
+</body>
+</html>
