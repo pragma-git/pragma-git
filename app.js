@@ -1145,14 +1145,6 @@ async function _callback( name, event){
         break;
       }     
       case 'clicked-status-text' : {
-        if (localState.fileListWindow == true) {          
-            try{ 
-                changed_win.focus();
-                return;
-            }catch(err){ 
-            }    
-        }
-            
         let status_data = await gitStatus();
         
         if (status_data.conflicted.length > 0){
@@ -1160,9 +1152,13 @@ async function _callback( name, event){
         }else{
             listChanged();
             localState.fileListWindow = true;
+            if (typeof changed_win !== 'undefined' && changed_win) {
+                try {
+                    changed_win.focus();
+                } catch(err) {
+                }
+            }
         }
-        
-        
         
         break;
       }
