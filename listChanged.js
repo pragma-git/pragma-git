@@ -74,7 +74,7 @@ async function injectIntoJs(document) {
     
  
     // Draw table
-    origFiles = createFileTable(status_data);
+    origFiles = await createFileTable(status_data);
        
     
     // Change text that does not match History mode 
@@ -105,6 +105,23 @@ async function _callback( name, event, event2){
     let status_data;
     let tool;
     
+    let folder = state.repos[state.repoNumber].localFolder;
+    
+    // Bail out if pragma-merge is open and one of the listed callback-names
+    const importantCallback = 'diffLinkAll, diffLink, diffLinkHistory, editLinkHistory, '.includes( `${name},`); // Note: end name with ','
+    if ( ( opener.merge_win !== undefined ) &&  importantCallback ){
+        
+        // Focus pragma-merge window
+        opener.merge_win.focus();
+        
+        // Show warning dialog
+        opener.merge_win.window.iframe.contentDocument.getElementById('isOpenDialog').showModal();
+        
+        return
+    }
+
+    
+    // 
     console.log('_callback = ' + name);
     switch(name) {
         case 'applySelectedFilesButton': {
@@ -308,12 +325,12 @@ async function _callback( name, event, event2){
                 commit2
             ];
 
-
-            console.log(command);
+            console.log( 'git ' );
+            console.log( command.join(' ') );
 
             // Git 
             try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
+                simpleGit( folder).raw(command );
             }catch(err){
                 console.log('diffLinkHistory -- caught error ');
                 console.log(err);
@@ -331,15 +348,34 @@ async function _callback( name, event, event2){
             let file = event;
             let rw_switch = event2; // --rw or --ro  or --show 
             
+            let SSH_EDIT = ( folder.startsWith('ssh:') && rw_switch.startsWith('--rw') );
+            
+            // NOTE: pragma-merge.js knows to use the hash when finding --show
+            //       so I don't need to supply the hash here
+            
+            
+            // If ssh-folder, the file has to be moved to client -- will change relative path to absolute path of temp-file
+            // ( Will transfer temp file back to URL when saving in pragma-merge)
+            let workingFolder = folder;
+            if ( SSH_EDIT){
+                let sshUrl = folder;
+                absoluteTempFilePath = await sshGet( sshUrl, file);  // Copies remote file from sshUrl (folder) to workingFolder
+                console.log(absoluteTempFilePath);
+                file = absoluteTempFilePath;
+            }
+            
 
-            // Setup running pragma-merge in edit mode 
+            // Setup running pragma-merge in edit mode.  Edit mode means one pane (not rw, which is another flag)
             try{
                 
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 
                 // Mac or Linux
-                let CD = 'cd  "' + state.repos[state.repoNumber].localFolder + '"; ';  // Change to repo folder
+                let CD = 'cd  "' + folder + '"; ';  // Change to repo folder
+                if ( SSH_EDIT ){
+                    CD='';  // Cannot cd to URL.  file is absolute path instead
+                }
                 let RUN = opener.CWD_INIT + pathsep + 'pragma-merge "' + file + '"' + '  --edit ' + rw_switch; // Start using absolute path of pragma-merge
                 let COMMAND = CD + RUN;
                 
@@ -348,7 +384,12 @@ async function _callback( name, event, event2){
                     let PRAGMA_MERGE = `${opener.CWD_INIT}/pragma-merge`
 					//"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c " cd 'C:/Users/jan/menu-test2'; 'C:\\Users\\jan\\test-clone\\pragma-git\\pragma-merge ' 'New folder/tjena.txt.txt' --edit --rw "
 	                let EXE = `"%PROGRAMFILES%\\Git\\bin\\sh.exe" -c ` ;
-	                let RUNWIN  = `" cd '${state.repos[state.repoNumber].localFolder}'; '${PRAGMA_MERGE}' '${file}' --edit --rw "`;
+	                let RUNWIN  = `" cd '${folder}'; '${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`; 
+                    
+                    if ( SSH_EDIT ){
+                        RUNWIN  = `"'${PRAGMA_MERGE}' '${file}'  --edit ${rw_switch}`;   // Cannot cd to URL.  file is absolute path instead
+                    }
+                    
 	                COMMAND = EXE + RUNWIN;
 				}
                 
@@ -390,7 +431,7 @@ async function _callback( name, event, event2){
                     function onReset(err, result) {console.log(result) }
              
                 // Checkout, to discard changes
-                simpleGit( state.repos[state.repoNumber].localFolder)
+                await simpleGit( state.repos[state.repoNumber].localFolder)
                     .checkout(file, onGitCheckout );
                     function onGitCheckout(err, result){ console.log(result); console.log(err);  };
 
@@ -415,7 +456,7 @@ async function _callback( name, event, event2){
             }
             
 
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }
         case 'restoreRenameLink': {
@@ -467,15 +508,9 @@ async function _callback( name, event, event2){
             
             file = event;   
             try{
-                 
-                // Unstage (may not be needed, but no harm)
-                 await simpleGit( state.repos[state.repoNumber].localFolder )
-                    .raw( [  'reset', '--', file ] ); 
-                    
-                // Delete from file system                   
-                let filePath = state.repos[state.repoNumber].localFolder + pathsep + file;
-                console.log('deleteLink -- deleting file = ' + filePath);
-                fs.unlinkSync(filePath)
+                await simpleGit( state.repos[state.repoNumber].localFolder ).add( file ); 
+                let command = [  'rm', '-f', '--',  file];
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw( command ); 
   
             }catch(err){
                 console.log('deleteLink -- caught error ');
@@ -496,7 +531,7 @@ async function _callback( name, event, event2){
                 return
             }
 
-            origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+            origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
         case 'ignoreLink': {
@@ -504,7 +539,7 @@ async function _callback( name, event, event2){
             console.log(event);
             
             // File paths
-            const ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      
+            let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      // Assume local folder (not ssh)
             const settingsDir = os.homedir() + pathsep + '.Pragma-git';        
             
             file = event;   
@@ -526,16 +561,37 @@ async function _callback( name, event, event2){
             
             // Append to file
                 try{
-                     
-                    // Unstage (may not be needed, but no harm)
-                     await simpleGit( state.repos[state.repoNumber].localFolder )
-                        .raw( [  'reset', '--', file ] ); 
+                    
+                    let  gitIgnoreExists = await fs_existsSync(global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore' );
+                    
+                    // If ssh -- Get server .gitignore
+                    if ( gitIgnoreExists && global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        ignoreFileName = await sshGet( global.state.repos[global.state.repoNumber].localFolder, '.gitignore'); // Get file from server, and put temp-file in ignoreFileName
+                    }
+                    
+                    // If ssh and .gitignore missing -- make path so it can be created later (in fs.appendFileSync)
+                    if ( !gitIgnoreExists && global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        ignoreFileName = SSH_TEMP_FILE_LOCATION + pathsep + '.gitignore'; // Get file from server, and make temp-file in ignoreFileName
+                    }
+                    
+                    //
+                    // Update local .gitignore (local or temp-file if ssh-server) 
+                    //
+                    
+                        // Unstage (may not be needed, but no harm)
+                         await simpleGit( state.repos[state.repoNumber].localFolder )
+                            .raw( [  'reset', '--', file ] ); 
+                            
+                        // Append to .gitignore  (will create file if missing)               
+                        await fs.appendFileSync(ignoreFileName, '\n' + file, function (err) {
+                            if (err) throw err;
+                            console.log('Added "' + file +'" to gitignore = ' + ignoreFileName);
+                        });
                         
-                    // Append to .gitignore                  
-                    fs.appendFile(ignoreFileName, '\n' + file, function (err) {
-                        if (err) throw err;
-                        console.log('Added "' + file +'" to gitignore = ' + ignoreFileName);
-                    });
+                    // IF ssh -- update server .gitignore
+                     if ( global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
+                        await sshPut( global.state.repos[global.state.repoNumber].localFolder, '.gitignore'); // Get file from server, and put temp-file in ignoreFileName
+                    }                   
       
                 }catch(err){
                     console.log('ignoreLink -- caught error ');
@@ -564,7 +620,7 @@ async function _callback( name, event, event2){
             await injectIntoJs(document)
 
             // Finish
-                origFiles = createFileTable(status_data); // Redraw, and update origFiles;
+                origFiles = await createFileTable(status_data); // Redraw, and update origFiles;
             break;
         }           
         case 'radioButtonChanged' : {
@@ -572,7 +628,7 @@ async function _callback( name, event, event2){
             // see https://stackoverflow.com/questions/31705665/oncheck-listener-for-checkbox-in-javascript
             
             let checked = event.checked;
-            let file2 = event.parentElement.innerText;
+            let file2 = event.dataset.filePath || (event.parentElement && event.parentElement.children[1] ? event.parentElement.children[1].innerText.trim() : event.parentElement.innerText.trim());
             //file2 = '"' + file2 + '"';
             
             if ( checked ) {
@@ -587,6 +643,8 @@ async function _callback( name, event, event2){
             function onAdd(err, result) {console.log(result) ;console.log(err);}
             function onReset(err, result) {console.log(result) ;console.log(err);}
 
+            localState.unstaged = makeListOfUnstagedFiles();
+
             break;
         }
 
@@ -600,16 +658,19 @@ async function _callback( name, event, event2){
         let unStaged = [];
         
         var table = document.getElementById("listFilesTableBody");
+        if (!table) return unStaged;
         
         for (var i = 0, row; row = table.rows[i]; i++) {
             //iterate through rows
             //rows would be accessed using the "row" variable assigned in the for loop
             
             let col = row.cells[0]; // First column
+            if (!col) continue;
         
-            let isChecked = col.children[0].checked;
-            let file  = col.children[1].innerText;
-            if (isChecked == false) {
+            let checkbox = col.querySelector('input[type="checkbox"]');
+            let isChecked = checkbox ? checkbox.checked : true;
+            let file = (checkbox && checkbox.dataset.filePath) ? checkbox.dataset.filePath : (col.children[1] ? col.children[1].innerText.trim() : '');
+            if (isChecked == false && file) {
                 unStaged.push(file);
             }
 
@@ -619,10 +680,37 @@ async function _callback( name, event, event2){
 
         return unStaged;
     };
+    window.makeListOfUnstagedFiles = makeListOfUnstagedFiles;
 
 
 // ================= END CALLBACK =================  
 }
+    function quoteGitPath( input) {
+        // Example usage:
+        // const original = "7c1b6811a73aa38de05e89729b4100f54062ce1c^:imlook4d/external  functions/checkForNewVersion.m";
+        // const quoted = quoteGitPath(original);
+        // console.log(quoted);  // Gives: "7c1b6811a73aa38de05e89729b4100f54062ce1c^:'imlook4d/external  functions/checkForNewVersion.m'"
+        
+        // Bail out if not SSH (simpleGit does not allow quoted -- it seems to do add quote internally, so I'll get two quotes if I add this)
+        if ( ! state.repos[state.repoNumber].localFolder.startsWith('ssh:')){
+            return input;
+        }
+        
+        const separatorIndex = input.indexOf(':');
+        if (separatorIndex === -1) return input; // No colon found, return as-is
+        
+        const prefix = input.slice(0, separatorIndex + 1); // includes the colon
+        const path = input.slice(separatorIndex + 1);
+        
+        // Wrap the path in single quotes
+        const quotedPath = `'${path}'`;
+        
+        return `${prefix}${quotedPath}`;
+    }
+
+
+
+
 function closeWindow(){
     
     // This used to be a button in listChanged.html, no apply selected files when closing window instead
@@ -633,7 +721,7 @@ function closeWindow(){
     localState.fileListWindow = false;  // Show to main program that window is closed
 
     // Remove from menu
-    opener.deleteWindowMenu("Changed Files");
+    opener.updateWindowMenu("Changed Files");
     
     win.close();
     
@@ -647,9 +735,13 @@ async function listGitStatus(){
     let status_data = await opener.gitStatus(); 
       
     // Update status_data.files to reflect also the non-tracked files that gitStatus does not fill in
+    let existingPaths = new Set((status_data.files || []).map(f => f.path));
     for (var i = 0; i < status_data.not_added.length; ++i) {              
         let fileName = status_data.not_added[i];            
-        status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+        if (!existingPaths.has(fileName)) {
+            status_data.files.push( { path : fileName, index: '?' , working_dir : '?'} ); // Mimicing the files-field in git status 
+            existingPaths.add(fileName);
+        }
     }  
     
     return status_data;
@@ -721,6 +813,8 @@ async function createFileTable(status_data) {
         let Y = fileStruct.working_dir
         let XY = X + Y;  
         
+        console.log(`${XY} -- ${file}`);
+        
         //console.log( '[' + XY + '] ' + fileStruct.path);
         
         // Remember found file
@@ -741,6 +835,7 @@ async function createFileTable(status_data) {
                 checkbox.setAttribute("onclick", "_callback('radioButtonChanged', this );" ) ; // Quotes around file
                 checkbox.type = 'checkbox';
                 checkbox.id = index;
+                checkbox.dataset.filePath = file;
                 checkbox.checked = true;
                 cell.appendChild(checkbox);
                 
@@ -753,40 +848,46 @@ async function createFileTable(status_data) {
             // Label
             let typeOfChanged;
             
-            var label = document.createElement('label')
+            var label = document.createElement('label');
             label.htmlFor = index;
-            switch (XY) {
-                case "D " :
-                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
-                    typeOfChanged = 'deleted';
-                    break;
-                case " D" :
-                    label.setAttribute("class","deleted"); // index+work_dir "D " " D"
-                    typeOfChanged = 'deleted';
-                    break;
-                    
-                case "M " :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
-                case " M" :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
-                case "MM" :
-                    label.setAttribute("class","modified"); // index+work_dir "M " " M"
-                    typeOfChanged = 'modified';
-                    break;
 
-                case "A " :
-                    label.setAttribute("class","added"); // index+work_dir "A " "??"
+            let fileFolder = state.repos[state.repoNumber].localFolder;
+            let fileExistsOnDisk = false;
+            try {
+                if (fileFolder && !fileFolder.startsWith('ssh:')) {
+                    fileExistsOnDisk = fs.existsSync(fileFolder + pathsep + file);
+                }
+            } catch(e) {}
+
+            let isDeleted = !fileExistsOnDisk && (Y === 'D' || X === 'D' || (status_data.deleted && status_data.deleted.includes(file)));
+            let isRenamed = (X === 'R' || Y === 'R' || (status_data.renamed && status_data.renamed.some(r => r.to === file || r.from === file)));
+            let isAdded = (Y === '?' || X === '?' || XY === '??' || Y === 'A' || X === 'A' || (status_data.not_added && status_data.not_added.includes(file)) || (status_data.created && status_data.created.includes(file)));
+            let isModified = (Y === 'M' || X === 'M' || XY === 'MM' || (status_data.modified && status_data.modified.includes(file)));
+
+            if (isDeleted) {
+                label.setAttribute("class", "deleted");
+                typeOfChanged = 'deleted';
+            } else if (isRenamed) {
+                label.setAttribute("class", "renamed");
+                typeOfChanged = 'renamed';
+            } else if (isAdded) {
+                label.setAttribute("class", "added");
+                typeOfChanged = 'added';
+            } else if (isModified) {
+                label.setAttribute("class", "modified");
+                typeOfChanged = 'modified';
+            } else {
+                // Fallback matching to guarantee an icon is never empty
+                if (XY.includes('D') && !fileExistsOnDisk) {
+                    label.setAttribute("class", "deleted");
+                    typeOfChanged = 'deleted';
+                } else if (XY.includes('A') || XY.includes('?')) {
+                    label.setAttribute("class", "added");
                     typeOfChanged = 'added';
-                    break;
-                case "??" :
-                    label.setAttribute("class","added"); // untracked (lets view it as added)
-                    typeOfChanged = 'added';
-                    break;
-            
+                } else {
+                    label.setAttribute("class", "modified");
+                    typeOfChanged = 'modified';
+                }
             }
             
             
@@ -838,7 +939,7 @@ async function createFileTable(status_data) {
         //      
             cell = row.insertCell();
             
-            if (localState.mode == 'HISTORY'){
+            if (localState.mode == 'HISTORY'){  // IS HISTORY
                 // diff-link for history vs previous history
                 let commit = localState.historyHash;
                 
@@ -848,7 +949,8 @@ async function createFileTable(status_data) {
                 }
                 cell.appendChild( fileCheckoutLink( document, commit, file, fileIsChanged) );
                 
-            }else{ // NOT HISTORY
+            }else{ // IS NOT HISTORY
+                
                 // diff-link for working_dir and staged vs HEAD
                 let commit = 'HEAD'
                 //cell.appendChild( diffLinkHistory( document, commit, file) );

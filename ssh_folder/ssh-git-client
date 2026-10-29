@@ -1,0 +1,300 @@
+#!/bin/bash
+# SimpleGit custom Git binary
+#
+# Implemented as a wrapper to git that runs git commands on remote server over ssh
+# and returns stdout and stderr
+#
+# Works as git, but have  two extra arguments carrying the SSH-URL.  They are removed,
+# and standard git arguments remain
+#
+# Arguments
+#   $1      --  -c
+#   $2      --  SSH URL, formatted as :  "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test"
+#   $opt    --  optional -- -PIPED -- meaning that the command is run as :  echo 'hej' | ssh-git-client ....  -- which is piped into git command on ssh-server
+#   $3      --  git command (for instance 'status')
+#   $4      --  options to git command
+#   $5      --  options to git command
+#  .....
+# ($1, $2 are example placement for SSHURL, may be anywhere in argument list)
+#
+# I extract SSH URL and -PIPED, and use remaining arguments with git binary
+# (internally each kept argument is quoted and added to a string REMAINING_ARGUMENTS)
+#
+# Example (run git status on remote server) :
+#   ./ssh-git-client -c "SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test" status
+#
+#
+# NOTE: to mimic pragma-git simpleGit commands on an ssh folder, many commands rely on the include.path.
+# Example
+#  ./ssh-git-client -c include.path="/Users/jan/.pragma-git/pragma-git-config-ssh" -c "SSHURL=ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/imlook4d_DEVELOP"    difftool -y --tool pragma-git  "7c1b6811a73aa38de05e89729b4100f54062ce1c^:'imlook4d/imlook4d.m'" "7c1b6811a73aa38de05e89729b4100f54062ce1c:'imlook4d/imlook4d.m'"
+#
+# Example on Windows cmd:
+#    cd C:\Users\axels\Documents\Projects\Pragma-git\pragma-git\ssh_folder
+#	 wsl /mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git/ssh_folder/($PID) ssh-git-client -c SSHURL=ssh://jan@home-jan-ubuntu/home/jan/Desktop/ssh_local_test version
+
+PID=$$                          # PID of this script -- used to print logs
+SCRIPT_FOLDER=$(dirname $0)     # The location of this script is the same as "pragma-merge" command
+ALL_ARGUMENTS="$@"
+
+# Start timing clock
+start_time=$(date +%s.%N)
+
+PIPED=false
+
+# Import functions and constants
+source $SCRIPT_FOLDER/lib/ssh-functions 
+
+# Override SSH_LOG and save in pragma-git-log.txt instead
+SSH_LOG="$TMP/pragma-git-log.txt" 
+
+# String with arguments for git command binary, quoted and filtered to remove control commands (SSHURL, --PIPED)
+REMAINING_ARGUMENTS=''  
+
+#
+# Massage argument list -- remove $SSHURL and -PIPED
+#
+    
+    # Get -c SSHURL... from argument list -- also remove these two from total filtered_args argument list
+    # Get -PIPED... from argument list -- also remove from total filtered_args argument list
+    filtered_args=()
+    
+    # UNCOMMENT FOR DEBUG (USEFUL TO FIND SPACE PROBLEMS)
+    #echo "($PID) ssh-git-client  -- ARGUMENTS : "  >> "$SSH_LOG"
+    #for arg in "$@"; do    
+        #echo "($PID) ssh-git-client  --    '$arg'"  >> "$SSH_LOG"
+    #done
+    
+    while [[ $# -gt 0 ]]; do
+    
+        if [[ "$1" == "-c" && "$2" == SSHURL=* ]]; then
+            SSHURL="${2#SSHURL=}"
+            echo "($PID) ssh-git-client  -- SSHURL='$SSHURL'" 2>&1 >> "$SSH_LOG"
+            shift 2     # Skip both -c and the SSHURL=... from argument list
+        elif [[ "$1" == "-PIPED" ]]; then
+            PIPED=true  # Skip "-PIPED" from argument list
+            shift
+        else
+            # Add to argument list
+            filtered_args+=("$1")  # String array
+            REMAINING_ARGUMENTS="${REMAINING_ARGUMENTS} '$1'"  # QUOTE
+            shift
+        fi
+    done
+    
+    echo "($PID) ssh-git-client  -- SSH_GIT_CLIENT  $ALL_ARGUMENTS " >> "$SSH_LOG"
+    echo "($PID) ssh-git-client  -- REMAINING_ARGUMENTS =${REMAINING_ARGUMENTS}" >> "$SSH_LOG"
+    
+    # Get server info
+    getSshUrlParts "$SSHURL"  # Sets SERVER PORT SERVER_BASE_PATH
+
+    
+    # Git command running from $SERVER_BASE_PATH
+    COMMAND="git -C '${SERVER_BASE_PATH}'" # Work in repo folder from SSHURL
+    COMMAND="$COMMAND ${REMAINING_ARGUMENTS}"
+    echo "($PID) ssh-git-client  -- COMMAND='$COMMAND'" 2>&1 >> "$SSH_LOG"
+
+
+##
+## Pragma-merge
+##
+    
+    ## Start Pragma-merge in new thread
+    #case "${filtered_args[2]}"  in
+    #mergetool|difftool)
+        #echo "($PID) ssh-git-client  --     Calling  ssh_folder/delayed-start-pragma-merge " >> "$SSH_LOG"
+        #"${SCRIPT_FOLDER}/delayed-start-pragma-merge" "$SSHURL" >> "$SSH_LOG"  & 
+    #;;
+    #mergetool)
+    
+    #;;
+    #esac
+
+
+#
+# Run git command over SSH
+#
+    
+    # Run git command on remote server 
+    if [ "$PIPED" = true ]; then
+        echo "($PID) ssh-git-client  -- Start git command on remote server -- run with -PIPED" >> "$SSH_LOG"
+        ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c '$COMMAND'" < /dev/stdin
+    else
+        # Run in background
+        echo "($PID) ssh-git-client  -- Start git command on remote server -- run in background" >> "$SSH_LOG"
+        echo "($PID) ssh-git-client  -- COMMAND = $COMMAND" >> "$SSH_LOG"
+        ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF &
+            export GIT_ASKPASS="\$HOME/.Pragma-git/pragma-askpass-ssh"  # Make $HOME work (does not expand in config)
+            eval "$COMMAND"
+EOF
+    
+    fi
+
+    # Info for $COMMAND
+    GIT_SSH_PID=$!
+    SSH_RETURN_STATUS=$?  
+ 
+    
+    # Detect succesful git command within first second and skip immediately
+    GIT_DONE=false
+    for i in {1..10}; do
+        if ! kill -0 "$GIT_SSH_PID" 2>/dev/null; then
+            echo "($PID) ssh-git-client  -- Git exited after $i ticks" >> "$SSH_LOG"
+            GIT_DONE=true
+            break
+        fi
+        sleep 0.1
+    done
+
+
+#
+# Wait for git command to finish
+#
+    echo "($PID) ssh-git-client  -- SSHURL='$SSHURL'" 2>&1 >> "$SSH_LOG"
+
+    if [ "$GIT_DONE" == false ]; then
+        echo "($PID) ssh-git-client  -- Start wait for git command to finish (over ssh on server) ..." >> "$SSH_LOG"   
+        
+        # System specific signaling files (Defined once here; outside while-loop)
+        REMOTE_TMP="/home/jan/.Pragma-git/.tmp"  # Default guess: Linux
+        if "${SCRIPT_FOLDER}/ssh-test-if-file-exists" "$SERVER:$PORT/Users" > /dev/null; then
+            REMOTE_TMP="/Users/jan/.Pragma-git/.tmp"  # Fallback guess: macOS
+        fi
+        echo "($PID) ssh-git-client  -- REMOTE_TMP = $REMOTE_TMP" >> "$SSH_LOG" 
+                
+        REMOTE_ASKPASS_SIGNAL_FILE="$REMOTE_TMP/pragma-askpass-running-ssh"
+        
+        REMOTE_MERGE_SIGNAL_FILE="$REMOTE_TMP/pragma-merge-running-ssh"
+        FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'
+    fi    
+    
+#
+# Loop until remote git connection stops  -- askpass or merge if needed
+#
+
+    MERGE_CALLED=false  # This is used to only perform merge operation in loop once
+    while kill -0 $GIT_SSH_PID 2>/dev/null; do
+    
+        # Bail out if git command finished (saves time; see above). 
+        if [ "$GIT_DONE" == true ]; then
+            break
+        fi
+        
+        echo "($PID) ssh-git-client  -- Git has not exited yet" >> "$SSH_LOG"    
+        
+
+        #
+        # If remote Git is waiting for merge dialog :
+        #
+        if [ "$MERGE_CALLED" == false ];  then   # MERGE_CALLED will be set to true, to ensure only doing this once
+        
+            if ssh -p $PORT "$SERVER" "test -f '$FILE_LIST_ON_SSH'"; then
+                
+                echo  "($PID) ssh-git-client  -- Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSHURL\""  >> "$SSH_LOG" 
+                echo  "  "  >> "$SSH_LOG"
+                
+                # Get files, and open pragma-merge locally
+                "${SCRIPT_FOLDER}/ssh-get-merge-files" "$SSHURL" 
+  
+                # Inhibit going into merge section of this script again
+                MERGE_CALLED=true
+            fi
+         fi   
+        
+
+        #
+        # If remote Git is waiting for askpass dialog :
+        #
+        if ssh -p $PORT "$SERVER" "test -f '$REMOTE_ASKPASS_SIGNAL_FILE'"; then
+        
+            # Signaling files
+            REMOTE_PROMPT_FILE="$REMOTE_TMP/askpass_first-ssh"
+            REMOTE_EXIT="$REMOTE_TMP/exit-pragma-askpass-ssh" 
+            REMOTE_EXITMESSAGEFILE="$REMOTE_TMP/exit-message-pragma-askpass-ssh" 
+            
+            LOCAL_EXIT="$TMP/exit-pragma-askpass"  
+            LOCAL_PROMPT_FILE="$TMP/askpass_first"
+            LOCAL_EXITMESSAGEFILE="$TMP/exit-message-pragma-askpass" 
+        
+            echo "($PID) ssh-git-client  -- =========================================================================================" >> "$SSH_LOG"
+            echo "($PID) ssh-git-client  -- Signal file detected on server ($SERVER:$REMOTE_ASKPASS_SIGNAL_FILE)" >> "$SSH_LOG"
+            
+            # Copy from remote askpass to local
+            echo "($PID) ssh-git-client  -- Copy prompt from $SERVER:$REMOTE_PROMPT_FILE  ->  $LOCAL_PROMPT_FILE" >> "$SSH_LOG"
+            scp -P $PORT "$SERVER:$REMOTE_PROMPT_FILE" "$LOCAL_PROMPT_FILE" >> "$SSH_LOG"
+            echo "($PID) ssh-git-client  -- Prompt = $(cat $LOCAL_PROMPT_FILE)" >> "$SSH_LOG"
+            
+            
+            # Run local askpass dialog
+            echo "($PID) ssh-git-client  -- Start local pragma-askpass" >> "$SSH_LOG"
+            ./pragma-askpass "$(cat "$LOCAL_PROMPT_FILE" )" 2>&1 | sed "s/^/(${PID}) pragma-askpass output -- /" >> "$SSH_LOG" &
+            ASKPASS_PID=$!
+            echo "($PID) ssh-git-client  -- ASKPASS_PID = $ASKPASS_PID" >> "$SSH_LOG"
+            
+            
+            # Wait for local pragma-askpass to stop (because dialog closed)
+            echo "($PID) ssh-git-client  -- Wait for user to close askpass dialog ..." >> "$SSH_LOG"
+            while kill -0 $ASKPASS_PID 2>/dev/null; do
+                sleep 1
+                echo "($PID) ssh-git-client  -- Wait for user to close askpass dialog ..." >> "$SSH_LOG"
+                
+            done
+            echo ' ' >> "$SSH_LOG"
+            echo "($PID) ssh-git-client  -- Local pragma-askpass closed EXIT = $LOCAL_EXIT = $(cat $LOCAL_EXIT)" >> "$SSH_LOG"
+            
+            
+            # Copy files to remote
+            echo "($PID) ssh-git-client  -- Copy $LOCAL_EXIT  ->  $SERVER:$REMOTE_EXIT" >> "$SSH_LOG"
+            scp -P $PORT "$LOCAL_EXIT" "$SERVER:$REMOTE_EXIT"  >> "$SSH_LOG"
+            
+            echo "($PID) ssh-git-client  -- Copy $LOCAL_EXITMESSAGEFILE  ->  $SERVER:$REMOTE_EXITMESSAGEFILE" >> "$SSH_LOG"
+            scp -P $PORT "$LOCAL_EXITMESSAGEFILE" "$SERVER:$REMOTE_EXITMESSAGEFILE"  >> "$SSH_LOG"
+            
+            echo "($PID) ssh-git-client  -- Close remote pragma-askpass -- remove file  $SERVER:$REMOTE_ASKPASS_SIGNAL_FILE" >> "$SSH_LOG"
+            ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c 'rm \"$REMOTE_ASKPASS_SIGNAL_FILE\" ' "
+            
+            
+    
+            # Clean up 
+            echo "($PID) ssh-git-client  -- Remove askpass temporary files :" >> "$SSH_LOG"
+            
+            echo "($PID) ssh-git-client  -- rm $LOCAL_EXITMESSAGEFILE  (local)" >> "$SSH_LOG"
+            rm "$LOCAL_EXITMESSAGEFILE"    # Remove file carrying textarea input from "askpass.html"
+            
+            echo "($PID) ssh-git-client  -- rm $LOCAL_PROMPT_FILE  (local)"  >> "$SSH_LOG"
+            rm "$LOCAL_PROMPT_FILE"  # Remove file carrying argument to "askpass"
+            
+            echo "($PID) ssh-git-client  -- rm $LOCAL_EXIT  (local)" >> "$SSH_LOG"
+            rm "$LOCAL_EXIT"                  # Remove file carrying EXIT code
+    
+    
+            echo '($PID) ssh-git-client  -- Stopped askpass' >> "$SSH_LOG"
+            
+            echo "($PID) ssh-git-client  -- =========================================================================================" >> "$SSH_LOG"
+            break
+        fi
+        sleep 0.1
+    done
+
+
+#
+# Finalize
+#
+    
+    
+    # Wait for Git to finish
+    wait $GIT_SSH_PID
+    SSH_RETURN_STATUS=$?
+    
+    
+    # Calculate timing
+    end_time=$(date +%s.%N)
+    time_diff=$(awk "BEGIN {print $end_time - $start_time }")
+    {
+        echo "($PID) ssh-git-client --  time  $time_diff   -- ssh -T \"$SERVER\"  -p ${PORT} $SSH_OPTIONS"  
+        echo "($PID) ssh-git-client --  time  $time_diff   -- ${COMMAND}" 
+        echo ' '
+    } >> "$SSH_LOG"
+    
+    
+    exit $SSH_RETURN_STATUS  
+    

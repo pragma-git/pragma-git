@@ -1,0 +1,4 @@
+#!/bin/bash
+# Convenient root wrapper for Pragma-git automated tests
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+exec "$SCRIPT_DIR/automated-tests/_run_tests" "$@"

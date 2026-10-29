@@ -1,0 +1,215 @@
+#!/usr/bin/env node
+/**
+ * test_02_credentials_lib_safe.js - Isolated non-GUI tests for pragma-credentials-lib
+ *
+ * CRITICAL SAFETY NOTE:
+ *   This test MUST NOT touch the macOS Keychain, personal tokens, or live credentials.
+ *   To guarantee complete safety:
+ *     1. It overrides the credential helper using an isolated mock helper script.
+ *     2. It uses empty dummy URL domains ('dummy-isolated.local').
+ *     3. It sets GIT_CONFIG_GLOBAL=/dev/null and GIT_CONFIG_SYSTEM=/dev/null so
+ *        Git's native 'osxkeychain' helper is NEVER executed or queried.
+ *     4. All test state is strictly contained inside a temporary directory and wiped on exit.
+ *
+ * Verifies:
+ *   1. getLocalFolder accurately maps remote URLs to repository state
+ *   2. setCredential executes git credential approve command pipe into isolated helper
+ *   3. getCredential retrieves and parses credentials via git credential fill
+ *   4. clearCredential removes stored credentials via git credential reject
+ */
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const vm = require('vm');
+const { execSync } = require('child_process');
+
+const REPO_ROOT = path.resolve(__dirname, '../../..');
+const util = require(path.join(REPO_ROOT, 'util_module.js'));
+const credLibPath = path.join(REPO_ROOT, 'lib/pragma-credentials-lib.js');
+const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
+
+// Create isolated temporary test directory
+const testDir = path.join(os.tmpdir(), `pragma_cred_safe_test_${process.pid}`);
+fs.mkdirSync(testDir, { recursive: true });
+
+// Create isolated dummy credential helper script
+const mockHelperScript = path.join(testDir, 'mock_helper.sh');
+const testDirPosix = testDir.replaceAll('\\', '/');
+fs.writeFileSync(
+    mockHelperScript,
+    `#!/bin/sh
+STORE="${testDirPosix}/creds_store.txt"
+if [ "$1" = "get" ]; then
+    if [ -f "$STORE" ]; then
+        cat "$STORE"
+    fi
+elif [ "$1" = "store" ]; then
+    cat > "$STORE"
+elif [ "$1" = "erase" ]; then
+    rm -f "$STORE"
+fi
+`,
+    { mode: 0o755 }
+);
+
+// Create isolated gitconfig clearing all inherited helpers and specifying ONLY mock helper
+const testConfigPath = path.join(testDir, 'test.gitconfig');
+const normalizedHelperPath = mockHelperScript.replaceAll('\\', '/');
+fs.writeFileSync(
+    testConfigPath,
+    `[credential]
+    helper = 
+    helper = "!sh \\"${normalizedHelperPath}\\""
+`
+);
+
+// Load pragma-credentials-lib into sandboxed VM context
+const credCode = fs.readFileSync(credLibPath, 'utf8');
+
+const dummyRemoteUrl = 'https://dummy-isolated.local/owner/repo.git';
+const dummyUser = 'testAutomationUser';
+const dummyPassword = 'mockSecretPassword123';
+
+const nullDevice = process.platform === 'win32' ? 'NUL' : '/dev/null';
+
+const sandbox = {
+    console: {
+        log: () => {},
+        warn: () => {},
+        error: () => {}
+    },
+    URL: global.URL,
+    util,
+    CWD_INIT: testDir,
+    STARTDIR: testDir,
+    pathsep: path.sep,
+    configFilePath: () => testConfigPath,
+    multiPlatformExecSync: async (folder, cmd) => {
+        let options = {
+            env: {
+                ...process.env,
+                GIT_CONFIG_GLOBAL: nullDevice,
+                GIT_CONFIG_SYSTEM: nullDevice,
+                GIT_TERMINAL_PROMPT: '0',
+                GIT_ASKPASS: ''
+            }
+        };
+        if (process.platform === 'win32') {
+            options.shell = fs.existsSync('C:\\Program Files\\git\\usr\\bin\\bash.exe')
+                ? 'C:\\Program Files\\git\\usr\\bin\\bash.exe'
+                : (fs.existsSync('C:\\Program Files\\git\\bin\\bash.exe') ? 'C:\\Program Files\\git\\bin\\bash.exe' : 'bash.exe');
+        }
+        return execSync(cmd, options).toString().trim();
+    },
+    state: {
+        repoNumber: 0,
+        repos: [
+            {
+                localFolder: testDir,
+                remoteURL: dummyRemoteUrl
+            }
+        ]
+    }
+};
+
+vm.runInNewContext(credCode, sandbox);
+
+async function runTests() {
+    console.log('Running Suite: Git Credentials Helper Integration (Sandboxed & Safe)');
+
+    try {
+        // Test 1: getLocalFolder matches remoteURL
+        const resolved = sandbox.getLocalFolder(dummyRemoteUrl);
+        if (resolved.localFolder === testDir && resolved.remoteUrl === dummyRemoteUrl) {
+            assertPass('2.1: getLocalFolder resolves corresponding local folder from state.repos');
+        } else {
+            assertFail('2.1: getLocalFolder failed to resolve expected folder', JSON.stringify(resolved));
+        }
+
+        // Test 2: setCredential approves and stores credential via isolated helper
+        await sandbox.setCredential(dummyRemoteUrl, dummyUser, dummyPassword);
+        const storeFileExists = fs.existsSync(path.join(testDir, 'creds_store.txt'));
+        if (storeFileExists) {
+            assertPass('2.2: setCredential executes approval command pipe to isolated mock helper');
+        } else {
+            assertFail('2.2: setCredential did not create stored credential file in sandbox');
+        }
+
+        // Test 3: getCredential fills and parses structured credentials
+        const creds = await sandbox.getCredential(dummyRemoteUrl);
+        if (
+            creds &&
+            creds.username === dummyUser &&
+            creds.password === dummyPassword &&
+            creds.protocol === 'https' &&
+            creds.host === 'dummy-isolated.local'
+        ) {
+            assertPass('2.3: getCredential queries mock helper and parses structured credentials');
+        } else {
+            assertFail('2.3: getCredential failed to parse expected credentials', JSON.stringify(creds));
+        }
+
+        // Test 4: setCredential overwrites an existing password (clears before approving)
+        const updatedPassword = 'updatedSecretPassword456';
+        await sandbox.setCredential(dummyRemoteUrl, dummyUser, updatedPassword);
+        const updatedCreds = await sandbox.getCredential(dummyRemoteUrl);
+        if (updatedCreds && updatedCreds.username === dummyUser && updatedCreds.password === updatedPassword) {
+            assertPass('2.4: setCredential updates existing password in credential helper');
+        } else {
+            assertFail('2.4: setCredential failed to update existing password', JSON.stringify(updatedCreds));
+        }
+
+        // Test 5: getCredential normalizes URLs containing embedded username@ and still queries helper
+        const embeddedUserUrl = 'https://embeddedUser@dummy-isolated.local/owner/repo.git';
+        const embeddedCreds = await sandbox.getCredential(embeddedUserUrl);
+        if (
+            embeddedCreds &&
+            embeddedCreds.password === updatedPassword &&
+            embeddedCreds.url === dummyRemoteUrl
+        ) {
+            assertPass('2.5: getCredential strips embedded username@ so helper password is used and url is normalized');
+        } else {
+            assertFail('2.5: getCredential failed on URL with embedded username@', JSON.stringify(embeddedCreds));
+        }
+
+        // Test 6: getLocalFolder preserves a newly created remoteUrl not yet in state.repos and prefers local over ssh:
+        sandbox.state.repos.push({
+            localFolder: 'ssh://user@127.0.0.1/remote/path',
+            remoteURL: dummyRemoteUrl
+        });
+        const brandNewUrl = 'https://dummy-isolated.local/owner/brand-new-repo.git';
+        const resolvedNew = sandbox.getLocalFolder(brandNewUrl);
+        const resolvedExisting = sandbox.getLocalFolder(dummyRemoteUrl);
+        if (
+            resolvedNew.remoteUrl === brandNewUrl &&
+            resolvedNew.localFolder === testDir &&
+            resolvedExisting.localFolder === testDir
+        ) {
+            assertPass('2.6: getLocalFolder preserves unindexed remoteUrl and prefers local folder over ssh:');
+        } else {
+            assertFail('2.6: getLocalFolder failed URL preservation or local preference', JSON.stringify({ resolvedNew, resolvedExisting }));
+        }
+
+        // Test 7: clearCredential rejects and erases credentials
+        await sandbox.clearCredential(dummyRemoteUrl);
+        const storeStillExists = fs.existsSync(path.join(testDir, 'creds_store.txt'));
+        if (!storeStillExists) {
+            assertPass('2.7: clearCredential sends rejection command pipe to mock helper, erasing credentials');
+        } else {
+            assertFail('2.7: clearCredential did not remove stored credentials file');
+        }
+
+    } catch (err) {
+        assertFail('Unexpected error during credentials test', err.stack);
+    } finally {
+        // Clean up sandbox temporary directory
+        try {
+            fs.rmSync(testDir, { recursive: true, force: true });
+        } catch (e) {}
+    }
+
+    printSuiteResult();
+}
+
+runTests();

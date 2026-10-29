@@ -1,11 +1,14 @@
 <html>
     
 <head>
+    <meta charset="utf-8">
     <title>Settings</title>
     <script src="settings.js"></script>
+    <script src="ssh_folder/ssh-folder-lib.js"></script>
     
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     <link rel="stylesheet" type="text/css" href="settings.css" />
+    <link rel="stylesheet" type="text/css" href="slider_switch.css" /> 
     
     <style> /* Style Tables   */
     
@@ -14,8 +17,11 @@
         table{
             border-collapse: collapse;
             text-align:left;
+            table-layout: fixed;
+            width: 100%;
         }
         
+
             background-color: #444;
      
         th{
@@ -46,15 +52,36 @@
     /* Style settings-page */
     /*                     */
     
+        .keyValueTable {
+            width: auto !important;
+            table-layout: auto !important;
+        }
+    
         .keyValueTable td {
-            font-size: 9pt;
+            min-width: fit-content;
+            /* font-size: 9pt; */
             font-weight: unset;
-            color: var(--code-text); 
-            padding: unset;
+            color: var(--code-text);
+            padding: 1px 0px;
+            width: auto !important;
+            white-space: nowrap;
+        }
+
+        .keyValueTable td:first-child {
+            padding-right: 6px;
+            width: auto !important;
+            white-space: nowrap;
+        }
+
+        .keyValueTable td:last-child {
+            padding-left: 0px;
+            width: auto !important;
+            white-space: nowrap;
         }
     
         .keyValueTable tr {
             border-bottom: unset;
+            /* white-space: nowrap; */
         } 
         
         
@@ -77,6 +104,16 @@
         .right{
             text-align:right;   
         }
+        
+        .smallButton{
+            font-size: 11px;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: default;
+            pointer-events: none;
+        }
     
         
     
@@ -84,27 +121,260 @@
             
         /* Repository list */  
         
+            .repoRadioCol {
+                width: 28px;
+                min-width: 28px;
+                max-width: 28px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 4px 2px;
+            }
+            th.repoRadioCol, td.repoRadioCol {
+                width: 28px;
+                min-width: 28px;
+                max-width: 28px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 4px 2px;
+            }
+
             .localFolderRadioButton{
-                margin-top: 0px;
+                margin: 0px;
+                cursor: pointer;
+                vertical-align: middle;
             }
         
             .localFolder {
-              width: 40%;
+                width: 28%;
+                min-width: 110px;
+                /* Force text to wrap to a second row instead of clipping */
+                word-break: break-all; 
+                white-space: normal !important; 
+                vertical-align: middle;
+            }
+                        
+            /* 1. Hide the path span inside the localFolder cell by default */
+            td.localFolder label span { 
+              display: none !important; 
+            }
+            
+            /* 2. Reveal the span instantly when hovering over the table cell */
+            td.localFolder:hover label span { 
+              display: inline !important; 
+            }
+            
+            /* Show the .ssh element by default */
+            td.localFolder .ssh {
+                  display: inline !important;
+            }
+          
+            /* Hide the .ssh element instantly when hovering over the parent td */
+            td.localFolder:hover .ssh {
+                  display: none !important;
+            }
+            
+            .ssh {
+                display: inline !important;
+                background-color: #F5F5F5 !important; /* Solid white block background, same as page background for light-mode (so it will hide in light-mode)*/
+                color: #1a1a1a !important;            /* Dark charcoal text for high contrast */
+                padding: 2px 2px;                     /* Creates the block shape */
+                border-radius: 4px;                   /* Clean, slightly rounded corners */
+                font-weight: bold;                    /* Makes the text easy to read */
+                margin-right: 6px;                    /* Separation from the path string */
+                user-select: none;                    /* Keeps the badge itself unselectable */
+            }
+            
+            th.remoteIcon, td.remoteIcon {
+                width: 36px;
+                min-width: 36px;
+                max-width: 36px;
+                text-align: center;
+                vertical-align: middle;
+                padding: 2px 2px;
+            }
+
+            img.remoteIcon {
+                width: 20px;
+                height: 20px;
+                filter: none;
+                vertical-align: middle;
+                display: inline-block;
+                opacity: 0.65;
+                transition: opacity 0.1s ease;
+            }
+            a:hover img.remoteIcon {
+                opacity: 1;
             }
             
             .remoteURL {
-              width: 44%;
+                width: auto;
+                min-width: 110px;
+                vertical-align: middle;
             }
+
+            .remoteURL textarea {
+                box-sizing: border-box;
+                width: 100%;
+                height: 24px;
+                resize: none;
+                vertical-align: middle;
+                font-family: inherit;
+                font-size: 10pt;
+                padding: 3px 6px;
+            }
+
+            /* Repo Group column */
+            .repoGroupCol {
+                width: 17%;
+                min-width: 105px;
+                vertical-align: middle;
+            }
+            .groupHeaderWrapper {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: space-between;
+                width: fit-content;
+                max-width: 100%;
+                cursor: pointer;
+                border: 1px solid transparent;
+                border-radius: 4px;
+                padding: 1px 5px;
+                box-sizing: border-box;
+            }
+            .groupHeaderWrapper:hover, .groupHeaderWrapper:focus-within {
+                border-color: #777;
+                background-color: var(--input-background);
+            }
+            #groupHeaderLabel {
+                font-weight: bold;
+                color: inherit;
+                font-family: inherit;
+                font-size: 11pt;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                pointer-events: none;
+                flex: 1 1 auto;
+            }
+            .groupHeaderArrow {
+                font-size: 10px;
+                color: inherit;
+                opacity: 0.8;
+                margin-left: 2px;
+                pointer-events: none;
+                flex: 0 0 auto;
+            }
+            .groupHeaderFilter {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+                z-index: 2;
+            }
+
+            /* Filter applied indicator (uses blockTextHighlight scale from color_styles.css) */
+            .groupHeaderWrapper.filtered {
+                background-color: var(--blockTextHighlight-background) !important;
+                border-color: var(--blockTextHighlight-border) !important;
+                color: var(--blockTextHighlight-text) !important;
+            }
+            .groupHeaderWrapper.filtered #groupHeaderLabel {
+                color: var(--blockTextHighlight-text) !important;
+            }
+            .groupHeaderWrapper.filtered .groupHeaderArrow {
+                color: var(--blockTextHighlight-text) !important;
+                opacity: 0.9 !important;
+            }
+            .groupHeaderWrapper.filtered:hover,
+            .groupHeaderWrapper.filtered:focus-within {
+                background-color: var(--blockTextHighlight-hover) !important;
+                border-color: var(--blockTextHighlight-hover-border) !important;
+            }
+            td.repoGroupCol {
+                padding-right: 6px;
+                padding-left: 2px;
+            }
+            td.repoGroupCol .groupDisplay {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                user-select: text;
+                -webkit-user-select: text;
+                color: inherit;
+                padding: 2px 4px;
+            }
+            td.repoGroupCol .groupEdit {
+                display: none;
+                align-items: center;
+                gap: 2px;
+                width: 100%;
+            }
+            td.repoGroupCol:hover .groupDisplay,
+            td.repoGroupCol:focus-within .groupDisplay {
+                display: none !important;
+            }
+            td.repoGroupCol:hover .groupEdit,
+            td.repoGroupCol:focus-within .groupEdit {
+                display: flex !important;
+            }
+            td.repoGroupCol.editing-done .groupDisplay {
+                display: block !important;
+            }
+            td.repoGroupCol.editing-done .groupEdit {
+                display: none !important;
+            }
+            .groupInput {
+                background-color: var(--input-background);
+                color: var(--text);
+                border: 1px solid #777;
+                border-radius: 3px;
+                padding: 2px 4px;
+                font-size: 11px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .groupSelect {
+                background-color: var(--input-background);
+                color: var(--text);
+                border: 1px solid #777;
+                border-radius: 3px;
+                padding: 2px 0px;
+                font-size: 11px;
+                cursor: pointer;
+                width: 22px;
+            }
+
             
             .setURL {
-              width: 8%;
-              text-align:center;
-            }   
+                width: 60px;
+                min-width: 60px;
+                max-width: 60px;
+                text-align: center;
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+            th.setURL {
+                text-align: center;
+            }
             
             .repoAction {
-              width: 8%;
-              text-align:right; 
+                width: 76px;
+                min-width: 76px;
+                max-width: 76px;
+                text-align: center;
+                vertical-align: middle;
+                white-space: nowrap;
+                padding-right: 4px;
+            }
+            th.repoAction {
+                text-align: center;
             } 
+
         
         
         /* Clone function */   
@@ -121,24 +391,113 @@
         
      /* Settings : Branch-table */       
         
-        .hiddenBranch{
+        #branchesTable {
+            width: 50% !important;
+        }
+        .hiddenBranch {
             width: 50px;
+            text-align: center;
         } 
+        th.hiddenBranch, td.hiddenBranch {
+            text-align: center;
+        }
         .branchAction {
-            width: fit-content;
-            text-align:right; 
+            width: 110px;
+            text-align: right; 
         }  
-        .branchName{
-            width: fit-content;
-            padding-right: 50px;
+        th.branchAction, td.branchAction {
+            text-align: right;
+            padding-right: 6px;
+        }
+        .branchName {
+            width: auto;
+            padding-right: 15px;
+        }
+        #branchNameTextarea {
+            width: 100%;
+            height: 24px;
+            box-sizing: border-box;
+            resize: none;
+            vertical-align: middle;
+            font-family: inherit;
+            font-size: 10pt;
+            padding: 3px 6px;
+        }
+
+     /* Settings : Server repository input details */
+        .serverDetailsContainer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+        .serverInput {
+            box-sizing: border-box;
+            height: 26px;
+            padding: 2px 6px;
+            font-size: 11px;
+        }
+        .serverUsername {
+            flex: 1 1 120px;
+            min-width: 100px;
+        }
+        .serverAt {
+            flex: 0 0 auto;
+            font-weight: bold;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .serverHost {
+            flex: 1.5 1 150px;
+            min-width: 130px;
+        }
+        .serverFolder {
+            flex: 2.2 1 200px;
+            min-width: 160px;
         }
         
-        .indented{
-            padding-left: 50px;
+     /* Settings : Software tab layout */
+        .authorTable {
+            width: auto !important;
+            table-layout: auto !important;
+        }
+        .authorTable td {
+            padding-right: 20px;
+            padding-left: 0px;
+            vertical-align: top;
+            width: auto !important;
+        }
+
+        .systemToolsTable {
+            width: 50% !important;
+        }
+        .systemToolsTable input, 
+        .systemToolsTable textarea {
+            box-sizing: border-box;
         }
         
-    
-    
+     /* Settings : System Info tab layout */
+        .systemInfoTopContainer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .systemInfoLeft {
+            flex: 0 1 auto;
+        }
+        .systemInfoRight {
+            flex: 0 0 auto;
+        }
+        .starFeedbackBox {
+            border-style: solid;
+            border-color: var(--header-color);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
      /* Settings : Text colors */         
         
         .green{
@@ -164,9 +523,39 @@
             filter: var(--stash-icon-filter);
         }
         
-        img[src="images/github-mark.png"]
+        img[src="images/github-mark.png"],
+        img[src="images/github_star_on.png"],
+        img[src="images/github_star_off.png"],
+        .providerImage
         {
             filter: none;
+        }
+
+        #CreateRemoteRepoDiv button {
+            cursor: pointer;
+        }
+        #CreateRemoteRepoDiv button img.providerImage {
+            opacity: 0.65;
+            transition: opacity 0.1s ease;
+        }
+        #CreateRemoteRepoDiv button:hover img.providerImage {
+            opacity: 1;
+        }
+
+        /* Remote repositories range buttons */
+        #fileRange span[id*="Down"],
+        #fileRange span[id*="Up"],
+        #fileRange span#down,
+        #fileRange span#up {
+            color: var(--dim-text, #777777);
+            transition: color 0.1s ease;
+            user-select: none;
+        }
+        #fileRange span[id*="Down"]:hover,
+        #fileRange span[id*="Up"]:hover,
+        #fileRange span#down:hover,
+        #fileRange span#up:hover {
+            color: var(--text, #222222);
         }
                 
                
@@ -205,6 +594,7 @@
        
     <script>                <!-- Dark mode on/off , zoom--> 
         if (localState.dark){
+            document.body.classList.remove('light');
             document.body.classList.add('dark');
         }
         window.document.body.style.zoom = global.state.zoom;
@@ -224,11 +614,24 @@
     <div id="header">        <!-- Header w tabs  -->                 
         <h2 id="header_Settings" style="display:contents">Settings</h2>
     
+            <!--Help icon -- in all tabs   -->   
             <img id="about-icon" style='vertical-align:middle;position: absolute; right: 20;' height="17" width="17"  
                 onclick="let evt = {}; evt.name='Settings';opener._callback('help',evt);" 
                 onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png' " 
                 onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png' " 
                 src="images/questionmark_black.png" >
+                                            
+            <!-- Find icon -- in all tabs   -->       
+            <img id="find-icon" 
+            style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
+            height="17" width="17"  
+            onclick="findInNw.showSearchBox();" 
+            onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+            onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
+            src="images/find_black.png" >
+            
+        
+            
     
        <br><br>
             <div class="wrapper">
@@ -245,6 +648,10 @@
         
 
         <div id="inner-content">   
+            
+
+            
+            
             <div class="content" id="foldableDiv2" style="display:none;">  <!--  SOFTWARE SETTINGS tab -->             
                     
                 <h3>Visual</h3>  
@@ -296,7 +703,7 @@
                 <h3>Git Settings</h3>  
                    
                     <!--  Author info -->
-                    <table>            
+                    <table class="authorTable">            
                       <tr style="border: none;">
                             <td>
                                 <label for="authorName"> <sup class="footnoteText">*</sup>Author's name (required) :</label><br>
@@ -366,7 +773,7 @@
                   
                 <h3>Git & system tools (built-in if empty)</h3>  
     
-                    <table>
+                    <table class="systemToolsTable">
                         <tr class="tools">
                             <td>
                                 <label for="gitDiffTool"> Diff tool :</label><br>
@@ -399,7 +806,7 @@
                                 <label for="terminal"> Terminal (open when clicking                                    
                                     <img height="17" width="17" style="  vertical-align: middle;"  src="images/terminal_black.png" onClick="opener._callback('clicked-terminal')"> ) : 
                                 </label><br>
-                                <input id="terminal" type="text"  style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
+                                <input id="terminal" type="text" style="width: 100%;" placeholder="Path to terminal program"  onChange="_callback('terminal', this)" />
                             </td>
                         </tr>
                         
@@ -418,13 +825,26 @@
             </div>                
             <div class="content" id="foldableDiv1"  style="display:none;"> <!--  REPO SETTINGS tab  --> 
                 <h3>Repository table </h3>  
+                        
                 <table style="width:100%"> <!--  REPOSITORY TABLE -->
                     <thead><tr>
-                        <th class=""></th>
-                        <th class="localFolder">Local folder</th>
+                        <th class="repoRadioCol"></th>
+                        <th class="localFolder">Project folder &nbsp;&nbsp;
+                        </th>
+                        <th class="repoGroupCol">
+                            <div class="groupHeaderWrapper" id="groupHeaderWrapper">
+                                <span id="groupHeaderLabel">Group (All)</span>
+                                <span class="groupHeaderArrow">&#x25BE;</span>
+                                <select id="repoTableGroupFilter" class="groupHeaderFilter" onchange="filterRepoTableByGroup(this.value)" title="Filter repositories by group">
+                                    <option value="ALL">Group (All)</option>
+                                    <option value="__UNGROUPED__">Ungrouped</option>
+                                </select>
+                            </div>
+                        </th>
+                        <th class="remoteIcon" title="Web Link">Web</th>
                         <th class="remoteURL">Remote repository ("origin")</th>
-                        <th class="testURL"  style="text-align: center">Remote</th>
-                        <th class="repoAction"  style="text-align: center">Action</th>
+                        <th class="setURL">Remote</th>
+                        <th class="repoAction">Action</th>
                     </tr></thead>
                     <tbody id="settingsTableBody">
                     </tbody>
@@ -446,7 +866,7 @@
                               <button id="SoftwareTab" class="tab-button-small" style="border-top-left-radius: 10px;" data-id="thisRepoDiv">Software (this repo)</button>
                               <button id="gitignoreTab" class="tab-button-small" data-id="gitIgnoreDiv">Ignore</button>
                               <button id="cloneTab" class="tab-button-small" data-id="cloneDiv">Clone</button>
-                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add Local</button>
+                              <button id="addTab" class="tab-button-small" data-id="addDiv">Add Repo</button>
                               <button id="gitHubTab" class="tab-button-small" style="border-top-right-radius: 10px;" data-id="gitHubDiv">Remote</button>
                         </div>
                     </div>
@@ -458,7 +878,7 @@
                         (For selected repository) <br><br>
                         
                         <!--  Author info -->
-                        <table>            
+                        <table class="authorTable">            
                           <tr style="border: none;">
                                 <td>
                                     <label for="thisRepoAuthorName"> <sup class="footnoteText">*</sup>Author's name (required):</label><br>
@@ -502,11 +922,12 @@
                     <!--  Clone TAB -->
                     
                     <div class="tool-content " id="cloneDiv" >  
-                        (Add repository to list) <br><br> 
-                        Clone a remote repository to this computer :
+                        (Clone and add repository to list) <br><br> 
+                        Clone a remote repository from :
                         <table class="toolTable">
                             <tbody>
                                 
+                                <!--  url to clone from-->
                                 <tr class="tool">
                                     <td>
                                         <textarea id="urlToClone"  placeholder="URL to clone from"></textarea>
@@ -516,18 +937,86 @@
                                     </td>
                                 </tr>
                                 
-                                
+                                       
                                 <tr class="tool">
+                                    <td>                 
+                                    to this location ( 
+                                        <!--  switch local/server -->
+                                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                                <span id="local_clone" style="color: var(--text)">local</span> 
+                                                <label class="switch">
+                                                    <input id="local_server_switch_clone" type="checkbox" class="slider round" onclick="switchSlicerTextColors_clone(); ">
+                                                    <span class="slider round"></span> 
+                                                </label> 
+                                                <span id="server_clone" style="color: var(--dim-text)">server</span> 
+                                        </span>
+                                        ) :
+                                    </td>
+                                </tr>
+                                        
+                                <!--  folder to clone to-->
+                                <tr  id="cloneFolderRow" class="tool">
                                     <td>
                                         <textarea id="cloneFolder" placeholder="Clone to local folder (type path, use button, or drop folder here) " 
                                             ondrop="_callback('droppedFolder',event)" 
                                             ondragover = "this.className = 'hover'; return false; "
                                             ondragleave = "this.className = ''; return false; "
                                         ></textarea>
+                                        
+                                        
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="cloneFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
                                     </td>
+                                        
+                                        
+                                  
+                                </tr>
+                                <tr class="tool"> 
+                                    <td>     
+                                        <div  id='cloneServerRepoTable' style="display: none">
+                                           
+                                            <table>
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div class="serverDetailsContainer">
+                                                            <input type="text" name="username_clone" placeholder="username on server" class="serverInput serverUsername" oninput="onServerInputsChanged('clone')" />
+                                                            <span class="serverAt">@</span>
+                                                            <input type="text" name="server_clone" placeholder="server ip or address" class="serverInput serverHost" oninput="onServerInputsChanged('clone')" />
+                                                            <input type="text" name="folder_clone" placeholder="absolute folder path" class="serverInput serverFolder" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                            <button type="button" id="testSshLoginButton_clone" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('clone')">Test login</button>
+                                                            <button type="button" id="setupSshButton_clone" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="openSshConfigDialog({ mode: 'clone' })">Setup SSH...</button>
+                                                            <button type="button" id="deploySshKeyButton_clone" style="display: none; font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="deploySshKey('clone')">Create key pair</button>
+                                                            <span id="testSshStatus_clone" style="font-size: 11px; vertical-align: middle;"></span>
+                                                        </div>
+                                                        <input type="hidden" id="sshKeyInput_clone" />
+                                                        <input type="file" id="sshKeyFileInput_clone" style="display: none;" onchange="onSshKeyFileSelected('clone', this)" />
+                                                        <div id="sshKeyNotice_clone" style="display: none;"></div>
+                                                        <input type="checkbox" id="setupRemoteKeyLogin_clone" style="display: none;" />
+                                                    </td>
+                                                </tr>
+                    
+                                                    
+                                                <tr class="tool">
+                                                    <td>
+                                                        <button id="cloneServerRepoButton" disabled onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus_server"></span>
+                                                    </td>                          
+                                                </tr>
+                                                
+                                            </table> 
+                                            
+                                                    
+                                        </div>          
+                                        
+                                    </td>
+ 
                                 </tr>
                                 
                                 
@@ -535,13 +1024,13 @@
                                     <td>
                                      <!--  Allow push to remote (This input is saved indirectly when pressing cloneButton ) -->
                                     <input type="checkbox" id="allowPushToRemoteClone" >
-                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to remote repository, and plan to push.  May require password.</label><br>
+                                    <label for="allowPushToRemoteClone"> Allow <code>git push</code>. Enable if you have write access to cloned remote repository, and plan to push.  May require password.</label><br>
                            
                                     </td>                                
                                 </tr>
                                 
                                 
-                                <tr class="tool">
+                                <tr class="tool" id="cloneButtonLocalRow">
                                     <td>
                                         <button id="cloneButton"  onclick="_callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus"></span>
                                     </td>                                
@@ -556,36 +1045,94 @@
                     
                     </div>
                     
-                     <!--  Add TAB -->
+                    <!--  Add TAB -->
                     
                     <div class="tool-content " id="addDiv" >  
                         (Add repository to list) <br><br> 
-                        Add local repository from folder on this computer :
+                        Add repository from :
                         <table class="toolTable">
                             <tbody>
-  
+                                
+                                <tr class="tool">
+                                    <td>                 
+                                    location ( 
+                                        <!--  switch local/server -->
+                                        <span class="normal-text" style="display: inline;font-size: 11px">             
+                                                <span id="local" style="color: var(--text)">local</span> 
+                                                <label class="switch">
+                                                    <input id="local_server_switch" type="checkbox" class="slider round" onclick="switchSlicerTextColors(); ">
+                                                    <span class="slider round"></span> 
+                                                </label> 
+                                                <span id="server" style="color: var(--dim-text)">server</span> 
+                                        </span>
+                                        ) :
+                                    </td>
+                                    <td class="toolButtonField"></td>
+                                </tr>
+                                        
+                                <!--  folder to add -->
                                 <tr class="tool">
                                     <td>
-                                        <textarea  id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
+                                        <textarea id="addFolder" placeholder="Path to local folder (type path, use button, or drop folder here)" 
                                             ondrop = "_callback('droppedFolder',event)" 
                                             ondragover = "this.className = 'hover'; return false; "
                                             ondragleave = "this.className = ''; return false; " 
                                         ></textarea>
+                                        
+                                        <div id='addServerRepoTable' style="display: none">
+                                           
+                                            <table>
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div class="serverDetailsContainer">
+                                                            <input type="text" name="username" placeholder="username on server" class="serverInput serverUsername" oninput="onServerInputsChanged('add')" />
+                                                            <span class="serverAt">@</span>
+                                                            <input type="text" name="server" placeholder="server ip or address" class="serverInput serverHost" oninput="onServerInputsChanged('add')" />
+                                                            <input type="text" name="folder" placeholder="absolute folder path" class="serverInput serverFolder" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="tool">
+                                                    <td colspan="100%">
+                                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                            <button type="button" id="testSshLoginButton_add" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="testSshKeyLogin('add')">Test login</button>
+                                                            <button type="button" id="setupSshButton_add" style="font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="openSshConfigDialog({ mode: 'add' })">Setup SSH...</button>
+                                                            <button type="button" id="deploySshKeyButton_add" style="display: none; font-size: 11px; padding: 2px 8px; vertical-align: middle;" onclick="deploySshKey('add')">Create key pair</button>
+                                                            <span id="testSshStatus_add" style="font-size: 11px; vertical-align: middle;"></span>
+                                                        </div>
+                                                        <input type="hidden" id="sshKeyInput_add" />
+                                                        <input type="file" id="sshKeyFileInput_add" style="display: none;" onchange="onSshKeyFileSelected('add', this)" />
+                                                        <div id="sshKeyNotice_add" style="display: none;"></div>
+                                                        <input type="checkbox" id="setupRemoteKeyLogin" style="display: none;" />
+                                                    </td>
+                                                </tr>
+                                    
+                                                    
+                                                <tr class="tool">
+                                                    <td>
+                                                        <button id="addServerRepoButton" disabled onclick="document.getElementById('addFolder').value = parseServerFields(); _callback('addRepoButtonPressed',this)">Add</button>
+                                                    </td>                          
+                                                </tr>
+                                                
+                                            </table> 
+                                              
+                                        </div>           
+                                        
                                     </td>
                                     <td class="toolButtonField">
                                         <button id="addFolderSelectButton" class="toolButton" onclick="_callback('folderSelectButton',this)">Get Folder</button>
                                     </td>
                                 </tr>
-
                                 
-                                <tr class="tool">
+                                <tr class="tool" id="addRepoButtonLocalRow">
                                     <td>
-                                        <button id="addRepoButton"  onclick="_callback('addRepoButtonPressed',this)">Add</button>
+                                        <button id="addRepoButton" onclick="_callback('addRepoButtonPressed',this)">Add</button>
                                     </td>                                
                                 </tr>
                                 
                             </tbody>
-                        </table>                    
+                        </table>
                     </div>   
                     
                     
@@ -684,66 +1231,13 @@
                         <div class="footnoteText">                  
                             <p>
                             <sup>*</sup>      
-                                 For remote git services, enter remote URL manually for selected repository. <br>
-                                 Format : <code>https://name:password@address</code> 
-                                 (for token-based services, exchange name for token-name, and password for token) 
+                                 For remote git services, enter remote URL manually for selected repository.
                             </p> 
-                             <p>                            
-                                 The password, and token, may be left out, and instead stored with the git credential manager.<br>
-                                 Format : <code>https://name@address</code>  .
-                                 If you have problems, fall back to method above.
-                             </p>   
                             
                         </div>
                         
                         
-                        <div id="Github-button">Or use Github wizard : 
-                            <button onclick="
-                            
-                                if (localState.githubWindow == true){
-                                    return
-                                }
-                                
-                                nw.Window.open('Create_github_repository.html', {id: 'githubWindowId', show: false},
-                                win=>win.on('loaded', () => {
-                                
-                                    opener.github_win = win;
-                                
-                                    opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
-                                    opener.addWindowMenu( 'Create Github Repository', 'github_win');
-                                    localState.githubWindow = true;
-    
-                                    win.on('close', function() { 
-                                        localState.githubWindow = false;
-                                        opener.deleteWindowMenu('Create Github Repository');
-                                        opener.fixNwjsBug7973( win);
-                                    } );
-                                    
-                                // Close when main window is closed (see https://docs.nwjs.io/en/latest/References/Window/#event-closed )
-                                win.on('closed', function () {
-                                    win = null;
-                                  });
-                                
-                                  // Listen to main window's close event
-                                  nw.Window.get().on('close', function () {
-                                    // Hide the window to give user the feeling of closing immediately
-                                    this.hide();
-                                
-                                    // If the new window is still open then close it.
-                                    if (win !== null) {
-                                      win.close(true);
-                                    }
-                                
-                                    // After closing the new window, close the main window.
-                                    this.close(true);
-                                  });
-                                    
-                                    
-                                } ));
-                                ">
-                                <img style='vertical-align:bottom;' height="17" width="17" src="images/github-mark.png" >
-                                GitHub
-                            </button> 
+                        <div id="CreateRemoteRepoDiv" style="filter: none;">Or create new repository : 
                         </div>
                         
                       
@@ -765,7 +1259,7 @@
                             
                                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                                 
-                                opener.addWindowMenu( 'Git-ignore Editor', 'gitignore_win');
+                                opener.updateWindowMenu( 'Git-ignore Editor', 'gitignore_win');
                                 opener.gitignore_win = win;
                                 
                                 localState.gitignoreWindow = true;
@@ -804,7 +1298,7 @@
                          </p>
                          <hr>
                          <b>The current .gitignore file : </b> <br><br>
-                         <code id="gitignoreText">test</code>
+                         <code id="gitignoreText"></code>
                           
                     </div>
 
@@ -819,7 +1313,7 @@
                 
                     
                 <!--  BRANCH TABLE -->  
-                <table style="width:fit-content;"> 
+                <table id="branchesTable"> 
                     <thead>
                         <tr>
                             <th class="hiddenBranch">Hide</th>
@@ -834,106 +1328,116 @@
             </div>     
             <div class="content" id="foldableDiv3" style="display:none;">  <!--  SYSTEM INFO  tab --> 
 
-                <img id="find-icon" 
-                style='position:absolute; top:20px; right: 50px; z-index:1000; vertical-align: middle;' 
-                height="17" width="17"  
-                onclick="findInNw.showSearchBox();" 
-                onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
-                onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
-                src="images/find_black.png" >
+                <div class="systemInfoTopContainer">
+                    <div class="systemInfoLeft">
+                        <h3 style="margin-top: 0;">Pragma-git info :</h3>                
+                        <code>
+                            <table class="keyValueTable">
+                                <tbody>
+                                    <tr> 
+                                        <td> &nbsp; Pragma-git version : &nbsp; </td> 
+                                        <td> <span id='version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Latest version : &nbsp; </td> 
+                                        <td> <span id='latestVersion' style="font-size: 9pt;"></span>
+                                            <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
+                                        </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr><tr> 
+                                        <td> &nbsp; nwjs version : &nbsp; </td> 
+                                        <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; node version : &nbsp; </td> 
+                                        <td> <span id='node-version' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Platform : &nbsp; </td> 
+                                        <td> <span id='platform' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Git version : &nbsp; </td> 
+                                        <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr> <tr> 
+                                        <td> &nbsp; Settings folder : &nbsp; </td> 
+                                        <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
+                                            <script>
+                                                 document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
+                                            </script>   
+                                        </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Log file : &nbsp; </td> 
+                                        <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
+                                            <script>
+                                                 document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
+                                            </script>  
+                                        </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; nwjs settings : &nbsp; </td> 
+                                        <td> <span id='nwjs-settings-folder' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td><br></td>
+                                        <td><br></td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Install path : &nbsp; </td> 
+                                        <td> <span id='pragmaPath' style="font-size: 9pt;"></span> </td>
+                                            <script>
+                                                 document.getElementById("pragmaPath").innerHTML = opener.CWD_INIT; 
+                                            </script>   
+                                    </tr><tr> 
+                                        <td> &nbsp; Askpass path : &nbsp; </td> 
+                                        <td> <span id='askpassPath' style="font-size: 9pt;"></span> </td>
+                                    </tr><tr> 
+                                        <td> &nbsp; Pragma-merge command : &nbsp; </td> 
+                                        <td> <span id='pragmaMergePath' style="font-size: 9pt;"></span> </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </code>
+                    </div>
 
-
-
-
-                <div style='float:right; position: relative; top: 0px;
-                    border-style: solid;border-color: var(--header-color);border-radius: 10px;
-                    padding: 15px;padding-top: 3px;' >
-                    
-                    <h3>Participate :</h3>
- 
-                    <!--  Star button from GitHub -->
-                    
-                    Give Pragma-git a star : <br><br>
-                    <button onclick="require('nw.gui').Shell.openExternal( 'https://github.com/pragma-git/pragma-git/' );return false;">
-                         <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-star d-inline-block mr-2">
-                            <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"></path>
-                        </svg>
-                        Star
-                    </button>
-                    
-                    <br>
-
-                    <br><br>
-                    
-                    
-                    Feedback : 
-                    <br><br> 
-                    
-                    <!--  Report Issues GitHub -->  
-                    <a href='https://github.com/pragma-git/pragma-git/issues/new/choose' 
-                       style="padding: 10px; padding-left: 0px;"
-                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
-                       Report bugs / requests </a>
-
-                    
-                    <!--  List Issues GitHub -->  
-                    <br><br>
-                    <a href='https://github.com/pragma-git/pragma-git/issues' 
-                       style="padding: 10px; padding-left: 0px;"
-                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
-                       Known issues </a>
-
-
-                    <br><br> 
-
-                       
+                    <div class="systemInfoRight">
+                        <div class="starFeedbackBox">
+                            <!--  Star button from GitHub -->
+                            <div id="givePragmaGitStarDiv" style="content-visibility: visible;">
+                                <span id="givePragmaGitStarText">Give Pragma-git a star :</span> <br> <br>
+                                <button onclick="_callback('starPragmaGit', this);" 
+                                    style="margin-left: 40px">
+                                    <img id="star-icon"  height="17" width="17"  
+                                        src="images/github_star_off.png" >
+                                    Star
+                                </button>
+                                <br><br>
+                            </div>
+                            
+                            Feedback : <br> 
+          
+                            <ul style="padding-inline-start: 1em;">
+                                <li>
+                                    <!--  List Issues GitHub -->  
+                                    <a href='https://github.com/pragma-git/pragma-git/issues' 
+                                       style="padding: 10px; padding-left: 0px;"
+                                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                                       Known issues </a>
+                                </li>
+                                <li>
+                                    <!--  Report Issues GitHub -->  
+                                    <a href='https://github.com/pragma-git/pragma-git/issues/new/choose' 
+                                       style="padding: 10px; padding-left: 0px;"
+                                       onclick="require('nw.gui').Shell.openExternal( this.href );return false;" >
+                                       Report a bug </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
+                <br>                                          
 
-                
-                <h3>Pragma-git info :</h3>                
-                <code>
-                    <table class="keyValueTable">
-                        <tbody>
-                            <tr> 
-                                <td> &nbsp; Pragma-git version : &nbsp; </td> 
-                                <td> <span id='version' style="font-size: 9pt;"> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Latest version : &nbsp; </td> 
-                                <td> <span id='latestVersion' style="font-size: 9pt;"></span>
-                                    <a href='https://github.com/pragma-git/pragma-git/releases/latest' style="font-size:11" onclick="require('nw.gui').Shell.openExternal( this.href );return false;">[Download page]</a>
-                                </td>
-                            </tr><tr> 
-                                <td> &nbsp; nwjs version : &nbsp; </td> 
-                                <td> <span id='nw-version' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; node version : &nbsp; </td> 
-                                <td> <span id='node-version' style="font-size: 9pt;"></span>  </td>
-                            </tr><tr> 
-                                <td> &nbsp; Platform : &nbsp; </td> 
-                                <td> <span id='platform' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Git version : &nbsp; </td> 
-                                <td> <span id='gitVersion' style="font-size: 9pt;"></span> </td>
-                            </tr><tr> 
-                                <td> &nbsp; Settings folder : &nbsp; </td> 
-                                <td> <span id='SettingsDir' style="font-size: 9pt;"></span> 
-                                    <script>
-                                         document.getElementById("SettingsDir").innerHTML = opener.getSettingsDir(); 
-                                    </script>   
-                                </td>
-                            </tr><tr> 
-                                <td> &nbsp; Log file : &nbsp; </td> 
-                                <td> <a href="#" id='logFile' style="cursor:pointer;font-size:11"  onclick="gui.Shell.openItem( path.resolve(document.getElementById('logFile').innerText) ); "> </a>
-                                    <script>
-                                         document.getElementById("logFile").innerText = opener.getSettingsDir() + pathsep + '.tmp' + pathsep + 'pragma-git-log.txt';
-                                    </script>  
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </code>
-                <br>                            
-                  
+                <h3>Project folder :</h3>
+                <div  class='indent'><div id='projectFolderInfo' style="font-size: 9pt"></div> </div>
+                <br>
 
                 <h3>Current Remote :</h3>
                 <div  class='indent'><div id='remoteInfo' style="font-size: 9pt"></div> </div>
@@ -965,7 +1469,7 @@
     <!-- Dialogs  -->   
     <dialog id="alertDialog"  class="error">               <!--  General alert dialog  --> 
         <p> 
-            <div id='alertTitle'></div><br>  
+            <b><div id='alertTitle'></div></b><br>  
             <div id='alertMessage'></div>  
         </p>  
         <button id="no"
@@ -1021,7 +1525,95 @@
         </button>    
 
     </dialog>  
-     
+     <dialog id="disabledPasswordlessLogin"  class="warning">         <!--  Warning dialog for dsabling passwordless login  -->  
+        <p>
+             You have disabled creation of passwordless login! <br> 
+             <br> 
+             Can you already ssh without a password? Then press [OK].<br> 
+             <br> 
+             If unsure, press [Cancel] and let pragma-git create passwordless log in.
+        </p>  
+        <button 
+            onclick="document.getElementById('disabledPasswordlessLogin').close();">
+            OK
+        </button>   
+        <button
+            onclick="
+                if (document.getElementById('setupRemoteKeyLogin')) document.getElementById('setupRemoteKeyLogin').checked = true;
+                if (document.getElementById('setupRemoteKeyLogin_clone')) document.getElementById('setupRemoteKeyLogin_clone').checked = true;
+                document.getElementById('disabledPasswordlessLogin').close();
+            " >
+            Cancel
+        </button>  
+    </dialog>     
+
+    <!-- Unified SSH Configuration Dialog -->
+    <dialog id="sshConfigDialog" style="position: relative; border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); min-width: 500px; max-width: 620px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+        
+        <!-- Help icon -->
+        <img id="sshConfigHelpIcon" style='vertical-align: middle; position: absolute; right: 20px; top: 18px; cursor: pointer;' height="17" width="17"  
+            onclick="let evt = {}; evt.name='SSH Connection';opener._callback('help',evt);" 
+            onmouseover="document.getElementById('sshConfigHelpIcon').src='images/questionmark_hover.png' " 
+            onmouseout="document.getElementById('sshConfigHelpIcon').src='images/questionmark_black.png' " 
+            src="images/questionmark_black.png" >
+
+        <h3 id="sshConfigTitle" style="margin-top: 0; margin-bottom: 14px; color: var(--header-color); padding-right: 30px;">SSH Connection Configuration</h3>
+        
+        <table class="keyValueTable" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Target:</b></td>
+                <td style="width: 100%;">
+                    <div id="sshConfigTargetDisplay" style="font-weight: bold; font-family: monospace; font-size: 11pt; padding: 3px 0;"></div>
+                    <div id="sshConfigTargetInputs" style="display: none; align-items: center; gap: 6px; width: 100%;">
+                        <input type="text" id="sshConfigUsername" placeholder="username" class="serverInput" style="flex: 1 1 120px;" />
+                        <span style="font-weight: bold;">@</span>
+                        <input type="text" id="sshConfigHost" placeholder="server ip or address" class="serverInput" style="flex: 1.5 1 180px;" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>SSH key:</b></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                        <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigSelectKey()">Select key...</button>
+                        <button type="button" id="sshConfigGenerateKeyBtn" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigToggleGeneratePanel()">Generate key...</button>
+                        <button type="button" id="sshConfigResetKeyButton" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; height: 26px;" title="Reset to default key" onclick="sshConfigResetKey()">&#x2715;</button>
+                    </div>
+                    <input type="file" id="sshConfigKeyFileInput" style="display: none;" onchange="onSshConfigFilePicked(this)" />
+                    <div id="sshConfigKeyNotice" style="font-size: 11px; margin-top: 6px; display: none; line-height: 1.35;"></div>
+
+                    <!-- Inline Generate Key Panel -->
+                    <div id="sshConfigGeneratePanel" style="display: none; margin-top: 8px; padding: 8px 10px; border: 1px solid var(--header-color); border-radius: 4px; background-color: var(--input-background);">
+                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--header-color);">Generate New ED25519 Key Pair</div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="text" id="sshConfigNewKeyPath" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Path for new key" />
+                            <button type="button" class="smallButton" style="padding: 2px 8px; font-size: 11px; font-weight: bold;" onclick="sshConfigDoGenerateKey()">Create</button>
+                            <button type="button" class="smallButton" style="padding: 2px 6px; font-size: 11px;" onclick="sshConfigToggleGeneratePanel(false)">Cancel</button>
+                        </div>
+                        <div id="sshConfigGenerateStatus" style="font-size: 11px; margin-top: 4px; display: none;"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Status:</b></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="sshConfigTestBtn" class="smallButton" style="padding: 2px 10px; vertical-align: middle;" onclick="sshConfigTestLogin()">Test login</button>
+                        <button type="button" id="sshConfigDeployBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigDeployKey()">Deploy public key</button>
+                        <button type="button" id="sshConfigGenPromptBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigToggleGeneratePanel(true)">Generate new key</button>
+                        <span id="sshConfigStatusText" style="font-size: 11px; vertical-align: middle;"></span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" id="sshConfigCancelBtn" class="smallButton" style="padding: 4px 14px;" onclick="closeSshConfigDialog(false)">Cancel</button>
+            <button type="button" id="sshConfigSaveBtn" class="smallButton" style="padding: 4px 14px; font-weight: bold;" onclick="closeSshConfigDialog(true)">Save & Close</button>
+        </div>
+    </dialog>
+
     <!-- Scripts  -->       
     <script>  <!--  Store selectedBranch used in dialog   -->
         var selectedBranch;  // Will be set when clicking "Delete" (which is a dynamically generated link, created from javascript)
@@ -1083,6 +1675,11 @@
         // Set Toolbar-TAB event listener
         toolTabs.onclick = e => {
         
+            // Hide nwFind search box
+            if (typeof findInNw !== 'undefined' && findInNw.hideSearchBox) {
+                findInNw.hideSearchBox();
+            }
+
             let id = e.target.dataset.id;
             if (id) {
                 toolTabButton.forEach(btn => {
@@ -1112,8 +1709,85 @@
     
     </script>
     
-    
+    <script>   <!--  local/server switch for Add Repo  -->          
+    function switchSlicerTextColors(){
+        if ( document.getElementById("local_server_switch").checked ){
+            // Server
+            if (typeof initSshKeyInputs === 'function') initSshKeyInputs();
+            document.getElementById('server').setAttribute('style','color: var(--text)');
+            document.getElementById('local').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('addFolder').style.display='none';
+            document.getElementById('addServerRepoTable').style.display='block';
+            document.getElementById('addFolderSelectButton').style.visibility='hidden';
+            document.getElementById('addRepoButtonLocalRow').style.display='none';
+            let status = document.getElementById('testSshStatus_add')?.textContent || '';
+            document.getElementById('addServerRepoButton').disabled = !status.includes('Login works');
+        }else{
+            // Local
+            document.getElementById('server').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('local').setAttribute('style','color: var(--text)');
+            document.getElementById('addFolder').style.display='block';
+            document.getElementById('addServerRepoTable').style.display='none';
+            document.getElementById('addFolderSelectButton').style.visibility='visible';
+            document.getElementById('addRepoButtonLocalRow').style.display='block';
+            document.getElementById('addRepoButton').disabled = false;
+        }
         
+    }
+    
+    function parseServerFields() {
+        const username = document.querySelector('input[name="username"]').value.trim();
+        const server   = document.querySelector('input[name="server"]').value.trim();
+        let folder   = document.querySelector('input[name="folder"]').value.trim();
+    
+        if (folder && !folder.startsWith('/')) {
+            folder = '/' + folder;
+        }
+        const combined = `ssh://${username}@${server}${folder}`; 
+        console.log(combined);
+    
+        return combined;
+    }
+</script>   
+    <script>   <!--  local/server switch for Clone  -->          
+    function switchSlicerTextColors_clone(){
+        if ( document.getElementById("local_server_switch_clone").checked ){
+            // Server
+            if (typeof initSshKeyInputs === 'function') initSshKeyInputs();
+            document.getElementById('server_clone').setAttribute('style','color: var(--text)');
+            document.getElementById('local_clone').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('cloneFolderRow').style.visibility='collapse';
+            document.getElementById('cloneServerRepoTable').style.display='block';
+            document.getElementById('cloneButtonLocalRow').style.display='none';
+            let status = document.getElementById('testSshStatus_clone')?.textContent || '';
+            document.getElementById('cloneServerRepoButton').disabled = !status.includes('Login works');
+        }else{
+            // Local
+            document.getElementById('server_clone').setAttribute('style','color: var(--dim-text)');
+            document.getElementById('local_clone').setAttribute('style','color: var(--text)');
+            document.getElementById('cloneFolderRow').style.visibility='visible';
+            document.getElementById('cloneServerRepoTable').style.display='none';
+            document.getElementById('cloneButtonLocalRow').style.display='block';
+            document.getElementById('cloneButton').disabled = false;
+        }
+        
+    }
+    
+    function parseServerFields_clone() {
+        const username = document.querySelector('input[name="username_clone"]').value.trim();
+        const server   = document.querySelector('input[name="server_clone"]').value.trim();
+        let folder   = document.querySelector('input[name="folder_clone"]').value.trim();
+    
+        if (folder && !folder.startsWith('/')) {
+            folder = '/' + folder;
+        }
+        const combined = `ssh://${username}@${server}${folder}`; 
+        console.log(combined);
+    
+        return combined;
+    }
+</script>   
+               
     <!-- Drop folder initiate script-->    
     <script>
     

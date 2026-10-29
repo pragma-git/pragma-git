@@ -1,4 +1,7 @@
-
+//
+// NOTE: 
+// To run locally is relatively easy
+// To run on a folder over ssh requires quite a bit of passing files from ssh server to local, and back.  See Tech-overview.pptx
 
 // Learned from :
 // https://blog.beardhatcode.be/2018/03/your-own-git-mergetool.html
@@ -26,7 +29,17 @@ var win;
 // Remember state
 var panes = global.state.pragmaMerge.mergePanes;
 var lastPaneNumber = panes; // Updates every InitUI
-var cachedFile = {};  // Struct to store content from files loaded
+
+// Struct to store content from files loaded 
+// where for instance cachedFile.LOCAL = { FileContent, FilePath, hasCRLF}
+// with  'FileContent' being the  text from file, 'FilePath' is obviously filepath to that file, and hasCRLF is true if windows EOL
+var cachedFile = { 
+    BASE: {}, 
+    LOCAL: {}, 
+    REMOTE: {}, 
+    MERGED: {} 
+    };  
+
 
 var SAVED = false; // Flag to show that save has been performed.
 var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
@@ -39,10 +52,14 @@ const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
+//const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
+
 process.chdir( SIGNALDIR);
 
-// Read file names stored in different files
-const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");   
+// Read file names stored in different files (file names are stored in files :  'first', 'second', 'third', 'fourth' )
+
+const ROOT = global.state.repos[global.state.repoNumber].localFolder;
+//const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");    // TODO: Does not work for SSH -- will use pragma-git folder as repo_path 
 
 const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
 
@@ -55,6 +72,7 @@ const REMOTE = THIRD;
 var MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
 var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
+
 
 console.log('PATHS : ')
 console.log('$ROOT   = ' + ROOT);
@@ -70,16 +88,16 @@ if (SECOND == '--edit'){
     MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
 }
 
-// Set working folder
-process.chdir( ROOT);  // Now all relative paths works
+// Set working folder (only for non-ssh, since ssh works with absolute paths)
+if (! ROOT.startsWith('ssh:')){
+    process.chdir( ROOT);  // Now all relative paths works
+}
 
 
 // HTML Title
-const HTML_TITLE = 'File    =   ' + MERGED;
+var HTML_TITLE = 'File    =   ' + MERGED;
         
 // Define help icon
-//const helpIcon = `<img style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  src="../images/questionmark_black.png" onclick="parent.opener._callback('help',{name: 'Merge Window'})">`;
-
 const helpIcon =     `  <!-- Help icon --> 
                 <img id="help-icon" style="vertical-align:middle;float: right; padding-right: 20px" height="17" width="17"  
                     onclick="parent.opener._callback('help',{name: 'Merge Window'})"  
@@ -121,11 +139,11 @@ async function setupAsBinary(){
             let hash = global.localState.historyHash;
             await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
-                cachedFile.BASE = res;
+                cachedFile.BASE.FileContent = res;
             }
             
             // Figure out if binary
-            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            let fileBuffer = await Buffer.from( cachedFile.BASE.FileContent);
             //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
             IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
             console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
@@ -160,10 +178,35 @@ function isBinaryFile(){
 async function injectIntoJs(document) {
     win = gui.Window.get();
     
-    cachedFile.BASE = loadFile(BASE);
-    cachedFile.LOCAL = loadFile(LOCAL);
-    cachedFile.REMOTE = loadFile(REMOTE);
-    cachedFile.MERGED = loadFile(MERGED);
+    // Read the file content
+    cachedFile.BASE.FileContent = loadFile(BASE);
+    cachedFile.BASE.FilePath = BASE;
+    
+    cachedFile.LOCAL.FileContent = loadFile(LOCAL);
+    cachedFile.LOCAL.FilePath = LOCAL;
+    
+    cachedFile.REMOTE.FileContent = loadFile(REMOTE);
+    cachedFile.REMOTE.FilePath = REMOTE;
+    
+    cachedFile.MERGED.FileContent = loadFile(MERGED);
+    cachedFile.MERGED.FilePath = MERGED;
+  
+    // Automatic cleaning of (\r)
+    for (let key in cachedFile) {
+        if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key].FileContent === 'string') {
+            // ignore binary files ( and don't test non-files where we have arguments  --edit, --show, --ro, --rw  )
+            if (  !cachedFile[key].FilePath.startsWith( '--')  ) {
+				if ( !isBinaryFileSync(cachedFile[key].FilePath) ) {
+					cachedFile[key].FileContent = cachedFile[key].FileContent.replace(/\r/g, '');
+					cachedFile[key].hasCRLF = cachedFile[key].FileContent.includes('\r');
+				}
+			}
+        }
+    }
+
+    
+    
+    console.log("-------------------------------");
     
     // Set mode if called as editor
     if (SECOND == '--edit'){
@@ -214,11 +257,11 @@ async function injectIntoJs(document) {
             let hash = global.localState.historyHash;
             await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
-                cachedFile.BASE = res;
+                cachedFile.BASE.FileContent = res;
             }
             
             // Figure out if binary
-            let fileBuffer = await Buffer.from( cachedFile.BASE);
+            let fileBuffer = await Buffer.from( cachedFile.BASE.FileContent);
             //IS_BINARY_HISTORICAL = await require("isbinaryfile").isBinaryFile( fileBuffer );
             IS_BINARY_HISTORICAL = isBinaryFileSync( fileBuffer );
             console.log('IS_BINARY_HISTORICAL = ' + IS_BINARY_HISTORICAL);
@@ -238,18 +281,30 @@ async function injectIntoJs(document) {
 
 function loadFile(filePath)  { 
     let content = "";
-    try{
-        content = fs.readFileSync(filePath,'utf8');
-        console.log('Success reading "' + filePath +'"');
-    }catch(err){
-        console.warn('failed reading "' + filePath +'"');
+    try {
+        content = fs.readFileSync(filePath, 'utf8');
+        console.log('Success reading "' + filePath + '"');
+        
+        // Remove Byte Order Mark (BOM) if present
+        if (content.startsWith('\uFEFF')) {
+            content = content.slice(1);
+        }
+        
+        // Normalize line endings to LF for the diff engine (skip binary files)
+        if ( !isBinaryFileSync(filePath) ) {
+            content = content.replace(/\r/g, '');
+        }
+        
+    } catch(err) {
+        console.warn('failed reading "' + filePath + '"', err);
     }
     
     return content;
-} 
+}
+
 function findMimeFromExtension( extension){
     
-    // Read  "node_modules/codemirror/mode/meta.js"  to find mime-type  
+    // Read  "../node_modules/codemirror/mode/meta.js"  to find mime-type  
     
     // My version below works better than this :
     //found = CodeMirror.findModeByFileName(extension);
@@ -292,7 +347,7 @@ function findMimeFromExtension( extension){
     //
     // Reach here if undefined -- search using shebang
     //
-    let sheBang = cachedFile.BASE.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
+    let sheBang = cachedFile.BASE.FileContent.split('\n')[0].split(' ')[0].split('/').pop();  // #!/bin/bash -x => bash 
     console.log('Plan B) Find mime-mode from shebang (=' + sheBang + ')');
     
     modeInfo.forEach( handleShebang);
@@ -340,7 +395,7 @@ function themeSelected( themeName){
     console.log(themeName);
     
     // Load theme into iframe head
-    let themeDir = 'node_modules/codemirror/theme/';
+    let themeDir = '../node_modules/codemirror/theme/';
     let themeCssFile = themeDir + themeName + '.css';
     loadjscssfile( themeCssFile, "css") //dynamically load and add this .css file
     
@@ -354,7 +409,14 @@ function themeSelected( themeName){
     for (var i = 0; i < cm.length; i++) {
       let themeString = 'cm-s-' + themeName;
       let classString = themeString + ' editorBackground';
-      cm[i].className = cm[i].className.replace('cm-s-default', classString);
+      if (cm[i].className.match(/cm-s-[\w-]+/)) {
+        cm[i].className = cm[i].className.replace(/cm-s-[\w-]+/, themeString);
+        if (!cm[i].className.includes('editorBackground')) {
+          cm[i].className += ' editorBackground';
+        }
+      } else {
+        cm[i].className += ' ' + classString;
+      }
     }
     
     // Read chunk color from html option-tag
@@ -541,7 +603,13 @@ async function initUI( keep) {
 
     // Get executable bits 
     let showExecutableBitDiffersState = 'collapse'; // May be changed to 'visible' if relevant bits differ
-    let execBits = await getExecutableFlags(BASE);
+    
+    let execBits
+    try{
+        execBits = await getExecutableFlags(BASE);
+    }catch (err){
+        
+    }
   
     
      //
@@ -562,17 +630,17 @@ async function initUI( keep) {
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
-        options.origLeft = cachedFile.LOCAL;
+        options.origLeft = cachedFile.LOCAL.File;
 
         if (keep){
             options.value = dv.editor().getValue();
         }else{
-            options.value = cachedFile.BASE;
+            options.value = cachedFile.BASE.FileContent;
         }
         
         
 
-        options.orig = cachedFile.REMOTE; 
+        options.orig = cachedFile.REMOTE.FileContent;
         
         // html
         document.getElementById('left3').innerHTML = 'this ';
@@ -611,7 +679,7 @@ async function initUI( keep) {
             
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
-            options.orig = cachedFile.LOCAL;
+            options.orig = cachedFile.LOCAL.FileContent;
 
             if ( execBits.uncommitted !== execBits.HEAD ){
                 showExecutableBitDiffersState = 'visible';
@@ -629,8 +697,8 @@ async function initUI( keep) {
                 rightViewerLabel = 'pinned commit < ' + global.localState.pinnedCommit.substring(0,6) + ' >';
             }
             
-            options.value = cachedFile.REMOTE;  // Can't be changed, because readonly
-            options.orig = cachedFile.LOCAL;
+            options.value = cachedFile.REMOTE.FileContent; // Can't be changed, because readonly
+            options.orig = cachedFile.LOCAL.FileContent;
             
             readOnlyOption(true); // Sets this mode to read only
             
@@ -649,12 +717,12 @@ async function initUI( keep) {
             if (keep){
                 options.value = dv.editor().getValue();
             }else{
-                options.value = cachedFile.LOCAL;
+                options.value = cachedFile.LOCAL.FileContent;
             }
             
             document.getElementById('right2_all').style.visibility = 'visible';  // Add-all button
             
-            options.orig = cachedFile.REMOTE
+            options.orig = cachedFile.REMOTE.FileContent
             break;
           }
           case 'EDITOR':  { 
@@ -667,15 +735,15 @@ async function initUI( keep) {
                     options.value = dv.editor().getValue();  // Use content, in case it has been edited
                 }catch(err){
                     // Lands here on open when dv not fully defined
-                    options.value = cachedFile.BASE;
+                    options.value = cachedFile.BASE.FileContent;
                 }
             }else{
-                // 2) cachedFile.LOCAL if changed from 3-pane
-                options.value = cachedFile.BASE;
+                // 2) cachedFile.LOCAL.FileContent if changed from 3-pane
+                options.value = cachedFile.BASE.FileContent;
             }
             
             
-            options.orig = cachedFile.BASE
+            options.orig = cachedFile.BASE.FileContent
             
             
             break;
@@ -842,11 +910,20 @@ function getMode( ){
 
 // Get info
 async function getExecutableFlags( file){
+    
+    // TODO: ROOT does not work for SSH -- will use pragma-git folder as repo_path 
+    
+    if (ROOT.startsWith('ssh:') ){
+        file = file.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+    }
+    
+    
     let executableResults = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous:  undefined};
 
     
      // Uncommitted (check executable flag directly -- Windows does only check if file exists)
     executableResults.uncommitted = !!(fs.statSync( BASE).mode & fs.constants.S_IXUSR)
+    // NOTE: Does not work on ssh folder
 
     
     // HEAD
@@ -891,8 +968,9 @@ async function getExecutableFlags( file){
 }
 
 // Finishing
-function finish( wayToFinish){
+async function finish( wayToFinish){
     
+    pragmaLog(`Pragma-merge  -- finish( ${wayToFinish}) called`)
     switch(wayToFinish) {
         case 'cancel':  {
             closeWindowNicely(1);
@@ -908,9 +986,9 @@ function finish( wayToFinish){
             break;
         }
         case 'save':  {
-            save();
+            await save();
             SAVED=true;
-            closeWindowNicely(0);
+            await closeWindowNicely(0);
             break;
         }
         case 'unloadWindow':  {
@@ -929,17 +1007,45 @@ function finish( wayToFinish){
     win.close();
 
 }
-function save(){
+async function save(){
+    pragmaLog('Pragma-merge  -- save() called');
     let content = "";
     try{
         content = dv.editor().getValue(); 
+        
+        // Reset windows CRLF:
+        if ( cachedFile.MERGED.hasCRLF ) {
+        //if (localFileHadCRLF && typeof content === 'string') {
+			content = content.replace(/\r/g, '').replace(/\n/g, '\r\n');
+		}
+        
         fs.writeFileSync(MERGED,content,'utf8');
+        
+        // Copy to server if ssh-folder
+        if ( ROOT.startsWith('ssh:') ){
+            
+            // Make relative
+            // WAS :  MERGED_REL_PATH = MERGED.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+            
+            // SSH_TEMP_FILE_LOCATION 'C:\\Users\\axels\\AppData\\Local\\Temp\\pragma-git-ssh-folders'
+            // =>  NEW_SSH_TEMP_FILE_LOCATION = 'C:/Users/axels/AppData/Local/Temp/pragma-git-ssh-folders/'
+            // (No harm if separator is / already)
+            let NEW_SSH_TEMP_FILE_LOCATION = SSH_TEMP_FILE_LOCATION.replaceAll('\\','/') + '/';  // Replace separator \ with /.  Add extra / at end
+            MERGED_REL_PATH = MERGED.replace( NEW_SSH_TEMP_FILE_LOCATION , '');
+    
+            
+            pragmaLog('Pragma-merge  -- save() called -- ssh:');
+            await sshPut( ROOT, MERGED_REL_PATH);  // Copies local tempFile to remote server's sshUrl
+        }
+        
     }catch(err){
         console.log('FAILED SAVING FILE = ' + MERGED);
         console.log(err);
     }    
 }
-function closeWindowNicely(exitCode){
+async function closeWindowNicely(exitCode){
+    
+    pragmaLog(`Pragma-merge  -- closeWindowNicely( ${exitCode}) called`);
     
     // Write exit code to file for script to pick up
     try{
@@ -959,7 +1065,7 @@ function closeWindowNicely(exitCode){
     
     
     // Remove from menu
-    parent.opener.deleteWindowMenu('Pragma-merge');
+    parent.opener.updateWindowMenu('Pragma-merge');
         
         
     // Remove file, to let script know it has stopped

@@ -2,6 +2,7 @@
 
 # Link to the binary
 rm -f /usr/local/bin/pragma-git
+rm -f /usr/local/bin/pragmagit
 rm -f /usr/local/bin/Pragma-git
 
 # Launcher files

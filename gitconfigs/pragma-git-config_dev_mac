@@ -1,9 +1,0 @@
-[mergetool "pragma-git"]
-    cmd = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
-
-[core]
-    askpass = /Users/jan/Documents/Projects/Pragma-git/Pragma-git/pragma-askpass
-  
-  
-[push]
-    autoSetupRemote = true

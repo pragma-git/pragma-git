@@ -46,12 +46,9 @@ async function injectIntoNotesJs(document) {
         el: document.querySelector('#editor'),
         previewStyle: 'vertical',
         height: '100%',
-        initialValue: content
+        initialValue: content,
+        usageStatistics: false  // Disable Google Analytics telemetry completely
     };
-    
-    
-    // Disable Google Analytics
-    usageStatistics: false;
     
  
     // Add search button to toolbar
@@ -191,7 +188,7 @@ async function closeWindow(){
     
     
     // Remove from menu
-    parent.opener.deleteWindowMenu('Notes');
+    parent.opener.updateWindowMenu('Notes');
     
     // Commmit .Pragma-git settings dir
     await parent.opener.commitSettingsDir('Saved Notes for ' + repoName);

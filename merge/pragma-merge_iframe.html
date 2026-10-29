@@ -8,15 +8,20 @@
     <title id='title'>Merge/Diff</title>
     
     
-    <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
-    <link rel="stylesheet" href="node_modules/codemirror/addon/merge/merge.css">
+    <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="../node_modules/codemirror/addon/merge/merge.css">
         
 
   
-    <script src="node_modules/codemirror/lib/codemirror.js"></script>
-    <script src="node_modules/codemirror/mode/meta.js"></script>   <!-- Used to map file-extension to mime-->    
-    <script src="node_modules/diff-match-patch/index.js"></script>
+    <script src="../node_modules/codemirror/lib/codemirror.js"></script>
+    <script src="../node_modules/codemirror/mode/meta.js"></script>   <!-- Used to map file-extension to mime-->    
+    <script src="../node_modules/diff-match-patch/index.js"></script>
     <script src="modified_codemirror_merge_addon.js"></script>
+    
+    
+    <!-- Insert this way instead of making a module (easier to debug that way) -->    
+    <script src="../ssh_folder/ssh-folder-lib.js"></script>
+    
      
     <script src="pragma-merge.js"></script>
     <link rel="stylesheet" type="text/css" href="../color_styles.css" />   
@@ -24,147 +29,147 @@
     
     <!-- Read in all language modes-->    
     
-    <script src="node_modules/codemirror/addon/mode/simple.js"></script>
+    <script src="../node_modules/codemirror/addon/mode/simple.js"></script>
     
-    <script src="node_modules/codemirror/mode/xml/xml.js"></script>
-    <script src="node_modules/codemirror/mode/css/css.js"></script>
-    <script src="node_modules/codemirror/mode/javascript/javascript.js"></script>
-    <script src="node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-    <script src="node_modules/codemirror/mode/clike/clike.js"></script>
-    <script src="node_modules/codemirror/mode/octave/octave.js"></script>
-    <script src="node_modules/codemirror/mode/python/python.js"></script>
+    <script src="../node_modules/codemirror/mode/xml/xml.js"></script>
+    <script src="../node_modules/codemirror/mode/css/css.js"></script>
+    <script src="../node_modules/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="../node_modules/codemirror/mode/clike/clike.js"></script>
+    <script src="../node_modules/codemirror/mode/octave/octave.js"></script>
+    <script src="../node_modules/codemirror/mode/python/python.js"></script>
         
         
-    <script src='node_modules/codemirror/mode/apl/apl.js'></script>
-    <script src='node_modules/codemirror/mode/asciiarmor/asciiarmor.js'></script>
-    <script src='node_modules/codemirror/mode/asn.1/asn.1.js'></script>
-    <script src='node_modules/codemirror/mode/asterisk/asterisk.js'></script>
-    <script src='node_modules/codemirror/mode/brainfuck/brainfuck.js'></script>
-    <script src='node_modules/codemirror/mode/clike/clike.js'></script>
-    <script src='node_modules/codemirror/mode/clojure/clojure.js'></script>
-    <script src='node_modules/codemirror/mode/cmake/cmake.js'></script>
-    <script src='node_modules/codemirror/mode/cobol/cobol.js'></script>
-    <script src='node_modules/codemirror/mode/coffeescript/coffeescript.js'></script>
-    <script src='node_modules/codemirror/mode/commonlisp/commonlisp.js'></script>
-    <script src='node_modules/codemirror/mode/crystal/crystal.js'></script>
-    <script src='node_modules/codemirror/mode/css/css.js'></script>
-    <script src='node_modules/codemirror/mode/cypher/cypher.js'></script>
-    <script src='node_modules/codemirror/mode/d/d.js'></script>
-    <script src='node_modules/codemirror/mode/dart/dart.js'></script>
-    <script src='node_modules/codemirror/mode/diff/diff.js'></script>
-    <script src='node_modules/codemirror/mode/django/django.js'></script>
+    <script src='../node_modules/codemirror/mode/apl/apl.js'></script>
+    <script src='../node_modules/codemirror/mode/asciiarmor/asciiarmor.js'></script>
+    <script src='../node_modules/codemirror/mode/asn.1/asn.1.js'></script>
+    <script src='../node_modules/codemirror/mode/asterisk/asterisk.js'></script>
+    <script src='../node_modules/codemirror/mode/brainfuck/brainfuck.js'></script>
+    <script src='../node_modules/codemirror/mode/clike/clike.js'></script>
+    <script src='../node_modules/codemirror/mode/clojure/clojure.js'></script>
+    <script src='../node_modules/codemirror/mode/cmake/cmake.js'></script>
+    <script src='../node_modules/codemirror/mode/cobol/cobol.js'></script>
+    <script src='../node_modules/codemirror/mode/coffeescript/coffeescript.js'></script>
+    <script src='../node_modules/codemirror/mode/commonlisp/commonlisp.js'></script>
+    <script src='../node_modules/codemirror/mode/crystal/crystal.js'></script>
+    <script src='../node_modules/codemirror/mode/css/css.js'></script>
+    <script src='../node_modules/codemirror/mode/cypher/cypher.js'></script>
+    <script src='../node_modules/codemirror/mode/d/d.js'></script>
+    <script src='../node_modules/codemirror/mode/dart/dart.js'></script>
+    <script src='../node_modules/codemirror/mode/diff/diff.js'></script>
+    <script src='../node_modules/codemirror/mode/django/django.js'></script>
     
-    <script src='node_modules/codemirror/mode/dockerfile/dockerfile.js'></script>
+    <script src='../node_modules/codemirror/mode/dockerfile/dockerfile.js'></script>
     
-    <script src='node_modules/codemirror/mode/dtd/dtd.js'></script>
-    <script src='node_modules/codemirror/mode/dylan/dylan.js'></script>
-    <script src='node_modules/codemirror/mode/ebnf/ebnf.js'></script>
-    <script src='node_modules/codemirror/mode/ecl/ecl.js'></script>
-    <script src='node_modules/codemirror/mode/eiffel/eiffel.js'></script>
-    <script src='node_modules/codemirror/mode/elm/elm.js'></script>
-    <script src='node_modules/codemirror/mode/erlang/erlang.js'></script>
+    <script src='../node_modules/codemirror/mode/dtd/dtd.js'></script>
+    <script src='../node_modules/codemirror/mode/dylan/dylan.js'></script>
+    <script src='../node_modules/codemirror/mode/ebnf/ebnf.js'></script>
+    <script src='../node_modules/codemirror/mode/ecl/ecl.js'></script>
+    <script src='../node_modules/codemirror/mode/eiffel/eiffel.js'></script>
+    <script src='../node_modules/codemirror/mode/elm/elm.js'></script>
+    <script src='../node_modules/codemirror/mode/erlang/erlang.js'></script>
 
-    <script src='node_modules/codemirror/mode/factor/factor.js'></script>
+    <script src='../node_modules/codemirror/mode/factor/factor.js'></script>
 
-    <script src='node_modules/codemirror/mode/fcl/fcl.js'></script>
-    <script src='node_modules/codemirror/mode/forth/forth.js'></script>
-    <script src='node_modules/codemirror/mode/fortran/fortran.js'></script>
-    <script src='node_modules/codemirror/mode/gas/gas.js'></script>
-    <script src='node_modules/codemirror/mode/gfm/gfm.js'></script>
-    <script src='node_modules/codemirror/mode/gherkin/gherkin.js'></script>
-    <script src='node_modules/codemirror/mode/go/go.js'></script>
-    <script src='node_modules/codemirror/mode/groovy/groovy.js'></script>
-    <script src='node_modules/codemirror/mode/haml/haml.js'></script>
-    <script src='node_modules/codemirror/mode/haskell/haskell.js'></script>
-    <script src='node_modules/codemirror/mode/haskell-literate/haskell-literate.js'></script>
-    <script src='node_modules/codemirror/mode/haxe/haxe.js'></script>
-    <script src='node_modules/codemirror/mode/htmlembedded/htmlembedded.js'></script>
-    <script src='node_modules/codemirror/mode/htmlmixed/htmlmixed.js'></script>
-    <script src='node_modules/codemirror/mode/http/http.js'></script>
-    <script src='node_modules/codemirror/mode/idl/idl.js'></script>
-    <script src='node_modules/codemirror/mode/javascript/javascript.js'></script>
-    <script src='node_modules/codemirror/mode/jinja2/jinja2.js'></script>
-    <script src='node_modules/codemirror/mode/jsx/jsx.js'></script>
-    <script src='node_modules/codemirror/mode/julia/julia.js'></script>
-    <script src='node_modules/codemirror/mode/livescript/livescript.js'></script>
-    <script src='node_modules/codemirror/mode/lua/lua.js'></script>
-    <script src='node_modules/codemirror/mode/markdown/markdown.js'></script>
-    <script src='node_modules/codemirror/mode/mathematica/mathematica.js'></script>
-    <script src='node_modules/codemirror/mode/mbox/mbox.js'></script>
-    <script src='node_modules/codemirror/mode/mirc/mirc.js'></script>
-    <script src='node_modules/codemirror/mode/mllike/mllike.js'></script>
-    <script src='node_modules/codemirror/mode/modelica/modelica.js'></script>
-    <script src='node_modules/codemirror/mode/mscgen/mscgen.js'></script>
-    <script src='node_modules/codemirror/mode/mumps/mumps.js'></script>
-    <script src='node_modules/codemirror/mode/nginx/nginx.js'></script>
+    <script src='../node_modules/codemirror/mode/fcl/fcl.js'></script>
+    <script src='../node_modules/codemirror/mode/forth/forth.js'></script>
+    <script src='../node_modules/codemirror/mode/fortran/fortran.js'></script>
+    <script src='../node_modules/codemirror/mode/gas/gas.js'></script>
+    <script src='../node_modules/codemirror/mode/gfm/gfm.js'></script>
+    <script src='../node_modules/codemirror/mode/gherkin/gherkin.js'></script>
+    <script src='../node_modules/codemirror/mode/go/go.js'></script>
+    <script src='../node_modules/codemirror/mode/groovy/groovy.js'></script>
+    <script src='../node_modules/codemirror/mode/haml/haml.js'></script>
+    <script src='../node_modules/codemirror/mode/haskell/haskell.js'></script>
+    <script src='../node_modules/codemirror/mode/haskell-literate/haskell-literate.js'></script>
+    <script src='../node_modules/codemirror/mode/haxe/haxe.js'></script>
+    <script src='../node_modules/codemirror/mode/htmlembedded/htmlembedded.js'></script>
+    <script src='../node_modules/codemirror/mode/htmlmixed/htmlmixed.js'></script>
+    <script src='../node_modules/codemirror/mode/http/http.js'></script>
+    <script src='../node_modules/codemirror/mode/idl/idl.js'></script>
+    <script src='../node_modules/codemirror/mode/javascript/javascript.js'></script>
+    <script src='../node_modules/codemirror/mode/jinja2/jinja2.js'></script>
+    <script src='../node_modules/codemirror/mode/jsx/jsx.js'></script>
+    <script src='../node_modules/codemirror/mode/julia/julia.js'></script>
+    <script src='../node_modules/codemirror/mode/livescript/livescript.js'></script>
+    <script src='../node_modules/codemirror/mode/lua/lua.js'></script>
+    <script src='../node_modules/codemirror/mode/markdown/markdown.js'></script>
+    <script src='../node_modules/codemirror/mode/mathematica/mathematica.js'></script>
+    <script src='../node_modules/codemirror/mode/mbox/mbox.js'></script>
+    <script src='../node_modules/codemirror/mode/mirc/mirc.js'></script>
+    <script src='../node_modules/codemirror/mode/mllike/mllike.js'></script>
+    <script src='../node_modules/codemirror/mode/modelica/modelica.js'></script>
+    <script src='../node_modules/codemirror/mode/mscgen/mscgen.js'></script>
+    <script src='../node_modules/codemirror/mode/mumps/mumps.js'></script>
+    <script src='../node_modules/codemirror/mode/nginx/nginx.js'></script>
 
-    <script src='node_modules/codemirror/mode/nsis/nsis.js'></script>
+    <script src='../node_modules/codemirror/mode/nsis/nsis.js'></script>
 
-    <script src='node_modules/codemirror/mode/null/null.js'></script>
+    <script src='../node_modules/codemirror/mode/null/null.js'></script>
 
-    <script src='node_modules/codemirror/mode/octave/octave.js'></script>
-    <script src='node_modules/codemirror/mode/oz/oz.js'></script>
-    <script src='node_modules/codemirror/mode/pascal/pascal.js'></script>
-    <script src='node_modules/codemirror/mode/pegjs/pegjs.js'></script>
-    <script src='node_modules/codemirror/mode/perl/perl.js'></script>
-    <script src='node_modules/codemirror/mode/php/php.js'></script>
-    <script src='node_modules/codemirror/mode/pig/pig.js'></script>
-    <script src='node_modules/codemirror/mode/powershell/powershell.js'></script>
-    <script src='node_modules/codemirror/mode/properties/properties.js'></script>
-    <script src='node_modules/codemirror/mode/protobuf/protobuf.js'></script>
-    <script src='node_modules/codemirror/mode/pug/pug.js'></script>
-    <script src='node_modules/codemirror/mode/puppet/puppet.js'></script>
-    <script src='node_modules/codemirror/mode/python/python.js'></script>
-    <script src='node_modules/codemirror/mode/q/q.js'></script>
-    <script src='node_modules/codemirror/mode/r/r.js'></script>
-    <script src='node_modules/codemirror/mode/rpm/rpm.js'></script>
-    <script src='node_modules/codemirror/mode/rst/rst.js'></script>
-    <script src='node_modules/codemirror/mode/ruby/ruby.js'></script>
+    <script src='../node_modules/codemirror/mode/octave/octave.js'></script>
+    <script src='../node_modules/codemirror/mode/oz/oz.js'></script>
+    <script src='../node_modules/codemirror/mode/pascal/pascal.js'></script>
+    <script src='../node_modules/codemirror/mode/pegjs/pegjs.js'></script>
+    <script src='../node_modules/codemirror/mode/perl/perl.js'></script>
+    <script src='../node_modules/codemirror/mode/php/php.js'></script>
+    <script src='../node_modules/codemirror/mode/pig/pig.js'></script>
+    <script src='../node_modules/codemirror/mode/powershell/powershell.js'></script>
+    <script src='../node_modules/codemirror/mode/properties/properties.js'></script>
+    <script src='../node_modules/codemirror/mode/protobuf/protobuf.js'></script>
+    <script src='../node_modules/codemirror/mode/pug/pug.js'></script>
+    <script src='../node_modules/codemirror/mode/puppet/puppet.js'></script>
+    <script src='../node_modules/codemirror/mode/python/python.js'></script>
+    <script src='../node_modules/codemirror/mode/q/q.js'></script>
+    <script src='../node_modules/codemirror/mode/r/r.js'></script>
+    <script src='../node_modules/codemirror/mode/rpm/rpm.js'></script>
+    <script src='../node_modules/codemirror/mode/rst/rst.js'></script>
+    <script src='../node_modules/codemirror/mode/ruby/ruby.js'></script>
  
-    <script src='node_modules/codemirror/mode/rust/rust.js'></script>
+    <script src='../node_modules/codemirror/mode/rust/rust.js'></script>
  
-    <script src='node_modules/codemirror/mode/sas/sas.js'></script>
-    <script src='node_modules/codemirror/mode/sass/sass.js'></script>
-    <script src='node_modules/codemirror/mode/scheme/scheme.js'></script>
-    <script src='node_modules/codemirror/mode/shell/shell.js'></script>
-    <script src='node_modules/codemirror/mode/sieve/sieve.js'></script>
-    <script src='node_modules/codemirror/mode/slim/slim.js'></script>
-    <script src='node_modules/codemirror/mode/smalltalk/smalltalk.js'></script>
-    <script src='node_modules/codemirror/mode/smarty/smarty.js'></script>
-    <script src='node_modules/codemirror/mode/solr/solr.js'></script>
-    <script src='node_modules/codemirror/mode/soy/soy.js'></script>
-    <script src='node_modules/codemirror/mode/sparql/sparql.js'></script>
-    <script src='node_modules/codemirror/mode/spreadsheet/spreadsheet.js'></script>
-    <script src='node_modules/codemirror/mode/sql/sql.js'></script>
-    <script src='node_modules/codemirror/mode/stex/stex.js'></script>
-    <script src='node_modules/codemirror/mode/stylus/stylus.js'></script>
-    <script src='node_modules/codemirror/mode/swift/swift.js'></script>
-    <script src='node_modules/codemirror/mode/tcl/tcl.js'></script>
-    <script src='node_modules/codemirror/mode/textile/textile.js'></script>
-    <script src='node_modules/codemirror/mode/tiddlywiki/tiddlywiki.js'></script>
-    <script src='node_modules/codemirror/mode/tiki/tiki.js'></script>
-    <script src='node_modules/codemirror/mode/toml/toml.js'></script>
-    <script src='node_modules/codemirror/mode/tornado/tornado.js'></script>
-    <script src='node_modules/codemirror/mode/troff/troff.js'></script>
-    <script src='node_modules/codemirror/mode/ttcn/ttcn.js'></script>
-    <script src='node_modules/codemirror/mode/ttcn-cfg/ttcn-cfg.js'></script>
-    <script src='node_modules/codemirror/mode/turtle/turtle.js'></script>
-    <script src='node_modules/codemirror/mode/twig/twig.js'></script>
-    <script src='node_modules/codemirror/mode/vb/vb.js'></script>
-    <script src='node_modules/codemirror/mode/vbscript/vbscript.js'></script>
-    <script src='node_modules/codemirror/mode/velocity/velocity.js'></script>
-    <script src='node_modules/codemirror/mode/verilog/verilog.js'></script>
-    <script src='node_modules/codemirror/mode/vhdl/vhdl.js'></script>
-    <script src='node_modules/codemirror/mode/vue/vue.js'></script>
+    <script src='../node_modules/codemirror/mode/sas/sas.js'></script>
+    <script src='../node_modules/codemirror/mode/sass/sass.js'></script>
+    <script src='../node_modules/codemirror/mode/scheme/scheme.js'></script>
+    <script src='../node_modules/codemirror/mode/shell/shell.js'></script>
+    <script src='../node_modules/codemirror/mode/sieve/sieve.js'></script>
+    <script src='../node_modules/codemirror/mode/slim/slim.js'></script>
+    <script src='../node_modules/codemirror/mode/smalltalk/smalltalk.js'></script>
+    <script src='../node_modules/codemirror/mode/smarty/smarty.js'></script>
+    <script src='../node_modules/codemirror/mode/solr/solr.js'></script>
+    <script src='../node_modules/codemirror/mode/soy/soy.js'></script>
+    <script src='../node_modules/codemirror/mode/sparql/sparql.js'></script>
+    <script src='../node_modules/codemirror/mode/spreadsheet/spreadsheet.js'></script>
+    <script src='../node_modules/codemirror/mode/sql/sql.js'></script>
+    <script src='../node_modules/codemirror/mode/stex/stex.js'></script>
+    <script src='../node_modules/codemirror/mode/stylus/stylus.js'></script>
+    <script src='../node_modules/codemirror/mode/swift/swift.js'></script>
+    <script src='../node_modules/codemirror/mode/tcl/tcl.js'></script>
+    <script src='../node_modules/codemirror/mode/textile/textile.js'></script>
+    <script src='../node_modules/codemirror/mode/tiddlywiki/tiddlywiki.js'></script>
+    <script src='../node_modules/codemirror/mode/tiki/tiki.js'></script>
+    <script src='../node_modules/codemirror/mode/toml/toml.js'></script>
+    <script src='../node_modules/codemirror/mode/tornado/tornado.js'></script>
+    <script src='../node_modules/codemirror/mode/troff/troff.js'></script>
+    <script src='../node_modules/codemirror/mode/ttcn/ttcn.js'></script>
+    <script src='../node_modules/codemirror/mode/ttcn-cfg/ttcn-cfg.js'></script>
+    <script src='../node_modules/codemirror/mode/turtle/turtle.js'></script>
+    <script src='../node_modules/codemirror/mode/twig/twig.js'></script>
+    <script src='../node_modules/codemirror/mode/vb/vb.js'></script>
+    <script src='../node_modules/codemirror/mode/vbscript/vbscript.js'></script>
+    <script src='../node_modules/codemirror/mode/velocity/velocity.js'></script>
+    <script src='../node_modules/codemirror/mode/verilog/verilog.js'></script>
+    <script src='../node_modules/codemirror/mode/vhdl/vhdl.js'></script>
+    <script src='../node_modules/codemirror/mode/vue/vue.js'></script>
 
-    <script src='node_modules/codemirror/mode/wast/wast.js'></script>
+    <script src='../node_modules/codemirror/mode/wast/wast.js'></script>
 
-    <script src='node_modules/codemirror/mode/webidl/webidl.js'></script>
-    <script src='node_modules/codemirror/mode/xml/xml.js'></script>
-    <script src='node_modules/codemirror/mode/xquery/xquery.js'></script>
-    <script src='node_modules/codemirror/mode/yacas/yacas.js'></script>
-    <script src='node_modules/codemirror/mode/yaml/yaml.js'></script>
-    <script src='node_modules/codemirror/mode/z80/z80.js'></script>
+    <script src='../node_modules/codemirror/mode/webidl/webidl.js'></script>
+    <script src='../node_modules/codemirror/mode/xml/xml.js'></script>
+    <script src='../node_modules/codemirror/mode/xquery/xquery.js'></script>
+    <script src='../node_modules/codemirror/mode/yacas/yacas.js'></script>
+    <script src='../node_modules/codemirror/mode/yaml/yaml.js'></script>
+    <script src='../node_modules/codemirror/mode/z80/z80.js'></script>
     
     
     
@@ -369,7 +374,67 @@
             backdrop-filter: none;
         }
 
+        /* ==========================================================================
+           CodeMirror Text Selection Contrast Enhancement
+           ==========================================================================
+           1. Architecture:
+              CodeMirror renders selected text using two complementary layers:
+                a) Background overlay rectangles (<div class="CodeMirror-selected">)
+                b) Native browser selection pseudo-elements (::selection, ::-moz-selection)
+              Both must be styled simultaneously to guarantee consistent text highlighting.
 
+           2. Specificity Override:
+              Bundled CodeMirror themes (e.g. hopscotch, isotope, duotone-light, railscasts)
+              specify hardcoded, low-contrast selection colors with '!important':
+                e.g. .cm-s-hopscotch div.CodeMirror-selected { background: #433b42 !important; }
+              Matching the theme class prefix '[class*="cm-s-"]' with '!important' ensures
+              our rule achieves equal or higher specificity and cleanly overrides them.
+
+           3. Color Tuning:
+              Using a radiant sky/azure tint with higher luminosity (rgba(75, 165, 255, 0.55))
+              ensures selections illuminate sharply against black/dark backgrounds (isotope,
+              liquibyte, zenburn, railscasts) while remaining clear and legible on light themes.
+           ========================================================================== */
+        .CodeMirror div.CodeMirror-selected,
+        .CodeMirror.CodeMirror-focused div.CodeMirror-selected,
+        .CodeMirror[class*="cm-s-"] div.CodeMirror-selected,
+        .CodeMirror[class*="cm-s-"].CodeMirror-focused div.CodeMirror-selected {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        .CodeMirror .CodeMirror-line::selection,
+        .CodeMirror .CodeMirror-line > span::selection,
+        .CodeMirror .CodeMirror-line > span > span::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span::selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span > span::selection {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        .CodeMirror .CodeMirror-line::-moz-selection,
+        .CodeMirror .CodeMirror-line > span::-moz-selection,
+        .CodeMirror .CodeMirror-line > span > span::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span::-moz-selection,
+        .CodeMirror[class*="cm-s-"] .CodeMirror-line > span > span::-moz-selection {
+            background-color: rgba(75, 165, 255, 0.55) !important;
+        }
+
+        /* --------------------------------------------------------------------------
+           Yeti Theme Exception:
+           The Yeti theme uses very faint pastel text (#d1c9c0) on an off-white editor
+           background (#ECEAE8). A semi-transparent selection makes the pastel font
+           wash out. We explicitly supply a solid deep blue with crisp white text.
+           -------------------------------------------------------------------------- */
+        .CodeMirror.cm-s-yeti .CodeMirror-line::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span > span::selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line::-moz-selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span::-moz-selection,
+        .CodeMirror.cm-s-yeti .CodeMirror-line > span > span::-moz-selection {
+            background-color: #2b6cb0 !important;
+            color: #ffffff !important;
+        }
 
   </style>
   
@@ -649,16 +714,16 @@
     <!--  Add Search  -->  
     <!--              -->    
 
-    <script src="node_modules/codemirror/addon/search/searchcursor.js"></script>
+    <script src="../node_modules/codemirror/addon/search/searchcursor.js"></script>
 <!--
-    <link rel="stylesheet" href="node_modules/codemirror/addon/dialog/dialog.css">
-    <link rel="stylesheet" href="node_modules/codemirror/addon/search/matchesonscrollbar.css">  
+    <link rel="stylesheet" href="../node_modules/codemirror/addon/dialog/dialog.css">
+    <link rel="stylesheet" href="../node_modules/codemirror/addon/search/matchesonscrollbar.css">  
       
-    <script src="node_modules/codemirror/addon/dialog/dialog.js"></script>
-    <script src="node_modules/codemirror/addon/search/search.js"></script> 
-    <script src="node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
-    <script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
-    <script src="node_modules/codemirror/addon/search/jump-to-line.js"></script>
+    <script src="../node_modules/codemirror/addon/dialog/dialog.js"></script>
+    <script src="../node_modules/codemirror/addon/search/search.js"></script> 
+    <script src="../node_modules/codemirror/addon/scroll/annotatescrollbar.js"></script>
+    <script src="../node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
+    <script src="../node_modules/codemirror/addon/search/jump-to-line.js"></script>
 -->
     
      <!--CSS for marked text -->
@@ -969,7 +1034,7 @@
         <b>WARNING</b> -- Looks like a binary file <br><br>(Cancel is the best option)
              
         <br><br>  
-            <button style="float: right"  onclick = "parent.window.close();"> 
+            <button style="float: right"  onclick = "parent.opener.merge_win.close();"> 
                 Cancel
             </button>    
             
@@ -987,7 +1052,7 @@
         <b>WARNING</b> -- Looks like a binary file <br><br> (Cancel is the best option)
              
         <br><br> 
-            <button style="float: right"  onclick = "parent.window.close();"> 
+            <button style="float: right"  onclick = "parent.opener.merge_win.close();"> 
                 Cancel 
             </button>    
             
@@ -995,5 +1060,21 @@
                 View binary 
             </button>   
     </dialog> 
+    
+    
+    <!--  Dialog for already opened -->       
+                
+    <dialog id="isOpenDialog"   class="warning">  
+        <b>WARNING</b> -- Pragma-merge was already opened. <br><br> 
+        
+        Close Pragma-merge and click link again.
+             
+        <br><br> 
+
+            <button style="float: right"  onclick = "document.getElementById('isOpenDialog').close()" > 
+                OK  
+            </button>    
+    </dialog> 
+        
 </body>    
 </html>

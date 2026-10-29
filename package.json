@@ -1,5 +1,6 @@
 {
-  "version": "0.9.16",
+  "version": "0.0.0",
+  "nwVersion": "0.100.1",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
   "main": "app.html",
@@ -18,9 +19,11 @@
     "icon": "./images/icon.png"
   },
   "scripts": {
-    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 ."
+    "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 .",
+    "test": "./_run_tests"
   },
   "dependencies": {
+    "@hackolade/keytar": "^7.9.0-2",
     "@toast-ui/editor": "3.0",
     "chokidar": "^3.6.0",
     "codemirror": "^5.65.16",
@@ -33,33 +36,9 @@
     "mime-types": "^2.1.35",
     "node-fetch": "^2.7.0",
     "simple-git": "^3.23.0",
-    "terminal-tab": "^0.0.7",
     "windows-network-drive": "^3.0.2"
   },
-  "build": {
-    "nwFlavor": "sdk",
-    "nwVersion": "v0.85.0",
-    "mac": {
-      "displayName": "Pragma-git",
-      "copyright": "©Jan Axelsson",
-      "icon": "./images/icon.icns",
-      "plistStrings": {
-        "CFBundleIdentifier": "io.github.JanAxelsson.pragmagit",
-        "CFBundleDocumentTypes": []
-      }
-    },
-    "win": {
-      "productName": "Pragma-git",
-      "companyName": "Jan Axelsson",
-      "copyright": "©Jan Axelsson",
-      "icon": "./images/icon.ico"
-    },
-    "nsis": {
-      "installDirectory": "$PROGRAMFILES\\${_COMPANYNAME}\\${_APPNAME}",
-      "diffUpdaters": true
-    }
-  },
   "devDependencies": {
-    "nwjs-builder-phoenix": "^1.15.0"
+    "nw-builder": "^4.7.8"
   }
 }

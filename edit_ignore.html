@@ -2,6 +2,8 @@
     <head>
         <title>Git-ignore Editor</title>  <!-- NOTE : Don't edit title, without updating listChanged.js which uses this title to close this editor --> 
         <script src="settings.js"></script>
+        <script src="ssh_folder/ssh-folder-lib.js"></script>
+    
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
         <link rel="stylesheet" type="text/css" href="settings.css" />
         <link rel="stylesheet" type="text/css" href="node_modules/css-spinners/dist/round/round.css" />
@@ -66,10 +68,26 @@
             }
             window.document.body.style.zoom = global.state.zoom;
         </script>
+        
+        <!--  Add find  -->    
+        <script src="node_modules/findinnw/dist/find-in-nw.js"></script>
+        <script src="extend_find-in-nw.js"></script>
+        <script>
+            findInNw.initialize();
+            extendFindInNw(); // Make find-in-nw fit my purpose for graph and note
+        </script> 
+
     
         <!-- HTML -->       
         <div id="outer-content" style="width: auto;">        
             <div id="inner-content">
+                
+                
+                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                    onclick="findInNw.showSearchBox();" 
+                    onmouseover="document.getElementById('about-icon').src='images/find_hover.png' " 
+                    onmouseout="document.getElementById('about-icon').src='images/find_black.png' " 
+                    src="images/find_black.png" >
                 
                 
                     
@@ -150,8 +168,6 @@
             // Always on top
             win = gui.Window.get();
             win.setAlwaysOnTop( state.alwaysOnTop );
-        
-            console.log('Create_github_repository.html :DOM fully loaded and parsed');
             
             // Import modules  
             simpleGit = require('simple-git');  // I am not sure why it did not work to use opener.simpleGit
@@ -283,7 +299,8 @@
         }
         
         // Delete MacOS menu
-        opener.opener.deleteWindowMenu('Git-ignore Editor');
+        opener.opener.updateWindowMenu('Git-ignore Editor');
+        localState.gitignoreWindow = false;
 
     }
     
@@ -368,7 +385,7 @@
                     try {
                         let fileName = splitted[row].substring(3); 
                         let filePath = global.state.repos[global.state.repoNumber].localFolder + pathsep + fileName;
-                        if (fs.existsSync(filePath)) {
+                        if (fs_existsSync(filePath)) {
                             //file exists, must be deleted from tracking
                             modified += splitted[row].substring(3) + '(untracked) \n';
                         }else{

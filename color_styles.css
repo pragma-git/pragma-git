@@ -10,7 +10,8 @@
     --body-text: var(--text);
     --input-background: #EEEEEE;
     --input-placeholder: #777777;
-    --image-invert: 0%;               /* do not invert black-transparent images to white  */
+    --image-invert: 35%;              /* soften black icons to dark charcoal */
+    --image-hover-filter: brightness(0); /* deepen to black on hover in light mode */
     --header-color: #2F5496;        /* header */
     --warn-color: #d6b51d;          /* for instance border of dialogs */
     --err-color: #C0401A;           /* for instance border of dialogs */
@@ -21,6 +22,7 @@
     --graph-decoration-color: DarkBlue;
     --border-color: var(--text);
     --stash-icon-filter: invert( 80% ); 
+    --stash-text-background: #CCCCCC;
     
     /* Settings */
     --green-text: green;
@@ -29,6 +31,11 @@
     --code-text: var(--header-color); /* same as header color */
     --tab-selected: #888888;
     --tab-deselected: #CCCCCC;
+    --blockTextHighlight-background: #DCDCDC;
+    --blockTextHighlight-text: var(--text);
+    --blockTextHighlight-border: #888888;
+    --blockTextHighlight-hover: #CBCBCB;
+    --blockTextHighlight-hover-border: #666666;
     
     /* Notes */
     --code-background: #DDDDDD;         /* (lighter grey) */
@@ -50,10 +57,19 @@
     --message-placeholder: var(--dim-text);
     --history-icon-brightness: 1;     /* keep original */
     --history-image-invert: 20%;
-    --middle-background: #CCCCCC; 
+    --middle-background: #f6f8fa; 
+    --titlebar-background: #ebedf0;
+    --titlebar-text: #24292f;
+    --titlebar-hover-text: #57606a;
+    --titlebar-divider: #d0d7de;
+    --titlebar-icon-filter: brightness(0.35);
+    --titlebar-icon-hover-filter: brightness(0.05);
+    --message-border: #d0d7de;
+    --message-background: #ffffff;
+    --message-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); 
     
     /* Tables */
-    --tableHoverBrightness: brightness(92%)   
+    --hoverBackGroundColor: lch( from var(--body-background) calc(l - 8 ) c h);  /* Workaround because backdrop-filter fails in jsonViewer.html */
 }
  
 .dark {
@@ -61,9 +77,10 @@
     --text:  #DDDDDD;                 /* in html and main windows (almost white) */
     --body-background: #454442;       /* in html windows (dark grey) */
     --body-text: var(--text);         /* in html windows and inputs */
-    --link-color: #f3da67;            /* in html windows */
+    --link-color: #f3da67a6;            /* in html windows */
     --link-pressed-color: #a3a040;
     --image-invert: 80%;               /* invert black-transparent images to white */
+    --image-hover-filter: none;
     --header-color: #d6b51d;
     --warn-color: #d6b51d;          /* for instance border of dialogs */
     --err-color: #C0401A;           /* for instance border of dialogs */
@@ -74,6 +91,7 @@
     --graph-decoration-color: #d6b51d; /* (mustard yellow) */
     --border-color: var(--text);
     --stash-icon-filter: invert( 20% ); 
+    --stash-text-background: #666666;
     
     /* Settings */
     --input-background: #505050;      /* in html windows (slightly less dark grey) */
@@ -84,6 +102,11 @@
     --code-text: #a2a2a2;             /* (light grey) */
     --tab-selected: #d6b51d;
     --tab-deselected: #DDDDDD;
+    --blockTextHighlight-background: #5E5D5B;
+    --blockTextHighlight-text: var(--text);
+    --blockTextHighlight-border: #807E7B;
+    --blockTextHighlight-hover: #6E6D6A;
+    --blockTextHighlight-hover-border: #A09E9B;
     
     /* Notes */
     --code-background: #505050;
@@ -110,11 +133,38 @@
     --message-placeholder: var(--dim-text);        /* message field: non-editable texts */
     --history-icon-brightness: 10;                 /* make white */
     --history-image-invert: 100%;
-    --middle-background: unset;
+    --middle-background: #404040;
+    --titlebar-background: #7a7c7c;
+    --titlebar-text: #ffffff;
+    --titlebar-hover-text: #aaaaaa;
+    --titlebar-divider: #2a2c2c;
+    --titlebar-icon-filter: none;
+    --titlebar-icon-hover-filter: none;
+    --message-border: none;
+    --message-background: inherit;
+    --message-shadow: none;
     
     /* Tables */
-    --tableHoverBrightness: brightness(120%);
+    --hoverBackGroundColor: lch( from var(--body-background) calc(l +  15 ) c h);   /* Workaround because backdrop-filter fails in jsonViewer.html */
 }   
+
+/* Highlight block for text elements (e.g. active filters or badge indicators) */
+.blockTextHighlight,
+.blockTextHighligt {
+    background-color: var(--blockTextHighlight-background);
+    color: var(--blockTextHighlight-text);
+    border: 1px solid var(--blockTextHighlight-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.blockTextHighlight:hover,
+.blockTextHighlight:focus-within,
+.blockTextHighligt:hover,
+.blockTextHighligt:focus-within {
+    background-color: var(--blockTextHighlight-hover);
+    border-color: var(--blockTextHighlight-hover-border);
+}
 
 
 /*                */
@@ -180,6 +230,13 @@
         img{
            filter: invert( var(--image-invert) );
            -webkit-user-drag: none;
+        }
+        
+        .light img[src*="_black"]:hover,
+        .light img[src*="_hover"],
+        .light #about-icon:hover,
+        .light #find-icon:hover {
+           filter: var(--image-hover-filter) !important;
         }
 
         
@@ -280,10 +337,16 @@
             background-color: white;
             padding: 8px;
         }
+        
+        .ssh-button{
+            background-color: #d0d0d0;
+            color: #303030;
+            padding: 0px
+        }
 
 
         li{
-            margin-bottom: 4px;
+            margin-bottom: 12px;
         }
         
         button{
@@ -299,6 +362,5 @@
         }
         
         tr:hover {
-            backdrop-filter: var(--tableHoverBrightness);  //
-            override locally by   tr:hover {  backdrop-filter: none; }
+            background-color: var(--hoverBackGroundColor);
         }

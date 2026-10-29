@@ -62,6 +62,10 @@ myModule.findObjectIndex = function ( myArray, objectField, stringToFind ){
     var foundIndex; //last found index
     // Loop for the array elements 
     for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
 
         if (stringToFind === myArray[i][objectField]){
             foundIndex = i;
@@ -75,6 +79,10 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     var foundIndex; //last found index
     // Loop for the array elements 
     for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
 
         if (myArray[i][objectField].startsWith( stringToFind)){
             foundIndex = i;
@@ -82,6 +90,24 @@ myModule.findObjectIndexStartsWith = function ( myArray, objectField, stringToFi
     } 
     
     return Number(foundIndex);
+}
+
+myModule.findOAllbjectsIndexStartsWith = function ( myArray, objectField, stringToFind ){ 
+    
+    var foundIndeces = []; //last found index
+    // Loop for the array elements 
+    for (let i in myArray) { 
+        
+        if ( myArray[i][objectField] == undefined){
+            continue
+        }
+
+        if  (myArray[i][objectField].startsWith( stringToFind)){
+            foundIndeces.push(Number(i));
+        }
+    } 
+    
+    return foundIndeces;
 }
 
 // Parse string containing multiple key value pairs 
@@ -133,17 +159,7 @@ myModule.isHiddenBranch = function( hiddenBranchNames, branchToCheck){
     return result;
 }      
 
-// File system
-myModule.mkdir = function (dir){
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
-    }
-}
-myModule.rm = function (f){
-    if (fs.existsSync(f)){
-        fs.unlinkSync(f);
-    }
-}
+
 
 
 // Export

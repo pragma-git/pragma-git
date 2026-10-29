@@ -1,0 +1,109 @@
+#!/bin/bash 
+# Tool to get difftool or mergetool files from ssh-folder.  Then start pragma-merge locally
+#
+# Started from ssh-git-client -> delayed-start-pragma-merge -> this
+#
+# Implemented as a tool to git that transfers temporary diff-files from ssh-folder to local $TEMP_FILE_LOCATION
+#
+# Arguments
+#   $1      --  SSH URL, for instance 'ssh://jan@linus/usr/local/MATLAB/imlook4d/imlook4d_DEVELOP'
+#  .....
+#
+# Example  :
+#   ./ssh-get-merge-files 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testRepos -- local on ssh/testOnMyMac' 
+#
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source $(dirname $0)/lib/ssh-functions
+
+
+# CONSTANTS
+SCRIPT_FOLDER=$(dirname $0)   # The location of this script, used to get absolute path to "pragma-merge"
+FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'            # Four files on ssh folder, coming from difftool BASE LOCAL REMOTE MERGED
+TIMEOUT=2;                                                # SSH TIME-OUT in seconds.  Stops software hanging when connection does not work
+
+
+
+# FUNCTIONS
+
+function getFiles () {
+    
+    echo "    TEMP_FILE_LOCATION='${TEMP_FILE_LOCATION}'"
+    
+    for var in "$@"
+    do
+        #echo ' '
+        echo "    REMOTE FILE   = '${var}'"
+        REMOTEFOLDER=$(dirname "${var}")
+        echo "    REMOTE FOLDER = '${REMOTEFOLDER}'"
+        
+        # Create absolute paths (needed if relative path from beginning)
+        if [[ ${var:0:1} == "/" ]] ; then 
+        
+            # Absolute file path
+            echo '    IS ABSOLUTE FILE PATH'
+            DIRNAME=${TEMP_FILE_LOCATION}$(dirname "${var}")
+            #echo "CREATE DIR = ${DIRNAME}" 
+            echo "    Making local folder '${DIRNAME}'"
+            mkdir -p "${DIRNAME}"     # Create folder 
+            echo "    $?"
+            LOCAL="${TEMP_FILE_LOCATION}${var}"  # don't add "/" , because absolute path starts with "/" 
+            REMOTE="${var}" 
+        else 
+        
+            # Relative file name
+            echo '    IS RELATIVE FILE PATH'
+            LOCAL="${TEMP_FILE_LOCATION}/${var}"
+            DIRNAME=$(dirname "${LOCAL}")
+            echo "    Making local folder '${DIRNAME}' "
+            mkdir -p "${DIRNAME}"
+            echo "    $?"
+            REMOTE="${SERVER_BASE_PATH}/${var}" 
+        fi
+        
+        # Transfer
+        echo "    SSH TRANSFER :  '${REMOTE}'  > '${LOCAL}'"
+        ssh -T "$SERVER" $SSH_OPTIONS  "cat '${REMOTE}'" > "${LOCAL}"
+        echo "    $?"
+        
+        #echo ' '
+        
+        # Return through variable
+        ABSOLUTE_FILE_LOCATIONS="${ABSOLUTE_FILE_LOCATIONS} \"${LOCAL}\""  # Concatenate all absolute paths
+        
+        #echo "    ABSOLUTE_FILE_LOCATIONS from ssh-get-merge-files with arguments = \"${LOCAL}\"" >> "$MERGE_LOG"
+    done
+ 
+}
+
+
+
+# CODE
+
+echo 'ENTER ssh-get-merge-files'
+
+# Prepare temp storage
+mkdir -p "${TEMP_FILE_LOCATION}" > /dev/null            # Make sure folder exists
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+
+echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$MERGE_LOG"
+
+# Get files from ssh folder
+FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
+echo "    FILE_LOCATIONS = ${FILE_LOCATIONS}"
+eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
+echo "    ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
+
+# Run pragma-merge locally
+command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
+echo "    Call $command" >> "$MERGE_LOG"
+echo " " >> "$MERGE_LOG"
+eval $command
+
+
+echo 'EXIT ssh-get-merge-files'
+
+exit $?  # Return error code from ssh

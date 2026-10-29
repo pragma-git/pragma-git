@@ -1,0 +1,111 @@
+name: Automated Non-GUI Tests
+
+on:
+  push:
+    branches: [ develop, master, feature/** ]
+  pull_request:
+    branches: [ develop, master ]
+
+env:
+  FORCE_COLOR: '1'
+  TERM: 'xterm-256color'
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Configure Git Line Endings (Windows)
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 || \
+            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11)
+          sudo systemctl start ssh
+
+      - name: Set up WSL (Windows)
+        if: runner.os == 'Windows'
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-22.04
+          use-cache: true
+          additional-packages: |
+            openssh-server
+            git
+            curl
+
+      - name: Configure Localhost SSH
+        run: |
+          mkdir -p ~/.ssh ~/.Pragma-git/.tmp /tmp/pragma-git-ssh-folders
+          chmod 700 ~/.ssh
+          ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
+          cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          cat << 'EOF' > ~/.ssh/config
+          Host localhost 127.0.0.1
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            sudo systemsetup -setremotelogin on 2>/dev/null || true
+          fi
+
+      - name: Configure WSL OpenSSH Service (Linux SSH Target)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Stop-Service sshd -ErrorAction SilentlyContinue
+          Set-Service -Name sshd -StartupType Disabled -ErrorAction SilentlyContinue
+          $drive = $PWD.Drive.Name.ToLower()
+          $rest = $PWD.Path.Substring(2).Replace('\', '/')
+          $wslRepo = "/mnt/$drive$rest"
+          wsl bash "$wslRepo/automated-tests/setup_wsl_ssh.sh" $env:USERNAME
+          Start-Process wsl -ArgumentList "sleep","infinity" -WindowStyle Hidden
+
+      - name: Configure Git Author
+        run: |
+          git config --global user.name "Pragma-git CI"
+          git config --global user.email "ci@pragma-git.local"
+
+      - name: Install NPM Dependencies
+        run: npm install
+
+      - name: Run Automated Test Suites (macOS)
+        if: runner.os == 'macOS'
+        run: npm test -- -v
+
+      - name: Run Automated Test Suites (Linux with D-Bus)
+        if: runner.os == 'Linux'
+        run: |
+          eval $(dbus-launch --sh-syntax)
+          echo "" | gnome-keyring-daemon --unlock || true
+          npm test -- -v
+
+      - name: Run Automated Test Suites (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          wsl -u root service ssh restart || true
+          bash ./_run_tests -v

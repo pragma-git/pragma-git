@@ -1,0 +1,217 @@
+#!/bin/bash
+# _run_tests - Git provider REST API mapping test runner for Pragma-git
+#
+# Usage:
+#   _run_tests [OPTIONS]
+#
+# Description:
+#   Runs automated tests for GitHub, GitLab, Bitbucket, and Gitea provider classes
+#   in apis_github_and_others, verifying git-to-API URL conversions, credential
+#   sanitization, and provider initialization.
+#
+# Options:
+#   -h, --help       Show this help text and exit
+#   -v, --verbose    Show detailed live output from each test
+#
+# Examples:
+#   ./_run_tests                  Run all APIs tests (concise mode)
+#   ./_run_tests -v               Run all APIs tests with live verbose output
+#
+## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
+
+# ==============================================================================
+# CI STATUS TEST REFERENCE (Live vs. Mocked)
+# ==============================================================================
+#
+# 1. LIVE TESTS (Zero Mocking) -- test_05_live_ci_status.js
+#    Makes real HTTPS requests against public repos without requiring GitLab or
+#    Bitbucket tokens (and with automatic unauthenticated fallback for GitHub).
+#
+#    Test | Provider & Endpoint                                       | Public Repo             | Success Commit Hash                        | Failure Commit Hash                        | Mocked?
+#    -----+-----------------------------------------------------------+-------------------------+--------------------------------------------+--------------------------------------------+--------
+#    5.1  | DNS connectivity check                                    | gitlab.com              | --                                         | --                                         | No
+#    5.2  | GitHub Check Runs API (/commits/SHA/check-runs)           | pragma-git/pragma-git   | 11f50c6fa77d76c80ae9f493d6e3c9ee1abff68a   | cbccde8611342a8c78fb9c8bc0a3c09dc713f035   | No
+#    5.3  | GitLab Modern Pipelines API (encoded project path)        | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No
+#    5.4  | GitLab Modern Pipelines API (by numeric project ID 13083) | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No
+#    5.5  | GitLab Web pipelines.json (/-/commit/SHA/pipelines.json)  | gitlab-org/gitlab-foss  | d7b9a6176ab4e279465ba3ee09922cde2b74de47   | 4d25d51356d8d855381ab9ab90b56cb63a338075   | No (ci-status-web)
+#    5.6  | GitLab SVG Badge (/badges/master/pipeline.svg)            | gitlab-org/gitlab-foss  | Live master branch status                  | --                                         | No (ci-status-badge)
+#    5.7  | Bitbucket Commit Statuses API (/commit/SHA/statuses)      | atlassian/aui           | 592af90b018b2d35fac96129e5fbeec1ed826fe2   | e99b3d8eb588e253c562b7c4014a97cd3d8b3301   | No (+ dfeff30e for none)
+#    5.8  | GitLab External CI Statuses via Modern Pipelines API      | inkscape/inkscape       | 7935678476697f9ccc6a6b7881e9430d27e5a184   | 000dddd8d3bd7eb08ec9916d456acb61313e80c0   | No (source: external)
+#    5.9  | Live self-hosted auto-detection (no provider name in URL) | code.videolan.org (GL)  | Auto-detects GitLab via /api/v4/version    | --                                         | No (new GeneralApi)
+#         |                                                           | gits-15.sys.kth.se (GH) | Auto-detects GitHub via /api/v3/meta       | --                                         | No (new GeneralApi)
+#         |                                                           | git.ecmwf.int (BB)      | Auto-detects Bitbucket via /status         | --                                         | No (new GeneralApi)
+#         |                                                           | opendev.org (GT)        | Auto-detects Gitea via /api/v1/version     | --                                         | No (new GeneralApi)
+#    5.10 | Gitea Combined Status API (/commits/SHA/status)           | gitea/tea               | 2727270931cad7b28189dd155eaad706d29705e0   | dfe89dfb6bf22dcbd2a6203bef8aa262e65ea085   | No (+ 4233ebcb for none)
+#
+# 2. MOCKED UNIT TESTS (Offline) -- test_04_ci_status.js & app_function_calls/test_03_ci_cache.js
+#    Runs offline (<1s) to verify status mapping, fallback chaining when an API
+#    is down (simulated 503), and stale-while-revalidate cache updates.
+#
+#    Test          | Provider             | What is Tested                                                         | How the Mock is Done
+#    --------------+----------------------+------------------------------------------------------------------------+-------------------------------------------------------------------------
+#    test_04 #1    | All 3 providers      | Missing/empty SHA returns { status: 'none', url: null }                | No mock needed (returns before any network call).
+#    test_04 #2    | GitHub               | Commit Status API (/status) & Check Runs API (/check-runs) pass/fail   | Stubs gh.fetchWithApi to return canned JSON by SHA in URL.
+#    test_04 #3    | Bitbucket            | Commit statuses SUCCESSFUL, FAILED, and empty [] -> none               | Stubs bb.fetchWithApi to return canned { values: [...] } per SHA.
+#    test_04 #4    | GitLab               | Status mapping (success/warnings/failed/canceled/running/skipped)      | Stubs glModern.fetchWithApi with 2 pipelines (newest first must win).
+#    test_04 #5    | GitLab               | URL construction: encoded path vs. numeric project ID                  | Records exact URL passed to glModern.fetchWithApi.
+#    test_04 #6    | GitLab               | Private repo token forwarding (PRIVATE-TOKEN header)                   | Captures options.headers passed into glPrivate.fetchWithApi.
+#    test_04 #7    | GitLab               | Fallback from REST API (503) -> web pipelines.json                     | fetchWithApi returns 503; global.fetch returns canned JSON Response.
+#    test_04 #8    | GitLab               | Fallback from REST API (503) -> web (HTML) -> SVG badge                | fetchWithApi returns 503; global.fetch returns HTML + canned SVG text.
+#    test_04 #9    | GitLab               | Throws error when API, web, and badge sources all fail                 | fetchWithApi returns 503; global.fetch returns HTML; no branch given.
+#    test_04 #10   | Gitea                | Combined status relative URL resolution, pass/fail, and total_count=0  | Stubs gt.fetchWithApi to return canned Gitea status JSON per SHA.
+#    test_03 #1-10 | app.js CI Cache      | Disk/memory cache, short SHA, badge DOM, stale-while-revalidate rerun  | Runs app.js functions in Node vm with temp ci_cache.json & stub provider.
+# ==============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+source "$REPO_ROOT/automated-tests/test_setup.sh"
+
+VERBOSE=false
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help|'/?')
+            sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'
+            exit 0
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            export VERBOSE=true
+            ;;
+    esac
+done
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}${CYAN}      Pragma-git Automated Tests: Git Provider APIs (Non-GUI)${NORMAL}"
+echo "${BOLD}======================================================================${NORMAL}"
+echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
+function print_suite_description() {
+    local file="$1"
+    case "$file" in
+        test_01_provider_url_translation.js)
+            echo "   Tests provider classes (GitHub, GitLab, Bitbucket, Gitea) translating git URLs to REST APIs."
+            echo "   Verifies automatic stripping of credentials from REST endpoints and slug parsing."
+            ;;
+        test_02_live_provider_query.js)
+            echo "   Checks network connectivity, then tests live public queries against GitHub, Bitbucket, & Gitea."
+            echo "   Verifies git ls-remote over HTTPS against official repos (GitHub, GitLab, Bitbucket, Gitea)."
+            ;;
+        test_03_provider_classes.js)
+            echo "   Tests provider class instantiation and static getters across GitHub, GitLab, Bitbucket, and Gitea."
+            echo "   Verifies General_git_rest_api base methods and provider-specific icon and username extraction."
+            ;;
+        test_04_ci_status.js)
+            echo "   Tests commit CI status extraction across GitHub, GitLab, Bitbucket, and Gitea provider classes."
+            echo "   Verifies status normalization (success, failure, pending, none) and build target URLs."
+            ;;
+        test_05_live_ci_status.js)
+            echo "   Live CI status for known success/failure commits on GitHub, GitLab, Bitbucket, and Gitea."
+            echo "   Covers GitLab Pipelines API, web pipelines.json, and SVG badge fallbacks without tokens."
+            ;;
+    esac
+}
+
+echo "Test dir  : $SCRIPT_DIR"
+echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+[ "$VERBOSE" = true ] && echo "Verbosity : Detailed (-v)"
+echo ""
+
+START_TIME=$(date +%s)
+TOTAL_TESTS=0
+PASSED_TESTS=0
+FAILED_TESTS=0
+
+export NODE_PATH="$REPO_ROOT"
+TEST_FILES=($(find "$SCRIPT_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
+NUM_TESTS=${#TEST_FILES[@]}
+
+CATEGORY_NAME=$(basename "$SCRIPT_DIR")
+
+for test_path in "${TEST_FILES[@]}"; do
+    test_name=$(basename "$test_path")
+    suite_title="${CATEGORY_NAME}/${test_name}"
+    ((TOTAL_TESTS++))
+
+    if [ "$VERBOSE" = true ]; then
+        echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
+        echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${suite_title}${NORMAL}"
+        print_suite_description "$test_name"
+        echo ""
+
+        TMP_OUT=$(mktemp)
+        if [[ "$test_path" == *.js ]]; then
+            node "$test_path" 2>&1 | tee "$TMP_OUT"
+        else
+            bash "$test_path" 2>&1 | tee "$TMP_OUT"
+        fi
+        exit_code=${PIPESTATUS[0]}
+        OUTPUT=$(cat "$TMP_OUT")
+        rm -f "$TMP_OUT"
+
+        if [ $exit_code -eq 0 ]; then
+            ((PASSED_TESTS++))
+            echo "${GREEN}${BOLD}>> Result: SUITE PASSED [OK]${NORMAL}"
+        else
+            ((FAILED_TESTS++))
+            echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
+        fi
+        echo ""
+    else
+        printf ">> [%d/%d] %-46s " "$TOTAL_TESTS" "$NUM_TESTS" "$suite_title"
+
+        if [[ "$test_path" == *.js ]]; then
+            OUTPUT=$(node "$test_path" 2>&1)
+        else
+            OUTPUT=$(bash "$test_path" 2>&1)
+        fi
+        exit_code=$?
+
+        pass_count=$(echo "$OUTPUT" | grep -c '\[PASS\]')
+        fail_count=$(echo "$OUTPUT" | grep -c '\[FAIL\]')
+        total_count=$((pass_count + fail_count))
+
+        if [ $exit_code -eq 0 ]; then
+            ((PASSED_TESTS++))
+            echo "${GREEN}[OK]${NORMAL} (${pass_count}/${total_count} passed)"
+        else
+            ((FAILED_TESTS++))
+            echo "${RED}[FAILED]${NORMAL} (${pass_count}/${total_count} passed, ${fail_count} failed)"
+            echo ""
+            echo "${RED}${BOLD}--- Failure Output for ${test_name} ---${NORMAL}"
+            echo "$OUTPUT"
+            echo "${RED}${BOLD}----------------------------------------${NORMAL}"
+            echo ""
+            record_failed_test "$suite_title" "$OUTPUT" "$exit_code"
+        fi
+    fi
+done
+
+[ "$VERBOSE" = false ] && echo ""
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}APIs Test Summary:${NORMAL}"
+echo "  Suites run:    $TOTAL_TESTS"
+echo "  Suites passed: ${GREEN}$PASSED_TESTS/$TOTAL_TESTS passed${NORMAL}"
+if [ $FAILED_TESTS -gt 0 ]; then
+    echo "  Suites failed: ${RED}$FAILED_TESTS${NORMAL}"
+else
+    echo "  Suites failed: $FAILED_TESTS"
+fi
+echo "  Duration:      ${DURATION}s"
+echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -gt 0 ]; then
+    print_failed_tests_summary "Failed Tests in ${CATEGORY_NAME}"
+fi
+
+if [ $FAILED_TESTS -eq 0 ] && [ $TOTAL_TESTS -gt 0 ]; then
+    echo "${GREEN}${BOLD}ALL APIS TESTS PASSED!${NORMAL}"
+    exit 0
+else
+    echo "${RED}${BOLD}SOME APIS TESTS FAILED!${NORMAL}"
+    exit 1
+fi

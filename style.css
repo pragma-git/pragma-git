@@ -101,8 +101,8 @@ div#inner-content {
 
 #edit_commit_text_div, #amend_commit_div{
   position: absolute;
-  bottom: 5;
-  right: 5;
+  bottom: 5px;
+  right: 5px;
   visibility: hidden; 
 }
 #edit_message_button, #amend_button{
@@ -161,7 +161,8 @@ div#inner-content {
   top: 0px;
   width: 100%;
   height: 28px;
-  background-color: #7a7c7c;
+  background-color: var(--titlebar-background);
+  color: var(--titlebar-text);
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
@@ -172,12 +173,21 @@ div#inner-content {
   bottom: 0px;
   width: 100%;
   height: 28px;
-  background-color: #7a7c7c;
+  background-color: var(--titlebar-background);
+  color: var(--titlebar-text);
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
 
-.top-titlebar-notes-icon, .top-titlebar-pinned-icon, .bottom-titlebar-more-icon{
+.top-titlebar-notes-icon {
+  display: inline;
+  vertical-align: middle;
+  position: relative;
+  margin-left: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-pinned-icon, .bottom-titlebar-more-icon{
   display:inline;
   vertical-align:middle;
   position: relative;
@@ -200,6 +210,17 @@ div#inner-content {
   -webkit-app-region: no-drag;
 }
 
+.top-titlebar img,
+.bottom-titlebar img {
+  filter: var(--titlebar-icon-filter);
+  transition: filter 0.1s ease;
+}
+
+.top-titlebar img:hover,
+.bottom-titlebar img:hover {
+  filter: var(--titlebar-icon-hover-filter);
+}
+
 .bottom-titlebar-text {
   position: absolute;
   left: 56px;
@@ -208,14 +229,14 @@ div#inner-content {
   margin-bottom: 6px;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
 }
 
 .bottom-titlebar-stash_pop-icon
  {
   position: absolute;
-  right: 80;
+  right: 80px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -227,7 +248,7 @@ div#inner-content {
  {
   FONT-WEIGHT: 200;
   position: absolute;
-  right: 115;
+  right: 115px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -238,7 +259,7 @@ div#inner-content {
 .bottom-titlebar-revert-icon
  {
   position: absolute;
-  right: 175;
+  right: 175px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -249,7 +270,7 @@ div#inner-content {
 .bottom-titlebar-cherry-pick-icon
  {
   position: absolute;
-  right: 150;
+  right: 150px;
   width: auto;
   height: 17px;
   margin-top: 6px;
@@ -264,7 +285,7 @@ div#inner-content {
   margin-bottom: 6px;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   text-align: left
 }
 
@@ -273,7 +294,7 @@ div#inner-content {
   font-size: 10pt;
   position: relative;
   display:inline-block;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
 }
 
@@ -284,12 +305,95 @@ div#inner-content {
   display:inline-block;
   font-family: Arial;
   font-size: 11pt;
-  color: #ffffff;
+  color: var(--titlebar-text);
   -webkit-app-region: no-drag;
+}
+
+.link-text-hover:hover {
+  color: var(--titlebar-hover-text);
+  cursor: pointer;
 }
 
 .top-titlebar-branch-text{
     font-style: italic;
+}
+
+.top-titlebar-ci-placeholder {
+  visibility: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  width: 36px;
+  height: 19px;
+  margin-left: 5px;
+  margin-right: 10px;
+  text-align: center;
+  line-height: 19px;
+  position: relative;
+  top: 1.5px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-ci-badge {
+  display: none;
+  position: relative;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  padding: 0;
+  border: none;
+  background: transparent;
+  line-height: 0;
+  color: #ffffff;
+  transition: opacity 0.15s;
+}
+
+.top-titlebar-ci-badge svg {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.top-titlebar-ci-badge svg rect,
+.top-titlebar-ci-badge svg path {
+  fill: currentColor;
+  fill-opacity: 0.08;
+  stroke: currentColor;
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+  transition: stroke-opacity 0.15s, fill-opacity 0.15s;
+}
+
+.top-titlebar-ci-badge svg text {
+  fill: currentColor;
+  transition: fill 0.15s;
+}
+
+.top-titlebar-ci-badge:hover svg rect,
+.top-titlebar-ci-badge:hover svg path {
+  fill-opacity: 0.16;
+  stroke-opacity: 0.9;
+}
+
+.top-titlebar-ci-failure {
+  opacity: 0.9;
+}
+
+.top-titlebar-ci-failure:hover {
+  opacity: 1;
+}
+
+.top-titlebar-ci-failure:hover svg path {
+  stroke-opacity: 0.95;
+  fill-opacity: 0.18;
+}
+
+/* Light & dark mode theme support */
+body.light .top-titlebar-ci-badge {
+  color: var(--titlebar-text);
+}
+
+body.dark .top-titlebar-ci-badge {
+  color: var(--titlebar-text);
 }
 
 .top-titlebar-tag-icon
@@ -382,7 +486,7 @@ div#inner-content {
   top: 27px;
   width: 100%;
   height: 1px;
-  background-color: #2a2c2c;
+  background-color: var(--titlebar-divider);
 }
 
 .bottom-titlebar-divider {
@@ -391,7 +495,7 @@ div#inner-content {
   bottom: 27px;
   width: 100%;
   height: 1px;
-  background-color: #2a2c2c;
+  background-color: var(--titlebar-divider);
 }
 
 dialog{

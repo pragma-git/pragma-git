@@ -1,4 +1,25 @@
-#!/bin/bash
+#!/bin/bash#
+#
+# build
+# =====
+# 
+# Build Pragma-git installers
+#
+# Typically run without extra flag.
+#
+# ./build           # Builds for Mac, Win, Linux.  Makes dmg files for MacOS (but not pkg)
+# ./build --pkg     # Builds for Mac, Win, Linux.  Makes dmg files AND pkg installers for MacOS
+#
+# Comment : I believe that dmg files will be the way forward for MacOS installers
+#
+
+## Help -- print file header until '##', ignore first row, remove leading '# '
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then sed '1d; /^##/q; /^\s*$/d; s/^#//g; s/^ //g' $0 | sed '$d'; exit 0; fi 
+## End Help
+
+# App signing and notarization
+DEV_ID_CERT="Developer ID Application: HAKAN JAN ERIK AXELSSON (BV7CXXA5MP)"
+KEY_CHAIN_PROFILE="jans-notary-profile"
 
 # Some good input from https://github.com/Aluxian/nwjs-starter
 
@@ -8,30 +29,31 @@
 # REQUIREMENTS
 #
 
-# Install nwjs-pheonix-builder
+# Install nw-builder
 
  1) cd ~/Documents/Projects/Pragma-git/pragma-git >
- 2) npm install nwjs-builder-phoenix --save-dev
- 3) cd node_modules/nwjs-builder-phoenix; npm install
+ 2) npm install nw-builder --save-dev
+ # SKIP? # 3) cd node_modules/nw-builder; npm install
 
 
-# Prerequisits nwjs-phoenix-builder
+# Prerequisits nw-builder
 
  4) brew cask install wine-stable --no-quarantine
- 5) # download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  
+ 
+ # SKIP ? # 5) # download rcedit-64.exe (https://github.com/electron/rcedit/releases)  => Hämtade Filer.  
     # Flytta till /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe
     chmod a+x /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe
     # Högerklicka Öppna efter nedladdning för att tillåta.
 
- 6) rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe  \
-    ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
+ # SKIP ? # 6) rm /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe  \
+ # SKIP ? #   ln -s /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-win/rcedit-x64.exe /Users/jan/Documents/Projects/Pragma-git/pragma-git/node_modules/rcedit/bin/rcedit.exe
 
 
-# To create installers
+# Prerequisits to create installers
 
  7) brew install makensis # For making windows installer
  8) brew install create-dmg # For creating mac installer
- 9) sudo gem install fpm # For linux .deb creation
+ 9) gem install fpm # For linux .deb creation
     run later version : /usr/local/lib/ruby/gems/3.0.0/gems/fpm-1.12.0/bin/fpm  instead of  fpm
  10) brew install gnu-tar # (tar for macos, for fpm)
  11) brew install rpm
@@ -50,37 +72,28 @@
 
 -  # no windows icons.   5) or 6) above 
 
--  # If install files becomes very large -- then the problem is that  ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches is included in install.
-   # Solution: softlink ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches -> 
-   rm -rf ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
-   ln -s  /Users/jan/Downloads/caches-nwjs-builder-phoenix ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder-phoenix/caches
-   
+# OLD
+-  # If install files becomes very large -- then the problem is that  ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder/caches is included in install.
+   # Solution: softlink ~/Documents/Projects/Pragma-git/Pragma-git/node_modules/nwjs-builder/caches -> 
+    rm -rf ~/Documents/Projects/Pragma-git/node_modules/nw-builder/cache
+    ln -s  ~/Downloads/caches-nw-builder ~/Documents/Projects/Pragma-git/node_modules/nw-builder/cache
    
 -  # Not allowed to run rcedit.exe 
    # On Mac, go to "System Settings/Security and Privacy/General" and click "Allow" button.  (Then restart build)
 
 ////
 
-    #
-    # CONSTANTS
-    #
-    
-    CACHE_DESTINATION='/Users/jan/Downloads/caches-nwjs-builder-phoenix'
-      
-    
-    # MACOS ARM RELEASE (downloaded to "/Users/jan/Downloads/caches-nwjs-builder-phoenix")
-    # NWJS_ARM_NAME='nwjs-sdk-v0.83.0-osx-arm64'  # UPDATE NAME HERE  (Download from  https://nwjs.io/downloads/)
-    
-
 
     #
     # START OF SCRIPT
     #
+    
+    LC_ALL=C.UTF-8 LANG=C.UTF-8
 
 
     # Declare formatting function (return "[OK] - " or "[XX] - ")
     
-    formatReturn () {
+    function formatReturn () {
         inCode=$1
         echo -n '['
         
@@ -88,7 +101,7 @@
             tput setaf 2  # Green
             echo -n "OK"
             tput sgr0  
-            echo -n ']   - '
+            echo -n '] - '
         else
             tput setaf 1  # Red
             echo -n "XX"
@@ -126,29 +139,8 @@
     
 	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/
     npm install
-
-    tput setaf $COLOR; echo ' '
-    echo '=================================='
-    echo 'INSTALLING FROM merge/package.json'
-    echo '=================================='
-    tput sgr0
-    
-	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/merge
-    npm install
-    
-
-    tput setaf $COLOR; echo ' '
-    echo '=================================='
-    echo 'INSTALLING FROM askpass/package.json'
-    echo '=================================='
-    tput sgr0
-    
-	cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/askpass
-    npm install
-    
     
      
-
     tput setaf $COLOR; echo ' '
     echo '=================================='
     echo 'FIX rcedit-x64'
@@ -189,221 +181,226 @@
 #
     tput setaf $COLOR; echo ' '
     echo '=============================='
-    echo 'BUILDING FOR ALL x86 PLATFORMS'
+    echo 'BUILDING FOR ALL PLATFORMS'
     echo '=============================='
     tput sgr0
     
-    cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries
-
-
-    # Build All platforms
-    BUILD_EXIT=0;
-    ~/Documents/Projects/Pragma-git/pragma-git/node_modules/.bin/build \
-    --tasks win-x64,linux-x64,mac-x64 \
-    --mirror https://dl.nwjs.io/  \
-    --name Pragma-git  \
-    --concurrent true  \
-    ~/Documents/Projects/Pragma-git/pragma-git \
-    || BUILD_EXIT=$?
-
-    #Options :
-    # https://github.com/evshiron/nwjs-builder-phoenix/blob/master/docs/Options.md
+    BUILD_EXIT=0
     
-        
-    # Make pragma-merge and pragma-askpass executable
+    cd /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries   # Work from here
+    
+    # Using nw-builder instead :
+    DIST='../../dist'
+    TEMPDIR="${DIST}/temp_pragma_git"
+    CACHEDIR='/Users/jan/Downloads/caches-nwjs'
+    
+    # Copy everything to temp folder (except .git)
+    echo 'Copy from pragma-git repo, exclude .git'
+    rsync -a  '/Users/jan/Documents/Projects/Pragma-git/pragma-git/' "${TEMPDIR}" --exclude='.git*' 
+    
+    # Build for platforms
+    node ./scripts/nwbuild_script.mjs # Build for all platforms and architectures
+
+
+    # Make pragma-merge and pragma-askpass executables
     echo ' '
-    echo 'Make "pragma-merge" executable'
+    echo 'Set "pragma-merge" executable bit'
     chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-merge" || BUILD_EXIT=$?
     
-    echo 'Make "pragma-askpass" executable'
+    echo 'Set "pragma-askpass" executable bit'
     chmod a+x "../dist/$(ls -1 ../dist/|grep 'mac-x64')/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass" || BUILD_EXIT=$?
 
     echo ' '
     echo $(formatReturn $BUILD_EXIT) Building
 #
-# Build Mac installer
+# Build Mac installer Intel
 #
     tput setaf $COLOR; echo ' '
-    echo '============================'
-    echo 'INSTALLER MACOS 64-BIT INTEL'
-    echo '============================'
+    echo '=================================='
+    echo 'INSTALLER MACOS 64-BIT INTEL (DMG)'
+    echo '=================================='
     tput sgr0
     
     MAC_EXIT=0
 
 
     # Copy .app to temporary folder (keep original, to use for apple silicon)
-    mkdir ../dist/temp-macos
     DIR=$(ls -1 ../dist/|grep  'mac-x64')
-    cp -R "../dist/$DIR/Pragma-git.app" ../dist/temp-macos
-    echo "$DIR.dmg" 
+    NAME="$DIR.dmg"
+    echo "$NAME" 
     
     # About dialog -- edit plist
-    plist=../dist/temp-macos/Pragma-git.app/Contents/Info.plist
-    
+    plist="../dist/$DIR/Pragma-git.app/Contents/Info.plist"
     CFBundleVersion=$(git rev-parse --short HEAD) || MAC_EXIT=$?  # Hash as build version (version n.n.n is taken from package.json)
     plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist || MAC_EXIT=$?
 
     
     # Make installer in destination folder (dist/mac) 
-    mkdir ../dist/mac
-    cd ../dist/mac
-
-     
-    # Make .dmg in ../dist/temp-macos
-    test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
-    create-dmg \
-      --volname "Mac-Pragma-git-Installer" \
-      --volicon "../../Pragma-git/images/icon_installer.icns" \
-      --window-pos 200 120 \
-      --window-size 500 520 \
-      --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
-      --icon-size 80 \
-      --icon "Pragma-git.app"  125 175 \
-      --hide-extension "Pragma-git.app" \
-      --app-drop-link 375 175 \
-      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      --icon ".fseventsd"  1000 190 \
-      --icon ".VolumeIcon.icns"  1000 190 \
-      "$(echo "$DIR.dmg")" \
-      "../temp-macos/" \
-    || MAC_EXIT=$?
+    mkdir "../dist/mac"
+    cd "../dist/mac"
     
+    # Make sure that only Pragma-git.app is packaged
+    STAGING_MAC="../staging_mac"
+    rm -rf "$STAGING_MAC"
+    mkdir "$STAGING_MAC/"
+    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"   
+    
+    # Make signed DMG
+    /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh  "$STAGING_MAC"  "$DEV_ID_CERT" "$KEY_CHAIN_PROFILE" "$NAME"
+    BITMASK_RESULT=$?
+    
+    # Decipher the bitmask using bitwise AND operations
+    # We want 0 for success (OK) and 1 for failure (FAIL) to match your formatReturn requirements
+    
+    # Check Bit 1 (Value 1): Build status
+    if [ $((BITMASK_RESULT & 1)) -eq 1 ]; then MAC_EXIT=0; else MAC_EXIT=1; fi
+    
+    # Check Bit 2 (Value 2): Sign status
+    if [ $((BITMASK_RESULT & 2)) -eq 2 ]; then MAC_SIGN=0; else MAC_SIGN=1; fi
+    
+    # Check Bit 3 (Value 4): Notary status
+    if [ $((BITMASK_RESULT & 4)) -eq 4 ]; then MAC_NOTARY=0; else MAC_NOTARY=1; fi
 
+
+    # Print out the status rows using your custom function
+    echo "$(formatReturn $MAC_EXIT) Creating Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_SIGN) Code signing Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_NOTARY) Notarizing and validating Mac installer (intel)"
+
+    cp "$NAME" "Pragma-git-mac-x64.dmg" 2>/dev/null
+
+
+        
     # Clean up 
     cd -
-    mv ../dist/temp-macos/Pragma-git.app "../dist/$DIR/"
-
-    pwd
     
-    echo ' '
-    echo $(formatReturn $MAC_EXIT) Creating Mac installer
-    
-    
-    
-#
-# Build for Apple silicon, and make installer
-#    
-    
-    tput setaf $COLOR; echo ' '
-    echo '============================='
-    echo 'RE-BUILDING FOR APPLE SILICON'
-    echo '============================='
-    tput sgr0
-    
-    #
-    # Download ARM build for MacOS (works for nwjs > 0.78.0)
-    #
-  
-    
-    # Get version from package.json, and Download Macos arm64
-    nwVersion=$( cat ../package.json | grep nwVersion | cut -d\" -f 4)
-
-    NWJS_ARM_NAME="nwjs-sdk-${nwVersion}-osx-arm64"
-    CACHE_NWJS_ARM="$CACHE_DESTINATION/$NWJS_ARM_NAME"  # Folder name
-
-    
-    # Download and unzip
-    if [ ! -d "$CACHE_NWJS_ARM" ]; then
-        echo "Downloading ARM version = $NWJS_ARM_NAME"
+ 
+    # Only if "--pkg" flag
+    if [[ "$1" == "--pkg" ]]; then
+        cd -  # Undo last cd -
         
-        URL="https://dl.nwjs.io/${nwVersion}/${NWJS_ARM_NAME}.zip"   # Download from  https://nwjs.io/downloads/
-        echo "               from URL = $URL"
-
-        # Download
-        (cd "$CACHE_DESTINATION" && curl -O "$URL")
+        tput setaf $COLOR; echo ' '
+        echo '=================================='
+        echo 'INSTALLER MACOS 64-BIT INTEL (PKG)'
+        echo '=================================='
+        tput sgr0
         
-        # Unzip
-        echo "Unzipping  ${NWJS_ARM_NAME}.zip  to  $CACHE_DESTINATION"
-        (cd "$CACHE_DESTINATION" && unzip "${NWJS_ARM_NAME}.zip")
+        MAC_EXIT_PKG=0    
+            
+        
+        # Make pkg installer
+        pwd 
+        export OS='mac-x64'
+        DIR=$(ls -1 ../ |grep  $OS)
+        VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+        export STAGING_MAC
+        export IDENT="io.github.pragma-git"
+        export VERSION="$VERSION"
+        export WORK="$PWD/../build_pkg"
+        bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+        || MAC_EXIT_PKG=$?
+        
+        # Clean up 
+        cd -
+        
+        echo ' '
+        echo $(formatReturn $MAC_EXIT_PKG) "Creating Mac PKG installer (intel)"
+        
     fi
     
-    
-    # 
+#
+# Build Mac installer Arm
+#    
  
-    #
-    # Use ARM build, and copy files from MacOS-build 
-    #  
+    tput setaf $COLOR; echo ' '
+    echo '================================'
+    echo 'INSTALLER MACOS 64-BIT ARM (DMG)'
+    echo '================================'
+    tput sgr0
     
-    # Location of arm nwjs.app  
-    NWJS_ARM="$CACHE_NWJS_ARM/nwjs.app"   # NWJS_ARM="/Users/jan/Downloads/caches-nwjs-builder-phoenix/$NWJS_ARM_NAME/nwjs.app" 
+    MAC_EXIT_ARM=0
+
+    # Copy .app to temporary folder (keep original, to use for apple silicon)
+    DIR=$(ls -1 ../dist/|grep  'mac-arm64')
+    NAME="$DIR.dmg"
+    echo "$NAME" 
+
+    # About dialog -- edit plist
+    plist="../dist/$DIR/Pragma-git.app/Contents/Info.plist"
+    CFBundleVersion=$(git rev-parse --short HEAD) || MAC_EXIT=$?  # Hash as build version (version n.n.n is taken from package.json)
+    plutil -replace CFBundleVersion -string "$CFBundleVersion" $plist || MAC_EXIT=$?
     
-    xattr -c "$NWJS_ARM"
+    
+    # Make installer in destination folder (dist/mac) 
+    mkdir "../dist/mac_arm64"
+    cd "../dist/mac_arm64"
+
+    # Make sure that only Pragma-git.app is packaged
+    STAGING_MAC="../staging_mac_arm64"
+    rm -rf "$STAGING_MAC"
+    mkdir "$STAGING_MAC/"
+    cp -R "../$DIR/Pragma-git.app" "$STAGING_MAC"   
+    
+    # Make signed DMG
+    /Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/scripts/build_dmg.sh  "$STAGING_MAC"  "$DEV_ID_CERT" "$KEY_CHAIN_PROFILE" "$NAME"
+    BITMASK_RESULT=$?
+    
+    # Decipher the bitmask using bitwise AND operations
+    # We want 0 for success (OK) and 1 for failure (FAIL) to match your formatReturn requirements
+    
+    # Check Bit 1 (Value 1): Build status
+    if [ $((BITMASK_RESULT & 1)) -eq 1 ]; then MAC_EXIT_ARM=0; else MAC_EXIT_ARM=1; fi
+    
+    # Check Bit 2 (Value 2): Sign status
+    if [ $((BITMASK_RESULT & 2)) -eq 2 ]; then MAC_SIGN_ARM=0; else MAC_SIGN_ARM=1; fi
+    
+    # Check Bit 3 (Value 4): Notary status
+    if [ $((BITMASK_RESULT & 4)) -eq 4 ]; then MAC_NOTARY_ARM=0; else MAC_NOTARY_ARM=1; fi
 
 
-    # Build apple silicon .app in temporary folder (pick stuff from original x86 app)
-    mkdir ../dist/temp-macos-arm64
+    # Print out the status rows using your custom function
+    echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac DMG installer (apple silicon)"
+    echo "$(formatReturn $MAC_SIGN_ARM) Code signing Mac DMG installer (apple silicon)"
+    echo "$(formatReturn $MAC_NOTARY_ARM) Notarizing and validating Mac installer (apple silicon)"
 
-    # Create folder
-    DIR_x64=$(ls -1 ../dist/|grep  'mac-x64')  # This is the template to pick files from (created for x86 above)
-    DIR=$(echo $DIR_x64 | sed 's/x64/arm64/g')   # New dir replacing x64 with 'arm'
-    mkdir "../dist/$DIR"
-    echo "$DIR.dmg" 
-    
-    
-    # Start with arm distribution -- put into /Pragma-git-x.x.x-mac-arm64 
-    cp -R "$NWJS_ARM" "../dist/$DIR/"
-    
-    # Copy all files from intel to arm distribution 
-    cp -R "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/app.nw" "../dist/$DIR/nwjs.app/Contents/Resources/app.nw"
-    
-    
-    
-    # Modify nwjs distribution -- Copy individual files according to  "https://docs.nwjs.io/en/latest/For%20Users/Package%20and%20Distribute/#mac-os-x" 
-    #    
-  
-        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/app.icns" "../../dist/$DIR/nwjs.app/Contents/Resources/app.icns"
-        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Info.plist" "../dist/$DIR/nwjs.app/Contents/Info.plist" 
-        cp "../dist/$DIR_x64/Pragma-git.app/Contents/Resources/en.lproj/InfoPlist.strings" "../dist/$DIR/nwjs.app/Contents/Resources/en.lproj/InfoPlist.strings" 
-     
-        # Rename inside app
-        mv "../dist/$DIR/nwjs.app/Contents/MacOS/nwjs" "../dist/$DIR/nwjs.app/Contents/MacOS/Pragma-git"
-           
-        # Rename app name
-        mv "../dist/$DIR/nwjs.app" "../dist/$DIR/Pragma-git.app"  # Rename to Pragma-git.app
+    cp "$NAME" "Pragma-git-mac-arm64.dmg" 2>/dev/null
+
+
         
-
-    cp -R "../dist/$DIR/Pragma-git.app" ../dist/temp-macos-arm64
-
-    
-    # Make installer in destination folder (dist/mac_arm64) 
-    mkdir ../dist/mac_arm64
-    cd ../dist/mac_arm64
-        
-    
-    
-    MAC_EXIT_ARM=0   
-   
-     
-    # Make .dmg in ../dist/temp-macos
-    test -f Pragma-git-Installer.dmg && rm Pragma-git-Installer.dmg
-    create-dmg \
-      --volname "Mac-Pragma-git-Installer-arm" \
-      --volicon "../../Pragma-git/images/icon_installer.icns" \
-      --window-pos 200 120 \
-      --window-size 500 520 \
-      --background "../../Pragma-git/make_binaries/assets-mac/dmg_background.png" \
-      --icon-size 80 \
-      --icon "Pragma-git.app"  125 175 \
-      --hide-extension "Pragma-git.app" \
-      --app-drop-link 375 175 \
-      --add-file  "README.txt" "../../Pragma-git/make_binaries/assets-mac/README.txt" 375 335 \
-      --icon ".fseventsd"  1000 190 \
-      --icon ".VolumeIcon.icns"  1000 190 \
-      "$(echo "$DIR.dmg")" \
-      "../temp-macos-arm64/" \
-    || MAC_EXIT_ARM=$?
-    
-
     # Clean up 
     cd -
-    #mv ../dist/temp-macos/Pragma-git.app "../dist/$(ls -1 ../dist/|grep 'mac-x64')/"
-    #rm -r ../dist/temp-macos
+ 
+    # Only if "--pkg" flag
+    if [[ "$1" == "--pkg" ]]; then
+        cd -  # Undo last cd -
     
-    pwd
-    
-    echo ' '
-    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (apple silicon)"
+        tput setaf $COLOR; echo ' '
+        echo '================================'
+        echo 'INSTALLER MACOS 64-BIT ARM (PKG)'
+        echo '================================'
+        tput sgr0
+        
+        MAC_EXIT_PKG_ARM=0    
+            
+        
+        # Make pkg installer
+        pwd 
+        export OS='mac-arm64'
+        DIR=$(ls -1 ../ |grep  $OS)
+        VERSION=$(echo $DIR | cut -d '-' -f 3)  # Pragma-git-0.1.0-mac-arm64 => VERSION='0.1.0'
+        export STAGING_MAC
+        export IDENT="io.github.pragma-git"
+        export VERSION="$VERSION"
+        export WORK="$PWD/../build_pkg"
+        bash ../../pragma-git/make_binaries/scripts/pkg_for_macos_script.bash \
+        || MAC_EXIT_PKG_ARM=$?
+        
+        # Clean up 
+        cd -
+        
+        echo ' '
+        echo $(formatReturn $MAC_EXIT_PKG_ARM) "Creating Mac PKG installer (apple silicon)"
+    fi
 
 # Build Windows installers
 #
@@ -418,14 +415,21 @@
     
     mkdir ../dist/win64
 
-    DIR=$(ls -1 ../dist/|grep  'win-x64')
-    makensis \
-    -DEXEFOLDER=$DIR \
-    -DOUTPUT="win64/$DIR.exe" \
-    -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
-    windows_installer.nsi \
-    || WIN_EXIT=$?
-    
+    DIR=$(ls -1 ../dist/|grep  'win-x64') || WIN_EXIT=$?
+
+    if [ "$WIN_EXIT" -eq 0 ]; then    
+        makensis \
+        -DEXEFOLDER=$DIR \
+        -DOUTPUT="win64/$DIR.exe" \
+        -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
+        assets-win/windows_installer.nsi \
+        || WIN_EXIT=$?
+        
+        cp "win64/$DIR.exe" "win64/Pragma-git-win-x64.exe" 2>/dev/null
+    else
+        echo "Failed because missing 'dist/win-x64' folder"
+    fi
+
     echo ' '
     echo $(formatReturn $WIN_EXIT) Creating Windows installer
 
@@ -442,7 +446,6 @@
     DEB_EXIT=0
     
     cd ~/Documents/Projects/Pragma-git/dist
-    rm linux64/*.deb
     mkdir linux64
     
     
@@ -452,6 +455,7 @@
 
     
     fpm \
+    --log info \
     --input-type dir \
     --output-type deb \
     --name 'pragma-git' \
@@ -470,6 +474,8 @@
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git \
     || DEB_EXIT=$?
+    
+    cp "linux64/$DIR.deb" "linux64/Pragma-git-linux-x64.deb" 2>/dev/null
     
     echo ' '
     echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
@@ -492,8 +498,7 @@
     RPM_EXIT=0
     
     cd ~/Documents/Projects/Pragma-git/dist
-    rm linux64/*.rpm
-    mkdir linux64
+    #mkdir linux64  # Alredady exists
     
     
     DIR=$(ls -1 ../dist/|grep  'linux-x64') # Pragma-git-0.1.0-linux-x64
@@ -503,6 +508,7 @@
     
     # Dependencies are added from problems I had with CentOS7
     fpm \
+    --log info \
     --input-type dir \
     --output-type rpm \
     --name 'pragma-git' \
@@ -522,6 +528,8 @@
     .=/opt/pragma-git \
     || RPM_EXIT=$?
     
+    cp "linux64/$DIR.rpm" "linux64/Pragma-git-linux-x64.rpm" 2>/dev/null
+    
     echo ' '
     echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
     
@@ -531,17 +539,28 @@
  
  
     tput setaf $COLOR; echo ' '
+    echo '==================================== ' 
+    echo 'Verifying node module architechtures '
+    echo '==================================== ' 
+    tput sgr0  
+    
+    NODE_PLATFORM_EXIT=0
+    bash ../pragma-git/make_binaries/scripts/verify_node_platforms.bash . || NODE_PLATFORM_EXIT=$?
+
+ 
+    tput setaf $COLOR; echo ' '
     echo '========================== ' 
     echo 'Clean up temporary folders '
     echo '========================== ' 
     tput sgr0  
      
     # Temporary folders for MacOS builds
-    rm -rf ../dist/temp-macos
-    rm -rf ../dist/temp-macos-arm64
-    rm -rf ../dist/Pragma-git-*
+    rm -rf ../dist/Pragma-git-*/
+    rm -rf temp_pragma_git/  # Created when building apps for all platforms
+    rm -rf staging_mac*/     # Created when building MacOS apps
+    rm -rf build_pkg/        # Created when building MacOS pkg installer
     
-    ls -la ../dist
+    ls -l ../dist/
     
        
 #
@@ -557,12 +576,31 @@
     
     # Output summary
     echo 'Summary : '
-    echo $(formatReturn $BUILD_EXIT) Building Intel versions
-    echo $(formatReturn $MAC_EXIT) Creating Mac installer
-    echo $(formatReturn $MAC_EXIT_ARM) "Creating Mac installer (Apple silicon) $ARM_INFO_TEXT"
-    echo $(formatReturn $WIN_EXIT) Creating Windows installer
-    echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
-    echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
+    echo "$(formatReturn $BUILD_EXIT) Building all platforms"
+    
+    echo "$(formatReturn $NODE_PLATFORM_EXIT) Verifying node compiled code for correct platform"
+    
+    echo "$(formatReturn $MAC_EXIT) Creating Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_SIGN) Code signing Mac DMG installer (intel)"
+    echo "$(formatReturn $MAC_NOTARY) Notarizing and validating Mac installer (intel)"
+    if [[ "$1" == "--pkg" ]]; then
+        echo "$(formatReturn $MAC_EXIT_PKG) Creating Mac PKG installer (intel)"
+    fi
+    
+    echo ' '
+    echo "$(formatReturn $MAC_EXIT_ARM) Creating Mac DMG installer (apple silicon)"
+    echo "$(formatReturn $MAC_SIGN_ARM) Code signing Mac DMG installer (apple silicon)"
+    echo "$(formatReturn $MAC_NOTARY_ARM) Notarizing and validating Mac installer (apple silicon)"
+    if [[ "$1" == "--pkg" ]]; then
+        echo "$(formatReturn $MAC_EXIT_PKG_ARM) Creating Mac PKG installer (Apple silicon)"
+    fi
+    
+    echo ' '
+    echo "$(formatReturn $WIN_EXIT) Creating Windows installer"
+    
+    echo "$(formatReturn $DEB_EXIT) Creating Linux .deb installer"
+    
+    echo "$(formatReturn $RPM_EXIT) Creating Linux .rpm installer"
     echo ' '
 
     

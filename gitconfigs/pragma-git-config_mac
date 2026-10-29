@@ -1,6 +1,9 @@
 [init]
     defaultbranch=main
 
+[mergetool]
+    keepBackup = false
+    
 [mergetool "pragma-git"]
     cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    

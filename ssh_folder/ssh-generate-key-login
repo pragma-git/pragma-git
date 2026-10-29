@@ -1,0 +1,221 @@
+#!/bin/bash
+
+###############################################################################
+#  PURPOSE:
+#    - Generate SSH key if missing
+#    - Detect PQ KEX support (warn at end)
+#    - Use SSH ControlMaster to reuse authentication (ONE PASSWORD)
+#    - Copy & install public key without duplicates
+#
+#  USAGE:
+#       ./ssh-generate-key-login <remote-user> <remote-host> [keyname]
+###############################################################################
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/ssh-functions"  # Standard setup for SSH
+
+
+
+
+# INITIALIZE LOGGING (all echo commands and errors prefixed)
+PRAGMA_LOG="$TMP/pragma-git-log.txt"
+
+# Redirect ALL output (stdout and stderr) to the log
+PID=$$
+PREFIX="($PID) ssh-generate-key-login -- "
+
+exec > >(while IFS= read -r line; do
+    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG"
+done) 2>&1
+
+
+# SCRIPT STARTS
+
+REMOTE_USER="$1"
+REMOTE_HOST="$2"
+KEY_INPUT="${3:-id_ed25519}"
+
+if [[ "$KEY_INPUT" == /* ]]; then
+    KEY_PATH="$KEY_INPUT"
+elif [[ "$KEY_INPUT" == ~* ]]; then
+    KEY_PATH="${KEY_INPUT/#\~/$HOME}"
+else
+    KEY_PATH="$HOME/.ssh/$KEY_INPUT"
+fi
+KEY_PATH="${KEY_PATH%.pub}"
+
+if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
+    echo "Usage: $0 <remote-user> <remote-host> [keyname_or_path]"  
+    exit 1
+fi
+
+
+###############################################################################
+# Setup ASKPASS dialogs (only works if pragma-git is running))
+###############################################################################
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"   # pragma-git/ssh_folder
+
+export SSH_ASKPASS="$SCRIPT_DIR/../pragma-askpass"  # export SSH_ASKPASS="/Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"
+export SSH_ASKPASS_REQUIRE=force
+export DISPLAY=dummy
+
+###############################################################################
+# Generate SSH key pair or derive public key if missing
+###############################################################################
+echo "==> Checking for local SSH key: $KEY_PATH"
+
+if [ -e "$KEY_PATH" ]; then
+    echo "==> Key already exists — not overwriting."
+    if [ ! -f "${KEY_PATH}.pub" ]; then
+        echo "==> Generating missing public key from private key..."
+        ssh-keygen -y -f "$KEY_PATH" > "${KEY_PATH}.pub"
+    fi
+else
+    echo "==> Generating new ED25519 key (no passphrase)…"
+    mkdir -p "$(dirname "$KEY_PATH")"
+    ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
+fi
+
+###############################################################################
+# Prepare ControlMaster session (ONE PASSWORD, ONE FINGERPRINT DIALOG)
+###############################################################################
+CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
+
+echo "==> Opening master SSH connection (one password will be asked)…"
+
+EXIT="$HOME/.Pragma-git/.tmp/exit-pragma-askpass-ssh"
+rm -f "$EXIT"
+
+# Start real master connection (handles fingerprint + password)
+ssh -o ControlMaster=yes \
+    -o ControlPersist=600 \
+    -o ControlPath="$CONTROL_SOCKET" \
+    -N "$REMOTE_USER@$REMOTE_HOST" &
+SSH_PID=$!
+
+# Wait for either:
+#   - SSH finishing authentication
+#   - Askpass writing exit file (CANCEL button in askpass.html)
+while kill -0 "$SSH_PID" 2>/dev/null; do
+
+    if [ -f "$EXIT" ]; then
+        EXITCODE=$(cat "$EXIT")
+
+        if [ "$EXITCODE" != "0" ]; then
+            echo "==> Cancel detected — killing SSH master"
+            kill "$SSH_PID" 2>/dev/null
+            sleep 0.2
+            kill -9 "$SSH_PID" 2>/dev/null
+            rm -f "$EXIT"
+            exit 1
+        fi
+
+        # If EXIT=0, let SSH finish authentication normally
+    fi
+
+    sleep 0.1
+done
+
+wait "$SSH_PID"
+SSH_EXIT=$?
+
+if [ "$SSH_EXIT" -ne 0 ]; then
+    echo "ERROR: SSH authentication failed."
+    exit 1
+fi
+
+echo "==> Master SSH connection active."
+
+
+SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
+
+###############################################################################
+# Detect PQ KEX support (just warn later)
+###############################################################################
+echo "==> Detecting remote OpenSSH version…"
+
+SSH_VERSION_OUTPUT=$(ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "ssh -V" 2>&1)
+REMOTE_SSH_VERSION=$(echo "$SSH_VERSION_OUTPUT" | grep -oE 'OpenSSH_([0-9]+\.[0-9]+)' | cut -d_ -f2)
+
+USE_LEGACY_KEX="unknown"
+
+if [ -n "$REMOTE_SSH_VERSION" ]; then
+    REMOTE_MAJOR=$(echo "$REMOTE_SSH_VERSION" | cut -d. -f1)
+    REMOTE_MINOR=$(echo "$REMOTE_SSH_VERSION" | cut -d. -f2)
+    if (( REMOTE_MAJOR < 9 )); then
+        USE_LEGACY_KEX="yes"
+    else
+        USE_LEGACY_KEX="no"
+    fi
+fi
+
+
+###############################################################################
+# Remote ~/.ssh setup
+###############################################################################
+echo "==> Creating ~/.ssh on remote server…"
+
+ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    mkdir -p ~/.ssh && chmod 700 ~/.ssh
+"
+
+
+###############################################################################
+# Upload key without scp, using single SSH session (ControlMaster reused)
+###############################################################################
+echo "==> Uploading public key…"
+
+cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    cat > /tmp/remote_tmp_key.pub
+"
+
+
+###############################################################################
+# Install key
+###############################################################################
+echo "==> Installing key on remote host…"
+
+ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+    touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+
+    PUBKEY_CONTENT=\$(cat /tmp/remote_tmp_key.pub)
+
+    if grep -qxF \"\$PUBKEY_CONTENT\" ~/.ssh/authorized_keys; then
+        echo '   -> Key already present — no change.'
+    else
+        echo \"\$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys
+        echo '   -> Key added successfully.'
+    fi
+
+    rm /tmp/remote_tmp_key.pub
+"
+
+
+###############################################################################
+# Close ControlMaster connection
+###############################################################################
+ssh -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
+
+
+###############################################################################
+# Done — PQ warning at the end
+###############################################################################
+
+echo ""
+echo "==> ✔ DONE!"
+echo "Local key path: $KEY_PATH"
+echo "You can now SSH without a password:"
+echo "  ssh $REMOTE_USER@$REMOTE_HOST"
+echo ""
+
+if [ "$USE_LEGACY_KEX" = "yes" ]; then
+    echo "⚠ WARNING: Remote server OpenSSH < 9.0 — no post‑quantum KEX available."
+    echo "   Connection still works, but PQ protection is not active."
+elif [ "$USE_LEGACY_KEX" = "unknown" ]; then
+    echo "⚠ WARNING: Could not detect remote OpenSSH version — PQ status unknown."
+else
+    echo "✓ Remote server supports post‑quantum KEX."
+fi
+
+echo ""
+###############################################################################

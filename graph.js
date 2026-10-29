@@ -142,9 +142,8 @@ async function injectIntoJs(document){
         console.log(history);
     
         // Commit log output format
-        const messageFormat = '--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N' + UNIQUE_EOL;  // %aI = author date, strict ISO 8601 format
-
-        
+        let messageFormat = `--format=S=%s T=%aI D=%d H=%H P=%P B=%b N=%N${UNIQUE_EOL}`;  // %aI = author date, strict ISO 8601 format
+    
     //
     // Set HTML
     //
@@ -181,7 +180,12 @@ async function injectIntoJs(document){
     //   
             
         try{
-            await simpleGit( folder).env('GIT_NOTES_REF', 'refs/notes/branchname').raw(  commands, onLog);
+            // Make work with remembered branch-names for both ssh and normal 
+            commands.push('--notes=refs/notes/branchname');
+            await opener.simpleGitLog( folder).raw(  commands, onLog);
+            
+            
+            
             function onLog(err, result ){graphText = result; console.log(result); };  
         }catch(err){        
             console.log(err);
@@ -361,6 +365,9 @@ async function setHistoricalCommit(hash){ // Called prior to DOM update
      
     await opener._setMode('HISTORY');
     await opener._update();
+    if (typeof opener.queryCommitCiStatus === 'function') {
+        opener.queryCommitCiStatus(false, hash);
+    }
 }
 function closeWindow(){
     localState.graphWindow = false;  // Show to main program that window is closed
@@ -376,7 +383,7 @@ function closeWindow(){
 
     
     // Remove from menu
-    opener.deleteWindowMenu('Graph');
+    opener.updateWindowMenu('Graph');
     
     win.close(); 
 }
@@ -712,6 +719,7 @@ async function gitCommitAuthor(hash){
     let text = '';
     try{
         let commands = [ 'show',  '-s', '--format=%aN (%aE)', hash]; // Author
+        
         await simpleGit( folder).raw(  commands, onGitCommitAuthor);
         function onGitCommitAuthor(err, result ){
             text = result; 
@@ -1661,8 +1669,19 @@ async function drawGraph( document, splitted, branchHistory, history){
                         onmouseout="updateImageUrl( '${imgId}', 'images/stash_pop.png')"
                         src="images/stash_pop.png">`
                 
-                //stashHtml += stashArray[i].stashNumber;
-                stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber"> &nbsp;` + imageHTML + stashArray[i].stashNumber + '</pre>'
+
+                if ( stashArray[i].message.startsWith('WIP') ) {
+                    // Only show numbered icon
+                    stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber"> ${imageHTML} ${stashArray[i].stashNumber} </pre>`;
+                }else{
+                    // If named stash -- show numbered icon, followed by stash message
+                    let N = stashArray[i].message.indexOf(':');
+                    let text = stashArray[i].message.substring(N + 1).trim();
+                    stashHtml +=  `&nbsp;&nbsp;<div class="stashBox"><pre  class="stashText"> </pre>`;
+                    stashHtml +=  `<pre  id="${stashNumberId}" class="stashNumber">${imageHTML}${stashArray[i].stashNumber}</pre>`;
+                    stashHtml +=  `<pre  class="stashText">"${text}" &nbsp;</pre> </div>`;
+                }
+                
             }
         }
         
@@ -1686,7 +1705,7 @@ async function drawGraph( document, splitted, branchHistory, history){
         }
         
         let until;
-        
+         
         if (nodeMap.has(commit.parents[0])){
             until = nodeMap.get(commit.parents[0]).y;  
         }else{

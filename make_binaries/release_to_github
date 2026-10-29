@@ -34,11 +34,11 @@ read -r -d '' RELEASE_NOTES << ---
 
 ### Downloads
 
-[Windows](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-win-x64.exe)
-[Mac - Intel or Rosetta](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-x64.dmg)
-[Mac - Apple silicon (M1, M2)](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-arm64.dmg)
-[Linux deb](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.deb)
-[Linux rpm](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.rpm)
+[Windows](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-win-x64.exe)  ([latest alias](https://github.com/pragma-git/pragma-git/releases/latest/download/Pragma-git-win-x64.exe))
+[Mac - Intel or Rosetta](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-x64.dmg)  ([latest alias](https://github.com/pragma-git/pragma-git/releases/latest/download/Pragma-git-mac-x64.dmg))
+[Mac - Apple silicon (M1, M2)](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-mac-arm64.dmg)  ([latest alias](https://github.com/pragma-git/pragma-git/releases/latest/download/Pragma-git-mac-arm64.dmg))
+[Linux deb](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.deb)  ([latest alias](https://github.com/pragma-git/pragma-git/releases/latest/download/Pragma-git-linux-x64.deb))
+[Linux rpm](https://github.com/pragma-git/pragma-git/releases/download/$TAG/Pragma-git-$TAG-linux-x64.rpm)  ([latest alias](https://github.com/pragma-git/pragma-git/releases/latest/download/Pragma-git-linux-x64.rpm))
 
 Or download the *one* installer that matches your system from the "__*assets*__" link below.
 
@@ -100,19 +100,29 @@ REPO=pragma-git/pragma-git
     cd '/Users/jan/Documents/Projects/Pragma-git/dist/'
 
     echo 'UPLOAD MAC (INTEL)'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls mac/Pragma-git*.dmg)" 
+    MAC_INTEL="$(ls mac/Pragma-git*.dmg)"
+    gh release upload $TAG --repo "$REPO" "$MAC_INTEL"
+    gh release upload $TAG --repo "$REPO" "$MAC_INTEL#Pragma-git-mac-x64.dmg" 2>/dev/null || cp "$MAC_INTEL" mac/Pragma-git-mac-x64.dmg && gh release upload $TAG --repo "$REPO" mac/Pragma-git-mac-x64.dmg
     
     echo 'UPLOAD MAC (ARM)'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls mac_arm64/Pragma-git*.dmg)" 
+    MAC_ARM="$(ls mac_arm64/Pragma-git*.dmg)"
+    gh release upload $TAG --repo "$REPO" "$MAC_ARM"
+    gh release upload $TAG --repo "$REPO" "$MAC_ARM#Pragma-git-mac-arm64.dmg" 2>/dev/null || cp "$MAC_ARM" mac_arm64/Pragma-git-mac-arm64.dmg && gh release upload $TAG --repo "$REPO" mac_arm64/Pragma-git-mac-arm64.dmg
     
     echo 'UPLOAD WINDOWS'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls win64/Pragma-git*.exe)" 
+    WIN_FILE="$(ls win64/Pragma-git*.exe)"
+    gh release upload $TAG --repo "$REPO" "$WIN_FILE"
+    gh release upload $TAG --repo "$REPO" "$WIN_FILE#Pragma-git-win-x64.exe" 2>/dev/null || cp "$WIN_FILE" win64/Pragma-git-win-x64.exe && gh release upload $TAG --repo "$REPO" win64/Pragma-git-win-x64.exe
     
     echo 'UPLOAD LINUX DEB'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.deb)" 
+    DEB_FILE="$(ls linux64/Pragma-git*.deb | grep -v 'Pragma-git-linux-x64.deb')"
+    gh release upload $TAG --repo "$REPO" "$DEB_FILE"
+    gh release upload $TAG --repo "$REPO" "$DEB_FILE#Pragma-git-linux-x64.deb" 2>/dev/null || cp "$DEB_FILE" linux64/Pragma-git-linux-x64.deb && gh release upload $TAG --repo "$REPO" linux64/Pragma-git-linux-x64.deb
     
     echo 'UPLOAD LINUX RPM'
-    gh release upload  $TAG  --repo "$REPO"  "$(ls linux64/Pragma-git*.rpm)" 
+    RPM_FILE="$(ls linux64/Pragma-git*.rpm | grep -v 'Pragma-git-linux-x64.rpm')"
+    gh release upload $TAG --repo "$REPO" "$RPM_FILE"
+    gh release upload $TAG --repo "$REPO" "$RPM_FILE#Pragma-git-linux-x64.rpm" 2>/dev/null || cp "$RPM_FILE" linux64/Pragma-git-linux-x64.rpm && gh release upload $TAG --repo "$REPO" linux64/Pragma-git-linux-x64.rpm 
 
 #
 # DONE

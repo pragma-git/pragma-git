@@ -1,9 +1,0 @@
-[mergetool "pragma-git"]
-    cmd = "C:/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
-       
-[core]
-    askPass = "C:/Users/axels/Documents/Projects/Pragma-git/pragma-git/pragma-askpass"   
-  
-  
-[push]
-    autoSetupRemote = true

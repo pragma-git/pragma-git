@@ -13,10 +13,5 @@
     "min_width": 350,
     "min_height": 140,
     "icon": "../images/icon.png"
-  },
-  "dependencies": {
-    "fs": "^0.0.1-security",
-    "os": "^0.1.2",
-    "path": "^0.12.7"
   }
 }

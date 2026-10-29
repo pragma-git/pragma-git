@@ -1,0 +1,26 @@
+# Pragma-git client app.js/setupSshServer()  
+# copies this file to linux server "$HOME/.Pragma-git/pragma-git-config-ssh" 
+
+[init]
+    defaultbranch=main
+
+[credential]
+    useHttpPath = true
+    helper = store
+
+[mergetool]
+    keepBackup = false
+    
+[mergetool "pragma-git"]
+    cmd = $HOME/.Pragma-git/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh
+    trustExitCode = true    
+
+[core]
+    # Set this in the ssh-git-client
+    # This is necessary because git does not expand $HOME for askpass (which is run as a command; not in a shell)
+    # (it works for mergetool because it is executed in a shell by git)
+    # For information -- this is the path in ssh-git-client (which is expanded there):
+    # askpass = $HOME/.Pragma-git/pragma-askpass  
+
+[push]
+    autoSetupRemote = true

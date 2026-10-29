@@ -7,7 +7,8 @@
     
     <link rel="stylesheet" type="text/css" href="color_styles.css" />
     
-    <script src="resolveConflicts.js"></script>
+    <script src="ssh_folder/ssh-folder-lib.js" defer></script>
+    <script src="resolveConflicts.js" ></script>
     
     <!-- As in settings.html -->
     <style>
@@ -225,7 +226,7 @@
         'unload', 
         (event) => {
             localState.conflictsWindow = false
-            opener.deleteWindowMenu("Resolve Conflicts");
+            opener.updateWindowMenu("Resolve Conflicts");
             console.log('resolveConflicts.html :DOM fully unloaded -- maybe window closed ');
             closeWindow(window);
         }
