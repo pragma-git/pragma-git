@@ -267,8 +267,6 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     echo "$(formatReturn $MAC_SIGN) Code signing Mac DMG installer (intel)"
     echo "$(formatReturn $MAC_NOTARY) Notarizing and validating Mac installer (intel)"
 
-    cp "$NAME" "Pragma-git-mac-x64.dmg" 2>/dev/null
-
 
         
     # Clean up 
@@ -363,8 +361,6 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     echo "$(formatReturn $MAC_SIGN_ARM) Code signing Mac DMG installer (apple silicon)"
     echo "$(formatReturn $MAC_NOTARY_ARM) Notarizing and validating Mac installer (apple silicon)"
 
-    cp "$NAME" "Pragma-git-mac-arm64.dmg" 2>/dev/null
-
 
         
     # Clean up 
@@ -424,8 +420,6 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
         -DVERSION="$(echo $DIR | cut -d '-' -f 3)" \
         assets-win/windows_installer.nsi \
         || WIN_EXIT=$?
-        
-        cp "win64/$DIR.exe" "win64/Pragma-git-win-x64.exe" 2>/dev/null
     else
         echo "Failed because missing 'dist/win-x64' folder"
     fi
@@ -474,8 +468,6 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git \
     || DEB_EXIT=$?
-    
-    cp "linux64/$DIR.deb" "linux64/Pragma-git-linux-x64.deb" 2>/dev/null
     
     echo ' '
     echo $(formatReturn $DEB_EXIT) Creating Linux .deb installer
@@ -527,8 +519,6 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     --after-remove '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postrm' \
     .=/opt/pragma-git \
     || RPM_EXIT=$?
-    
-    cp "linux64/$DIR.rpm" "linux64/Pragma-git-linux-x64.rpm" 2>/dev/null
     
     echo ' '
     echo $(formatReturn $RPM_EXIT) Creating Linux .rpm installer
