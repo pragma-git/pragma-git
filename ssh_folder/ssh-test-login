@@ -25,6 +25,12 @@ if [ -n "$2" ]; then
     fi
 fi
 
+# Check for missing server
+if [ -z "$SERVER" ]; then
+    echo "STATUS:ERROR: Missing host/server in SSH URL"
+    exit 0
+fi
+
 # Run ssh with publickey authentication only, timeout 4 seconds
 OUTPUT=$(ssh $KEY_OPT -T "$SERVER" -p ${PORT} -o BatchMode=yes -o ConnectTimeout=4 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "echo PRAGMA_SSH_OK" 2>&1)
 EXIT_CODE=$?

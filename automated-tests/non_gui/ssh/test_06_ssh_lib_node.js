@@ -138,4 +138,22 @@ try {
     assertFail('6.8-6.9: generateLocalSshKey execution error', err.message);
 }
 
-printSuiteResult();
+// Test 7: isWslAvailable function exists and returns boolean
+(async () => {
+    try {
+        if (typeof sshLib.isWslAvailable === 'function') {
+            const wslRes = await sshLib.isWslAvailable();
+            if (typeof wslRes === 'boolean') {
+                assertPass(`6.10: isWslAvailable returns boolean (${wslRes}) on platform (${process.platform})`);
+            } else {
+                assertFail('6.10: isWslAvailable return type', typeof wslRes);
+            }
+        } else {
+            assertFail('6.10: isWslAvailable', 'Function is not exported');
+        }
+    } catch (err) {
+        assertFail('6.10: isWslAvailable execution error', err.message);
+    }
+
+    printSuiteResult();
+})();

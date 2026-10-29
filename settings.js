@@ -323,6 +323,16 @@ async function _callback( name, event){
 
             // If SSH server folder
             if ( folder.startsWith('ssh:') ){
+                // Windows check: verify WSL is available before proceeding with remote SSH repo
+                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        setCloneStatus('');
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
+                        return;
+                    }
+                }
+
                 // Setup password-less login
                 let setupKeyCheckbox = document.getElementById('setupRemoteKeyLogin_clone');
                 if ( setupKeyCheckbox && setupKeyCheckbox.checked ){
@@ -432,6 +442,14 @@ async function _callback( name, event){
 			// Make folder for ssh-folder or local repo (if folder missing)
 			// 
             if ( folder.startsWith('ssh:') ){
+                // Windows check: verify WSL is available before proceeding with remote SSH repo
+                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
+                        return;
+                    }
+                }
 
                 // mkdir 
 				await opener.mkdir(folder);  // Create local folder if it does not exist
@@ -592,7 +610,18 @@ async function _callback( name, event){
             console.log(event);
                 
             try{                    
-                
+                let targetFolder = global.state.repos[ Number(id)]?.localFolder || '';
+                // On Windows, warn user if WSL is missing when selecting an SSH server repo
+                if (process.platform === 'win32' && targetFolder.startsWith('ssh:') && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.');
+                        id = origRepoNumber;
+                        document.getElementById(state.repoNumber).click();
+                        return;
+                    }
+                }
+
                 // Check that repo (both normal and ssh-folder)
                 let repoKey = (global.state.repos[ Number(id)] && global.state.repos[ Number(id)].sshKey) ? global.state.repos[ Number(id)].sshKey : '';
                 isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD`, repoKey ); 

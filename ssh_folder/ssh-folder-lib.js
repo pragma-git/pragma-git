@@ -80,7 +80,9 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
     }catch (err){
         let msg = (err && err.message) ? err.message : String(err);
         let lower = msg.toLowerCase();
-        if (lower.includes('permission denied') || lower.includes('key rejected')) {
+        if (lower.includes('wsl is required') || lower.includes('wsl')) {
+            fs_existsSync.lastReason = 'wsl missing';
+        } else if (lower.includes('permission denied') || lower.includes('key rejected')) {
             fs_existsSync.lastReason = 'key rejected';
         } else if (lower.includes('timed out') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host')) {
             fs_existsSync.lastReason = 'no network';
@@ -429,6 +431,19 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
     statusEl.style.color = 'var(--dim-text, #888)';
     statusEl.textContent = 'Testing connection...';
 
+    // Windows pre-check: verify WSL is available before attempting SSH
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = true;
+            if (testBtn) testBtn.disabled = false;
+            return;
+        }
+    }
+
     try {
         let fakeFolder = `ssh://${username}@${server}/`;
         let result = await sshTestLogin(fakeFolder, selectedKey);
@@ -509,6 +524,21 @@ async function deploySshKey( mode ) {                           // Deploys key p
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
+
+    // Windows pre-check: verify WSL is available before attempting SSH key deploy
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (testBtn) testBtn.disabled = false;
+            if (deployBtn) deployBtn.disabled = false;
+            return;
+        }
+    }
+
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
         statusEl.textContent = 'Deploying public key to remote server...';
@@ -948,6 +978,20 @@ async function sshConfigTestLogin() {
         statusEl.textContent = 'Testing connection...';
     }
 
+    // Windows pre-check: verify WSL is available before attempting SSH
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (testBtn) testBtn.disabled = false;
+            return;
+        }
+    }
+
     try {
         let fakeFolder = `ssh://${username}@${server}/`;
         let result = await sshTestLogin(fakeFolder, keyToTest);
@@ -1020,6 +1064,21 @@ async function sshConfigDeployKey() {
 
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
+
+    // Windows pre-check: verify WSL is available before attempting SSH key deploy
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (testBtn) testBtn.disabled = false;
+            if (deployBtn) deployBtn.disabled = false;
+            return;
+        }
+    }
+
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
         statusEl.textContent = 'Deploying public key to remote server...';
@@ -1127,6 +1186,31 @@ async function closeSshConfigDialog( save = false ) {
     dialog.close();
 }
 
+let _wslAvailableCache = null;
+
+// Checks whether WSL (Windows Subsystem for Linux) is installed and available
+async function isWslAvailable() {
+    if (process.platform !== 'win32') return true;
+    if (_wslAvailableCache !== null) return _wslAvailableCache;
+
+    const { exec } = require('child_process');
+    return new Promise((resolve) => {
+        exec('where wsl.exe', { timeout: 3000 }, (error, stdout) => {
+            if (error || !stdout || stdout.trim().length === 0) {
+                _wslAvailableCache = false;
+                resolve(false);
+            } else {
+                _wslAvailableCache = true;
+                resolve(true);
+            }
+        });
+    });
+}
+
+function resetWslCache() {
+    _wslAvailableCache = null;
+}
+
 // WINDOWS specific helpers
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
@@ -1174,4 +1258,6 @@ if (typeof module !== 'undefined' && module.exports) {
 	module.exports.wslToWindowsPath = wslToWindowsPath;
 	module.exports.windowsToWslPath = windowsToWslPath;
 	module.exports.getAndCreateWinTempFolder = getAndCreateWinTempFolder;
+	module.exports.isWslAvailable = isWslAvailable;
+	module.exports.resetWslCache = resetWslCache;
 }

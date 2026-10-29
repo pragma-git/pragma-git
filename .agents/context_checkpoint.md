@@ -29,6 +29,18 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Windows WSL Missing Detection & SSH Failure Diagnostics**:
+  - Implemented automatic WSL detection on Windows (`isWslAvailable()` using `where wsl.exe` with caching and reset helper) in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js).
+  - Scoped Windows-specific WSL warnings strictly to explicit SSH user interactions rather than background probing/caching:
+    - **Selecting an SSH server repository**: In `app.js` (`clickedRepoContextualMenu`) and `settings.js` (`repoRadiobuttonChanged`), when switching to an SSH repository, checks WSL on Windows and displays a friendly dialog explaining that WSL is needed to connect, resetting the selection to the prior repository.
+    - **Configuring a new SSH repository**: In `settings.js` (`addRepoButtonPressed` and `cloneButtonPressed`), if `folder.startsWith('ssh:')` (both direct path entry and Server toggle UI) and WSL is missing on Windows, alerts the user before creating folders or running git commands.
+    - **Testing or deploying SSH keys**: In `ssh-folder-lib.js` (`testSshKeyLogin`, `deploySshKey`, `sshConfigTestLogin`, `sshConfigDeployKey`), checks WSL on Windows and displays `✗ WSL is required on Windows (run "wsl --install" in PowerShell)` inline in the status label.
+    - **Silent background probing**: In `ssh-folder-lib.js` (`fs_existsSync`), failures during background existence checks and settings table status probing catch missing WSL errors silently and mark `fs_existsSync.lastReason = 'wsl missing'` without showing any popup dialogs.
+  - Refined cross-platform connection failure distinctions:
+    - In `ssh-test-login`: Checks for empty/missing server hostname (`STATUS:ERROR: Missing host/server in SSH URL`) before invoking SSH.
+    - Accurately reports host not found / DNS resolution (`STATUS:ERROR: Could not resolve hostname (<server>)`), connection refused / wrong port (`STATUS:ERROR: Connection refused on port <port>`), connection timeout (`STATUS:TIMEOUT`), key authentication rejected (`STATUS:KEY_NEEDED`), and successful login (`STATUS:OK`).
+  - Updated documentation in [HELP/SSH Connection.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20Connection.html) with a dedicated "Windows Platform Requirements" section explaining WSL and `wsl --install`.
+  - Added automated test in [automated-tests/non_gui/ssh/test_06_ssh_lib_node.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js) verifying `isWslAvailable`. Master test suite passes 100% across all 7 categories (20 suites, 110 passed tests).
 * **Remote Status Startup Flashing Fix (`cacheRemoteOriginStatus`)**:
   - Fixed premature display of red `"Remote : remote error"` indicator in the bottom footer on startup ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
   - Initialized `newCachedRemoteOrigins.isActiveRemote` with `null` instead of `false` so unverified/checking remotes are not treated as failed.

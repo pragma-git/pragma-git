@@ -76,3 +76,12 @@ The newly generated key is created without a passphrase so that automated Git op
     <li><button>Cancel</button> discards any unsaved key selections and closes the dialog.</li>
 </ul>
 </p>
+
+<h4>Windows Platform Requirements</h4>
+<p>
+On Windows, Pragma-git executes SSH remote repository commands and SSH authentication utilities via <b>WSL (Windows Subsystem for Linux)</b> to provide full POSIX SSH socket compatibility and connection reuse.
+<br><br>
+If WSL is not yet installed on your Windows machine, open <b>PowerShell as Administrator</b> and run:
+<pre style="background: var(--bg-hover, #eee); padding: 8px 12px; border-radius: 4px; font-family: monospace;">wsl --install</pre>
+Once installed, reboot Windows if prompted, then launch Pragma-git.
+</p>

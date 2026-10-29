@@ -587,6 +587,16 @@ async function _callback( name, event){
         }
         
         if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
+            // On Windows, warn user if WSL is missing when selecting an SSH server repo
+            if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                let wslOk = await isWslAvailable();
+                if (!wslOk) {
+                    displayLongAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.', 'warn');
+                    noDialog = false;
+                    state.repoNumber = origRepoNumber;
+                    return;
+                }
+            }
             try{
                 isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD` );
             }catch (err){
@@ -7045,6 +7055,10 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		} catch (err) {
 			  console.warn('Warning:', err.message);
 			  console.warn('stderr:', err.stderr?.toString());
+			  let errStr = (err?.message || err?.stderr?.toString() || err?.toString() || '');
+			  if (errStr.includes('is not recognized') || errStr.includes('cannot find the file specified') || err?.code === 127) {
+			      throw new Error(`WSL is required on Windows to access SSH repositories. Please install WSL by running 'wsl --install' in PowerShell.`);
+			  }
 			  throw new Error( `multiPlatformExecSync error: = ${err}`);
 		}
 
