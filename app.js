@@ -587,25 +587,26 @@ async function _callback( name, event){
         }
         
         if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
-            // On Windows, warn user if WSL is missing when selecting an SSH server repo
+            // On Windows, if WSL is missing, silently revert without blocking modal dialog
             if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
                 let wslOk = await isWslAvailable();
                 if (!wslOk) {
-                    displayLongAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.', 'warn');
-                    noDialog = false;
                     state.repoNumber = origRepoNumber;
                     return;
                 }
             }
             try{
-                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD` );
+                let repoKey = state.repos[state.repoNumber].sshKey || '';
+                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD`, repoKey );
+                if (!isRepo) {
+                    // Silently revert to previous repository without blocking modal dialog;
+                    // the greyed-out repo menu and footer indicator provide non-intrusive feedback
+                    state.repoNumber = origRepoNumber;
+                    return;
+                }
             }catch (err){
-                displayLongAlert('SSH Folder Error -- repo check failed', 
-                    `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
-                    'error'); 
-                    noDialog = false;
-                    
                 state.repoNumber = origRepoNumber;
+                return;
             }
             
             
@@ -2185,6 +2186,15 @@ async function _callback( name, event){
                     let isCurrentInCurrentView = !hasAnyGroup ? isCurrentRepo : (isCurrentRepo && (currentGroupView === groupContext));
                     let warningSign = (!isRepoValid || remoteHasError) ? ' ! ' : '';
                     let reason = !isRepoValid ? localReason : remoteReason;
+                    if (localFolder.startsWith('ssh:') && !isRepoValid) {
+                        if (reason === 'no network') {
+                            reason = 'SSH offline';
+                        } else if (reason === 'key rejected') {
+                            reason = 'SSH key rejected';
+                        } else if (reason === 'wsl missing') {
+                            reason = 'WSL needed';
+                        }
+                    }
                     let reasonSuffix = reason ? ` (${reason})` : '';
 
                     let menuItemConfig = { 
@@ -3512,19 +3522,40 @@ async function _update2(){
                 queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                 document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
-                // Show remote error indicator if remote is defined and not accessible
+                // Show error indicator in footer: prioritize local SSH folder status over remote push URL
                 if (remoteTextEl) {
+                    let curFolder = (state.repos[state.repoNumber] && state.repos[state.repoNumber].localFolder) || '';
+                    let isSsh = curFolder.startsWith('ssh:');
                     let rUrl = (state.repos[state.repoNumber] && state.repos[state.repoNumber].remoteURL) || '';
-                    let isActive = (cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[state.repoNumber]);
-                    if (rUrl && rUrl.trim().length > 0 && isActive === false) {
-                        let reason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[state.repoNumber]) ? cachedRemoteOrigins.reason[state.repoNumber] : 'remote error';
-                        let displayText = `Remote : ${reason}`;
+                    let isLocalDown = isSsh && (cachedLocalStatus && cachedLocalStatus.exists && cachedLocalStatus.exists[state.repoNumber] === false);
+                    let localReason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[state.repoNumber]) ? cachedLocalStatus.reason[state.repoNumber] : '';
+
+                    if (isLocalDown) {
+                        let sshLabel = 'SSH folder offline';
+                        if (localReason === 'key rejected') {
+                            sshLabel = 'SSH key rejected';
+                        } else if (localReason === 'wsl missing') {
+                            sshLabel = 'WSL required';
+                        } else if (localReason === 'no network') {
+                            sshLabel = 'SSH connection timed out';
+                        }
+                        let displayText = `Local SSH : ${sshLabel}`;
                         if (remoteTextEl.innerText !== displayText) {
                             remoteTextEl.innerText = displayText;
                         }
                         remoteTextEl.style.display = 'inline-block';
                     } else {
-                        remoteTextEl.style.display = 'none';
+                        let isActive = (cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[state.repoNumber]);
+                        if (rUrl && rUrl.trim().length > 0 && isActive === false) {
+                            let reason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[state.repoNumber]) ? cachedRemoteOrigins.reason[state.repoNumber] : 'remote error';
+                            let displayText = `Remote : ${reason}`;
+                            if (remoteTextEl.innerText !== displayText) {
+                                remoteTextEl.innerText = displayText;
+                            }
+                            remoteTextEl.style.display = 'inline-block';
+                        } else {
+                            remoteTextEl.style.display = 'none';
+                        }
                     }
                 }
                 
@@ -6036,7 +6067,15 @@ async function cacheRemoteOriginStatus( start = 0 ){
     let promisesSSH = [];
     for (var i = start; i < state.repos.length; ++i) {
         if ( state.repos[ i ].localFolder.startsWith('ssh:') ){
-            promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+            let localExists = (cachedLocalStatus && cachedLocalStatus.exists && cachedLocalStatus.exists[i] !== undefined)
+                ? cachedLocalStatus.exists[i]
+                : true;
+            if (!localExists) {
+                newCachedRemoteOrigins.isActiveRemote[i] = false;
+                newCachedRemoteOrigins.reason[i] = 'SSH project folder offline';
+            } else {
+                promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+            }
         }else{
             promisesLocal.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
         }
@@ -6060,6 +6099,13 @@ async function cacheRemoteOriginStatus( start = 0 ){
     console.log('START promisesSSH');
     await Promise.allSettled( promisesSSH )
     await console.log('STOP promisesSSH');
+        
+    // If settings window is currently open, refresh its repo table so it reflects the updated remote status
+    if (localState.settings && typeof updateSettingsRepoTable === 'function') {
+        try {
+            await updateSettingsRepoTable();
+        } catch(e) {}
+    }
         
     
     
@@ -6243,8 +6289,15 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     console.log('STOP promisesLocal');
     
     console.log('START promisesSSH');
-    Promise.allSettled( promisesSSH )
+    await Promise.allSettled( promisesSSH )
     console.log('STOP promisesSSH');
+    
+    // If settings window is currently open, refresh its repo table so it reflects the updated SSH/network status
+    if (localState.settings && typeof updateSettingsRepoTable === 'function') {
+        try {
+            await updateSettingsRepoTable();
+        } catch(e) {}
+    }
     
     
     // Internal function
@@ -6998,7 +7051,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
                 return await runCommandWithTimeout(cmd, {}, timeoutInMs);
             }catch (err){
                 console.error( err);
-                return err.toString();
+                throw err;
             }
         }
         

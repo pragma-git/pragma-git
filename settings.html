@@ -1469,7 +1469,7 @@
     <!-- Dialogs  -->   
     <dialog id="alertDialog"  class="error">               <!--  General alert dialog  --> 
         <p> 
-            <b><div id='alertTitle'></div></b><br>  
+            <div id='alertTitle' style="font-weight: bold;"></div><br>  
             <div id='alertMessage'></div>  
         </p>  
         <button id="no"
@@ -1602,8 +1602,8 @@
                         <button type="button" id="sshConfigTestBtn" class="smallButton" style="padding: 2px 10px; vertical-align: middle;" onclick="sshConfigTestLogin()">Test login</button>
                         <button type="button" id="sshConfigDeployBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigDeployKey()">Deploy public key</button>
                         <button type="button" id="sshConfigGenPromptBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigToggleGeneratePanel(true)">Generate new key</button>
-                        <span id="sshConfigStatusText" style="font-size: 11px; vertical-align: middle;"></span>
                     </div>
+                    <div id="sshConfigStatusText" style="font-size: 11px; margin-top: 8px; line-height: 1.4;"></div>
                 </td>
             </tr>
         </table>

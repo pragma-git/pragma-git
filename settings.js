@@ -626,10 +626,11 @@ async function _callback( name, event){
                 let repoKey = (global.state.repos[ Number(id)] && global.state.repos[ Number(id)].sshKey) ? global.state.repos[ Number(id)].sshKey : '';
                 isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD`, repoKey ); 
                 if ( isRepo == false ){
-                        // Set to previous    
-                        id = origRepoNumber;  
-                        document.getElementById(state.repoNumber).click()    
-                        return                    
+                    // Silently revert to previous repository without showing blocking alert dialogs
+                    // (the visual red text, reason tag, and Fix button in Settings provide clear non-modal feedback)
+                    id = origRepoNumber;  
+                    document.getElementById(state.repoNumber).click();    
+                    return;                    
                 }
                 
                 
@@ -2342,8 +2343,33 @@ async function generateRepoTable(document, table, data) {
                 // Local repo status warning (also for ssh folder)
                 console.log(`Coloring Local Folder -- exists:${existsStatus} isRepo:${isRepoStatus} reason:${reason} -- ${element.localFolder}`);   
                 if ( reason ){
+                    let isSsh = element.localFolder && element.localFolder.startsWith('ssh:');
+                    let displayReason = reason;
+                    let tooltip = '';
+
+                    if (isSsh) {
+                        let diag = (typeof formatSshErrorDetails === 'function')
+                            ? formatSshErrorDetails(reason, element.localFolder)
+                            : { summary: reason, suggestion: '' };
+                        tooltip = `${diag.summary}${diag.suggestion ? ' — ' + diag.suggestion : ''}`;
+                        if (reason === 'no network') {
+                            displayReason = 'SSH: host offline / timeout';
+                        } else if (reason === 'key rejected') {
+                            displayReason = 'SSH: key rejected';
+                        } else if (reason === 'wsl missing') {
+                            displayReason = 'SSH: WSL required';
+                        } else if (reason === 'not a folder') {
+                            displayReason = 'SSH: folder missing';
+                        } else if (reason === 'not a repo') {
+                            displayReason = 'SSH: not a repo';
+                        }
+                    }
+
                     label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
-                    label.innerHTML = '<b><i>(' + reason + ')</i></b> : ' + element.localFolder;
+                    label.innerHTML = element.localFolder + ' &nbsp;<b><i>(' + displayReason + ')</i></b>';
+                    if (tooltip) {
+                        label.title = tooltip;
+                    }
                     radiobox.style.visibility = "hidden";
 
                     if ( element.localFolder && element.localFolder.startsWith('ssh:') ) {

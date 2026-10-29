@@ -151,8 +151,27 @@ try {
         } else {
             assertFail('6.10: isWslAvailable', 'Function is not exported');
         }
+
+        // Test 8: formatSshErrorDetails classifies errors with actionable suggestions
+        if (typeof sshLib.formatSshErrorDetails === 'function') {
+            const timeoutDiag = sshLib.formatSshErrorDetails('Connection timed out', 'ssh://jan@linus/repo');
+            if (timeoutDiag && timeoutDiag.summary.includes('timed out') && timeoutDiag.server === 'linus') {
+                assertPass('6.11: formatSshErrorDetails accurately classifies connection timeout');
+            } else {
+                assertFail('6.11: formatSshErrorDetails timeout', JSON.stringify(timeoutDiag));
+            }
+
+            const keyDiag = sshLib.formatSshErrorDetails('Permission denied (publickey)', 'ssh://jan@myserver/repo');
+            if (keyDiag && keyDiag.summary.includes('rejected') && keyDiag.suggestion.includes('SSH')) {
+                assertPass('6.12: formatSshErrorDetails accurately classifies key rejection');
+            } else {
+                assertFail('6.12: formatSshErrorDetails key rejection', JSON.stringify(keyDiag));
+            }
+        } else {
+            assertFail('6.11-6.12: formatSshErrorDetails', 'Function is not exported');
+        }
     } catch (err) {
-        assertFail('6.10: isWslAvailable execution error', err.message);
+        assertFail('6.10-6.12: Execution error', err.message);
     }
 
     printSuiteResult();

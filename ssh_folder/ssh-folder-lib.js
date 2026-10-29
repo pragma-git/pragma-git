@@ -73,18 +73,23 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
         
         //MAIN.multiPlatformExecSync( sshUrl, CMD);
-        await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000)
+        let res = await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000);
+        if (res && typeof res === 'string' && (res.includes('SSH ERROR') || res.includes('timed out') || res.startsWith('Error:'))) {
+            throw new Error(res);
+        }
         
         fs_existsSync.lastReason = '';
+        fs_existsSync.lastError = null;
         return true
     }catch (err){
+        fs_existsSync.lastError = err;
         let msg = (err && err.message) ? err.message : String(err);
         let lower = msg.toLowerCase();
         if (lower.includes('wsl is required') || lower.includes('wsl')) {
             fs_existsSync.lastReason = 'wsl missing';
         } else if (lower.includes('permission denied') || lower.includes('key rejected')) {
             fs_existsSync.lastReason = 'key rejected';
-        } else if (lower.includes('timed out') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host')) {
+        } else if (lower.includes('timed out') || lower.includes('timeout') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
             fs_existsSync.lastReason = 'no network';
         } else {
             fs_existsSync.lastReason = 'not a folder';
@@ -688,7 +693,25 @@ let currentSshConfigState = {
     selectedKey: ''
 };
 
-function openSshConfigDialog( options = {} ) {
+async function openSshConfigDialog( options = {} ) {
+    // On Windows, if WSL is not available, show a dedicated clean WSL installation dialog
+    if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            let win = (typeof displayAlert === 'function') ? window : (global.windows && global.windows['settings_win'] && global.windows['settings_win'].window) || window;
+            if (win && typeof win.displayAlert === 'function') {
+                win.displayAlert(
+                    'WSL Required for SSH on Windows',
+                    'WSL (Windows Subsystem for Linux) is required on Windows to access repositories over SSH.<br><br>' +
+                    'Please install WSL by running in PowerShell (as Administrator):<br><br>' +
+                    '<code>wsl --install</code><br><br>' +
+                    'Once installed, restart your computer if prompted, then restart Pragma-git.'
+                );
+            }
+            return;
+        }
+    }
+
     let dialog = document.getElementById('sshConfigDialog');
     if (!dialog) return;
 
@@ -1211,6 +1234,61 @@ function resetWslCache() {
     _wslAvailableCache = null;
 }
 
+// Detailed error classifier for SSH connection & project folder issues
+function formatSshErrorDetails(rawError, sshUrl) {
+    let server = '';
+    let port = '22';
+    try {
+        if (sshUrl && sshUrl.startsWith('ssh:')) {
+            let u = new URL(sshUrl);
+            server = u.hostname || '';
+            port = u.port || '22';
+        }
+    } catch (e) {}
+
+    let errStr = (rawError && (rawError.message || String(rawError))) || '';
+    let lower = errStr.toLowerCase();
+
+    let title = 'SSH Project Folder Error';
+    let summary = 'Failed to connect to SSH host';
+    let suggestion = '';
+
+    if (process.platform === 'win32' && (lower.includes('wsl is required') || lower.includes('wsl') || lower.includes('is not recognized'))) {
+        title = 'WSL Required';
+        summary = 'WSL (Windows Subsystem for Linux) is required on Windows to access repositories over SSH.';
+        suggestion = 'Please install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.';
+    } else if (lower.includes('missing host') || !server || server.trim().length === 0) {
+        summary = 'Invalid SSH URL: Host/server name is missing.';
+        suggestion = 'Check the repository URL in Settings (e.g. ssh://user@server/path).';
+    } else if (lower.includes('could not resolve') || lower.includes('name or service not known') || lower.includes('nodename nor servname provided')) {
+        summary = `Could not resolve hostname "${server}".`;
+        suggestion = `Verify that server name "${server}" is spelled correctly and DNS or ~/.ssh/config is configured.`;
+    } else if (lower.includes('connection refused')) {
+        summary = `Connection refused by "${server}" on port ${port}.`;
+        suggestion = `Verify that the SSH server daemon (sshd) is running on port ${port} and not blocked by a firewall.`;
+    } else if (lower.includes('timed out') || lower.includes('timeout') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
+        summary = `Connection to "${server}" timed out.`;
+        suggestion = `Check your network connection, Wi-Fi, or VPN. Ensure "${server}" is online and reachable.`;
+    } else if (lower.includes('permission denied') || lower.includes('key rejected')) {
+        summary = `SSH login rejected by "${server}" (permission denied / key not accepted).`;
+        suggestion = `Click "Fix" or "Setup SSH" in Settings to verify and deploy your SSH public key.`;
+    } else if (lower.includes('file missing') || lower.includes('not a folder') || lower.includes('no such file')) {
+        summary = `Target directory does not exist on "${server}".`;
+        suggestion = `Verify the path on the server in Settings.`;
+    } else {
+        summary = errStr.length > 0 ? errStr : `Unknown error communicating with "${server}".`;
+        suggestion = `Test connecting via terminal: ssh ${server}`;
+    }
+
+    return {
+        title: title,
+        summary: summary,
+        suggestion: suggestion,
+        server: server,
+        fullMessage: `${summary}\n\nPath: ${sshUrl}\n\n${suggestion}`
+    };
+}
+
 // WINDOWS specific helpers
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
@@ -1260,4 +1338,5 @@ if (typeof module !== 'undefined' && module.exports) {
 	module.exports.getAndCreateWinTempFolder = getAndCreateWinTempFolder;
 	module.exports.isWslAvailable = isWslAvailable;
 	module.exports.resetWslCache = resetWslCache;
+	module.exports.formatSshErrorDetails = formatSshErrorDetails;
 }
