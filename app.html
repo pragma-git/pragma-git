@@ -999,7 +999,9 @@
                     if (getMode() == 'NO_FILES_TO_COMMIT'){
                         document.getElementById('message').blur();  // Unfocus
                         document.getElementById('up-arrow').click();
-                        document.getElementById('edit_commit_text_div').style.visibility = 'visible';  // Show text
+                        let hasDraft = (readMessage().trim().length > 0);
+                        document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
+                        document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
                     }
                     
                     // Close find fields

@@ -2962,6 +2962,13 @@ async function _callback( name, event){
         saveCurrentRepoDraftMessage(false);
 
         if (getMode() === 'NO_FILES_TO_COMMIT') {
+            let hasDraft = (readMessage().trim().length > 0);
+            if (hasDraft) {
+                document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+            } else if (window._msgAllowAction) {
+                document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
+                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
+            }
             return;
         }
         
@@ -3924,10 +3931,12 @@ async function _setMode( inputModeName){
                 // Modify edit message text
                 if (!window._msgAllowAction) {
                     document.getElementById('edit_commit_text_div').innerHTML='(esc-key to cancel)';
+                    document.getElementById('edit_commit_text_div').style.visibility = 'visible';
                 }else{
                     document.getElementById('edit_commit_text_div').innerHTML='(double-click to change)';
+                    let hasDraft = (readMessage().trim().length > 0);
+                    document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
                 }
-                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
                 return
             };
             
