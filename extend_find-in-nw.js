@@ -292,9 +292,9 @@ function extendFindInNw(elementToSearch){
                 
                 for (let el of contentElements) {
                     const style = window.getComputedStyle(el);
-                    if (style.display === 'contents') {
+                    if (style.display === 'contents' || (style.display !== 'none' && style.visibility !== 'hidden')) {
                         searchElement = el;
-                        break
+                        break;
                     }
                 }
 
@@ -306,7 +306,14 @@ function extendFindInNw(elementToSearch){
         // Find all elements
         for (let i = 0; i < searchElement.children.length; i++) {
             let child = searchElement.children[i];
-            if (child.tagName.toLowerCase() !== 'style' && child.tagName.toLowerCase() !== 'script') {
+            let tag = child.tagName.toLowerCase();
+            if (tag !== 'style' && tag !== 'script') {
+                // If this is a tool subtab container, only include if currently visible
+                if (child.classList && child.classList.contains('tool-content')) {
+                    if (child.style.display === 'none' || child.style.visibility === 'none' || child.style.visibility === 'hidden') {
+                        continue;
+                    }
+                }
                 elements.push(child);
             }
         }
@@ -413,14 +420,45 @@ function extendFindInNw(elementToSearch){
         const elements = this.getElementsToSearch();
         console.log(elements);
         
-        // Search HTML (exclude the search box and all <textarea> descendants)
+        // Helper: verify if node is actually visible (not hidden by filter, display:none, or inactive subtab)
+        function isNodeVisible(node) {
+          if (!node) return false;
+          let el = (node.nodeType === Node.ELEMENT_NODE) ? node : node.parentElement;
+          if (!el) return false;
+          if (el.nodeName.toLowerCase() === 'textarea') return false;
+
+          let cur = el;
+          while (cur && cur !== document.body) {
+            // Check inactive tool subtab
+            if (cur.classList && cur.classList.contains('tool-content')) {
+              if (cur.style.display === 'none' || cur.style.visibility === 'none' || cur.style.visibility === 'hidden') {
+                return false;
+              }
+            }
+            // Check table row or generic element inline styles
+            if (cur.style) {
+              if (cur.style.display === 'none' || cur.style.visibility === 'hidden') {
+                return false;
+              }
+            }
+            // Check computed styles
+            let cs = window.getComputedStyle(cur);
+            if (cs.display === 'none' || cs.visibility === 'hidden') {
+              return false;
+            }
+            cur = cur.parentElement;
+          }
+          return true;
+        }
+
+        // Search HTML (exclude the search box, hidden elements/subtabs/rows, and all <textarea> descendants)
         elements.forEach(function (element) {
           if (element.id !== 'find-in-nw-search-box') {
             window.findAndReplaceDOMText(element, {
               find: RegExp( text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'gi'), // literal
               wrap: 'mark',
               wrapClass: 'find-in-nw-token',
-              filterElements: (node) => node.nodeName.toLowerCase() !== 'textarea'
+              filterElements: (node) => isNodeVisible(node)
             });
           }
         });
@@ -447,9 +485,12 @@ function extendFindInNw(elementToSearch){
         // ---- NEW: Search inside all <textarea> values and render overlay highlights
         const taRegex = RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
         
-        // Only search in elements defined above
+        // Only search in elements defined above (visible textareas only)
         elements.forEach(el => {
           el.querySelectorAll('textarea').forEach(ta => {
+            if (ta.offsetWidth === 0 && ta.offsetHeight === 0) return;
+            let cs = window.getComputedStyle(ta);
+            if (cs.display === 'none' || cs.visibility === 'hidden') return;
             const matches = findMatchesInTextarea(ta, taRegex);
             renderTextareaHighlights(ta, matches);
           });

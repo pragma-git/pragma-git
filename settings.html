@@ -1675,6 +1675,11 @@
         // Set Toolbar-TAB event listener
         toolTabs.onclick = e => {
         
+            // Hide nwFind search box
+            if (typeof findInNw !== 'undefined' && findInNw.hideSearchBox) {
+                findInNw.hideSearchBox();
+            }
+
             let id = e.target.dataset.id;
             if (id) {
                 toolTabButton.forEach(btn => {

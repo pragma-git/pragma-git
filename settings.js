@@ -2591,6 +2591,10 @@ function updateAllGroupDropdowns() {
 }
 
 function filterRepoTableByGroup(selectedGroup) {
+    // Hide nwFind search box if open when filter changes
+    if (typeof findInNw !== 'undefined' && findInNw.hideSearchBox) {
+        findInNw.hideSearchBox();
+    }
     if (!selectedGroup) selectedGroup = 'ALL';
     let tbody = document.getElementById('settingsTableBody');
     if (!tbody) return;
