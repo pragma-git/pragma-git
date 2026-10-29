@@ -46,12 +46,9 @@ async function injectIntoNotesJs(document) {
         el: document.querySelector('#editor'),
         previewStyle: 'vertical',
         height: '100%',
-        initialValue: content
+        initialValue: content,
+        usageStatistics: false  // Disable Google Analytics telemetry completely
     };
-    
-    
-    // Disable Google Analytics
-    usageStatistics: false;
     
  
     // Add search button to toolbar
