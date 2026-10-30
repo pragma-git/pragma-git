@@ -181,12 +181,14 @@ function resolveAndSyncSshKey() {
         mkdir -p "$HOME/.ssh" 2>/dev/null && chmod 700 "$HOME/.ssh" 2>/dev/null
         if [ ! -f "$dst_key" ] || [ "$src_key" -nt "$dst_key" ]; then
             cp -f "$src_key" "$dst_key" 2>/dev/null
-            chmod 600 "$dst_key" 2>/dev/null
             if [ -f "${src_key}.pub" ]; then
                 cp -f "${src_key}.pub" "${dst_key}.pub" 2>/dev/null
-                chmod 644 "${dst_key}.pub" 2>/dev/null
             fi
         fi
+        # Always enforce strict 0600 on the private key and 0644 on pubkey
+        chmod 600 "$dst_key" 2>/dev/null
+        [ -f "${dst_key}.pub" ] && chmod 644 "${dst_key}.pub" 2>/dev/null
+        chmod 700 "$HOME/.ssh" 2>/dev/null
         echo "$dst_key"
         return 0
     fi

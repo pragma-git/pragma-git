@@ -29,6 +29,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Default File Picker Directory for SSH Key Selection**:
+  - In [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) (`selectSshKey` and `sshConfigSelectKey`), added `nwworkingdir` attribute to the hidden file input dynamically pointing to `~/.ssh` (`path.join(os.homedir(), '.ssh')`).
+  - This ensures that clicking "Select key file..." on Windows (or Mac/Linux) opens directly in the current user's `.ssh` directory rather than the last used document directory.
+* **Enforce Strict 0600 on Every Key Sync**:
+  - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions) (`resolveAndSyncSshKey`), moved `chmod 600 "$dst_key"` and `chmod 700 "$HOME/.ssh"` outside the file-copy `if` block so that even existing pre-synced keys that were created with `644` are immediately corrected to `0600` whenever tested or used.
 * **WSL SSH Key Permission & Auto-Sync / Cleanup (`resolveAndSyncSshKey`)**:
   - Solved OpenSSH key rejection in WSL due to Windows NTFS 0777 mount permissions:
     - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Added `resolveAndSyncSshKey()` function.

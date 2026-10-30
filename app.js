@@ -7115,7 +7115,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		// forcelocal=false is required 
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
-		cmd = cmd.replaceAll('\\','/').replaceAll(/([a-zA-Z]):\//g, (match, drive) => `/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
+		cmd = cmd.replace(/\\/g, '/').replace(/(^|[\s"'])([a-zA-Z]):\//g, (m, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
 
 		try{
 

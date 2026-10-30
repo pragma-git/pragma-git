@@ -283,6 +283,12 @@ function selectSshKey( mode ) {
     let fileInput = document.getElementById(mode === 'clone' ? 'sshKeyFileInput_clone' : 'sshKeyFileInput_add');
     if (fileInput) {
         fileInput.value = '';
+        try {
+            let os = require('os');
+            let path = require('path');
+            let sshDir = path.join(os.homedir(), '.ssh');
+            fileInput.setAttribute('nwworkingdir', sshDir);
+        } catch (e) {}
         fileInput.click();
     }
 }
@@ -944,6 +950,12 @@ function sshConfigSelectKey() {
     let fileInput = document.getElementById('sshConfigKeyFileInput');
     if (fileInput) {
         fileInput.value = '';
+        try {
+            let os = require('os');
+            let path = require('path');
+            let sshDir = path.join(os.homedir(), '.ssh');
+            fileInput.setAttribute('nwworkingdir', sshDir);
+        } catch (e) {}
         fileInput.click();
     }
 }
