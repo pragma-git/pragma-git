@@ -2523,8 +2523,11 @@ async function generateRepoTable(document, table, data) {
             // Remote URL active / inactive
             if ( opener.cachedRemoteOrigins?.isActiveRemote?.[index] ){
                 document.getElementById(textareaId).classList.add('green');  // Connection has been tested to work
+                document.getElementById(textareaId).title = '';
             }else{
                 document.getElementById(textareaId).classList.add('red');  // Connection has been tested to work
+                let remoteReason = (opener.cachedRemoteOrigins?.reason && opener.cachedRemoteOrigins.reason[index]) ? opener.cachedRemoteOrigins.reason[index] : 'remote error';
+                document.getElementById(textareaId).title = remoteReason;
             }
                         
             //
@@ -2560,6 +2563,27 @@ async function generateRepoTable(document, table, data) {
     } // if any repos
  
   
+}
+
+function updateRemoteStatusColors() {
+    if (!state || !state.repos) return;
+
+    for (let i = 0; i < state.repos.length; i++) {
+        let textareaId = i + 10000;
+        let area = document.getElementById(textareaId);
+        if (area) {
+            let isActive = opener?.cachedRemoteOrigins?.isActiveRemote?.[i];
+            area.classList.remove('green', 'grey', 'red');
+            if (isActive) {
+                area.classList.add('green');
+                area.title = '';
+            } else {
+                area.classList.add('red');
+                let remoteReason = (opener?.cachedRemoteOrigins?.reason && opener.cachedRemoteOrigins.reason[i]) ? opener.cachedRemoteOrigins.reason[i] : 'remote error';
+                area.title = remoteReason;
+            }
+        }
+    }
 }
 
 function updateAllGroupDropdowns() {

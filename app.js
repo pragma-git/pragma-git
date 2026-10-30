@@ -6063,6 +6063,14 @@ async function cacheRemoteOriginStatus( start = 0 ){
     //}
     //await Promise.allSettled( promises )
     
+    // First time
+    if (cachedRemoteOrigins.isActiveRemote == undefined){
+        cachedRemoteOrigins = newCachedRemoteOrigins;
+    }
+    if (cachedRemoteOrigins.reason == undefined){
+        cachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
+    }
+
     let promisesLocal = [];
     let promisesSSH = [];
     for (var i = start; i < state.repos.length; ++i) {
@@ -6073,20 +6081,18 @@ async function cacheRemoteOriginStatus( start = 0 ){
             if (!localExists) {
                 newCachedRemoteOrigins.isActiveRemote[i] = false;
                 newCachedRemoteOrigins.reason[i] = 'SSH project folder offline';
+                if (cachedRemoteOrigins.isActiveRemote) {
+                    cachedRemoteOrigins.isActiveRemote[i] = false;
+                }
+                if (cachedRemoteOrigins.reason) {
+                    cachedRemoteOrigins.reason[i] = 'SSH project folder offline';
+                }
             } else {
                 promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
             }
         }else{
             promisesLocal.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
         }
-    }
-    
-    // First time
-    if (cachedRemoteOrigins.isActiveRemote == undefined){
-        cachedRemoteOrigins = newCachedRemoteOrigins;
-    }
-    if (cachedRemoteOrigins.reason == undefined){
-        cachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
     }
     
     
@@ -6100,10 +6106,12 @@ async function cacheRemoteOriginStatus( start = 0 ){
     await Promise.allSettled( promisesSSH )
     await console.log('STOP promisesSSH');
         
-    // If settings window is currently open, refresh its repo table so it reflects the updated remote status
-    if (localState.settings && typeof updateSettingsRepoTable === 'function') {
+    // If settings window is currently open, dynamically update remote status without rebuilding the table or stealing focus
+    if (localState.settings && settings_win && settings_win.window) {
         try {
-            await updateSettingsRepoTable();
+            if (typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                settings_win.window.updateRemoteStatusColors();
+            }
         } catch(e) {}
     }
         
@@ -6142,6 +6150,11 @@ async function cacheRemoteOriginStatus( start = 0 ){
             if (result == undefined){
                 newCachedRemoteOrigins.isActiveRemote[repoNumber] = false;
                 cachedRemoteOrigins.isActiveRemote[repoNumber] = false;
+                if (localState.settings && settings_win && settings_win.window && typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                    try {
+                        settings_win.window.updateRemoteStatusColors();
+                    } catch(e) {}
+                }
                 if (repoNumber === state.repoNumber) {
                     _update();
                 }
@@ -6178,6 +6191,11 @@ async function cacheRemoteOriginStatus( start = 0 ){
                     cachedRemoteOrigins.isActiveRemote[repoNumber] = newCachedRemoteOrigins.isActiveRemote[repoNumber];
                     if (cachedRemoteOrigins.reason && newCachedRemoteOrigins.reason) {
                         cachedRemoteOrigins.reason[repoNumber] = newCachedRemoteOrigins.reason[repoNumber];
+                    }
+                    if (localState.settings && settings_win && settings_win.window && typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                        try {
+                            settings_win.window.updateRemoteStatusColors();
+                        } catch(e) {}
                     }
                     if (repoNumber === state.repoNumber) {
                         _update();

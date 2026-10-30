@@ -29,6 +29,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Live Remote & SSH Status Synchronization in Settings**:
+  - Fixed offline SSH repos erroneously remaining green in the Settings window when network is disconnected: in `app.js` (`cacheRemoteOriginStatus()`), when an SSH project folder is offline (`!localExists`), marked `isActiveRemote[i] = false` and `reason[i] = 'SSH project folder offline'` so its remote URL status updates to red alongside local repositories.
+  - Implemented dynamic live remote status updating in the open Settings window without table rebuilding or focus disruption:
+    - In `settings.js`: added `updateRemoteStatusColors()` which iterates over existing rows and updates each remote URL textarea's class (`green` vs `red`) and tooltip reason (`title`) in-place without touching user input or selection. Also sets tooltip `title` on initial table generation.
+    - In `app.js`: invoked `settings_win.window.updateRemoteStatusColors()` whenever a remote status check settles (both during stream processing and after batch completion) if Settings is open. Avoided focus stealing by not calling `updateSettingsRepoTable()`, keeping user focus intact in the Settings window.
+  - All automated test suites (7 categories, 20 suites, 110 tests) pass 100%.
 * **Windows WSL Missing Detection & SSH Failure Diagnostics**:
   - Implemented automatic WSL detection on Windows (`isWslAvailable()` using `where wsl.exe` with caching and reset helper) in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js).
   - Scoped Windows-specific WSL warnings strictly to explicit SSH user interactions rather than background probing/caching:
