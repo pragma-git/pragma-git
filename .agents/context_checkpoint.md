@@ -29,6 +29,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix `spawn C:\Windows\system32\cmd.exe ENOENT` on Windows in `multiPlatformExecSync`**:
+  - Identified the root cause of `Error: spawn C:\Windows\system32\cmd.exe ENOENT` when clicking "Deploy public key":
+    - In [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (`multiPlatformExecSync`), lines 7074-7076 unconditionally set `options = { cwd: folder, timeout: timeoutInMs }` whenever `mode === 'timeout'`.
+    - When `folder` is a virtual SSH repository URL (such as `ssh://jan@130.239.99.15/`), setting `options.cwd` to that string passes a non-existent directory path to Node.js's underlying `child_process.exec()` / `spawn()` call.
+    - On Windows, libuv / `CreateProcess` returns path-not-found for an invalid `cwd`, which Node.js surfaces misleadingly as `Error: spawn C:\Windows\system32\cmd.exe ENOENT` (as if `cmd.exe` could not be found).
+    - Fixed by ensuring `options.cwd` is only assigned when `folder` is a real local folder (`!folder.startsWith('ssh:')`), and only assigning `options.timeout = timeoutInMs` when `mode === 'timeout'`.
 * **Windows WSL SSH-folder Key Sync & Centralized SSH Options (branch `wsl-ssh-cleanup`)**:
   - Re-architected Windows/WSL SSH folder key handling starting clean from `57d171c4` (preserving the `0b6fb62e` master connection unhang fix):
     - Added [`ssh_folder/ssh-sync-keys`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-sync-keys): One-way mirrors Windows `%USERPROFILE%\.ssh` into a clean native WSL `$HOME/.ssh` with strict permissions (`0700` dir, `0600` private keys, `0644` public keys and `known_hosts`). Excludes `config` (to prevent Windows-style path breakage) and `authorized_keys`.

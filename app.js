@@ -7064,16 +7064,16 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     let options = {};
     let out;
     
-    // Set path if known
-    let isDefinedFolder =  ( folder !== undefined);
-    let isLocalFolder = ( ! folder.startsWith('ssh:') );
+    // Set path if known (only for real local directories)
+    let isDefinedFolder = ( folder !== undefined );
+    let isLocalFolder = ( typeof folder === 'string' && !folder.startsWith('ssh:') );
     if ( isDefinedFolder && isLocalFolder ){  
-        options = {cwd: folder};
+        options.cwd = folder;
     }
     
     // Set time-out if defined
     if (mode == 'timeout'){
-        options = {cwd: folder, timeout: timeoutInMs};  
+        options.timeout = timeoutInMs;  
     }
 
     // Attach SSH key environment if running an ssh operation
