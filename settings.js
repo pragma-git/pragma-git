@@ -340,10 +340,12 @@ async function _callback( name, event){
                         let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
                         let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
                         if (username && server) {
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }
                     }catch (err){
                         console.error('Error in password-less login');
@@ -460,10 +462,12 @@ async function _callback( name, event){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
                             let server = document.querySelector('input[name="server"]').value.trim();
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }catch (err){
                             console.error('Error in password-less login');
                             opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 

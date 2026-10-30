@@ -53,14 +53,36 @@ if [ ! -d "$TMP" ]; then
 	mkdir -p "$TMP" 2>/dev/null || TMP="/tmp"
 fi
 
+# SSH KEY SELECTION (central -- scripts in ssh_folder/ must NOT parse keys themselves)
+#
+# Pragma-git passes the key for the current ssh-folder repo in environment variable PRAGMA_SSH_KEY
+# (on Windows forwarded into WSL through WSLENV):
+#   - empty            => ssh default keys
+#   - bare file name   => "$HOME/.ssh/<name>"   (Windows: WSL ~/.ssh is a mirror of %USERPROFILE%\.ssh, see ssh-sync-keys)
+#   - path with "/"    => used as is            (macOS / Linux)
+SSH_KEY_PATH=""
+SSH_KEY_OPTIONS=""
+if [ -n "$PRAGMA_SSH_KEY" ]; then
+    case "$PRAGMA_SSH_KEY" in
+        "~/"*) SSH_KEY_PATH="$HOME/${PRAGMA_SSH_KEY#\~/}" ;;
+        */*)   SSH_KEY_PATH="$PRAGMA_SSH_KEY" ;;
+        *)     SSH_KEY_PATH="$HOME/.ssh/$PRAGMA_SSH_KEY" ;;
+    esac
+    SSH_KEY_PATH="${SSH_KEY_PATH%.pub}"   # Always point at private key
+    SSH_KEY_OPTIONS=" -i $SSH_KEY_PATH -o IdentitiesOnly=yes "
+
+    # Separate multiplexed master connection per key (otherwise a master opened with key A is reused when testing key B)
+    CONTROLPATH="${CONTROLPATH}-$(basename "$SSH_KEY_PATH")"
+fi
+
 # SSH AND SCP OPTIONS
 TIMEOUT="1"   # SSH TIMEOUT
 CONNECT_OPTIONS=" -4 -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no " # Connecting
 
 REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${CONTROLPATH} "  # Reuse ssh channel (speed up )
 
-# Combine connection and reuse options  
-SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
+# Combine connection, key and reuse options  
+SSH_OPTIONS="${CONNECT_OPTIONS} ${SSH_KEY_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
 SSH_LOG="${TMP}/ssh-log.log"
 MERGE_LOG="$TMP/mergelog.txt"

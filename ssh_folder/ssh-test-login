@@ -1,29 +1,15 @@
 #!/bin/bash
 # Tests if passwordless SSH login is working
-# Usage: ./ssh-test-login <SSH_URL> [KEY_PATH]
+# Usage: ./ssh-test-login <SSH_URL>
 # Example: ./ssh-test-login ssh://jan@localhost/
-# Example: ./ssh-test-login ssh://jan@localhost/ ~/.ssh/id_rsa_jans_mac
+# Example: PRAGMA_SSH_KEY=~/.ssh/id_rsa_jans_mac ./ssh-test-login ssh://jan@localhost/
+#
+# The key is selected centrally in lib/ssh-functions (environment variable PRAGMA_SSH_KEY => SSH_KEY_OPTIONS)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib/ssh-functions"
 
 getSshUrlParts "$1"
-
-KEY_OPT=""
-if [ -n "$2" ]; then
-    KEY_INPUT="$2"
-    if [[ "$KEY_INPUT" == /* ]]; then
-        KEY_PATH="$KEY_INPUT"
-    elif [[ "$KEY_INPUT" == ~* ]]; then
-        KEY_PATH="${KEY_INPUT/#\~/$HOME}"
-    else
-        KEY_PATH="$HOME/.ssh/$KEY_INPUT"
-    fi
-    KEY_PATH="${KEY_PATH%.pub}"
-    if [ -f "$KEY_PATH" ]; then
-        KEY_OPT="-i $KEY_PATH -o IdentitiesOnly=yes"
-    fi
-fi
 
 # Check for missing server
 if [ -z "$SERVER" ]; then
@@ -31,8 +17,14 @@ if [ -z "$SERVER" ]; then
     exit 0
 fi
 
-# Run ssh with publickey authentication only, timeout 4 seconds
-OUTPUT=$(ssh $KEY_OPT -T "$SERVER" -p ${PORT} -o BatchMode=yes -o ConnectTimeout=4 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "echo PRAGMA_SSH_OK" 2>&1)
+# Check that selected key exists (on Windows: mirrored into WSL ~/.ssh by ssh-sync-keys)
+if [ -n "$SSH_KEY_PATH" ] && [ ! -f "$SSH_KEY_PATH" ]; then
+    echo "STATUS:KEY_NEEDED"
+    exit 0
+fi
+
+# Run ssh with publickey authentication only, timeout 4 seconds (no connection reuse -- test a fresh login)
+OUTPUT=$(ssh $SSH_KEY_OPTIONS -T "$SERVER" -p ${PORT} -o BatchMode=yes -o ConnectTimeout=4 -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o StrictHostKeyChecking=no "echo PRAGMA_SSH_OK" 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "PRAGMA_SSH_OK"; then

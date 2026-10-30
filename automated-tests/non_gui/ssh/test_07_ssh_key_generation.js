@@ -126,8 +126,9 @@ try {
     try {
         let output = '';
         try {
-            output = execSync(`bash "${testLoginBin}" "ssh://${currentUser}@127.0.0.1/tmp" "${keyPath}"`, {
+            output = execSync(`bash "${testLoginBin}" "ssh://${currentUser}@127.0.0.1/tmp"`, {
                 encoding: 'utf8',
+                env: Object.assign({}, process.env, { PRAGMA_SSH_KEY: keyPath }),
                 stdio: ['pipe', 'pipe', 'pipe']
             });
         } catch (e) {
@@ -155,8 +156,9 @@ try {
 
             let loginOutput = '';
             try {
-                loginOutput = execSync(`bash "${testLoginBin}" "ssh://${currentUser}@127.0.0.1/tmp" "${keyPath}"`, {
+                loginOutput = execSync(`bash "${testLoginBin}" "ssh://${currentUser}@127.0.0.1/tmp"`, {
                     encoding: 'utf8',
+                    env: Object.assign({}, process.env, { PRAGMA_SSH_KEY: keyPath }),
                     stdio: ['pipe', 'pipe', 'pipe']
                 });
             } catch (e) {

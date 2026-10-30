@@ -36,19 +36,13 @@ done) 2>&1
 
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
-KEY_INPUT="${3:-id_ed25519}"
 
-if [[ "$KEY_INPUT" == /* ]]; then
-    KEY_PATH="$KEY_INPUT"
-elif [[ "$KEY_INPUT" == ~* ]]; then
-    KEY_PATH="${KEY_INPUT/#\~/$HOME}"
-else
-    KEY_PATH="$HOME/.ssh/$KEY_INPUT"
-fi
+# Key to deploy is selected centrally in lib/ssh-functions (PRAGMA_SSH_KEY => SSH_KEY_PATH)
+KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 KEY_PATH="${KEY_PATH%.pub}"
 
 if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
-    echo "Usage: $0 <remote-user> <remote-host> [keyname_or_path]"  
+    echo "Usage: [PRAGMA_SSH_KEY=<keyname_or_path>] $0 <remote-user> <remote-host>"  
     exit 1
 fi
 
@@ -73,10 +67,18 @@ if [ -e "$KEY_PATH" ]; then
         echo "==> Generating missing public key from private key..."
         ssh-keygen -y -f "$KEY_PATH" > "${KEY_PATH}.pub"
     fi
+elif [ "$ISWSL" = true ]; then
+    # On Windows, %USERPROFILE%\.ssh is the source of truth and WSL ~/.ssh is a disposable mirror (ssh-sync-keys).
+    # A key generated here would be deleted on next sync -- keys must be generated on the Windows side.
+    echo "ERROR: Key not found in WSL: $KEY_PATH"
+    echo "       Generate the key in Windows (%USERPROFILE%\\.ssh) and let Pragma-git sync it to WSL."
+    exit 1
 else
     echo "==> Generating new ED25519 key (no passphrase)…"
     mkdir -p "$(dirname "$KEY_PATH")"
-    ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
+    KEY_USER="${USER:-$(whoami 2>/dev/null || echo "user")}"
+    KEY_HOST="${HOSTNAME:-$(hostname 2>/dev/null || echo "local")}"
+    ssh-keygen -t ed25519 -f "$KEY_PATH" -N "" -C "${KEY_USER}@${KEY_HOST} (pragma-git)"
 fi
 
 ###############################################################################

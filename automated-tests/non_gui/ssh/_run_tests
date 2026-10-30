@@ -74,6 +74,10 @@ function print_suite_description() {
             echo "   Tests isolated ED25519 key generation, permissions, derivation, and overwrite protection."
             echo "   Verifies local sandbox isolation (safeguarding ~/.ssh) and CI-guarded deployment."
             ;;
+        test_08_ssh_sync_keys.sh)
+            echo "   Tests ssh-sync-keys one-way mirroring from Windows .ssh to clean WSL ~/.ssh."
+            echo "   Verifies file exclusions (config, authorized_keys), strict 700/600/644 permissions, and central key options."
+            ;;
     esac
 }
 

@@ -203,6 +203,15 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             let sshUrl = pwd;
            
+            // Forward SSH key for this repo via process environment (PRAGMA_SSH_KEY)
+            let gitSpawnEnv = Object.assign({}, process.env);
+            if (typeof sshKeyEnv === 'function') {
+                let keyEnvs = sshKeyEnv(sshUrl);
+                if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+                    Object.assign(gitSpawnEnv, keyEnvs);
+                }
+            }
+
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
             //
             // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
@@ -211,6 +220,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             return simpleGitDefault( 
                 {   
+                    spawnOptions: { env: gitSpawnEnv },
                     config: [   
                                 `include.path=${configFile}`, 
                                 `SSHURL=${sshUrl}` 
@@ -593,6 +603,10 @@ async function _callback( name, event){
                 if (!wslOk) {
                     state.repoNumber = origRepoNumber;
                     return;
+                }
+                // Ensure WSL ~/.ssh mirror is in sync with Windows keys when switching to an ssh repo
+                if (typeof syncSshKeysToWsl === 'function') {
+                    await syncSshKeysToWsl();
                 }
             }
             try{
@@ -6299,6 +6313,13 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             promisesLocal.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
         }
     }
+
+    // On Windows, if any SSH repos exist, ensure keys are synced once before running SSH checks
+    if (promisesSSH.length > 0 && process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        try {
+            await syncSshKeysToWsl();
+        } catch (e) {}
+    }
     
     //promisesSSH.push( cachedLocalStatus = cachedLocalStatus );
     
@@ -7024,7 +7045,7 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
     });
   });
 }
-async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000 ){  // Run git bash in 'folder', on all platforms. 
+async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000, execExtra = {} ){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -7035,6 +7056,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
      //		forcelocal		Windows typically runs git on ssh-folder over WSL.  Force running local git-bash instead
      //     mode            'timeout'
      //     timeoutInMs     
+     //     execExtra       optional object, e.g. { sshKey: '...' }
      //
      // Output
      //     string output of command, trimmed  (without leading and trailing spaces)
@@ -7054,6 +7076,15 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         options = {cwd: folder, timeout: timeoutInMs};  
     }
 
+    // Attach SSH key environment if running an ssh operation
+    if (folder.startsWith('ssh:') && typeof sshKeyEnv === 'function') {
+        let keyOverride = (execExtra && execExtra.sshKey) ? execExtra.sshKey : '';
+        let keyEnvs = sshKeyEnv(folder, keyOverride);
+        if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+            options.env = Object.assign({}, process.env, options.env || {}, keyEnvs);
+        }
+    }
+
     //
     
     //
@@ -7066,7 +7097,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         if ( folder.startsWith('ssh:') ) {
             
             try{
-                return await runCommandWithTimeout(cmd, {}, timeoutInMs);
+                return await runCommandWithTimeout(cmd, options, timeoutInMs);
             }catch (err){
                 console.error( err);
                 throw err;
@@ -7115,11 +7146,11 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		// forcelocal=false is required 
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
-		cmd =  cmd.replaceAll('\\','/').replaceAll('C:/','/mnt/c/');  // Change to wsl path
+		cmd = cmd.replaceAll('\\','/').replaceAll(/(^|[\s"'])([a-zA-Z]):\//g, (match, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
 
 		try{
 
-			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, {}, timeoutInMs);
+			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, options, timeoutInMs);
 			 
 			 console.log('Output:', out);
              return out;
