@@ -630,8 +630,15 @@ function generateLocalSshKey( keyPath ) {
         fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
     }
 
+    let username = '';
+    try {
+        username = (os.userInfo().username || '').replace(/^.*\\/, '');
+    } catch (e) {}
+    if (!username) {
+        username = process.env.USER || process.env.USERNAME || 'user';
+    }
     let hostname = os.hostname() || 'local';
-    let comment = `pragma-git@${hostname}`;
+    let comment = `${username}@${hostname} (pragma-git)`;
     let cmd = `ssh-keygen -t ed25519 -f "${resolvedPath}" -N "" -C "${comment}"`;
 
     let options = {};

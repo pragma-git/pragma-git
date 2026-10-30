@@ -29,6 +29,19 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **SSH Key Path Resolution under Windows WSL in `ssh-test-login` and `ssh-generate-key-login`**:
+  - Fixed why "Test login" showed `ℹ Key needed (login not permitted)` after deploying a key on Windows:
+    - On Windows, `multiPlatformExecSync` passes the Windows key path (e.g. `C:\Users\jan.axelsson\.ssh\id_ed25519`) or bare key name (`id_ed25519`) to `wsl ssh-test-login`.
+    - In `ssh-test-login` and `ssh-generate-key-login`, Windows drive-letter paths (e.g. `C:\...` or `C:/...`) were not matched by `/*` and fell back to `/home/jan/.ssh/C:\...` which does not exist in WSL.
+    - When a key was not found or accessible, OpenSSH with `-o IdentitiesOnly=yes` refused the connection, resulting in `Permission denied (publickey)` -> `STATUS:KEY_NEEDED`.
+    - Resolved by:
+      - Converting Windows drive letters to WSL paths in `app.js` (`multiPlatformExecSync`).
+      - In `ssh_folder/ssh-test-login` and `ssh_folder/ssh-generate-key-login`, adding regex parser `^[a-zA-Z]:[/\]` to convert Windows paths directly to `/mnt/<drive>/...`.
+      - Added fallback in WSL to search the Windows user's `.ssh` directory (`$WIN_WSL_PROFILE/.ssh/`) for bare key names or when the key is stored on the Windows filesystem.
+* **SSH Key Comment Standardization**:
+  - Updated key generation comments across Node.js ([`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)) and bash ([`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login)) to use the standard human-readable format:
+    `${username}@${hostname} (pragma-git)`
+    (e.g., `jan.axelsson@UFBI23 (pragma-git)`).
 * **SSH Master Connection Timeout on Key Deployment (`ssh-generate-key-login`)**:
   - Identified cause for the 60000ms timeout when clicking "Deploy public key" in SSH Connection Setup:
     - Backgrounded SSH master process (`ssh -o ControlMaster=yes ... &`) was launched with inherited standard input and without explicit host key acceptance. If OpenSSH prompted for terminal input (such as an unknown host fingerprint or terminal TTY fallback), background subshell processes receive `SIGTTIN` or block indefinitely.

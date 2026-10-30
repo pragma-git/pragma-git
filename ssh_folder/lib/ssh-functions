@@ -34,6 +34,7 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
     if [ "$ISWSL" = true ] && [[ "$TMP" == *"/home/"* ]]; then
         TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp  
         TEMP_FILE_LOCATION="${HOME/\/home/\/mnt\/c\/Users}/AppData/Local/Temp/pragma-git-ssh-folders"
+        WIN_WSL_PROFILE="${HOME/\/home/\/mnt\/c\/Users}"
     fi
 
     # Final fallback if TMP directory cannot be established in Windows mount
