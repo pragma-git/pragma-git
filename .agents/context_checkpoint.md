@@ -29,6 +29,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **SSH Master Connection Timeout on Key Deployment (`ssh-generate-key-login`)**:
+  - Identified cause for the 60000ms timeout when clicking "Deploy public key" in SSH Connection Setup:
+    - Backgrounded SSH master process (`ssh -o ControlMaster=yes ... &`) was launched with inherited standard input and without explicit host key acceptance. If OpenSSH prompted for terminal input (such as an unknown host fingerprint or terminal TTY fallback), background subshell processes receive `SIGTTIN` or block indefinitely.
+    - Also, stale control socket files (`/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}`) from previous aborted attempts could block subsequent connection attempts.
+    - In [`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login):
+      - Added `rm -f "$CONTROL_SOCKET"` prior to starting master connection.
+      - Added `< /dev/null` redirection on `ssh -o ControlMaster=yes ...` so the background process never hangs on stdin.
+      - Added `-o StrictHostKeyChecking=accept-new` to automatically accept and trust new remote host fingerprints on first connect without stalling.
 * **SSH Key Deployment on Windows WSL (`/root/.Pragma-git/.tmp` error)**:
   - Fixed `Error: multiPlatformExecSync error: = Error: tee: /root/.Pragma-git/.tmp/pragma-git-log.txt: No such file or directory` when clicking "Deploy Key" on Windows:
     - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Enhanced WSL path resolution when WSL runs as `root` (or any username where `$HOME` is not `/home/...`). Dynamically retrieves `%USERPROFILE%` via `cmd.exe` and converts it with `wslpath -u` to map to the Windows user profile directory. Added guaranteed directory creation `mkdir -p "$TMP"` with fallback to `/tmp`.

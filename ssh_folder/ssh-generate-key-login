@@ -83,6 +83,7 @@ fi
 # Prepare ControlMaster session (ONE PASSWORD, ONE FINGERPRINT DIALOG)
 ###############################################################################
 CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
+rm -f "$CONTROL_SOCKET"
 
 echo "==> Opening master SSH connection (one password will be asked)…"
 
@@ -93,7 +94,8 @@ rm -f "$EXIT"
 ssh -o ControlMaster=yes \
     -o ControlPersist=600 \
     -o ControlPath="$CONTROL_SOCKET" \
-    -N "$REMOTE_USER@$REMOTE_HOST" &
+    -o StrictHostKeyChecking=accept-new \
+    -N "$REMOTE_USER@$REMOTE_HOST" < /dev/null &
 SSH_PID=$!
 
 # Wait for either:
