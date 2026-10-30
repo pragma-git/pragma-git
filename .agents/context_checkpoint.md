@@ -29,6 +29,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **WSL SSH Key Permission & Auto-Sync / Cleanup (`resolveAndSyncSshKey`)**:
+  - Solved OpenSSH key rejection in WSL due to Windows NTFS 0777 mount permissions:
+    - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Added `resolveAndSyncSshKey()` function.
+    - When a key resides on the Windows filesystem (`/mnt/c/...`), the script checks if it was deleted on Windows. If deleted, it automatically deletes the synced copy (`$HOME/.ssh/<key>` and `<key>.pub`) from WSL's native filesystem.
+    - If the key exists on Windows, it syncs the key to native Linux `$HOME/.ssh/` with strict `0600` permissions (and `0644` for `.pub`), ensuring WSL OpenSSH accepts it without "UNPROTECTED PRIVATE KEY FILE" errors.
+    - Integrated `resolveAndSyncSshKey()` across [`ssh_folder/ssh-test-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login), [`ssh_folder/ssh-test-if-file-exists`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-if-file-exists), and [`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login).
 * **SSH Key Path Resolution under Windows WSL in `ssh-test-login` and `ssh-generate-key-login`**:
   - Fixed why "Test login" showed `ℹ Key needed (login not permitted)` after deploying a key on Windows:
     - On Windows, `multiPlatformExecSync` passes the Windows key path (e.g. `C:\Users\jan.axelsson\.ssh\id_ed25519`) or bare key name (`id_ed25519`) to `wsl ssh-test-login`.

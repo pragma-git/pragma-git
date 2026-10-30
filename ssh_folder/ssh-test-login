@@ -11,37 +11,9 @@ getSshUrlParts "$1"
 
 KEY_OPT=""
 if [ -n "$2" ]; then
-    KEY_INPUT="$2"
-    # Support Windows paths when running inside WSL (e.g. C:\... or C:/...)
-    if [[ "$KEY_INPUT" =~ ^[a-zA-Z]:[/\\] ]]; then
-        DRIVE_LETTER="$(echo "${KEY_INPUT:0:1}" | tr '[:upper:]' '[:lower:]')"
-        REST="${KEY_INPUT:2}"
-        REST="${REST//\\//}"
-        KEY_PATH="/mnt/${DRIVE_LETTER}${REST}"
-    elif [[ "$KEY_INPUT" == /* ]]; then
-        KEY_PATH="$KEY_INPUT"
-    elif [[ "$KEY_INPUT" == ~* ]]; then
-        KEY_PATH="${KEY_INPUT/#\~/$HOME}"
-    else
-        # If running inside WSL, check Windows user profile ~/.ssh first if key exists there
-        if [ "$ISWSL" = true ] && [ -n "$WIN_WSL_PROFILE" ] && [ -f "$WIN_WSL_PROFILE/.ssh/$KEY_INPUT" ]; then
-            KEY_PATH="$WIN_WSL_PROFILE/.ssh/$KEY_INPUT"
-        else
-            KEY_PATH="$HOME/.ssh/$KEY_INPUT"
-        fi
-    fi
-    KEY_PATH="${KEY_PATH%.pub}"
-
-    # Also fallback to Windows profile .ssh in WSL if path under Linux $HOME doesn't exist
-    if [ ! -f "$KEY_PATH" ] && [ "$ISWSL" = true ] && [ -n "$WIN_WSL_PROFILE" ]; then
-        BASE_KEY="$(basename "$KEY_PATH")"
-        if [ -f "$WIN_WSL_PROFILE/.ssh/$BASE_KEY" ]; then
-            KEY_PATH="$WIN_WSL_PROFILE/.ssh/$BASE_KEY"
-        fi
-    fi
-
-    if [ -f "$KEY_PATH" ]; then
-        KEY_OPT="-i $KEY_PATH -o IdentitiesOnly=yes"
+    SYNCED_KEY=$(resolveAndSyncSshKey "$2")
+    if [ -n "$SYNCED_KEY" ] && [ -f "$SYNCED_KEY" ]; then
+        KEY_OPT="-i $SYNCED_KEY -o IdentitiesOnly=yes"
     fi
 fi
 

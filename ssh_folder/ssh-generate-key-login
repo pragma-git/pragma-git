@@ -71,6 +71,14 @@ if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
     exit 1
 fi
 
+# Sync key into WSL native ~/.ssh if on Windows filesystem
+if [ -n "$KEY_PATH" ] && [ -f "$KEY_PATH" ]; then
+    SYNCED_KEY=$(resolveAndSyncSshKey "$KEY_PATH")
+    if [ -n "$SYNCED_KEY" ] && [ -f "$SYNCED_KEY" ]; then
+        KEY_PATH="$SYNCED_KEY"
+    fi
+fi
+
 
 ###############################################################################
 # Setup ASKPASS dialogs (only works if pragma-git is running))

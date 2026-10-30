@@ -134,3 +134,68 @@ function getSshUrlParts() {
     #echo "PORT = $PORT" >> "$MERGE_LOG"
     #echo "SERVER_BASE_PATH = $SERVER_BASE_PATH" >> "$MERGE_LOG"
 }
+
+# Resolve and sync SSH key for WSL/Linux environments
+# In WSL, private keys located on Windows NTFS mounts (/mnt/c/...) have permissions
+# like 0777 which OpenSSH strictly rejects ("UNPROTECTED PRIVATE KEY FILE! ... bad permissions").
+# This helper syncs keys from /mnt/ to native Linux ~/.ssh with secure 0600 permissions.
+# If a key is deleted from the Windows filesystem, its synced copy in WSL is also removed.
+function resolveAndSyncSshKey() {
+    local key_in="$1"
+    [ -z "$key_in" ] && return 1
+
+    local src_key=""
+    if [[ "$key_in" =~ ^[a-zA-Z]:[/\\] ]]; then
+        local drive="$(echo "${key_in:0:1}" | tr '[:upper:]' '[:lower:]')"
+        local rest="${key_in:2}"
+        rest="${rest//\\//}"
+        src_key="/mnt/${drive}${rest}"
+    elif [[ "$key_in" == /* ]]; then
+        src_key="$key_in"
+    elif [[ "$key_in" == ~* ]]; then
+        src_key="${key_in/#\~/$HOME}"
+    else
+        # Relative or bare key name (e.g. id_ed25519)
+        if [ "$ISWSL" = true ] && [ -n "$WIN_WSL_PROFILE" ] && [ -f "$WIN_WSL_PROFILE/.ssh/$key_in" ]; then
+            src_key="$WIN_WSL_PROFILE/.ssh/$key_in"
+        else
+            src_key="$HOME/.ssh/$key_in"
+        fi
+    fi
+    src_key="${src_key%.pub}"
+
+    # If running inside WSL and key points to /mnt/... (Windows filesystem)
+    if [ "$ISWSL" = true ] && [[ "$src_key" == /mnt/* ]]; then
+        local base="$(basename "$src_key")"
+        local dst_key="$HOME/.ssh/$base"
+
+        # If source key was removed from Windows, remove the synced WSL copy
+        if [ ! -f "$src_key" ]; then
+            if [ -f "$dst_key" ]; then
+                rm -f "$dst_key" "${dst_key}.pub" 2>/dev/null
+            fi
+            return 1
+        fi
+
+        # Sync key to native Linux ~/.ssh with strict 0600 permissions
+        mkdir -p "$HOME/.ssh" 2>/dev/null && chmod 700 "$HOME/.ssh" 2>/dev/null
+        if [ ! -f "$dst_key" ] || [ "$src_key" -nt "$dst_key" ]; then
+            cp -f "$src_key" "$dst_key" 2>/dev/null
+            chmod 600 "$dst_key" 2>/dev/null
+            if [ -f "${src_key}.pub" ]; then
+                cp -f "${src_key}.pub" "${dst_key}.pub" 2>/dev/null
+                chmod 644 "${dst_key}.pub" 2>/dev/null
+            fi
+        fi
+        echo "$dst_key"
+        return 0
+    fi
+
+    # Native Linux / macOS path
+    if [ -f "$src_key" ]; then
+        echo "$src_key"
+        return 0
+    fi
+
+    return 1
+}

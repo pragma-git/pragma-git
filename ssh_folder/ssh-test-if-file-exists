@@ -19,8 +19,11 @@ KEY_PATH="$2"
 SERVER_PATH="${SERVER_BASE_PATH}"
 
 KEY_OPT=""
-if [ -n "$KEY_PATH" ] && [ -f "$KEY_PATH" ]; then
-    KEY_OPT="-i \"$KEY_PATH\" -o IdentitiesOnly=yes"
+if [ -n "$KEY_PATH" ]; then
+    SYNCED_KEY=$(resolveAndSyncSshKey "$KEY_PATH")
+    if [ -n "$SYNCED_KEY" ] && [ -f "$SYNCED_KEY" ]; then
+        KEY_OPT="-i \"$SYNCED_KEY\" -o IdentitiesOnly=yes"
+    fi
 fi
 
 # Execute the test command 
