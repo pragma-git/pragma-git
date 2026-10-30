@@ -80,6 +80,34 @@ else
     assert_fail "8.6: PRAGMA_SSH_KEY full path resolution" "$RESOLVED_OUT"
 fi
 
+# Test 7: Generate real cryptographic key, mirror via sync, and test over SSH
+REAL_KEY_SRC="$SRC_TMP/id_ed25519_realsync"
+ssh-keygen -t ed25519 -N "" -C "pragma_test_sync@localhost" -f "$REAL_KEY_SRC" >/dev/null 2>&1
+"$SYNC_KEYS_BIN" "$SRC_TMP" "$DST_TMP" >/dev/null 2>&1
+
+SYNCED_KEY="$DST_TMP/id_ed25519_realsync"
+CURRENT_USER="${CURRENT_USER##*\\}"
+TEST_LOGIN_BIN="$SSH_FOLDER_DIR/ssh-test-login"
+
+if [ -f "$SYNCED_KEY" ]; then
+    # Test connection with the synced key over SSH
+    # Since this new key is not in authorized_keys, OpenSSH must accept key permissions
+    # without warning ('Permissions ... are too open') and return STATUS:KEY_NEEDED.
+    SSH_OUTPUT=$(PRAGMA_SSH_KEY="$SYNCED_KEY" "$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@127.0.0.1/tmp" 2>&1)
+    
+    if echo "$SSH_OUTPUT" | grep -q "Permissions .* are too open"; then
+        assert_fail "8.7: Synced key rejected due to open permissions" "$SSH_OUTPUT"
+    elif echo "$SSH_OUTPUT" | grep -q "STATUS:KEY_NEEDED"; then
+        assert_pass "8.7: Real key generated, synced, and verified over SSH (STATUS:KEY_NEEDED, permissions valid)"
+    elif echo "$SSH_OUTPUT" | grep -q "STATUS:OK"; then
+        assert_pass "8.7: Real key generated, synced, and authenticated over SSH (STATUS:OK)"
+    else
+        assert_fail "8.7: Unexpected SSH response with synced key" "$SSH_OUTPUT"
+    fi
+else
+    assert_fail "8.7: Real key failed to mirror to destination" "Missing $SYNCED_KEY"
+fi
+
 # Clean up
 rm -rf "$SRC_TMP" "$DST_TMP"
 
