@@ -29,6 +29,8 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Enable CI for All Branches**:
+  - Updated [`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml) push and pull_request triggers to `branches: [ '**' ]` so GitHub Actions automatically runs across macOS, Ubuntu, and Windows for all branches (including `wsl-ssh-cleanup` and other feature/fix branches), ensuring CI status badges appear throughout Pragma-git.
 * **Fix Pragma-Merge History View and Diff on SSH-folder Repositories**:
   - Investigated and resolved issues when clicking "(view)" on newly added files in history view or viewing files in `pragma-merge` on SSH repositories:
     1. Removed erroneous `<script src='../node_modules/codemirror/mode/null/null.js'></script>` in [`merge/pragma-merge_iframe.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html), eliminating `net::ERR_FILE_NOT_FOUND (null.js)`.

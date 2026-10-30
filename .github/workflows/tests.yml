@@ -2,9 +2,9 @@ name: Automated Non-GUI Tests
 
 on:
   push:
-    branches: [ develop, master, feature/** ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ develop, master ]
+    branches: [ '**' ]
 
 env:
   FORCE_COLOR: '1'
