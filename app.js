@@ -203,7 +203,35 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             let sshUrl = pwd;
            
-            // The second config-row below is used to sneak the SSHURL into the ssh-git-client
+            // Look up any custom SSH key configured for this repo
+            let repoKey = '';
+            if (state && Array.isArray(state.repos)) {
+                let repoObj = state.repos.find(r => r && r.localFolder === sshUrl);
+                if (repoObj && repoObj.sshKey) {
+                    repoKey = repoObj.sshKey;
+                }
+            }
+            // Fallback: check if settings window has an active key selected for adding/cloning
+            if (!repoKey && typeof global.windows === 'object' && global.windows['settings_win']) {
+                try {
+                    let win = global.windows['settings_win'].window;
+                    if (win && typeof win.getSelectedSshKey === 'function') {
+                        repoKey = win.getSelectedSshKey('add') || win.getSelectedSshKey('clone') || '';
+                    }
+                } catch (e) {
+                    // Ignore window access errors
+                }
+            }
+
+            let gitConfig = [   
+                `include.path=${configFile}`, 
+                `SSHURL=${sshUrl}` 
+            ];
+            if (repoKey && repoKey.trim().length > 0) {
+                gitConfig.push(`SSHKEY=${repoKey.trim()}`);
+            }
+
+            // The second and third config-rows above are used to sneak SSHURL and SSHKEY into ssh-git-client
             //
             // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
@@ -211,10 +239,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             return simpleGitDefault( 
                 {   
-                    config: [   
-                                `include.path=${configFile}`, 
-                                `SSHURL=${sshUrl}` 
-                            ],
+                    config: gitConfig,
                     unsafe: {  
                         allowUnsafeCustomBinary: true
                     } , 
@@ -6699,9 +6724,9 @@ function waitTime( delay) {
   })
 }
 
-async function mkdir(dir){        // Make local folder
-    if (! await fs_existsSync(dir)){
-        await fs_mkdir( dir);   // Use this for both ssh-folder and local folder
+async function mkdir(dir, sshKey = ''){        // Make local folder
+    if (! await fs_existsSync(dir, sshKey)){
+        await fs_mkdir( dir, sshKey);   // Use this for both ssh-folder and local folder
     }
 }
 function rmLocalFile(localFile){

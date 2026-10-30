@@ -101,7 +101,7 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
   }
   
 }
-async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- works on both local and over ssh
+async function fs_mkdir( folder_or_sshUrl, sshKey = '') {                    // mkdir -p -- works on both local and over ssh
 
 
     // TODO : Make app.js mkdir call this function !
@@ -116,7 +116,8 @@ async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- w
                 // SSH folder
                 
                   // run ssh-get bash script
-                  let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"`;
+                  let keyArg = (sshKey && typeof sshKey === 'string' && sshKey.trim().length > 0) ? ` "${sshKey.trim()}"` : '';
+                  let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"${keyArg}`;
                   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
                   await MAIN.multiPlatformExecSync( folder_or_sshUrl, CMD, false, 'timeout', 30000);
 

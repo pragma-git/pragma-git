@@ -29,6 +29,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Custom SSH Key Support for `ssh-mkdir` and `ssh-git-client`**:
+  - Solved `Add Repository Error: Permission denied (publickey,password)` when creating or checking a new remote repository with custom keys:
+    - Updated [`ssh_folder/ssh-mkdir`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir) to accept an optional `$2` key parameter, resolve and sync the key using `resolveAndSyncSshKey`, and apply `-i "$SYNCED_KEY" -o IdentitiesOnly=yes` to the remote `mkdir -p` and `ssh-test-if-file-exists` calls.
+    - Updated `fs_mkdir` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) and `mkdir` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to accept and forward the custom SSH key argument.
+    - In [`settings.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), passed `selectedKeyForAdd` to `opener.mkdir(folder, selectedKeyForAdd)` in the Add Repository action.
+    - Updated [`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client) to recognize `-c SSHKEY=<key>` arguments and pass `-i "$SYNCED_KEY" -o IdentitiesOnly=yes` to remote `ssh` commands.
+    - In [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), enhanced `simpleGit(pwd)` for SSH URLs to look up configured or active repository SSH keys and include `SSHKEY=<key>` in the `simpleGit` configuration.
 * **Default File Picker Directory for SSH Key Selection**:
   - In [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) (`selectSshKey` and `sshConfigSelectKey`), added `nwworkingdir` attribute to the hidden file input dynamically pointing to `~/.ssh` (`path.join(os.homedir(), '.ssh')`).
   - This ensures that clicking "Select key file..." on Windows (or Mac/Linux) opens directly in the current user's `.ssh` directory rather than the last used document directory.

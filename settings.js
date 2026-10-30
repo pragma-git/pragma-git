@@ -452,7 +452,8 @@ async function _callback( name, event){
                 }
 
                 // mkdir 
-				await opener.mkdir(folder);  // Create local folder if it does not exist
+                let selectedKeyForAdd = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+				await opener.mkdir(folder, selectedKeyForAdd);  // Create local folder if it does not exist
                 
                 try{
                     // Setup password-less login

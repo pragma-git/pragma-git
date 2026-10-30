@@ -70,6 +70,10 @@ REMAINING_ARGUMENTS=''
             SSHURL="${2#SSHURL=}"
             echo "($PID) ssh-git-client  -- SSHURL='$SSHURL'" 2>&1 >> "$SSH_LOG"
             shift 2     # Skip both -c and the SSHURL=... from argument list
+        elif [[ "$1" == "-c" && "$2" == SSHKEY=* ]]; then
+            SSHKEY="${2#SSHKEY=}"
+            echo "($PID) ssh-git-client  -- SSHKEY='$SSHKEY'" 2>&1 >> "$SSH_LOG"
+            shift 2     # Skip both -c and the SSHKEY=... from argument list
         elif [[ "$1" == "-PIPED" ]]; then
             PIPED=true  # Skip "-PIPED" from argument list
             shift
@@ -83,6 +87,14 @@ REMAINING_ARGUMENTS=''
     
     echo "($PID) ssh-git-client  -- SSH_GIT_CLIENT  $ALL_ARGUMENTS " >> "$SSH_LOG"
     echo "($PID) ssh-git-client  -- REMAINING_ARGUMENTS =${REMAINING_ARGUMENTS}" >> "$SSH_LOG"
+    
+    # Configure custom SSH key if specified
+    if [ -n "$SSHKEY" ]; then
+        SYNCED_KEY=$(resolveAndSyncSshKey "$SSHKEY")
+        if [ -n "$SYNCED_KEY" ] && [ -f "$SYNCED_KEY" ]; then
+            SSH_OPTIONS="${SSH_OPTIONS} -i \"$SYNCED_KEY\" -o IdentitiesOnly=yes"
+        fi
+    fi
     
     # Get server info
     getSshUrlParts "$SSHURL"  # Sets SERVER PORT SERVER_BASE_PATH

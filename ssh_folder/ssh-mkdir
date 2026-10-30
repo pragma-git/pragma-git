@@ -11,12 +11,21 @@ source lib/ssh-functions
 
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+KEY_PATH="$2"
+
+KEY_OPT=""
+if [ -n "$KEY_PATH" ]; then
+    SYNCED_KEY=$(resolveAndSyncSshKey "$KEY_PATH")
+    if [ -n "$SYNCED_KEY" ] && [ -f "$SYNCED_KEY" ]; then
+        KEY_OPT="-i $SYNCED_KEY -o IdentitiesOnly=yes"
+    fi
+fi
 
 echo ">> SSH-MKDIR  \"$1\" " >> "$PRAGMALOG_FILE"
 
 # Make folder on server
-echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS mkdir -p '$SERVER_BASE_PATH'" >> "$PRAGMALOG_FILE"
-ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS mkdir -p "'$SERVER_BASE_PATH'"
+echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS $KEY_OPT mkdir -p '$SERVER_BASE_PATH'" >> "$PRAGMALOG_FILE"
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS $KEY_OPT mkdir -p "'$SERVER_BASE_PATH'"
 
 
 # Check result
@@ -24,7 +33,7 @@ if [ $? -eq 0 ]; then
     echo "    Success : Created folder \"$1\"" 
     echo "    Success : Created folder \"$1\""  >> "$PRAGMALOG_FILE"
     
-    ./ssh-test-if-file-exists "$1" > /dev/null
+    ./ssh-test-if-file-exists "$1" "$KEY_PATH" > /dev/null
     if [ $? -eq 0 ]; then
         echo "    Verified folder exists : \"$1\"" 
     else
