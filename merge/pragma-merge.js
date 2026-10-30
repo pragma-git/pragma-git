@@ -128,6 +128,27 @@ dv.panes = panes; // Initial value
 // FUNCTIONS
 //-----------
 
+function safeIsBinaryFile(filePathOrBuffer) {
+    if (!filePathOrBuffer) {
+        return false;
+    }
+    if (Buffer.isBuffer(filePathOrBuffer)) {
+        try {
+            return isBinaryFileSync(filePathOrBuffer);
+        } catch (err) {
+            return false;
+        }
+    }
+    try {
+        if (typeof filePathOrBuffer === 'string' && fs.existsSync(filePathOrBuffer) && fs.statSync(filePathOrBuffer).isFile()) {
+            return isBinaryFileSync(filePathOrBuffer);
+        }
+    } catch (err) {
+        return false;
+    }
+    return false;
+}
+
 async function setupAsBinary(){
         
     // Set Read-Only for Editor-mode 
@@ -157,7 +178,7 @@ async function setupAsBinary(){
 function isBinaryFile(){
 
     try{
-        if ( isBinaryFileSync(MERGED)  ){
+        if ( safeIsBinaryFile(MERGED)  ){
             pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
             return true
         }        
@@ -179,8 +200,14 @@ async function injectIntoJs(document) {
     win = gui.Window.get();
     
     // Read the file content
-    cachedFile.BASE.FileContent = loadFile(BASE);
-    cachedFile.BASE.FilePath = BASE;
+    if (SECOND == '--edit' && THIRD == '--show') {
+        // In historical view mode, the file is retrieved from git, not from disk
+        cachedFile.BASE.FileContent = "";
+        cachedFile.BASE.FilePath = BASE;
+    } else {
+        cachedFile.BASE.FileContent = loadFile(BASE);
+        cachedFile.BASE.FilePath = BASE;
+    }
     
     cachedFile.LOCAL.FileContent = loadFile(LOCAL);
     cachedFile.LOCAL.FilePath = LOCAL;
@@ -196,7 +223,7 @@ async function injectIntoJs(document) {
         if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key].FileContent === 'string') {
             // ignore binary files ( and don't test non-files where we have arguments  --edit, --show, --ro, --rw  )
             if (  !cachedFile[key].FilePath.startsWith( '--')  ) {
-				if ( !isBinaryFileSync(cachedFile[key].FilePath) ) {
+				if ( !safeIsBinaryFile(cachedFile[key].FilePath) ) {
 					cachedFile[key].FileContent = cachedFile[key].FileContent.replace(/\r/g, '');
 					cachedFile[key].hasCRLF = cachedFile[key].FileContent.includes('\r');
 				}
@@ -291,7 +318,7 @@ function loadFile(filePath)  {
         }
         
         // Normalize line endings to LF for the diff engine (skip binary files)
-        if ( !isBinaryFileSync(filePath) ) {
+        if ( !safeIsBinaryFile(filePath) ) {
             content = content.replace(/\r/g, '');
         }
         
@@ -630,7 +657,7 @@ async function initUI( keep) {
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
-        options.origLeft = cachedFile.LOCAL.File;
+        options.origLeft = cachedFile.LOCAL.FileContent;
 
         if (keep){
             options.value = dv.editor().getValue();

@@ -29,6 +29,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Pragma-Merge History View and Diff on SSH-folder Repositories**:
+  - Investigated and resolved issues when clicking "(view)" on newly added files in history view or viewing files in `pragma-merge` on SSH repositories:
+    1. Removed erroneous `<script src='../node_modules/codemirror/mode/null/null.js'></script>` in [`merge/pragma-merge_iframe.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html), eliminating `net::ERR_FILE_NOT_FOUND (null.js)`.
+    2. Added browser/window compatibility shim for `node_modules/diff-match-patch/index.js` in [`merge/pragma-merge_iframe.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html) so `module.exports` and `diff_match_patch` globals initialize reliably without throwing `Uncaught ReferenceError: module is not defined`.
+    3. Created `safeIsBinaryFile(filePathOrBuffer)` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to safely check existence before calling `isBinaryFileSync(path)`. This prevents uncaught `ENOENT` crashes during file loads or CRLF stripping on virtual/remote paths.
+    4. Guarded `--show` file loading in `injectIntoJs()`: when `SECOND == '--edit' && THIRD == '--show'`, avoided invalid local disk reads (`loadFile(BASE)`) for historical files which are only present in git and loaded via `simpleGit(ROOT).show([hash + ':' + BASE])`.
+    5. Corrected typo in `pragma-merge.js` 3-pane merge initialization: `cachedFile.LOCAL.File` -> `cachedFile.LOCAL.FileContent`.
+  - Verified with automated test suite: all 7 test categories, 21 suites, and 118 tests passed 100%.
 * **Fix Pragma-Merge Diff on SSH-folder Repositories**:
   - Investigated why clicking "diff" for a modified file on an SSH-folder repo failed to open `pragma-merge` on Windows/WSL:
     1. WSL `TMP` directory mismatch: `pragma-merge` and `ssh_folder/ssh-close-pragma-merge-ssh` previously relied on `${TMP/\/home/\/mnt\/c\/Users}`. When WSL runs as `root` (or with different usernames), the path evaluated to `/root/.Pragma-git/.tmp`, which the Windows NW.js process watching `%USERPROFILE%\.Pragma-git\.tmp\pragma-merge-running` never detects. Added Windows profile resolution via `cmd.exe /c "echo %USERPROFILE%"` and `wslpath -u`.
