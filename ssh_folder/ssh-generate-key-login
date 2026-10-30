@@ -19,13 +19,16 @@ source "$SCRIPT_DIR/lib/ssh-functions"  # Standard setup for SSH
 
 # INITIALIZE LOGGING (all echo commands and errors prefixed)
 PRAGMA_LOG="$TMP/pragma-git-log.txt"
+if [ ! -d "$(dirname "$PRAGMA_LOG")" ]; then
+    mkdir -p "$(dirname "$PRAGMA_LOG")" 2>/dev/null
+fi
 
 # Redirect ALL output (stdout and stderr) to the log
 PID=$$
 PREFIX="($PID) ssh-generate-key-login -- "
 
 exec > >(while IFS= read -r line; do
-    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG"
+    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG" 2>/dev/null || echo "$PREFIX$line"
 done) 2>&1
 
 

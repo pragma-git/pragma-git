@@ -29,6 +29,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **SSH Key Deployment on Windows WSL (`/root/.Pragma-git/.tmp` error)**:
+  - Fixed `Error: multiPlatformExecSync error: = Error: tee: /root/.Pragma-git/.tmp/pragma-git-log.txt: No such file or directory` when clicking "Deploy Key" on Windows:
+    - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Enhanced WSL path resolution when WSL runs as `root` (or any username where `$HOME` is not `/home/...`). Dynamically retrieves `%USERPROFILE%` via `cmd.exe` and converts it with `wslpath -u` to map to the Windows user profile directory. Added guaranteed directory creation `mkdir -p "$TMP"` with fallback to `/tmp`.
+    - In [`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login): Ensured `mkdir -p "$(dirname "$PRAGMA_LOG")"` is executed before logging redirection, and safeguarded the `tee -a` redirect subshell so logging I/O failures do not abort key generation or deployment.
 * **SSH Connection Setup Text Wrapping & Dialog Layout**:
   - Fixed horizontal scroll bar bug caused by long warning/notice texts in the SSH Connection Configuration dialog (`#sshConfigDialog`):
     - Replaced the global `.keyValueTable` single-line `white-space: nowrap` inheritance on the second column with explicit `white-space: normal !important`, `word-wrap: break-word`, `overflow-wrap: break-word`, and `table-layout: fixed !important`.
