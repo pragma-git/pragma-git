@@ -29,6 +29,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **SSH Connection Setup Text Wrapping & Dialog Layout**:
+  - Fixed horizontal scroll bar bug caused by long warning/notice texts in the SSH Connection Configuration dialog (`#sshConfigDialog`):
+    - Replaced the global `.keyValueTable` single-line `white-space: nowrap` inheritance on the second column with explicit `white-space: normal !important`, `word-wrap: break-word`, `overflow-wrap: break-word`, and `table-layout: fixed !important`.
+    - Added word-wrapping rules to all SSH warning/status elements (`#sshConfigKeyNotice`, `#sshConfigStatusText`, `#sshConfigGenerateStatus`, `#sshKeyNotice_add`, and `#sshKeyNotice_clone`).
+    - Configured dialog width constraints (`width: 560px; min-width: 480px; max-width: 90vw; box-sizing: border-box;`) ensuring it fits naturally on smaller screens and Windows without triggering horizontal scrolling.
 * **Live Remote & SSH Status Synchronization in Settings**:
   - Fixed offline SSH repos erroneously remaining green in the Settings window when network is disconnected: in `app.js` (`cacheRemoteOriginStatus()`), when an SSH project folder is offline (`!localExists`), marked `isActiveRemote[i] = false` and `reason[i] = 'SSH project folder offline'` so its remote URL status updates to red alongside local repositories.
   - Implemented dynamic live remote status updating in the open Settings window without table rebuilding or focus disruption:
