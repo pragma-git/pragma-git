@@ -86,7 +86,7 @@ CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
 
 echo "==> Opening master SSH connection (one password will be asked)…"
 
-EXIT="$HOME/.Pragma-git/.tmp/exit-pragma-askpass-ssh"
+EXIT="$TMP/exit-pragma-askpass-ssh"
 rm -f "$EXIT"
 
 # Start real master connection (handles fingerprint + password)

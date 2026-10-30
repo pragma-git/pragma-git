@@ -928,6 +928,8 @@ function updateSshConfigKeyDisplay( keyPath ) {
     if (deployBtn) {
         let keyExists = fs.existsSync(activeKey) || fs.existsSync(activeKey + '.pub');
         deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
+        deployBtn.style.display = keyExists ? 'inline-block' : 'none';
+        deployBtn.disabled = false;
     }
 }
 
@@ -954,8 +956,6 @@ function onSshConfigFilePicked( inputEl ) {
 
     let statusEl = document.getElementById('sshConfigStatusText');
     if (statusEl) statusEl.textContent = '';
-    let deployBtn = document.getElementById('sshConfigDeployBtn');
-    if (deployBtn) deployBtn.style.display = 'none';
 }
 
 function sshConfigResetKey() {
@@ -966,8 +966,6 @@ function sshConfigResetKey() {
 
     let statusEl = document.getElementById('sshConfigStatusText');
     if (statusEl) statusEl.textContent = '';
-    let deployBtn = document.getElementById('sshConfigDeployBtn');
-    if (deployBtn) deployBtn.style.display = 'none';
 }
 
 async function sshConfigTestLogin() {

@@ -56,9 +56,24 @@ if [ -z ${SYSTEMDRIVE+x} ] ; then
 	       
 	    # Windows over WSL  (git over ssh  is implemented using WSL)
 		if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-			HOME="${HOME/\/home/\/mnt\/c\/Users}" # Transform /home/jan/ => /mnt/c/Users/jan/  
-			SETTINGSDIR="$HOME/.Pragma-git"
-			TMP="$SETTINGSDIR/.tmp"
+            # Make paths for running inside WSL
+            if [[ "$TMP" == /root/* ]] || [ ! -d "$(dirname "$TMP")" ] || [ ! -f "$TMP/pragma-git-running" ]; then
+                # When WSL runs as root or username does not match, locate Windows user profile
+                WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')
+                if [ -n "$WIN_USER_PROFILE" ]; then
+                    WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
+                    if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+                        SETTINGSDIR="$WIN_WSL_PROFILE/.Pragma-git"
+                        TMP="$SETTINGSDIR/.tmp"
+                    fi
+                fi
+            fi
+
+            # Fallback path transformation if not set via USERPROFILE
+            if [[ "$SETTINGSDIR" == *"/home/"* ]]; then
+                SETTINGSDIR="${SETTINGSDIR/\/home/\/mnt\/c\/Users}" # Transform /home/jan/ => /mnt/c/Users/jan/
+                TMP="$SETTINGSDIR/.tmp"
+            fi
 	        echo "WSL Linux" > "$TMP/askpasslog.txt"
 		fi
     
