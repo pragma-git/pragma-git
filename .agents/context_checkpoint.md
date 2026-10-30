@@ -29,6 +29,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Pragma-Merge Diff on SSH-folder Repositories**:
+  - Investigated why clicking "diff" for a modified file on an SSH-folder repo failed to open `pragma-merge` on Windows/WSL:
+    1. WSL `TMP` directory mismatch: `pragma-merge` and `ssh_folder/ssh-close-pragma-merge-ssh` previously relied on `${TMP/\/home/\/mnt\/c\/Users}`. When WSL runs as `root` (or with different usernames), the path evaluated to `/root/.Pragma-git/.tmp`, which the Windows NW.js process watching `%USERPROFILE%\.Pragma-git\.tmp\pragma-merge-running` never detects. Added Windows profile resolution via `cmd.exe /c "echo %USERPROFILE%"` and `wslpath -u`.
+    2. Missing SSH options: In `ssh_folder/ssh-git-client`, lines checking if the server signal file exists (`test -f '$FILE_LIST_ON_SSH'` and `test -f '$REMOTE_ASKPASS_SIGNAL_FILE'`) invoked `ssh -p $PORT "$SERVER"` without `$SSH_OPTIONS`. Added `$SSH_OPTIONS` so repository-specific or selected keys are included.
+    3. Server executable permissions: In `ssh_folder/ssh-put-simple`, added automatic `chmod +x` after uploading `pragma-merge` or `pragma-askpass` to the remote server.
 * **Fix `spawn C:\Windows\system32\cmd.exe ENOENT` on Windows in `multiPlatformExecSync`**:
   - Identified the root cause of `Error: spawn C:\Windows\system32\cmd.exe ENOENT` when clicking "Deploy public key":
     - In [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (`multiPlatformExecSync`), lines 7074-7076 unconditionally set `options = { cwd: folder, timeout: timeoutInMs }` whenever `mode === 'timeout'`.

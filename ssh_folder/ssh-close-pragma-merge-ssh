@@ -22,9 +22,26 @@ then
     TMP="$HOME/.Pragma-git/.tmp"
     
     # Modify TMP if run under WSL
-    # Windows (git over ssh  is implemented using WSL)
+    # Windows (git over ssh is implemented using WSL)
 	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+		if [[ "$TMP" == /root/* ]] || [ ! -d "$(dirname "$TMP")" ]; then
+			WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')
+			if [ -n "$WIN_USER_PROFILE" ]; then
+				WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
+				if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+					TMP="$WIN_WSL_PROFILE/.Pragma-git/.tmp"
+				fi
+			fi
+		fi
+
+		if [[ "$TMP" == *"/home/"* ]]; then
+			TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+		fi
+
+		if [ ! -d "$(dirname "$TMP")" ]; then
+			TMP="$HOME/.Pragma-git/.tmp"
+		fi
+
 		MERGE_LOG="${TMP}/ssh-log.log"
 	fi
 else

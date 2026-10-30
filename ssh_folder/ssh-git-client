@@ -187,7 +187,7 @@ EOF
         #
         if [ "$MERGE_CALLED" == false ];  then   # MERGE_CALLED will be set to true, to ensure only doing this once
         
-            if ssh -p $PORT "$SERVER" "test -f '$FILE_LIST_ON_SSH'"; then
+            if ssh -p $PORT $SSH_OPTIONS "$SERVER" "test -f '$FILE_LIST_ON_SSH'"; then
                 
                 echo  "($PID) ssh-git-client  -- Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSHURL\""  >> "$SSH_LOG" 
                 echo  "  "  >> "$SSH_LOG"
@@ -204,7 +204,7 @@ EOF
         #
         # If remote Git is waiting for askpass dialog :
         #
-        if ssh -p $PORT "$SERVER" "test -f '$REMOTE_ASKPASS_SIGNAL_FILE'"; then
+        if ssh -p $PORT $SSH_OPTIONS "$SERVER" "test -f '$REMOTE_ASKPASS_SIGNAL_FILE'"; then
         
             # Signaling files
             REMOTE_PROMPT_FILE="$REMOTE_TMP/askpass_first-ssh"
