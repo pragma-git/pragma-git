@@ -144,48 +144,25 @@ try {
         assertFail('7.7: Error testing undeployed key rejection', err.message);
     }
 
-    // Test 8: CI-Guarded End-to-End Key Deployment & Verification
-    if (isCI) {
-        try {
-            const sshDir = path.join(os.homedir(), '.ssh');
-            const authKeysPath = path.join(sshDir, 'authorized_keys');
-            const pubContent = fs.readFileSync(keyPath + '.pub', 'utf8').trim();
-
-            // Append key to authorized_keys in CI runner (disposable VM)
-            fs.appendFileSync(authKeysPath, '\n' + pubContent + '\n', { mode: 0o600 });
-
-            let loginOutput = '';
-            try {
-                loginOutput = execSync(`bash "${testLoginBin}" "ssh://${currentUser}@127.0.0.1/tmp"`, {
-                    encoding: 'utf8',
-                    env: Object.assign({}, process.env, { PRAGMA_SSH_KEY: keyPath }),
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
-            } catch (e) {
-                loginOutput = (e.stdout || '') + (e.stderr || '');
-            }
-
-            // Remove test key from authorized_keys immediately
-            try {
-                const currentAuth = fs.readFileSync(authKeysPath, 'utf8');
-                const keySig = pubContent.split(' ')[1];
-                const cleaned = currentAuth.split('\n').filter(line => !line.includes(keySig)).join('\n');
-                fs.writeFileSync(authKeysPath, cleaned, { mode: 0o600 });
-            } catch (cleanupErr) {
-                console.warn('Warning: Failed to clean up authorized_keys in CI:', cleanupErr);
-            }
-
-            if (loginOutput.includes('STATUS:OK')) {
-                assertPass('7.8: (CI Runner) Deployed key authenticates successfully (STATUS:OK) and revokes cleanly');
-            } else {
-                assertFail('7.8: (CI Runner) Deployed key failed authentication', loginOutput.trim());
-            }
-        } catch (ciErr) {
-            assertFail('7.8: (CI Runner) Error in deployment test', ciErr.message);
+    // Test 8: Full ssh interaction against a REAL ephemeral sshd on localhost (own host key, own authorized_keys).
+    // Runs on all platforms; on Windows the bash helper and ssh scripts run inside WSL, like in production.
+    // Rejected before injection, accepted after injection -- never touches the real ~/.ssh/authorized_keys.
+    try {
+        const helper = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
+        let out = '';
+        if (process.platform === 'win32') {
+            const toWsl = (p) => p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
+            out = execSync(`wsl bash "${toWsl(helper)}" login-check "${toWsl(keyPath)}"`, { encoding: 'utf8' });
+        } else {
+            out = execSync(`bash "${helper}" login-check "${keyPath}"`, { encoding: 'utf8' });
         }
-    } else {
-        // Local machine: skip modifying authorized_keys so developer macOS is completely protected
-        assertPass('7.8: Local environment protected — authorized_keys modification isolated to CI runners');
+        if (out.includes('BEFORE:STATUS:KEY_NEEDED') && out.includes('AFTER:STATUS:OK')) {
+            assertPass('7.8: Generated key rejected by real sshd, then accepted after injection into its authorized_keys');
+        } else {
+            assertFail('7.8: Real sshd login check gave unexpected result', out.trim());
+        }
+    } catch (err) {
+        assertFail('7.8: Real sshd login check failed to run', (err.stdout || '') + (err.stderr || '') + err.message);
     }
 
 } finally {

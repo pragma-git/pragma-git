@@ -29,6 +29,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Real ephemeral sshd for SSH tests + correct suite failure reporting**:
+  - Added [`automated-tests/ssh_test_server.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh): starts an unprivileged real `sshd` on a random localhost port with its own host key and its own `authorized_keys` (never touches real `~/.ssh`). `start_test_sshd`, `inject_test_sshd_key`, `stop_test_sshd`, `login-check` command. On Windows runners it runs inside WSL.
+  - `test_08` 8.7/8.8: synced key rejected (`KEY_NEEDED`) -> injected into authorized_keys -> accepted (`STATUS:OK`). `test_07` 7.8 uses the same helper (replaces the old CI-only edit of the real authorized_keys, which wrote to the Windows home while sshd ran in WSL).
+  - 8.4 permission check: GNU `stat -c` first (GNU `stat -f` = filesystem status and succeeds with wrong output), then BSD `stat -f`; no python dependency.
+  - All 7 `_run_tests` runners: `set -o pipefail` + `exit_code=$?` (PIPESTATUS[0] returned tee's/subshell's 0 inside the Windows `( wsl ... | tee )` subshell, giving "SUITE PASSED" with failures) plus a safety net that any `[FAIL]` line fails the suite.
+* **Fix Linux Stat Permission Inspection in test_08_ssh_sync_keys.sh**:
+  - Identified the root cause of test 8.4 failure on Ubuntu Linux runners: GNU `stat` supports `-f` (filesystem information mode), returning raw filesystem metadata (`File: ..., ID: ... Namelen: 255 Type: ext2/ext3`) rather than failing. Because it returned exit code `0`, `stat -c "%a"` was never reached.
+  - Implemented portable `get_octal_perm()` using Python 3 `os.stat().st_mode` fallback with `stat -c "%a"` and `stat -f "%Lp"`, ensuring accurate octal permission extraction on macOS, Linux, and Windows/WSL.
 * **Enable CI for All Branches**:
   - Updated [`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml) push and pull_request triggers to `branches: [ '**' ]` so GitHub Actions automatically runs across macOS, Ubuntu, and Windows for all branches (including `wsl-ssh-cleanup` and other feature/fix branches), ensuring CI status badges appear throughout Pragma-git.
 * **Fix Pragma-Merge History View and Diff on SSH-folder Repositories**:

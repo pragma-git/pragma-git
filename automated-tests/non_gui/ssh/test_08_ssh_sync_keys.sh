@@ -52,10 +52,15 @@ else
 fi
 
 # Test 4: Verify permissions (directory 700, private keys 600, pub/known_hosts 644)
-DST_PERM=$(stat -f "%Lp" "$DST_TMP" 2>/dev/null || stat -c "%a" "$DST_TMP" 2>/dev/null)
-PRIV_PERM=$(stat -f "%Lp" "$DST_TMP/id_ed25519" 2>/dev/null || stat -c "%a" "$DST_TMP/id_ed25519" 2>/dev/null)
-PUB_PERM=$(stat -f "%Lp" "$DST_TMP/id_ed25519.pub" 2>/dev/null || stat -c "%a" "$DST_TMP/id_ed25519.pub" 2>/dev/null)
-HOSTS_PERM=$(stat -f "%Lp" "$DST_TMP/known_hosts" 2>/dev/null || stat -c "%a" "$DST_TMP/known_hosts" 2>/dev/null)
+get_octal_perm() {
+    # GNU stat (Linux/WSL) first: BSD stat (macOS) rejects -c with an error and falls through to -f.
+    # (Never try -f first: on GNU stat it means "filesystem status" and succeeds with unrelated output.)
+    stat -c "%a" "$1" 2>/dev/null || stat -f "%Lp" "$1" 2>/dev/null
+}
+DST_PERM=$(get_octal_perm "$DST_TMP")
+PRIV_PERM=$(get_octal_perm "$DST_TMP/id_ed25519")
+PUB_PERM=$(get_octal_perm "$DST_TMP/id_ed25519.pub")
+HOSTS_PERM=$(get_octal_perm "$DST_TMP/known_hosts")
 
 if [ "$DST_PERM" = "700" ] && [ "$PRIV_PERM" = "600" ] && [ "$PUB_PERM" = "644" ] && [ "$HOSTS_PERM" = "644" ]; then
     assert_pass "8.4: Correct permissions set (dst 700, priv 600, pub/known_hosts 644)"
@@ -80,7 +85,11 @@ else
     assert_fail "8.6: PRAGMA_SSH_KEY full path resolution" "$RESOLVED_OUT"
 fi
 
-# Test 7: Generate real cryptographic key, mirror via sync, and test over SSH
+# Test 7 + 8: Real key, mirrored by sync, used against a REAL (ephemeral) sshd on localhost.
+#   8.7: key not yet in the server's authorized_keys  -> rejected (STATUS:KEY_NEEDED), no "Permissions too open"
+#   8.8: key injected into the server's authorized_keys -> accepted (STATUS:OK)
+source "$REPO_ROOT/automated-tests/ssh_test_server.sh"
+
 REAL_KEY_SRC="$SRC_TMP/id_ed25519_realsync"
 ssh-keygen -t ed25519 -N "" -C "pragma_test_sync@localhost" -f "$REAL_KEY_SRC" >/dev/null 2>&1
 "$SYNC_KEYS_BIN" "$SRC_TMP" "$DST_TMP" >/dev/null 2>&1
@@ -89,23 +98,31 @@ SYNCED_KEY="$DST_TMP/id_ed25519_realsync"
 CURRENT_USER="${CURRENT_USER##*\\}"
 TEST_LOGIN_BIN="$SSH_FOLDER_DIR/ssh-test-login"
 
-if [ -f "$SYNCED_KEY" ]; then
-    # Test connection with the synced key over SSH
-    # Since this new key is not in authorized_keys, OpenSSH must accept key permissions
-    # without warning ('Permissions ... are too open') and return STATUS:KEY_NEEDED.
-    SSH_OUTPUT=$(PRAGMA_SSH_KEY="$SYNCED_KEY" "$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@127.0.0.1/tmp" 2>&1)
-    
-    if echo "$SSH_OUTPUT" | grep -q "Permissions .* are too open"; then
-        assert_fail "8.7: Synced key rejected due to open permissions" "$SSH_OUTPUT"
-    elif echo "$SSH_OUTPUT" | grep -q "STATUS:KEY_NEEDED"; then
-        assert_pass "8.7: Real key generated, synced, and verified over SSH (STATUS:KEY_NEEDED, permissions valid)"
-    elif echo "$SSH_OUTPUT" | grep -q "STATUS:OK"; then
-        assert_pass "8.7: Real key generated, synced, and authenticated over SSH (STATUS:OK)"
-    else
-        assert_fail "8.7: Unexpected SSH response with synced key" "$SSH_OUTPUT"
-    fi
-else
+if [ ! -f "$SYNCED_KEY" ]; then
     assert_fail "8.7: Real key failed to mirror to destination" "Missing $SYNCED_KEY"
+    assert_fail "8.8: Skipped because key was not mirrored" "Missing $SYNCED_KEY"
+elif ! start_test_sshd; then
+    assert_fail "8.7: Could not start ephemeral sshd on localhost" "$TEST_SSHD_ERROR"
+    assert_fail "8.8: Could not start ephemeral sshd on localhost" "$TEST_SSHD_ERROR"
+else
+    SSH_URL="ssh://${CURRENT_USER}@127.0.0.1:${TEST_SSHD_PORT}/tmp"
+
+    SSH_OUTPUT=$(PRAGMA_SSH_KEY="$SYNCED_KEY" "$TEST_LOGIN_BIN" "$SSH_URL" 2>&1)
+    if echo "$SSH_OUTPUT" | grep -q "STATUS:KEY_NEEDED"; then
+        assert_pass "8.7: Synced key is rejected by real sshd before it is authorized (STATUS:KEY_NEEDED)"
+    else
+        assert_fail "8.7: Expected STATUS:KEY_NEEDED before authorizing the synced key" "$SSH_OUTPUT"
+    fi
+
+    inject_test_sshd_key "$SYNCED_KEY.pub"
+    SSH_OUTPUT=$(PRAGMA_SSH_KEY="$SYNCED_KEY" "$TEST_LOGIN_BIN" "$SSH_URL" 2>&1)
+    if echo "$SSH_OUTPUT" | grep -q "STATUS:OK"; then
+        assert_pass "8.8: Synced key (700/600/644 permissions) authenticates against real sshd after injection into authorized_keys (STATUS:OK)"
+    else
+        assert_fail "8.8: Expected STATUS:OK after injecting the synced key into authorized_keys" "$SSH_OUTPUT"
+    fi
+
+    stop_test_sshd
 fi
 
 # Clean up
