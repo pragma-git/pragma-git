@@ -288,18 +288,18 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
         let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
-        mkdir( settingsDir);
+        if (!fs.existsSync(settingsDir)) fs.mkdirSync(settingsDir, { recursive: true });
         
         var settingsFile = settingsDir + pathsep + 'settings.json';    
         var ciCacheFile = settingsDir + pathsep + 'ci_cache.json';    
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
-        mkdir(notesDir);
+        if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
     
         
         // Pragma-git : Signaling files and folders 
         const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
-        mkdir(SIGNALDIR); 
+        if (!fs.existsSync(SIGNALDIR)) fs.mkdirSync(SIGNALDIR, { recursive: true }); 
         
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt'; 
@@ -465,7 +465,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
 // Main functions
-var _debounceState = {};  // State variable for _callback debounce
+var _debounceState = _debounceState || {};  // State variable for _callback debounce
 async function _callback( name, event){ 
     
     // Debounce code (prevent double-click)
@@ -476,6 +476,7 @@ async function _callback( name, event){
     
     // Only consider the list in "debounceableCallbacks"
     if (debounceableCallbacks.includes(key)) {
+        if (!_debounceState) _debounceState = {};
         const now = Date.now();
         const lastCall = _debounceState[key]?.lastCall || 0;  // "_debounceState[key]?lastCall" avoids fail (returns undefined), if key not in array.  If so, fall back to value 0
         
@@ -9444,9 +9445,11 @@ window.onload = async function() {
   }
   
   // Dialog if author's name is unknown (for  local folder)
-  let folder = state.repos[state.repoNumber].localFolder;
-  if ( ! folder.startsWith('ssh:') ){
-    showUserDialog(true)  // test = true, will show only if author is unknown
+  if (state.repos && state.repos[state.repoNumber] && state.repos[state.repoNumber].localFolder) {
+    let folder = state.repos[state.repoNumber].localFolder;
+    if ( ! folder.startsWith('ssh:') ){
+      showUserDialog(true)  // test = true, will show only if author is unknown
+    }
   }
  
   // Hide settings icon

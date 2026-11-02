@@ -7,6 +7,7 @@
 ---
 
 ### 🏛️ Architecture & Files
+* **UI Test Framework**: Framework för automatiserade och interaktiva UI-tester av Pragma-git via Chrome DevTools Protocol med YAML-scenarier och isolerade testmiljöer ([automated-tests/ui/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/run_ui_tests.js), [automated-tests/ui/cdp_client.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/cdp_client.js), [automated-tests/ui/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/ui_fixtures.js), [automated-tests/ui/scenarios/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/))
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
 * **Modified Files List**: Fönster för modifierade filer och filurval ([listChanged.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.html), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js))
 * **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info, Clone ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
@@ -29,6 +30,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **UI Test Framework & SSH Clone Fixes**:
+  - Implemented interactive `--step` / `-i` CLI test runner in [`automated-tests/ui/run_ui_tests.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/run_ui_tests.js) with clean terminal layout (unindented `STEP [X/Y]: <name>`, dividing line, indentation of all actions and verification steps, and prompt execution with single `[Enter]`).
+  - Fixed `kex_exchange_identification: Connection reset by peer` by:
+    1. Setting `MaxStartups 100:30:200` and `MaxSessions 100` in [`automated-tests/ssh_test_server.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh).
+    2. Forwarding `process.env.PRAGMA_SSH_KEY = selectedKey` during initial clone in [`settings.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) so `ssh-git-client` correctly uses the configured SSH key before the repo is saved to `state.repos`.
 * **Real ephemeral sshd for SSH tests + correct suite failure reporting**:
   - Added [`automated-tests/ssh_test_server.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh): starts an unprivileged real `sshd` on a random localhost port with its own host key and its own `authorized_keys` (never touches real `~/.ssh`). `start_test_sshd`, `inject_test_sshd_key`, `stop_test_sshd`, `login-check` command. On Windows runners it runs inside WSL.
   - `test_08` 8.7/8.8: synced key rejected (`KEY_NEEDED`) -> injected into authorized_keys -> accepted (`STATUS:OK`). `test_07` 7.8 uses the same helper (replaces the old CI-only edit of the real authorized_keys, which wrote to the Windows home while sshd ran in WSL).

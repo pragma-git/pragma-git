@@ -64,6 +64,8 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 UsePAM no
 StrictModes no
+MaxStartups 100:30:200
+MaxSessions 100
 LogLevel ERROR
 EOF
         "$sshd_bin" -D -e -f "$TEST_SSHD_DIR/sshd_config" > "$TEST_SSHD_DIR/sshd.log" 2>&1 &

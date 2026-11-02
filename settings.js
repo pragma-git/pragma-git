@@ -1625,8 +1625,15 @@ async function gitClone( folderName, repoURL){
     let cleanFolderName = folderName.replace(/[\\\/]+$/, '');
     let topFolder = cleanFolderName + sep + repoName;
 
+    let selectedKey = isSsh && (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+    let origPragmaSshKey = process.env.PRAGMA_SSH_KEY;
+
     // Clone
     try{
+        if (selectedKey) {
+            process.env.PRAGMA_SSH_KEY = selectedKey;
+        }
+
         // 1) mkdir parent folder if missing
         let options = [];
         opener.pragmaLog(`Create folder : ${cleanFolderName}`);
@@ -1657,6 +1664,12 @@ async function gitClone( folderName, repoURL){
         opener.pragmaLog(err);
         displayAlert('Clone failed', err);
         return false;
+    }finally{
+        if (origPragmaSshKey !== undefined) {
+            process.env.PRAGMA_SSH_KEY = origPragmaSshKey;
+        } else {
+            delete process.env.PRAGMA_SSH_KEY;
+        }
     }
         
     // Add this repo to state

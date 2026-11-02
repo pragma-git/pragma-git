@@ -37,7 +37,13 @@ Se till att redigera/uppdatera `.agents/context_checkpoint.md` med filredigering
 ## Arkitektur
 * **Runtime**: NW.js (`0.100.1`) som kombinerar Chromium och Node.js för skrivbordsmiljö.
 * **Huvudfönster**: `app.html` och `app.js` utgör appens huvudgränssnitt och orkestrerar Git-operationer, dialoger och vyer.
-* **Git-integration**: Använder `simple-git` för interaktion med Git-repositorier samt `askpass/` och `pragma-askpass` för autentisering.
+* **Filurval & Modifierade filer**: `listChanged.html` och `listChanged.js` hanterar presentation och val av ändrade/uncommitted filer för commits.
+* **Inställningsfönster**: `settings.html` och `settings.js` tillhandahåller konfiguration för Repository, Branch, Software, System Info, SSH-inställningar och Kloning.
+* **Diff & Merge Engine**: `merge/pragma-merge.js`, `merge/pragma-merge_iframe.html` och `pragma-merge` sköter 2-vägs/3-vägs interaktiv diff och merge mot lokala och virtuella remote SSH-filer.
+* **SSH Folder Integration**: `ssh_folder/` innehåller wrappers för git över SSH (`ssh-git-client`, `ssh-folder-lib.js`), central nyckelupplösning (`lib/ssh-functions`), nyckelgenerering/distribution (`ssh-generate-key-login`, `ssh-test-login`) samt automatisk spegling av Windows-nycklar till WSL (`ssh-sync-keys`).
+* **Git Provider APIs**: `apis_github_and_others/` tillhandahåller abstraktionslager mot GitHub, GitLab och Bitbucket REST APIs med commit CI-statusfrågor och persistent 2-stegs cache.
+* **Automatiserade tester (Headless/CLI)**: `automated-tests/` innehåller master-testkörningssviten `_run_tests` med 7 kategorier (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls) och en efemär OpenSSH-testserver (`ssh_test_server.sh`).
+* **UI Test Framework**: `automated-tests/ui/` orkestrerar end-to-end och interaktiva UI-tester via Chrome DevTools Protocol (CDP), isolerade testmiljöer (`ui_fixtures.js`), deklarativa scenarier (`scenarios/`) och steg-för-steg körning (`run_ui_tests.js`).
 * **Byggsystem (`make_binaries/`)**:
   - `make_binaries/build`: Master-skript för att bygga och paketera binärer för macOS (Intel x64 och Apple Silicon arm64), Linux och Windows.
   - `make_binaries/scripts/sign_app.sh`: Inside-out kodsignering av NW.js `.app`-bunt, inklusive dynamiska bibliotek (`.dylib`), infödda Node-moduler (`.node`), hjälparappar (`Helper.app` utan föräldra-entitlements) och slutligen `nwjs Framework` och huvudexekverbara filen med entitlements.
