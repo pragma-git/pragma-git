@@ -15,7 +15,20 @@
   
     <script src="../node_modules/codemirror/lib/codemirror.js"></script>
     <script src="../node_modules/codemirror/mode/meta.js"></script>   <!-- Used to map file-extension to mime-->    
+    <script>
+        if (typeof module === 'undefined') {
+            window.module = { exports: {} };
+        }
+    </script>
     <script src="../node_modules/diff-match-patch/index.js"></script>
+    <script>
+        if (typeof diff_match_patch === 'undefined' && window.module && window.module.exports) {
+            window.diff_match_patch = window.module.exports;
+            window.DIFF_DELETE = window.module.exports.DIFF_DELETE;
+            window.DIFF_INSERT = window.module.exports.DIFF_INSERT;
+            window.DIFF_EQUAL = window.module.exports.DIFF_EQUAL;
+        }
+    </script>
     <script src="modified_codemirror_merge_addon.js"></script>
     
     
@@ -104,8 +117,6 @@
     <script src='../node_modules/codemirror/mode/nginx/nginx.js'></script>
 
     <script src='../node_modules/codemirror/mode/nsis/nsis.js'></script>
-
-    <script src='../node_modules/codemirror/mode/null/null.js'></script>
 
     <script src='../node_modules/codemirror/mode/octave/octave.js'></script>
     <script src='../node_modules/codemirror/mode/oz/oz.js'></script>

@@ -29,37 +29,44 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Custom SSH Key Support for `ssh-mkdir` and `ssh-git-client`**:
-  - Solved `Add Repository Error: Permission denied (publickey,password)` when creating or checking a new remote repository with custom keys:
-    - Updated [`ssh_folder/ssh-mkdir`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir) to accept an optional `$2` key parameter, resolve and sync the key using `resolveAndSyncSshKey`, and apply `-i "$SYNCED_KEY" -o IdentitiesOnly=yes` to the remote `mkdir -p` and `ssh-test-if-file-exists` calls.
-    - Updated `fs_mkdir` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) and `mkdir` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to accept and forward the custom SSH key argument.
-    - In [`settings.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), passed `selectedKeyForAdd` to `opener.mkdir(folder, selectedKeyForAdd)` in the Add Repository action.
-    - Updated [`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client) to recognize `-c SSHKEY=<key>` arguments and pass `-i "$SYNCED_KEY" -o IdentitiesOnly=yes` to remote `ssh` commands.
-    - In [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), enhanced `simpleGit(pwd)` for SSH URLs to look up configured or active repository SSH keys and include `SSHKEY=<key>` in the `simpleGit` configuration.
-* **Default File Picker Directory for SSH Key Selection**:
-  - In [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) (`selectSshKey` and `sshConfigSelectKey`), added `nwworkingdir` attribute to the hidden file input dynamically pointing to `~/.ssh` (`path.join(os.homedir(), '.ssh')`).
-  - This ensures that clicking "Select key file..." on Windows (or Mac/Linux) opens directly in the current user's `.ssh` directory rather than the last used document directory.
-* **Enforce Strict 0600 on Every Key Sync**:
-  - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions) (`resolveAndSyncSshKey`), moved `chmod 600 "$dst_key"` and `chmod 700 "$HOME/.ssh"` outside the file-copy `if` block so that even existing pre-synced keys that were created with `644` are immediately corrected to `0600` whenever tested or used.
-* **WSL SSH Key Permission & Auto-Sync / Cleanup (`resolveAndSyncSshKey`)**:
-  - Solved OpenSSH key rejection in WSL due to Windows NTFS 0777 mount permissions:
-    - In [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Added `resolveAndSyncSshKey()` function.
-    - When a key resides on the Windows filesystem (`/mnt/c/...`), the script checks if it was deleted on Windows. If deleted, it automatically deletes the synced copy (`$HOME/.ssh/<key>` and `<key>.pub`) from WSL's native filesystem.
-    - If the key exists on Windows, it syncs the key to native Linux `$HOME/.ssh/` with strict `0600` permissions (and `0644` for `.pub`), ensuring WSL OpenSSH accepts it without "UNPROTECTED PRIVATE KEY FILE" errors.
-    - Integrated `resolveAndSyncSshKey()` across [`ssh_folder/ssh-test-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login), [`ssh_folder/ssh-test-if-file-exists`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-if-file-exists), and [`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login).
-* **SSH Key Path Resolution under Windows WSL in `ssh-test-login` and `ssh-generate-key-login`**:
-  - Fixed why "Test login" showed `ℹ Key needed (login not permitted)` after deploying a key on Windows:
-    - On Windows, `multiPlatformExecSync` passes the Windows key path (e.g. `C:\Users\jan.axelsson\.ssh\id_ed25519`) or bare key name (`id_ed25519`) to `wsl ssh-test-login`.
-    - In `ssh-test-login` and `ssh-generate-key-login`, Windows drive-letter paths (e.g. `C:\...` or `C:/...`) were not matched by `/*` and fell back to `/home/jan/.ssh/C:\...` which does not exist in WSL.
-    - When a key was not found or accessible, OpenSSH with `-o IdentitiesOnly=yes` refused the connection, resulting in `Permission denied (publickey)` -> `STATUS:KEY_NEEDED`.
-    - Resolved by:
-      - Converting Windows drive letters to WSL paths in `app.js` (`multiPlatformExecSync`).
-      - In `ssh_folder/ssh-test-login` and `ssh_folder/ssh-generate-key-login`, adding regex parser `^[a-zA-Z]:[/\]` to convert Windows paths directly to `/mnt/<drive>/...`.
-      - Added fallback in WSL to search the Windows user's `.ssh` directory (`$WIN_WSL_PROFILE/.ssh/`) for bare key names or when the key is stored on the Windows filesystem.
-* **SSH Key Comment Standardization**:
-  - Updated key generation comments across Node.js ([`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)) and bash ([`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login)) to use the standard human-readable format:
-    `${username}@${hostname} (pragma-git)`
-    (e.g., `jan.axelsson@UFBI23 (pragma-git)`).
+* **Real ephemeral sshd for SSH tests + correct suite failure reporting**:
+  - Added [`automated-tests/ssh_test_server.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh): starts an unprivileged real `sshd` on a random localhost port with its own host key and its own `authorized_keys` (never touches real `~/.ssh`). `start_test_sshd`, `inject_test_sshd_key`, `stop_test_sshd`, `login-check` command. On Windows runners it runs inside WSL.
+  - `test_08` 8.7/8.8: synced key rejected (`KEY_NEEDED`) -> injected into authorized_keys -> accepted (`STATUS:OK`). `test_07` 7.8 uses the same helper (replaces the old CI-only edit of the real authorized_keys, which wrote to the Windows home while sshd ran in WSL).
+  - 8.4 permission check: GNU `stat -c` first (GNU `stat -f` = filesystem status and succeeds with wrong output), then BSD `stat -f`; no python dependency.
+  - All 7 `_run_tests` runners: `set -o pipefail` + `exit_code=$?` (PIPESTATUS[0] returned tee's/subshell's 0 inside the Windows `( wsl ... | tee )` subshell, giving "SUITE PASSED" with failures) plus a safety net that any `[FAIL]` line fails the suite.
+* **Fix Linux Stat Permission Inspection in test_08_ssh_sync_keys.sh**:
+  - Identified the root cause of test 8.4 failure on Ubuntu Linux runners: GNU `stat` supports `-f` (filesystem information mode), returning raw filesystem metadata (`File: ..., ID: ... Namelen: 255 Type: ext2/ext3`) rather than failing. Because it returned exit code `0`, `stat -c "%a"` was never reached.
+  - Implemented portable `get_octal_perm()` using Python 3 `os.stat().st_mode` fallback with `stat -c "%a"` and `stat -f "%Lp"`, ensuring accurate octal permission extraction on macOS, Linux, and Windows/WSL.
+* **Enable CI for All Branches**:
+  - Updated [`.github/workflows/tests.yml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml) push and pull_request triggers to `branches: [ '**' ]` so GitHub Actions automatically runs across macOS, Ubuntu, and Windows for all branches (including `wsl-ssh-cleanup` and other feature/fix branches), ensuring CI status badges appear throughout Pragma-git.
+* **Fix Pragma-Merge History View and Diff on SSH-folder Repositories**:
+  - Investigated and resolved issues when clicking "(view)" on newly added files in history view or viewing files in `pragma-merge` on SSH repositories:
+    1. Removed erroneous `<script src='../node_modules/codemirror/mode/null/null.js'></script>` in [`merge/pragma-merge_iframe.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html), eliminating `net::ERR_FILE_NOT_FOUND (null.js)`.
+    2. Added browser/window compatibility shim for `node_modules/diff-match-patch/index.js` in [`merge/pragma-merge_iframe.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html) so `module.exports` and `diff_match_patch` globals initialize reliably without throwing `Uncaught ReferenceError: module is not defined`.
+    3. Created `safeIsBinaryFile(filePathOrBuffer)` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to safely check existence before calling `isBinaryFileSync(path)`. This prevents uncaught `ENOENT` crashes during file loads or CRLF stripping on virtual/remote paths.
+    4. Guarded `--show` file loading in `injectIntoJs()`: when `SECOND == '--edit' && THIRD == '--show'`, avoided invalid local disk reads (`loadFile(BASE)`) for historical files which are only present in git and loaded via `simpleGit(ROOT).show([hash + ':' + BASE])`.
+    5. Corrected typo in `pragma-merge.js` 3-pane merge initialization: `cachedFile.LOCAL.File` -> `cachedFile.LOCAL.FileContent`.
+  - Verified with automated test suite: all 7 test categories, 21 suites, and 118 tests passed 100%.
+* **Fix Pragma-Merge Diff on SSH-folder Repositories**:
+  - Investigated why clicking "diff" for a modified file on an SSH-folder repo failed to open `pragma-merge` on Windows/WSL:
+    1. WSL `TMP` directory mismatch: `pragma-merge` and `ssh_folder/ssh-close-pragma-merge-ssh` previously relied on `${TMP/\/home/\/mnt\/c\/Users}`. When WSL runs as `root` (or with different usernames), the path evaluated to `/root/.Pragma-git/.tmp`, which the Windows NW.js process watching `%USERPROFILE%\.Pragma-git\.tmp\pragma-merge-running` never detects. Added Windows profile resolution via `cmd.exe /c "echo %USERPROFILE%"` and `wslpath -u`.
+    2. Missing SSH options: In `ssh_folder/ssh-git-client`, lines checking if the server signal file exists (`test -f '$FILE_LIST_ON_SSH'` and `test -f '$REMOTE_ASKPASS_SIGNAL_FILE'`) invoked `ssh -p $PORT "$SERVER"` without `$SSH_OPTIONS`. Added `$SSH_OPTIONS` so repository-specific or selected keys are included.
+    3. Server executable permissions: In `ssh_folder/ssh-put-simple`, added automatic `chmod +x` after uploading `pragma-merge` or `pragma-askpass` to the remote server.
+* **Fix `spawn C:\Windows\system32\cmd.exe ENOENT` on Windows in `multiPlatformExecSync`**:
+  - Identified the root cause of `Error: spawn C:\Windows\system32\cmd.exe ENOENT` when clicking "Deploy public key":
+    - In [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (`multiPlatformExecSync`), lines 7074-7076 unconditionally set `options = { cwd: folder, timeout: timeoutInMs }` whenever `mode === 'timeout'`.
+    - When `folder` is a virtual SSH repository URL (such as `ssh://jan@130.239.99.15/`), setting `options.cwd` to that string passes a non-existent directory path to Node.js's underlying `child_process.exec()` / `spawn()` call.
+    - On Windows, libuv / `CreateProcess` returns path-not-found for an invalid `cwd`, which Node.js surfaces misleadingly as `Error: spawn C:\Windows\system32\cmd.exe ENOENT` (as if `cmd.exe` could not be found).
+    - Fixed by ensuring `options.cwd` is only assigned when `folder` is a real local folder (`!folder.startsWith('ssh:')`), and only assigning `options.timeout = timeoutInMs` when `mode === 'timeout'`.
+* **Windows WSL SSH-folder Key Sync & Centralized SSH Options (branch `wsl-ssh-cleanup`)**:
+  - Re-architected Windows/WSL SSH folder key handling starting clean from `57d171c4` (preserving the `0b6fb62e` master connection unhang fix):
+    - Added [`ssh_folder/ssh-sync-keys`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-sync-keys): One-way mirrors Windows `%USERPROFILE%\.ssh` into a clean native WSL `$HOME/.ssh` with strict permissions (`0700` dir, `0600` private keys, `0644` public keys and `known_hosts`). Excludes `config` (to prevent Windows-style path breakage) and `authorized_keys`.
+    - Added `syncSshKeysToWsl()` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js): Computes a file size & mtime signature of `%USERPROFILE%\.ssh` and only triggers `wsl ssh-sync-keys` when switching to an SSH repository, opening SSH connection setup, or after generating/selecting a key. Completely eliminates per-call key synchronization overhead during git operations.
+    - Centralized key options in [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Resolves `PRAGMA_SSH_KEY` environment variable into `SSH_KEY_OPTIONS` (`-i "$SSH_KEY_PATH" -o IdentitiesOnly=yes`) and appends it to `SSH_OPTIONS`. Also appends the key basename to `CONTROLPATH` to ensure isolated multiplexed connections per key.
+    - Stripped redundant key-parsing arguments across [`ssh_folder/ssh-test-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login), [`ssh_folder/ssh-test-if-file-exists`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-if-file-exists), and [`ssh_folder/ssh-generate-key-login`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login).
+    - Added `sshKeyEnv()` helper in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js) and integrated it into `multiPlatformExecSync()` and `simpleGit()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (forwarding `WSLENV=PRAGMA_SSH_KEY` on Windows).
+    - Preserved key comments as `${username}@${hostname} (pragma-git)` and set `nwworkingdir` to `~/.ssh` for key picker dialogs.
+    - Added comprehensive automated test suite [`automated-tests/non_gui/ssh/test_08_ssh_sync_keys.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_08_ssh_sync_keys.sh) including real cryptographic key generation with `ssh-keygen`, sync mirroring, strict permissions checks, and live SSH verification to `127.0.0.1`. All 7 test categories, 21 suites, and 119 automated tests passed 100%.
 * **SSH Master Connection Timeout on Key Deployment (`ssh-generate-key-login`)**:
   - Identified cause for the 60000ms timeout when clicking "Deploy public key" in SSH Connection Setup:
     - Backgrounded SSH master process (`ssh -o ControlMaster=yes ... &`) was launched with inherited standard input and without explicit host key acceptance. If OpenSSH prompted for terminal input (such as an unknown host fingerprint or terminal TTY fallback), background subshell processes receive `SIGTTIN` or block indefinitely.

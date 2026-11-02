@@ -68,12 +68,10 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
   
     // run ssh-test-if-file-exists bash script
     try{
-        let keyArg = (sshKey && typeof sshKey === 'string' && sshKey.trim().length > 0) ? ` "${sshKey.trim()}"` : '';
-        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"${keyArg}`;
+        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"`;
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
         
-        //MAIN.multiPlatformExecSync( sshUrl, CMD);
-        let res = await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000);
+        let res = await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 2000, { sshKey: sshKey });
         if (res && typeof res === 'string' && (res.includes('SSH ERROR') || res.includes('timed out') || res.startsWith('Error:'))) {
             throw new Error(res);
         }
@@ -283,6 +281,11 @@ function getSelectedSshKey( mode ) {
 function selectSshKey( mode ) {
     let fileInput = document.getElementById(mode === 'clone' ? 'sshKeyFileInput_clone' : 'sshKeyFileInput_add');
     if (fileInput) {
+        try {
+            const os = require('os');
+            const path = require('path');
+            fileInput.setAttribute('nwworkingdir', path.join(os.homedir(), '.ssh'));
+        } catch (e) {}
         fileInput.value = '';
         try {
             let os = require('os');
@@ -347,6 +350,11 @@ function onSshKeyFileSelected( mode, inputEl ) {
     if (resetBtn) resetBtn.style.display = 'inline-block';
     if (deployBtn) deployBtn.textContent = 'Deploy public key';
 
+    // Sync to WSL mirror if on Windows
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        syncSshKeysToWsl().catch(() => {});
+    }
+
     onServerInputsChanged(mode);
 }
 
@@ -403,10 +411,9 @@ async function sshTestLogin( sshUrl, keyPath ) {                 // Test if pass
   // Output :
   //   string status from ssh-test-login ('STATUS:OK', 'STATUS:KEY_NEEDED', 'STATUS:TIMEOUT', or 'STATUS:ERROR: ...')
 
-  let keyArg = (keyPath && keyPath.trim().length > 0) ? ` "${keyPath.trim()}"` : '';
-  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"${keyArg}`;
+  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"`;
   let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
-  return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000);
+  return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000, { sshKey: keyPath });
 }
 
 async function testSshKeyLogin( mode ) {                        // UI handler for Settings (Clone and Add Repo tabs)
@@ -556,12 +563,17 @@ async function deploySshKey( mode ) {                           // Deploys key p
         statusEl.textContent = 'Deploying public key to remote server...';
     }
 
+    // Ensure WSL has the latest synced keys from Windows before deploying
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        await syncSshKeysToWsl();
+    }
+
     let fakeFolder = `ssh://${username}@${server}/`;
-    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${selectedKey}"`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
 
     try {
-        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000, { sshKey: selectedKey } );
     } catch (err) {
         console.error('Error when setting up password-less login:', err);
         if (MAIN.displayLongAlert) {
@@ -724,6 +736,9 @@ async function openSshConfigDialog( options = {} ) {
             }
             return;
         }
+        if (typeof syncSshKeysToWsl === 'function') {
+            await syncSshKeysToWsl();
+        }
     }
 
     let dialog = document.getElementById('sshConfigDialog');
@@ -841,6 +856,11 @@ function sshConfigDoGenerateKey() {
         updateSshConfigKeyDisplay(createdPath);
         sshConfigToggleGeneratePanel(false);
 
+        // Sync new key to WSL mirror immediately
+        if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+            syncSshKeysToWsl({ force: true }).catch(() => {});
+        }
+
         let noticeEl = document.getElementById('sshConfigKeyNotice');
         if (noticeEl) {
             let pathMod = require('path');
@@ -950,6 +970,11 @@ function updateSshConfigKeyDisplay( keyPath ) {
 function sshConfigSelectKey() {
     let fileInput = document.getElementById('sshConfigKeyFileInput');
     if (fileInput) {
+        try {
+            const os = require('os');
+            const path = require('path');
+            fileInput.setAttribute('nwworkingdir', path.join(os.homedir(), '.ssh'));
+        } catch (e) {}
         fileInput.value = '';
         try {
             let os = require('os');
@@ -973,6 +998,11 @@ function onSshConfigFilePicked( inputEl ) {
     }
     currentSshConfigState.selectedKey = privPath;
     updateSshConfigKeyDisplay(privPath);
+
+    // Sync to WSL mirror if on Windows
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        syncSshKeysToWsl().catch(() => {});
+    }
 
     let statusEl = document.getElementById('sshConfigStatusText');
     if (statusEl) statusEl.textContent = '';
@@ -1125,12 +1155,17 @@ async function sshConfigDeployKey() {
         statusEl.textContent = 'Deploying public key to remote server...';
     }
 
+    // Ensure WSL has latest synced keys from Windows before deploying
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        await syncSshKeysToWsl();
+    }
+
     let fakeFolder = `ssh://${username}@${server}/`;
-    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${keyToDeploy}"`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
 
     try {
-        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000, { sshKey: keyToDeploy } );
     } catch (err) {
         console.error('sshConfigDeployKey error:', err);
         if (MAIN.displayLongAlert) {
@@ -1308,17 +1343,134 @@ function formatSshErrorDetails(rawError, sshUrl) {
 }
 
 // WINDOWS specific helpers
+let _lastSyncedSshSignature = null;
+
+// Synchronizes the Windows ~/.ssh folder to WSL ~/.ssh using ssh-sync-keys
+// Only executes on Windows, and skips if the Windows ~/.ssh directory has not changed.
+async function syncSshKeysToWsl(options = {}) {
+    if (process.platform !== 'win32') {
+        return { skipped: true, reason: 'not_windows' };
+    }
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+
+    let winSshDir = path.join(os.homedir(), '.ssh');
+    if (!fs.existsSync(winSshDir)) {
+        return { skipped: true, reason: 'no_win_ssh_dir' };
+    }
+
+    // Build signature of Windows .ssh folder (names, mtimes, sizes) to avoid redundant syncs
+    let currentSignature = '';
+    try {
+        let entries = fs.readdirSync(winSshDir).sort();
+        for (let name of entries) {
+            let fullPath = path.join(winSshDir, name);
+            try {
+                let stat = fs.statSync(fullPath);
+                currentSignature += `${name}:${stat.size}:${stat.mtimeMs};`;
+            } catch (e) {}
+        }
+    } catch (e) {
+        currentSignature = String(Date.now());
+    }
+
+    if (!options.force && _lastSyncedSshSignature === currentSignature) {
+        return { skipped: true, reason: 'unchanged' };
+    }
+
+    let wslSrcDir = windowsToWslPath(winSshDir);
+    let cwdInit = (typeof CWD_INIT !== 'undefined' && CWD_INIT) ? CWD_INIT : (global.CWD_INIT || '');
+    let wslCwd = windowsToWslPath(cwdInit);
+    let cmd = `wsl "${wslCwd}/ssh_folder/ssh-sync-keys" "${wslSrcDir}"`;
+
+    let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+    let runCmd = (MAIN && MAIN.runCommandWithTimeout) ? MAIN.runCommandWithTimeout : null;
+    if (!runCmd && typeof require !== 'undefined') {
+        let child_process = require('child_process');
+        runCmd = (c, o, t) => new Promise((resolve, reject) => {
+            child_process.exec(c, { timeout: t || 10000 }, (err, stdout, stderr) => {
+                if (err) reject(new Error(stderr || err.message));
+                else resolve((stdout || '').trim());
+            });
+        });
+    }
+
+    try {
+        let out = await runCmd(cmd, {}, 10000);
+        _lastSyncedSshSignature = currentSignature;
+        console.log('syncSshKeysToWsl success:', out);
+        return { success: true, output: out };
+    } catch (err) {
+        console.warn('syncSshKeysToWsl warning:', err);
+        return { success: false, error: err };
+    }
+}
+
+// Computes the environment variable object for SSH operations.
+// Resolves PRAGMA_SSH_KEY (and on Windows, WSLENV) from the repository's configuration
+// or an explicit key override.
+function sshKeyEnv(sshUrl, keyOverride = '') {
+    let key = '';
+    if (keyOverride && typeof keyOverride === 'string' && keyOverride.trim().length > 0) {
+        key = keyOverride.trim();
+    } else if (sshUrl) {
+        // Look up matching repo in global.state or opener.state or state
+        let st = (typeof state !== 'undefined' && state) || (typeof global !== 'undefined' && global.state) || (typeof opener !== 'undefined' && opener.state);
+        if (st && Array.isArray(st.repos)) {
+            let longestMatch = null;
+            let longestLen = -1;
+            for (let r of st.repos) {
+                if (!r || !r.localFolder) continue;
+                if (sshUrl === r.localFolder || sshUrl.startsWith(r.localFolder + '/') || sshUrl.startsWith(r.localFolder + '\\')) {
+                    if (r.localFolder.length > longestLen) {
+                        longestLen = r.localFolder.length;
+                        longestMatch = r;
+                    }
+                }
+            }
+            if (longestMatch && longestMatch.sshKey) {
+                key = longestMatch.sshKey.trim();
+            }
+        }
+    }
+
+    if (!key) {
+        return {};
+    }
+
+    const path = require('path');
+    let envVal = '';
+    if (process.platform === 'win32') {
+        // Under WSL, Windows ~/.ssh is mirrored to ~/.ssh, so pass bare filename
+        let base = path.basename(key);
+        if (base.endsWith('.pub')) base = base.slice(0, -4);
+        envVal = base;
+        return {
+            PRAGMA_SSH_KEY: envVal,
+            WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
+        };
+    } else {
+        // macOS / Linux: pass full path (strip .pub)
+        if (key.endsWith('.pub')) key = key.slice(0, -4);
+        envVal = key;
+        return {
+            PRAGMA_SSH_KEY: envVal
+        };
+    }
+}
+
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
+		wslPath = wslPath.replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:\\`).replaceAll('/','\\');  // Support any drive letter (/mnt/c/ -> C:\)
 	}
 	return wslPath
 }
 function windowsToWslPath( windowsPath) {                       // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
+		windowsPath = windowsPath.replaceAll('\\','/').replace(/^([a-zA-Z]):\//, (m, d) => `/mnt/${d.toLowerCase()}/`);   // Support any drive letter (C:/ -> /mnt/c/)
 	}
 	return windowsPath
 }
@@ -1357,4 +1509,6 @@ if (typeof module !== 'undefined' && module.exports) {
 	module.exports.isWslAvailable = isWslAvailable;
 	module.exports.resetWslCache = resetWslCache;
 	module.exports.formatSshErrorDetails = formatSshErrorDetails;
+	module.exports.syncSshKeysToWsl = syncSshKeysToWsl;
+	module.exports.sshKeyEnv = sshKeyEnv;
 }

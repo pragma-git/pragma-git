@@ -8,6 +8,13 @@
     cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge $BASE $LOCAL $REMOTE $MERGED     
 	trustExitCode = true    
 
+[difftool]
+    prompt = false
+
+[difftool "pragma-git"]
+    cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge "$LOCAL" "$REMOTE" "" ""
+    trustExitCode = true    
+
 [core]
     askpass = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-askpass
 

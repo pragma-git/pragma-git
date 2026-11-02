@@ -15,6 +15,13 @@
     cmd = $HOME/.Pragma-git/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh
     trustExitCode = true    
 
+[difftool]
+    prompt = false
+
+[difftool "pragma-git"]
+    cmd = $HOME/.Pragma-git/pragma-merge  "$LOCAL" "$REMOTE" "" "" ssh
+    trustExitCode = true    
+
 [core]
     # Set this in the ssh-git-client
     # This is necessary because git does not expand $HOME for askpass (which is run as a command; not in a shell)

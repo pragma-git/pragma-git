@@ -170,6 +170,31 @@ try {
         } else {
             assertFail('6.11-6.12: formatSshErrorDetails', 'Function is not exported');
         }
+
+        // Test 9: sshKeyEnv helper resolves key environment correctly
+        if (typeof sshLib.sshKeyEnv === 'function') {
+            global.state = {
+                repos: [
+                    { localFolder: 'ssh://jan@130.239.99.15/home/jan/repoA', sshKey: '/Users/jan/.ssh/id_test_a' },
+                    { localFolder: 'ssh://jan@130.239.99.15/home/jan/repoA_sub', sshKey: '/Users/jan/.ssh/id_test_sub' }
+                ]
+            };
+            const envA = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA/.git/HEAD');
+            if (envA.PRAGMA_SSH_KEY && envA.PRAGMA_SSH_KEY.includes('id_test_a')) {
+                assertPass('6.13: sshKeyEnv resolves repo sshKey from longest prefix match');
+            } else {
+                assertFail('6.13: sshKeyEnv longest prefix match', JSON.stringify(envA));
+            }
+
+            const envOverride = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA', '/custom/path/id_override.pub');
+            if (envOverride.PRAGMA_SSH_KEY && envOverride.PRAGMA_SSH_KEY.includes('id_override') && !envOverride.PRAGMA_SSH_KEY.endsWith('.pub')) {
+                assertPass('6.14: sshKeyEnv keyOverride takes precedence and strips .pub');
+            } else {
+                assertFail('6.14: sshKeyEnv keyOverride', JSON.stringify(envOverride));
+            }
+        } else {
+            assertFail('6.13-6.14: sshKeyEnv', 'Function is not exported');
+        }
     } catch (err) {
         assertFail('6.10-6.12: Execution error', err.message);
     }

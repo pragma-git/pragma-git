@@ -10,28 +10,10 @@
 #
 
 
-# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+# Import functions and constants: TMP, MERGE_LOG, TEMP_FILE_LOCATION, SSH_OPTIONS
 source $(dirname $0)/lib/ssh-functions
 
 echo ">> SSH-CLOSE-PRAGMA-MERGE-SSH  \"$1\"" >> "$MERGE_LOG"
-
-# Platform specific $TMP in Home dir
-if [ -z ${SYSTEMDRIVE+x} ]
-then
-    # Mac or Linux or WSL
-    TMP="$HOME/.Pragma-git/.tmp"
-    
-    # Modify TMP if run under WSL
-    # Windows (git over ssh  is implemented using WSL)
-	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-		TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
-		MERGE_LOG="${TMP}/ssh-log.log"
-	fi
-else
-    # Windows local
-    TMP="$USERPROFILE/.Pragma-git/.tmp"
-fi
-
 echo  "SSH-CLOSE-PRAGMA-MERGE $1"  >> "$MERGE_LOG"
 echo  " "  >> "$MERGE_LOG"
 
@@ -43,8 +25,8 @@ FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'
 # Get EXIT CODE (local) 
 EXITCODE=$(cat "$TMP/exit-pragma-merge")
 
-# Run git command on remote server 
-ssh -T "$SERVER" $SSH_OPTIONS bash -s <<EOF
+# Run git command on remote server (-p "${PORT}" supports non-default SSH ports)
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS bash -s <<EOF
 # \$ means that a variable name is on server ($ means that the variable is inserted from above script)
 
     #

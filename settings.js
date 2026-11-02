@@ -340,10 +340,12 @@ async function _callback( name, event){
                         let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
                         let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
                         if (username && server) {
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }
                     }catch (err){
                         console.error('Error in password-less login');
@@ -461,10 +463,12 @@ async function _callback( name, event){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
                             let server = document.querySelector('input[name="server"]').value.trim();
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }catch (err){
                             console.error('Error in password-less login');
                             opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
@@ -703,12 +707,14 @@ async function _callback( name, event){
                 // Update displayed .gitignore     
                 document.getElementById('gitignoreText').innerText = ''
                 
-                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                if (fs_existsSync(ignoreFileName) ){
+                // Use '/' for SSH URLs (even on Windows) and await async fs_existsSync before downloading .gitignore
+                let repoFolder = global.state.repos[global.state.repoNumber].localFolder;
+                let sep = repoFolder.startsWith('ssh:') ? '/' : pathsep;
+                let ignoreFileName = repoFolder + sep + '.gitignore'; 
+                if ( await fs_existsSync(ignoreFileName, repoKey) ){
                     
-                    if (global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
-                        let sshUrl = global.state.repos[global.state.repoNumber].localFolder;
-                        ignoreFileName = await sshGet( sshUrl, '.gitignore')
+                    if (repoFolder.startsWith('ssh:') ){
+                        ignoreFileName = await sshGet( repoFolder, '.gitignore')
                     }
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                     
@@ -1627,12 +1633,10 @@ async function gitClone( folderName, repoURL){
         await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
         
         // 2) Clone
-        let topFolderValidOnServer = topFolder;
-        if (isSsh){
-            // Clean to make it local on the server
-            let url = new URL(topFolder);
-            topFolderValidOnServer = decodeURIComponent(url.pathname);
-        }
+        // For SSH repositories, simpleGit runs via ssh-git-client which is already placed in cleanFolderName (-C SERVER_BASE_PATH).
+        // Passing topFolderValidOnServer as repoName ensures it clones into a relative subfolder on the remote server
+        // without attempting to create an invalid absolute path with URL/server prefixes.
+        let topFolderValidOnServer = isSsh ? repoName : topFolder;
         
         opener.pragmaLog(`Clone : "${repoURL}"  to "${cleanFolderName}"`);
         await simpleGitLog(cleanFolderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)

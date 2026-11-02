@@ -41,6 +41,14 @@ eval $SCP
 # Check result
 if [ $? -eq 0 ]; then
     echo "    Success : Pushed file \"$1\" to \"$2\""  >> "$MERGE_LOG"
+    # Ensure uploaded script has executable permissions if it is pragma-merge or pragma-askpass
+    case "$(basename "$SERVER_PATH")" in
+        pragma-merge*|pragma-askpass*)
+            CHMOD_CMD="ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS chmod +x \"$SERVER_PATH\""
+            echo "    $CHMOD_CMD" >> "$MERGE_LOG"
+            eval $CHMOD_CMD
+            ;;
+    esac
     echo " " >> "$MERGE_LOG"
     exit 0
 else

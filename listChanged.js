@@ -209,11 +209,13 @@ async function _callback( name, event, event2){
             }
        
             // Git 
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw(command);
+            } catch(err) {
+                console.error('diffLinkAll -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLinkAll error: ' + (err.message || err));
+                }
             }
             
             
@@ -290,14 +292,13 @@ async function _callback( name, event, event2){
             ];
 
             // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw(command);
+            } catch(err) {
+                console.error('diffLink -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLink error: ' + (err.message || err));
+                }
             }
         
 
@@ -329,11 +330,13 @@ async function _callback( name, event, event2){
             console.log( command.join(' ') );
 
             // Git 
-            try{
-                simpleGit( folder).raw(command );
-            }catch(err){
-                console.log('diffLinkHistory -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( folder).raw(command );
+            } catch(err) {
+                console.error('diffLinkHistory -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLinkHistory error: ' + (err.message || err));
+                }
             }
         
 

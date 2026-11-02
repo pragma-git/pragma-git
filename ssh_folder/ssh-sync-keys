@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# One-way mirror of the Windows user's .ssh folder into a clean WSL ~/.ssh folder
+#
+# Why: On Windows, ssh-folder repos are handled by running the ssh_folder/ scripts in WSL.
+#      The Windows .ssh folder is visible in WSL (/mnt/c/Users/<user>/.ssh) but with permissions 0777,
+#      which OpenSSH refuses for private keys. Therefore keys are mirrored into native WSL ~/.ssh with
+#      strict permissions. Windows %USERPROFILE%\.ssh is the single source of truth -- WSL ~/.ssh is disposable.
+#
+# Usage:   ./ssh-sync-keys <SRC_DIR> [DST_DIR]
+#
+# Arguments
+#   $1      --  Source folder, WSL path to Windows .ssh folder, for instance '/mnt/c/Users/jan/.ssh'
+#   $2      --  Destination folder (optional, default "$HOME/.ssh").  Used by automated tests.
+#
+# Mirrored:      all regular files, except 'config' (may contain Windows paths) and 'authorized_keys'
+# Permissions:   folder 700,  files 600,  *.pub and known_hosts* 644
+#
+# Called from Pragma-git (syncSshKeysToWsl in ssh-folder-lib.js) when switching to an ssh-folder repo,
+# and when setting up SSH connections -- NOT on every ssh call.
+
+SRC_DIR="$1"
+DST_DIR="${2:-$HOME/.ssh}"
+
+if [ -z "$SRC_DIR" ]; then
+    echo "Usage: $0 <SRC_DIR> [DST_DIR]" >&2
+    exit 1
+fi
+
+if [ ! -d "$SRC_DIR" ]; then
+    echo "ssh-sync-keys: source folder not found: $SRC_DIR" >&2
+    exit 1
+fi
+
+# Safety: never wipe the source, and never wipe something that is not a .ssh-like folder path
+SRC_REAL="$(cd "$SRC_DIR" && pwd -P)"
+if [ -d "$DST_DIR" ]; then
+    DST_REAL="$(cd "$DST_DIR" && pwd -P)"
+    if [ "$SRC_REAL" = "$DST_REAL" ]; then
+        echo "ssh-sync-keys: source and destination are the same folder: $SRC_REAL" >&2
+        exit 1
+    fi
+fi
+if [ -z "$DST_DIR" ] || [ "$DST_DIR" = "/" ] || [ "$DST_DIR" = "$HOME" ]; then
+    echo "ssh-sync-keys: refusing to use destination: '$DST_DIR'" >&2
+    exit 1
+fi
+
+# Clean destination
+rm -rf "$DST_DIR" || { echo "ssh-sync-keys: could not remove $DST_DIR" >&2; exit 1; }
+mkdir -p "$DST_DIR" && chmod 700 "$DST_DIR" || { echo "ssh-sync-keys: could not create $DST_DIR" >&2; exit 1; }
+
+# Copy files
+COUNT=0
+for f in "$SRC_DIR"/* "$SRC_DIR"/.[!.]*; do
+    [ -f "$f" ] || continue
+    name="$(basename "$f")"
+    case "$name" in
+        config|authorized_keys) continue ;;
+    esac
+
+    cp "$f" "$DST_DIR/$name" || { echo "ssh-sync-keys: could not copy $name" >&2; exit 1; }
+
+    case "$name" in
+        *.pub|known_hosts*) chmod 644 "$DST_DIR/$name" ;;
+        *)                  chmod 600 "$DST_DIR/$name" ;;
+    esac
+    COUNT=$((COUNT + 1))
+done
+
+echo "ssh-sync-keys: mirrored $COUNT file(s) from $SRC_DIR to $DST_DIR"
+exit 0

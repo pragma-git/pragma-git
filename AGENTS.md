@@ -4,7 +4,8 @@ Den innehåller instruktioner för arkitektur, byggkommandon, tester och regler 
 -->
 
 ## Agent Rules / AI Context
-You MUST automatically update the context checkpoint file at `.agents/context_checkpoint.md` in the workspace at the end of each response, eller närhelst koden ändras, för att upprätthålla en källa till sanning för kodbasens kontext.
+- AT THE START OF A SESSION (or after a chat clear), your very first action MUST be to read `.agents/context_checkpoint.md` to load the current workspace state. Do not make assumptions before reading this file.
+- You MUST automatically update the context checkpoint file at `.agents/context_checkpoint.md` in the workspace at the end of each response, eller närhelst koden ändras, för att upprätthålla en källa till sanning för kodbasens kontext.
 
 Checkpoint-filen `.agents/context_checkpoint.md` måste följa denna detaljerade mall:
 

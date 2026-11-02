@@ -197,41 +197,22 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             // Git binary linux, MacOS, Windows
             let binary = [`${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client` ];
             if (process.platform === 'win32') {  
-                let WSL_STARTDIR =  STARTDIR.replaceAll('\\','/').replace('C:','/mnt/c'); // 'C:\\Users\\axels\\Documents\\Projects\\Pragma-git\\pragma-git' => '/mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git'
+                let WSL_STARTDIR = STARTDIR.replaceAll('\\','/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`); // Support any drive letter (e.g. C:\ or D:\ -> /mnt/c or /mnt/d)
                 binary = ['wsl', `${WSL_STARTDIR}/ssh_folder/ssh-git-client` ]; // WSL abs path to ssh-git-client
             }
             
             let sshUrl = pwd;
            
-            // Look up any custom SSH key configured for this repo
-            let repoKey = '';
-            if (state && Array.isArray(state.repos)) {
-                let repoObj = state.repos.find(r => r && r.localFolder === sshUrl);
-                if (repoObj && repoObj.sshKey) {
-                    repoKey = repoObj.sshKey;
-                }
-            }
-            // Fallback: check if settings window has an active key selected for adding/cloning
-            if (!repoKey && typeof global.windows === 'object' && global.windows['settings_win']) {
-                try {
-                    let win = global.windows['settings_win'].window;
-                    if (win && typeof win.getSelectedSshKey === 'function') {
-                        repoKey = win.getSelectedSshKey('add') || win.getSelectedSshKey('clone') || '';
-                    }
-                } catch (e) {
-                    // Ignore window access errors
+            // Forward SSH key for this repo via process environment (PRAGMA_SSH_KEY)
+            let gitSpawnEnv = Object.assign({}, process.env);
+            if (typeof sshKeyEnv === 'function') {
+                let keyEnvs = sshKeyEnv(sshUrl);
+                if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+                    Object.assign(gitSpawnEnv, keyEnvs);
                 }
             }
 
-            let gitConfig = [   
-                `include.path=${configFile}`, 
-                `SSHURL=${sshUrl}` 
-            ];
-            if (repoKey && repoKey.trim().length > 0) {
-                gitConfig.push(`SSHKEY=${repoKey.trim()}`);
-            }
-
-            // The second and third config-rows above are used to sneak SSHURL and SSHKEY into ssh-git-client
+            // The second config-row below is used to sneak the SSHURL into the ssh-git-client
             //
             // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
@@ -239,7 +220,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             return simpleGitDefault( 
                 {   
-                    config: gitConfig,
+                    spawnOptions: { env: gitSpawnEnv },
+                    config: [   
+                                `include.path=${configFile}`, 
+                                `SSHURL=${sshUrl}` 
+                            ],
                     unsafe: {  
                         allowUnsafeCustomBinary: true
                     } , 
@@ -579,39 +564,8 @@ async function _callback( name, event){
         let noDialog = true;
         
         var isRepo;
-        // Check if repo
-        if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
-            // If folder exists, I am allowed to set up ssh-server, and can then check if repo exists
-            
-	        // Setup and copy git config to ssh server
-	        await setupSshServer(); 
-            
-            // Check if repository 
-            try{
-
-                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD`);
-                if (!isRepo) {
-                    displayLongAlert('Repository Error', 'Repository missing', 'error'); 
-                    noDialog = false;
-                }
-            }catch (err){
-                isRepo = false;
-                displayLongAlert('Repository Error', 'Missing repository : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
-                noDialog = false;
-                state.repoNumber = origRepoNumber;  
-            }
-        }else{    
-            // Show dialog except if over ssh
-            if ( !state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){           
-                // localFolder missing -- dialog, and reset repo
-                displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
-                noDialog = false;
-                state.repoNumber = origRepoNumber;  
-            }
- 
-        }
-        
-        if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
+        let currentFolder = state.repos[state.repoNumber].localFolder;
+        if ( currentFolder.startsWith('ssh:') ){  
             // On Windows, if WSL is missing, silently revert without blocking modal dialog
             if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
                 let wslOk = await isWslAvailable();
@@ -619,22 +573,55 @@ async function _callback( name, event){
                     state.repoNumber = origRepoNumber;
                     return;
                 }
+                // Ensure WSL ~/.ssh mirror is in sync with Windows keys when switching to an ssh repo
+                if (typeof syncSshKeysToWsl === 'function') {
+                    await syncSshKeysToWsl();
+                }
             }
             try{
+                // Single SSH check on .git/HEAD verifies both folder existence and valid git repo at once
                 let repoKey = state.repos[state.repoNumber].sshKey || '';
-                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD`, repoKey );
+                isRepo = await fs_existsSync( `${currentFolder}/.git/HEAD`, repoKey );
                 if (!isRepo) {
                     // Silently revert to previous repository without blocking modal dialog;
                     // the greyed-out repo menu and footer indicator provide non-intrusive feedback
                     state.repoNumber = origRepoNumber;
                     return;
                 }
+                // Update cached status so the 1s _update2() loop does not need to re-probe over SSH
+                if (cachedLocalStatus && cachedLocalStatus.exists) {
+                    cachedLocalStatus.exists[state.repoNumber] = true;
+                    cachedLocalStatus.isRepo[state.repoNumber] = true;
+                    cachedLocalStatus.ping[state.repoNumber] = true;
+                    cachedLocalStatus.localFolder[state.repoNumber] = currentFolder;
+                    if (cachedLocalStatus.reason) cachedLocalStatus.reason[state.repoNumber] = '';
+                }
+                await setupSshServer();
             }catch (err){
                 state.repoNumber = origRepoNumber;
                 return;
             }
-            
-            
+        } else {
+            // Local folder check (await required because fs_existsSync is async)
+            if ( await fs_existsSync(currentFolder) ) {
+                try{
+                    isRepo = await fs_existsSync( `${currentFolder}/.git/HEAD` );
+                    if (!isRepo) {
+                        displayLongAlert('Repository Error', 'Repository missing', 'error'); 
+                        noDialog = false;
+                    }
+                }catch (err){
+                    isRepo = false;
+                    displayLongAlert('Repository Error', 'Missing repository : \n' + currentFolder, 'error'); 
+                    noDialog = false;
+                    state.repoNumber = origRepoNumber;  
+                }
+            } else {
+                // localFolder missing -- dialog, and reset repo
+                displayLongAlert('Folder Error', 'Missing repository folder : \n' + currentFolder, 'error'); 
+                noDialog = false;
+                state.repoNumber = origRepoNumber;  
+            }
         }
     
         
@@ -649,13 +636,6 @@ async function _callback( name, event){
         localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         //_setMode('UNKNOWN');
 
-        
-        // Update repo in settings_win 
-        try{
-            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        }catch(err){ 
-        }
-        
         await cacheBranchList();
         
         await gitStashMap(state.repos[state.repoNumber].localFolder);
@@ -3312,12 +3292,25 @@ async function _update2(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    let folderExists= false;
+    let folderExists = false;
+    let isSshRepo = (typeof fullFolderPath === 'string' && fullFolderPath.startsWith('ssh:'));
     
-    try{
-        folderExists = await fs_existsSync( fullFolderPath );
-    }catch (err){
-        console.error(err);
+    if (isSshRepo) {
+        // Use cached status in 1s loop to avoid two sequential SSH round-trips before gitStatus
+        if (cachedLocalStatus && cachedLocalStatus.localFolder && cachedLocalStatus.localFolder[state.repoNumber] === fullFolderPath) {
+            folderExists = Boolean(cachedLocalStatus.exists[state.repoNumber]);
+            isRepo = Boolean(cachedLocalStatus.isRepo[state.repoNumber]);
+        } else {
+            folderExists = true;
+            isRepo = true;
+        }
+    } else {
+        try{
+            folderExists = await fs_existsSync( fullFolderPath );
+            isRepo = folderExists ? await fs_existsSync( `${fullFolderPath}/.git/HEAD` ) : false;
+        }catch (err){
+            console.error(err);
+        }
     }
   
     var startTime = performance.now();      
@@ -3329,9 +3322,6 @@ async function _update2(){
     
     let promises = [];
 
-    // Promise 1
-    promises.push( isRepo = await fs_existsSync( `${fullFolderPath}/.git/HEAD` ));
-    
     // Promise 2
     let statusCheck = gitStatus().then(  function(value) { status_data = value; }  );
     promises.push( statusCheck );
@@ -3354,6 +3344,16 @@ async function _update2(){
 
     // Run 
     await Promise.allSettled( promises )
+
+    if (isSshRepo) {
+        if (status_data && status_data.current !== undefined) {
+            folderExists = true;
+            isRepo = true;
+            folder = path.basename(state.repos[state.repoNumber].localFolder);
+        } else if (!folderExists) {
+            folder = '';
+        }
+    }
     
     
     //isRepo = await fs_existsSync( fullFolderPath );
@@ -4375,22 +4375,19 @@ function configFilePath( folder = ''){
         const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
         let sshHome;
         
-        // Get remote platform if cached
+        // Get remote platform from URL path or session cache (avoids guessing Linux when Mac is already known)
         try{
-            platform = cachedLocalStatus.platform[repoNumber];
-            if (platform == 'Mac'){
+            const serverHost = urlParts.host || urlParts.hostname;
+            const serverKey = `${urlParts.username}@${serverHost}`;
+            platform = cachedLocalStatus.platform[repoNumber] || (typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]);
+            if (platform == 'Mac' || urlParts.pathname.startsWith('/Users/')){
                 sshHome = `/Users/${urlParts.username}`
+            } else {
+                sshHome = `/home/${urlParts.username}`
             }
-            if (platform == 'Linux'){
-                sshHome = `/home/${urlParts.username}`
-            }  
-            if (platform == undefined){
-                // Falback -- guess linux system
-                sshHome = `/home/${urlParts.username}`
-            }  
         }catch (err){
-            // Falback -- guess linux system
-            sshHome = `/home/${urlParts.username}`
+            // Fallback -- guess linux system unless URL path starts with /Users/
+            sshHome = urlParts.pathname.startsWith('/Users/') ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
         }
         
         // Use sshHome in config file path     
@@ -6324,6 +6321,13 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             promisesLocal.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
         }
     }
+
+    // On Windows, if any SSH repos exist, ensure keys are synced once before running SSH checks
+    if (promisesSSH.length > 0 && process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        try {
+            await syncSshKeysToWsl();
+        } catch (e) {}
+    }
     
     //promisesSSH.push( cachedLocalStatus = cachedLocalStatus );
     
@@ -6346,50 +6350,63 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     // Internal function
     async function testLocalStatus( repoNumber, folder){
         let repoKey = (state.repos[repoNumber] && state.repos[repoNumber].sshKey) ? state.repos[repoNumber].sshKey : '';
-        cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
         cachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
         if ( !cachedLocalStatus.reason ){
             cachedLocalStatus.reason = new Array(state.repos.length).fill('');
         }
 
-        // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
+        // Figure out if git repository two ways: 1) if ssh, look for .git/HEAD first (single SSH call); 2) if local repo, use git to check 
 
         if ( folder.startsWith('ssh:') ){
-            if ( cachedLocalStatus.exists[ repoNumber] ){
-                cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
-                cachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD`, repoKey );
-                if ( cachedLocalStatus.isRepo[ repoNumber] ){
-                    cachedLocalStatus.reason[ repoNumber] = '';
-                }else{
-                    cachedLocalStatus.reason[ repoNumber] = 'not a repo';
+            // Probe .git/HEAD first: verifies both folder and repo in a single SSH call for valid repos
+            let hasGitHead = await fs_existsSync( `${folder}/.git/HEAD`, repoKey );
+            if ( hasGitHead ){
+                cachedLocalStatus.exists[ repoNumber] = true;
+                cachedLocalStatus.isRepo[ repoNumber] = true;
+                cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that .git/HEAD existed on ssh-server
+                cachedLocalStatus.reason[ repoNumber] = '';
+                cachedLocalStatus.platform[ repoNumber] = await typeOfRepoServer(folder, repoKey);
+            } else {
+                // Skip secondary folder probe if SSH already failed due to network, rejected key, or missing WSL
+                let headReason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : '';
+                if (headReason === 'no network' || headReason === 'key rejected' || headReason === 'wsl missing') {
+                    cachedLocalStatus.exists[ repoNumber] = false;
+                } else {
+                    cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
                 }
-                let platform = await typeOfRepoServer(folder); 
-                cachedLocalStatus.platform[ repoNumber] = platform;
-            }else{
-                cachedLocalStatus.isRepo[ repoNumber] = false;
-                cachedLocalStatus.platform[ repoNumber] = undefined;
-                let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
-                
-                // If key was rejected, SSH actively responded -- ping is unnecessary and must NOT overwrite the reason!
-                if ( reason === 'key rejected' ){
+
+                if ( cachedLocalStatus.exists[ repoNumber] ){
                     cachedLocalStatus.ping[ repoNumber] = true;
-                }else{
-                    // Check if host responds to ping to differentiate 'no network' from 'not a folder'
-                    try {
-                        let hostname = new URL( folder).hostname;
-                        let pingCmd = (process.platform === 'win32') ? `ping -n 1 ${hostname}` : `ping -c 1 -W 1 ${hostname}`;
-                        await runCommandWithTimeout(pingCmd, args = [], timeoutMs = 1500);
-                        cachedLocalStatus.ping[ repoNumber] = true;  
-                    }catch (err){
-                        cachedLocalStatus.ping[ repoNumber] = false;  
-                        reason = 'no network';
+                    cachedLocalStatus.isRepo[ repoNumber] = false;
+                    cachedLocalStatus.reason[ repoNumber] = 'not a repo';
+                    cachedLocalStatus.platform[ repoNumber] = await typeOfRepoServer(folder, repoKey);
+                } else {
+                    cachedLocalStatus.isRepo[ repoNumber] = false;
+                    cachedLocalStatus.platform[ repoNumber] = undefined;
+                    let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
+                    
+                    // If key was rejected, SSH actively responded -- ping is unnecessary and must NOT overwrite the reason!
+                    if ( reason === 'key rejected' ){
+                        cachedLocalStatus.ping[ repoNumber] = true;
+                    }else{
+                        // Check if host responds to ping to differentiate 'no network' from 'not a folder'
+                        try {
+                            let hostname = new URL( folder).hostname;
+                            let pingCmd = (process.platform === 'win32') ? `ping -n 1 ${hostname}` : `ping -c 1 -W 1 ${hostname}`;
+                            await runCommandWithTimeout(pingCmd, args = [], timeoutMs = 1500);
+                            cachedLocalStatus.ping[ repoNumber] = true;  
+                        }catch (err){
+                            cachedLocalStatus.ping[ repoNumber] = false;  
+                            reason = 'no network';
+                        }
                     }
+                    cachedLocalStatus.reason[ repoNumber] = reason;
                 }
-                cachedLocalStatus.reason[ repoNumber] = reason;
             }
             
         }else{
+            cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
             cachedLocalStatus.platform[ repoNumber] = 'Local';
             if ( !cachedLocalStatus.exists[ repoNumber] ){
                 cachedLocalStatus.isRepo[ repoNumber] = false;
@@ -6635,25 +6652,47 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 // Utility functions
 
-async function typeOfRepoServer( sshUrl){  // For ssh-folders, returns : Mac, Linux or undefined.   For local, returns 'Local'
+async function typeOfRepoServer( sshUrl, sshKey = '' ){  // For ssh-folders, returns : Mac, Linux or undefined.   For local, returns 'Local'
     
     if ( !sshUrl.startsWith('ssh:') ){
         return 'Local'
     }
+    if (!typeOfRepoServer._cache) {
+        typeOfRepoServer._cache = {};
+    }
     
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    const serverHost = urlParts.host || urlParts.hostname;
+    const serverKey = `${urlParts.username}@${serverHost}`;
+
+    // Fast path 1: infer directly from path prefix without any SSH call
+    if (urlParts.pathname.startsWith('/home/')) {
+        typeOfRepoServer._cache[serverKey] = 'Linux';
+        return 'Linux';
+    }
+    if (urlParts.pathname.startsWith('/Users/')) {
+        typeOfRepoServer._cache[serverKey] = 'Mac';
+        return 'Mac';
+    }
+
+    // Fast path 2: return cached server platform if already probed in this session
+    if (typeOfRepoServer._cache[serverKey]) {
+        return typeOfRepoServer._cache[serverKey];
+    }
     
     // Check home directory
     try{
         // Assume linux
-        let baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
-        if ( await fs_existsSync(baseUrl)){
+        let baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}/home/${urlParts.username}`;  // ssh://host/home/jan
+        if ( await fs_existsSync(baseUrl, sshKey)){
+            typeOfRepoServer._cache[serverKey] = 'Linux';
             return 'Linux';
         }
         
         // Assume MacOS
-        baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
-        if ( await fs_existsSync(baseUrl)){
+        baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}/Users/${urlParts.username}`;  // ssh://host/Users/jan
+        if ( await fs_existsSync(baseUrl, sshKey)){
+            typeOfRepoServer._cache[serverKey] = 'Mac';
             return 'Mac';
         }
         
@@ -6666,23 +6705,45 @@ async function typeOfRepoServer( sshUrl){  // For ssh-folders, returns : Mac, Li
     
 }
 
-async function setupSshServer( ){ // Copies config, and executables to ssh server "$HOME/.Pragma-git" folder
-    
+async function setupSshServer( force = false ){ // Copies config, and executables to ssh server "$HOME/.Pragma-git" folder
+    if (state.repoNumber < 0 || !state.repos || !state.repos[state.repoNumber]) {
+        return;
+    }
     const sshUrl = state.repos[state.repoNumber].localFolder;  
-    if ( !sshUrl.startsWith('ssh:') ){
+    if ( !sshUrl || !sshUrl.startsWith('ssh:') ){
         //console.log(`NOT A SSH URL -- ${sshUrl}`);
         return
     }
+    if (!setupSshServer._initialized) {
+        setupSshServer._initialized = new Set();
+    }
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    const serverHost = urlParts.host || urlParts.hostname;
+    const serverKey = `${urlParts.username}@${serverHost}`;
+
+    // Skip if helper scripts have already been uploaded to this user@host:port during this session
+    if (!force && setupSshServer._initialized.has(serverKey)) {
+        return;
+    }
+
+    // Try known platform home directory first so macOS servers do not waste 3 failed Linux scp attempts
+    const cachedPlat = (typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]) || (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[state.repoNumber]);
+    const isMac = (urlParts.pathname.startsWith('/Users/') || cachedPlat === 'Mac');
+    const primaryHome = isMac ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
+    const fallbackHome = isMac ? `/home/${urlParts.username}` : `/Users/${urlParts.username}`;
     
     try{
-        // Assume linux
-        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${primaryHome}`;
         await putFiles(baseUrl);
+        setupSshServer._initialized.add(serverKey);
     }catch (err){
-        // Assume MacOS
-        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
-        await putFiles(baseUrl);
+        try {
+            const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${fallbackHome}`;
+            await putFiles(baseUrl);
+            setupSshServer._initialized.add(serverKey);
+        } catch (err2) {
+            console.warn('setupSshServer failed:', err2);
+        }
     }
     
     // Internal function
@@ -6724,9 +6785,9 @@ function waitTime( delay) {
   })
 }
 
-async function mkdir(dir, sshKey = ''){        // Make local folder
-    if (! await fs_existsSync(dir, sshKey)){
-        await fs_mkdir( dir, sshKey);   // Use this for both ssh-folder and local folder
+async function mkdir(dir){        // Make local folder
+    if (! await fs_existsSync(dir)){
+        await fs_mkdir( dir);   // Use this for both ssh-folder and local folder
     }
 }
 function rmLocalFile(localFile){
@@ -7049,7 +7110,7 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
     });
   });
 }
-async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000 ){  // Run git bash in 'folder', on all platforms. 
+async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000, execExtra = {} ){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -7060,6 +7121,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
      //		forcelocal		Windows typically runs git on ssh-folder over WSL.  Force running local git-bash instead
      //     mode            'timeout'
      //     timeoutInMs     
+     //     execExtra       optional object, e.g. { sshKey: '...' }
      //
      // Output
      //     string output of command, trimmed  (without leading and trailing spaces)
@@ -7067,16 +7129,25 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     let options = {};
     let out;
     
-    // Set path if known
-    let isDefinedFolder =  ( folder !== undefined);
-    let isLocalFolder = ( ! folder.startsWith('ssh:') );
+    // Set path if known (only for real local directories)
+    let isDefinedFolder = ( folder !== undefined );
+    let isLocalFolder = ( typeof folder === 'string' && !folder.startsWith('ssh:') );
     if ( isDefinedFolder && isLocalFolder ){  
-        options = {cwd: folder};
+        options.cwd = folder;
     }
     
     // Set time-out if defined
     if (mode == 'timeout'){
-        options = {cwd: folder, timeout: timeoutInMs};  
+        options.timeout = timeoutInMs;  
+    }
+
+    // Attach SSH key environment if running an ssh operation
+    if (folder.startsWith('ssh:') && typeof sshKeyEnv === 'function') {
+        let keyOverride = (execExtra && execExtra.sshKey) ? execExtra.sshKey : '';
+        let keyEnvs = sshKeyEnv(folder, keyOverride);
+        if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+            options.env = Object.assign({}, process.env, options.env || {}, keyEnvs);
+        }
     }
 
     //
@@ -7091,7 +7162,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         if ( folder.startsWith('ssh:') ) {
             
             try{
-                return await runCommandWithTimeout(cmd, {}, timeoutInMs);
+                return await runCommandWithTimeout(cmd, options, timeoutInMs);
             }catch (err){
                 console.error( err);
                 throw err;
@@ -7140,11 +7211,11 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		// forcelocal=false is required 
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
-		cmd = cmd.replace(/\\/g, '/').replace(/(^|[\s"'])([a-zA-Z]):\//g, (m, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
+		cmd = cmd.replaceAll('\\','/').replaceAll(/(^|[\s"'])([a-zA-Z]):\//g, (match, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
 
 		try{
 
-			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, {}, timeoutInMs);
+			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, options, timeoutInMs);
 			 
 			 console.log('Output:', out);
              return out;
@@ -7632,10 +7703,11 @@ function pragmaLog(message){
         mainLogFileStream = require('fs').createWriteStream(MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
     }
     
-    // Write message to stream
+    // Write message to stream (strip NUL bytes from git output to keep log clean text for editors like Geany)
     let timeStamp = new Date().toISOString();
     let space = '   ';
-    let output = timeStamp + space + cleanedMessage + os.EOL;
+    let safeMessage = cleanedMessage.replaceAll('\0', '');
+    let output = timeStamp + space + safeMessage + os.EOL;
     mainLogFileStream.write( output);
 }
 function sendGitOutputToFile( id) {
