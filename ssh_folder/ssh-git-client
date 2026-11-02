@@ -134,15 +134,15 @@ EOF
     SSH_RETURN_STATUS=$?  
  
     
-    # Detect succesful git command within first second and skip immediately
+    # Exponential backoff (8 ms -> 512 ms, ~1 s total): catches fast cached SSH calls in 8-24 ms instead of 100 ms
     GIT_DONE=false
-    for i in {1..10}; do
+    for delay in 0.008 0.016 0.032 0.064 0.128 0.256 0.512; do
+        sleep $delay
         if ! kill -0 "$GIT_SSH_PID" 2>/dev/null; then
-            echo "($PID) ssh-git-client  -- Git exited after $i ticks" >> "$SSH_LOG"
+            echo "($PID) ssh-git-client  -- Git exited after delay $delay" >> "$SSH_LOG"
             GIT_DONE=true
             break
         fi
-        sleep 0.1
     done
 
 
@@ -154,11 +154,8 @@ EOF
     if [ "$GIT_DONE" == false ]; then
         echo "($PID) ssh-git-client  -- Start wait for git command to finish (over ssh on server) ..." >> "$SSH_LOG"   
         
-        # System specific signaling files (Defined once here; outside while-loop)
-        REMOTE_TMP="/home/jan/.Pragma-git/.tmp"  # Default guess: Linux
-        if "${SCRIPT_FOLDER}/ssh-test-if-file-exists" "$SERVER:$PORT/Users" > /dev/null; then
-            REMOTE_TMP="/Users/jan/.Pragma-git/.tmp"  # Fallback guess: macOS
-        fi
+        # Relative path in ssh/scp resolves to remote user's $HOME on both Linux and macOS (avoids hardcoded user and extra SSH check)
+        REMOTE_TMP=".Pragma-git/.tmp"
         echo "($PID) ssh-git-client  -- REMOTE_TMP = $REMOTE_TMP" >> "$SSH_LOG" 
                 
         REMOTE_ASKPASS_SIGNAL_FILE="$REMOTE_TMP/pragma-askpass-running-ssh"
@@ -218,9 +215,9 @@ EOF
             echo "($PID) ssh-git-client  -- =========================================================================================" >> "$SSH_LOG"
             echo "($PID) ssh-git-client  -- Signal file detected on server ($SERVER:$REMOTE_ASKPASS_SIGNAL_FILE)" >> "$SSH_LOG"
             
-            # Copy from remote askpass to local
+            # Copy from remote askpass to local ($SSH_OPTIONS reuses ControlMaster connection and custom SSH key)
             echo "($PID) ssh-git-client  -- Copy prompt from $SERVER:$REMOTE_PROMPT_FILE  ->  $LOCAL_PROMPT_FILE" >> "$SSH_LOG"
-            scp -P $PORT "$SERVER:$REMOTE_PROMPT_FILE" "$LOCAL_PROMPT_FILE" >> "$SSH_LOG"
+            scp -P $PORT $SSH_OPTIONS "$SERVER:$REMOTE_PROMPT_FILE" "$LOCAL_PROMPT_FILE" >> "$SSH_LOG"
             echo "($PID) ssh-git-client  -- Prompt = $(cat $LOCAL_PROMPT_FILE)" >> "$SSH_LOG"
             
             
@@ -242,12 +239,12 @@ EOF
             echo "($PID) ssh-git-client  -- Local pragma-askpass closed EXIT = $LOCAL_EXIT = $(cat $LOCAL_EXIT)" >> "$SSH_LOG"
             
             
-            # Copy files to remote
+            # Copy files to remote ($SSH_OPTIONS reuses ControlMaster connection and custom SSH key)
             echo "($PID) ssh-git-client  -- Copy $LOCAL_EXIT  ->  $SERVER:$REMOTE_EXIT" >> "$SSH_LOG"
-            scp -P $PORT "$LOCAL_EXIT" "$SERVER:$REMOTE_EXIT"  >> "$SSH_LOG"
+            scp -P $PORT $SSH_OPTIONS "$LOCAL_EXIT" "$SERVER:$REMOTE_EXIT"  >> "$SSH_LOG"
             
             echo "($PID) ssh-git-client  -- Copy $LOCAL_EXITMESSAGEFILE  ->  $SERVER:$REMOTE_EXITMESSAGEFILE" >> "$SSH_LOG"
-            scp -P $PORT "$LOCAL_EXITMESSAGEFILE" "$SERVER:$REMOTE_EXITMESSAGEFILE"  >> "$SSH_LOG"
+            scp -P $PORT $SSH_OPTIONS "$LOCAL_EXITMESSAGEFILE" "$SERVER:$REMOTE_EXITMESSAGEFILE"  >> "$SSH_LOG"
             
             echo "($PID) ssh-git-client  -- Close remote pragma-askpass -- remove file  $SERVER:$REMOTE_ASKPASS_SIGNAL_FILE" >> "$SSH_LOG"
             ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "bash -c 'rm \"$REMOTE_ASKPASS_SIGNAL_FILE\" ' "

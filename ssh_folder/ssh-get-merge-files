@@ -61,9 +61,9 @@ function getFiles () {
             REMOTE="${SERVER_BASE_PATH}/${var}" 
         fi
         
-        # Transfer
+        # Transfer (-p "${PORT}" supports non-default SSH ports)
         echo "    SSH TRANSFER :  '${REMOTE}'  > '${LOCAL}'"
-        ssh -T "$SERVER" $SSH_OPTIONS  "cat '${REMOTE}'" > "${LOCAL}"
+        ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS  "cat '${REMOTE}'" > "${LOCAL}"
         echo "    $?"
         
         #echo ' '
@@ -91,8 +91,8 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
 echo ">> SSH-GET-MERGE-FILES  \"$1\"" >> "$MERGE_LOG"
 
-# Get files from ssh folder
-FILE_LOCATIONS=$(ssh -T "$SERVER" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
+# Get files from ssh folder (-p "${PORT}" supports non-default SSH ports)
+FILE_LOCATIONS=$(ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS cat ${FILE_LIST_ON_SSH} )  
 echo "    FILE_LOCATIONS = ${FILE_LOCATIONS}"
 eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEMP_FILE_LOCATION. $ABSOLUTE_FILE_LOCATIONS also created in this function
 echo "    ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"

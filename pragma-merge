@@ -20,18 +20,31 @@ then
     # Modify TMP if run under WSL
     # Windows (git over ssh is implemented using WSL)
 	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-		if [[ "$TMP" == /root/* ]] || [ ! -d "$(dirname "$TMP")" ]; then
-			WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')
-			if [ -n "$WIN_USER_PROFILE" ]; then
-				WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
-				if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
-					TMP="$WIN_WSL_PROFILE/.Pragma-git/.tmp"
+		# 1. Fast path: assume WSL username matches Windows username (/home/<user> -> /mnt/c/Users/<user>, 0 ms)
+		WIN_WSL_PROFILE=""
+		if [[ "$HOME" == /home/* ]]; then
+			WIN_WSL_PROFILE="${HOME/\/home/\/mnt\/c\/Users}"
+		fi
+
+		# 2. Fallback for username mismatch or root: read cached Windows profile or query cmd.exe once
+		if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE/.Pragma-git" ]; then
+			PROFILE_CACHE="/tmp/pragma_win_profile"
+			if [ -f "$PROFILE_CACHE" ]; then
+				WIN_WSL_PROFILE=$(<"$PROFILE_CACHE")
+			fi
+			if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE" ]; then
+				WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r\n')
+				if [ -n "$WIN_USER_PROFILE" ]; then
+					WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
+					if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+						echo "$WIN_WSL_PROFILE" > "$PROFILE_CACHE" 2>/dev/null
+					fi
 				fi
 			fi
 		fi
 
-		if [[ "$TMP" == *"/home/"* ]]; then
-			TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp 
+		if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+			TMP="$WIN_WSL_PROFILE/.Pragma-git/.tmp"
 		fi
 
 		if [ ! -d "$(dirname "$TMP")" ]; then

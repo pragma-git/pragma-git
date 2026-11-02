@@ -706,12 +706,14 @@ async function _callback( name, event){
                 // Update displayed .gitignore     
                 document.getElementById('gitignoreText').innerText = ''
                 
-                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                if (fs_existsSync(ignoreFileName) ){
+                // Use '/' for SSH URLs (even on Windows) and await async fs_existsSync before downloading .gitignore
+                let repoFolder = global.state.repos[global.state.repoNumber].localFolder;
+                let sep = repoFolder.startsWith('ssh:') ? '/' : pathsep;
+                let ignoreFileName = repoFolder + sep + '.gitignore'; 
+                if ( await fs_existsSync(ignoreFileName, repoKey) ){
                     
-                    if (global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
-                        let sshUrl = global.state.repos[global.state.repoNumber].localFolder;
-                        ignoreFileName = await sshGet( sshUrl, '.gitignore')
+                    if (repoFolder.startsWith('ssh:') ){
+                        ignoreFileName = await sshGet( repoFolder, '.gitignore')
                     }
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                     

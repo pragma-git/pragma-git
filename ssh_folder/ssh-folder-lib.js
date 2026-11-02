@@ -1450,14 +1450,14 @@ function sshKeyEnv(sshUrl, keyOverride = '') {
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
+		wslPath = wslPath.replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:\\`).replaceAll('/','\\');  // Support any drive letter (/mnt/c/ -> C:\)
 	}
 	return wslPath
 }
 function windowsToWslPath( windowsPath) {                       // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
+		windowsPath = windowsPath.replaceAll('\\','/').replace(/^([a-zA-Z]):\//, (m, d) => `/mnt/${d.toLowerCase()}/`);   // Support any drive letter (C:/ -> /mnt/c/)
 	}
 	return windowsPath
 }

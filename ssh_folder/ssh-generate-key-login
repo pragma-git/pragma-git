@@ -36,6 +36,12 @@ done) 2>&1
 
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
+REMOTE_PORT="22"
+if [[ "$REMOTE_HOST" == *:* ]]; then
+    REMOTE_PORT="${REMOTE_HOST##*:}"
+    REMOTE_HOST="${REMOTE_HOST%:*}"
+    [[ -z "$REMOTE_PORT" ]] && REMOTE_PORT="22"
+fi
 
 # Key to deploy is selected centrally in lib/ssh-functions (PRAGMA_SSH_KEY => SSH_KEY_PATH)
 KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
@@ -92,8 +98,9 @@ echo "==> Opening master SSH connection (one password will be asked)…"
 EXIT="$TMP/exit-pragma-askpass"
 rm -f "$EXIT"
 
-# Start real master connection (handles fingerprint + password)
-ssh -o ControlMaster=yes \
+# Start real master connection (handles fingerprint + password; -p supports non-default ports)
+ssh -p "$REMOTE_PORT" \
+    -o ControlMaster=yes \
     -o ControlPersist=600 \
     -o ControlPath="$CONTROL_SOCKET" \
     -o StrictHostKeyChecking=accept-new \
@@ -134,7 +141,7 @@ fi
 echo "==> Master SSH connection active."
 
 
-SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
+SSH_CM_OPTS="-p $REMOTE_PORT -o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
 
 ###############################################################################
 # Detect PQ KEX support (just warn later)
@@ -201,7 +208,7 @@ ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 # Close ControlMaster connection
 ###############################################################################
-ssh -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
+ssh -p "$REMOTE_PORT" -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
 
 
 ###############################################################################

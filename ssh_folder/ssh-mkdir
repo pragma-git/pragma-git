@@ -19,19 +19,10 @@ echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS mkdir -p '$SERVER_BASE_PATH
 ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS mkdir -p "'$SERVER_BASE_PATH'"
 
 
-# Check result
+# Check exit code directly (mkdir -p returns 0 on both new and existing folders; avoids extra ssh-test-if-file-exists round-trip)
 if [ $? -eq 0 ]; then
     echo "    Success : Created folder \"$1\"" 
     echo "    Success : Created folder \"$1\""  >> "$PRAGMALOG_FILE"
-    
-    ./ssh-test-if-file-exists "$1" > /dev/null
-    if [ $? -eq 0 ]; then
-        echo "    Verified folder exists : \"$1\"" 
-    else
-        echo "    Folder does not exist : \"$1\"" 
-        exit 1 
-    fi
-    
     echo " " >> "$PRAGMALOG_FILE"
     exit 0
 else
