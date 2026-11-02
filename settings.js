@@ -1632,12 +1632,10 @@ async function gitClone( folderName, repoURL){
         await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
         
         // 2) Clone
-        let topFolderValidOnServer = topFolder;
-        if (isSsh){
-            // Clean to make it local on the server
-            let url = new URL(topFolder);
-            topFolderValidOnServer = decodeURIComponent(url.pathname);
-        }
+        // For SSH repositories, simpleGit runs via ssh-git-client which is already placed in cleanFolderName (-C SERVER_BASE_PATH).
+        // Passing topFolderValidOnServer as repoName ensures it clones into a relative subfolder on the remote server
+        // without attempting to create an invalid absolute path with URL/server prefixes.
+        let topFolderValidOnServer = isSsh ? repoName : topFolder;
         
         opener.pragmaLog(`Clone : "${repoURL}"  to "${cleanFolderName}"`);
         await simpleGitLog(cleanFolderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
