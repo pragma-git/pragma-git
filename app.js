@@ -7703,10 +7703,11 @@ function pragmaLog(message){
         mainLogFileStream = require('fs').createWriteStream(MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
     }
     
-    // Write message to stream
+    // Write message to stream (strip NUL bytes from git output to keep log clean text for editors like Geany)
     let timeStamp = new Date().toISOString();
     let space = '   ';
-    let output = timeStamp + space + cleanedMessage + os.EOL;
+    let safeMessage = cleanedMessage.replaceAll('\0', '');
+    let output = timeStamp + space + safeMessage + os.EOL;
     mainLogFileStream.write( output);
 }
 function sendGitOutputToFile( id) {
