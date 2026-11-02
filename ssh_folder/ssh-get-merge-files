@@ -32,6 +32,8 @@ function getFiles () {
     
     for var in "$@"
     do
+        # Skip empty argument
+        [ -z "$var" ] && continue
         #echo ' '
         echo "    REMOTE FILE   = '${var}'"
         REMOTEFOLDER=$(dirname "${var}")

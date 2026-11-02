@@ -16,5 +16,12 @@
     cmd = "C:/Program Files/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"     
 	trustExitCode = true 
 
+[difftool]
+    prompt = false
+
+[difftool "pragma-git"]
+    cmd = "C:/Program Files/Pragma-git/pragma-merge" "$LOCAL" "$REMOTE" "" ""
+    trustExitCode = true 
+
 [push]
     autoSetupRemote = true

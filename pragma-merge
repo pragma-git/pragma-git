@@ -91,9 +91,9 @@ mkdir "$TMP" 2>/dev/null
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
 
-# SSH folder -- special ($5 == 'ssh' means that pragma-merge is running on server)
-echo "${LOG_INDENT}Argument \$5 = \"$5\" (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
-if [[ $5 == "ssh" ]] ; then
+# SSH folder -- special ($5 == 'ssh' or $3 == 'ssh' means that pragma-merge is running on server)
+echo "${LOG_INDENT}Argument \$5 = \"$5\", \$3 = \"$3\" (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
+if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
     # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
