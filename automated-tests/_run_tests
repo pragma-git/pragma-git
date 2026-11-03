@@ -61,8 +61,16 @@ for arg in "$@"; do
         --keep-artifacts)
             UI_EXTRA_ARGS+=("$arg")
             ;;
+        --clean-up)
+            UI_EXTRA_ARGS+=("$arg")
+            ;;
     esac
 done
+
+# If the user did not explicitly pass --keep-artifacts to the master runner, clean up UI artifacts automatically
+if [[ ! " ${UI_EXTRA_ARGS[*]} " =~ " --keep-artifacts " ]]; then
+    UI_EXTRA_ARGS+=("--clean-up")
+fi
 
 echo "${BOLD}======================================================================${NORMAL}"
 echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (All Categories: Non-GUI & UI)${NORMAL}"

@@ -30,6 +30,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Keep Artifacts by Default in UI Tests**:
+  - Changed default behavior for manual/standalone UI test runs to **keep artifacts** automatically without requiring flags.
+  - Added `--clean-up` flag to remove artifacts when desired.
+  - Configured master runner `automated-tests/_run_tests` to pass `--clean-up` to UI suites by default (unless `--keep-artifacts` is explicitly passed).
 * **Real UI Deploy Public Key Flow in UI Test Framework**:
   - Replaced test fixture key injection shortcut with the real UI workflow exercising `#sshConfigDeployBtn` ("Deploy public key").
   - Updated `ssh_folder/ssh-generate-key-login` to respect `PRAGMA_REMOTE_AUTHORIZED_KEYS` (enabling isolated test deployments to `$TEST_SSHD_DIR/authorized_keys` without touching host `~/.ssh/authorized_keys`), and appended `_${REMOTE_PORT}` to `CONTROL_SOCKET` to prevent mux socket collisions.

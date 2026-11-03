@@ -7,7 +7,8 @@
  * Options:
  *   --scenario=<file>    Run a specific YAML scenario (default: ssh_clone_repo.yaml)
  *   --step, -i           Step-by-step interactive mode (pauses and prompts with verification instructions)
- *   --keep-artifacts     Keep test directories and cloned repos after test finishes
+ *   --clean-up           Remove test directories and cloned repos after test finishes (default: kept)
+ *   --keep-artifacts     Keep test directories (already default)
  *   --port=<num>         CDP remote debugging port (default: 9333, never 9222 to prevent dev collisions)
  */
 
@@ -23,12 +24,15 @@ const UIFixtures = require('./ui_fixtures');
 function parseArgs(customArgs) {
     const rawArgs = customArgs || process.argv.slice(2);
     const isStepMode = rawArgs.includes('--step') || rawArgs.includes('-i');
-    const keepArtifacts = rawArgs.includes('--keep-artifacts');
+    // Default: keep artifacts when running standalone/manually.
+    // Clean up when explicitly told to via --clean-up (e.g. from master _run_tests or CI).
+    const cleanUp = rawArgs.includes('--clean-up') || (rawArgs.includes('--no-keep-artifacts'));
+    const keepArtifacts = rawArgs.includes('--keep-artifacts') || !cleanUp;
     const scenarioFlag = rawArgs.find(a => a.startsWith('--scenario='));
     const scenarioFile = scenarioFlag ? scenarioFlag.split('=')[1] : null;
     const portFlag = rawArgs.find(a => a.startsWith('--port='));
     const cdpPort = portFlag ? parseInt(portFlag.split('=')[1], 10) : 9333;
-    return { isStepMode, keepArtifacts, scenarioFile, cdpPort };
+    return { isStepMode, keepArtifacts, cleanUp, scenarioFile, cdpPort };
 }
 
 let userPromptInterface = null;
