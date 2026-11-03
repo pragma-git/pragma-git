@@ -20,7 +20,7 @@
     prompt = false
 
 [difftool "pragma-git"]
-    cmd = "C:/Program Files/Pragma-git/pragma-merge" "$LOCAL" "$REMOTE" "" ""
+    cmd = "C:/Program Files/Pragma-git/pragma-merge" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
     trustExitCode = true 
 
 [push]

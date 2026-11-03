@@ -29,6 +29,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Empty Diffs in Pragma-Merge from Modified Files Window**:
+  - Identified root cause introduced in commit `6e343637`: `[difftool "pragma-git"]` cmd was set to `.../pragma-merge "$LOCAL" "$REMOTE" "" ""`. Passing empty strings for `$3` (REMOTE) and `$4` (MERGED) caused `REMOTE == MERGED` to evaluate to true, but `loadFile(REMOTE)` loaded an empty string, rendering empty editor panes in `pragma-merge`.
+  - Fixed `[difftool "pragma-git"]` in `gitconfigs/pragma-git-config_mac`, `gitconfigs/pragma-git-config_linux`, `gitconfigs/pragma-git-config_win`, and `gitconfigs/pragma-git-config_linux_ssh_server` to pass `"$BASE" "$LOCAL" "$REMOTE" "$MERGED"` (matching what `pragma-merge` expects for 4-argument git tool conventions).
+  - Updated `configFilePath()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to write `[difftool "pragma-git"]` alongside `[mergetool "pragma-git"]` in `pragma-git-config-dev` with `"$BASE" "$LOCAL" "$REMOTE" "$MERGED"`, keeping DEV mode aligned with release configurations.
 * **Real ephemeral sshd for SSH tests + correct suite failure reporting**:
   - Added [`automated-tests/ssh_test_server.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh): starts an unprivileged real `sshd` on a random localhost port with its own host key and its own `authorized_keys` (never touches real `~/.ssh`). `start_test_sshd`, `inject_test_sshd_key`, `stop_test_sshd`, `login-check` command. On Windows runners it runs inside WSL.
   - `test_08` 8.7/8.8: synced key rejected (`KEY_NEEDED`) -> injected into authorized_keys -> accepted (`STATUS:OK`). `test_07` 7.8 uses the same helper (replaces the old CI-only edit of the real authorized_keys, which wrote to the Windows home while sshd ran in WSL).

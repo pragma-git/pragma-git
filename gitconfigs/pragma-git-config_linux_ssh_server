@@ -19,7 +19,7 @@
     prompt = false
 
 [difftool "pragma-git"]
-    cmd = $HOME/.Pragma-git/pragma-merge  "$LOCAL" "$REMOTE" "" "" ssh
+    cmd = $HOME/.Pragma-git/pragma-merge  "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh
     trustExitCode = true    
 
 [core]

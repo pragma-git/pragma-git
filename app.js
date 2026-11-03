@@ -4480,6 +4480,14 @@ function configFilePath( folder = ''){
         configText += '[mergetool "pragma-git"]' + EOL;
         let mergePathNormalized = `${STARTDIR}/pragma-merge`.replaceAll('\\','/');
         configText += `    cmd = "${mergePathNormalized}" $BASE $LOCAL $REMOTE $MERGED` + EOL;
+        configText += '' + EOL;
+        
+        configText += '[difftool]' + EOL;
+        configText += '    prompt = false' + EOL;
+        configText += '' + EOL;
+        
+        configText += '[difftool "pragma-git"]' + EOL;
+        configText += `    cmd = "${mergePathNormalized}" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"` + EOL;
         
         fs.writeFileSync( devConfigFilePath, configText);
         

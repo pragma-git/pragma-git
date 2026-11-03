@@ -12,7 +12,7 @@
     prompt = false
 
 [difftool "pragma-git"]
-    cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge "$LOCAL" "$REMOTE" "" ""
+    cmd = /Applications/Pragma-git.app/Contents/Resources/app.nw/pragma-merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
     trustExitCode = true    
 
 [core]
