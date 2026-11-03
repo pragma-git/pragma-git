@@ -30,6 +30,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Empty Diffs in Pragma-Merge from Modified Files Window**:
+  - Identified root cause introduced in commit `6e343637`: `[difftool "pragma-git"]` cmd was set to `.../pragma-merge "$LOCAL" "$REMOTE" "" ""`. Passing empty strings for `$3` (REMOTE) and `$4` (MERGED) caused `REMOTE == MERGED` to evaluate to true, but `loadFile(REMOTE)` loaded an empty string, rendering empty editor panes in `pragma-merge`.
+  - Fixed `[difftool "pragma-git"]` in `gitconfigs/pragma-git-config_mac`, `gitconfigs/pragma-git-config_linux`, `gitconfigs/pragma-git-config_win`, and `gitconfigs/pragma-git-config_linux_ssh_server` to pass `"$BASE" "$LOCAL" "$REMOTE" "$MERGED"` (matching what `pragma-merge` expects for 4-argument git tool conventions).
+  - Updated `configFilePath()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to write `[difftool "pragma-git"]` alongside `[mergetool "pragma-git"]` in `pragma-git-config-dev` with `"$BASE" "$LOCAL" "$REMOTE" "$MERGED"`, keeping DEV mode aligned with release configurations.
 * **CI & UI Test Runner Headless Support**:
   - Gracefully skip the UI test suite with exit code `77` when NW.js binary is not present (e.g. GitHub Actions runners without NW.js installed) in [`automated-tests/ui/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/_run_tests) and [`automated-tests/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests).
   - Added `ws` and `js-yaml` to `devDependencies` so test fixtures can connect over Chrome DevTools Protocol.
