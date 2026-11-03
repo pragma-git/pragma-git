@@ -9,14 +9,16 @@
 #   and ephemeral isolated test sandboxes.
 #
 # Options:
-#   -h, --help       Show this help text and exit
-#   --step, -i       Interactive step-by-step mode (pause before each action)
-#   --clean-up       Clean up temporary test artifacts upon completion (default: kept)
-#   -v, --verbose    Show detailed output
-#   --port=<num>     CDP port (default: 9333)
+#   -h, --help        Show this help text and exit
+#   --step, -i        Interactive step-by-step mode (pause before each action)
+#   --clean-up        Clean up temporary test artifacts upon completion (default: kept)
+#   --keep-artifacts  Keep temporary test artifacts upon completion (already default)
+#   -v, --verbose     Show detailed output
+#   --port=<num>      CDP port (default: 9333)
 #
 # Examples:
-#   ./_run_tests                  Run all UI test suites automatically
+#   ./_run_tests                  Run all UI test suites automatically (artifacts kept)
+#   ./_run_tests --clean-up       Run all UI test suites and remove test artifacts
 #   ./_run_tests --step           Run all UI test suites with interactive step prompts
 #
 ## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)

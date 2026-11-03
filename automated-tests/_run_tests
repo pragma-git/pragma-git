@@ -21,15 +21,18 @@
 #   its local tests (e.g. automated-tests/non_gui/_run_tests or automated-tests/ui/_run_tests).
 #
 # Options:
-#   -h, --help       Show this help text and exit
-#   -v, --verbose    Show detailed live output from each test
-#   --step, -i       Pass interactive step-by-step mode to UI tests
+#   -h, --help        Show this help text and exit
+#   -v, --verbose     Show detailed live output from each test
+#   --step, -i        Pass interactive step-by-step mode to UI tests
+#   --keep-artifacts  Keep temporary UI test directories (default for UI is clean-up in master runner)
 #
 # Examples:
-#   ./_run_tests                  Run all test categories (concise mode)
+#   ./_run_tests                  Run all test categories (concise mode, UI artifacts cleaned)
 #   ./_run_tests -v               Run all test categories with live verbose output
 #   ./_run_tests --step           Run all test categories, prompting interactively on UI tests
+#   ./_run_tests --keep-artifacts Run all test categories, keeping UI test artifacts
 #   cd automated-tests/non_gui && ./_run_tests         Run all non-gui tests
+#   cd automated-tests/ui && ./_run_tests              Run all UI tests (artifacts kept by default)
 #   cd automated-tests/ui && ./_run_tests --step       Run all UI tests interactively
 #
 ## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
