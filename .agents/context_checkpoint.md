@@ -30,6 +30,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **CI & UI Test Runner Headless Support**:
+  - Gracefully skip the UI test suite with exit code `77` when NW.js binary is not present (e.g. GitHub Actions runners without NW.js installed) in [`automated-tests/ui/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/_run_tests) and [`automated-tests/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests).
+  - Added `ws` and `js-yaml` to `devDependencies` so test fixtures can connect over Chrome DevTools Protocol.
+  - Verified all CI runners (**macOS**, **Ubuntu**, **Windows**) pass green on GitHub Actions run [`41643766605`](https://github.com/pragma-git/pragma-git/actions/runs/41643766605).
 * **UI Test Automation & SSH Environment Fixes**:
   - Automatically raises terminal window using `osascript` before and after pressing ENTER so users can step through `--step` tests without manual window switching.
   - Subtracted non-interactive `connect_window` actions from the total interactive step count (`STEP [1/17]` to `STEP [17/17]`).

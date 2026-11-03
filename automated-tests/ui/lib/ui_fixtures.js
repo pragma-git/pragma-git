@@ -100,13 +100,20 @@ class UIFixtures {
     launchNW(port = 9333) {
         this.cdpPort = port;
         const repoRoot = path.resolve(__dirname, '../../..');
-        const nwBinary = process.env.NW_BIN || (
-            process.platform === 'darwin'
-                ? '/Applications/nwjs.app/Contents/MacOS/nwjs'
-                : 'nw'
-        );
+        let nwBinary = process.env.NW_BIN;
+        if (!nwBinary) {
+            if (process.platform === 'darwin') {
+                if (fs.existsSync('/Applications/nwjs.app/Contents/MacOS/nwjs')) {
+                    nwBinary = '/Applications/nwjs.app/Contents/MacOS/nwjs';
+                } else {
+                    nwBinary = 'nw';
+                }
+            } else {
+                nwBinary = 'nw';
+            }
+        }
 
-        if (!fs.existsSync(nwBinary) && process.platform === 'darwin') {
+        if (path.isAbsolute(nwBinary) && !fs.existsSync(nwBinary)) {
             throw new Error(`NW.js binary not found at ${nwBinary}. Set NW_BIN environment variable.`);
         }
 

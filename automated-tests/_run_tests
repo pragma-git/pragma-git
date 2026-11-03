@@ -173,6 +173,8 @@ if [ -f "$SCRIPT_DIR/ui/_run_tests" ]; then
     if [ $exit_code -eq 0 ]; then
         ((PASSED_CATEGORIES++))
         CATEGORY_RESULTS+=("  ${GREEN}[OK]${NORMAL}     ui (${cat_duration}s)")
+    elif [ $exit_code -eq 77 ]; then
+        CATEGORY_RESULTS+=("  ${CYAN}[SKIPPED]${NORMAL} ui (${cat_duration}s)")
     else
         ((FAILED_CATEGORIES++))
         CATEGORY_RESULTS+=("  ${RED}[FAILED]${NORMAL} ui (${cat_duration}s)")

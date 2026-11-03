@@ -52,6 +52,31 @@ echo "Test dir  : $SCRIPT_DIR"
 echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
 echo ""
 
+# Check whether NW.js is available
+NW_FOUND=false
+if [ -n "$NW_BIN" ]; then
+    if [ -x "$NW_BIN" ]; then
+        NW_FOUND=true
+    fi
+elif [ "$(uname -s)" = "Darwin" ]; then
+    if [ -x "/Applications/nwjs.app/Contents/MacOS/nwjs" ]; then
+        NW_FOUND=true
+    elif command -v nw &>/dev/null; then
+        NW_FOUND=true
+    fi
+else
+    if command -v nw &>/dev/null; then
+        NW_FOUND=true
+    fi
+fi
+
+if [ "$NW_FOUND" = false ]; then
+    echo "${YELLOW}${BOLD}[SKIPPED] NW.js binary not found. Skipping UI test suites.${NORMAL}"
+    echo "To run UI tests, install NW.js (e.g. /Applications/nwjs.app or in PATH) or set NW_BIN=/path/to/nwjs"
+    echo ""
+    exit 77
+fi
+
 CURRENT_TEST_PID=""
 function handle_interrupt() {
     echo ""
