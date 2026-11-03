@@ -28,7 +28,8 @@ class UIFixtures {
         // 1. Create unique test sandbox
         this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pragma_ui_test_'));
         this.userDataDir = path.join(this.tmpDir, 'nw_user_data');
-        this.testSettingsDir = path.join(this.tmpDir, '.Pragma-git');
+        this.testHome = path.join(this.tmpDir, 'home');
+        this.testSettingsDir = path.join(this.testHome, '.Pragma-git');
         fs.mkdirSync(this.userDataDir, { recursive: true });
         fs.mkdirSync(this.testSettingsDir, { recursive: true });
 
@@ -75,7 +76,7 @@ class UIFixtures {
         execSync(`git clone --bare "${tempInit}" "${this.originRepoPath}"`, { stdio: 'ignore' });
         execSync(`rm -rf "${tempInit}"`, { stdio: 'ignore' });
 
-        this.targetClonePath = path.join(this.tmpDir, 'cloned_repo');
+        this.targetClonePath = path.join(this.tmpDir, 'cloned_repo_on_ssh_server');
         return {
             tmpDir: this.tmpDir,
             sshdPort: this.sshdPort,
@@ -118,7 +119,7 @@ class UIFixtures {
         }
 
         // Set isolated HOME so test Pragma-git creates ~/.Pragma-git inside this.tmpDir
-        const testHome = path.join(this.tmpDir, 'home');
+        const testHome = this.testHome || path.join(this.tmpDir, 'home');
         fs.mkdirSync(testHome, { recursive: true });
 
         // Copy default git author and ssh config to testHome
