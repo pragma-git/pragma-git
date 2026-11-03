@@ -181,6 +181,27 @@ class UIFixtures {
                 }
             } else {
                 console.log(`[UIFixtures] Kept test artifacts at: ${this.tmpDir}`);
+
+                // Git tree validation between clone source and cloned target
+                const clonedRepoPath = path.join(this.targetClonePath, path.basename(this.originRepoPath, '.git'));
+                if (fs.existsSync(this.originRepoPath) && fs.existsSync(clonedRepoPath)) {
+                    try {
+                        const originTree = execSync(`git --git-dir="${this.originRepoPath}" rev-parse HEAD^{tree}`).toString().trim();
+                        const cloneTree = execSync(`git -C "${clonedRepoPath}" rev-parse HEAD^{tree}`).toString().trim();
+                        console.log(`\n[UIFixtures] --- Git Tree Validation ---`);
+                        console.log(`[UIFixtures] Source Tree: ${originTree} (${this.originRepoPath})`);
+                        console.log(`[UIFixtures] Cloned Tree: ${cloneTree} (${clonedRepoPath})`);
+                        console.log(`[UIFixtures] Manual verification command:`);
+                        console.log(`  [ "$(git --git-dir=\\"${this.originRepoPath}\\" rev-parse HEAD^{tree})" = "$(git -C \\"${clonedRepoPath}\\" rev-parse HEAD^{tree})" ] && echo "TREES MATCH" || echo "TREES DIFFER"`);
+                        if (originTree === cloneTree) {
+                            console.log(`[UIFixtures] \x1b[32m✓ Validation passed: Cloned git tree is identical to remote source tree.\x1b[0m\n`);
+                        } else {
+                            console.error(`[UIFixtures] \x1b[31m✗ Validation failed: Cloned git tree differs from remote source tree!\x1b[0m\n`);
+                        }
+                    } catch (err) {
+                        console.warn(`[UIFixtures] Could not validate git trees: ${err.message}`);
+                    }
+                }
             }
         }
     }
