@@ -8,7 +8,7 @@
  *   --scenario=<file>    Run a specific YAML scenario (default: ssh_clone_repo.yaml)
  *   --step, -i           Step-by-step interactive mode (pauses and prompts with verification instructions)
  *   --keep-artifacts     Keep test directories and cloned repos after test finishes
- *   --port=<num>         CDP remote debugging port (default: 9222)
+ *   --port=<num>         CDP remote debugging port (default: 9333, never 9222 to prevent dev collisions)
  */
 
 const fs = require('fs');
@@ -25,7 +25,7 @@ const keepArtifacts = args.includes('--keep-artifacts');
 const scenarioFlag = args.find(a => a.startsWith('--scenario='));
 const scenarioFile = scenarioFlag ? scenarioFlag.split('=')[1] : 'ssh_clone_repo.yaml';
 const portFlag = args.find(a => a.startsWith('--port='));
-const cdpPort = portFlag ? parseInt(portFlag.split('=')[1], 10) : 9222;
+const cdpPort = portFlag ? parseInt(portFlag.split('=')[1], 10) : 9333;
 
 function askUser(promptText) {
     return new Promise(resolve => {
@@ -118,8 +118,24 @@ async function runScenario() {
             switch (step.action) {
                 case 'connect_window': {
                     const target = resolveTemplate(step.target || '*');
-                    console.log(`    Connecting CDP to window matching: "${target}"...`);
+                    console.log(`    Connecting CDP to window matching: "${target}" on port ${cdpPort}...`);
                     const client = await CDPClient.connectToTarget(target, cdpPort);
+
+                    // HARD SAFETY CHECK: Ensure the connected instance is never operating on the user's real ~/.Pragma-git
+                    try {
+                        const connectedSettingsFile = await client.eval('settingsFile');
+                        const realSettingsFile = path.join(os.homedir(), '.Pragma-git', 'settings.json');
+                        if (connectedSettingsFile && path.resolve(connectedSettingsFile) === path.resolve(realSettingsFile)) {
+                            console.error(`\n\x1b[41;37m CRITICAL SAFETY ABORT \x1b[0m`);
+                            console.error(`Target window is using the REAL user settings file: ${connectedSettingsFile}`);
+                            console.error(`Aborting test immediately to protect developer configuration!`);
+                            cleanup();
+                            process.exit(1);
+                        }
+                    } catch (e) {
+                        // Some windows (popups or non-app pages) may not have settingsFile defined
+                    }
+
                     if (currentCDP) currentCDP.close();
                     currentCDP = client;
                     break;

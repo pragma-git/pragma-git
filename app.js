@@ -287,7 +287,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const STARTDIR = process.cwd(); // Folder where this file was started
         const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
-        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
+        let settingsDir = process.env.PRAGMA_SETTINGS_DIR || (os.homedir() + pathsep + '.Pragma-git'); 
         if (!fs.existsSync(settingsDir)) fs.mkdirSync(settingsDir, { recursive: true });
         
         var settingsFile = settingsDir + pathsep + 'settings.json';    
@@ -298,7 +298,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     
         
         // Pragma-git : Signaling files and folders 
-        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+        const SIGNALDIR = process.env.PRAGMA_SIGNAL_DIR || (settingsDir + pathsep + '.tmp');
         if (!fs.existsSync(SIGNALDIR)) fs.mkdirSync(SIGNALDIR, { recursive: true }); 
         
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  

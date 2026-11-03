@@ -21,13 +21,16 @@ class UIFixtures {
         this.originRepoPath = '';
         this.targetClonePath = '';
         this.nwProcess = null;
+        this.cdpPort = 9333;
     }
 
     async setup() {
         // 1. Create unique test sandbox
         this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pragma_ui_test_'));
         this.userDataDir = path.join(this.tmpDir, 'nw_user_data');
+        this.testSettingsDir = path.join(this.tmpDir, '.Pragma-git');
         fs.mkdirSync(this.userDataDir, { recursive: true });
+        fs.mkdirSync(this.testSettingsDir, { recursive: true });
 
         // 2. Start ephemeral SSH server via automated-tests/ssh_test_server.sh
         const repoRoot = path.resolve(__dirname, '../..');
@@ -94,7 +97,8 @@ class UIFixtures {
         return false;
     }
 
-    launchNW(port = 9222) {
+    launchNW(port = 9333) {
+        this.cdpPort = port;
         const repoRoot = path.resolve(__dirname, '../..');
         const nwBinary = process.env.NW_BIN || (
             process.platform === 'darwin'
@@ -129,7 +133,9 @@ class UIFixtures {
             env: {
                 ...process.env,
                 HOME: testHome,
-                USERPROFILE: testHome
+                USERPROFILE: testHome,
+                PRAGMA_SETTINGS_DIR: this.testSettingsDir,
+                PRAGMA_SIGNAL_DIR: path.join(this.testSettingsDir, '.tmp')
             }
         });
 
