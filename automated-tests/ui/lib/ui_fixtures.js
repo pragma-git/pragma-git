@@ -37,7 +37,7 @@ class UIFixtures {
         const repoRoot = path.resolve(__dirname, '../../..');
         const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
 
-        // Generate client key pair inside this.tmpDir
+        // Generate client key pair inside this.tmpDir (the key that will be configured and deployed via the UI)
         this.clientKey = path.join(this.tmpDir, 'test_user_key');
         this.clientKeyPub = `${this.clientKey}.pub`;
         execSync(`ssh-keygen -q -t ed25519 -N "" -f "${this.clientKey}"`);
@@ -61,6 +61,33 @@ class UIFixtures {
         this.sshdPort = parseInt(portMatch[1], 10);
         this.sshdPid = parseInt(pidMatch[1], 10);
         this.sshdDir = dirMatch ? dirMatch[1].trim() : '';
+
+        // Authorize developer/host's pre-existing default SSH key on the test server.
+        // WHY A PRE-EXISTING KEY IS AUTHORIZED HERE:
+        // 1. The ephemeral test OpenSSH server runs without root privileges (as normal user),
+        //    which means password authentication and PAM are disabled (Unix prohibits unprivileged
+        //    processes from verifying passwords or switching UIDs).
+        // 2. In real usage, deploying a new public key via "Deploy public key" (ssh-generate-key-login)
+        //    connects to the remote server either via password or via an existing recognized SSH key.
+        // 3. By placing the developer/runner's default key into the test server's authorized_keys,
+        //    ssh-generate-key-login can establish the initial SSH connection to deploy the newly
+        //    configured client key (test_user_key) when the user clicks the "Deploy public key" button in the UI.
+        const defaultPubCandidates = [
+            path.join(os.homedir(), '.ssh', 'id_rsa.pub'),
+            path.join(os.homedir(), '.ssh', 'id_ed25519.pub'),
+            path.join(os.homedir(), '.ssh', 'id_ecdsa.pub')
+        ];
+        if (this.sshdDir) {
+            const authKeysPath = path.join(this.sshdDir, 'authorized_keys');
+            for (const pubCandidate of defaultPubCandidates) {
+                if (fs.existsSync(pubCandidate)) {
+                    const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
+                    if (pubData) {
+                        fs.appendFileSync(authKeysPath, `${pubData}\n`);
+                    }
+                }
+            }
+        }
 
         // 3. Create a sample remote git repository
         this.originRepoPath = path.join(this.tmpDir, 'remote_clone_source.git');
@@ -128,6 +155,22 @@ class UIFixtures {
             try { fs.copyFileSync(path.join(realHome, '.gitconfig'), path.join(testHome, '.gitconfig')); } catch (e) {}
         }
 
+        // Mirror host default key into testHome/.ssh so ssh-generate-key-login can authenticate against the test server
+        const testSshDir = path.join(testHome, '.ssh');
+        fs.mkdirSync(testSshDir, { recursive: true, mode: 0o700 });
+        for (const keyName of ['id_ed25519', 'id_rsa', 'id_ecdsa']) {
+            const privPath = path.join(realHome, '.ssh', keyName);
+            const pubPath = `${privPath}.pub`;
+            if (fs.existsSync(privPath) && fs.existsSync(pubPath)) {
+                try {
+                    fs.copyFileSync(privPath, path.join(testSshDir, keyName));
+                    fs.chmodSync(path.join(testSshDir, keyName), 0o600);
+                    fs.copyFileSync(pubPath, path.join(testSshDir, `${keyName}.pub`));
+                    fs.chmodSync(path.join(testSshDir, `${keyName}.pub`), 0o644);
+                } catch (e) {}
+            }
+        }
+
         const args = [
             `--remote-debugging-port=${port}`,
             `--user-data-dir=${this.userDataDir}`,
@@ -143,7 +186,8 @@ class UIFixtures {
                 HOME: testHome,
                 USERPROFILE: testHome,
                 PRAGMA_SETTINGS_DIR: this.testSettingsDir,
-                PRAGMA_SIGNAL_DIR: path.join(this.testSettingsDir, '.tmp')
+                PRAGMA_SIGNAL_DIR: path.join(this.testSettingsDir, '.tmp'),
+                PRAGMA_REMOTE_AUTHORIZED_KEYS: path.join(this.sshdDir, 'authorized_keys')
             }
         });
 

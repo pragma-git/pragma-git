@@ -30,6 +30,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Real UI Deploy Public Key Flow in UI Test Framework**:
+  - Replaced test fixture key injection shortcut with the real UI workflow exercising `#sshConfigDeployBtn` ("Deploy public key").
+  - Updated `ssh_folder/ssh-generate-key-login` to respect `PRAGMA_REMOTE_AUTHORIZED_KEYS` (enabling isolated test deployments to `$TEST_SSHD_DIR/authorized_keys` without touching host `~/.ssh/authorized_keys`), and appended `_${REMOTE_PORT}` to `CONTROL_SOCKET` to prevent mux socket collisions.
+  - Updated `automated-tests/ui/lib/ui_fixtures.js` to authorize developer/host pre-existing default SSH keys on the ephemeral server (with clear documentation explaining that unprivileged test daemons cannot use PAM/passwords) and mirror them into `testHome/.ssh`.
+  - Updated `automated-tests/ui/scenarios/test_01_ssh_clone_repo.yaml` with explicit client key selection in the Clone tab, verifying initial 'Key needed' status, opening the 'Setup SSH...' modal, deploying the public key via `#sshConfigDeployBtn`, verifying '✓ Login works', saving, and cloning successfully with git tree matching.
+  - Enhanced `automated-tests/ui/lib/cdp_client.js` with richer assertion error messages showing the last actual DOM text content upon timeout.
 * **Fix Empty Diffs in Pragma-Merge from Modified Files Window**:
   - Identified root cause introduced in commit `6e343637`: `[difftool "pragma-git"]` cmd was set to `.../pragma-merge "$LOCAL" "$REMOTE" "" ""`. Passing empty strings for `$3` (REMOTE) and `$4` (MERGED) caused `REMOTE == MERGED` to evaluate to true, but `loadFile(REMOTE)` loaded an empty string, rendering empty editor panes in `pragma-merge`.
   - Fixed `[difftool "pragma-git"]` in `gitconfigs/pragma-git-config_mac`, `gitconfigs/pragma-git-config_linux`, `gitconfigs/pragma-git-config_win`, and `gitconfigs/pragma-git-config_linux_ssh_server` to pass `"$BASE" "$LOCAL" "$REMOTE" "$MERGED"` (matching what `pragma-merge` expects for 4-argument git tool conventions).

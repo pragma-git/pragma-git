@@ -90,7 +90,7 @@ fi
 ###############################################################################
 # Prepare ControlMaster session (ONE PASSWORD, ONE FINGERPRINT DIALOG)
 ###############################################################################
-CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
+CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}_${REMOTE_PORT}"
 rm -f "$CONTROL_SOCKET"
 
 echo "==> Opening master SSH connection (one password will be asked)…"
@@ -189,15 +189,20 @@ cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 echo "==> Installing key on remote host…"
 
+# Allow PRAGMA_REMOTE_AUTHORIZED_KEYS override for isolated test environments (e.g. ephemeral test sshd)
+# Defaults to standard ~/.ssh/authorized_keys
+REMOTE_AUTH_KEYS="${PRAGMA_REMOTE_AUTHORIZED_KEYS:-~/.ssh/authorized_keys}"
+
 ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
-    touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+    mkdir -p \"\$(dirname \"$REMOTE_AUTH_KEYS\")\" 2>/dev/null
+    touch \"$REMOTE_AUTH_KEYS\" && chmod 600 \"$REMOTE_AUTH_KEYS\"
 
     PUBKEY_CONTENT=\$(cat /tmp/remote_tmp_key.pub)
 
-    if grep -qxF \"\$PUBKEY_CONTENT\" ~/.ssh/authorized_keys; then
+    if grep -qxF \"\$PUBKEY_CONTENT\" \"$REMOTE_AUTH_KEYS\"; then
         echo '   -> Key already present — no change.'
     else
-        echo \"\$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys
+        echo \"\$PUBKEY_CONTENT\" >> \"$REMOTE_AUTH_KEYS\"
         echo '   -> Key added successfully.'
     fi
 

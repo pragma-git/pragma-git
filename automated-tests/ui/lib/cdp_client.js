@@ -162,12 +162,13 @@ class CDPClient {
 
     async waitForText(selector, expectedText, timeoutMs = 15000) {
         const start = Date.now();
+        let lastText = '';
         while (Date.now() - start < timeoutMs) {
-            const text = await this.getText(selector, 1000).catch(() => '');
-            if (text && text.includes(expectedText)) return true;
+            lastText = await this.getText(selector, 1000).catch(() => '');
+            if (lastText && lastText.includes(expectedText)) return true;
             await new Promise(r => setTimeout(r, 200));
         }
-        throw new Error(`Timeout waiting for selector "${selector}" to contain "${expectedText}"`);
+        throw new Error(`Timeout waiting for selector "${selector}" to contain "${expectedText}". Last actual content: "${lastText}"`);
     }
 
     close() {
