@@ -63,7 +63,7 @@ class UIFixtures {
         this.sshdDir = dirMatch ? dirMatch[1].trim() : '';
 
         // 3. Create a sample remote git repository
-        this.originRepoPath = path.join(this.tmpDir, 'remote_origin.git');
+        this.originRepoPath = path.join(this.tmpDir, 'remote_clone_source.git');
         const tempInit = path.join(this.tmpDir, 'temp_init');
         fs.mkdirSync(tempInit, { recursive: true });
         execSync(`git -C "${tempInit}" init -b main`, { stdio: 'ignore' });
