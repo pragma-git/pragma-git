@@ -23,7 +23,7 @@
  * NOTE: Operates 100% inside isolated temporary directories. Never touches ~/.Pragma-git or real user settings.
  */
 
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -67,24 +67,39 @@ function getBashShell() {
 }
 const bashShell = getBashShell();
 
+function toWslPath(p) {
+    return p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
+}
+
+function runSshHelper(args) {
+    const helperScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
+    if (process.platform === 'win32') {
+        const wslHelper = toWslPath(helperScript);
+        const wslArgs = args.map(a => typeof a === 'string' && /^[a-zA-Z]:[\\/]/.test(a) ? toWslPath(a) : a);
+        const res = spawnSync('wsl', ['bash', wslHelper, ...wslArgs], { encoding: 'utf8' });
+        if (res.status !== 0) {
+            throw new Error(`wsl bash ${wslHelper} ${wslArgs.join(' ')} failed (exit ${res.status}): ${res.stderr || res.stdout}`);
+        }
+        return res.stdout || '';
+    } else {
+        const res = spawnSync('bash', [helperScript, ...args], { encoding: 'utf8' });
+        if (res.status !== 0) {
+            throw new Error(`bash ${helperScript} ${args.join(' ')} failed (exit ${res.status}): ${res.stderr || res.stdout}`);
+        }
+        return res.stdout || '';
+    }
+}
+
 // 1. Setup Ephemeral OpenSSH Server & Temporary Sandboxes
-const sshScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
 let sshdPort = null;
 let sshdPid = null;
 let sshdDir = null;
 let tmpBaseDir = null;
 
 function cleanup() {
-    if (sshdPid || sshdPort || sshdDir) {
+    if (sshdPid && sshdPort && sshdDir) {
         try {
-            const stopCmd = `
-                source "${sshScript}"
-                TEST_SSHD_PORT="${sshdPort || ''}"
-                TEST_SSHD_PID="${sshdPid || ''}"
-                TEST_SSHD_DIR="${sshdDir || ''}"
-                stop_test_sshd
-            `;
-            execSync(stopCmd, { shell: bashShell, stdio: 'ignore' });
+            runSshHelper(['stop', String(sshdPort), String(sshdPid), String(sshdDir)]);
         } catch (e) {}
     }
     if (tmpBaseDir && fs.existsSync(tmpBaseDir)) {
@@ -99,14 +114,8 @@ process.on('SIGTERM', () => { cleanup(); process.exit(1); });
 
 async function main() {
     try {
-        // Start ephemeral SSH server
-        const startOut = execSync(`
-            source "${sshScript}"
-            start_test_sshd || { echo "FAIL:$TEST_SSHD_ERROR"; exit 1; }
-            echo "PORT:$TEST_SSHD_PORT"
-            echo "PID:$TEST_SSHD_PID"
-            echo "DIR:$TEST_SSHD_DIR"
-        `, { shell: bashShell }).toString();
+        // Start ephemeral SSH server via clean CLI helper
+        const startOut = runSshHelper(['start']);
 
         const portMatch = startOut.match(/PORT:(\d+)/);
         const pidMatch = startOut.match(/PID:(\d+)/);
@@ -123,7 +132,9 @@ async function main() {
         tmpBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pragma_parity_'));
         const clientKey = path.join(tmpBaseDir, 'test_key');
         execSync(`ssh-keygen -q -t ed25519 -N "" -f "${clientKey}"`);
-        fs.appendFileSync(path.join(sshdDir, 'authorized_keys'), fs.readFileSync(clientKey + '.pub'));
+
+        // Inject client key into ephemeral sshd authorized_keys via CLI helper
+        runSshHelper(['inject-key', sshdDir, clientKey + '.pub']);
 
         const localRepoDir = path.join(tmpBaseDir, 'local_repo');
         const serverRepoDir = path.join(tmpBaseDir, 'server_repo');
@@ -141,8 +152,8 @@ async function main() {
         }
 
         const username = (os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, '');
-        const serverRepoPath = process.platform === 'win32' ? serverRepoDir.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => '/mnt/' + d.toLowerCase()) : serverRepoDir;
-        const nonRepoPath = process.platform === 'win32' ? nonRepoDir.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => '/mnt/' + d.toLowerCase()) : nonRepoDir;
+        const serverRepoPath = process.platform === 'win32' ? toWslPath(serverRepoDir) : serverRepoDir;
+        const nonRepoPath = process.platform === 'win32' ? toWslPath(nonRepoDir) : nonRepoDir;
         const sshUrl = `ssh://${username}@127.0.0.1:${sshdPort}${serverRepoPath}`;
         const sshNonRepoUrl = `ssh://${username}@127.0.0.1:${sshdPort}${nonRepoPath}`;
 
@@ -157,12 +168,18 @@ async function main() {
                 os: { EOL: '\n' },
                 process: {
                     platform: process.platform,
-                    env: Object.assign({}, process.env, isSsh ? { PRAGMA_SSH_KEY: clientKey } : {})
+                    env: Object.assign({}, process.env, isSsh ? {
+                        PRAGMA_SSH_KEY: clientKey,
+                        WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
+                    } : {})
                 },
                 localState: { historyHash: 'HEAD', pinnedCommit: '' },
                 state: { repos: [{ localFolder: repoPath }], repoNumber: 0, FirstParent: false, StashPop: true },
                 configFilePath: () => path.join(REPO_ROOT, 'gitconfigs', process.platform === 'darwin' ? 'pragma-git-config_mac' : 'pragma-git-config_linux'),
-                sshKeyEnv: () => (isSsh ? { PRAGMA_SSH_KEY: clientKey } : {}),
+                sshKeyEnv: () => (isSsh ? {
+                    PRAGMA_SSH_KEY: clientKey,
+                    WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
+                } : {}),
                 console: { log: () => {}, error: () => {}, warn: () => {} },
                 document: {
                     getElementById: (id) => ({

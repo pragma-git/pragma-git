@@ -118,7 +118,23 @@ function ssh_login_check() {   # $1 = private key.  Echoes "BEFORE:<STATUS> AFTE
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     case "$1" in
+        start)
+            start_test_sshd || { echo "FAIL:$TEST_SSHD_ERROR"; exit 1; }
+            echo "PORT:$TEST_SSHD_PORT"
+            echo "PID:$TEST_SSHD_PID"
+            echo "DIR:$TEST_SSHD_DIR"
+            ;;
+        stop)
+            TEST_SSHD_PORT="$2"
+            TEST_SSHD_PID="$3"
+            TEST_SSHD_DIR="$4"
+            stop_test_sshd
+            ;;
+        inject-key)
+            TEST_SSHD_DIR="$2"
+            inject_test_sshd_key "$3"
+            ;;
         login-check) ssh_login_check "$2" ;;
-        *) echo "Usage: $0 login-check <private-key-file>" >&2; exit 2 ;;
+        *) echo "Usage: $0 {start|stop <port> <pid> <dir>|inject-key <dir> <pubkey>|login-check <private-key>}" >&2; exit 2 ;;
     esac
 fi

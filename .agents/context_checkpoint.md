@@ -30,6 +30,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Windows & macOS CI Failure Analysis (Run 41735824886)**:
+  - **macOS**: UI test suite was skipped gracefully with exit code 77 (`[SKIPPED] NW.js binary not found. Skipping UI test suites.`). Standard cloud runners do not pre-install NW.js; all non-GUI test suites passed 100%.
+  - **Windows**: `git_client/test_03_local_vs_server_parity.js` failed due to:
+    1. Windows `cmd.exe` rejecting inline shell variable assignments (`GIT_COMMITTER_DATE=... git ...`), requiring Node `execSync(cmd, { env: ... })`.
+    2. SSH key permissions for `clientKey` generated on Windows filesystem mount (`/mnt/c` has `0777` permissions causing OpenSSH rejection). Needs key placed or mirrored in native WSL `/tmp` with `chmod 600`.
+  - Awaiting user confirmation whether to amend to commit `287bfecf` (`git push --force-with-lease`) or create a new commit.
 * **Keep Artifacts by Default in UI Tests**:
   - Changed default behavior for manual/standalone UI test runs to **keep artifacts** automatically without requiring flags.
   - Added `--clean-up` flag to remove artifacts when desired.
