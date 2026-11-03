@@ -5,26 +5,32 @@
 #   _run_tests [OPTIONS]
 #
 # Description:
-#   Runs all automated test suites across all non-GUI test categories:
-#     - ssh         : SSH authentication, remote folders, git over SSH, file transfers
-#     - utils       : util_module.js string validation, array deduping, branch filtering
-#     - git_client  : simpleGitWithRetry lock recovery, merge conflict markers
-#     - credentials : keytar keychain secrets management via pragma-secrets-lib
-#     - git_configs : platform gitconfig templates syntax & directive verification
-#     - apis        : GitHub, GitLab, Bitbucket git-to-REST API mappings
-#     - app_function_calls : repository settings repair and history message formatting from app.js
+#   Runs all automated test suites across all non-GUI and UI test categories:
+#     Non-GUI:
+#       - ssh         : SSH authentication, remote folders, git over SSH, file transfers
+#       - utils       : util_module.js string validation, array deduping, branch filtering
+#       - git_client  : simpleGitWithRetry lock recovery, merge conflict markers
+#       - credentials : keytar keychain secrets management via pragma-secrets-lib
+#       - git_configs : platform gitconfig templates syntax & directive verification
+#       - apis        : GitHub, GitLab, Bitbucket git-to-REST API mappings
+#       - app_function_calls : repository settings repair and history message formatting from app.js
+#     UI:
+#       - ui          : End-to-end interactive & automated UI tests via CDP
 #
 #   Each subfolder also has its own independent _run_tests script to run only
-#   its local tests.
+#   its local tests (e.g. automated-tests/non_gui/_run_tests or automated-tests/ui/_run_tests).
 #
 # Options:
 #   -h, --help       Show this help text and exit
 #   -v, --verbose    Show detailed live output from each test
+#   --step, -i       Pass interactive step-by-step mode to UI tests
 #
 # Examples:
 #   ./_run_tests                  Run all test categories (concise mode)
 #   ./_run_tests -v               Run all test categories with live verbose output
-#   cd automated-tests/non_gui/utils && ./_run_tests   Run only utils tests
+#   ./_run_tests --step           Run all test categories, prompting interactively on UI tests
+#   cd automated-tests/non_gui && ./_run_tests         Run all non-gui tests
+#   cd automated-tests/ui && ./_run_tests --step       Run all UI tests interactively
 #
 ## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
 if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
@@ -35,6 +41,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/test_setup.sh"
 
 VERBOSE_ARG=""
+UI_EXTRA_ARGS=()
+
 for arg in "$@"; do
     case "$arg" in
         -h|--help|'/?')
@@ -44,16 +52,26 @@ for arg in "$@"; do
         -v|--verbose)
             VERBOSE_ARG="-v"
             ;;
+        --step|-i)
+            UI_EXTRA_ARGS+=("$arg")
+            ;;
+        --port=*)
+            UI_EXTRA_ARGS+=("$arg")
+            ;;
+        --keep-artifacts)
+            UI_EXTRA_ARGS+=("$arg")
+            ;;
     esac
 done
 
 echo "${BOLD}======================================================================${NORMAL}"
-echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (All Categories)${NORMAL}"
+echo "${BOLD}${CYAN}      Pragma-git Automated Test Suite (All Categories: Non-GUI & UI)${NORMAL}"
 echo "${BOLD}======================================================================${NORMAL}"
 echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
 echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
 echo "Repo root : $REPO_ROOT"
 [ -n "$VERBOSE_ARG" ] && echo "Verbosity : Detailed (-v)"
+[ ${#UI_EXTRA_ARGS[@]} -gt 0 ] && echo "UI args   : ${UI_EXTRA_ARGS[*]}"
 echo ""
 
 START_TIME=$(date +%s)
@@ -63,6 +81,20 @@ FAILED_CATEGORIES=0
 
 FAILED_TESTS_LOG=$(mktemp)
 export FAILED_TESTS_LOG
+
+CURRENT_RUNNER_PID=""
+function handle_interrupt() {
+    echo ""
+    echo "${RED}${BOLD}Interrupt (Ctrl-C) received. Stopping all test processes...${NORMAL}"
+    if [ -n "$CURRENT_RUNNER_PID" ]; then
+        kill -INT "$CURRENT_RUNNER_PID" 2>/dev/null
+        wait "$CURRENT_RUNNER_PID" 2>/dev/null
+    fi
+    pkill -f "remote-debugging-port=9333" 2>/dev/null || true
+    rm -f "$FAILED_TESTS_LOG"
+    exit 130
+}
+trap handle_interrupt SIGINT SIGTERM
 trap 'rm -f "$FAILED_TESTS_LOG"' EXIT
 
 # Define subfolder order
@@ -91,13 +123,19 @@ for cat in "${CATEGORIES[@]}"; do
 
     if [ -n "$VERBOSE_ARG" ]; then
         echo "${BOLD}######################################################################${NORMAL}"
-        echo "${BOLD}${YELLOW}>>> CATEGORY: $cat${NORMAL}"
+        echo "${BOLD}${YELLOW}>>> CATEGORY: $cat (non-gui)${NORMAL}"
         echo "${BOLD}######################################################################${NORMAL}"
-        bash "$cat_runner" -v
-        exit_code=$?
+        bash "$cat_runner" -v &
     else
-        bash "$cat_runner"
-        exit_code=$?
+        bash "$cat_runner" &
+    fi
+    CURRENT_RUNNER_PID=$!
+    wait "$CURRENT_RUNNER_PID"
+    exit_code=$?
+    CURRENT_RUNNER_PID=""
+
+    if [ $exit_code -eq 130 ]; then
+        handle_interrupt
     fi
 
     cat_end=$(date +%s)
@@ -112,6 +150,35 @@ for cat in "${CATEGORIES[@]}"; do
     fi
     echo ""
 done
+
+# Run UI test suite
+if [ -f "$SCRIPT_DIR/ui/_run_tests" ]; then
+    ((TOTAL_CATEGORIES++))
+    cat_start=$(date +%s)
+    echo "${BOLD}######################################################################${NORMAL}"
+    echo "${BOLD}${YELLOW}>>> CATEGORY: ui${NORMAL}"
+    echo "${BOLD}######################################################################${NORMAL}"
+    bash "$SCRIPT_DIR/ui/_run_tests" "${UI_EXTRA_ARGS[@]}" &
+    CURRENT_RUNNER_PID=$!
+    wait "$CURRENT_RUNNER_PID"
+    exit_code=$?
+    CURRENT_RUNNER_PID=""
+
+    if [ $exit_code -eq 130 ]; then
+        handle_interrupt
+    fi
+    cat_end=$(date +%s)
+    cat_duration=$((cat_end - cat_start))
+
+    if [ $exit_code -eq 0 ]; then
+        ((PASSED_CATEGORIES++))
+        CATEGORY_RESULTS+=("  ${GREEN}[OK]${NORMAL}     ui (${cat_duration}s)")
+    else
+        ((FAILED_CATEGORIES++))
+        CATEGORY_RESULTS+=("  ${RED}[FAILED]${NORMAL} ui (${cat_duration}s)")
+    fi
+    echo ""
+fi
 
 END_TIME=$(date +%s)
 TOTAL_DURATION=$((END_TIME - START_TIME))

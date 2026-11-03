@@ -33,7 +33,7 @@ class UIFixtures {
         fs.mkdirSync(this.testSettingsDir, { recursive: true });
 
         // 2. Start ephemeral SSH server via automated-tests/ssh_test_server.sh
-        const repoRoot = path.resolve(__dirname, '../..');
+        const repoRoot = path.resolve(__dirname, '../../..');
         const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
 
         // Generate client key pair inside this.tmpDir
@@ -99,7 +99,7 @@ class UIFixtures {
 
     launchNW(port = 9333) {
         this.cdpPort = port;
-        const repoRoot = path.resolve(__dirname, '../..');
+        const repoRoot = path.resolve(__dirname, '../../..');
         const nwBinary = process.env.NW_BIN || (
             process.platform === 'darwin'
                 ? '/Applications/nwjs.app/Contents/MacOS/nwjs'

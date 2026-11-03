@@ -1,0 +1,41 @@
+#!/bin/bash
+# _run_01_ssh_clone_repo - UI test for SSH remote repository cloning in Pragma-git
+#
+# Usage:
+#   _run_01_ssh_clone_repo [OPTIONS]
+#
+# Description:
+#   Runs the '01_ssh_clone_repo' UI test scenario via Chrome DevTools Protocol (CDP).
+#   Tests testing SSH connection, deploying SSH key, and cloning a remote repository.
+#
+# Options:
+#   -h, --help       Show this help text and exit
+#   --step, -i       Interactive step-by-step mode (pause before each action)
+#   --port=<num>     CDP remote debugging port (default: 9333)
+#   --keep-artifacts Keep test directories and cloned repos after test finishes
+#
+# Examples:
+#   ./_run_01_ssh_clone_repo          Run test_01_ssh_clone_repo scenario automatically
+#   ./_run_01_ssh_clone_repo --step   Run test_01_ssh_clone_repo scenario with interactive step prompts
+#
+## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+CURRENT_PID=""
+function handle_interrupt() {
+    if [ -n "$CURRENT_PID" ]; then
+        kill -INT "$CURRENT_PID" 2>/dev/null
+        wait "$CURRENT_PID" 2>/dev/null
+    fi
+    pkill -f "remote-debugging-port=9333" 2>/dev/null || true
+    exit 130
+}
+trap handle_interrupt SIGINT SIGTERM
+
+node "$SCRIPT_DIR/scenarios/test_01_ssh_clone_repo.js" "$@" &
+CURRENT_PID=$!
+wait "$CURRENT_PID"
+exit_code=$?
+exit $exit_code

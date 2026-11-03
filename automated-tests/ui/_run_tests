@@ -1,0 +1,137 @@
+#!/bin/bash
+# _run_tests - UI automated test runner for Pragma-git
+#
+# Usage:
+#   _run_tests [OPTIONS]
+#
+# Description:
+#   Runs automated UI tests for Pragma-git using Chrome DevTools Protocol (CDP)
+#   and ephemeral isolated test sandboxes.
+#
+# Options:
+#   -h, --help       Show this help text and exit
+#   --step, -i       Interactive step-by-step mode (pause before each action)
+#   -v, --verbose    Show detailed output
+#   --port=<num>     CDP port (default: 9333)
+#
+# Examples:
+#   ./_run_tests                  Run all UI test suites automatically
+#   ./_run_tests --step           Run all UI test suites with interactive step prompts
+#
+## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+source "$REPO_ROOT/automated-tests/test_setup.sh"
+
+PASSTHROUGH_ARGS=()
+VERBOSE=false
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help|'/?')
+            sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'
+            exit 0
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            ;;
+        *)
+            PASSTHROUGH_ARGS+=("$arg")
+            ;;
+    esac
+done
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}${CYAN}      Pragma-git Automated Tests: UI Test Suites${NORMAL}"
+echo "${BOLD}======================================================================${NORMAL}"
+echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
+echo "Test dir  : $SCRIPT_DIR"
+echo "Started at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+echo ""
+
+CURRENT_TEST_PID=""
+function handle_interrupt() {
+    echo ""
+    echo "${RED}${BOLD}Interrupt (Ctrl-C) received. Tearing down active test...${NORMAL}"
+    if [ -n "$CURRENT_TEST_PID" ]; then
+        kill -INT "$CURRENT_TEST_PID" 2>/dev/null
+        wait "$CURRENT_TEST_PID" 2>/dev/null
+    fi
+    # Ensure any stray NW.js or unprivileged sshd spawned by this test session are stopped
+    pkill -f "remote-debugging-port=9333" 2>/dev/null || true
+    exit 130
+}
+trap handle_interrupt SIGINT SIGTERM
+
+START_TIME=$(date +%s)
+TOTAL_TESTS=0
+PASSED_TESTS=0
+FAILED_TESTS=0
+
+SCENARIO_DIR="$SCRIPT_DIR/scenarios"
+TEST_FILES=($(find "$SCENARIO_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
+NUM_TESTS=${#TEST_FILES[@]}
+
+for test_path in "${TEST_FILES[@]}"; do
+    test_name=$(basename "$test_path")
+    suite_title="ui/${test_name}"
+    ((TOTAL_TESTS++))
+
+    echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
+    echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${suite_title}${NORMAL}"
+    echo ""
+
+    if [[ "$test_path" == *.js ]]; then
+        node "$test_path" "${PASSTHROUGH_ARGS[@]}" &
+    else
+        bash "$test_path" "${PASSTHROUGH_ARGS[@]}" &
+    fi
+    CURRENT_TEST_PID=$!
+    wait "$CURRENT_TEST_PID"
+    exit_code=$?
+    CURRENT_TEST_PID=""
+
+    # 130 means terminated by SIGINT
+    if [ $exit_code -eq 130 ]; then
+        handle_interrupt
+    fi
+
+    if [ $exit_code -eq 0 ]; then
+        ((PASSED_TESTS++))
+        echo "${GREEN}${BOLD}>> Result: SUITE PASSED [OK]${NORMAL}"
+    else
+        ((FAILED_TESTS++))
+        echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
+        if [ -n "$FAILED_TESTS_LOG" ]; then
+            echo "  [FAIL] ${suite_title}" >> "$FAILED_TESTS_LOG"
+        fi
+    fi
+    echo ""
+done
+
+END_TIME=$(date +%s)
+TOTAL_DURATION=$((END_TIME - START_TIME))
+
+echo "${BOLD}======================================================================${NORMAL}"
+echo "${BOLD}UI Test Summary:${NORMAL}"
+echo "----------------------------------------------------------------------"
+echo "  Suites run:    $TOTAL_TESTS"
+echo "  Suites passed: ${GREEN}$PASSED_TESTS/$TOTAL_TESTS passed${NORMAL}"
+if [ $FAILED_TESTS -gt 0 ]; then
+    echo "  Suites failed: ${RED}$FAILED_TESTS${NORMAL}"
+else
+    echo "  Suites failed: $FAILED_TESTS"
+fi
+echo "  Total Duration: ${TOTAL_DURATION}s"
+echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -eq 0 ] && [ $TOTAL_TESTS -gt 0 ]; then
+    echo "${GREEN}${BOLD}ALL UI TESTS PASSED!${NORMAL}"
+    exit 0
+else
+    echo "${RED}${BOLD}SOME UI TESTS FAILED!${NORMAL}"
+    exit 1
+fi

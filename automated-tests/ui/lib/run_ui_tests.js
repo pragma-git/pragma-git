@@ -19,13 +19,16 @@ const CDPClient = require('./cdp_client');
 const UIFixtures = require('./ui_fixtures');
 
 // Parse CLI flags
-const args = process.argv.slice(2);
-const isStepMode = args.includes('--step') || args.includes('-i');
-const keepArtifacts = args.includes('--keep-artifacts');
-const scenarioFlag = args.find(a => a.startsWith('--scenario='));
-const scenarioFile = scenarioFlag ? scenarioFlag.split('=')[1] : 'ssh_clone_repo.yaml';
-const portFlag = args.find(a => a.startsWith('--port='));
-const cdpPort = portFlag ? parseInt(portFlag.split('=')[1], 10) : 9333;
+function parseArgs(customArgs) {
+    const rawArgs = customArgs || process.argv.slice(2);
+    const isStepMode = rawArgs.includes('--step') || rawArgs.includes('-i');
+    const keepArtifacts = rawArgs.includes('--keep-artifacts');
+    const scenarioFlag = rawArgs.find(a => a.startsWith('--scenario='));
+    const scenarioFile = scenarioFlag ? scenarioFlag.split('=')[1] : null;
+    const portFlag = rawArgs.find(a => a.startsWith('--port='));
+    const cdpPort = portFlag ? parseInt(portFlag.split('=')[1], 10) : 9333;
+    return { isStepMode, keepArtifacts, scenarioFile, cdpPort };
+}
 
 function askUser(promptText) {
     return new Promise(resolve => {
@@ -53,8 +56,18 @@ function printStepVerification(verifyInstruction) {
     });
 }
 
-async function runScenario() {
-    const scenarioPath = path.resolve(__dirname, 'scenarios', scenarioFile);
+async function runUiScenario(scenarioNameOrFile, customArgs) {
+    const { isStepMode, keepArtifacts, cdpPort } = parseArgs(customArgs);
+    let targetFile = scenarioNameOrFile;
+    if (!targetFile) {
+        const parsed = parseArgs(customArgs);
+        targetFile = parsed.scenarioFile || 'test_01_ssh_clone_repo.yaml';
+    }
+    if (!targetFile.endsWith('.yaml') && !targetFile.endsWith('.yml')) {
+        targetFile += '.yaml';
+    }
+
+    const scenarioPath = path.resolve(__dirname, '../scenarios', targetFile);
     if (!fs.existsSync(scenarioPath)) {
         console.error(`\x1b[31mScenario file not found: ${scenarioPath}\x1b[0m`);
         process.exit(1);
@@ -208,7 +221,7 @@ async function runScenario() {
         console.log('       ALL STEPS IN SCENARIO COMPLETED SUCCESSFULLY! [PASS]');
         console.log('======================================================================\x1b[0m');
         cleanup();
-        process.exit(0);
+        return true;
 
     } catch (err) {
         console.error('\n\x1b[31m======================================================================');
@@ -220,4 +233,8 @@ async function runScenario() {
     }
 }
 
-runScenario();
+if (require.main === module) {
+    runUiScenario();
+}
+
+module.exports = { runUiScenario };
