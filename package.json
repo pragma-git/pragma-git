@@ -39,6 +39,7 @@
     "windows-network-drive": "^3.0.2"
   },
   "devDependencies": {
+    "js-yaml": "^5.5.0",
     "nw-builder": "^4.7.8"
   }
 }
