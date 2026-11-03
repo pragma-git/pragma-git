@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { execSync } = require('child_process');
 const yaml = require('js-yaml');
 const CDPClient = require('./cdp_client');
 const UIFixtures = require('./ui_fixtures');
@@ -30,17 +31,61 @@ function parseArgs(customArgs) {
     return { isStepMode, keepArtifacts, scenarioFile, cdpPort };
 }
 
-function askUser(promptText) {
-    return new Promise(resolve => {
-        const rl = readline.createInterface({
+let userPromptInterface = null;
+let userPromptIterator = null;
+
+function bringTerminalToFront() {
+    if (process.platform === 'darwin') {
+        try {
+            const termApp = process.env.TERM_PROGRAM;
+            if (termApp === 'Apple_Terminal') {
+                execSync('osascript -e \'tell application "Terminal" to activate\'', { stdio: 'ignore' });
+            } else if (termApp === 'iTerm.app') {
+                execSync('osascript -e \'tell application "iTerm" to activate\'', { stdio: 'ignore' });
+            } else {
+                // Fallback: activate whichever terminal or IDE process is running
+                execSync(`osascript -e '
+                    tell application "System Events"
+                        repeat with p in (every process)
+                            if name of p is in {"Terminal", "iTerm2", "Code", "kitty", "alacritty", "wezterm-gui"} then
+                                set frontmost of p to true
+                                exit repeat
+                            end if
+                        end repeat
+                    end tell
+                '`, { stdio: 'ignore' });
+            }
+        } catch (_) {}
+    }
+}
+
+function getUserPromptIterator() {
+    if (!userPromptInterface) {
+        userPromptInterface = readline.createInterface({
             input: process.stdin,
-            output: process.stdout
+            output: process.stdout,
+            terminal: false
         });
-        rl.question(promptText, (ans) => {
-            rl.close();
-            resolve(ans);
-        });
-    });
+        userPromptIterator = userPromptInterface[Symbol.asyncIterator]();
+    }
+    return userPromptIterator;
+}
+
+async function askUser(promptText) {
+    bringTerminalToFront();
+    process.stdout.write(promptText);
+    const it = getUserPromptIterator();
+    const { value } = await it.next();
+    bringTerminalToFront();
+    return value;
+}
+
+function closeUserPrompt() {
+    if (userPromptInterface) {
+        userPromptInterface.close();
+        userPromptInterface = null;
+        userPromptIterator = null;
+    }
 }
 
 function printStepHeader(stepNum, totalSteps, title) {
@@ -84,6 +129,7 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
     let currentCDP = null;
 
     const cleanup = () => {
+        closeUserPrompt();
         if (currentCDP) currentCDP.close();
         fixtures.teardown(keepArtifacts);
     };
@@ -116,23 +162,37 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
         };
 
         const steps = doc.steps || [];
+        const interactiveStepCount = steps.filter(s => s.action !== 'connect_window').length;
+        let stepCounter = 0;
         for (let i = 0; i < steps.length; i++) {
             const step = steps[i];
+            const isConnectionStep = (step.action === 'connect_window');
             const stepTitle = step.name || step.action;
             const verify = step.verify ? resolveTemplate(step.verify) : null;
 
-            if (isStepMode) {
-                printStepHeader(i + 1, steps.length, stepTitle);
-                await askUser('    \x1b[32m[Press ENTER to run]\x1b[0m ');
+            if (!isConnectionStep) {
+                stepCounter++;
+                if (isStepMode) {
+                    printStepHeader(stepCounter, interactiveStepCount, stepTitle);
+                    await askUser('    \x1b[32m[Press ENTER to run]\x1b[0m ');
+                } else {
+                    console.log(`\nSTEP [${stepCounter}/${interactiveStepCount}]: ${stepTitle}`);
+                }
             } else {
-                console.log(`\nSTEP [${i + 1}/${steps.length}]: ${stepTitle}`);
+                console.log(`\n    --> Connecting to window: "${step.target || '*'}"`);
             }
 
             switch (step.action) {
                 case 'connect_window': {
                     const target = resolveTemplate(step.target || '*');
-                    console.log(`    Connecting CDP to window matching: "${target}" on port ${cdpPort}...`);
-                    const client = await CDPClient.connectToTarget(target, cdpPort);
+                    let client = null;
+                    try {
+                        client = await CDPClient.connectToTarget(target, cdpPort);
+                        console.log(`    \x1b[32m[PASS]\x1b[0m Connected to window "${target}" on port ${cdpPort}`);
+                    } catch (err) {
+                        console.error(`    \x1b[31m[FAIL]\x1b[0m Failed to connect to window "${target}" on port ${cdpPort}: ${err.message}`);
+                        throw err;
+                    }
 
                     // HARD SAFETY CHECK: Ensure the connected instance is never operating on the user's real ~/.Pragma-git
                     try {
@@ -156,6 +216,17 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                 case 'eval': {
                     const code = resolveTemplate(step.code);
                     await currentCDP.eval(code);
+                    break;
+                }
+                case 'click_if_present': {
+                    const selector = resolveTemplate(step.selector);
+                    const timeout = step.timeout || 1500;
+                    try {
+                        await currentCDP.click(selector, timeout);
+                        console.log(`    Dismissed dialog button: ${selector}`);
+                    } catch (e) {
+                        // Dialog was not open or already dismissed, continue
+                    }
                     break;
                 }
                 case 'click': {

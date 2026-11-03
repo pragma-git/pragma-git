@@ -30,6 +30,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **UI Test Automation & SSH Environment Fixes**:
+  - Automatically raises terminal window using `osascript` before and after pressing ENTER so users can step through `--step` tests without manual window switching.
+  - Subtracted non-interactive `connect_window` actions from the total interactive step count (`STEP [1/17]` to `STEP [17/17]`).
+  - Added short `/tmp/pg_%r_%h_%p` ControlPath fallback in [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions) to resolve Unix domain socket length limits (> 104 bytes) in macOS sandbox paths.
+  - Fixed `simpleGit` SSH environment forwarding in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L234): `simple-git`'s `spawnOptions.env` in the constructor is not used for process environment (only `uid`/`gid`). Calling `.env(gitSpawnEnv)` ensures `PRAGMA_SSH_KEY` is passed to the spawned process for subsequent `git` commands, allowing `registerDefaultBranch` and `createHtmlTable` to populate the repository table with the newly cloned repository without crashing.
+  - Converted SSH key configuration step to use the actual UI "Setup SSH..." dialog instead of behind-the-scenes evaluation.
+  - Aligned Step 17 clone verification with the Remote repositories tab (`#additionalRemotesDiv`).
 * **UI Test Framework & SSH Clone Fixes**:
   - Implemented interactive `--step` / `-i` CLI test runner in [`automated-tests/ui/run_ui_tests.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/run_ui_tests.js) with clean terminal layout (unindented `STEP [X/Y]: <name>`, dividing line, indentation of all actions and verification steps, and prompt execution with single `[Enter]`).
   - Fixed `kex_exchange_identification: Connection reset by peer` by:

@@ -8,6 +8,12 @@ steps:
     target: "app.html"
     verify: "Pragma-git main toolbar is visible."
 
+  # Dismiss upgrade dialog if shown on version 0.0.0
+  - name: "Dismiss New Version Dialog (if present)"
+    action: click_if_present
+    selector: "#waitButton"
+    timeout: 2000
+
   # 2. Open Settings Window
   - name: "Open Settings Window"
     action: eval
@@ -19,6 +25,12 @@ steps:
     action: connect_window
     target: "settings.html"
     verify: "Connected to Settings window DOM."
+
+  # Dismiss "No repositories" warning dialog if shown on fresh profile
+  - name: "Dismiss 'No repositories' Alert (if present)"
+    action: click_if_present
+    selector: "#alertDialog button#no"
+    timeout: 2000
 
   # 4. Open the 'Clone' Tab
   - name: "Switch to 'Clone' Tab"
@@ -59,28 +71,52 @@ steps:
     text: "Key needed"
     verify: |-
       - Status indicates 'Key needed'.
-      - 'Deploy public key' button is displayed.
+      - '[Setup SSH]' link and 'Setup SSH...' button are displayed.
       - Clone button is disabled.
 
-  # 9. Set the Client Key for the Test
-  - name: "Configure SSH Client Key"
-    action: eval
-    code: "document.getElementById('sshKeyInput_clone').value = '${CLIENT_KEY}'"
-    verify: "Client key path is assigned to clone configuration."
+  # 9. Click "Setup SSH..." button to open the SSH Connection Setup dialog
+  - name: "Click 'Setup SSH...' Button"
+    action: click
+    selector: "#setupSshButton_clone"
+    verify: |-
+      - The 'SSH Connection Setup' modal dialog opens.
+      - Displays target user@host and key selection controls.
 
-  # 10. Inject Key into Test Server (simulating deployment to server)
+  # 10. Select the client key in the SSH Configuration dialog
+  - name: "Choose SSH Key in Dialog"
+    action: set_value
+    selector: "#sshConfigKeyInput"
+    value: "${CLIENT_KEY}"
+    verify: "Selected private key path is set in the SSH configuration dialog."
+
+  # 11. Authorize Public Key on Server (simulating remote authorization)
   - name: "Authorize Public Key on Server"
     action: inject_key
     verify: "Public key is added to ephemeral OpenSSH server's authorized_keys."
 
-  # 11. Re-test Login with Authorized Key
-  - name: "Click 'Test Login' Again (Expecting Login Works)"
+  # 12. Test login inside the dialog
+  - name: "Click 'Test Login' Inside Dialog"
     action: click
-    selector: "#testSshLoginButton_clone"
-    verify: "Login is tested again with key authorized."
+    selector: "#sshConfigTestBtn"
+    verify: "Login is verified directly inside the SSH configuration dialog."
 
-  # 12. Verify 'Login works' and Clone Button Enabled
-  - name: "Verify 'Login works' Status"
+  # 13. Verify login works inside dialog
+  - name: "Verify 'Login works' Inside Dialog"
+    action: wait_for_text
+    selector: "#sshConfigStatusText"
+    text: "Login works"
+    verify: "Dialog status indicates '✓ Login works'."
+
+  # 14. Save and close dialog
+  - name: "Click 'Save & Close' Dialog Button"
+    action: click
+    selector: "#sshConfigSaveBtn"
+    verify: |-
+      - Dialog saves key to clone configuration and closes.
+      - Clone window status updates to '✓ Login works'.
+
+  # 15. Verify 'Login works' and Clone Button Enabled in Clone tab
+  - name: "Verify Clone Tab 'Login works' Status"
     action: wait_for_text
     selector: "#testSshStatus_clone"
     text: "Login works"
@@ -88,19 +124,19 @@ steps:
       - Status text displays '✓ Login works'.
       - Clone button is enabled.
 
-  # 13. Click Clone Button
+  # 16. Click Clone Button
   - name: "Click 'Clone' Button"
     action: click
     selector: "#cloneServerRepoButton"
     verify: "Clone process initiates over SSH."
 
-  # 14. Verify Clone Completed
-  - name: "Verify Clone Completed and Switched to Software Tab"
+  # 17. Verify Clone Completed
+  - name: "Verify Clone Completed and Switched to Remote Tab"
     action: wait_for_text
-    selector: "#thisRepoDiv"
-    text: "Software"
+    selector: "#additionalRemotesDiv"
+    text: "Remote repositories"
     timeout: 25000
     verify: |-
       - Clone completed successfully over SSH.
-      - Settings window switched to 'Software (this repo)' tab.
+      - Settings window switched to the Remote ('gitHubTab') tab.
       - The newly cloned repository is registered and active in state.

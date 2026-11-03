@@ -901,6 +901,10 @@ function updateSshConfigKeyDisplay( keyPath ) {
     let noticeEl = document.getElementById('sshConfigKeyNotice');
     let deployBtn = document.getElementById('sshConfigDeployBtn');
 
+    if (keyPath) {
+        currentSshConfigState.selectedKey = keyPath.trim();
+    }
+
     let defaultKey = getDefaultSshKey();
     let hasExplicitKey = (keyPath && typeof keyPath === 'string' && keyPath.trim().length > 0);
 

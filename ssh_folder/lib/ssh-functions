@@ -9,7 +9,13 @@ ISWSL=false
 
 # Mac or Linux  
 TMP="$HOME/.Pragma-git/.tmp"	# /home/jan
-CONTROLPATH="${TMP}/%r@%h:%p"	# Controlpath in "$HOME/.Pragma-git/.tmp"
+# ControlPath socket max length on Unix is 104-108 bytes.
+# If TMP path is long (e.g. temporary sandbox /var/folders/.../T/...), use short /tmp path to avoid "ControlPath too long".
+if [ ${#TMP} -gt 45 ]; then
+    CONTROLPATH="/tmp/pg_%r_%h_%p"
+else
+    CONTROLPATH="${TMP}/%r@%h:%p"
+fi
 TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder temporary files (same path defined in pragma-merge.js)
 
 # Windows (git over ssh  is implemented using WSL)

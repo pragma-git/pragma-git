@@ -218,7 +218,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
             
             
-            return simpleGitDefault( 
+            let gitInst = simpleGitDefault( 
                 {   
                     spawnOptions: { env: gitSpawnEnv },
                     config: [   
@@ -231,6 +231,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                     binary: binary  
                 }
             ); 
+            if (gitInst && typeof gitInst.env === 'function' && gitSpawnEnv && Object.keys(gitSpawnEnv).length > 0) {
+                gitInst.env(gitSpawnEnv);
+            }
+            return gitInst;
 			// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
             // My ssh-git-client handles path by itself (by SSHURL being sneaked in via config parameters).
         }

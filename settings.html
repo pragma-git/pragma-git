@@ -1581,7 +1581,7 @@
                 <td style="width: 80px; white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>SSH key:</b></td>
                 <td style="width: calc(100% - 80px); white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;">
                     <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" oninput="updateSshConfigKeyDisplay(this.value)" />
                         <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigSelectKey()">Select key...</button>
                         <button type="button" id="sshConfigGenerateKeyBtn" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigToggleGeneratePanel()">Generate key...</button>
                         <button type="button" id="sshConfigResetKeyButton" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; height: 26px;" title="Reset to default key" onclick="sshConfigResetKey()">&#x2715;</button>
