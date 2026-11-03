@@ -14,21 +14,15 @@ const pathsep = require('path').sep;  // Os-dependent path separator
         
 const simpleGit = opener.simpleGit;
 
-
-
 var state = global.state; // internal copy of global.state
 var localState = global.localState; 
 
-var win
+var win;
 
 const delayInMs = 1000;
 
-// Initiate GUI update loop 
-//var timer = _loopTimer( 1000);
-
-// Storage of paths to backup files
-//const backupExtension = '.orig';
-var origFiles = [];  // Store files found to be conflicting.  Use to remove .orig files of these at the end
+// Default sort order: descending (newest versions first, e.g. 2.0.1 before 0.9.1)
+var sortDescending = true;
 
 // ---------
 // FUNCTIONS
@@ -65,8 +59,9 @@ async function injectIntoJs(document) {
         win.setVisibleOnAllWorkspaces( state.onAllWorkspaces ); 
     }
 
-    // Populate window
-    fillSelectWithValues(localState.arrayTagList, '*');
+    // Initialize sort button display & populate window
+    updateSortButtonDisplay();
+    refreshTagList();
     
     // Set button name
     document.getElementById('Select-button').innerHTML =  localState.tagListButton;
@@ -76,6 +71,37 @@ async function injectIntoJs(document) {
     document.title = 'Select tag to ' + tagDialogType;
 
 };
+
+function updateSortButtonDisplay() {
+    let btn = document.getElementById('sortOrderButton');
+    if (!btn) return;
+    btn.innerHTML = '&uarr;&darr;'; // Bold adjacent arrows without space (↑↓)
+    if (sortDescending) {
+        btn.title = 'Current sort: Newest first (click to toggle order)';
+    } else {
+        btn.title = 'Current sort: Oldest first (click to toggle order)';
+    }
+}
+
+function sortTags(tags, descending = true) {
+    if (!Array.isArray(tags)) return [];
+    return tags.slice().sort((a, b) => {
+        let cmp = a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        return descending ? -cmp : cmp;
+    });
+}
+
+function refreshTagList() {
+    let filterRule = document.getElementById('tagFilterText').value.trim();
+    if (!filterRule) {
+        filterRule = '*';
+    } else if (!filterRule.endsWith('*')) {
+        filterRule = filterRule + '*';
+    }
+    let sorted = sortTags(localState.arrayTagList, sortDescending);
+    fillSelectWithValues(sorted, filterRule);
+}
+
 function fillSelectWithValues( tagValues, filterRule){
     let selectBox = document.getElementById("tagSelection");
     selectBox.innerHTML = "";
@@ -88,41 +114,37 @@ function fillSelectWithValues( tagValues, filterRule){
             selectBox.appendChild(selectOption);
         }
     }
-    
+    if (selectBox.options.length > 0) {
+        selectBox.selectedIndex = 0;
+    }
 }
+
 function matchRuleExpl(str, rule) {
   // From : https://stackoverflow.com/questions/26246601/wildcard-string-comparison-in-javascript  
-    
-  // for this solution to work on any string, no matter what characters it has
   var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-
-  // "."  => Find a single character, except newline or line terminator
-  // ".*" => Matches any string that contains zero or more characters
   rule = rule.split("*").map(escapeRegex).join(".*");
-
-  // "^"  => Matches any string with the following at the beginning of it
-  // "$"  => Matches any string with that in front at the end of it
-  rule = "^" + rule + "$"
-
-  //Create a regular expression object for matching string
+  rule = "^" + rule + "$";
   var regex = new RegExp(rule);
-
-  //Returns true if it finds a match, otherwise it returns false
   return regex.test(str);
 }
 
 async function _callback( name, event, event2){
-
     
     console.log('_callback = ' + name);
     switch(name) {
         
         case 'onFilterKeyUp': {
-            let filterRule = document.getElementById('tagFilterText').value;
-            filterRule = filterRule + '*';  // Implicit end with wildcard
-            fillSelectWithValues( localState.arrayTagList, filterRule)
+            refreshTagList();
             break;
         }
+
+        case 'toggleSortOrder': {
+            sortDescending = !sortDescending;
+            updateSortButtonDisplay();
+            refreshTagList();
+            break;
+        }
+
         case 'Select-button' : {
             console.log(event);
             opener._callback('tagSelected',event); // Calling _callback in opening window
@@ -135,47 +157,10 @@ async function _callback( name, event, event2){
             break;
         }
 
-
     } // End switch
-    
-    // ---------------
-    // LOCAL FUNCTIONS
-    // ---------------
-
-    function makeListOfUnstagedFiles(){
-        let unStaged = [];
-        
-        var table = document.getElementById("listFilesTableBody");
-        
-        for (var i = 0, row; row = table.rows[i]; i++) {
-            //iterate through rows
-            //rows would be accessed using the "row" variable assigned in the for loop
-            
-            let col = row.cells[0]; // First column
-        
-            let isChecked = col.children[0].checked;
-            let file  = col.children[1].innerText;
-            if (isChecked == false) {
-                unStaged.push(file);
-            }
-
-            console.log(col);
-
-        }
-
-        return unStaged;
-    };
-
-
-// ================= END CALLBACK =================  
 }
 
 function closeWindow(){
-
-    // Return
-    
     localState.tagListWindow = false;  // Show to main program that window is closed
     win.close();
-    
 }
-

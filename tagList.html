@@ -21,7 +21,6 @@
                 background-color: var(--input-background);
             }
             
-            
             select{ 
                 width: 100%;
                 line-height: 1;
@@ -29,7 +28,27 @@
                 border-width: thin;
                 background-color: var(--input-background);
             }
-        
+
+            .sort-icon {
+                background: transparent;
+                border: none;
+                color: var(--body-text);
+                cursor: pointer;
+                font-size: 11pt;
+                font-weight: bold;
+                letter-spacing: 0;
+                padding: 0 2px;
+                margin-left: 8px;
+                line-height: 1;
+                user-select: none;
+                opacity: 0.75;
+                vertical-align: baseline;
+                transition: opacity 0.15s;
+            }
+
+            .sort-icon:hover {
+                opacity: 1;
+            }
         </style>
     </head>
     
@@ -44,7 +63,7 @@
         window.document.body.style.zoom = global.state.zoom;
     </script>
 
-        <div id="outerContent"  style="width: fit-content;padding: 10px">
+        <div id="outerContent" style="width: fit-content;padding: 10px">
               
         <label for="tagFilterText">Filter (wildcard *)</label><br>
         <textarea id="tagFilterText" 
@@ -52,57 +71,54 @@
             cols="30" 
             placeholder="*"
             onkeyup="_callback('onFilterKeyUp',this)"
-        
-            ></textarea>
-            </textarea>
+        ></textarea>
         <br>
         <br>
-        
-        
 
-        <label for="tagSelection"> Select one</label><br>
+        <div style="margin-bottom: 4px;">
+            <label for="tagSelection">Select one
+                <span id="sortOrderButton" class="sort-icon" title="Toggle tag sort order" onclick="_callback('toggleSortOrder'); event.preventDefault();">
+                    &uarr;&darr;
+                </span>
+            </label>
+        </div>
         <select name="tagSelection" id="tagSelection" size="15" style="width: 100%">
             <!--  Filled in by tagList.js  -->
-            </select>
+        </select>
             
         <br>
         <br>
         
-        <button  id="Select-button"
+        <button id="Select-button"
             onclick="
                 event.buttonText = document.getElementById('Select-button').innerHTML;
-                event.selected = document.getElementById('tagSelection').value ;
-                 _callback('Select-button', event);">
+                event.selected = document.getElementById('tagSelection').value;
+                _callback('Select-button', event);">
             Checkout
-            </button>    
+        </button>    
         
-        <button  id="Cancel"
+        <button id="Cancel"
             onclick="_callback('Cancel-button');">
             Cancel
-            </button>  
+        </button>  
         </div>
     </body>
     
-    
-    
     <!--  Onload, call javascript file  --> 
     <script>
-    
-    
         window.addEventListener(
             'DOMContentLoaded', 
             (event) => {
-                console.log('listChanged.html :DOM fully loaded and parsed');
+                console.log('tagList.html :DOM fully loaded and parsed');
                 injectIntoJs(document);
             }
         );
         window.addEventListener(
             'unload', 
             (event) => {
-                console.log('listChanged.html :DOM fully unloaded -- maybe window closed ');
+                console.log('tagList.html :DOM fully unloaded -- maybe window closed ');
                 closeWindow(window);
             }
         );
     </script>
-    
 </html>
