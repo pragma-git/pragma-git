@@ -285,6 +285,26 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                     console.log(`    \x1b[32m✓ Assertion passed:\x1b[0m "${selector}" contains "${expected}"`);
                     break;
                 }
+                case 'assert_git_tree_match': {
+                    const source = resolveTemplate(step.source);
+                    const target = resolveTemplate(step.target);
+                    console.log(`    Validating git tree match...`);
+                    console.log(`      Source: ${source}`);
+                    console.log(`      Target: ${target}`);
+                    if (!fs.existsSync(source)) {
+                        throw new Error(`Git tree validation failed: source repo does not exist at "${source}"`);
+                    }
+                    if (!fs.existsSync(target)) {
+                        throw new Error(`Git tree validation failed: target repo does not exist at "${target}"`);
+                    }
+                    const sourceTree = execSync(`git --git-dir="${source}" rev-parse HEAD^{tree}`).toString().trim();
+                    const targetTree = execSync(`git -C "${target}" rev-parse HEAD^{tree}`).toString().trim();
+                    if (sourceTree !== targetTree) {
+                        throw new Error(`Git tree mismatch! Source tree (${sourceTree}) != Target tree (${targetTree})`);
+                    }
+                    console.log(`    \x1b[32m✓ Git tree match passed:\x1b[0m ${sourceTree}`);
+                    break;
+                }
                 default:
                     console.warn(`    Unknown step action: ${step.action}`);
             }

@@ -139,5 +139,14 @@ steps:
       - Clone completed successfully over SSH.
       - Settings window switched to the Remote ('gitHubTab') tab.
       - The newly cloned repository is registered and active in state.
-      - Git tree comparison command:
-          diff -u <(git --git-dir="${ORIGIN_REPO_PATH}" ls-tree -r HEAD) <(git -C "${TARGET_CLONE_PATH}/remote_clone_source" ls-tree -r HEAD) && echo "TREES MATCH"
+
+  # 18. Validate Cloned Git Tree Matches Source Git Tree
+  - name: "Validate Cloned Git Tree Matches Source Git Tree"
+    action: assert_git_tree_match
+    source: "${ORIGIN_REPO_PATH}"
+    target: "${TARGET_CLONE_PATH}/remote_clone_source"
+    verify: |-
+      - Both repositories exist on disk.
+      - HEAD tree hash of cloned repository matches origin repository exactly.
+      - Manual check:
+          diff -u <(git --git-dir="${ORIGIN_REPO_PATH}" ls-tree -r HEAD) <(git -C "${TARGET_CLONE_PATH}/remote_clone_source" ls-tree -r HEAD)
