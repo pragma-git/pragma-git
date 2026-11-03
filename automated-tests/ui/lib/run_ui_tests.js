@@ -7,8 +7,7 @@
  * Options:
  *   --scenario=<file>    Run a specific YAML scenario (default: ssh_clone_repo.yaml)
  *   --step, -i           Step-by-step interactive mode (pauses and prompts with verification instructions)
- *   --clean-up           Remove test directories and cloned repos after test finishes (default: kept)
- *   --keep-artifacts     Keep test directories (already default)
+ *   --clean-up           Remove test directories and cloned repos after test finishes (stores artifacts if omitted)
  *   --port=<num>         CDP remote debugging port (default: 9333, never 9222 to prevent dev collisions)
  */
 

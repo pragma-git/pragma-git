@@ -6,7 +6,8 @@ Den innehåller instruktioner för arkitektur, byggkommandon, tester och regler 
 ## Agent Rules / AI Context
 - AT THE START OF A SESSION (or after a chat clear), your very first action MUST be to read `.agents/context_checkpoint.md` to load the current workspace state. Do not make assumptions before reading this file.
 - You MUST automatically update the context checkpoint file at `.agents/context_checkpoint.md` in the workspace at the end of each response, eller närhelst koden ändras, för att upprätthålla en källa till sanning för kodbasens kontext.
-- **Atomic Commits with Documentation:** When modifying code or tests together with `.agents/context_checkpoint.md` or any other documentation, ALWAYS include both the code/test changes and the documentation in the **same atomic commit**. Never make separate standalone commits for context checkpoint/documentation updates unless only documentation was changed.
+- **Git Commits:** The agent MUST NEVER run `git commit` on its own. Always prepare, edit, and test changes in the working tree, and wait for the user to explicitly request a commit or ask for a commit message.
+- **Atomic Commits with Documentation:** When modifying code or tests together with `.agents/context_checkpoint.md` or any other documentation, ALWAYS stage both the code/test changes and the documentation together for the commit. Never make separate standalone commits for context checkpoint/documentation updates unless only documentation was changed.
 
 Checkpoint-filen `.agents/context_checkpoint.md` måste följa denna detaljerade mall:
 

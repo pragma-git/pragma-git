@@ -12,11 +12,10 @@
 #   -h, --help        Show this help text and exit
 #   --step, -i        Interactive step-by-step mode (pause before each action)
 #   --port=<num>      CDP remote debugging port (default: 9333)
-#   --clean-up        Clean up temporary test artifacts upon completion (default: kept)
-#   --keep-artifacts  Keep test directories and cloned repos after test finishes (already default)
+#   --clean-up        Clean up temporary test artifacts upon completion (stores artifacts if omitted)
 #
 # Examples:
-#   ./_run_01_ssh_clone_repo            Run test_01_ssh_clone_repo scenario (artifacts kept)
+#   ./_run_01_ssh_clone_repo            Run test_01_ssh_clone_repo scenario (stores artifacts)
 #   ./_run_01_ssh_clone_repo --clean-up Run test_01_ssh_clone_repo and clean up artifacts
 #   ./_run_01_ssh_clone_repo --step     Run test_01_ssh_clone_repo scenario with interactive step prompts
 #
