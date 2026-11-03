@@ -6,6 +6,7 @@ Den innehåller instruktioner för arkitektur, byggkommandon, tester och regler 
 ## Agent Rules / AI Context
 - AT THE START OF A SESSION (or after a chat clear), your very first action MUST be to read `.agents/context_checkpoint.md` to load the current workspace state. Do not make assumptions before reading this file.
 - You MUST automatically update the context checkpoint file at `.agents/context_checkpoint.md` in the workspace at the end of each response, eller närhelst koden ändras, för att upprätthålla en källa till sanning för kodbasens kontext.
+- **Atomic Commits with Documentation:** When modifying code or tests together with `.agents/context_checkpoint.md` or any other documentation, ALWAYS include both the code/test changes and the documentation in the **same atomic commit**. Never make separate standalone commits for context checkpoint/documentation updates unless only documentation was changed.
 
 Checkpoint-filen `.agents/context_checkpoint.md` måste följa denna detaljerade mall:
 
@@ -59,6 +60,92 @@ Se till att redigera/uppdatera `.agents/context_checkpoint.md` med filredigering
   cd make_binaries && ./build
   ```
   *(Eller kör selektivt för Intel/ARM enligt menyvalen i `build`).*
+
+---
+
+## UI Test Framework Architecture & Guidelines
+
+All UI tests for Pragma-git are located in `automated-tests/ui/` and run via Chrome DevTools Protocol (CDP) against a live NW.js instance.
+
+### Directory Structure & Roles
+- `automated-tests/ui/scenarios/*.yaml`: Declarative UI test scenarios.
+- `automated-tests/ui/lib/run_ui_tests.js`: Core CDP test runner orchestrating steps, actions, assertions, and `--step` interactive mode.
+- `automated-tests/ui/lib/ui_fixtures.js`: Test lifecycle manager: starts ephemeral OpenSSH test servers, generates temporary SSH keys, sets up isolated `HOME` and `nw_user_data` environments, and tears down processes/artifacts on exit.
+- `automated-tests/ui/lib/cdp_client.js`: Lightweight CDP client over WebSocket communicating with NW.js windows (`app.html`, `settings.html`, etc.).
+- `automated-tests/ui/_run_tests`: Wrapper script that runs all UI scenarios; gracefully skips with exit code `77` when NW.js binary is not present (e.g. GitHub Actions runners).
+- `automated-tests/ui/_run_<scenario_name>`: Convenient single-scenario runner scripts (e.g. `_run_01_ssh_clone_repo --step --keep-artifacts`).
+
+### Writing a UI Test Scenario (`.yaml`)
+A test scenario defines a sequence of steps. Each step executes an action, and can include `verify:` text which is displayed to the user during interactive `--step` mode.
+
+```yaml
+name: "Scenario Name"
+description: "Description of what this scenario covers"
+steps:
+  # 1. Window connection (non-interactive, excluded from step numbering)
+  - action: connect_window
+    title: "app.html"
+
+  # 2. Click elements
+  - name: "Click Settings"
+    action: click
+    selector: "#settingsButton"
+    verify: "Settings window opens."
+
+  # 3. Switching window context
+  - action: connect_window
+    title: "settings.html"
+
+  # 4. Fill form fields
+  - name: "Enter Repository URL"
+    action: fill
+    fields:
+      "#urlToClone": "${ORIGIN_REPO_PATH}"
+      "input[name='folder_clone']": "${TARGET_CLONE_PATH}"
+
+  # 5. Waiting for asynchronous events & UI transitions
+  - name: "Wait for Operation Completion"
+    action: wait_for_selector
+    selector: "#gitHubTab.active"
+    timeout: 25000
+
+  # 6. Content assertions
+  - name: "Verify Status Text"
+    action: assert_text
+    selector: "#statusDiv"
+    expected: "Operation Successful"
+
+  # 7. Git tree verification (MANDATORY for clone/commit/merge operations)
+  - name: "Validate Cloned Git Tree Matches Source Git Tree"
+    action: assert_git_tree_match
+    source: "${ORIGIN_REPO_PATH}"
+    target: "${TARGET_CLONE_PATH}/remote_clone_source"
+```
+
+### Supported Actions in `run_ui_tests.js`
+- `connect_window`: Switches CDP context to target window matching regex or substring (`title: "settings.html"`).
+- `click`: Dispatches CDP mouse click to `selector`.
+- `fill`: Sets values of multiple input fields via `fields: { selector: value }`.
+- `set_value`: Sets single input field value (`selector`, `value`).
+- `wait_for_selector`: Polls until CSS selector appears in DOM with matching state (`timeout` in ms).
+- `wait_for_text`: Polls until element matching `selector` contains `text`.
+- `wait`: Sleeps for `ms` milliseconds.
+- `inject_key`: Appends generated test public key to test OpenSSH `authorized_keys`.
+- `assert_text`: Verifies element inner text contains `expected`; throws and fails test if not matched.
+- `assert_git_tree_match`: **Mandatory verification step** for clone, pull, merge, or commit operations. Checks existence of source and target repos on disk and asserts `HEAD^{tree}` hashes match; throws and fails test if mismatched.
+
+### Template Variables Available in Scenarios
+- `${ORIGIN_REPO_PATH}`: Absolute path to ephemeral test bare git repo (`remote_clone_source.git`).
+- `${TARGET_CLONE_PATH}`: Absolute path to target clone folder (`cloned_repo_on_ssh_server`).
+- `${TEST_SSHD_PORT}`: Port of the ephemeral OpenSSH server.
+- `${USER}`: Current system username.
+- `${CLIENT_KEY}`: Absolute path to generated test private SSH key.
+- `${CLIENT_KEY_PUB}`: Absolute path to generated test public SSH key.
+
+### Essential Rules for UI Tests
+1. **Never use static DOM text for async completion checks:** If an element already contains placeholder text before an async operation starts, `wait_for_text` will resolve immediately. Always wait for an explicit state change (e.g. `wait_for_selector: "#tab.active"` or a distinct success message).
+2. **Always include automated git tree validation:** Any test performing a clone, checkout, pull, or merge MUST conclude with an `assert_git_tree_match` step. Never rely only on console output or UI tabs.
+3. **Keep Artifacts & Diff inspection:** When `--keep-artifacts` is used, the test fixtures print the exact path and a clean `diff -u <(git --git-dir=... ls-tree -r HEAD) <(git -C ... ls-tree -r HEAD)` command for manual terminal inspection.
 
 ---
 
