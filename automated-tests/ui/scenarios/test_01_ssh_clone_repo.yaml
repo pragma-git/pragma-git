@@ -140,4 +140,4 @@ steps:
       - Settings window switched to the Remote ('gitHubTab') tab.
       - The newly cloned repository is registered and active in state.
       - Git tree comparison command:
-          [ "$(git --git-dir=\"${ORIGIN_REPO_PATH}\" rev-parse HEAD^{tree})" = "$(git -C \"${TARGET_CLONE_PATH}/remote_clone_source\" rev-parse HEAD^{tree})" ] && echo "TREES MATCH"
+          diff -u <(git --git-dir="${ORIGIN_REPO_PATH}" ls-tree -r HEAD) <(git -C "${TARGET_CLONE_PATH}/remote_clone_source" ls-tree -r HEAD) && echo "TREES MATCH"

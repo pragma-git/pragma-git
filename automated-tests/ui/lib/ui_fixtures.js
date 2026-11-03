@@ -192,7 +192,7 @@ class UIFixtures {
                         console.log(`[UIFixtures] Source Tree: ${originTree} (${this.originRepoPath})`);
                         console.log(`[UIFixtures] Cloned Tree: ${cloneTree} (${clonedRepoPath})`);
                         console.log(`[UIFixtures] Manual verification command:`);
-                        console.log(`  [ "$(git --git-dir=\\"${this.originRepoPath}\\" rev-parse HEAD^{tree})" = "$(git -C \\"${clonedRepoPath}\\" rev-parse HEAD^{tree})" ] && echo "TREES MATCH" || echo "TREES DIFFER"`);
+                        console.log(`  diff -u <(git --git-dir="${this.originRepoPath}" ls-tree -r HEAD) <(git -C "${clonedRepoPath}" ls-tree -r HEAD) && echo "TREES MATCH" || echo "TREES DIFFER"`);
                         if (originTree === cloneTree) {
                             console.log(`[UIFixtures] \x1b[32m✓ Validation passed: Cloned git tree is identical to remote source tree.\x1b[0m\n`);
                         } else {
