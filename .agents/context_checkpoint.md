@@ -35,6 +35,9 @@
   - Added `ws` and `js-yaml` to `devDependencies` so test fixtures can connect over Chrome DevTools Protocol.
   - Verified all CI runners (**macOS**, **Ubuntu**, **Windows**) pass green on GitHub Actions run [`41643766605`](https://github.com/pragma-git/pragma-git/actions/runs/41643766605).
 * **UI Test Automation & SSH Environment Fixes**:
+  - Fixed premature PASS on Step 17 by implementing `wait_for_selector: "#gitHubTab.active"` in [`automated-tests/ui/scenarios/test_01_ssh_clone_repo.yaml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_01_ssh_clone_repo.yaml) and adding `wait_for_selector` support to [`automated-tests/ui/lib/run_ui_tests.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js), ensuring tests wait for the SSH clone and tab transition to complete before exiting.
+  - Renamed clone origin to `remote_clone_source.git` and clone destination folder to `cloned_repo_on_ssh_server` in [`automated-tests/ui/lib/ui_fixtures.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/ui_fixtures.js).
+  - Unified the test `.Pragma-git` folder inside the test `HOME` (`<artifact_dir>/home/.Pragma-git`), eliminating the redundant duplicate top-level `.Pragma-git` folder.
   - Automatically raises terminal window using `osascript` before and after pressing ENTER so users can step through `--step` tests without manual window switching.
   - Subtracted non-interactive `connect_window` actions from the total interactive step count (`STEP [1/17]` to `STEP [17/17]`).
   - Added short `/tmp/pg_%r_%h_%p` ControlPath fallback in [`ssh_folder/lib/ssh-functions`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions) to resolve Unix domain socket length limits (> 104 bytes) in macOS sandbox paths.
