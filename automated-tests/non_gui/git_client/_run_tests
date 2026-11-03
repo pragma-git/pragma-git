@@ -53,6 +53,10 @@ function print_suite_description() {
             echo "   Creates branching scenarios with conflicting edits and tests merge conflict handling."
             echo "   Verifies git status reports unmerged paths (UU) and embeds diff3 conflict markers."
             ;;
+        test_03_local_vs_server_parity.js)
+            echo "   Compares core Git operations in app.js across local and remote SSH server repositories."
+            echo "   Verifies parity for status, diff parsing, history, branches, and tree diff equality."
+            ;;
     esac
 }
 
