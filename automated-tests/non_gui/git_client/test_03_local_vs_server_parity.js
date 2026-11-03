@@ -50,6 +50,23 @@ function extractFunction(name) {
     return appCode.slice(start, end);
 }
 
+
+function getBashShell() {
+    if (process.platform === 'win32') {
+        const candidates = [
+            'C:\\Program Files\\Git\\bin\\bash.exe',
+            'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+            process.env.COMSPEC ? undefined : 'bash'
+        ];
+        for (const c of candidates) {
+            if (c && fs.existsSync(c)) return c;
+        }
+        return 'bash';
+    }
+    return '/bin/bash';
+}
+const bashShell = getBashShell();
+
 // 1. Setup Ephemeral OpenSSH Server & Temporary Sandboxes
 const sshScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
 let sshdPort = null;
@@ -67,7 +84,7 @@ function cleanup() {
                 TEST_SSHD_DIR="${sshdDir || ''}"
                 stop_test_sshd
             `;
-            execSync(stopCmd, { shell: '/bin/bash', stdio: 'ignore' });
+            execSync(stopCmd, { shell: bashShell, stdio: 'ignore' });
         } catch (e) {}
     }
     if (tmpBaseDir && fs.existsSync(tmpBaseDir)) {
@@ -89,7 +106,7 @@ async function main() {
             echo "PORT:$TEST_SSHD_PORT"
             echo "PID:$TEST_SSHD_PID"
             echo "DIR:$TEST_SSHD_DIR"
-        `, { shell: '/bin/bash' }).toString();
+        `, { shell: bashShell }).toString();
 
         const portMatch = startOut.match(/PORT:(\d+)/);
         const pidMatch = startOut.match(/PID:(\d+)/);
@@ -123,9 +140,11 @@ async function main() {
             execSync(`git -C "${dir}" config init.defaultBranch "main"`);
         }
 
-        const username = os.userInfo().username;
-        const sshUrl = `ssh://${username}@127.0.0.1:${sshdPort}${serverRepoDir}`;
-        const sshNonRepoUrl = `ssh://${username}@127.0.0.1:${sshdPort}${nonRepoDir}`;
+        const username = (os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, '');
+        const serverRepoPath = process.platform === 'win32' ? serverRepoDir.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => '/mnt/' + d.toLowerCase()) : serverRepoDir;
+        const nonRepoPath = process.platform === 'win32' ? nonRepoDir.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => '/mnt/' + d.toLowerCase()) : nonRepoDir;
+        const sshUrl = `ssh://${username}@127.0.0.1:${sshdPort}${serverRepoPath}`;
+        const sshNonRepoUrl = `ssh://${username}@127.0.0.1:${sshdPort}${nonRepoPath}`;
 
         // Create isolated VM runtime for app.js functions
         function createRepoVM(repoPath) {
