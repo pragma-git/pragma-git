@@ -251,6 +251,12 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                     }
                     break;
                 }
+                case 'wait_for_selector': {
+                    const selector = resolveTemplate(step.selector);
+                    console.log(`    Waiting for selector "${selector}"...`);
+                    await currentCDP.waitForSelector(selector, step.timeout || 15000);
+                    break;
+                }
                 case 'wait_for_text': {
                     const selector = resolveTemplate(step.selector);
                     const text = resolveTemplate(step.text);

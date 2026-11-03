@@ -132,9 +132,8 @@ steps:
 
   # 17. Verify Clone Completed
   - name: "Verify Clone Completed and Switched to Remote Tab"
-    action: wait_for_text
-    selector: "#additionalRemotesDiv"
-    text: "Remote repositories"
+    action: wait_for_selector
+    selector: "#gitHubTab.active"
     timeout: 25000
     verify: |-
       - Clone completed successfully over SSH.
