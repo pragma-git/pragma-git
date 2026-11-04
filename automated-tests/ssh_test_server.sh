@@ -134,6 +134,16 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
             TEST_SSHD_DIR="$2"
             inject_test_sshd_key "$3"
             ;;
+        copy-client-key)
+            # $2 = source key (may be on /mnt/c), $3 = dest dir inside Linux/WSL (e.g. /tmp/...)
+            SRC_KEY="$2"
+            DST_DIR="$3"
+            mkdir -p "$DST_DIR" && chmod 700 "$DST_DIR"
+            cp "$SRC_KEY" "$DST_DIR/client_key"
+            [ -f "$SRC_KEY.pub" ] && cp "$SRC_KEY.pub" "$DST_DIR/client_key.pub"
+            chmod 600 "$DST_DIR/client_key"
+            echo "$DST_DIR/client_key"
+            ;;
         login-check) ssh_login_check "$2" ;;
         *) echo "Usage: $0 {start|stop <port> <pid> <dir>|inject-key <dir> <pubkey>|login-check <private-key>}" >&2; exit 2 ;;
     esac

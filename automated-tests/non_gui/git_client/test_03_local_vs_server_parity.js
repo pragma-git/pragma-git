@@ -71,6 +71,24 @@ function toWslPath(p) {
     return p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
 }
 
+function gitCommitWithDate(repoDir, message, dateStr) {
+    execSync(`git -C "${repoDir}" commit --date="${dateStr}" -m "${message}"`, {
+        env: Object.assign({}, process.env, {
+            GIT_COMMITTER_DATE: dateStr,
+            GIT_AUTHOR_DATE: dateStr
+        })
+    });
+}
+
+function gitMergeWithDate(repoDir, branchName, message, dateStr) {
+    execSync(`git -C "${repoDir}" merge --no-ff "${branchName}" -m "${message}"`, {
+        env: Object.assign({}, process.env, {
+            GIT_COMMITTER_DATE: dateStr,
+            GIT_AUTHOR_DATE: dateStr
+        })
+    });
+}
+
 function runSshHelper(args) {
     const helperScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
     if (process.platform === 'win32') {
@@ -136,6 +154,16 @@ async function main() {
         // Inject client key into ephemeral sshd authorized_keys via CLI helper
         runSshHelper(['inject-key', sshdDir, clientKey + '.pub']);
 
+        // On Windows/WSL, copy key into Linux temp dir with strict 0600 permissions
+        // because keys on /mnt/c mounts show 0777 and OpenSSH will refuse them.
+        let activeClientKey = clientKey;
+        if (process.platform === 'win32') {
+            const wslKeyPath = runSshHelper(['copy-client-key', clientKey, `${sshdDir}/client`]).trim();
+            if (wslKeyPath) {
+                activeClientKey = wslKeyPath;
+            }
+        }
+
         const localRepoDir = path.join(tmpBaseDir, 'local_repo');
         const serverRepoDir = path.join(tmpBaseDir, 'server_repo');
         const nonRepoDir = path.join(tmpBaseDir, 'non_repo_folder');
@@ -169,7 +197,7 @@ async function main() {
                 process: {
                     platform: process.platform,
                     env: Object.assign({}, process.env, isSsh ? {
-                        PRAGMA_SSH_KEY: clientKey,
+                        PRAGMA_SSH_KEY: activeClientKey,
                         WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
                     } : {})
                 },
@@ -177,7 +205,7 @@ async function main() {
                 state: { repos: [{ localFolder: repoPath }], repoNumber: 0, FirstParent: false, StashPop: true },
                 configFilePath: () => path.join(REPO_ROOT, 'gitconfigs', process.platform === 'darwin' ? 'pragma-git-config_mac' : 'pragma-git-config_linux'),
                 sshKeyEnv: () => (isSsh ? {
-                    PRAGMA_SSH_KEY: clientKey,
+                    PRAGMA_SSH_KEY: activeClientKey,
                     WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
                 } : {}),
                 console: { log: () => {}, error: () => {}, warn: () => {} },
@@ -249,8 +277,10 @@ async function main() {
         // -------------------------------------------------------------
         // Test 3: Staged & Committed State Parity
         // -------------------------------------------------------------
-        execSync(`git -C "${localRepoDir}" add untracked_alpha.txt && GIT_COMMITTER_DATE="2026-11-03T10:00:00" git -C "${localRepoDir}" commit --date="2026-11-03T10:00:00" -m "Commit 1"`);
-        execSync(`git -C "${serverRepoDir}" add untracked_alpha.txt && GIT_COMMITTER_DATE="2026-11-03T10:00:00" git -C "${serverRepoDir}" commit --date="2026-11-03T10:00:00" -m "Commit 1"`);
+        execSync(`git -C "${localRepoDir}" add untracked_alpha.txt`);
+        gitCommitWithDate(localRepoDir, 'Commit 1', '2026-11-03T10:00:00');
+        execSync(`git -C "${serverRepoDir}" add untracked_alpha.txt`);
+        gitCommitWithDate(serverRepoDir, 'Commit 1', '2026-11-03T10:00:00');
 
         const localSt3 = await localVM.gitStatus();
         const serverSt3 = await serverVM.gitStatus();
@@ -272,8 +302,10 @@ async function main() {
 
         fs.writeFileSync(path.join(localRepoDir, 'to_delete.txt'), 'Delete me\n');
         fs.writeFileSync(path.join(serverRepoDir, 'to_delete.txt'), 'Delete me\n');
-        execSync(`git -C "${localRepoDir}" add to_delete.txt && GIT_COMMITTER_DATE="2026-11-03T10:01:00" git -C "${localRepoDir}" commit --date="2026-11-03T10:01:00" -m "Commit 2"`);
-        execSync(`git -C "${serverRepoDir}" add to_delete.txt && GIT_COMMITTER_DATE="2026-11-03T10:01:00" git -C "${serverRepoDir}" commit --date="2026-11-03T10:01:00" -m "Commit 2"`);
+        execSync(`git -C "${localRepoDir}" add to_delete.txt`);
+        gitCommitWithDate(localRepoDir, 'Commit 2', '2026-11-03T10:01:00');
+        execSync(`git -C "${serverRepoDir}" add to_delete.txt`);
+        gitCommitWithDate(serverRepoDir, 'Commit 2', '2026-11-03T10:01:00');
 
         fs.unlinkSync(path.join(localRepoDir, 'to_delete.txt'));
         fs.unlinkSync(path.join(serverRepoDir, 'to_delete.txt'));
@@ -293,8 +325,10 @@ async function main() {
         // -------------------------------------------------------------
         // Test 5: Historical Diff Parity (gitShowHistorical)
         // -------------------------------------------------------------
-        execSync(`git -C "${localRepoDir}" add -u && GIT_COMMITTER_DATE="2026-11-03T10:02:00" git -C "${localRepoDir}" commit --date="2026-11-03T10:02:00" -m "Commit 3: updates"`);
-        execSync(`git -C "${serverRepoDir}" add -u && GIT_COMMITTER_DATE="2026-11-03T10:02:00" git -C "${serverRepoDir}" commit --date="2026-11-03T10:02:00" -m "Commit 3: updates"`);
+        execSync(`git -C "${localRepoDir}" add -u`);
+        gitCommitWithDate(localRepoDir, 'Commit 3: updates', '2026-11-03T10:02:00');
+        execSync(`git -C "${serverRepoDir}" add -u`);
+        gitCommitWithDate(serverRepoDir, 'Commit 3: updates', '2026-11-03T10:02:00');
 
         localVM.localState.historyHash = 'HEAD';
         serverVM.localState.historyHash = 'HEAD';
@@ -370,9 +404,10 @@ async function main() {
         for (const dir of [localRepoDir, serverRepoDir]) {
             execSync(`git -C "${dir}" checkout -b branch-for-merge`);
             fs.writeFileSync(path.join(dir, 'merge_side.txt'), 'branch-for-merge content\n');
-            execSync(`git -C "${dir}" add merge_side.txt && GIT_COMMITTER_DATE="2026-11-03T10:03:00" git -C "${dir}" commit --date="2026-11-03T10:03:00" -m "Side commit"`);
+            execSync(`git -C "${dir}" add merge_side.txt`);
+            gitCommitWithDate(dir, 'Side commit', '2026-11-03T10:03:00');
             execSync(`git -C "${dir}" checkout main`);
-            execSync(`GIT_COMMITTER_DATE="2026-11-03T10:04:00" git -C "${dir}" merge --no-ff branch-for-merge -m "Merge branch-for-merge into main"`);
+            gitMergeWithDate(dir, 'branch-for-merge', 'Merge branch-for-merge into main', '2026-11-03T10:04:00');
         }
 
         const localHeadAfterMerge = await localVM.gitCurrentCommit();

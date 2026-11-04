@@ -1,4 +1,4 @@
-name: Automated Non-GUI Tests
+name: Automated Test Suites
 
 on:
   push:
@@ -37,11 +37,18 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Read NW.js Version from package.json
+        id: nw-version
+        run: |
+          NW_VER=$(node -p "require('./package.json').nwVersion")
+          echo "NW_VERSION=$NW_VER" >> "$GITHUB_ENV"
+          echo "version=$NW_VER" >> "$GITHUB_OUTPUT"
+
       - name: Install System Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 || \
-            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11)
+          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb || \
+            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb)
           sudo systemctl start ssh
 
       - name: Set up WSL (Windows)
@@ -54,6 +61,43 @@ jobs:
             openssh-server
             git
             curl
+
+      - name: Cache NW.js Binary
+        id: cache-nwjs
+        uses: actions/cache@v4
+        with:
+          path: ~/nwjs_cache
+          key: nwjs-${{ runner.os }}-${{ steps.nw-version.outputs.version }}
+
+      - name: Install NW.js Binary
+        run: |
+          mkdir -p ~/nwjs_cache
+          cd ~/nwjs_cache
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            if [ ! -d "nwjs-v${NW_VERSION}-osx-x64/nwjs.app" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-osx-x64.zip"
+              unzip -q nwjs.zip
+              rm -f nwjs.zip
+            fi
+            sudo cp -R "nwjs-v${NW_VERSION}-osx-x64/nwjs.app" /Applications/
+            echo "NW_BIN=/Applications/nwjs.app/Contents/MacOS/nwjs" >> "$GITHUB_ENV"
+          elif [ "${{ runner.os }}" = "Linux" ]; then
+            if [ ! -f "nwjs-v${NW_VERSION}-linux-x64/nw" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.tar.gz "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-linux-x64.tar.gz"
+              tar -xzf nwjs.tar.gz
+              rm -f nwjs.tar.gz
+            fi
+            sudo ln -sf "$PWD/nwjs-v${NW_VERSION}-linux-x64/nw" /usr/local/bin/nw
+            echo "NW_BIN=$PWD/nwjs-v${NW_VERSION}-linux-x64/nw" >> "$GITHUB_ENV"
+          elif [ "${{ runner.os }}" = "Windows" ]; then
+            if [ ! -f "nwjs-v${NW_VERSION}-win-x64/nw.exe" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-win-x64.zip"
+              unzip -q nwjs.zip
+              rm -f nwjs.zip
+            fi
+            echo "$PWD/nwjs-v${NW_VERSION}-win-x64" >> "$GITHUB_PATH"
+            echo "NW_BIN=$PWD/nwjs-v${NW_VERSION}-win-x64/nw.exe" >> "$GITHUB_ENV"
+          fi
 
       - name: Configure Localhost SSH
         run: |
@@ -97,12 +141,12 @@ jobs:
         if: runner.os == 'macOS'
         run: npm test -- -v
 
-      - name: Run Automated Test Suites (Linux with D-Bus)
+      - name: Run Automated Test Suites (Linux with D-Bus and Xvfb)
         if: runner.os == 'Linux'
         run: |
           eval $(dbus-launch --sh-syntax)
           echo "" | gnome-keyring-daemon --unlock || true
-          npm test -- -v
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" npm test -- -v
 
       - name: Run Automated Test Suites (Windows)
         if: runner.os == 'Windows'

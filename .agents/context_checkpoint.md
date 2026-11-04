@@ -30,11 +30,17 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Automated Test Suites CI Workflow & Windows Parity Fix**:
+  - Renamed workflow from `"Automated Non-GUI Tests"` to `"Automated Test Suites"` in [.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml).
+  - Configured dynamic reading of NW.js version directly from `package.json` (`nwVersion`) in CI runner step `Read NW.js Version from package.json`, dynamically setting cache keys (`nwjs-${{ runner.os }}-${{ steps.nw-version.outputs.version }}`) and download paths so CI automatically stays in sync with `package.json`.
+  - Added automated caching and setup for NW.js binary across macOS (`/Applications/nwjs.app`), Linux (`/usr/local/bin/nw` with `xvfb` and `xvfb-run`), and Windows (adding to `PATH` and `NW_BIN`), enabling UI test suites to run on CI across all platforms.
+  - Fixed Windows CI failure in [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js):
+    1. Replaced shell inline environment variables (`GIT_COMMITTER_DATE=... git ...`) with cross-platform helper functions using Node's `execSync(..., { env: ... })`.
+    2. Added `copy-client-key` action to [automated-tests/ssh_test_server.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh) to mirror `clientKey` into native WSL `/tmp` with `chmod 600`, preventing OpenSSH rejection caused by `0777` permissions on `/mnt/c` mounts.
+    3. Pointed `activeClientKey` in `createRepoVM` to the strict-permission WSL key path when running on `win32`.
 * **Windows & macOS CI Failure Analysis (Run 41735824886)**:
-  - **macOS**: UI test suite was skipped gracefully with exit code 77 (`[SKIPPED] NW.js binary not found. Skipping UI test suites.`). Standard cloud runners do not pre-install NW.js; all non-GUI test suites passed 100%.
-  - **Windows**: `git_client/test_03_local_vs_server_parity.js` failed due to:
-    1. Windows `cmd.exe` rejecting inline shell variable assignments (`GIT_COMMITTER_DATE=... git ...`), requiring Node `execSync(cmd, { env: ... })`.
-    2. SSH key permissions for `clientKey` generated on Windows filesystem mount (`/mnt/c` has `0777` permissions causing OpenSSH rejection). Needs key placed or mirrored in native WSL `/tmp` with `chmod 600`.
+  - **macOS**: UI test suite was skipped gracefully with exit code 77 (`[SKIPPED] NW.js binary not found. Skipping UI test suites.`). Standard cloud runners do not pre-install NW.js; now resolved by the NW.js setup step.
+  - **Windows**: Parity test resolved via cross-platform git commit/merge execution and strict WSL key permissions.
   - Awaiting user confirmation whether to amend to commit `287bfecf` (`git push --force-with-lease`) or create a new commit.
 * **Keep Artifacts by Default in UI Tests**:
   - Changed default behavior for manual/standalone UI test runs to **keep artifacts** automatically without requiring flags.
