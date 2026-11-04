@@ -158,6 +158,10 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
             return str
                 .replace(/\$\{TEST_SSHD_PORT\}/g, env.sshdPort)
                 .replace(/\$\{USER\}/g, env.user)
+                .replace(/\$\{ORIGIN_REPO_PATH_JSON\}/g, JSON.stringify(env.originRepoPath))
+                .replace(/\$\{TARGET_CLONE_PATH_JSON\}/g, JSON.stringify(env.targetClonePath))
+                .replace(/\$\{CLIENT_KEY_JSON\}/g, JSON.stringify(env.clientKey))
+                .replace(/\$\{CLIENT_KEY_PUB_JSON\}/g, JSON.stringify(env.clientKeyPub))
                 .replace(/\$\{ORIGIN_REPO_PATH\}/g, env.originRepoPath)
                 .replace(/\$\{TARGET_CLONE_PATH\}/g, env.targetClonePath)
                 .replace(/\$\{CLIENT_KEY\}/g, env.clientKey)
@@ -289,19 +293,27 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                     break;
                 }
                 case 'assert_git_tree_match': {
-                    const source = resolveTemplate(step.source);
-                    const target = resolveTemplate(step.target);
+                    let source = resolveTemplate(step.source);
+                    let target = resolveTemplate(step.target);
                     console.log(`    Validating git tree match...`);
                     console.log(`      Source: ${source}`);
                     console.log(`      Target: ${target}`);
+
+                    // On Windows, if paths were converted to WSL /mnt/... paths, convert back for Node.js fs/git execution
+                    if (process.platform === 'win32') {
+                        const fromWsl = (p) => p.replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:/`);
+                        source = fromWsl(source);
+                        target = fromWsl(target);
+                    }
+
                     if (!fs.existsSync(source)) {
                         throw new Error(`Git tree validation failed: source repo does not exist at "${source}"`);
                     }
                     if (!fs.existsSync(target)) {
                         throw new Error(`Git tree validation failed: target repo does not exist at "${target}"`);
                     }
-                    const sourceTree = execSync(`git --git-dir="${source}" rev-parse HEAD^{tree}`).toString().trim();
-                    const targetTree = execSync(`git -C "${target}" rev-parse HEAD^{tree}`).toString().trim();
+                    const sourceTree = execSync(`git --git-dir="${source}" log -1 --format=%T HEAD`).toString().trim();
+                    const targetTree = execSync(`git -C "${target}" log -1 --format=%T HEAD`).toString().trim();
                     if (sourceTree !== targetTree) {
                         throw new Error(`Git tree mismatch! Source tree (${sourceTree}) != Target tree (${targetTree})`);
                     }

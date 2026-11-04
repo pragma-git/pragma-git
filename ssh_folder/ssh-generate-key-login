@@ -179,7 +179,7 @@ ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 echo "==> Uploading public key…"
 
-cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+tr -d '\r' < "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
     cat > /tmp/remote_tmp_key.pub
 "
 
@@ -197,7 +197,7 @@ ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
     mkdir -p \"\$(dirname \"$REMOTE_AUTH_KEYS\")\" 2>/dev/null
     touch \"$REMOTE_AUTH_KEYS\" && chmod 600 \"$REMOTE_AUTH_KEYS\"
 
-    PUBKEY_CONTENT=\$(cat /tmp/remote_tmp_key.pub)
+    PUBKEY_CONTENT=\$(tr -d '\r' < /tmp/remote_tmp_key.pub)
 
     if grep -qxF \"\$PUBKEY_CONTENT\" \"$REMOTE_AUTH_KEYS\"; then
         echo '   -> Key already present — no change.'

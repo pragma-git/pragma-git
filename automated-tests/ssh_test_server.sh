@@ -123,6 +123,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
             echo "PORT:$TEST_SSHD_PORT"
             echo "PID:$TEST_SSHD_PID"
             echo "DIR:$TEST_SSHD_DIR"
+            echo "USER:$(id -un)"
             ;;
         stop)
             TEST_SSHD_PORT="$2"

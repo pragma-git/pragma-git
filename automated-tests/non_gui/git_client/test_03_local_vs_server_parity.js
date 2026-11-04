@@ -138,6 +138,7 @@ async function main() {
         const portMatch = startOut.match(/PORT:(\d+)/);
         const pidMatch = startOut.match(/PID:(\d+)/);
         const dirMatch = startOut.match(/DIR:([^\r\n]+)/);
+        const userMatch = startOut.match(/USER:([^\r\n]+)/);
 
         if (!portMatch || !pidMatch) {
             throw new Error(`Failed to start test sshd: ${startOut}`);
@@ -145,6 +146,7 @@ async function main() {
         sshdPort = parseInt(portMatch[1], 10);
         sshdPid = parseInt(pidMatch[1], 10);
         sshdDir = dirMatch ? dirMatch[1].trim() : '';
+        const sshUser = userMatch ? userMatch[1].trim() : ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''));
 
         // Create temporary sandboxes
         tmpBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pragma_parity_'));
@@ -179,11 +181,10 @@ async function main() {
             execSync(`git -C "${dir}" config init.defaultBranch "main"`);
         }
 
-        const username = (os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, '');
         const serverRepoPath = process.platform === 'win32' ? toWslPath(serverRepoDir) : serverRepoDir;
         const nonRepoPath = process.platform === 'win32' ? toWslPath(nonRepoDir) : nonRepoDir;
-        const sshUrl = `ssh://${username}@127.0.0.1:${sshdPort}${serverRepoPath}`;
-        const sshNonRepoUrl = `ssh://${username}@127.0.0.1:${sshdPort}${nonRepoPath}`;
+        const sshUrl = `ssh://${sshUser}@127.0.0.1:${sshdPort}${serverRepoPath}`;
+        const sshNonRepoUrl = `ssh://${sshUser}@127.0.0.1:${sshdPort}${nonRepoPath}`;
 
         // Create isolated VM runtime for app.js functions
         function createRepoVM(repoPath) {
@@ -198,15 +199,22 @@ async function main() {
                     platform: process.platform,
                     env: Object.assign({}, process.env, isSsh ? {
                         PRAGMA_SSH_KEY: activeClientKey,
-                        WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
+                        WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
                     } : {})
                 },
                 localState: { historyHash: 'HEAD', pinnedCommit: '' },
                 state: { repos: [{ localFolder: repoPath }], repoNumber: 0, FirstParent: false, StashPop: true },
-                configFilePath: () => path.join(REPO_ROOT, 'gitconfigs', process.platform === 'darwin' ? 'pragma-git-config_mac' : 'pragma-git-config_linux'),
+                configFilePath: (folder) => {
+                    if (folder && folder.startsWith('ssh:')) {
+                        const urlParts = new URL(folder);
+                        const sshHome = urlParts.pathname.startsWith('/Users/') ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
+                        return `${sshHome}/.Pragma-git/pragma-git-config-ssh`;
+                    }
+                    return path.join(REPO_ROOT, 'gitconfigs', process.platform === 'darwin' ? 'pragma-git-config_mac' : (process.platform === 'win32' ? 'pragma-git-config_win' : 'pragma-git-config_linux'));
+                },
                 sshKeyEnv: () => (isSsh ? {
                     PRAGMA_SSH_KEY: activeClientKey,
-                    WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY/p` : 'PRAGMA_SSH_KEY/p'
+                    WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
                 } : {}),
                 console: { log: () => {}, error: () => {}, warn: () => {} },
                 document: {
@@ -542,8 +550,8 @@ async function main() {
         // -------------------------------------------------------------
         // Test 15: Working Tree Content & Git Diff Equivalence
         // -------------------------------------------------------------
-        const localTreeSha = execSync(`git -C "${localRepoDir}" rev-parse HEAD^{tree}`).toString().trim();
-        const serverTreeSha = execSync(`git -C "${serverRepoDir}" rev-parse HEAD^{tree}`).toString().trim();
+        const localTreeSha = execSync(`git -C "${localRepoDir}" log -1 --format=%T HEAD`).toString().trim();
+        const serverTreeSha = execSync(`git -C "${serverRepoDir}" log -1 --format=%T HEAD`).toString().trim();
 
         if (localTreeSha === serverTreeSha) {
             assertPass(`15: Working tree SHA-1 hashes match perfectly between local and server (${localTreeSha})`);

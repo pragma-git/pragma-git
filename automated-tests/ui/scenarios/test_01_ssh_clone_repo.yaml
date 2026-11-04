@@ -65,8 +65,8 @@ steps:
       (() => {
         let input = document.getElementById('sshKeyInput_clone');
         if (input) {
-          input.value = '${CLIENT_KEY}';
-          input.dataset.keyPath = '${CLIENT_KEY}';
+          input.value = ${CLIENT_KEY_JSON};
+          input.dataset.keyPath = ${CLIENT_KEY_JSON};
         }
       })()
     verify: "Selected client key is set in Clone tab."
@@ -97,9 +97,17 @@ steps:
 
   # 11. Select the client key in the SSH Configuration dialog
   - name: "Choose SSH Key in Dialog"
-    action: set_value
-    selector: "#sshConfigKeyInput"
-    value: "${CLIENT_KEY}"
+    action: eval
+    code: |-
+      (() => {
+        let inp = document.getElementById('sshConfigKeyInput');
+        if (inp) {
+          inp.value = ${CLIENT_KEY_JSON};
+          if (typeof updateSshConfigKeyDisplay === 'function') {
+            updateSshConfigKeyDisplay(${CLIENT_KEY_JSON});
+          }
+        }
+      })()
     verify: "Selected private key path is set in the SSH configuration dialog."
 
   # 12. Test login inside the dialog (Key not yet authorized on server)

@@ -47,8 +47,8 @@ jobs:
       - name: Install System Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb || \
-            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb)
+          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 libpango-1.0-0 || \
+            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 || true)
           sudo systemctl start ssh
 
       - name: Set up WSL (Windows)
@@ -67,36 +67,41 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/nwjs_cache
-          key: nwjs-${{ runner.os }}-${{ steps.nw-version.outputs.version }}
+          key: nwjs-sdk-${{ runner.os }}-${{ runner.arch }}-${{ steps.nw-version.outputs.version }}
 
       - name: Install NW.js Binary
         run: |
           mkdir -p ~/nwjs_cache
           cd ~/nwjs_cache
           if [ "${{ runner.os }}" = "macOS" ]; then
-            if [ ! -d "nwjs-v${NW_VERSION}-osx-x64/nwjs.app" ]; then
-              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-osx-x64.zip"
+            ARCH=$(uname -m)
+            [ "$ARCH" = "arm64" ] && OSX_ARCH="osx-arm64" || OSX_ARCH="osx-x64"
+            if [ ! -d "nwjs-sdk-v${NW_VERSION}-${OSX_ARCH}/nwjs.app" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-sdk-v${NW_VERSION}-${OSX_ARCH}.zip"
               unzip -q nwjs.zip
               rm -f nwjs.zip
             fi
-            sudo cp -R "nwjs-v${NW_VERSION}-osx-x64/nwjs.app" /Applications/
+            sudo rm -rf /Applications/nwjs.app
+            sudo cp -R "nwjs-sdk-v${NW_VERSION}-${OSX_ARCH}/nwjs.app" /Applications/
+            sudo chown -R "$(id -u):$(id -g)" /Applications/nwjs.app
+            sudo chmod -R a+rX /Applications/nwjs.app
             echo "NW_BIN=/Applications/nwjs.app/Contents/MacOS/nwjs" >> "$GITHUB_ENV"
           elif [ "${{ runner.os }}" = "Linux" ]; then
-            if [ ! -f "nwjs-v${NW_VERSION}-linux-x64/nw" ]; then
-              curl -sSL -A "Mozilla/5.0" -o nwjs.tar.gz "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-linux-x64.tar.gz"
+            if [ ! -f "nwjs-sdk-v${NW_VERSION}-linux-x64/nw" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.tar.gz "https://dl.nwjs.io/v${NW_VERSION}/nwjs-sdk-v${NW_VERSION}-linux-x64.tar.gz"
               tar -xzf nwjs.tar.gz
               rm -f nwjs.tar.gz
             fi
-            sudo ln -sf "$PWD/nwjs-v${NW_VERSION}-linux-x64/nw" /usr/local/bin/nw
-            echo "NW_BIN=$PWD/nwjs-v${NW_VERSION}-linux-x64/nw" >> "$GITHUB_ENV"
+            sudo ln -sf "$PWD/nwjs-sdk-v${NW_VERSION}-linux-x64/nw" /usr/local/bin/nw
+            echo "NW_BIN=$PWD/nwjs-sdk-v${NW_VERSION}-linux-x64/nw" >> "$GITHUB_ENV"
           elif [ "${{ runner.os }}" = "Windows" ]; then
-            if [ ! -f "nwjs-v${NW_VERSION}-win-x64/nw.exe" ]; then
-              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-win-x64.zip"
+            if [ ! -f "nwjs-sdk-v${NW_VERSION}-win-x64/nw.exe" ]; then
+              curl -sSL -A "Mozilla/5.0" -o nwjs.zip "https://dl.nwjs.io/v${NW_VERSION}/nwjs-sdk-v${NW_VERSION}-win-x64.zip"
               unzip -q nwjs.zip
               rm -f nwjs.zip
             fi
-            echo "$PWD/nwjs-v${NW_VERSION}-win-x64" >> "$GITHUB_PATH"
-            echo "NW_BIN=$PWD/nwjs-v${NW_VERSION}-win-x64/nw.exe" >> "$GITHUB_ENV"
+            echo "$PWD/nwjs-sdk-v${NW_VERSION}-win-x64" >> "$GITHUB_PATH"
+            echo "NW_BIN=$PWD/nwjs-sdk-v${NW_VERSION}-win-x64/nw.exe" >> "$GITHUB_ENV"
           fi
 
       - name: Configure Localhost SSH

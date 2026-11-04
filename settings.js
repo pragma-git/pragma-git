@@ -1660,7 +1660,7 @@ async function gitClone( folderName, repoURL){
         };
         
     }catch(err){ 
-        console.log(err);
+        console.error('gitClone error:', err);
         opener.pragmaLog(err);
         displayAlert('Clone failed', err);
         return false;

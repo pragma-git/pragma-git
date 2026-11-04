@@ -42,25 +42,32 @@ class UIFixtures {
         this.clientKeyPub = `${this.clientKey}.pub`;
         execSync(`ssh-keygen -q -t ed25519 -N "" -f "${this.clientKey}"`);
 
-        // Start sshd using ssh_test_server.sh functions in bash
-        const startCmd = `
-            source "${sshScript}"
-            start_test_sshd || { echo "FAIL:$TEST_SSHD_ERROR"; exit 1; }
-            echo "PORT:$TEST_SSHD_PORT"
-            echo "PID:$TEST_SSHD_PID"
-            echo "DIR:$TEST_SSHD_DIR"
-        `;
-        const sshOut = execSync(startCmd, { shell: '/bin/bash' }).toString();
-        const portMatch = sshOut.match(/PORT:(\d+)/);
-        const pidMatch = sshOut.match(/PID:(\d+)/);
-        const dirMatch = sshOut.match(/DIR:([^\r\n]+)/);
+        // Start sshd using ssh_test_server.sh CLI functions
+        let startOut = '';
+        if (process.platform === 'win32') {
+            const wslScript = sshScript.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
+            const res = spawn('wsl', ['bash', wslScript, 'start'], { stdio: ['ignore', 'pipe', 'pipe'] });
+            startOut = await new Promise((resolve, reject) => {
+                let out = '', err = '';
+                res.stdout.on('data', d => out += d);
+                res.stderr.on('data', d => err += d);
+                res.on('close', code => code === 0 ? resolve(out) : reject(new Error(`wsl start sshd failed: ${err || out}`)));
+            });
+        } else {
+            startOut = execSync(`bash "${sshScript}" start`).toString();
+        }
+        const portMatch = startOut.match(/PORT:(\d+)/);
+        const pidMatch = startOut.match(/PID:(\d+)/);
+        const dirMatch = startOut.match(/DIR:([^\r\n]+)/);
+        const userMatch = startOut.match(/USER:([^\r\n]+)/);
 
         if (!portMatch || !pidMatch) {
-            throw new Error(`Failed to start test sshd: ${sshOut}`);
+            throw new Error(`Failed to start test sshd: ${startOut}`);
         }
         this.sshdPort = parseInt(portMatch[1], 10);
         this.sshdPid = parseInt(pidMatch[1], 10);
         this.sshdDir = dirMatch ? dirMatch[1].trim() : '';
+        this.sshdUser = userMatch ? userMatch[1].trim() : ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''));
 
         // Authorize developer/host's pre-existing default SSH key on the test server.
         // WHY A PRE-EXISTING KEY IS AUTHORIZED HERE:
@@ -78,12 +85,25 @@ class UIFixtures {
             path.join(os.homedir(), '.ssh', 'id_ecdsa.pub')
         ];
         if (this.sshdDir) {
-            const authKeysPath = path.join(this.sshdDir, 'authorized_keys');
-            for (const pubCandidate of defaultPubCandidates) {
-                if (fs.existsSync(pubCandidate)) {
-                    const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
-                    if (pubData) {
-                        fs.appendFileSync(authKeysPath, `${pubData}\n`);
+            if (process.platform === 'win32') {
+                for (const pubCandidate of defaultPubCandidates) {
+                    if (fs.existsSync(pubCandidate)) {
+                        const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
+                        if (pubData) {
+                            try {
+                                execSync(`wsl bash -c "printf '%s\\n' '${pubData.replace(/'/g, "'\\''")}' >> '${this.sshdDir}/authorized_keys'"`, { stdio: 'ignore' });
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } else {
+                const authKeysPath = path.join(this.sshdDir, 'authorized_keys');
+                for (const pubCandidate of defaultPubCandidates) {
+                    if (fs.existsSync(pubCandidate)) {
+                        const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
+                        if (pubData) {
+                            fs.appendFileSync(authKeysPath, `${pubData}\n`);
+                        }
                     }
                 }
             }
@@ -104,14 +124,15 @@ class UIFixtures {
         execSync(`rm -rf "${tempInit}"`, { stdio: 'ignore' });
 
         this.targetClonePath = path.join(this.tmpDir, 'cloned_repo_on_ssh_server');
+        const toWslPath = (p) => p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
         return {
             tmpDir: this.tmpDir,
             sshdPort: this.sshdPort,
             clientKey: this.clientKey,
             clientKeyPub: this.clientKeyPub,
-            originRepoPath: this.originRepoPath,
-            targetClonePath: this.targetClonePath,
-            user: os.userInfo().username
+            originRepoPath: process.platform === 'win32' ? toWslPath(this.originRepoPath) : this.originRepoPath,
+            targetClonePath: process.platform === 'win32' ? toWslPath(this.targetClonePath) : this.targetClonePath,
+            user: this.sshdUser || ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''))
         };
     }
 
@@ -174,20 +195,27 @@ class UIFixtures {
         const args = [
             `--remote-debugging-port=${port}`,
             `--user-data-dir=${this.userDataDir}`,
-            '--disable-gpu',
-            repoRoot
+            '--disable-gpu'
         ];
+        if (process.platform === 'linux') {
+            args.push('--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu-compositing');
+        }
+        args.push(repoRoot);
+
+        const remoteAuthKeys = process.platform === 'win32'
+            ? `${this.sshdDir}/authorized_keys`
+            : path.join(this.sshdDir, 'authorized_keys');
 
         this.nwProcess = spawn(nwBinary, args, {
             detached: false,
-            stdio: 'ignore',
+            stdio: ['ignore', 'inherit', 'inherit'],
             env: {
                 ...process.env,
                 HOME: testHome,
                 USERPROFILE: testHome,
                 PRAGMA_SETTINGS_DIR: this.testSettingsDir,
                 PRAGMA_SIGNAL_DIR: path.join(this.testSettingsDir, '.tmp'),
-                PRAGMA_REMOTE_AUTHORIZED_KEYS: path.join(this.sshdDir, 'authorized_keys')
+                PRAGMA_REMOTE_AUTHORIZED_KEYS: remoteAuthKeys
             }
         });
 
@@ -201,7 +229,16 @@ class UIFixtures {
         }
 
         if (this.sshdPid) {
-            try { process.kill(this.sshdPid, 'SIGTERM'); } catch (e) {}
+            if (process.platform === 'win32') {
+                try {
+                    const repoRoot = path.resolve(__dirname, '../../..');
+                    const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
+                    const wslScript = sshScript.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
+                    execSync(`wsl bash "${wslScript}" stop "${this.sshdPort}" "${this.sshdPid}" "${this.sshdDir}"`, { stdio: 'ignore' });
+                } catch (e) {}
+            } else {
+                try { process.kill(this.sshdPid, 'SIGTERM'); } catch (e) {}
+            }
             this.sshdPid = null;
         }
 
@@ -220,7 +257,9 @@ class UIFixtures {
                         fs.rmSync(this.tmpDir, { recursive: true, force: true });
                         break;
                     } catch (e) {
-                        try { execSync('sleep 0.2'); } catch (_) {}
+                        if (process.platform !== 'win32') {
+                            try { execSync('sleep 0.2'); } catch (_) {}
+                        }
                     }
                 }
             } else {
@@ -230,8 +269,8 @@ class UIFixtures {
                 const clonedRepoPath = path.join(this.targetClonePath, path.basename(this.originRepoPath, '.git'));
                 if (fs.existsSync(this.originRepoPath) && fs.existsSync(clonedRepoPath)) {
                     try {
-                        const originTree = execSync(`git --git-dir="${this.originRepoPath}" rev-parse HEAD^{tree}`).toString().trim();
-                        const cloneTree = execSync(`git -C "${clonedRepoPath}" rev-parse HEAD^{tree}`).toString().trim();
+                        const originTree = execSync(`git --git-dir="${this.originRepoPath}" log -1 --format=%T HEAD`).toString().trim();
+                        const cloneTree = execSync(`git -C "${clonedRepoPath}" log -1 --format=%T HEAD`).toString().trim();
                         console.log(`\n[UIFixtures] --- Git Tree Validation ---`);
                         console.log(`[UIFixtures] Source Tree: ${originTree} (${this.originRepoPath})`);
                         console.log(`[UIFixtures] Cloned Tree: ${cloneTree} (${clonedRepoPath})`);

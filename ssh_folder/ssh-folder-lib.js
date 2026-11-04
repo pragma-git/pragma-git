@@ -1031,6 +1031,11 @@ async function sshConfigTestLogin() {
     if (targetInputs && targetInputs.style.display !== 'none') {
         currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
         currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    } else if (!currentSshConfigState.username || !currentSshConfigState.server) {
+        let uInp = document.querySelector('input[name="username_clone"]') || document.querySelector('input[name="username"]');
+        let sInp = document.querySelector('input[name="server_clone"]') || document.querySelector('input[name="server"]');
+        if (uInp && uInp.value) currentSshConfigState.username = uInp.value.trim();
+        if (sInp && sInp.value) currentSshConfigState.server = sInp.value.trim();
     }
 
     let username = currentSshConfigState.username;
@@ -1044,7 +1049,8 @@ async function sshConfigTestLogin() {
         return;
     }
 
-    let keyToTest = currentSshConfigState.selectedKey || getDefaultSshKey();
+    let rawKeyInput = (document.getElementById('sshConfigKeyInput')?.value || '').trim();
+    let keyToTest = rawKeyInput || currentSshConfigState.selectedKey || getDefaultSshKey();
 
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
@@ -1130,10 +1136,22 @@ async function sshConfigDeployKey() {
     let statusEl = document.getElementById('sshConfigStatusText');
     let testBtn = document.getElementById('sshConfigTestBtn');
     let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let targetInputs = document.getElementById('sshConfigTargetInputs');
+
+    if (targetInputs && targetInputs.style.display !== 'none') {
+        currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
+        currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    } else if (!currentSshConfigState.username || !currentSshConfigState.server) {
+        let uInp = document.querySelector('input[name="username_clone"]') || document.querySelector('input[name="username"]');
+        let sInp = document.querySelector('input[name="server_clone"]') || document.querySelector('input[name="server"]');
+        if (uInp && uInp.value) currentSshConfigState.username = uInp.value.trim();
+        if (sInp && sInp.value) currentSshConfigState.server = sInp.value.trim();
+    }
 
     let username = currentSshConfigState.username;
     let server = currentSshConfigState.server;
-    let keyToDeploy = currentSshConfigState.selectedKey || getDefaultSshKey();
+    let rawKeyInput = (document.getElementById('sshConfigKeyInput')?.value || '').trim();
+    let keyToDeploy = rawKeyInput || currentSshConfigState.selectedKey || getDefaultSshKey();
 
     if (!username || !server) return;
 
@@ -1440,20 +1458,75 @@ function sshKeyEnv(sshUrl, keyOverride = '') {
     }
 
     if (!key) {
+        if (process.platform === 'win32' && process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS) {
+            let existingWslEnv = process.env.WSLENV || '';
+            let combined = existingWslEnv.split(':').filter(Boolean);
+            if (!combined.includes('PRAGMA_REMOTE_AUTHORIZED_KEYS')) {
+                combined.push('PRAGMA_REMOTE_AUTHORIZED_KEYS');
+            }
+            let wslAuthKeys = windowsToWslPath(process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS);
+            return {
+                PRAGMA_REMOTE_AUTHORIZED_KEYS: wslAuthKeys,
+                WSLENV: combined.join(':')
+            };
+        }
         return {};
     }
 
     const path = require('path');
     let envVal = '';
     if (process.platform === 'win32') {
-        // Under WSL, Windows ~/.ssh is mirrored to ~/.ssh, so pass bare filename
-        let base = path.basename(key);
-        if (base.endsWith('.pub')) base = base.slice(0, -4);
-        envVal = base;
-        return {
-            PRAGMA_SSH_KEY: envVal,
-            WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
+        // If key is a Unix/WSL path (e.g. /tmp/... or ~/.ssh/...)
+        if (key.startsWith('/') || key.startsWith('~')) {
+            let cleanKey = key.endsWith('.pub') ? key.slice(0, -4) : key;
+            envVal = cleanKey;
+            // If it's a Linux/WSL temp path (like /tmp/...), ensure it's also mirrored to ~/.ssh
+            // or usable directly with strict permissions.
+        } else if (/^[a-zA-Z]:[/\\]/.test(key)) {
+            // Windows absolute path (e.g. C:\Users\... or C:/Users/...)
+            // IMPORTANT: Keys on /mnt/c have 0777 permissions in WSL, causing OpenSSH to reject them with:
+            // "Permissions 0777 for ... are too open. It is required that your private key files are NOT accessible by others."
+            // Therefore, we mirror/copy the private & public key into WSL native ~/.ssh (chmod 600/644)
+            // so OpenSSH will accept the key without permission errors.
+            let keyBaseName = path.basename(key);
+            if (keyBaseName.endsWith('.pub')) keyBaseName = keyBaseName.slice(0, -4);
+            let wslKey = windowsToWslPath(key);
+            let cleanWslKey = wslKey.endsWith('.pub') ? wslKey.slice(0, -4) : wslKey;
+
+            try {
+                let { execSync } = require('child_process');
+                execSync(`wsl bash -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cp -f '${cleanWslKey}' ~/.ssh/'${keyBaseName}' && chmod 600 ~/.ssh/'${keyBaseName}' && if [ -f '${cleanWslKey}.pub' ]; then cp -f '${cleanWslKey}.pub' ~/.ssh/'${keyBaseName}.pub' && chmod 644 ~/.ssh/'${keyBaseName}.pub'; fi"`, { stdio: 'ignore' });
+                envVal = keyBaseName;
+            } catch (e) {
+                // Fallback to direct wslKey path if copy failed
+                envVal = cleanWslKey;
+            }
+        } else {
+            // Under WSL, Windows ~/.ssh is mirrored to ~/.ssh, so pass bare filename
+            let base = path.basename(key);
+            if (base.endsWith('.pub')) base = base.slice(0, -4);
+            envVal = base;
+        }
+
+        let wslEnvVars = {
+            PRAGMA_SSH_KEY: envVal
         };
+        let envList = ['PRAGMA_SSH_KEY'];
+        if (process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS) {
+            wslEnvVars.PRAGMA_REMOTE_AUTHORIZED_KEYS = windowsToWslPath(process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS);
+            envList.push('PRAGMA_REMOTE_AUTHORIZED_KEYS');
+        }
+
+        let existingWslEnv = process.env.WSLENV || '';
+        let combined = existingWslEnv.split(':').filter(Boolean);
+        for (let k of envList) {
+            if (!combined.includes(k)) {
+                combined.push(k);
+            }
+        }
+        wslEnvVars.WSLENV = combined.join(':');
+
+        return wslEnvVars;
     } else {
         // macOS / Linux: pass full path (strip .pub)
         if (key.endsWith('.pub')) key = key.slice(0, -4);

@@ -4611,7 +4611,7 @@ async function gitStatus(){
             return out;
         };
         function createEmptyGitStatus(){
-            status_data = [];
+            status_data = {};
             status_data.conflicted = [];
             status_data.modified = []; // zero length
             status_data.renamed = []; // zero length
@@ -7228,18 +7228,20 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 
 		try{
 
-			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, options, timeoutInMs);
+			 let out =  await runCommandWithTimeout(`wsl bash -c "${cmd.replace(/"/g, '\\"')}"`, options, timeoutInMs);
 			 
 			 console.log('Output:', out);
              return out;
 		} catch (err) {
 			  console.warn('Warning:', err.message);
-			  console.warn('stderr:', err.stderr?.toString());
-			  let errStr = (err?.message || err?.stderr?.toString() || err?.toString() || '');
+			  let stderrStr = err.stderr ? err.stderr.toString() : '';
+			  if (stderrStr) console.warn('stderr:', stderrStr);
+			  let errStr = (err?.message || stderrStr || err?.toString() || '');
 			  if (errStr.includes('is not recognized') || errStr.includes('cannot find the file specified') || err?.code === 127) {
 			      throw new Error(`WSL is required on Windows to access SSH repositories. Please install WSL by running 'wsl --install' in PowerShell.`);
 			  }
-			  throw new Error( `multiPlatformExecSync error: = ${err}`);
+			  let detailedMsg = stderrStr ? `${err.message || err} (stderr: ${stderrStr.trim()})` : (err.message || err);
+			  throw new Error( `multiPlatformExecSync error: = ${detailedMsg}`);
 		}
 
 	}

@@ -32,10 +32,12 @@ class CDPClient {
         });
     }
 
-    static async connectToTarget(titleOrUrlPattern, port = 9222, maxRetries = 30) {
+    static async connectToTarget(titleOrUrlPattern, port = 9222, maxRetries = 60) {
+        let lastTargets = [];
         for (let i = 0; i < maxRetries; i++) {
             try {
                 const targets = await CDPClient.getTargets(port);
+                lastTargets = targets;
                 const target = targets.find(t => 
                     (t.title && t.title.includes(titleOrUrlPattern)) || 
                     (t.url && t.url.includes(titleOrUrlPattern)) ||
@@ -51,7 +53,7 @@ class CDPClient {
             }
             await new Promise(r => setTimeout(r, 500));
         }
-        throw new Error(`Timeout waiting for target matching: "${titleOrUrlPattern}" on port ${port}`);
+        throw new Error(`Timeout waiting for target matching: "${titleOrUrlPattern}" on port ${port}. Discovered targets: ${JSON.stringify(lastTargets)}`);
     }
 
     async connect() {

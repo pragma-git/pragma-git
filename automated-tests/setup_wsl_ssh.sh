@@ -47,9 +47,11 @@ sed -i 's/#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 sed -i 's/#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 service ssh restart
 
-# 4. Configure Git identity for the user inside WSL
+# 4. Configure Git identity and safe directory for the user inside WSL
 sudo -u "$USER_NAME" git config --global user.name "Pragma-git CI"
 sudo -u "$USER_NAME" git config --global user.email "ci@pragma-git.local"
+sudo -u "$USER_NAME" git config --global --add safe.directory "*"
+git config --global --add safe.directory "*" 2>/dev/null || true
 
 # 5. Verify loopback connection to WSL sshd
 sudo -u "$USER_NAME" ssh -o StrictHostKeyChecking=no localhost "echo WSL SSH Server Ready: \$(uname -s) for \$(whoami)"

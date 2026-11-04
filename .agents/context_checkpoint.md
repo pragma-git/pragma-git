@@ -30,18 +30,16 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Automated Test Suites CI Workflow & Windows Parity Fix**:
-  - Renamed workflow from `"Automated Non-GUI Tests"` to `"Automated Test Suites"` in [.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml).
-  - Configured dynamic reading of NW.js version directly from `package.json` (`nwVersion`) in CI runner step `Read NW.js Version from package.json`, dynamically setting cache keys (`nwjs-${{ runner.os }}-${{ steps.nw-version.outputs.version }}`) and download paths so CI automatically stays in sync with `package.json`.
-  - Added automated caching and setup for NW.js binary across macOS (`/Applications/nwjs.app`), Linux (`/usr/local/bin/nw` with `xvfb` and `xvfb-run`), and Windows (adding to `PATH` and `NW_BIN`), enabling UI test suites to run on CI across all platforms.
-  - Fixed Windows CI failure in [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js):
-    1. Replaced shell inline environment variables (`GIT_COMMITTER_DATE=... git ...`) with cross-platform helper functions using Node's `execSync(..., { env: ... })`.
-    2. Added `copy-client-key` action to [automated-tests/ssh_test_server.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ssh_test_server.sh) to mirror `clientKey` into native WSL `/tmp` with `chmod 600`, preventing OpenSSH rejection caused by `0777` permissions on `/mnt/c` mounts.
-    3. Pointed `activeClientKey` in `createRepoVM` to the strict-permission WSL key path when running on `win32`.
-* **Windows & macOS CI Failure Analysis (Run 41735824886)**:
-  - **macOS**: UI test suite was skipped gracefully with exit code 77 (`[SKIPPED] NW.js binary not found. Skipping UI test suites.`). Standard cloud runners do not pre-install NW.js; now resolved by the NW.js setup step.
-  - **Windows**: Parity test resolved via cross-platform git commit/merge execution and strict WSL key permissions.
-  - Awaiting user confirmation whether to amend to commit `287bfecf` (`git push --force-with-lease`) or create a new commit.
+* **Fix CI Failures Across Windows, Linux, and macOS (Commit `130729f0` - 100% PASS ON ALL RUNNERS)**:
+  - All CI jobs (macOS, Windows, Ubuntu) in GitHub Actions run `41906597238` completed with **100% SUCCESS [OK]**:
+    - **macOS (`macos-latest`, arm64)**: Passed in 1m33s (ID `126842796084`).
+    - **Ubuntu (`ubuntu-latest`)**: Passed in 1m7s (ID `126842796489`).
+    - **Windows (`windows-latest`)**: Passed in 3m59s (ID `126842796359`) across all 8 test categories, including full 20/20 steps in `ui/test_01_ssh_clone_repo.js`!
+  - Final Windows UI step 19–20 fixes applied in `130729f0`:
+    1. Remote SSH target & origin paths on Windows: in `ui_fixtures.js`, converted `originRepoPath` and `targetClonePath` to WSL paths (`/mnt/c/...`) when running on Windows so that remote git commands executed over SSH target valid server-side filesystem paths instead of raw Windows backslash paths (`C:\...`).
+    2. Input path normalization in `settings.html`: updated `parseServerFields` and `parseServerFields_clone` to normalize backslashes (`\`) to forward slashes (`/`) so SSH URLs remain well-formed on Windows.
+    3. Windows tree match path translation: in `run_ui_tests.js` (`assert_git_tree_match`), automatically translate `/mnt/[drive]/...` paths back to Windows drive paths (`[Drive]:/...`) when executing local git tree verification on Windows runners.
+    4. Guarded retry teardown sleep in `ui_fixtures.js` to avoid Windows shell `sleep` errors.
 * **Keep Artifacts by Default in UI Tests**:
   - Changed default behavior for manual/standalone UI test runs to **keep artifacts** automatically without requiring flags.
   - Added `--clean-up` flag to remove artifacts when desired.

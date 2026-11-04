@@ -1746,8 +1746,11 @@
         const server   = document.querySelector('input[name="server"]').value.trim();
         let folder   = document.querySelector('input[name="folder"]').value.trim();
     
-        if (folder && !folder.startsWith('/')) {
-            folder = '/' + folder;
+        if (folder) {
+            folder = folder.replace(/\\/g, '/');
+            if (!folder.startsWith('/')) {
+                folder = '/' + folder;
+            }
         }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);
@@ -1784,8 +1787,11 @@
         const server   = document.querySelector('input[name="server_clone"]').value.trim();
         let folder   = document.querySelector('input[name="folder_clone"]').value.trim();
     
-        if (folder && !folder.startsWith('/')) {
-            folder = '/' + folder;
+        if (folder) {
+            folder = folder.replace(/\\/g, '/');
+            if (!folder.startsWith('/')) {
+                folder = '/' + folder;
+            }
         }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);
