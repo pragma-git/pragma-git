@@ -82,6 +82,9 @@ const sandbox = {
             return { value: '', style: {} };
         }
     },
+    window: {
+        _msgAllowAction: true
+    },
     getMode: () => currentMode,
     _setMode: (mode) => { currentMode = mode; sandbox.localState.mode = mode; },
     saveSettings: () => { savedSettingsCallCount++; },
@@ -208,6 +211,18 @@ async function runTests() {
         messageElement.placeholder.includes('You may write what is ongoing here'),
         'restoreRepoDraftMessage immediately clears historical text and displays ongoing placeholder'
     );
+
+    // Test 9: saveCurrentRepoDraftMessage does NOT overwrite draft when editing previous commit message via double-click (_msgAllowAction === false in NO_FILES_TO_COMMIT)
+    currentMode = 'NO_FILES_TO_COMMIT';
+    sandbox.window._msgAllowAction = false;
+    sandbox.state.repos[0].draftMessage = '';
+    messageElement.value = 'Amended commit message from double-click';
+    sandbox.saveCurrentRepoDraftMessage(true, 0);
+    assert(
+        sandbox.state.repos[0].draftMessage === '',
+        'saveCurrentRepoDraftMessage ignores updates while amending previous commit message via double-click in NO_FILES_TO_COMMIT mode'
+    );
+    sandbox.window._msgAllowAction = true;
 
     printSuiteResult();
 }

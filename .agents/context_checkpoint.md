@@ -30,6 +30,9 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix `ReferenceError: window is not defined` in `saveCurrentRepoDraftMessage` (`test_04_draft_message.js`)**:
+  - Guarded `window._msgAllowAction` with `typeof window !== 'undefined'` in [`saveCurrentRepoDraftMessage`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L8666-L8669) in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) so headless Node VM contexts do not throw `ReferenceError: window is not defined`.
+  - Added `window: { _msgAllowAction: true }` to the VM sandbox and added Test 9 in [`test_04_draft_message.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js) verifying that double-click amending (`_msgAllowAction === false` in `NO_FILES_TO_COMMIT`) does not overwrite the repository draft note.
 * **Fix CI Failures Across Windows, Linux, and macOS (Commit `130729f0` - 100% PASS ON ALL RUNNERS)**:
   - All CI jobs (macOS, Windows, Ubuntu) in GitHub Actions run `41906597238` completed with **100% SUCCESS [OK]**:
     - **macOS (`macos-latest`, arm64)**: Passed in 1m33s (ID `126842796084`).

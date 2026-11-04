@@ -845,7 +845,7 @@ async function _callback( name, event){
       case 'message_dblclick': {
 
             // If we already have a cursor in the textarea (already editing):
-            if (window._messageHadFocus) {
+            if (window._messageHadFocus && readMessage().trim().length > 0) {
                 break; // normal dblclick (select word)
             }
 
@@ -870,6 +870,7 @@ async function _callback( name, event){
 
                 writeTextOutput({ value: commitMessage });
                 document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+                document.getElementById('store-button').disabled = false;
                 
                 messageKeyUpEvent();  // Will act as if I have typed -- shows some messages
             }
@@ -2989,12 +2990,19 @@ async function _callback( name, event){
 
         if (getMode() === 'NO_FILES_TO_COMMIT') {
             let hasDraft = (readMessage().trim().length > 0);
-            if (hasDraft) {
-                document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
-            } else if (window._msgAllowAction) {
+            if (!hasDraft) {
+                window._msgAllowAction = true;
+                document.getElementById('store-button').disabled = true;
                 document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
                 document.getElementById('edit_commit_text_div').style.visibility = 'visible';
+                return;
             }
+            if (!window._msgAllowAction) {
+                document.getElementById('edit_commit_text_div').innerHTML = '(esc-key to cancel)';
+                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
+                return;
+            }
+            document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
             return;
         }
         
@@ -3962,9 +3970,11 @@ async function _setMode( inputModeName){
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
             }
 
-            let draft = getRepoDraftMessage();
-            textOutput.value = draft;
-            writeTextOutput(textOutput);
+            if (window._msgAllowAction) {
+                let draft = getRepoDraftMessage();
+                textOutput.value = draft;
+                writeTextOutput(textOutput);
+            }
 
             // Store button should be disabled if no modified files to commit (unless amending)
             let isAmending = (document.getElementById('amend_commit_checkbox') && document.getElementById('amend_commit_checkbox').checked) || !window._msgAllowAction;
@@ -8654,6 +8664,9 @@ function readMessage(){
 let _saveDraftTimeout = null;
 
 function saveCurrentRepoDraftMessage(syncSave = false, repoIdx = state.repoNumber) {
+    if (typeof window !== 'undefined' && !window._msgAllowAction && getMode() === 'NO_FILES_TO_COMMIT') {
+        return;
+    }
     if (repoIdx >= 0 && state.repos && state.repos[repoIdx]) {
         if (localState.historyNumber < 0 && getMode() !== 'HISTORY') {
             state.repos[repoIdx].draftMessage = readMessage();

@@ -277,7 +277,7 @@
                 onkeyup="_callback('message_key_up');"
                 oninput="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
-                onblur="window._messageHadFocus = false; window._msgAllowAction = true; _callback('message_blur');"
+                onblur="window._messageHadFocus = false; _callback('message_blur'); window._msgAllowAction = true;"
             
                 placeholder="You may write what is ongoing here,&#10;&#10;Change text to commit message (or stash name) when done"
                 readonly
@@ -997,6 +997,8 @@
                     
                     // Hint text about edit commit message
                     if (getMode() == 'NO_FILES_TO_COMMIT'){
+                        restoreRepoDraftMessage();
+                        document.getElementById('store-button').disabled = true;
                         document.getElementById('message').blur();  // Unfocus
                         document.getElementById('up-arrow').click();
                         let hasDraft = (readMessage().trim().length > 0);
