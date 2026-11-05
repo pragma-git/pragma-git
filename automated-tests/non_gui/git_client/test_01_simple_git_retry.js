@@ -68,10 +68,13 @@ async function runTests() {
         assert.strictEqual(failedAsExpected, true, 'Should fail when maxRetries exhausted');
         assertPass('1.3: Throws error when maxRetries is exhausted with permanent lock');
 
-        // Test 4: Chainable methods remain chainable
+        // Test 4: Synchronous builder methods remain chainable and addConfig awaits completion
         const chained = git.env({ GIT_AUTHOR_NAME: 'Chained Author' });
-        assert.ok(chained, 'env() returns git instance');
-        assertPass('1.4: Chainable configuration methods (env, addConfig) maintain fluent interface');
+        assert.ok(chained, 'env() returns git instance synchronously');
+        const addConfigPromise = git.addConfig('user.name', 'Updated Test User');
+        assert.strictEqual(typeof addConfigPromise?.then, 'function', 'addConfig() returns an awaitable Promise');
+        await addConfigPromise;
+        assertPass('1.4: Chainable builder methods (env) maintain fluent interface and addConfig awaits completion');
 
     } catch (err) {
         assertFail('General failure in simpleGitWithRetry tests', err.stack);
