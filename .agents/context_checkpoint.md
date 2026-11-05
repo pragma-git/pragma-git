@@ -30,6 +30,8 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Document Shared Dialog Reuse (`forcePushOrPullPushDialog`)**:
+  - Added explicit documentation in both [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) explaining that `<dialog id="forcePushOrPullPushDialog">` is a single, dynamically reused component configured on the fly by `showForcePushOrPullPushDialog()` for `AMENDED_COMMIT`, `COLLEAGUE_COMMITS`, and `GENERAL_BEHIND` fallback.
 * **Refine Divergence Reason Detection via Git Reflog (`AMENDED_COMMIT` vs `COLLEAGUE_COMMITS`)**:
   - Found the flaw with checking `HEAD~1 === origin~1`: when a teammate pushes 1 commit and you push 1 commit from the same initial branch point, both commits also share `HEAD~1 === origin~1`!
   - Updated `detectDivergenceReason()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to inspect the local git reflog (`log -g -1 --format=%gs HEAD` and `HEAD@{1}` vs `origin/<branch>`).

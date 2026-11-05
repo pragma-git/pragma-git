@@ -798,6 +798,11 @@
 
 
     <!-- Force push, or pull dialog -->   
+    <!-- NOTE: This single dialog (#forcePushOrPullPushDialog) is dynamically reused for all diverged scenarios:
+         1) AMENDED_COMMIT: User amended a commit already on remote (recommends 'Overwrite server')
+         2) COLLEAGUE_COMMITS: Teammate pushed newer commits to remote (recommends 'Download updates')
+         3) GENERAL_BEHIND / Fallback: Standard prompt when branch is behind
+         Text, descriptions, and recommended radio selection are populated dynamically in showForcePushOrPullPushDialog() in app.js -->
   
     <dialog id="forcePushOrPullPushDialog"  class="error" style="overflow: unset">  
         

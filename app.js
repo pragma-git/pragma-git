@@ -5430,7 +5430,11 @@ async function detectDivergenceReason() {
     }
 }
 
-// Prepare and display forcePushOrPullPushDialog with context-aware labels
+// Prepare and display forcePushOrPullPushDialog with context-aware labels.
+// Reuses the single #forcePushOrPullPushDialog in app.html across all diverged scenarios:
+//   - Case 1 (AMENDED_COMMIT): User modified a commit after pushing it; pre-selects & recommends 'Overwrite server'
+//   - Case 2 (COLLEAGUE_COMMITS): Remote has newer commits from another machine/collaborator; pre-selects & recommends 'Download updates'
+//   - Fallback (GENERAL_BEHIND): Default prompt when branch is behind remote
 async function showForcePushOrPullPushDialog() {
     let reason = await detectDivergenceReason();
     let titleEl = document.getElementById('divergedDialogTitle');
