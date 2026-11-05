@@ -587,6 +587,25 @@
     </dialog>  
  
  
+    <!-- Uncommitted files before pull warning dialog -->
+
+    <dialog id="uncommittedBeforePullDialog" class="warning">
+        <b>Uncommitted changes</b><br>
+        <br>
+        <div>
+            <span>
+                You have modified files in your repository.<br><br>
+                Please add a description and press <b>Store</b> (or click the <b>Stash</b> icon) before downloading updates from the server.
+            </span>
+            <br><br>
+            <button style="float:right"
+                onclick="document.getElementById('uncommittedBeforePullDialog').close();">
+                OK
+            </button>
+        </div>
+    </dialog>
+
+
     <!--  Amend alert dialog  --> 
 
     <dialog id="amendDialog"  class="warning">  
@@ -802,7 +821,7 @@
 
         <label for="behindPull">
             <input type="radio" id="behindPull" name="behindRemoteRadiobuttonGroup" value="Pull" checked>
-            Get remote, and push (pull --rebase, and push)
+            Download updates and combine with local changes (pull)
         </label>
 
         <!-- Radio-buttons -->  
@@ -810,7 +829,7 @@
         
         <label for="behindForcePush">
             <input type="radio" id="behindForcePush" name="behindRemoteRadiobuttonGroup" value="ForcePush">
-            Force push -- overwrite remote commits (dangerous)
+            Overwrite server -- discard remote updates (dangerous)
         </label>
         
         

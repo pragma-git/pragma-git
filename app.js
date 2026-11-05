@@ -5659,6 +5659,18 @@ async function gitPull(){
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
 
+    // Protect against rebasing/pulling over uncommitted changes
+    if (status_data && status_data.changedFiles) {
+        pragmaLog('   gitPull blocked -- uncommitted changes present');
+        let pullWarnDialog = document.getElementById('uncommittedBeforePullDialog');
+        if (pullWarnDialog && typeof pullWarnDialog.showModal === 'function') {
+            pullWarnDialog.showModal();
+        } else {
+            displayAlert('Uncommitted changes', 'Please Store or Stash modified files before downloading updates.', 'warning');
+        }
+        return;
+    }
+
     // Pull
     if (status_data.behind > 0){
         setStatusBar( 'Pulling files  (from remote ' + remoteBranch + ')');
