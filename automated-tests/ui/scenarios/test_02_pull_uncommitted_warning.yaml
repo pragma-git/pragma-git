@@ -1,0 +1,215 @@
+name: "Diverged Remote - Pull Warning and Diverged Options"
+description: "Clones a remote repository, creates a diverged state (ahead and behind), tests uncommitted pull warning dialog, and tests the diverged push dialog with pull and force-push options"
+
+steps:
+  # 1. Connect to Main Window
+  - name: "Connect to Main Window"
+    action: connect_window
+    target: "app.html"
+    verify: "Connected to Pragma-git main window DOM."
+
+  # Dismiss upgrade dialog if shown on version 0.0.0
+  - name: "Dismiss New Version Dialog (if present)"
+    action: click_if_present
+    selector: "#waitButton"
+    timeout: 2000
+
+  # Dismiss 'No repositories' Alert if shown on fresh profile
+  - name: "Dismiss 'No repositories' Alert (if present)"
+    action: click_if_present
+    selector: "#alertDialog button#no"
+    timeout: 2000
+
+  # 2. Clone the remote repository to create a real remote tracking repo
+  - name: "Clone Remote Repository and Register in Pragma-git"
+    action: eval
+    code: |-
+      (async () => {
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+        const localClone = path.join(${TMP_DIR_JSON}, 'local_diverged_repo');
+        if (!fs.existsSync(localClone)) {
+          execSync(`git clone "${${ORIGIN_REPO_PATH_JSON}}" "${localClone}"`);
+          execSync(`git -C "${localClone}" config user.name "Test Local"`);
+          execSync(`git -C "${localClone}" config user.email "local@test.local"`);
+        }
+        await addExistingRepo(localClone);
+        await _update();
+      })()
+    verify: "Cloned remote repository is registered and active in Pragma-git."
+
+  # 3. Wait for clean initial state
+  - name: "Wait for Clean Status"
+    action: wait
+    ms: 1200
+    verify: "Pragma-git initializes repository status."
+
+  # 4. Create Diverged State:
+  #    - Commit on remote origin (via a secondary temp clone) -> makes local BEHIND by 1
+  #    - Commit on local clone -> makes local AHEAD by 1
+  - name: "Create Diverged Commits on Remote and Local"
+    action: eval
+    code: |-
+      (() => {
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+
+        // 4a. Push a new commit to remote from a temporary workspace
+        const tempOther = path.join(${TMP_DIR_JSON}, 'temp_other_committer');
+        execSync(`git clone "${${ORIGIN_REPO_PATH_JSON}}" "${tempOther}"`);
+        execSync(`git -C "${tempOther}" config user.name "Other Developer"`);
+        execSync(`git -C "${tempOther}" config user.email "other@test.local"`);
+        fs.appendFileSync(path.join(tempOther, 'README.md'), 'Remote change by other developer\n');
+        execSync(`git -C "${tempOther}" commit -am "Commit from other developer on remote"`);
+        execSync(`git -C "${tempOther}" push origin main`);
+        execSync(`rm -rf "${tempOther}"`);
+
+        // 4b. Make a local commit in our repository without pulling
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        fs.appendFileSync(path.join(localFolder, 'sample.txt'), 'Local independent change\n');
+        execSync(`git -C "${localFolder}" commit -am "Local commit made ahead"`);
+      })()
+    verify: |-
+      - Remote origin has 1 new commit.
+      - Local repository has 1 new independent commit.
+      - Branches have diverged.
+
+  # 5. Fetch remote updates so Pragma-git detects the diverged state (ahead and behind)
+  - name: "Fetch Remote Status"
+    action: eval
+    code: |-
+      (async () => {
+        await gitFetch();
+        await _update();
+      })()
+    verify: "Pragma-git fetches remote tracking status and detects ahead > 0 and behind > 0."
+
+  # 6. Wait for update loop and verify both Push and Pull arrows are visible
+  - name: "Verify Both Pull and Push Arrows Visible in Diverged State"
+    action: wait_for_selector
+    selector: "#top-titlebar-pull-icon"
+    verify: |-
+      - Local branch is both AHEAD and BEHIND remote.
+      - Both Push arrow and Pull arrow are active on the titlebar.
+
+  # =========================================================================
+  # PART A: Test Pull Warning when having Uncommitted Changes
+  # =========================================================================
+
+  # 7. Add uncommitted changes to the working tree
+  - name: "Add Uncommitted Changes in Diverged State"
+    action: eval
+    code: |-
+      (() => {
+        const fs = require('fs');
+        const path = require('path');
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        fs.writeFileSync(path.join(localFolder, 'uncommitted_work.txt'), 'Ongoing unsaved work\n');
+      })()
+    verify: "Uncommitted file created in working tree."
+
+  # 8. Wait for update loop to register changed files
+  - name: "Wait for Change Detection"
+    action: wait
+    ms: 1500
+    verify: "Pragma-git detects uncommitted files."
+
+  # 9. Click Pull icon while having uncommitted files
+  - name: "Click Pull Icon (with Uncommitted Changes)"
+    action: click
+    selector: "#top-titlebar-pull-icon"
+    verify: |-
+      - gitPull detects uncommitted changes.
+      - Pull is blocked to prevent rebase conflicts destroying local work.
+      - 'uncommittedBeforePullDialog' opens with warning.
+
+  # 10. Assert Uncommitted Warning Dialog is shown
+  - name: "Verify Uncommitted Warning Dialog Displays"
+    action: assert_text
+    selector: "#uncommittedBeforePullDialog div span"
+    expected: "Please add a description and press Store"
+    verify: "Dialog explains that uncommitted changes must be Stored or Stashed before pulling."
+
+  # 11. Dismiss the dialog
+  - name: "Dismiss Uncommitted Warning Dialog"
+    action: click
+    selector: "#uncommittedBeforePullDialog button"
+    verify: "Dialog closes cleanly."
+
+  # 12. Discard the uncommitted test file to clear working tree for push test
+  - name: "Clean Up Uncommitted Test File"
+    action: eval
+    code: |-
+      (async () => {
+        const fs = require('fs');
+        const path = require('path');
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        const uncommittedFile = path.join(localFolder, 'uncommitted_work.txt');
+        if (fs.existsSync(uncommittedFile)) fs.unlinkSync(uncommittedFile);
+        await _update();
+      })()
+    verify: "Working tree is clean again (no uncommitted files, remaining ahead 1 and behind 1)."
+
+  # =========================================================================
+  # PART B: Test Diverged Push Dialog (Pull vs Force-Push options)
+  # =========================================================================
+
+  # 13. Wait for clean state detection
+  - name: "Wait for Clean Status"
+    action: wait
+    ms: 1200
+    verify: "Working tree is clean, ready for push test."
+
+  # 14. Click Push icon while diverged (behind remote)
+  - name: "Click Push Icon While Diverged"
+    action: click
+    selector: "#top-titlebar-push-icon"
+    verify: |-
+      - Push is attempted against remote origin.
+      - Remote rejects the push because branch is behind.
+      - 'forcePushOrPullPushDialog' opens presenting the diverged options.
+
+  # 15. Assert Diverged Push Dialog is shown with beginner-friendly options
+  - name: "Verify Diverged Options Dialog Opens with Beginner-Friendly Options"
+    action: assert_text
+    selector: "#forcePushOrPullPushDialog label[for='behindPull']"
+    expected: "Download updates and combine with local changes"
+    verify: |-
+      - Modal 'forcePushOrPullPushDialog' is open.
+      - Radio option 1 offers: 'Download updates and combine with local changes (pull)'.
+      - Radio option 2 offers: 'Overwrite server -- discard remote updates (dangerous)'.
+
+  # 16. Verify Force Push option label is present
+  - name: "Verify Force Push Radio Option Label"
+    action: assert_text
+    selector: "#forcePushOrPullPushDialog label[for='behindForcePush']"
+    expected: "Overwrite server -- discard remote updates"
+    verify: "Force Push option clearly warns about overwriting server commits."
+
+  # 17. Close the diverged dialog via Cancel
+  - name: "Cancel Diverged Push Dialog"
+    action: click
+    selector: "#forcePushOrPullPushDialog button#cancelDetachedDialog"
+    verify: |-
+      - Dialog is dismissed without executing force push or pull.
+      - Repositories remain safe and unchanged.
+
+  # 18. Verify both Push and Pull icons are still visible after canceling dialog
+  - name: "Wait for UI Refresh After Canceling Dialog"
+    action: wait
+    ms: 1200
+    verify: "Pragma-git updates UI after dialog dismissal."
+
+  - name: "Verify Both Arrows Remain Visible After Canceling Dialog"
+    action: eval
+    code: |-
+      (() => {
+        const pushVis = document.getElementById('top-titlebar-push-icon').style.visibility;
+        const pullVis = document.getElementById('top-titlebar-pull-icon').style.visibility;
+        if (pushVis !== 'visible' || pullVis !== 'visible') {
+          throw new Error(`Expected both push and pull icons to be visible! (push: ${pushVis}, pull: ${pullVis})`);
+        }
+      })()
+    verify: "Both push and pull arrows remain visible because branch is still both ahead and behind."

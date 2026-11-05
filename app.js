@@ -1961,7 +1961,12 @@ async function _callback( name, event){
         }
         
         if (event == 'ForcePush'){
-            gitPush( forcePush = true); 
+            await gitPush( forcePush = true); 
+            await _update2();
+        }
+
+        if (event == 'Cancel'){
+            await _update2();
         }
         
         break;
@@ -5436,7 +5441,7 @@ async function gitPush( forcePush){
             
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
             try{
-                push();
+                await push();
                 console.log('success push - first attempt');
             }catch(err){
                 // Try again
@@ -5475,14 +5480,20 @@ async function gitPush( forcePush){
                           ( err.toString()).includes('not have locally')   ){
                         // Give options to 'pull' or 'push --force'
                         document.getElementById('forcePushOrPullPushDialog').showModal();
+                        return;
                     }else{
                         // General error dialog
                         displayLongAlert('Push Error' + attempt , err, 'error');
+                        return;
                     }
                 }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( '--force', 'origin', 'refs/notes/branchname', onPush);    
+                try {
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( '--force', 'origin', 'refs/notes/branchname', onPush);    
+                } catch(notesErr) {
+                    console.warn('Failed pushing branchname notes:', notesErr);
+                }
                 
                 if (ERR){
                     throw 'Push Error';

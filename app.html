@@ -859,7 +859,10 @@
         </button>   
          
         <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
-            onclick="document.getElementById('forcePushOrPullPushDialog').close();">
+            onclick="
+                document.getElementById('forcePushOrPullPushDialog').close();
+                _callback('clicked-forcePushOrPullPushDialog', 'Cancel');
+            ">
             Cancel
         </button>  
         

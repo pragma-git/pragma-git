@@ -162,10 +162,12 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                 .replace(/\$\{TARGET_CLONE_PATH_JSON\}/g, JSON.stringify(env.targetClonePath))
                 .replace(/\$\{CLIENT_KEY_JSON\}/g, JSON.stringify(env.clientKey))
                 .replace(/\$\{CLIENT_KEY_PUB_JSON\}/g, JSON.stringify(env.clientKeyPub))
+                .replace(/\$\{TMP_DIR_JSON\}/g, JSON.stringify(env.tmpDir))
                 .replace(/\$\{ORIGIN_REPO_PATH\}/g, env.originRepoPath)
                 .replace(/\$\{TARGET_CLONE_PATH\}/g, env.targetClonePath)
                 .replace(/\$\{CLIENT_KEY\}/g, env.clientKey)
-                .replace(/\$\{CLIENT_KEY_PUB\}/g, env.clientKeyPub);
+                .replace(/\$\{CLIENT_KEY_PUB\}/g, env.clientKeyPub)
+                .replace(/\$\{TMP_DIR\}/g, env.tmpDir);
         };
 
         const steps = doc.steps || [];

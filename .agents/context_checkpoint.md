@@ -30,6 +30,26 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Arrow Disappearance on Diverged Push Cancellation**:
+  - Identified that inside `gitPush()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), the internal async `push()` function was invoked unawaited (`push()`), causing it to run in the background while subsequent status updates proceeded prematurely.
+  - When a push failed because the local branch was behind the remote, `push()` was not returning early, proceeding to attempt a notes force-push and throwing an unhandled rejection.
+  - Updated `gitPush()` to `await push()`, return immediately when an error or diverged condition is caught, and wrapped the notes push in try/catch.
+  - Updated `<dialog id="forcePushOrPullPushDialog">` Cancel button in [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) to send `_callback('clicked-forcePushOrPullPushDialog', 'Cancel')`, which calls `_update2()` to refresh `status_data.ahead` and `status_data.behind`.
+  - Added verification in `test_02_pull_uncommitted_warning.yaml` checking that both push and pull arrows remain visible after dismissing the diverged push dialog with Cancel.
+* **Enhance UI Test `test_02_pull_uncommitted_warning` with Real Remote & Diverged State Verification**:
+  - Rewrote [`automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml) to run against the real remote repository (`remote_clone_source.git`) created by `ui_fixtures.js`.
+  - Creates a true diverged state (`ahead 1` and `behind 1`) by pushing a commit to origin from a secondary workspace and committing locally.
+  - Tests **Part A**: With uncommitted files in diverged state, clicking the Pull arrow triggers `uncommittedBeforePullDialog` advising the user to Store/Stash first.
+  - Tests **Part B**: With working tree clean in diverged state, clicking the Push arrow triggers `forcePushOrPullPushDialog`, asserting the presence of the novice-friendly options (*"Download updates and combine with local changes (pull)"* vs *"Overwrite server -- discard remote updates (dangerous)"*), then safely cancels.
+* **Fix Template Variable Resolution in UI Test Runner (`${TMP_DIR}`, `${TMP_DIR_JSON}`)**:
+  - Identified root cause of failure in `test_02_pull_uncommitted_warning`: `resolveTemplate` in [`automated-tests/ui/lib/run_ui_tests.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js) was missing mappings for `${TMP_DIR}` and `${TMP_DIR_JSON}`, leaving `${TMP_DIR}` unexpanded as an empty string and attempting `git -C "/test_pull_repo"`.
+  - Added `${TMP_DIR}` and `${TMP_DIR_JSON}` mappings to `resolveTemplate` in [`run_ui_tests.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js).
+  - Renamed the test repo to `pull_warning_test_repo` and used `${TMP_DIR_JSON} || os.tmpdir()` in [`test_02_pull_uncommitted_warning.yaml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml) to ensure it is isolated to the test sandbox and avoids any collisions with existing user repositories.
+* **Add Convenience Script `_run_02_pull_uncommitted_warning`**:
+  - Created [`automated-tests/ui/_run_02_pull_uncommitted_warning`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/_run_02_pull_uncommitted_warning) matching `_run_01_ssh_clone_repo` with cliHelpLine support, `--step`/`-i`, `--clean-up`, and `--port` options.
+* **Add UI Test Suite for Pull Warning on Uncommitted Changes (`test_02_pull_uncommitted_warning`)**:
+  - Created [`automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml) and runner script [`test_02_pull_uncommitted_warning.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.js).
+  - Automatically initializes a test repository, generates uncommitted working changes, triggers the Pull action via `_callback('clicked-pull-button')`, asserts that `uncommittedBeforePullDialog` opens with the expected warning message, dismisses it with the OK button, and verifies the repository state remains intact.
 * **Safeguard `gitPull()` with `<dialog>` against Uncommitted Work & Beginner-Friendly Diverged Prompts**:
   - Implemented `<dialog id="uncommittedBeforePullDialog" class="warning">` in [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) following Pragma-git's native modal `<dialog>` pattern.
   - In [`gitPull()`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L5650-L5666), checks `status_data.changedFiles` before running `pull --rebase`. If uncommitted changes exist, displays `uncommittedBeforePullDialog` advising the user to Store or Stash before downloading updates, preventing local edits from colliding with incoming commits or rebase conflict markers.
