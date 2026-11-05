@@ -80,7 +80,9 @@ REMAINING_ARGUMENTS=''
         else
             # Add to argument list
             filtered_args+=("$1")  # String array
-            REMAINING_ARGUMENTS="${REMAINING_ARGUMENTS} '$1'"  # QUOTE
+            # Safely shell-quote argument for remote bash eval (handle single quotes and backslashes)
+            ESCAPED_ARG="${1//\'/\'\\\'\'}"
+            REMAINING_ARGUMENTS="${REMAINING_ARGUMENTS} '${ESCAPED_ARG}'"
             shift
         fi
     done

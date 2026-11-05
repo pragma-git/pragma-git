@@ -5032,12 +5032,6 @@ async function gitAddCommitAndPush( message){
     var status_data; 
     let forcePush = false;  // Default, if not git amend    
     
-    // Fix for ssh
-    if (  state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
-        message = `"${message}"`;
-    }
-
-    
     //
     // PREPARE
     //
@@ -7027,6 +7021,12 @@ function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, retur
     // If folder2 is UNC path (//vll.se/...) then topFolder is correct
     if ( folder2.startsWith('//') ){
         return topFolder.replaceAll( '/', '\\');  // Return using Windows '\'
+    }
+    
+    // Only applies if git rev-parse returned a UNC path (//server/share/...) for a mapped drive (Z:/...)
+    let topFolderSlash = topFolder.replaceAll('\\', '/');
+    if (!topFolderSlash.startsWith('//')) {
+        return topFolder.replaceAll('/', '\\');
     }
     
     // 

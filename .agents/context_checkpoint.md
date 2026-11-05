@@ -30,6 +30,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Windows Path Truncation and Commit Message Escaping**:
+  - Found and fixed root cause for `ENOENT: no such file or directory, open 'C:\Users\R\sample.txt'` on Windows CI in `fixWindowsMappedNetworkDrive()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) by only triggering for UNC paths (`//server/share`).
+  - Removed double-quoting hack `message = '"' + message + '"'` in `gitAddCommitAndPush()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) which caused backslashes (`\`) and special characters to be mangled or corrupt bash expansion.
+  - Hardened argument escaping in [`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client) (`${1//\'/\'\\\'\'}`) so commit messages and raw Git arguments pass cleanly through `eval` over SSH without losing backslashes or corrupting quotes.
 * **Document Shared Dialog Reuse (`forcePushOrPullPushDialog`)**:
   - Added explicit documentation in both [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) explaining that `<dialog id="forcePushOrPullPushDialog">` is a single, dynamically reused component configured on the fly by `showForcePushOrPullPushDialog()` for `AMENDED_COMMIT`, `COLLEAGUE_COMMITS`, and `GENERAL_BEHIND` fallback.
 * **Refine Divergence Reason Detection via Git Reflog (`AMENDED_COMMIT` vs `COLLEAGUE_COMMITS`)**:
