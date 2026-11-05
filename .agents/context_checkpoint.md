@@ -30,6 +30,21 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Refine Divergence Reason Detection via Git Reflog (`AMENDED_COMMIT` vs `COLLEAGUE_COMMITS`)**:
+  - Found the flaw with checking `HEAD~1 === origin~1`: when a teammate pushes 1 commit and you push 1 commit from the same initial branch point, both commits also share `HEAD~1 === origin~1`!
+  - Updated `detectDivergenceReason()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to inspect the local git reflog (`log -g -1 --format=%gs HEAD` and `HEAD@{1}` vs `origin/<branch>`).
+  - Only when the reflog confirms `commit (amend)` and `HEAD@{1} === origin/<branch>` is the state classified as `AMENDED_COMMIT`. Otherwise, independent commits are correctly classified as `COLLEAGUE_COMMITS`.
+  - Both automated and interactive `--step` mode now pass Step 16 consistently.
+* **Divergence Reason Detection and Context-Aware Dialogs (Case 1 & Case 2)**:
+  - Implemented `detectDivergenceReason()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to distinguish between:
+    - **Case 1 (`AMENDED_COMMIT`)**: `ahead === 1 && behind === 1` where local `HEAD~1` and `origin/<branch>~1` match the exact same parent commit.
+    - **Case 2 (`COLLEAGUE_COMMITS`)**: Divergence caused by genuine commits on remote from a teammate or other workstation.
+  - Implemented `showForcePushOrPullPushDialog()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with dynamic heading, description, and radio pre-selection:
+    - For `AMENDED_COMMIT`: Displays *"Local commit was amended"*, explains that the local commit was updated after being sent, pre-selects and recommends *"Overwrite server with your updated commit (recommended)"*, and warns that pull will undo the amend.
+    - For `COLLEAGUE_COMMITS`: Displays *"Server has newer commits"*, explains that new work was pushed to the server, pre-selects and recommends *"Download updates and combine with local changes (pull & rebase) (recommended)"*, and warns that force push will delete teammate's work.
+  - Updated `app.html` with dynamic labels (`#divergedDialogTitle`, `#divergedDialogDescription`, `#behindPullText`, `#behindForcePushText`).
+  - Guarded `gitPull()`: if the branch is diverged due to an `AMENDED_COMMIT`, intercepted the pull to show `showForcePushOrPullPushDialog()` instead of pulling and resurrecting the old commit.
+  - Verified with UI test runner `test_02_pull_uncommitted_warning.js` passing 20/20 steps.
 * **Fix Arrow Disappearance on Diverged Push Cancellation**:
   - Identified that inside `gitPush()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), the internal async `push()` function was invoked unawaited (`push()`), causing it to run in the background while subsequent status updates proceeded prematurely.
   - When a push failed because the local branch was behind the remote, `push()` was not returning early, proceeding to attempt a notes force-push and throwing an unhandled rejection.

@@ -816,20 +816,20 @@
         
         
         <!-- Warning text -->  
-        <b>WARNING -- local branch behind remote branch !</b><br>
-             <br>
+        <b id="divergedDialogTitle">WARNING -- local branch behind remote branch !</b><br>
+        <div id="divergedDialogDescription" style="font-size: 11px; margin: 6px 0 10px 0; color: #444; display: none;"></div>
 
-        <label for="behindPull">
+        <label for="behindPull" id="behindPullLabel">
             <input type="radio" id="behindPull" name="behindRemoteRadiobuttonGroup" value="Pull" checked>
-            Download updates and combine with local changes (pull)
+            <span id="behindPullText">Download updates and combine with local changes (pull)</span>
         </label>
 
         <!-- Radio-buttons -->  
 
         
-        <label for="behindForcePush">
+        <label for="behindForcePush" id="behindForcePushLabel">
             <input type="radio" id="behindForcePush" name="behindRemoteRadiobuttonGroup" value="ForcePush">
-            Overwrite server -- discard remote updates (dangerous)
+            <span id="behindForcePushText">Overwrite server -- discard remote updates (dangerous)</span>
         </label>
         
         

@@ -30,7 +30,7 @@ steps:
         const { execSync } = require('child_process');
         const localClone = path.join(${TMP_DIR_JSON}, 'local_diverged_repo');
         if (!fs.existsSync(localClone)) {
-          execSync(`git clone "${${ORIGIN_REPO_PATH_JSON}}" "${localClone}"`);
+          execSync(`git clone "${${LOCAL_ORIGIN_REPO_PATH_JSON}}" "${localClone}"`);
           execSync(`git -C "${localClone}" config user.name "Test Local"`);
           execSync(`git -C "${localClone}" config user.email "local@test.local"`);
         }
@@ -58,7 +58,7 @@ steps:
 
         // 4a. Push a new commit to remote from a temporary workspace
         const tempOther = path.join(${TMP_DIR_JSON}, 'temp_other_committer');
-        execSync(`git clone "${${ORIGIN_REPO_PATH_JSON}}" "${tempOther}"`);
+        execSync(`git clone "${${LOCAL_ORIGIN_REPO_PATH_JSON}}" "${tempOther}"`);
         execSync(`git -C "${tempOther}" config user.name "Other Developer"`);
         execSync(`git -C "${tempOther}" config user.email "other@test.local"`);
         fs.appendFileSync(path.join(tempOther, 'README.md'), 'Remote change by other developer\n');

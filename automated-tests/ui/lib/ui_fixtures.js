@@ -131,6 +131,7 @@ class UIFixtures {
             clientKey: this.clientKey,
             clientKeyPub: this.clientKeyPub,
             originRepoPath: process.platform === 'win32' ? toWslPath(this.originRepoPath) : this.originRepoPath,
+            localOriginRepoPath: this.originRepoPath,
             targetClonePath: process.platform === 'win32' ? toWslPath(this.targetClonePath) : this.targetClonePath,
             user: this.sshdUser || ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''))
         };

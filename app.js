@@ -5394,6 +5394,87 @@ async function gitStashMap( folder ){
 
 }     
 
+// Detect why a local branch and remote tracking branch have diverged
+async function detectDivergenceReason() {
+    // Returns: 'AMENDED_COMMIT' | 'COLLEAGUE_COMMITS' | 'GENERAL_BEHIND'
+    try {
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        const status = await gitStatus();
+        const currentBranch = status.current;
+
+        if (!(status.ahead > 0 && status.behind > 0)) {
+            return 'GENERAL_BEHIND';
+        }
+
+        // Case 1: Exactly 1 ahead and 1 behind — verify if local HEAD was created by an amend replacing origin
+        if (status.ahead === 1 && status.behind === 1) {
+            try {
+                // Check git reflog for HEAD@{0}: if the latest action was a commit (amend)
+                const latestReflogAction = (await simpleGit(localFolder).raw(['log', '-g', '-1', '--format=%gs', 'HEAD'])).trim();
+                const remoteHash = (await simpleGit(localFolder).raw(['rev-parse', `origin/${currentBranch}`])).trim();
+                const previousHeadHash = (await simpleGit(localFolder).raw(['rev-parse', 'HEAD@{1}'])).trim();
+
+                // If HEAD was created by 'commit (amend)' and directly replaced the remote commit (or remote shares previous HEAD)
+                if (latestReflogAction.startsWith('commit (amend)') && previousHeadHash === remoteHash) {
+                    return 'AMENDED_COMMIT';
+                }
+            } catch (reflogErr) {
+                console.warn('detectDivergenceReason reflog check failed:', reflogErr);
+            }
+        }
+
+        return 'COLLEAGUE_COMMITS';
+    } catch (err) {
+        console.warn('detectDivergenceReason error:', err);
+        return 'GENERAL_BEHIND';
+    }
+}
+
+// Prepare and display forcePushOrPullPushDialog with context-aware labels
+async function showForcePushOrPullPushDialog() {
+    let reason = await detectDivergenceReason();
+    let titleEl = document.getElementById('divergedDialogTitle');
+    let descEl = document.getElementById('divergedDialogDescription');
+    let pullTextEl = document.getElementById('behindPullText');
+    let forcePushTextEl = document.getElementById('behindForcePushText');
+    let pullRadio = document.getElementById('behindPull');
+    let forcePushRadio = document.getElementById('behindForcePush');
+
+    if (reason === 'AMENDED_COMMIT') {
+        // Case 1: Local commit was amended after being pushed
+        if (titleEl) titleEl.innerText = 'Local commit was amended';
+        if (descEl) {
+            descEl.innerText = 'You modified your latest commit after it was already sent to the server. The server still has your older version.';
+            descEl.style.display = 'block';
+        }
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server with your updated commit (recommended)';
+        if (pullTextEl) pullTextEl.innerText = 'Download older commit from server (will undo your amend)';
+        if (forcePushRadio) forcePushRadio.checked = true;
+    } else if (reason === 'COLLEAGUE_COMMITS') {
+        // Case 2: Teammate or another machine pushed new commits to the server
+        if (titleEl) titleEl.innerText = 'Server has newer commits';
+        if (descEl) {
+            descEl.innerText = 'A colleague (or another machine) pushed new work to the server while you were working locally.';
+            descEl.style.display = 'block';
+        }
+        if (pullTextEl) pullTextEl.innerText = 'Download updates and combine with local changes (pull & rebase) (recommended)';
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server -- discard remote updates (dangerous: deletes remote work)';
+        if (pullRadio) pullRadio.checked = true;
+    } else {
+        // General behind / fallback
+        if (titleEl) titleEl.innerText = 'WARNING -- local branch behind remote branch !';
+        if (descEl) descEl.style.display = 'none';
+        if (pullTextEl) pullTextEl.innerText = 'Download updates and combine with local changes (pull)';
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server -- discard remote updates (dangerous)';
+        if (pullRadio) pullRadio.checked = true;
+    }
+
+    let dialog = document.getElementById('forcePushOrPullPushDialog');
+    if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    }
+}
+
 async function gitPush( forcePush){
     // forcePush = true, means a --force push is used
     
@@ -5478,8 +5559,8 @@ async function gitPush( forcePush){
                     // Helpful dialog if possible:
                     if (  (err.toString()).includes('tip of your current branch is behind')   ||
                           ( err.toString()).includes('not have locally')   ){
-                        // Give options to 'pull' or 'push --force'
-                        document.getElementById('forcePushOrPullPushDialog').showModal();
+                        // Give context-aware options to 'pull' or 'push --force'
+                        await showForcePushOrPullPushDialog();
                         return;
                     }else{
                         // General error dialog
@@ -5680,6 +5761,16 @@ async function gitPull(){
             displayAlert('Uncommitted changes', 'Please Store or Stash modified files before downloading updates.', 'warning');
         }
         return;
+    }
+
+    // Intercept diverged pull if local commit was amended (Case 1) to avoid resurrecting old commit
+    if (status_data && status_data.ahead > 0 && status_data.behind > 0) {
+        let reason = await detectDivergenceReason();
+        if (reason === 'AMENDED_COMMIT') {
+            pragmaLog('   gitPull intercepted -- amended commit diverged state');
+            await showForcePushOrPullPushDialog();
+            return;
+        }
     }
 
     // Pull
