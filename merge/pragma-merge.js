@@ -267,11 +267,7 @@ async function injectIntoJs(document) {
     document.getElementById('theme-select').selectedIndex = 
         util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     
-    initUI();
-    
-        
-    
-    // Set Read-Only for Editor-mode 
+    // Set Read-Only for Editor-mode (load historical content before initUI)
     if ( (SECOND == '--edit') ){
         if  (THIRD == '--ro'){
             readOnlyOption( true); // Hides and changes some HTML
@@ -296,13 +292,17 @@ async function injectIntoJs(document) {
         }       
 
     }
+
+    await initUI();
     
     // Force show binary scroll bar
-    if (isBinaryFile()){
+    if (isBinaryFile() && dv && dv.edit){
         dv.edit.refresh();  // Force redraw -- makes binary show scroll bars
     }
     
-    document.getElementById('down').click()
+    if (dv) {
+        document.getElementById('down').click();
+    }
 
 };
 
@@ -631,9 +631,10 @@ async function initUI( keep) {
     // Get executable bits 
     let showExecutableBitDiffersState = 'collapse'; // May be changed to 'visible' if relevant bits differ
     
-    let execBits
+    let execBits = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous: undefined };
     try{
-        execBits = await getExecutableFlags(BASE);
+        let flags = await getExecutableFlags(BASE);
+        if (flags) execBits = flags;
     }catch (err){
         
     }
@@ -756,7 +757,11 @@ async function initUI( keep) {
             editorLabel = 'this'; 
             rightViewerLabel = 'empty'; 
             
-            if ( dv.panes == panes ){ // Not changed number of panes
+            if (THIRD == '--ro' || THIRD == '--show') {
+                readOnlyOption(true);
+            }
+
+            if ( dv && dv.panes == panes ){ // Not changed number of panes
                 // 1) dv.editor().getValue() if not changed from 3-pane
                 try{
                     options.value = dv.editor().getValue();  // Use content, in case it has been edited

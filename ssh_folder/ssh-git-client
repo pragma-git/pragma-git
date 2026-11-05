@@ -122,6 +122,15 @@ REMAINING_ARGUMENTS=''
     #esac
 
 
+    # Detect whether this git command can legitimately invoke pragma-merge (difftool or mergetool)
+    IS_MERGE_OR_DIFF_CMD=false
+    for arg in "${filtered_args[@]}"; do
+        if [[ "$arg" == "difftool" || "$arg" == "mergetool" ]]; then
+            IS_MERGE_OR_DIFF_CMD=true
+            break
+        fi
+    done
+
 #
 # Run git command over SSH
 #
@@ -134,8 +143,13 @@ REMAINING_ARGUMENTS=''
         # Run in background
         echo "($PID) ssh-git-client  -- Start git command on remote server -- run in background" >> "$SSH_LOG"
         echo "($PID) ssh-git-client  -- COMMAND = $COMMAND" >> "$SSH_LOG"
+        CLEANUP_OLD_MERGE=""
+        if [ "$IS_MERGE_OR_DIFF_CMD" == true ]; then
+            CLEANUP_OLD_MERGE="rm -f '/tmp/git_diff_file_list.txt' \"\$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh\""
+        fi
         ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF &
             export GIT_ASKPASS="\$HOME/.Pragma-git/pragma-askpass-ssh"  # Make $HOME work (does not expand in config)
+            $CLEANUP_OLD_MERGE
             eval "$COMMAND"
 EOF
     
@@ -192,11 +206,11 @@ EOF
         
 
         #
-        # If remote Git is waiting for merge dialog :
+        # If remote Git is waiting for merge dialog (only applicable for difftool / mergetool) :
         #
-        if [ "$MERGE_CALLED" == false ];  then   # MERGE_CALLED will be set to true, to ensure only doing this once
+        if [ "$IS_MERGE_OR_DIFF_CMD" == true ] && [ "$MERGE_CALLED" == false ]; then   # MERGE_CALLED will be set to true, to ensure only doing this once
         
-            if ssh -p $PORT $SSH_OPTIONS "$SERVER" "test -f '$FILE_LIST_ON_SSH'"; then
+            if ssh -p $PORT $SSH_OPTIONS "$SERVER" "test -f '$REMOTE_MERGE_SIGNAL_FILE' -a -f '$FILE_LIST_ON_SSH'"; then
                 
                 echo  "($PID) ssh-git-client  -- Call \"${SCRIPT_FOLDER}/ssh-get-merge-files\" \"$SSHURL\""  >> "$SSH_LOG" 
                 echo  "  "  >> "$SSH_LOG"

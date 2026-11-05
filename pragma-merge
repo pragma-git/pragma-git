@@ -96,17 +96,20 @@ echo "${LOG_INDENT}Argument \$5 = \"$5\", \$3 = \"$3\" (empty if local, 'ssh' if
 if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
-    # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
-    echo "\"$1\" \"$2\" \"$3\" \"$4\" $5" >>  "$MERGE_LOG" 
-    echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
 fi
 
 # Bail out if already running
 if [  -f "$RUNNING" ] ; then
     echo  " " >> "$MERGE_LOG"
-    echo  "${LOG_INDENT}$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$MERGE_LOG"
-    echo  "${LOG_INDENT}$(date) Bail out, already open (indicated by existence of file : $TMP/pragma-merge-running)" >> "$MERGE_LOG"
+    echo  "${LOG_INDENT}$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $RUNNING)" >> "$MERGE_LOG"
+    echo  "${LOG_INDENT}$(date) Bail out, already open (indicated by existence of file : $RUNNING)" >> "$MERGE_LOG"
     exit
+fi
+
+if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
+    # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
+    echo "\"$1\" \"$2\" \"$3\" \"$4\" $5" >>  "$MERGE_LOG" 
+    echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
 fi
 
 # If started in WSL -- need to transform to Window file paths in signalling files
@@ -138,6 +141,9 @@ do
 done
 
 # Exited Pragma-merge
+if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
+    rm -f "$FILE_LIST_ON_SSH" 2>/dev/null
+fi
 EXITCODE=$(cat "$EXIT")
 # rm "$EXIT"  # Don't remove -- needs this file so I can copy EXITCODE to server (when using ssh-folder)
 
