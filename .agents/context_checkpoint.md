@@ -30,13 +30,16 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Consistent "Last commit : ..." Placeholder Across Repo Switches**:
+  - Removed remaining hardcoded "You may write what is ongoing here..." boilerplate across `app.js`, `app.html`, and `about.html`.
+  - In `restoreRepoDraftMessage()` and `UNKNOWN` mode transitions, the placeholder now preserves the existing `Last commit : "<title>"` (or defaults cleanly to `"No previous commits"` if there are no commits), ensuring switching repositories never flashes the old help text.
 * **Resizable Remote URL Textareas in Settings**:
   - Restored vertical resizing (`resize: vertical; min-height: 24px;`) for `.remoteURL textarea` in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html#L215).
   - Users can pull the corner of remote repository URL inputs to view and edit long URLs conveniently.
 * **(draft) Scratchpad Indicator**:
   - Implemented `(draft)` badge in the message area sharing the exact bottom-right position of `(double-click to change)` (`#edit_commit_text_div`).
   - Coordinated through `updateEditCommitTextDiv()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html):
-    - Appears immediately upon leaving the textarea (`onblur`), or after 20 seconds of typing inactivity if still focused at HEAD.
+    - Appears immediately upon leaving the textarea (`onblur`), or after 6 seconds of typing inactivity if still focused at HEAD.
     - Unobtrusively muted with tooltip: `"Draft note for this repository (edit when ready to commit)"`.
     - Automatically hides while actively typing, or reverts to `(double-click to change)` / `(esc-key to cancel)` when empty at HEAD, and remains completely hidden in historical navigation.
   - Documented in [about.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) under **Message Area & Commit Flow**.

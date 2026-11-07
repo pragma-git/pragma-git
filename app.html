@@ -274,13 +274,13 @@
                 id="message"
             
                 onmousedown="if (event.detail === 1) { window._messageHadFocus = (document.activeElement === this); }"
-                onfocus="_callback('message_focus');"
+                onfocus="window._messageHadFocus = true; _callback('message_focus');"
                 onkeyup="_callback('message_key_up');"
                 oninput="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
                 onblur="window._messageHadFocus = false; _callback('message_blur'); window._msgAllowAction = true;"
             
-                placeholder="You may write what is ongoing here,&#10;&#10;Change text to commit message (or stash name) when done"
+                placeholder="No previous commits"
                 readonly
             ></textarea>
             

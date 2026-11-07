@@ -3881,9 +3881,11 @@ async function _setMode( inputModeName){
                 if (currentMode == 'HISTORY'){
                     let draft = getRepoDraftMessage();
                     textOutput.value = draft;
-                    textOutput.placeholder = 
-                        "You may write what is ongoing here," + os.EOL + os.EOL + 
-                        "Change text to commit message (or stash name) when done";
+                    if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                        textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+                    } else {
+                        textOutput.placeholder = "No previous commits";
+                    }
                     textOutput.readOnly = false;
                     writeTextOutput(textOutput);
                     localState.historyString = "";
@@ -4057,9 +4059,7 @@ async function _setMode( inputModeName){
 
             // Alternative message if no previous commit
             if (HEAD_title == undefined){
-                textOutput.placeholder = 
-                    "You may write what is ongoing here," + os.EOL + os.EOL + 
-                    "Change text to commit message (or stash name) when done";
+                textOutput.placeholder = "No previous commits";
             }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
@@ -5254,7 +5254,7 @@ function resetDraftInactivityTimer() {
         _draftInactivityTimer = null;
         _draftInactivityExpired = true;
         updateEditCommitTextDiv();
-    }, 20000); // 20 seconds idle
+    }, 6000); // 6 seconds idle
 }
 
 function onMessageFocus() {
@@ -5289,7 +5289,11 @@ function updateEditCommitTextDiv() {
     }
 
     let msg = (typeof readMessage === 'function') ? readMessage().trim() : '';
-    let msgHasFocus = (typeof window !== 'undefined' && window._messageHadFocus);
+    let msgEl = document.getElementById('message');
+    let msgHasFocus = (msgEl && document.activeElement === msgEl) || (typeof window !== 'undefined' && window._messageHadFocus);
+    if (typeof window !== 'undefined' && msgEl) {
+        window._messageHadFocus = Boolean(document.activeElement === msgEl || window._messageHadFocus);
+    }
 
     // If text is written at HEAD, check whether it is considered a draft
     if (msg.length > 0) {
@@ -8948,9 +8952,10 @@ function restoreRepoDraftMessage(repoIdx = state.repoNumber) {
         let draft = getRepoDraftMessage(repoIdx);
         textOutput.value = draft;
         textOutput.readOnly = false;
-        textOutput.placeholder = 
-            "You may write what is ongoing here," + os.EOL + os.EOL + 
-            "Change text to commit message (or stash name) when done";
+        // Keep existing placeholder if already set (e.g. Last commit : "..."), otherwise fallback
+        if (!textOutput.placeholder || textOutput.placeholder === '') {
+            textOutput.placeholder = "No previous commits";
+        }
         writeTextOutput(textOutput);
         if (draft.length > 0) {
             if (getMode() === 'CHANGED_FILES' || getMode() === 'CHANGED_FILES_TEXT_ENTERED') {

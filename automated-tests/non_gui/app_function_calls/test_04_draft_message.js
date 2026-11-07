@@ -211,7 +211,7 @@ async function runTests() {
         'Committing clears draftMessage and resets scratch textarea'
     );
 
-    // Test 8: restoreRepoDraftMessage on empty draft sets ongoing placeholder and editable state when returning to HEAD
+    // Test 8: restoreRepoDraftMessage on empty draft restores editable state and placeholder when returning to HEAD
     sandbox.localState.historyNumber = -1;
     currentMode = 'HISTORY';
     messageElement.value = 'Historical commit from history';
@@ -221,8 +221,8 @@ async function runTests() {
     assert(
         messageElement.value === '' &&
         messageElement.readOnly === false &&
-        messageElement.placeholder.includes('You may write what is ongoing here'),
-        'restoreRepoDraftMessage immediately clears historical text and displays ongoing placeholder'
+        messageElement.placeholder === 'No previous commits',
+        'restoreRepoDraftMessage immediately clears historical text and sets default fallback placeholder when unset'
     );
 
     // Test 9: saveCurrentRepoDraftMessage does NOT overwrite draft when editing previous commit message via double-click (_msgAllowAction === false in NO_FILES_TO_COMMIT)
@@ -258,13 +258,13 @@ async function runTests() {
         'updateEditCommitTextDiv hides (draft) while actively typing in focus'
     );
 
-    // When idle for 20s while focused, (draft) becomes visible
+    // When idle for 6s while focused, (draft) becomes visible
     sandbox._draftInactivityExpired = true;
     sandbox.updateEditCommitTextDiv();
     assert(
         editCommitTextElement.innerHTML === '(draft)' &&
         editCommitTextElement.style.visibility === 'visible',
-        'updateEditCommitTextDiv reveals (draft) when idle for 20s even if focused'
+        'updateEditCommitTextDiv reveals (draft) when idle for 6s even if focused'
     );
 
     // In NO_FILES_TO_COMMIT with no draft: shows (double-click to change)
