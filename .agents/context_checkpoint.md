@@ -30,6 +30,15 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Optimized Fast Graph & General Find in NW.js**:
+  - In [extend_find-in-nw.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/extend_find-in-nw.js), `getElementsToSearch()` now returns `#graphContent` directly for Graph windows so `window.findAndReplaceDOMText` performs a fast single pass over the entire commit list instead of iterating over hundreds of individual child rows.
+  - Bypassed costly ancestor tree crawling and `window.getComputedStyle(cur)` in `isNodeVisible` for Graph elements.
+  - Replaced per-element `_yieldToUI()` with 16ms time-chunking (`Date.now() - lastYieldTime > 16`) across all element, hash, and textarea loops, allowing find tokens and the match count (`1/432`) to compute and display virtually instantaneously without blocking input cancellation.
+* **Cancelable / Preemptible Find in NW.js**:
+  - Fixed UI freezing and lag when typing single characters or rapidly updating query text in [extend_find-in-nw.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/extend_find-in-nw.js).
+  - Search runs asynchronously across elements, yielding to the UI event loop between elements.
+  - Overrode the `input` event listener on `#find-in-nw-input` with a sequence counter (`_activeSearchId`).
+  - Any subsequent keystroke (typing a character, removing characters with backspace, or clearing) immediately increments `_activeSearchId`, dumping and cancelling any pending/in-flight DOM search so it is replaced with the new query string without blocking the UI.
 * **Pragma-merge "Ignore Whitespace" Option**:
   - Added an `ignore whitespace` checkbox in [merge/pragma-merge_iframe.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html) alongside `align` and `hide unchanged`.
   - Configured CodeMirror MergeView with `options.ignoreWhitespace = ignoreWhitespace` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).

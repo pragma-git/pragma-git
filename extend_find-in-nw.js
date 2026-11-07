@@ -242,7 +242,6 @@ function extendFindInNw(elementToSearch){
         // Initial guess - base search element
         let searchElement = document.body; 
         
-        
         // If Notes, override base search element -- two modes Wysiwyg (button 1) and Markdown (button 0)
         try{
             const isWysiwyg = document.getElementsByClassName('toastui-editor-mode-switch')[0].getElementsByClassName('tab-item')[1].classList.contains('active');
@@ -260,7 +259,6 @@ function extendFindInNw(elementToSearch){
             // Not a Notes window 
         }    
         
-        
         // If Pragma-merge
         try{
             searchElement = document.getElementsByClassName( pragmaMergeSearchInEditorId)[0];  // Messaging variable defined in pragma-merge.html
@@ -273,11 +271,15 @@ function extendFindInNw(elementToSearch){
             // Not a Pragma-merge window
         }            
          
-        
         // If Graph
         try{
-            if (graphSearchInEditorId){  // graphSearchInEditorId = true if a graph window
-                searchElement = document.getElementById( 'graphContent');  
+            if (typeof graphSearchInEditorId !== 'undefined' && graphSearchInEditorId){  // graphSearchInEditorId = true if a graph window
+                searchElement = document.getElementById('graphContent');  
+                if (searchElement) {
+                    // For Graph, return graphContent container directly for a fast single-pass DOM search
+                    elements.push(searchElement);
+                    return elements;
+                }
             }
 
         }catch(err){
@@ -317,10 +319,6 @@ function extendFindInNw(elementToSearch){
                 elements.push(child);
             }
         }
-        console.log(`searchElement = ${searchElement}`); 
-        console.log(searchElement); 
-        console.log(`elements = ${elements}`);    
-        console.log(elements); 
         return elements;
     };  
     //-------------------------------------------------------------    
@@ -411,14 +409,29 @@ function extendFindInNw(elementToSearch){
       }; 
     //------------------------------------------------------------- 
     
-    // Perform case-insensitive search (now also includes <textarea>)
-    findInNw.search = function (text) {
+    // Search sequence ID to cancel obsolete searches when user types or deletes characters
+    let _activeSearchId = 0;
+
+    // Helper: yield to UI event loop to allow user input / key presses to be processed
+    function _yieldToUI() {
+        return new Promise(function(resolve) {
+            setTimeout(resolve, 0);
+        });
+    }
+
+    // Perform case-insensitive search (now also includes <textarea>, with async chunking & cancellation)
+    findInNw.search = async function (text) {
+        const searchId = ++_activeSearchId;
+
         // Clear existing highlights (DOM + textarea overlays)
         this.clearTokens();
         clearAllTextareaHighlights();
 
+        if (!text) {
+            return;
+        }
+
         const elements = this.getElementsToSearch();
-        console.log(elements);
         
         // Helper: verify if node is actually visible (not hidden by filter, display:none, or inactive subtab)
         function isNodeVisible(node) {
@@ -451,24 +464,53 @@ function extendFindInNw(elementToSearch){
           return true;
         }
 
+        const isGraph = typeof graphSearchInEditorId !== 'undefined' && graphSearchInEditorId;
+        const filterFn = isGraph ? ((node) => node && node.nodeName && node.nodeName.toLowerCase() !== 'textarea') : ((node) => isNodeVisible(node));
+
+        let lastYieldTime = Date.now();
+
         // Search HTML (exclude the search box, hidden elements/subtabs/rows, and all <textarea> descendants)
-        elements.forEach(function (element) {
+        for (let i = 0; i < elements.length; i++) {
+          if (searchId !== _activeSearchId) {
+            this.clearTokens();
+            clearAllTextareaHighlights();
+            return;
+          }
+
+          let element = elements[i];
           if (element.id !== 'find-in-nw-search-box') {
             window.findAndReplaceDOMText(element, {
               find: RegExp( text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'gi'), // literal
               wrap: 'mark',
               wrapClass: 'find-in-nw-token',
-              filterElements: (node) => isNodeVisible(node)
+              filterElements: filterFn
             });
           }
-        });
+
+          // Chunk yielding by time (16ms per frame) to prevent hundreds of UI repaints in large views like Graph
+          if (Date.now() - lastYieldTime > 16) {
+            await _yieldToUI();
+            lastYieldTime = Date.now();
+            if (searchId !== _activeSearchId) {
+              this.clearTokens();
+              clearAllTextareaHighlights();
+              return;
+            }
+          }
+        }
         
         // Search for hash (element id in text class, in Graph)
         if (text.length >= 2){ // Only search for hash when string is 2 characters or more         
             try{
                 let hashText = text.toLowerCase();
                 let textElements = document.getElementsByClassName('text');
-                textElements.forEach(function (textElement) {
+                for (let i = 0; i < textElements.length; i++) {
+                  if (searchId !== _activeSearchId) {
+                    this.clearTokens();
+                    clearAllTextareaHighlights();
+                    return;
+                  }
+                  let textElement = textElements[i];
                   if (textElement.id.startsWith(hashText)) {
                     window.findAndReplaceDOMText(textElement, {
                       find: RegExp(textElement.innerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'gi'), // literal
@@ -476,33 +518,93 @@ function extendFindInNw(elementToSearch){
                       wrapClass: 'find-in-nw-token'
                     });
                   }
-                });
+
+                  if (Date.now() - lastYieldTime > 16) {
+                    await _yieldToUI();
+                    lastYieldTime = Date.now();
+                    if (searchId !== _activeSearchId) {
+                      this.clearTokens();
+                      clearAllTextareaHighlights();
+                      return;
+                    }
+                  }
+                }
             }catch (err){
                 // Will fail in other windows
             }
+        }
+
+        if (searchId !== _activeSearchId) {
+          this.clearTokens();
+          clearAllTextareaHighlights();
+          return;
         }
 
         // ---- NEW: Search inside all <textarea> values and render overlay highlights
         const taRegex = RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
         
         // Only search in elements defined above (visible textareas only)
-        elements.forEach(el => {
-          el.querySelectorAll('textarea').forEach(ta => {
-            if (ta.offsetWidth === 0 && ta.offsetHeight === 0) return;
+        for (let i = 0; i < elements.length; i++) {
+          if (searchId !== _activeSearchId) {
+            this.clearTokens();
+            clearAllTextareaHighlights();
+            return;
+          }
+          let el = elements[i];
+          let textareas = el.querySelectorAll('textarea');
+          for (let j = 0; j < textareas.length; j++) {
+            let ta = textareas[j];
+            if (ta.offsetWidth === 0 && ta.offsetHeight === 0) continue;
             let cs = window.getComputedStyle(ta);
-            if (cs.display === 'none' || cs.visibility === 'hidden') return;
+            if (cs.display === 'none' || cs.visibility === 'hidden') continue;
             const matches = findMatchesInTextarea(ta, taRegex);
             renderTextareaHighlights(ta, matches);
-          });
-        });
+          }
 
-        
+          if (Date.now() - lastYieldTime > 16) {
+            await _yieldToUI();
+            lastYieldTime = Date.now();
+            if (searchId !== _activeSearchId) {
+              this.clearTokens();
+              clearAllTextareaHighlights();
+              return;
+            }
+          }
+        }
+
+        if (searchId !== _activeSearchId) {
+          this.clearTokens();
+          clearAllTextareaHighlights();
+          return;
+        }
+
         this.lastSearched = text;
         this.setDataPositionAttribute();
         this.initCurrentToken();
         this.updateCount();
         this.highlightCurrentToken(); // we'll sync caret below via wrapper
     };
+
+    // Override input event on #find-in-nw-input so new searches cancel previous ones immediately
+    const inputElement = document.getElementById('find-in-nw-input');
+    if (inputElement) {
+        // Clone input element to strip findinnw's original synchronous event listener
+        const newInputElement = inputElement.cloneNode(true);
+        inputElement.parentNode.replaceChild(newInputElement, inputElement);
+
+        newInputElement.addEventListener('input', function(e) {
+            e.preventDefault();
+            const val = e.target.value;
+            // Always bump search ID so any in-flight search is invalidated immediately
+            ++_activeSearchId;
+            if (val && val !== findInNw.lastSearched) {
+                findInNw.search(val);
+            } else if (!val) {
+                findInNw.clearTokens();
+                clearAllTextareaHighlights();
+            }
+        });
+    }
 
     //------------------------------------------------------------- 
     
