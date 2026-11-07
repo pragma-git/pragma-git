@@ -30,6 +30,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Forward-Compatible Settings Preservation**:
+  - Enhanced loadSettings() and fixRepoSettingWithDefault() in app.js to preserve any unknown/newer keys from incoming JSON at both the root state and individual repo levels.
+  - Maintains the exact canonical key ordering in JSON export while safeguarding custom or branch-specific keys from being stripped on checkout or older version execution.
+  - Restored 14 historical repository groups in ~/.Pragma-git/settings.json.
 * **Sensible Default Window Sizes**:
   - Implemented  in [](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to set sensible first-time window dimensions adapted to screen resolution.
   - Generous height applied across all sub-windows: Graph (), Settings (), Pragma-merge (), Notes (), Help (), About (), Changed Files (), Resolve Conflicts (), Git-ignore Editor (), JSON Viewer (), and Create Remote Repository ().

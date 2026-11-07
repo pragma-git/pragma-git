@@ -9189,6 +9189,14 @@ function loadSettings(settingsFile){
                 console.warn('Failed reading individual repos');
             }
             
+        // Preserve any unknown/newer top-level keys from incoming state at the end
+        if (typeof state_in === 'object' && state_in !== null) {
+            for (let key of Object.keys(state_in)) {
+                if (!(key in state)) {
+                    state[key] = state_in[key];
+                }
+            }
+        }
   
     //
     // Post-process state
@@ -9339,6 +9347,15 @@ function loadSettings(settingsFile){
         
         // Draft message / Mental note
         repoState.draftMessage = setting( repoStateIn.draftMessage, '' );
+
+        // Preserve any unknown/newer keys from incoming repo state at the end
+        if (typeof repoStateIn === 'object' && repoStateIn !== null) {
+            for (let key of Object.keys(repoStateIn)) {
+                if (!(key in repoState)) {
+                    repoState[key] = repoStateIn[key];
+                }
+            }
+        }
 
         return repoState;
     }
