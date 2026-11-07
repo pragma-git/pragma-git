@@ -889,7 +889,8 @@ async function _callback( name, event){
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
             
             // Make window
-            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
+            let createSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(500, 700) : {width: 500, height: 700};
+            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false, width: createSize.width, height: createSize.height},
             win => win.on('loaded', function () {
                 
                 console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
@@ -3313,14 +3314,16 @@ function showJsonInPopup(jsonData, title, subtitle) {
     
     let showJsonInPopupWindow;
     // Create a new window   
+    let jsonViewerSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(1200, 1150) : {width: 1200, height: 1150};
+    // Create a new window   
     gui.Window.open( 
         'jsonViewer.html', 
         {
             title: 'JSON Viewer',
             id: 'jsonViewerID', 
             show: true,
-            width: 800,
-            height: 600
+            width: jsonViewerSize.width,
+            height: jsonViewerSize.height
         },
         win => win.on('loaded', function () {
 

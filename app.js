@@ -731,13 +731,14 @@ async function _callback( name, event){
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
+        let notesSize = getSensibleWindowSize(1100, 1200);
         gui.Window.open('notes.html',
             {   
                 id: 'notesWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 600,
+                width: notesSize.width,
+                height: notesSize.height,
                 title: title
             },  
             win=>win.on('loaded', async () => {
@@ -1196,13 +1197,14 @@ async function _callback( name, event){
         let title = "Graph";
 
         // Open new window (will open above old)
+        let graphSize = getSensibleWindowSize(1400, 1100);
         gui.Window.open('graph.html',
             {
                 id: 'graphWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 600,
+                width: graphSize.width,
+                height: graphSize.height,
                 title: title
             }
             ,
@@ -2006,13 +2008,14 @@ async function _callback( name, event){
 
         // Open new window -- and create closed-callback
         if ( localState.helpWindow == false ){
+            let helpSize = getSensibleWindowSize(1100, 1200);
             gui.Window.open(
                 'HELP' + pathsep + 'TEMPLATE_help.html',
                 {   id: 'helpId',
                     show: false,
                     position: 'center',
-                    width: 600,
-                    height: 700   
+                    width: helpSize.width,
+                    height: helpSize.height   
                 },
                 function(cWindows){ 
                     cWindows.on('closed', 
@@ -2580,12 +2583,13 @@ async function _callback( name, event){
 
         
         // Open new window -- and create closed-callback
+        let aboutSize = getSensibleWindowSize(1100, 1400);
         gui.Window.open('about.html#/new_page', 
             {   id: 'aboutWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: aboutSize.width,
+                height: aboutSize.height,
                 title: title   
             },
             function(cWindows){ 
@@ -3117,13 +3121,14 @@ async function _callback( name, event){
         _setMode('SETTINGS');
         
         let title = "Settings";
+        let settingsSize = getSensibleWindowSize(1400, 1100);
         settings_win = gui.Window.open('settings.html' ,
             {
                 id: 'settingsWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: settingsSize.width,
+                height: settingsSize.height,
                 title: title
             },
             win=>win.on('loaded', () => {
@@ -3156,13 +3161,14 @@ async function _callback( name, event){
             return
         }
         
+        let resolveSize = getSensibleWindowSize(1200, 1050);
         gui.Window.open('resolveConflicts.html#/new_page' ,
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: resolveSize.width,
+                height: resolveSize.height,
                 title: title
             },
                 win=>win.on('loaded', () => {
@@ -3187,13 +3193,14 @@ async function _callback( name, event){
             
         }catch(err){        
             // Make new window
+            let changedSize = getSensibleWindowSize(900, 500);
             gui.Window.open('listChanged.html#/new_page' ,
                 {
                     id: 'listChangedId',
                     position: 'center',
                     show: false,
-                    width: 600,
-                    height: 700,
+                    width: changedSize.width,
+                    height: changedSize.height,
                     title: title
                 },
                     win=>win.on('loaded', 
@@ -4172,12 +4179,13 @@ async function _setMode( inputModeName){
 function startPragmaMerge(){
     
     let title = "Pragma-merge";
+    let mergeSize = getSensibleWindowSize(2000, 1150);
     gui.Window.open('merge/pragma-merge.html', { 
             id: 'mergeWindowId',
             position: 'center',
             show: false,
-            width: 600,
-            height: 700,
+            width: mergeSize.width,
+            height: mergeSize.height,
             title: title
         },
             win=>win.on('loaded', () => {
@@ -7924,6 +7932,17 @@ function stackInfo( level ){
 
 
 // Update other windows
+
+function getSensibleWindowSize(idealWidth, idealHeight) {
+    const marginW = 40;
+    const marginH = 60;
+    const screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+    const screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+    return {
+        width: Math.min(idealWidth, Math.max(600, screenW - marginW)),
+        height: Math.min(idealHeight, Math.max(500, screenH - marginH))
+    };
+}
 
 async function showWindow(win){ // Show external window that was opened hidden
     

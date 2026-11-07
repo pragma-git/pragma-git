@@ -1260,7 +1260,8 @@
                                  return
                              }
                              
-                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
+                             let gitignoreSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(1000, 1150) : {width: 1000, height: 1150};
+                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false, width: gitignoreSize.width, height: gitignoreSize.height},
                             win=>win.on('loaded', () => {
                             
                                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
