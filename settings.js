@@ -64,6 +64,16 @@ async function _callback( name, event){
     }
         
     switch(name) {  
+        case 'maxRecentReposChanged': {
+            let val = parseInt(event.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 50) val = 50;
+            event.value = val;
+            global.state.maxRecentRepos = val;
+            opener.state.maxRecentRepos = val;
+            opener.saveSettings();
+            break;
+        }
         case 'checkboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
@@ -90,14 +100,24 @@ async function _callback( name, event){
             
             break;
         } 
+        case 'zoomMainChanged': {
+            let val = parseFloat(event.value);
+            if (isNaN(val) || val < 0.5) val = 0.5;
+            if (val > 3.0) val = 3.0;
+            event.value = String(val);
+            global.state.zoomMain = String(val);
+            opener.state.zoomMain = String(val);
+            opener.saveSettings();
+            opener.win.reload();
+            break;
+        }
         case 'zoomChanged': {
-            value = document.getElementById(id).value;
-            
-            console.log('zoomChanged');
-            console.log(event);
-            opener.pragmaLog('   settings ' + id + ' = ' + value);
-            
-            global.state.zoom = value;
+            let val = parseFloat(event.value);
+            if (isNaN(val) || val < 0.5) val = 0.5;
+            if (val > 3.0) val = 3.0;
+            event.value = String(val);
+            global.state.zoom = String(val);
+            opener.state.zoom = String(val);
             
             // Reload zoom change
             opener.updateWithNewSettings();
@@ -2175,6 +2195,7 @@ async function drawSoftwareTab(document){
     //document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
     document.getElementById('StashPop').checked = state.StashPop;
+    document.getElementById('maxRecentRepos').value = (state.maxRecentRepos !== undefined) ? state.maxRecentRepos : 5;
     
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;

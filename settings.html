@@ -683,20 +683,21 @@
                     Window scaling (default = 1.0) : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
-                        onchange="
-                            global.state.zoomMain = this.value;
-                            opener.saveSettings();
-                            opener.win.reload()"
-                        />&nbsp;
-                    <label for="zoomMain"> Main window</label>
+                        onchange="_callback('zoomMainChanged', this)"/>&nbsp;
+                    <label for="zoomMain"> Main window (0.5 - 3.0)</label>
                     
                     <br> 
                     
                     <input id="zoom" type="text" style="margin-top: 3px"  size="4" 
-                        onchange=" _callback('zoomChanged',this)"/>&nbsp;
-                    <label for="zoom"> Other windows</label>
+                        onchange="_callback('zoomChanged', this)"/>&nbsp;
+                    <label for="zoom"> Other windows (0.5 - 3.0)</label>
     
                     <br>
+                    <br>
+
+                    <!--  Number of recent repos in menu -->
+                    <label for="maxRecentRepos"> Recent repos in menu: </label>
+                    <input type="number" id="maxRecentRepos" min="1" max="25" style="width: 45px; text-align: center;" onchange="_callback('maxRecentReposChanged', this)"><br>
                     <br>
     
                     
@@ -749,6 +750,8 @@
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="FirstParent"> Search and history follow current branch </label><br>
+
+
                     
                     <!--  -- remove stash when pressing  () -->
                     <input type="checkbox" id="StashPop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>

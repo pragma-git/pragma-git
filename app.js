@@ -2091,7 +2091,7 @@ async function _callback( name, event){
     }
 
     // Utility to get indices of recently opened repos, sorted newest first, without duplicates
-    function getRecentRepoIndices(maxCount = 5) {
+    function getRecentRepoIndices(maxCount = (state.maxRecentRepos !== undefined ? Number(state.maxRecentRepos) : 5)) {
         ensureLastOpenedInitialized();
         let recent = [];
         for (let i = 0; i < state.repos.length; i++) {
@@ -2220,7 +2220,7 @@ async function _callback( name, event){
                         label: warningSign + myEvent.selectedRepo + reasonSuffix, 
                         type: 'checkbox',
                         checked: isCurrentRepo,
-                        enabled: !isCurrentInCurrentView && isRepoValid,
+                        enabled: !isCurrentRepo && isRepoValid,
                         click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
                     };
 
@@ -2248,96 +2248,92 @@ async function _callback( name, event){
                         cachedRepoMenu.append(new gui.MenuItem({ label: 'No accessible repositories found', enabled: false }));
                     }
                 } else {
-                    // Grouped menu:
-                    let currentRepoGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
-                    if (currentGroupView === undefined) {
-                        currentGroupView = currentRepoGroup;
-                    } else if (currentGroupView !== 'ALL' && currentGroupView !== 'RECENT') {
-                        if (!groupMap[currentGroupView] && currentGroupView !== '') {
-                            currentGroupView = currentRepoGroup;
-                            localState.activeGroupView = currentGroupView;
-                        }
-                    }
+                    // Concept A:
+                    // 1. Top Section: Recent Repos (always directly in root menu)
+                    let recentIndices = getRecentRepoIndices();
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Recent repos : ', enabled: false }));
 
-                    // 1. All groups folded as submenus at top
-                    let allGroups = Object.keys(groupMap).filter(g => g.length > 0).sort();
-                    if (groupMap[''] && groupMap[''].length > 0) {
-                        allGroups.push('');
-                    }
-
-                    let recentIndices = getRecentRepoIndices(5);
-                    allGroups.push('RECENT');
-                    allGroups.push('ALL');
-
-                    let addedSubmenus = false;
-
-                    if (allGroups.length > 0) {
-                        // Leading grey text above groups
-                        cachedRepoMenu.append(new gui.MenuItem({ label: 'Repo groups : ', enabled: false }));
-
-                        for (let g of allGroups) {
-                            let subMenu = new gui.Menu();
-                            let countInSub = 0;
-                            let repoIndices = (g === 'ALL') ? Array.from({ length: state.repos.length }, (_, k) => k) : ((g === 'RECENT') ? recentIndices : (groupMap[g] || []));
-                            for (let idx of repoIndices) {
-                                let item = await buildRepoMenuItem(idx, g);
-                                if (item) {
-                                    subMenu.append(item);
-                                    countInSub++;
-                                }
-                            }
-                            if (countInSub > 0) {
-                                let labelText = (g === 'ALL') ? 'All' : ((g === 'RECENT') ? 'Recent' : ((g.length === 0) ? 'Ungrouped' : g));
-                                cachedRepoMenu.append(new gui.MenuItem({
-                                    label: labelText,
-                                    submenu: subMenu
-                                }));
-                                addedSubmenus = true;
-                            }
-                        }
-                    }
-
-                    if (addedSubmenus) {
-                        cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
-                    }
-
-                    // 2. Current group repos shown directly in menu
-                    let headerText = '';
-                    let currentRepos = [];
-                    if (currentGroupView === 'ALL') {
-                        headerText = 'All repos : ';
-                        currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
-                    } else if (currentGroupView === 'RECENT') {
-                        headerText = 'Recent repos : ';
-                        currentRepos = recentIndices;
-                    } else if (currentGroupView.length > 0) {
-                        headerText = `Repos in '${currentGroupView}' : `;
-                        currentRepos = groupMap[currentGroupView] || [];
-                    } else {
-                        headerText = 'Ungrouped repos : ';
-                        currentRepos = groupMap[''] || [];
-                    }
-
-                    if (currentRepos.length === 0 && currentGroupView !== 'ALL') {
-                        currentGroupView = 'ALL';
-                        localState.activeGroupView = 'ALL';
-                        state.repoGroupFilter = 'ALL';
-                        headerText = 'All repos : ';
-                        currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
-                    }
-
-                    cachedRepoMenu.append(new gui.MenuItem({ label: headerText, enabled: false }));
-
-                    let addedCurrentCount = 0;
-                    for (let idx of currentRepos) {
-                        let item = await buildRepoMenuItem(idx, currentGroupView);
+                    let addedRecentCount = 0;
+                    for (let idx of recentIndices) {
+                        let item = await buildRepoMenuItem(idx);
                         if (item) {
                             cachedRepoMenu.append(item);
-                            addedCurrentCount++;
+                            addedRecentCount++;
                         }
                     }
-                    if (addedCurrentCount === 0) {
-                        cachedRepoMenu.append(new gui.MenuItem({ label: 'No accessible repositories found', enabled: false }));
+
+                    if (addedRecentCount === 0) {
+                        cachedRepoMenu.append(new gui.MenuItem({ label: '(No recent repos)', enabled: false }));
+                    }
+
+                    cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
+
+                    // 2. Middle Section: Groups in clean submenus
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Repo groups : ', enabled: false }));
+
+                    let namedGroups = Object.keys(groupMap).filter(g => g.length > 0).sort();
+                    for (let g of namedGroups) {
+                        let subMenu = new gui.Menu();
+                        let countInSub = 0;
+                        for (let idx of groupMap[g]) {
+                            let item = await buildRepoMenuItem(idx);
+                            if (item) {
+                                subMenu.append(item);
+                                countInSub++;
+                            }
+                        }
+                        if (countInSub > 0) {
+                            cachedRepoMenu.append(new gui.MenuItem({
+                                label: g,
+                                submenu: subMenu
+                            }));
+                        }
+                    }
+
+                    // Ungrouped repos submenu if any exist
+                    if (groupMap[''] && groupMap[''].length > 0) {
+                        let subMenu = new gui.Menu();
+                        let countInSub = 0;
+                        for (let idx of groupMap['']) {
+                            let item = await buildRepoMenuItem(idx);
+                            if (item) {
+                                subMenu.append(item);
+                                countInSub++;
+                            }
+                        }
+                        if (countInSub > 0) {
+                            cachedRepoMenu.append(new gui.MenuItem({
+                                label: 'Ungrouped',
+                                submenu: subMenu
+                            }));
+                        }
+                    }
+
+                    cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
+
+                    // 3. Bottom Section: All Repos (Alphabetical) in submenu
+                    let allSubMenu = new gui.Menu();
+                    let allIndicesSorted = Array.from({ length: state.repos.length }, (_, k) => k);
+                    allIndicesSorted.sort((a, b) => {
+                        let nameA = (path.basename(state.repos[a]?.localFolder || '')).toLowerCase();
+                        let nameB = (path.basename(state.repos[b]?.localFolder || '')).toLowerCase();
+                        return nameA.localeCompare(nameB);
+                    });
+
+                    let countInAll = 0;
+                    for (let idx of allIndicesSorted) {
+                        let item = await buildRepoMenuItem(idx);
+                        if (item) {
+                            allSubMenu.append(item);
+                            countInAll++;
+                        }
+                    }
+
+                    if (countInAll > 0) {
+                        cachedRepoMenu.append(new gui.MenuItem({
+                            label: 'All Repos (Alphabetical)',
+                            submenu: allSubMenu
+                        }));
                     }
                 }
 
@@ -9108,10 +9104,20 @@ function loadSettings(settingsFile){
                 }
                 
                 if ( !isDecimal(state.zoom) ){
-                    state.zoom = '1.0'
-                } 
+                    state.zoom = '1.0';
+                } else {
+                    let z = parseFloat(state.zoom);
+                    if (z < 0.5) z = 0.5;
+                    if (z > 3.0) z = 3.0;
+                    state.zoom = String(z);
+                }
                 if ( !isDecimal(state.zoomMain) ){
-                    state.zoomMain = '1.0'
+                    state.zoomMain = '1.0';
+                } else {
+                    let zm = parseFloat(state.zoomMain);
+                    if (zm < 0.5) zm = 0.5;
+                    if (zm > 3.0) zm = 3.0;
+                    state.zoomMain = String(zm);
                 } 
             
         
@@ -9120,6 +9126,7 @@ function loadSettings(settingsFile){
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             state.StashPop = setting( state_in.StashPop, true);
+            state.maxRecentRepos = setting( state_in.maxRecentRepos, 5);
          
          // Debug   
             state.debug  = setting( state_in.debug, false );  // Note, set by editing settings.json

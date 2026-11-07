@@ -30,6 +30,17 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Zoom Level Clamping (0.5 to 3.0)**:
+  - Enforced bounding between 0.5 and 3.0 for both `zoomMain` (main window) and `zoom` (other windows) in `loadSettings()` ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)) and in input callbacks `zoomMainChanged` / `zoomChanged` ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)).
+* **Recent Repositories Count Setting**:
+  - Added `Recent repos in menu:` numeric input under **Settings -> Software** tab ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)).
+  - Persists `state.maxRecentRepos` to `settings.json` (defaults to 5) and dynamically sizes the root menu Recent section.
+* **Streamlined Repo Menu Architecture (Concept A)**:
+  - Replaced dynamic group-mode-switching with an intuitive, predictable menu layout.
+  - **Top section**: Top 5 most recent repositories listed directly in the root menu for 1-click access.
+  - **Middle section**: Defined repository groups cleanly organized into hoverable submenus.
+  - **Bottom section**: "All Repos (Alphabetical)" accessible in a submenu.
+  - Eliminates awkward "double-switching" and guarantees clicking any repository simply switches to that repository.
 * **Forward-Compatible Settings Preservation**:
   - Enhanced loadSettings() and fixRepoSettingWithDefault() in app.js to preserve any unknown/newer keys from incoming JSON at both the root state and individual repo levels.
   - Maintains the exact canonical key ordering in JSON export while safeguarding custom or branch-specific keys from being stripped on checkout or older version execution.
