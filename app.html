@@ -274,6 +274,7 @@
                 id="message"
             
                 onmousedown="if (event.detail === 1) { window._messageHadFocus = (document.activeElement === this); }"
+                onfocus="_callback('message_focus');"
                 onkeyup="_callback('message_key_up');"
                 oninput="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
@@ -1028,9 +1029,7 @@
                         document.getElementById('store-button').disabled = true;
                         document.getElementById('message').blur();  // Unfocus
                         document.getElementById('up-arrow').click();
-                        let hasDraft = (readMessage().trim().length > 0);
-                        document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
-                        document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
+                        updateEditCommitTextDiv();
                     }
                     
                     // Close find fields

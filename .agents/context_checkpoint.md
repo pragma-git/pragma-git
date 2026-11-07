@@ -30,6 +30,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **(draft) Scratchpad Indicator**:
+  - Implemented `(draft)` badge in the message area sharing the exact bottom-right position of `(double-click to change)` (`#edit_commit_text_div`).
+  - Coordinated through `updateEditCommitTextDiv()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html):
+    - Appears immediately upon leaving the textarea (`onblur`), or after 20 seconds of typing inactivity if still focused at HEAD.
+    - Unobtrusively muted with tooltip: `"Draft note for this repository (edit when ready to commit)"`.
+    - Automatically hides while actively typing, or reverts to `(double-click to change)` / `(esc-key to cancel)` when empty at HEAD, and remains completely hidden in historical navigation.
+  - Documented in [about.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) under **Message Area & Commit Flow**.
+  - Verified with comprehensive test coverage in [automated-tests/non_gui/app_function_calls/test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js) (14/14 passed).
 * **Dynamic Stash Naming Tooltip**:
   - Added dynamic tooltip behavior for the stash button in `app.html` (`updateStashTooltip()`) and `app.js`.
   - When in `CHANGED_FILES` or `CHANGED_FILES_TEXT_ENTERED`:

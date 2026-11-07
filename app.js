@@ -835,12 +835,21 @@ async function _callback( name, event){
       }
 
       // Middle field
+      case 'message_focus': {
+        if (typeof onMessageFocus === 'function') {
+            onMessageFocus();
+        }
+        break;
+      }
       case 'message_key_up': {
         messageKeyUpEvent();
         break;
       }
       case 'message_blur': {
         saveCurrentRepoDraftMessage(true);
+        if (typeof onMessageBlur === 'function') {
+            onMessageBlur();
+        }
         break;
       }
       case 'message_dblclick': {
@@ -2990,6 +2999,7 @@ async function _callback( name, event){
             return;
         }
         
+        resetDraftInactivityTimer();
         textOutput.value = readMessage();
         saveCurrentRepoDraftMessage(false);
 
@@ -2998,16 +3008,8 @@ async function _callback( name, event){
             if (!hasDraft) {
                 window._msgAllowAction = true;
                 document.getElementById('store-button').disabled = true;
-                document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
-                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
-                return;
             }
-            if (!window._msgAllowAction) {
-                document.getElementById('edit_commit_text_div').innerHTML = '(esc-key to cancel)';
-                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
-                return;
-            }
-            document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+            updateEditCommitTextDiv();
             return;
         }
         
@@ -3017,6 +3019,7 @@ async function _callback( name, event){
         }else{
             _setMode( 'CHANGED_FILES');
         }
+        updateEditCommitTextDiv();
         
     }
     async function dropFile(e) {
@@ -4011,14 +4014,7 @@ async function _setMode( inputModeName){
                 setButtonText();
                 
                 // Modify edit message text
-                if (!window._msgAllowAction) {
-                    document.getElementById('edit_commit_text_div').innerHTML='(esc-key to cancel)';
-                    document.getElementById('edit_commit_text_div').style.visibility = 'visible';
-                }else{
-                    document.getElementById('edit_commit_text_div').innerHTML='(double-click to change)';
-                    let hasDraft = (readMessage().trim().length > 0);
-                    document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
-                }
+                updateEditCommitTextDiv();
                 return;
             };
             
@@ -4085,12 +4081,16 @@ async function _setMode( inputModeName){
             // set by messageKeyUpEvent
             console.log( readMessage() );
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
-            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
+            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { 
+                updateEditCommitTextDiv();
+                return;
+            };
             setButtonText();// Set button
             document.getElementById('store-button').disabled = false;  
             textOutput.value = readMessage();    
             textOutput.readOnly = false;
             // NOTE: Do not call writeTextOutput(textOutput); Reason : Characters may be lost -- better let browser window handle display self.
+            updateEditCommitTextDiv();
             break;
         }
             
@@ -4167,6 +4167,7 @@ async function _setMode( inputModeName){
         pragmaLog('_setMode = ' + await getMode() + ' ( from current mode = ' + currentMode + ')' );
     }
     
+    updateEditCommitTextDiv();
 
     return newModeName;  // In case I want to use it with return variable
 }
@@ -5154,6 +5155,9 @@ async function gitAddCommitAndPush( message){
             state.repos[state.repoNumber].draftMessage = '';
             saveSettings();
         }
+        if (typeof onMessageBlur === 'function') {
+            onMessageBlur();
+        }
         _setMode('UNKNOWN');  
         await _update()
         _setMode('UNKNOWN');  
@@ -5237,6 +5241,89 @@ async function gitRememberBranch( hash, name){
     }  
 }
 
+let _draftInactivityTimer = null;
+let _draftInactivityExpired = false;
+
+function resetDraftInactivityTimer() {
+    if (_draftInactivityTimer) {
+        clearTimeout(_draftInactivityTimer);
+        _draftInactivityTimer = null;
+    }
+    _draftInactivityExpired = false;
+    _draftInactivityTimer = setTimeout(() => {
+        _draftInactivityTimer = null;
+        _draftInactivityExpired = true;
+        updateEditCommitTextDiv();
+    }, 20000); // 20 seconds idle
+}
+
+function onMessageFocus() {
+    resetDraftInactivityTimer();
+    updateEditCommitTextDiv();
+}
+
+function onMessageBlur() {
+    if (_draftInactivityTimer) {
+        clearTimeout(_draftInactivityTimer);
+        _draftInactivityTimer = null;
+    }
+    _draftInactivityExpired = false;
+    updateEditCommitTextDiv();
+}
+
+function updateEditCommitTextDiv() {
+    let div = document.getElementById('edit_commit_text_div');
+    if (!div) return;
+
+    let mode = (typeof getMode === 'function') ? getMode() : '';
+    let isHistory = (mode === 'HISTORY' || (typeof localState !== 'undefined' && localState.historyNumber >= 0));
+    if (isHistory) {
+        div.style.visibility = 'hidden';
+        return;
+    }
+
+    let isAtHead = (mode === 'NO_FILES_TO_COMMIT' || mode === 'CHANGED_FILES' || mode === 'CHANGED_FILES_TEXT_ENTERED');
+    if (!isAtHead) {
+        div.style.visibility = 'hidden';
+        return;
+    }
+
+    let msg = (typeof readMessage === 'function') ? readMessage().trim() : '';
+    let msgHasFocus = (typeof window !== 'undefined' && window._messageHadFocus);
+
+    // If text is written at HEAD, check whether it is considered a draft
+    if (msg.length > 0) {
+        // Shown when unfocused (on blur / left textarea) or if 20 seconds have passed without typing
+        let isDraftActive = (!msgHasFocus || _draftInactivityExpired);
+        if (isDraftActive) {
+            div.innerHTML = '(draft)';
+            div.setAttribute('data-tooltip', 'Draft note for this repository (edit when ready to commit)');
+            div.style.visibility = 'visible';
+            return;
+        } else {
+            div.style.visibility = 'hidden';
+            return;
+        }
+    }
+
+    // No text entered:
+    if (mode === 'NO_FILES_TO_COMMIT') {
+        if (typeof window !== 'undefined' && !window._msgAllowAction) {
+            div.innerHTML = '(esc-key to cancel)';
+            div.removeAttribute('data-tooltip');
+            div.style.visibility = 'visible';
+        } else {
+            div.innerHTML = '(double-click to change)';
+            div.removeAttribute('data-tooltip');
+            div.style.visibility = 'visible';
+        }
+        return;
+    }
+
+    // In CHANGED_FILES with empty text: nothing to show in this position
+    div.style.visibility = 'hidden';
+}
+
 function updateStashTooltip() {
     let wrapper = document.getElementById("bottom-titlebar-stash-icon-wrapper");
     if (!wrapper) return;
@@ -5271,10 +5358,19 @@ async function gitStash(){
             // Write latest commit to message area placeholder (because there is nothing uncommited now)
             let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
             commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
+            let placeholderText = (latestCommit && latestCommit.latest && latestCommit.latest.message) ?
+                ('Last commit : "' + latestCommit.latest.message + '"') : "No previous commits";
             writeTextOutput( { 
-                placeholder: "You may write what is ongoing here," + os.EOL + os.EOL + "Change text to commit message (or stash name) when done", 
+                placeholder: placeholderText, 
                 value: '' 
             } ); 
+            if (state.repoNumber >= 0 && state.repos && state.repos[state.repoNumber]) {
+                state.repos[state.repoNumber].draftMessage = '';
+                saveSettings();
+            }
+            if (typeof onMessageBlur === 'function') {
+                onMessageBlur();
+            } 
         }
         
         
@@ -8860,6 +8956,9 @@ function restoreRepoDraftMessage(repoIdx = state.repoNumber) {
             if (getMode() === 'CHANGED_FILES' || getMode() === 'CHANGED_FILES_TEXT_ENTERED') {
                 _setMode('CHANGED_FILES_TEXT_ENTERED');
             }
+        }
+        if (typeof updateEditCommitTextDiv === 'function') {
+            updateEditCommitTextDiv();
         }
     }
 }

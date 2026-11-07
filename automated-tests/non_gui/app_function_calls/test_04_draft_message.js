@@ -59,6 +59,14 @@ const messageElement = {
     style: {}
 };
 
+const editCommitTextElement = {
+    innerHTML: '',
+    style: { visibility: 'hidden' },
+    attributes: {},
+    setAttribute: function(name, val) { this.attributes[name] = val; },
+    removeAttribute: function(name) { delete this.attributes[name]; }
+};
+
 const sandbox = {
     state: {
         repoNumber: 0,
@@ -79,12 +87,16 @@ const sandbox = {
     document: {
         getElementById: (id) => {
             if (id === 'message') return messageElement;
+            if (id === 'edit_commit_text_div') return editCommitTextElement;
             return { value: '', style: {} };
         }
     },
     window: {
-        _msgAllowAction: true
+        _msgAllowAction: true,
+        _messageHadFocus: false
     },
+    _draftInactivityTimer: null,
+    _draftInactivityExpired: false,
     getMode: () => currentMode,
     _setMode: (mode) => { currentMode = mode; sandbox.localState.mode = mode; },
     saveSettings: () => { savedSettingsCallCount++; },
@@ -100,7 +112,8 @@ const fnNames = [
     'writeTextOutput',
     'getRepoDraftMessage',
     'saveCurrentRepoDraftMessage',
-    'restoreRepoDraftMessage'
+    'restoreRepoDraftMessage',
+    'updateEditCommitTextDiv'
 ];
 
 let compiledCode = '';
@@ -223,6 +236,57 @@ async function runTests() {
         'saveCurrentRepoDraftMessage ignores updates while amending previous commit message via double-click in NO_FILES_TO_COMMIT mode'
     );
     sandbox.window._msgAllowAction = true;
+
+    // Test 10: updateEditCommitTextDiv shows (draft) badge on blur or idle, and (double-click to change) when empty at HEAD
+    currentMode = 'CHANGED_FILES';
+    messageElement.value = 'WIP notes for refactoring';
+    sandbox.window._messageHadFocus = false;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(draft)' &&
+        editCommitTextElement.style.visibility === 'visible' &&
+        editCommitTextElement.attributes['data-tooltip'] === 'Draft note for this repository (edit when ready to commit)',
+        'updateEditCommitTextDiv displays (draft) when text is entered and textarea is not focused'
+    );
+
+    // When focused and active typing (not idle), (draft) is hidden
+    sandbox.window._messageHadFocus = true;
+    sandbox._draftInactivityExpired = false;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.style.visibility === 'hidden',
+        'updateEditCommitTextDiv hides (draft) while actively typing in focus'
+    );
+
+    // When idle for 20s while focused, (draft) becomes visible
+    sandbox._draftInactivityExpired = true;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(draft)' &&
+        editCommitTextElement.style.visibility === 'visible',
+        'updateEditCommitTextDiv reveals (draft) when idle for 20s even if focused'
+    );
+
+    // In NO_FILES_TO_COMMIT with no draft: shows (double-click to change)
+    currentMode = 'NO_FILES_TO_COMMIT';
+    messageElement.value = '';
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(double-click to change)' &&
+        editCommitTextElement.style.visibility === 'visible' &&
+        !editCommitTextElement.attributes['data-tooltip'],
+        'updateEditCommitTextDiv restores (double-click to change) when message area is empty at HEAD'
+    );
+
+    // In HISTORY mode: hidden
+    currentMode = 'HISTORY';
+    sandbox.localState.historyNumber = 2;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.style.visibility === 'hidden',
+        'updateEditCommitTextDiv is hidden in HISTORY mode'
+    );
+    sandbox.localState.historyNumber = -1;
 
     printSuiteResult();
 }
