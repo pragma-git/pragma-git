@@ -527,11 +527,11 @@
                 
                                                    
             <!-- Icon Stash  -->                             
-            <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
+            <div id="bottom-titlebar-stash-icon-wrapper" class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
                 <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
                     onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
                              _callback('clicked-stash-button')" 
-                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png'); updateStashTooltip();" 
                     onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
                     src="images/stash.png">
             </div> 

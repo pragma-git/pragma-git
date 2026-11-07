@@ -74,7 +74,7 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * For instance, textarea can have text, placeholder and read-only text, depending on mode. 
  * 
  * 
- * Mode Strings :
+ * Mode Strings : 
  * --------------
  * 
  * UNKNOWN                    lets _setMode determine correct mode
@@ -4031,7 +4031,7 @@ async function _setMode( inputModeName){
             break;
         }
             
-        case 'CHANGED_FILES': {
+        case 'CHANGED_FILES': { 
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
 
@@ -5235,6 +5235,25 @@ async function gitRememberBranch( hash, name){
         console.log('Error in gitRememberBranch() -- creating branch-note');   
         console.log(err);
     }  
+}
+
+function updateStashTooltip() {
+    let wrapper = document.getElementById("bottom-titlebar-stash-icon-wrapper");
+    if (!wrapper) return;
+    let mode = (typeof getMode === "function") ? getMode() : "";
+    let isChanged = (mode === "CHANGED_FILES" || mode === "CHANGED_FILES_TEXT_ENTERED");
+    if (!isChanged) {
+        wrapper.setAttribute("data-tooltip", "Stash uncommitted");
+        return;
+    }
+    let msg = (typeof readMessage === "function") ? readMessage().trim() : "";
+    if (msg.length > 0) {
+        let shortMsg = msg.replace(/\r?\n.*/s, ""); // take first line
+        if (shortMsg.length > 30) shortMsg = shortMsg.substring(0, 30) + "...";
+        wrapper.setAttribute("data-tooltip", `Stash with name: "${shortMsg}"`);
+    } else {
+        wrapper.setAttribute("data-tooltip", "Stash uncommitted files (type in above textarea to name stash)");
+    }
 }
 
 async function gitStash(){

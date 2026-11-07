@@ -30,13 +30,15 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Dynamic Stash Naming Tooltip**:
+  - Added dynamic tooltip behavior for the stash button in `app.html` (`updateStashTooltip()`) and `app.js`.
+  - When in `CHANGED_FILES` or `CHANGED_FILES_TEXT_ENTERED`:
+    - If user has entered text in the commit message box, tooltip reflects the pending stash name: `Stash with name: "<entered text>"`.
+    - If empty, tooltip provides a subtle prompt: `Stash uncommitted files (type in above textarea to name stash)`.
+  - In other modes (or if no uncommitted changes), defaults back to clean `Stash uncommitted`.
 * **Clean Previous Commit Placeholder**:
   - Replaced generic 3-line help boilerplate with `Last commit: "<title>"` placeholder in the message area for both `NO_FILES_TO_COMMIT` and `CHANGED_FILES` modes when at `HEAD` ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
   - Provides instant context of the previous commit directly in grey text without unnecessary clutter.
-* **HEAD Message Area & Floating Status Enhancements**:
-  - Restored latest commit title as grey placeholder in the message area when at `HEAD` without modified files (`NO_FILES_TO_COMMIT`).
-  - Added dedicated floating status indicator at bottom-left (`#edit_commit_status_div`) showing `(changed)` when text has been altered from the displayed previous commit.
-  - Retained bottom-right floating help (`(double-click to change)` / `(esc-key to cancel)`) with coordinated visibility.
 * **Menu Visual Contrast Fix**:
   - Stopped greying out active repositories and branches in both the repo menu and the branch menu ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
   - Active items remain enabled with full visual contrast and their checked status indicator, preventing them from appearing disabled or broken.
