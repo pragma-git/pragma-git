@@ -1,12 +1,13 @@
 ### 🛠️ Tech Stack
 * **Runtime & Framework**: NW.js (`0.100.1`) med Chromium och Node.js
-* **Core Libraries**: `simple-git`, `@hackolade/keytar`, `chokidar`, `diff-match-patch`, `@toast-ui/editor`
+* **Core Libraries**: `simple-git` (^4.0.2), `@hackolade/keytar`, `chokidar`, `diff-match-patch`, `@toast-ui/editor`
 * **Packaging & Signing**: `create-dmg`, macOS `codesign`, Apple `notarytool` / `stapler`
 * **Coding Standard**: Always write code comments, documentation, and variable/function names in **American English**.
 
 ---
 
 ### 🏛️ Architecture & Files
+* **Git Wrapper & Resilience (`lib/simpleGitWithRetry.js`)**: Central Proxy wrapper for `simple-git` providing automated exponential retry logic on index.lock/config.lock collisions, transparent normalization for `simple-git` v4 CommonJS exports, and automatic injection of required security guard flags (`allowEnvironment` and `opts.unsafe.*`).
 * **UI Test Framework**: Framework för automatiserade och interaktiva UI-tester av Pragma-git via Chrome DevTools Protocol med YAML-scenarier och isolerade testmiljöer ([automated-tests/ui/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/run_ui_tests.js), [automated-tests/ui/cdp_client.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/cdp_client.js), [automated-tests/ui/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/ui_fixtures.js), [automated-tests/ui/scenarios/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/))
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
 * **Modified Files List**: Fönster för modifierade filer och filurval ([listChanged.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.html), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js))
@@ -30,6 +31,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Upgraded to `simple-git` v4.0.2 with Full Backwards-Compatibility**:
+  - Upgraded `simple-git` to `^4.0.2` in `package.json` to resolve security vulnerabilities identified by `npm audit`.
+  - Normalized CommonJS imports in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js), [notes.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/notes.js), [edit_ignore.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/edit_ignore.html), and [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js) to resolve the factory function whether returned directly or as `{ simpleGit }` / `{ default }`.
+  - Configured `normalizeGitOptions` in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js) to configure `simple-git` v4's environment guards (`allowEnvironment`) and security category flags (`unsafe.allowUnsafeInclude`, `allowUnsafeAskPass`, `allowUnsafeCredentialHelper`, etc.), allowing include configs, custom binaries (`ssh-git-client`), and credentials without throws.
+  - Verified 100% pass rate across all 8 test categories (SSH, utils, git_client, credentials, git_configs, apis, app_function_calls, and UI suites).
 * **Optimized Fast Graph & General Find in NW.js**:
   - In [extend_find-in-nw.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/extend_find-in-nw.js), `getElementsToSearch()` now returns `#graphContent` directly for Graph windows so `window.findAndReplaceDOMText` performs a fast single pass over the entire commit list instead of iterating over hundreds of individual child rows.
   - Bypassed costly ancestor tree crawling and `window.getComputedStyle(cur)` in `isNodeVisible` for Graph elements.

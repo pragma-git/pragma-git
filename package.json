@@ -35,7 +35,7 @@
     "isbinaryfile": "^5.0.2",
     "mime-types": "^2.1.35",
     "node-fetch": "^2.7.0",
-    "simple-git": "^3.23.0",
+    "simple-git": "^4.0.2",
     "windows-network-drive": "^3.0.2"
   },
   "devDependencies": {

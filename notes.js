@@ -5,7 +5,8 @@ const gui = require("nw.gui"); // TODO : don't know if this will be needed
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const simpleGit = require('simple-git');  // (const simpleGit = opener.simpleGit  --  Does not work);
+const sgImport = require('simple-git');  // (const simpleGit = opener.simpleGit  --  Does not work);
+const simpleGit = typeof sgImport === 'function' ? sgImport : (sgImport.simpleGit || sgImport.default);
 
 var util = require('./util_module.js'); // Pragma-git common functions
 

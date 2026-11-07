@@ -30,7 +30,7 @@ const os = require('os');
 const vm = require('vm');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
-const simpleGitDefault = require(path.join(REPO_ROOT, 'node_modules/simple-git'));
+const simpleGitDefault = require(path.join(REPO_ROOT, 'lib/simpleGitWithRetry.js'));
 const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT, 'automated-tests/test_setup.js'));
 
 console.log('Running Suite: Git Parity Tests (Local vs Remote SSH Server)');

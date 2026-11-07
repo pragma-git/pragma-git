@@ -170,7 +170,8 @@
             win.setAlwaysOnTop( state.alwaysOnTop );
             
             // Import modules  
-            simpleGit = require('simple-git');  // I am not sure why it did not work to use opener.simpleGit
+            const sgImport = require('simple-git');  // I am not sure why it did not work to use opener.simpleGit
+            simpleGit = typeof sgImport === 'function' ? sgImport : (sgImport.simpleGit || sgImport.default);
             
             const os = require('os');
             const util = require('./util_module.js'); // Pragma-git common functions

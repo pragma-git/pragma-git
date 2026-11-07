@@ -39,6 +39,7 @@ Se till att redigera/uppdatera `.agents/context_checkpoint.md` med filredigering
 ## Arkitektur
 * **Runtime**: NW.js (`0.100.1`) som kombinerar Chromium och Node.js för skrivbordsmiljö.
 * **Huvudfönster**: `app.html` och `app.js` utgör appens huvudgränssnitt och orkestrerar Git-operationer, dialoger och vyer.
+* **Git Wrapper & Proxy (`lib/simpleGitWithRetry.js`)**: Central proxywrapper för `simple-git` som hanterar retry-logik vid fillås, normaliserar CommonJS-anrop för v4, och injicerar säkerhetsflaggor (`allowEnvironment`, `unsafe.*`).
 * **Filurval & Modifierade filer**: `listChanged.html` och `listChanged.js` hanterar presentation och val av ändrade/uncommitted filer för commits.
 * **Inställningsfönster**: `settings.html` och `settings.js` tillhandahåller konfiguration för Repository, Branch, Software, System Info, SSH-inställningar och Kloning.
 * **Diff & Merge Engine**: `merge/pragma-merge.js`, `merge/pragma-merge_iframe.html` och `pragma-merge` sköter 2-vägs/3-vägs interaktiv diff och merge mot lokala och virtuella remote SSH-filer.
