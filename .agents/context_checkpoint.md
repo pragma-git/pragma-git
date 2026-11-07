@@ -30,6 +30,9 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Menu Visual Contrast Fix**:
+  - Stopped greying out active repositories and branches in both the repo menu and the branch menu ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
+  - Active items remain enabled with full visual contrast and their checked status indicator, preventing them from appearing disabled or broken.
 * **Zoom Level Clamping (0.5 to 3.0)**:
   - Enforced bounding between 0.5 and 3.0 for both `zoomMain` (main window) and `zoom` (other windows) in `loadSettings()` ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)) and in input callbacks `zoomMainChanged` / `zoomChanged` ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)).
 * **Recent Repositories Count Setting**:

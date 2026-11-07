@@ -2220,7 +2220,7 @@ async function _callback( name, event){
                         label: warningSign + myEvent.selectedRepo + reasonSuffix, 
                         type: 'checkbox',
                         checked: isCurrentRepo,
-                        enabled: !isCurrentRepo && isRepoValid,
+                        enabled: isRepoValid,
                         click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
                     };
 
@@ -2360,7 +2360,7 @@ async function _callback( name, event){
                                 label: name,
                                 type: 'checkbox',
                                 checked: isCurrent,
-                                enabled: !isCurrent,
+                                enabled: true,
                                 click: () => {
                                     _callback('clickedRepoContextualMenu', {
                                         selectedRepo: name,
@@ -6709,7 +6709,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         label : branchNames[i], 
                         type: 'checkbox',
                         checked : isCurrentBranch,
-                        enabled: !isCurrentBranch,
+                        enabled: true,
                         click :  () => { _callback(callbackName,myEvent);}  
                     }));    
                 }
@@ -6731,7 +6731,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                                 label: secondPart,
                                 type: 'checkbox',
                                 checked : isCurrentBranch,
-                                enabled: !isCurrentBranch,  
+                                enabled: true,  
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
