@@ -3967,16 +3967,13 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             
             newModeName = 'NO_FILES_TO_COMMIT';
-            textOutput.placeholder = 
-                "You may write what is ongoing here," + os.EOL + os.EOL + 
-                "Change text to commit message (or stash name) when done"; 
-            textOutput.readOnly = false;
-            if (HEAD_title == undefined){
-                textOutput.placeholder = "No modified files" ;
-                
-                // Hide amend checkbox
-                document.getElementById('amend_commit_div').style.visibility='hidden';    
+            if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+            } else {
+                textOutput.placeholder = "No previous commits";
+                document.getElementById('amend_commit_div').style.visibility = 'hidden';
             }
+            textOutput.readOnly = false;
 
             if (window._msgAllowAction) {
                 let draft = getRepoDraftMessage();
@@ -4011,7 +4008,7 @@ async function _setMode( inputModeName){
             if (newModeName ==  'NO_FILES_TO_COMMIT') { 
                 // Hide amend  checkbox
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
-                setButtonText()
+                setButtonText();
                 
                 // Modify edit message text
                 if (!window._msgAllowAction) {
@@ -4022,7 +4019,7 @@ async function _setMode( inputModeName){
                     let hasDraft = (readMessage().trim().length > 0);
                     document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
                 }
-                return
+                return;
             };
             
             
@@ -4038,9 +4035,11 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
 
-            textOutput.placeholder = 
-                "You may write what is ongoing here," + os.EOL + os.EOL + 
-                "Change text to commit message (or stash name) when done";  
+            if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+            } else {
+                textOutput.placeholder = "No previous commits";
+            }  
                 
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
