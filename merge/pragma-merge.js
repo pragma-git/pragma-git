@@ -108,6 +108,7 @@ const helpIcon =     `  <!-- Help icon -->
 // Modified from GUI
 var connect = null; // null or "align"
 var collapse = false; 
+var ignoreWhitespace = false;
 
 // Options for MergeView
 const optionsTemplate = {
@@ -115,6 +116,7 @@ const optionsTemplate = {
     mode: "text/html",
     highlightDifferences: true,
     connect: connect,
+    ignoreWhitespace: false,
     readOnly: false
   };
 var options = optionsTemplate;
@@ -252,6 +254,7 @@ async function injectIntoJs(document) {
 
     // Set saved gui mode settings
     collapse = global.state.pragmaMerge.hide_unchanged;
+    ignoreWhitespace = Boolean(global.state.pragmaMerge.ignoreWhitespace);
 
     if ( global.state.pragmaMerge.align ) {
         connect = 'align';
@@ -622,6 +625,7 @@ async function initUI( keep) {
     // Set state as set with clicky-buttons
     options.collapseIdentical = collapse; // Updated from GUI button
     options.connect = connect; // null or 'align'
+    options.ignoreWhitespace = ignoreWhitespace;
     
     // Set display of clicky-buttons
     document.getElementById("two-way").classList.add('enabled');
@@ -823,6 +827,12 @@ async function initUI( keep) {
     }else{
         disable('hide-unchanged'); 
     }
+
+    if (ignoreWhitespace){
+        enable('ignore-whitespace'); 
+    }else{
+        disable('ignore-whitespace'); 
+    }
     
     //
     // Set size, theme, and show search icons
@@ -883,6 +893,8 @@ function changeToEditor(){
     document.getElementById('align-text').style.display = 'none';
     document.getElementById('hide-unchanged').style.display = 'none';
     document.getElementById('hide-unchanged-text').style.display = 'none';
+    document.getElementById('ignore-whitespace').style.display = 'none';
+    document.getElementById('ignore-whitespace-text').style.display = 'none';
  
     document.getElementById('up').style.display = 'none';
     document.getElementById('down').style.display = 'none';
@@ -1093,6 +1105,10 @@ async function closeWindowNicely(exitCode){
     // Store gui mode settings
     global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
     global.state.pragmaMerge.align = document.getElementById('align').checked;
+    let ignoreWsEl = document.getElementById('ignore-whitespace');
+    if (ignoreWsEl) {
+        global.state.pragmaMerge.ignoreWhitespace = ignoreWsEl.checked;
+    }
     global.state.pragmaMerge.mergePanes = panes;
     
     

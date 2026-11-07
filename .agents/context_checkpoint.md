@@ -30,6 +30,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Pragma-merge "Ignore Whitespace" Option**:
+  - Added an `ignore whitespace` checkbox in [merge/pragma-merge_iframe.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html) alongside `align` and `hide unchanged`.
+  - Configured CodeMirror MergeView with `options.ignoreWhitespace = ignoreWhitespace` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+  - Defaults to `false` (safe merge behavior without silently ignoring indentation changes).
+  - Persisted in `settings.json` under `state.pragmaMerge.ignoreWhitespace` via `loadSettings()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and `closeWindowNicely()` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
 * **Consistent "Last commit : ..." Placeholder Across Repo Switches**:
   - Removed remaining hardcoded "You may write what is ongoing here..." boilerplate across `app.js`, `app.html`, and `about.html`.
   - In `restoreRepoDraftMessage()` and `UNKNOWN` mode transitions, the placeholder now preserves the existing `Last commit : "<title>"` (or defaults cleanly to `"No previous commits"` if there are no commits), ensuring switching repositories never flashes the old help text.

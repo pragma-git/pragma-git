@@ -289,7 +289,7 @@
           display: block;
         }
         
-        #up, #down, #align, #hide-unchanged{
+        #up, #down, #align, #hide-unchanged, #ignore-whitespace{
           color: var( --body-text);
           border-color: var( --body-text);
         }
@@ -526,6 +526,14 @@
                         themeSelected( obj.options[obj.selectedIndex].text);"
                 > 
                 <span id='hide-unchanged-text'>hide unchanged</span>
+
+                <input type="checkbox" id='ignore-whitespace'  class=clicky  
+                    onclick="ignoreWhitespace = !ignoreWhitespace; 
+                        initUI(true);
+                        obj = document.getElementById('theme-select');
+                        themeSelected( obj.options[obj.selectedIndex].text);"
+                > 
+                <span id='ignore-whitespace-text'>ignore whitespace</span>
 
                 <!-- option = default is hard coded in code-mirror.css -->
                 <!-- override by chunk-color, which specifies  alpha, or  html color -->
