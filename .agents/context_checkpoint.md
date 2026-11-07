@@ -30,6 +30,9 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Resizable Remote URL Textareas in Settings**:
+  - Restored vertical resizing (`resize: vertical; min-height: 24px;`) for `.remoteURL textarea` in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html#L215).
+  - Users can pull the corner of remote repository URL inputs to view and edit long URLs conveniently.
 * **(draft) Scratchpad Indicator**:
   - Implemented `(draft)` badge in the message area sharing the exact bottom-right position of `(double-click to change)` (`#edit_commit_text_div`).
   - Coordinated through `updateEditCommitTextDiv()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html):
