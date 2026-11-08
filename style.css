@@ -397,44 +397,6 @@ body.dark .top-titlebar-ci-badge {
   color: var(--titlebar-text);
 }
 
-.top-titlebar-upstream-placeholder {
-  visibility: visible;
-  display: inline-block;
-  vertical-align: middle;
-  height: 19px;
-  margin-left: 0;
-  margin-right: 0;
-  line-height: 19px;
-  position: relative;
-  top: 1px;
-  -webkit-app-region: no-drag;
-}
-
-.top-titlebar-upstream-badge {
-  display: none;
-  position: relative;
-  vertical-align: middle;
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-  margin-left: 6px;
-  margin-right: 4px;
-  padding: 1px 6px;
-  font-family: Arial, sans-serif;
-  font-size: 8pt;
-  font-weight: bold;
-  border-radius: 3px;
-  border: 1px solid var(--border-color);
-  background: var(--body-background);
-  color: var(--titlebar-text);
-  line-height: 15px;
-  transition: opacity 0.15s, background 0.15s;
-}
-
-.top-titlebar-upstream-badge:hover {
-  background: var(--button-hover-background);
-  border-color: var(--titlebar-hover-text);
-}
-
 .top-titlebar-tag-icon
  {
   position: absolute;
@@ -476,6 +438,20 @@ body.dark .top-titlebar-ci-badge {
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
+  overflow: visible;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-merge-badge {
+  display: none;
+  position: absolute;
+  top: -4px;
+  right: -7px;
+  font-size: 9px;
+  line-height: 9px;
+  color: #ffffff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
   -webkit-app-region: no-drag;
 }
 

@@ -38,13 +38,20 @@
   - **Phase 2: Upstream Ahead Detection (dry-run & parser)**:
     - Wrapped `gitListUpstreamsNeedingFetch()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) in a Promise, robustly parsing dry-run fetch output (`... -> upstream/<branch>`) and marking `upstreamAhead = true` on `cachedBranchList.branches[remoteBranchLongName]`.
   - **Phase 3: Visual Indicators, Badges & Menu Visibility**:
-    - Added `#top-titlebar-upstream-placeholder` and `#top-titlebar-upstream-badge` (`onclick="_callback('clicked-upstream-badge')"`) in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and styled in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css). Positioned directly adjacent to the branch name/menu, with the CI badge following to the right. Both placeholders dynamically flow without leaving empty dead space when badges are hidden.
-    - Clicking `#top-titlebar-upstream-badge` triggers the matching warning dialog `<dialog id="confirmMergeUpstreamDialog" class="warning">` to confirm merging upstream directly into current branch.
-    - Added dynamic tooltip on `#top-titlebar-merge-icon-wrapper` via `updateMergeTooltip()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) signaling pending upstream merges.
-    - Updated `makeBranchMenu()`:
-      - Includes `upstream` remote branches in both Branch and Merge menus.
-      - Decorates upstream branches with `'★ ' + secondPart + ' (+' + behindCount + ')'`.
-      - Highlights remotes submenu as `'★ Remotes (upstream updates)'` when upstream commits are pending.
+    - Replaced the intrusive titlebar text badge with a discrete indicator flag featuring a star (`★`) directly on the top-right corner of the Merge icon (`#top-titlebar-merge-badge`) in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css).
+    - Star styled in clean white (`#ffffff`, with subtle contrast drop shadow), sized down to 9px, and offset (`top: -4px; right: -7px;`) so it rests cleanly on the top-right corner without clashing with the theme palette.
+    - Synchronized visibility: Hiding the merge icon (e.g. when uncommitted changes exist after selecting merge, or in DEFAULT mode) hides `#top-titlebar-merge-icon-wrapper` as a whole, ensuring the star badge cleanly disappears whenever the merge icon closes.
+    - Preserved clean titlebar aesthetics next to the branch name/menu while keeping dynamic merge icon tooltip (`Merge (N updates from upstream)`).
+    - Removed upstream branches from the Branch menu entirely; upstream tracking is exclusively accessible from the Merge menu where the star badge points.
+    - Added smart relevance filtering via `getUpstreamDefaultBranch()` and `isRelevantUpstreamBranch()`:
+      - Added `hasUpstreamRemote()` check to bypass upstream checks entirely if no `upstream` remote is configured for the active repository, eliminating periodic `gitFetch` overhead on standard repos.
+      - Suppressed stderr (`2>/dev/null`) in `git symbolic-ref` and branch inspection queries, preventing `fatal: ref refs/remotes/upstream/HEAD is not a symbolic ref` noise on repositories where upstream does not define a symbolic `HEAD`.
+      - The star badge, alert tooltip count `N`, and the direct Merge menu items strictly track the upstream default branch (`upstream/HEAD` -> `upstream/main` or `master`) and matching branches (e.g. `upstream/<currentBranch>`).
+      - Completely prevents dozens or hundreds of irrelevant upstream experimental/feature branches from cluttering the menu or permanently holding the star badge on.
+    - Updated `makeBranchMenu()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+      - Renders relevant upstream branches (`★ upstream/main (+N)` and/or `★ upstream/<branch> (+N)`) directly into the Merge menu with a preceding separator, rather than nesting them inside a submenu.
+      - 1-click access to merge upstream directly from the root Merge menu without hover delay.
+      - Kept `Remotes` cleanly dedicated to origin and other remotes.
   - **Phase 4: Fetch & Merge Workflow**:
     - In `clickedBranchContextualMenu` and `clicked-upstream-badge`, selecting/clicking upstream updates displays `<dialog id="confirmMergeUpstreamDialog" class="warning">` matching Pragma-git's standard warning dialog layout instead of browser `confirm()`.
     - Merging executes standard `gitMerge()`, preparing the changes and placing the suggested commit message (`Merge branch '<selectedBranch>' into <currentBranch>`) into the commit text area for storing, maintaining full consistency with all other merges in Pragma-git.

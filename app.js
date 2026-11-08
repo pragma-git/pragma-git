@@ -3509,10 +3509,19 @@ async function _update2(){
         
     // Merge button (hide if uncomitted files)
         try{
+            let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
             if (status_data.changedFiles){
-                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden'
+                if (mergeIconWrapper) {
+                    mergeIconWrapper.style.visibility = 'hidden';
+                } else {
+                    document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+                }
             }else{
-                document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+                if (mergeIconWrapper) {
+                    mergeIconWrapper.style.visibility = 'visible';
+                } else {
+                    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible';
+                }
             }
         }catch(err){  
             console.log(err);
@@ -3696,7 +3705,12 @@ async function _update2(){
             // Hide icons
             document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden';
-            document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+            let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
+            if (mergeIconWrapper) {
+                mergeIconWrapper.style.visibility = 'hidden';
+            } else {
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+            }
             document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
@@ -5393,14 +5407,51 @@ function updateStashTooltip() {
     }
 }
 
+function hasUpstreamRemote() {
+    if (cachedBranchList && cachedBranchList.remoteRepos && cachedBranchList.remoteRepos.fetch && cachedBranchList.remoteRepos.fetch.names) {
+        return cachedBranchList.remoteRepos.fetch.names.includes('upstream');
+    }
+    return false;
+}
+
+function getUpstreamDefaultBranch(folder, remoteName = 'upstream') {
+    if (!folder) return 'main';
+    const { execSync } = require('child_process');
+    try {
+        let symRef = execSync(`cd '${folder}' && git symbolic-ref --short refs/remotes/${remoteName}/HEAD 2>/dev/null`, { encoding: 'utf8' }).trim();
+        return symRef.replace(`${remoteName}/`, '');
+    } catch (e) {}
+    try {
+        let branches = execSync(`cd '${folder}' && git branch -r 2>/dev/null`, { encoding: 'utf8' });
+        if (branches.includes(`${remoteName}/main`)) return 'main';
+        if (branches.includes(`${remoteName}/master`)) return 'master';
+    } catch (e) {}
+    return 'main';
+}
+
+function isRelevantUpstreamBranch(branchRef, currentBranch, upstreamDefault = 'main') {
+    if (!branchRef || typeof branchRef !== 'string') return false;
+    let clean = branchRef.replace(/^remotes\/[^\/]+\//, '').replace(/^[^\/]+\//, '');
+    return (clean === upstreamDefault || clean === 'main' || clean === 'master' || (currentBranch && clean === currentBranch));
+}
+
 function updateMergeTooltip() {
     let wrapper = document.getElementById("top-titlebar-merge-icon-wrapper");
     if (!wrapper) return;
+    if (!hasUpstreamRemote()) {
+        wrapper.setAttribute("data-tooltip", "Merge");
+        return;
+    }
     let totalBehind = 0;
+    let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+    let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+    let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
     if (cachedBranchList && cachedBranchList.branches) {
         for (let b in cachedBranchList.branches) {
             if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
-                totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                if (isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                    totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                }
             }
         }
     }
@@ -5412,19 +5463,26 @@ function updateMergeTooltip() {
 }
 
 function updateUpstreamBadge() {
-    let badge = document.getElementById("top-titlebar-upstream-badge");
+    let badge = document.getElementById("top-titlebar-merge-badge");
     if (!badge) return;
+    if (!hasUpstreamRemote()) {
+        badge.style.display = "none";
+        return;
+    }
     let totalBehind = 0;
+    let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+    let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+    let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
     if (cachedBranchList && cachedBranchList.branches) {
         for (let b in cachedBranchList.branches) {
             if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
-                totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                if (isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                    totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                }
             }
         }
     }
     if (totalBehind > 0) {
-        badge.innerText = `↓ ${totalBehind} upstream`;
-        badge.setAttribute("data-tooltip", `Upstream has ${totalBehind} new commit${totalBehind > 1 ? 's' : ''} (click to view/merge)`);
         badge.style.display = "inline-block";
     } else {
         badge.style.display = "none";
@@ -6380,10 +6438,15 @@ async function cacheBranchList(){
         try {
             const { execSync } = require('child_process');
             let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'HEAD';
+            let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
             for (let b of cachedBranchList.all) {
                 if (b.startsWith('remotes/') && !b.startsWith('remotes/origin/')) {
+                    if (!isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                        continue;
+                    }
                     try {
-                        let countStr = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count ${current}..${b}`, { encoding: 'utf8' }).trim();
+                        let countStr = execSync(`cd '${localFolder}' && git rev-list --count ${current}..${b}`, { encoding: 'utf8' }).trim();
                         let count = parseInt(countStr, 10) || 0;
                         if (count > 0) {
                             if (!cachedBranchList.branches[b]) {
@@ -6894,12 +6957,17 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let numberOfHiddenBranches = 0;
             let submenu = new gui.Menu(); // Prepare an empty submenu for future use
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
+            let upstreamMenuItems = []; // Direct menu items for relevant upstream branches
             
-            let isRemoteUpstreamAhead = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
+            let isRemoteUpstreamAhead = false;  // Flag to tell if remotes/upstream main menu should be flagged as having upstreams ahead
+            let upstreamAheadCount = 0;         // Total upstream updates pending
             const UPSTREAM_AHEAD_MARKER = '!  ';
             
             let isCurrentSubmenuBranch = false;  // Signal to true when I want to checkbox the main menu-item (where one submenu item is currentBranch)
             
+            let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+
             for (var i = 0; i < branchNames.length; ++i) {
                 
                 // Populate utility variables 
@@ -6934,8 +7002,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 
                 // 1) Branch menu
-                //    show remote/origin and locals, plus upstream if available (for inspection/sync)
-                if (  isRemoteBranch &&  ( !isOrigin && !secondPart.startsWith('upstream') ) && ( callbackName === "clickedBranchContextualMenu")  ) {
+                //    only show remote/origin and locals (skip all other remotes including upstream)
+                if ( isRemoteBranch && !isOrigin && ( callbackName === "clickedBranchContextualMenu") ) {
                     continue
                 }
 
@@ -6983,12 +7051,21 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                         
                 // If upstream ahead -- add hint
-                if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
+                let isUpstreamBranch = isRemoteBranch && secondPart.startsWith('upstream');
+                let isRelevantUpstream = isUpstreamBranch && isRelevantUpstreamBranch(branchNames[i], currentBranch, upstreamDefault);
+                
+                // Only include relevant upstream branches (default branch or matching current branch) in upstream menu
+                if (isUpstreamBranch && !isRelevantUpstream) {
+                    continue;
+                }
+
+                if ( isRelevantUpstream && cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
                     let countHint = (cachedBranchList.branches[ branchNames[i] ].behindCount > 1) 
                         ? ` (+${cachedBranchList.branches[ branchNames[i] ].behindCount})` 
                         : '';
                     secondPart = '★ ' + secondPart + countHint;
                     isRemoteUpstreamAhead = true;
+                    upstreamAheadCount += (cachedBranchList.branches[ branchNames[i] ].behindCount || 1);
                 }
                                                          
                 // Skip upstream not needing fetch
@@ -7030,7 +7107,11 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                             });
                         
                         if (isRemoteBranch && showRemote) {
-                            remoteSubmenu.append( tempSubMenu); 
+                            if (isUpstreamBranch) {
+                                upstreamMenuItems.push( tempSubMenu);
+                            } else {
+                                remoteSubmenu.append( tempSubMenu);
+                            }
                             submenuInProgress = false;
                         }else {
                             submenu.append( tempSubMenu); 
@@ -7055,14 +7136,18 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             } // End - branch list loop 
                  
                 
+            // Add upstream directly to menu (no extra hover submenu needed for 1-2 items)
+            if ( upstreamMenuItems.length > 0 ){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                for (let item of upstreamMenuItems) {
+                    menu.append(item);
+                }
+            }
+
             // Add remotes to menu
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
                 let remoteLabel = 'Remotes';
-                if (isRemoteUpstreamAhead){
-                    remoteLabel = '★ Remotes (upstream updates)';
-                }
-
                 menu.append( new gui.MenuItem( { label : remoteLabel, submenu: remoteSubmenu }  )); 
             }
                  
@@ -9829,7 +9914,12 @@ function dev_show_all_icons(){
     document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
-    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+    let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
+    if (mergeIconWrapper) {
+        mergeIconWrapper.style.visibility = 'visible';
+    } else {
+        document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible';
+    }
     document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
