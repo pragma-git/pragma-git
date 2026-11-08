@@ -685,12 +685,54 @@ async function _callback( name, event){
         
         break;
       }
+      case 'clicked-upstream-badge': {
+        // Find first upstream branch that is ahead and prompt to merge directly
+        let targetBranch = null;
+        let count = 0;
+        let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+        if (cachedBranchList && cachedBranchList.branches) {
+            for (let b in cachedBranchList.branches) {
+                if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                    targetBranch = b;
+                    count = cachedBranchList.branches[b].behindCount || 1;
+                    break;
+                }
+            }
+        }
+        if (targetBranch) {
+            showConfirmMergeUpstreamDialog(targetBranch, current, count);
+        } else {
+            await branchClicked(true, 'menu');
+        }
+        break;
+      }
+      case 'confirmMergeUpstreamOK': {
+        if (pendingUpstreamMerge) {
+            let mergeInfo = pendingUpstreamMerge;
+            pendingUpstreamMerge = null;
+            await _callback('clickedMergeContextualMenu', {
+                selectedBranch: mergeInfo.selectedBranch,
+                currentBranch: mergeInfo.currentBranch
+            });
+        }
+        break;
+      }
       case 'clickedBranchContextualMenu': { 
         console.log('Selected branch = ' + event.selectedBranch);
         let branchName = event.selectedBranch;
         pragmaLog('   branchname = ' + branchName);
         
         saveCurrentRepoDraftMessage(true);
+
+        // If user selected an upstream branch from branch menu, offer to merge it into current branch
+        if (branchName.startsWith('remotes/upstream') || branchName.startsWith('upstream/')) {
+            let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+            let count = (cachedBranchList && cachedBranchList.branches && cachedBranchList.branches[branchName]) 
+                ? (cachedBranchList.branches[branchName].behindCount || 1) 
+                : 1;
+            showConfirmMergeUpstreamDialog(branchName, current, count);
+            break;
+        }
 
         // Checkout local branch
         try{
@@ -3667,11 +3709,15 @@ async function _update2(){
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'hidden';  
             updateCiBadge({ status: 'none', url: null });
+            if (typeof updateUpstreamBadge === 'function') updateUpstreamBadge();
+            if (typeof updateMergeTooltip === 'function') updateMergeTooltip();
         }else{
             // Notes and folder icon shown if repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'visible'; // Notes icon
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'visible'; // Folder icon
             queryCommitCiStatus(false);
+            if (typeof updateUpstreamBadge === 'function') updateUpstreamBadge();
+            if (typeof updateMergeTooltip === 'function') updateMergeTooltip();
         }
                
                         
@@ -5347,6 +5393,61 @@ function updateStashTooltip() {
     }
 }
 
+function updateMergeTooltip() {
+    let wrapper = document.getElementById("top-titlebar-merge-icon-wrapper");
+    if (!wrapper) return;
+    let totalBehind = 0;
+    if (cachedBranchList && cachedBranchList.branches) {
+        for (let b in cachedBranchList.branches) {
+            if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+            }
+        }
+    }
+    if (totalBehind > 0) {
+        wrapper.setAttribute("data-tooltip", `Merge (${totalBehind} update${totalBehind > 1 ? 's' : ''} from upstream)`);
+    } else {
+        wrapper.setAttribute("data-tooltip", "Merge");
+    }
+}
+
+function updateUpstreamBadge() {
+    let badge = document.getElementById("top-titlebar-upstream-badge");
+    if (!badge) return;
+    let totalBehind = 0;
+    if (cachedBranchList && cachedBranchList.branches) {
+        for (let b in cachedBranchList.branches) {
+            if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+            }
+        }
+    }
+    if (totalBehind > 0) {
+        badge.innerText = `↓ ${totalBehind} upstream`;
+        badge.setAttribute("data-tooltip", `Upstream has ${totalBehind} new commit${totalBehind > 1 ? 's' : ''} (click to view/merge)`);
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
+
+var pendingUpstreamMerge = null;
+
+function showConfirmMergeUpstreamDialog(upstreamBranch, currentBranch, count = 1) {
+    pendingUpstreamMerge = {
+        selectedBranch: upstreamBranch,
+        currentBranch: currentBranch
+    };
+    let dialog = document.getElementById("confirmMergeUpstreamDialog");
+    let msgEl = document.getElementById("confirmMergeUpstreamMessage");
+    if (msgEl) {
+        msgEl.innerHTML = `Do you want to merge <b>${count} commit${count > 1 ? 's' : ''}</b> from <b>${upstreamBranch}</b> into your current branch <b>${currentBranch}</b>?`;
+    }
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+    }
+}
+
 async function gitStash(){
     // Stash
     try{
@@ -5789,9 +5890,12 @@ function gitFetch( longUpstreamBranch){ // Fetch
 
         if ( longUpstreamBranch == undefined){
             
-            // Fetch from default (origin)
-            simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, 'origin'], onFetch);
+            // Fetch from all configured remotes (--all) so origin, upstream, etc. are updated automatically
+            simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, '--all'], onFetch);
             function onFetch(err, result) {
+                if (typeof updateBranchListWithUpstream === 'function') {
+                    updateBranchListWithUpstream();
+                }
             };
             
         }else{
@@ -6068,28 +6172,31 @@ async function addUpstream( forkParentUrl){
     
     try{
    
+        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+
         // Set remote repo
         let commands = [ 'remote', 'add', 'upstream' , forkParentUrl];
-        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
-        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
-        function onAddemote(err, result ){
-            console.log(result);
-            console.log(err);
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddRemote);
+        function onAddRemote(err, result ){
+            if (err) console.warn(err);
+            if (result) console.log(result);
         };
         
-        // Modify push url (so it will be different from fetch url)
+        // Block push by setting pushurl to NO-PUSH (so upstream can never be pushed to)
         commands = [ 'remote', 'set-url', '--push', 'upstream', 'NO-PUSH'  ];                
         await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
         function onSetRemoteUrl(err, result ){
-            console.log(result);
-            console.log(err);
+            if (err) console.warn(err);
+            if (result) console.log(result);
         };
         
         // Document fork parent in settings
-        state.repos[repoNumber].forkedFromURL = forkParentUrl;
+        state.repos[state.repoNumber].forkedFromURL = forkParentUrl;
         
         await cacheBranchList();
-        await updateRemoteRepos();
+        if (typeof updateRemoteRepos === 'function') {
+            await updateRemoteRepos();
+        }
     }catch (err){
         console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
         console.warn(err);
@@ -6266,47 +6373,112 @@ async function cacheBranchList(){
         }
 
         // Check upstreams in parallel
-        await Promise.allSettled( promises )
+        await Promise.allSettled( promises );
+        
+        // Also check any existing local tracking branches for upstream remotes (e.g. remotes/upstream/*)
+        // against current branch using rev-list, so that branches already fetched are flagged as ahead
+        try {
+            const { execSync } = require('child_process');
+            let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'HEAD';
+            for (let b of cachedBranchList.all) {
+                if (b.startsWith('remotes/') && !b.startsWith('remotes/origin/')) {
+                    try {
+                        let countStr = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count ${current}..${b}`, { encoding: 'utf8' }).trim();
+                        let count = parseInt(countStr, 10) || 0;
+                        if (count > 0) {
+                            if (!cachedBranchList.branches[b]) {
+                                cachedBranchList.branches[b] = {current: false, name: b, commit: undefined, label: undefined, show: true};
+                            }
+                            cachedBranchList.branches[b].upstreamAhead = true;
+                            cachedBranchList.branches[b].behindCount = count;
+                        }
+                    } catch (e) {
+                        // branch or ref may not exist
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('Error verifying fetched upstream refs:', err);
+        }
+        
+        // Update UI badge & merge tooltip
+        if (typeof updateUpstreamBadge === 'function') {
+            updateUpstreamBadge();
+        }
+        if (typeof updateMergeTooltip === 'function') {
+            updateMergeTooltip();
+        }
         
     }
         async function gitListUpstreamsNeedingFetch(branchName){
-            // Sets upstreamAhead flag
+            // Sets upstreamAhead flag and computes behind count
             
-            let INCLUDE_PATH = `include.path = ${configFile}` ;
-            RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git -c '${INCLUDE_PATH}' -c core.askpass= fetch --dry-run ${branchName}`;
-        
-            let child = await exec( RUN , 
-                (error, stdout, stderr) => { 
-        
-                    // Typical response (or totally empty if fetch is not needed) :
-                    //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
-                            //276f6e7..1c89d32  main       -> upstream/main
-                    //`
-        
-                    // Parse response and update  cachedBranchList.branches.upstreamAhead 
-                    let returnedRemotes = [];
-        
-                    let rows = stderr.split('\n'); 
-                    for (var i = 0; i < rows.length; ++i) {
-                        
-                        let columns = rows[i].split('->'); 
-                        let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
-                        
-                        if ( remoteBranchShortName.startsWith(branchName) ){
-                            let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
-                            
-                            //cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
-                            cachedBranchList.branches[remoteBranchLongName] =
-                                {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true};
-                            
-                            if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
-                                cachedBranchList.all.push(remoteBranchLongName);
+            return new Promise((resolve) => {
+                let INCLUDE_PATH = typeof configFile !== 'undefined' ? `include.path = ${configFile}` : '';
+                let configFlag = INCLUDE_PATH ? `-c '${INCLUDE_PATH}' ` : '';
+                let RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git ${configFlag}-c core.askpass= fetch --dry-run ${branchName}`;
+            
+                exec( RUN , 
+                    async (error, stdout, stderr) => { 
+            
+                        // Typical response (or totally empty if fetch is not needed) :
+                        //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
+                        //        276f6e7..1c89d32  main       -> upstream/main
+                        //`
+            
+                        // Parse response and update  cachedBranchList.branches.upstreamAhead 
+                        if (stderr) {
+                            let rows = stderr.split('\n'); 
+                            for (var i = 0; i < rows.length; ++i) {
+                                if (!rows[i].includes('->')) continue;
+                                let columns = rows[i].split('->'); 
+                                let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
+                                
+                                if ( remoteBranchShortName.startsWith(branchName) ){
+                                    let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
+                                    
+                                    // Parse commit difference if available (e.g. 276f6e7..1c89d32)
+                                    let diffParts = columns[0].trim().split(/\s+/);
+                                    let count = 1;
+                                    if (diffParts.length > 0 && diffParts[0].includes('..')) {
+                                        let range = diffParts[0];
+                                        try {
+                                            const { execSync } = require('child_process');
+                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count ${range}`, { encoding: 'utf8' }).trim();
+                                            count = parseInt(res, 10) || 1;
+                                        } catch (e) {
+                                            count = 1;
+                                        }
+                                    } else {
+                                        // Brand new upstream branch or ref not locally present
+                                        try {
+                                            const { execSync } = require('child_process');
+                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count HEAD..${branchName}/${remoteBranchShortName.replace(branchName + '/', '')}`, { encoding: 'utf8' }).trim();
+                                            count = parseInt(res, 10) || 1;
+                                        } catch (e) {
+                                            count = 1;
+                                        }
+                                    }
+
+                                    if (cachedBranchList.branches[remoteBranchLongName]) {
+                                        cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                                        cachedBranchList.branches[remoteBranchLongName].behindCount = count;
+                                    } else {
+                                        cachedBranchList.branches[remoteBranchLongName] =
+                                            {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true, behindCount: count};
+                                    }
+                                    
+                                    if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
+                                        cachedBranchList.all.push(remoteBranchLongName);
+                                    }
+                                }
                             }
                         }
-                    }
-             
-                }  // end callback handler
-            );  // End exec
+                 
+                        resolve();
+                    }  // end callback handler
+                );  // End exec
+            });
             
         }
 
@@ -6762,7 +6934,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 
                 // 1) Branch menu
-                if (  isRemoteBranch &&  ( !isOrigin ) && ( callbackName === "clickedBranchContextualMenu")  ) {
+                //    show remote/origin and locals, plus upstream if available (for inspection/sync)
+                if (  isRemoteBranch &&  ( !isOrigin && !secondPart.startsWith('upstream') ) && ( callbackName === "clickedBranchContextualMenu")  ) {
                     continue
                 }
 
@@ -6811,7 +6984,10 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         
                 // If upstream ahead -- add hint
                 if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
-                    secondPart = UPSTREAM_AHEAD_MARKER + secondPart;
+                    let countHint = (cachedBranchList.branches[ branchNames[i] ].behindCount > 1) 
+                        ? ` (+${cachedBranchList.branches[ branchNames[i] ].behindCount})` 
+                        : '';
+                    secondPart = '★ ' + secondPart + countHint;
                     isRemoteUpstreamAhead = true;
                 }
                                                          
@@ -6882,11 +7058,12 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             // Add remotes to menu
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
+                let remoteLabel = 'Remotes';
                 if (isRemoteUpstreamAhead){
-                    cachedFirstPart = UPSTREAM_AHEAD_MARKER + cachedFirstPart;
+                    remoteLabel = '★ Remotes (upstream updates)';
                 }
 
-                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
+                menu.append( new gui.MenuItem( { label : remoteLabel, submenu: remoteSubmenu }  )); 
             }
                  
                  
@@ -7908,6 +8085,8 @@ global.getCachedCiStatus = getCachedCiStatus;
 global.setCachedCiStatus = setCachedCiStatus;
 global.updateCiBadge = updateCiBadge;
 global.queryCommitCiStatus = queryCommitCiStatus;
+global.updateUpstreamBadge = updateUpstreamBadge;
+global.updateMergeTooltip = updateMergeTooltip;
 listUnstarredGithub = async function( state, owner, repo) {
     // state is state for pragma-git
     // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo
@@ -9787,6 +9966,8 @@ window.onload = async function() {
   
   // Fix that is it hidden when starting (was misplaced in GUI at start)
   document.getElementById('top-titlebar-ci-placeholder').style.visibility = 'visible';
+  let upstreamPlaceholder = document.getElementById('top-titlebar-upstream-placeholder');
+  if (upstreamPlaceholder) upstreamPlaceholder.style.visibility = 'visible';
   
 
 };

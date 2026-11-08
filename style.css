@@ -319,13 +319,12 @@ div#inner-content {
 }
 
 .top-titlebar-ci-placeholder {
-  visibility: hidden;
+  visibility: visible;
   display: inline-block;
   vertical-align: middle;
-  width: 36px;
   height: 19px;
-  margin-left: 5px;
-  margin-right: 10px;
+  margin-left: 0;
+  margin-right: 0;
   text-align: center;
   line-height: 19px;
   position: relative;
@@ -339,6 +338,8 @@ div#inner-content {
   vertical-align: middle;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  margin-left: 4px;
+  margin-right: 6px;
   padding: 0;
   border: none;
   background: transparent;
@@ -394,6 +395,44 @@ body.light .top-titlebar-ci-badge {
 
 body.dark .top-titlebar-ci-badge {
   color: var(--titlebar-text);
+}
+
+.top-titlebar-upstream-placeholder {
+  visibility: visible;
+  display: inline-block;
+  vertical-align: middle;
+  height: 19px;
+  margin-left: 0;
+  margin-right: 0;
+  line-height: 19px;
+  position: relative;
+  top: 1px;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-upstream-badge {
+  display: none;
+  position: relative;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  margin-left: 6px;
+  margin-right: 4px;
+  padding: 1px 6px;
+  font-family: Arial, sans-serif;
+  font-size: 8pt;
+  font-weight: bold;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  background: var(--body-background);
+  color: var(--titlebar-text);
+  line-height: 15px;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.top-titlebar-upstream-badge:hover {
+  background: var(--button-hover-background);
+  border-color: var(--titlebar-hover-text);
 }
 
 .top-titlebar-tag-icon

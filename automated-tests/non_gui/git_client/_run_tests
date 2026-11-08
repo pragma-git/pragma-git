@@ -57,6 +57,10 @@ function print_suite_description() {
             echo "   Compares core Git operations in app.js across local and remote SSH server repositories."
             echo "   Verifies parity for status, diff parsing, history, branches, and tree diff equality."
             ;;
+        test_04_upstream_and_origin.js)
+            echo "   Tests upstream parent configuration, fetch dry-run ahead detection, and NO-PUSH safety."
+            echo "   Verifies fork push to origin is permitted while pushing to upstream is strictly blocked."
+            ;;
     esac
 }
 

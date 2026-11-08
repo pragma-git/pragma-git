@@ -824,6 +824,12 @@ async function _callback( name, event){
                     await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                     };
+
+                    // For any non-origin remote (such as upstream), always set push URL to NO-PUSH
+                    if (alias !== 'origin'){
+                        await simpleGitLog( localFolder3).raw( ['remote', 'set-url', '--push', alias, 'NO-PUSH'], (err, res) => {});
+                        remoteRepos.push.URLs[index] = 'NO-PUSH';
+                    }
                 }else{
                     newUrl = '';    
                         

@@ -31,6 +31,31 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Upstream Remote Handling & Fork Incorporation (Phases 1-4 Complete)**:
+  - **Phase 1: Permanent NO-PUSH Protection**:
+    - Enhanced `addUpstream()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and `setRemoteRepoButton` in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) so that any configured `upstream` (or non-origin) remote always sets `git remote set-url --push <alias> NO-PUSH`.
+    - Permanently prohibits accidental pushing to upstream parent repositories at the Git level, while leaving `origin` (the user's fork) writable.
+  - **Phase 2: Upstream Ahead Detection (dry-run & parser)**:
+    - Wrapped `gitListUpstreamsNeedingFetch()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) in a Promise, robustly parsing dry-run fetch output (`... -> upstream/<branch>`) and marking `upstreamAhead = true` on `cachedBranchList.branches[remoteBranchLongName]`.
+  - **Phase 3: Visual Indicators, Badges & Menu Visibility**:
+    - Added `#top-titlebar-upstream-placeholder` and `#top-titlebar-upstream-badge` (`onclick="_callback('clicked-upstream-badge')"`) in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and styled in [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css). Positioned directly adjacent to the branch name/menu, with the CI badge following to the right. Both placeholders dynamically flow without leaving empty dead space when badges are hidden.
+    - Clicking `#top-titlebar-upstream-badge` triggers the matching warning dialog `<dialog id="confirmMergeUpstreamDialog" class="warning">` to confirm merging upstream directly into current branch.
+    - Added dynamic tooltip on `#top-titlebar-merge-icon-wrapper` via `updateMergeTooltip()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) signaling pending upstream merges.
+    - Updated `makeBranchMenu()`:
+      - Includes `upstream` remote branches in both Branch and Merge menus.
+      - Decorates upstream branches with `'★ ' + secondPart + ' (+' + behindCount + ')'`.
+      - Highlights remotes submenu as `'★ Remotes (upstream updates)'` when upstream commits are pending.
+  - **Phase 4: Fetch & Merge Workflow**:
+    - In `clickedBranchContextualMenu` and `clicked-upstream-badge`, selecting/clicking upstream updates displays `<dialog id="confirmMergeUpstreamDialog" class="warning">` matching Pragma-git's standard warning dialog layout instead of browser `confirm()`.
+    - Merging executes standard `gitMerge()`, preparing the changes and placing the suggested commit message (`Merge branch '<selectedBranch>' into <currentBranch>`) into the commit text area for storing, maintaining full consistency with all other merges in Pragma-git.
+  - **Automated Remote Discovery & `--all` Fetch Support**:
+    - In `gitFetch()` within [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), changed default fetch without arguments from `fetch origin` to `fetch --all`. Pragma-git now automatically fetches and populates remote tracking references from all configured remotes (`origin`, `upstream`, etc.) seamlessly without requiring terminal intervention.
+    - Updated `updateBranchListWithUpstream()` and dry-run parser to handle new tracking branches and automatically refresh branch lists upon fetch completion.
+    - In `updateBranchListWithUpstream()`, added inspection of existing local tracking branches (`remotes/upstream/*`) via `git rev-list --count HEAD..<remote_branch>` so that once upstream commits have been fetched locally, upstream branches are accurately flagged as ahead (`upstreamAhead = true`, `behindCount = N`), ensuring badges and menu indicators display both before and after fetches.
+    - Fixed `ReferenceError: status_data is not defined` in `updateBranchListWithUpstream()` and branch callbacks by ensuring safe `typeof status_data !== 'undefined'` evaluation.
+    - Set `.top-titlebar-upstream-placeholder` to `visibility: visible` in `style.css` so the badge is rendered without waiting for onload DOM modifications.
+  - **Automated Tests**:
+    - Created [automated-tests/non_gui/git_client/test_04_upstream_and_origin.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_04_upstream_and_origin.js) covering parent repository setup, origin fork push, upstream `NO-PUSH` enforcement, dry-run change detection, fetch commit counting, clean merging of upstream into local branch, and pushing merged upstream commits to origin (8/8 tests passed).
 * **Upgraded to `simple-git` v4.0.2 with Full Backwards-Compatibility**:
   - Upgraded `simple-git` to `^4.0.2` in `package.json` to resolve security vulnerabilities identified by `npm audit`.
   - Normalized CommonJS imports in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js), [notes.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/notes.js), [edit_ignore.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/edit_ignore.html), and [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js) to resolve the factory function whether returned directly or as `{ simpleGit }` / `{ default }`.
