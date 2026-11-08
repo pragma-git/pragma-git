@@ -31,6 +31,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Message Overlay Badge Dynamic Offset on Scrollbar**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Added `adjustMessageOverlayOffset()` to calculate whether the `#message` textarea has a vertical scrollbar (`scrollHeight > clientHeight`) and measure the scrollbar width (`offsetWidth - clientWidth`).
+    - Dynamically offsets the `right` position of `#edit_commit_text_div` (containing `(draft)`, `(double-click to change)`, `(esc-key to cancel)`) and `#amend_commit_div` to `(scrollbarWidth + 5) + 'px'` (falling back to `20px`) when vertical scrolling is active, and resets back to `5px` when no scrollbar is present.
+    - Integrated offset recalculation into `updateEditCommitTextDiv()`, `_setMode()` amend div display, and `window.onresize`.
+  - In [automated-tests/non_gui/app_function_calls/test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js):
+    - Added unit test coverage verifying overlay badge offset behavior both with and without a vertical scrollbar.
 * **Selected Repository Row Highlighting in Settings**:
   - In [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html):
     - Added CSS rule `#settingsTableBody tr:has(.localFolderRadioButton:checked), #settingsTableBody tr.selectedRepoRow` using `var(--hoverBackGroundColor)`, styling the currently active radio-buttoned repository row with the identical highlight background color used when hovering over repository rows.

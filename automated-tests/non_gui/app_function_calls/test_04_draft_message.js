@@ -56,15 +56,23 @@ const messageElement = {
     value: '',
     placeholder: '',
     readOnly: false,
+    offsetWidth: 500,
+    clientWidth: 500,
+    scrollHeight: 100,
+    clientHeight: 100,
     style: {}
 };
 
 const editCommitTextElement = {
     innerHTML: '',
-    style: { visibility: 'hidden' },
+    style: { visibility: 'hidden', right: '5px' },
     attributes: {},
     setAttribute: function(name, val) { this.attributes[name] = val; },
     removeAttribute: function(name) { delete this.attributes[name]; }
+};
+
+const amendCommitElement = {
+    style: { visibility: 'hidden', right: '5px' }
 };
 
 const sandbox = {
@@ -88,6 +96,7 @@ const sandbox = {
         getElementById: (id) => {
             if (id === 'message') return messageElement;
             if (id === 'edit_commit_text_div') return editCommitTextElement;
+            if (id === 'amend_commit_div') return amendCommitElement;
             return { value: '', style: {} };
         }
     },
@@ -108,6 +117,7 @@ const sandbox = {
 };
 
 const fnNames = [
+    'adjustMessageOverlayOffset',
     'readMessage',
     'writeTextOutput',
     'getRepoDraftMessage',
@@ -287,6 +297,30 @@ async function runTests() {
         'updateEditCommitTextDiv is hidden in HISTORY mode'
     );
     sandbox.localState.historyNumber = -1;
+
+    // Test 11: adjustMessageOverlayOffset dynamically moves overlay badges left when vertical scrollbar is present
+    messageElement.offsetWidth = 500;
+    messageElement.clientWidth = 485; // 15px scrollbar width
+    messageElement.scrollHeight = 300;
+    messageElement.clientHeight = 100; // scrollHeight > clientHeight (hasVerticalScroll)
+    sandbox.adjustMessageOverlayOffset();
+    assert(
+        editCommitTextElement.style.right === '20px' &&
+        amendCommitElement.style.right === '20px',
+        'adjustMessageOverlayOffset offsets right position by scrollbarWidth + 5px (20px) when scrollbar is present'
+    );
+
+    // When there is no vertical scrollbar, offset returns to 5px
+    messageElement.offsetWidth = 500;
+    messageElement.clientWidth = 500;
+    messageElement.scrollHeight = 100;
+    messageElement.clientHeight = 100;
+    sandbox.adjustMessageOverlayOffset();
+    assert(
+        editCommitTextElement.style.right === '5px' &&
+        amendCommitElement.style.right === '5px',
+        'adjustMessageOverlayOffset resets right position to 5px when no vertical scrollbar is present'
+    );
 
     printSuiteResult();
 }

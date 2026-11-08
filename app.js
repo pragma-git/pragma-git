@@ -4108,6 +4108,7 @@ async function _setMode( inputModeName){
                     "- 2) type description here, and press Store (solve problems later)";                 
             }else{
                 // Show git amend checkbox in message-area
+                adjustMessageOverlayOffset();
                 document.getElementById('amend_commit_div').style.visibility='visible';    
                 
                 // Enable Store button if clicked to amend
@@ -5331,9 +5332,30 @@ function onMessageBlur() {
     updateEditCommitTextDiv();
 }
 
+function adjustMessageOverlayOffset() {
+    let msgEl = document.getElementById('message');
+    if (!msgEl) return;
+
+    let scrollbarWidth = (msgEl.offsetWidth && msgEl.clientWidth) ? (msgEl.offsetWidth - msgEl.clientWidth) : 0;
+    let hasVerticalScroll = (msgEl.scrollHeight && msgEl.clientHeight) ? (msgEl.scrollHeight > msgEl.clientHeight) : false;
+    let offset = (hasVerticalScroll && scrollbarWidth > 0) ? (scrollbarWidth + 5) : (hasVerticalScroll ? 20 : 5);
+
+    let editDiv = document.getElementById('edit_commit_text_div');
+    if (editDiv) {
+        editDiv.style.right = offset + 'px';
+    }
+
+    let amendDiv = document.getElementById('amend_commit_div');
+    if (amendDiv) {
+        amendDiv.style.right = offset + 'px';
+    }
+}
+
 function updateEditCommitTextDiv() {
     let div = document.getElementById('edit_commit_text_div');
     if (!div) return;
+
+    adjustMessageOverlayOffset();
 
     let mode = (typeof getMode === 'function') ? getMode() : '';
     let isHistory = (mode === 'HISTORY' || (typeof localState !== 'undefined' && localState.historyNumber >= 0));
@@ -9960,6 +9982,9 @@ window.onblur = function() {
 window.onresize = function() {
   //win.reload();
   updateContentStyle();
+  if (typeof adjustMessageOverlayOffset === 'function') {
+    adjustMessageOverlayOffset();
+  }
 };
 window.onload = async function() {
     
