@@ -31,6 +31,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Selected Repository Row Highlighting in Settings**:
+  - In [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html):
+    - Added CSS rule `#settingsTableBody tr:has(.localFolderRadioButton:checked), #settingsTableBody tr.selectedRepoRow` using `var(--hoverBackGroundColor)`, styling the currently active radio-buttoned repository row with the identical highlight background color used when hovering over repository rows.
+  - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js):
+    - Added `selectedRepoRow` class application to the matching row during table generation in `generateRepoTable()`.
+    - Updated `repoRadiobuttonChanged` callback in `_callback()` to dynamically toggle the `selectedRepoRow` class on table rows when switching repositories.
 * **System Info Remote & Fork Status Enhancements**:
   - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) `updateRemoteInfo()`:
     - Displaying reason alongside "fail" in `Provider API status`: If the API call fails or encounters an HTTP error (e.g. 401 Unauthorized, 403 Forbidden / rate limit, 404 Not Found), the specific HTTP code and description or network error is displayed in bold italic alongside `fail` (e.g. `fail (401 Unauthorized - invalid or missing credentials)`).

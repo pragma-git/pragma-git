@@ -143,6 +143,12 @@
                 cursor: pointer;
                 vertical-align: middle;
             }
+
+            /* Highlight the currently selected repository row using the same hover highlight */
+            #settingsTableBody tr:has(.localFolderRadioButton:checked),
+            #settingsTableBody tr.selectedRepoRow {
+                background-color: var(--hoverBackGroundColor);
+            }
         
             .localFolder {
                 width: 28%;

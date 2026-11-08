@@ -701,7 +701,22 @@ async function _callback( name, event){
                 opener.pragmaLog(' ');
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
-                document.getElementById(id).checked=true
+                let activeRadio = document.getElementById(id);
+                if (activeRadio) {
+                    activeRadio.checked = true;
+                }
+                // Update row highlight
+                let tbody = document.getElementById("settingsTableBody");
+                if (tbody) {
+                    let rows = tbody.getElementsByTagName('tr');
+                    for (let r of rows) {
+                        r.classList.remove('selectedRepoRow');
+                    }
+                    if (activeRadio) {
+                        let parentRow = activeRadio.closest('tr');
+                        if (parentRow) parentRow.classList.add('selectedRepoRow');
+                    }
+                }
 
 
                                 
@@ -2295,6 +2310,9 @@ async function generateRepoTable(document, table, data) {
     
             let cell, text, button, textarea, radiobutton
             let row = table.insertRow();
+            if (index === state.repoNumber) {
+                row.classList.add('selectedRepoRow');
+            }
             
     
              //  Into table cell : Column Repo-path with radiobuttons
