@@ -3282,6 +3282,24 @@ async function updateRemoteInfo( ){
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let iconLongPath =  opener.CWD_INIT + pathsep + await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
+        if (providerApiStatus !== 'ok' && provider && provider.repoInfoStruct) {
+            let info = provider.repoInfoStruct;
+            let reason = '';
+            if (info.status === 401) {
+                reason = '401 Unauthorized - invalid or missing credentials';
+            } else if (info.status === 403) {
+                reason = '403 Forbidden - access restricted or rate limit reached';
+            } else if (info.status === 404) {
+                reason = '404 Not Found - repository private or does not exist';
+            } else if (info.status) {
+                reason = `${info.status}${info.statusText ? ' ' + info.statusText : ''}`;
+            } else if (info.errorMessage) {
+                reason = info.errorMessage;
+            }
+            if (reason) {
+                providerApiStatus += ` &nbsp;<b><i>(${reason})</i></b>`;
+            }
+        }
         let providerApiUrl = await provider.getValue('api-url');
         console.log(providerApiUrl);
         let providerWebPageUrl = await provider.getValue('web-url');
@@ -3300,7 +3318,13 @@ async function updateRemoteInfo( ){
         }
         let forkParentUrl = await provider.getValue('fork-parent');
         if (forkParentUrl == undefined){
-            forkParentUrl = '(this is not a known fork)';
+            // Fallback to locally stored forkedFromURL if API query didn't return parent (e.g. login failed or unauthenticated)
+            let storedFork = state.repos && state.repos[state.repoNumber] && state.repos[state.repoNumber].forkedFromURL;
+            if (storedFork) {
+                forkParentUrl = `${storedFork} &nbsp;<b><i>(from settings)</i></b>`;
+            } else {
+                forkParentUrl = '(this is not a known fork)';
+            }
         }
 
         html += '<code> <table class="keyValueTable">';

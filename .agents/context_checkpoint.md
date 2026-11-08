@@ -31,6 +31,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **System Info Remote & Fork Status Enhancements**:
+  - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) `updateRemoteInfo()`:
+    - Displaying reason alongside "fail" in `Provider API status`: If the API call fails or encounters an HTTP error (e.g. 401 Unauthorized, 403 Forbidden / rate limit, 404 Not Found), the specific HTTP code and description or network error is displayed in bold italic alongside `fail` (e.g. `fail (401 Unauthorized - invalid or missing credentials)`).
+    - Displaying fallback fork parent URL: If the API call does not return a `fork-parent` (due to authentication failure or API errors), Pragma-git falls back to the repository's locally stored `forkedFromURL` in `state.repos[state.repoNumber]` (e.g. `<upstream_url> (from settings)`), instead of stating `(this is not a known fork)`.
+  - In [apis_github_and_others/general_git_rest_api.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/general_git_rest_api.js):
+    - Added `statusText` and `errorMessage` capture to `fetchWithApi()` response structure, preserving HTTP response status descriptions and error messages for diagnostic presentation in System Info.
 * **Upstream Remote Handling & Fork Incorporation (Phases 1-4 Complete)**:
   - **Phase 1: Permanent NO-PUSH Protection**:
     - Enhanced `addUpstream()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and `setRemoteRepoButton` in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) so that any configured `upstream` (or non-origin) remote always sets `git remote set-url --push <alias> NO-PUSH`.
