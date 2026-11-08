@@ -180,7 +180,7 @@ async function runTests() {
             assertFail('5.5: GitLab web pipelines.json (ci-status-web)', `success=${describe(ok)} failure=${describe(fail)}`);
         }
     } catch (err) {
-        if (/40[13]|429|503|rate limit|cloudflare|blocked/i.test(err.message)) {
+        if (/40[13]|429|503|rate limit|cloudflare|blocked|unavailable|did not return/i.test(err.message)) {
             console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.5: GitLab web pipelines.json (API rate limit or blocked): ${err.message}`);
         } else {
             assertFail('5.5: GitLab web pipelines.json (ci-status-web)', err.message);
@@ -198,7 +198,7 @@ async function runTests() {
             assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', describe(result));
         }
     } catch (err) {
-        if (/40[13]|429|503|rate limit|cloudflare|blocked/i.test(err.message)) {
+        if (/40[13]|429|503|rate limit|cloudflare|blocked|unavailable|did not return/i.test(err.message)) {
             console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.6: GitLab SVG badge (API rate limit or blocked): ${err.message}`);
         } else {
             assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', err.message);

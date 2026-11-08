@@ -38,6 +38,8 @@
     - Added `selectedRepoRow` class application to the matching row during table generation in `generateRepoTable()`.
     - Updated `repoRadiobuttonChanged` callback in `_callback()` to dynamically toggle the `selectedRepoRow` class on table rows when switching repositories.
 * **System Info Remote & Fork Status Enhancements**:
+  - In [automated-tests/non_gui/apis/test_05_live_ci_status.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/apis/test_05_live_ci_status.js):
+    - Expanded the external blocking / rate-limit regex for live GitLab tests 5.5 and 5.6 to match `"unavailable"` and `"did not return"`. When public GitLab web endpoints return 403 or anti-bot challenge pages on GitHub Actions runner IPs, the error message thrown by `getValue()` (`GitLab web pipelines.json did not return CI status (private repo or endpoint unavailable)`) is now accurately caught and recorded as `[SKIP]`.
   - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) `updateRemoteInfo()`:
     - Displaying reason alongside "fail" in `Provider API status`: If the API call fails or encounters an HTTP error (e.g. 401 Unauthorized, 403 Forbidden / rate limit, 404 Not Found), the specific HTTP code and description or network error is displayed in bold italic alongside `fail` (e.g. `fail (401 Unauthorized - invalid or missing credentials)`).
     - Displaying fallback fork parent URL: If the API call does not return a `fork-parent` (due to authentication failure or API errors), Pragma-git falls back to the repository's locally stored `forkedFromURL` in `state.repos[state.repoNumber]` (e.g. `<upstream_url> (from settings)`), instead of stating `(this is not a known fork)`.
