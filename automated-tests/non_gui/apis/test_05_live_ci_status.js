@@ -180,7 +180,11 @@ async function runTests() {
             assertFail('5.5: GitLab web pipelines.json (ci-status-web)', `success=${describe(ok)} failure=${describe(fail)}`);
         }
     } catch (err) {
-        assertFail('5.5: GitLab web pipelines.json (ci-status-web)', err.message);
+        if (/40[13]|429|503|rate limit|cloudflare|blocked/i.test(err.message)) {
+            console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.5: GitLab web pipelines.json (API rate limit or blocked): ${err.message}`);
+        } else {
+            assertFail('5.5: GitLab web pipelines.json (ci-status-web)', err.message);
+        }
     }
 
     // Test 6: GitLab SVG badge -- called directly, no mocking (branch level: current master status, so only validity is checked)
@@ -194,7 +198,11 @@ async function runTests() {
             assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', describe(result));
         }
     } catch (err) {
-        assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', err.message);
+        if (/40[13]|429|503|rate limit|cloudflare|blocked/i.test(err.message)) {
+            console.log(`  ${YELLOW}[SKIP]${NORMAL} 5.6: GitLab SVG badge (API rate limit or blocked): ${err.message}`);
+        } else {
+            assertFail('5.6: GitLab SVG badge (ci-status-badge, master)', err.message);
+        }
     }
 
 
