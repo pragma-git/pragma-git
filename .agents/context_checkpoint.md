@@ -45,7 +45,7 @@
     - Removed upstream branches from the Branch menu entirely; upstream tracking is exclusively accessible from the Merge menu where the star badge points.
     - Added smart relevance filtering via `getUpstreamDefaultBranch()` and `isRelevantUpstreamBranch()`:
       - Added `hasUpstreamRemote()` check to bypass upstream checks entirely if no `upstream` remote is configured for the active repository, eliminating periodic `gitFetch` overhead on standard repos.
-      - Suppressed stderr (`2>/dev/null`) in `git symbolic-ref` and branch inspection queries, preventing `fatal: ref refs/remotes/upstream/HEAD is not a symbolic ref` noise on repositories where upstream does not define a symbolic `HEAD`.
+      - Suppressed stderr using Node.js child_process `stdio: ['pipe', 'pipe', 'ignore']` and Node `cwd` options across `git symbolic-ref`, `git branch -r`, and `git rev-list`, ensuring full cross-platform compatibility across Windows, macOS, and Linux without shell-specific redirection (`2>/dev/null` or `cd`).
       - The star badge, alert tooltip count `N`, and the direct Merge menu items strictly track the upstream default branch (`upstream/HEAD` -> `upstream/main` or `master`) and matching branches (e.g. `upstream/<currentBranch>`).
       - Completely prevents dozens or hundreds of irrelevant upstream experimental/feature branches from cluttering the menu or permanently holding the star badge on.
     - Updated `makeBranchMenu()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
@@ -63,6 +63,7 @@
     - Set `.top-titlebar-upstream-placeholder` to `visibility: visible` in `style.css` so the badge is rendered without waiting for onload DOM modifications.
   - **Automated Tests**:
     - Created [automated-tests/non_gui/git_client/test_04_upstream_and_origin.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_04_upstream_and_origin.js) covering parent repository setup, origin fork push, upstream `NO-PUSH` enforcement, dry-run change detection, fetch commit counting, clean merging of upstream into local branch, and pushing merged upstream commits to origin (8/8 tests passed).
+    - Fixed GitHub Actions runner compatibility by explicitly setting `-b main` and `symbolic-ref HEAD refs/heads/main` on bare test repositories, preventing `src refspec main does not match any` errors when Git runners default to `master`.
 * **Upgraded to `simple-git` v4.0.2 with Full Backwards-Compatibility**:
   - Upgraded `simple-git` to `^4.0.2` in `package.json` to resolve security vulnerabilities identified by `npm audit`.
   - Normalized CommonJS imports in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js), [notes.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/notes.js), [edit_ignore.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/edit_ignore.html), and [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js) to resolve the factory function whether returned directly or as `{ simpleGit }` / `{ default }`.

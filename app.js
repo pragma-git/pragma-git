@@ -5418,11 +5418,11 @@ function getUpstreamDefaultBranch(folder, remoteName = 'upstream') {
     if (!folder) return 'main';
     const { execSync } = require('child_process');
     try {
-        let symRef = execSync(`cd '${folder}' && git symbolic-ref --short refs/remotes/${remoteName}/HEAD 2>/dev/null`, { encoding: 'utf8' }).trim();
+        let symRef = execSync(`git symbolic-ref --short refs/remotes/${remoteName}/HEAD`, { cwd: folder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
         return symRef.replace(`${remoteName}/`, '');
     } catch (e) {}
     try {
-        let branches = execSync(`cd '${folder}' && git branch -r 2>/dev/null`, { encoding: 'utf8' });
+        let branches = execSync(`git branch -r`, { cwd: folder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
         if (branches.includes(`${remoteName}/main`)) return 'main';
         if (branches.includes(`${remoteName}/master`)) return 'master';
     } catch (e) {}
@@ -6446,7 +6446,7 @@ async function cacheBranchList(){
                         continue;
                     }
                     try {
-                        let countStr = execSync(`cd '${localFolder}' && git rev-list --count ${current}..${b}`, { encoding: 'utf8' }).trim();
+                        let countStr = execSync(`git rev-list --count ${current}..${b}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
                         let count = parseInt(countStr, 10) || 0;
                         if (count > 0) {
                             if (!cachedBranchList.branches[b]) {

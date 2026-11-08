@@ -23,12 +23,13 @@ async function runTests() {
         fs.mkdirSync(baseTempDir, { recursive: true });
 
         // 1. Set up bare parent repository ("upstream")
-        execSync(`git init --bare "${upstreamDir}"`, { stdio: 'pipe' });
+        execSync(`git init -b main --bare "${upstreamDir}"`, { stdio: 'pipe' });
+        execSync(`git -C "${upstreamDir}" symbolic-ref HEAD refs/heads/main`, { stdio: 'pipe' });
 
         // Seed initial commit into upstream
         const seedDir = path.join(baseTempDir, 'seed');
         fs.mkdirSync(seedDir, { recursive: true });
-        execSync(`git init "${seedDir}"`, { stdio: 'pipe' });
+        execSync(`git init -b main "${seedDir}"`, { stdio: 'pipe' });
         execSync(`git -C "${seedDir}" config user.name "Upstream Owner"`, { stdio: 'pipe' });
         execSync(`git -C "${seedDir}" config user.email "owner@upstream.test"`, { stdio: 'pipe' });
         fs.writeFileSync(path.join(seedDir, 'README.md'), '# Original Upstream Project\n');
@@ -40,9 +41,10 @@ async function runTests() {
 
         // 2. Fork into "origin" bare repository
         execSync(`git clone --bare "${upstreamDir}" "${originDir}"`, { stdio: 'pipe' });
+        execSync(`git -C "${originDir}" symbolic-ref HEAD refs/heads/main`, { stdio: 'pipe' });
 
         // 3. Clone fork locally as working repo
-        execSync(`git clone "${originDir}" "${localDir}"`, { stdio: 'pipe' });
+        execSync(`git clone -b main "${originDir}" "${localDir}"`, { stdio: 'pipe' });
         execSync(`git -C "${localDir}" config user.name "Fork Contributor"`, { stdio: 'pipe' });
         execSync(`git -C "${localDir}" config user.email "contributor@fork.test"`, { stdio: 'pipe' });
 
