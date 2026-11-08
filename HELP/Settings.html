@@ -385,39 +385,29 @@
             <br>           
                 <dd>  
                     
-                <p>If you try to clone a 'forked' repository, Pragma-git tries to get the url for the original (parent) repository automatically,
-                and write the parent url as 'upstream' remote.
+                <p>Forking is the process of creating your own personal copy of someone else's repository on the Git provider (such as GitHub, GitLab, or Bitbucket) so you can freely experiment, make changes, and contribute without modifying the original project.</p>
+
+                <p><b>How the fork workflow works:</b>
+                    <ol>
+                        <li><b>Create the fork on the provider first:</b> In GitHub and similar providers, forking is performed from the web interface on the provider's website (for example, clicking the "Fork" button on GitHub). This creates a new repository in your own provider account.</li>
+                        <li><b>Clone your fork in Pragma-git:</b> Copy your fork's URL from the provider and enter it in the <b>Remote URL to clone from</b> field above.</li>
+                        <li><b>Automatic upstream detection:</b> When you clone a forked repository, Pragma-git automatically connects to the provider's API, detects the original (parent) repository, and configures the parent repository URL as an <code>upstream</code> remote with permanent push protection.</li>
+                    </ol>
                 </p>
                       
-                <p>Forking is the process of starting with somebody elses repository, and making it your own.
-                In Github and similar providers forking is performed from the web interface.  
-                
-                The fork process then creates a copy in your own repository (called origin),
-                and also remember where it came from (upstream).  
-                
-                The beauty of keeping the relation to the parent, is that you can update the changes from the parent to your own repository, 
-                as the parent evolves.
-                
-                The parent is called "upstream" and is a remote repository. Your own remote repository is called "origin". 
-                </p>
-         
-        
-                    
+                <p>Your own remote copy on the provider is named <b>origin</b> (which you can push to), while the original parent repository is named <b>upstream</b> (from which you pull updates). Keeping the connection to the parent repository allows you to easily incorporate new additions and changes made to the upstream project as it continues to evolve.</p>
 
-                Sometimes, you want to transfer code you have developed in your forked repository back to "upstream". 
-                This is done through something called a "pull request" or "merge request".  
-                Typically this is done on your remote repository's (github, gitlab, ...) web page.
+                <p>Sometimes, you want to contribute code you have developed in your forked repository back to the original project. This is done through a "pull request" (or "merge request") on the provider's web interface.</p>
                 
-                <br>
-                <br>
-                You still have the opportunity to update your repository with new additions from the "upstream" repository.  
-                This is done using the main window merge button ( <img src="../images/merge_black.png"    height="17" width="17"> ).
-                The upstream changes are found under the <img src="../images/merge_black.png"    height="17" width="17"> button and the submenu "remotes".  
-                Changes that have not been merged, are indicated by an " ! " mark.
+                <p><b>Merging updates from upstream:</b> Whenever new commits are available in the upstream repository:
+                    <ul>
+                        <li>A discrete star indicator (<span style="font-size: 11px;">★</span>) appears directly on the top-right corner of the main window Merge button (<img src="../images/merge_black.png" height="15" width="15">), and the tooltip indicates the number of incoming updates (e.g. <i>Merge (1 update from upstream)</i>).</li>
+                        <li>Clicking the Merge button displays the relevant upstream branches (e.g. <code>★ upstream/main (+1)</code>) directly in the menu for immediate 1-click access.</li>
+                        <li>Selecting an upstream branch opens a confirmation dialog, fetches the latest commits from upstream, and merges them safely into your local branch.</li>
+                    </ul>
+                </p>
                 
-                <br>
-                <br>
-                More about working with multiple remote repositories can be found below (<a href="#multipleRepoSection">multiple remotes section </a>)
+                <p>More details about managing multiple remote repositories can be found below in the <a href="#multipleRepoSection">multiple remotes section</a>.</p>
               
             </dd> 
      

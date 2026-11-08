@@ -5944,7 +5944,7 @@ async function gitEnsureUpstream() { // Set upstream to origin/[same name as bra
         console.error('Error checking or setting upstream:', err);
     }
 }
-function gitFetch( longUpstreamBranch){ // Fetch 
+async function gitFetch( longUpstreamBranch){ // Fetch 
     // Default without argument -- fetch from origin
     // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
@@ -5971,12 +5971,10 @@ function gitFetch( longUpstreamBranch){ // Fetch
         if ( longUpstreamBranch == undefined){
             
             // Fetch from all configured remotes (--all) so origin, upstream, etc. are updated automatically
-            simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, '--all'], onFetch);
-            function onFetch(err, result) {
-                if (typeof updateBranchListWithUpstream === 'function') {
-                    updateBranchListWithUpstream();
-                }
-            };
+            await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, '--all']);
+            if (typeof updateBranchListWithUpstream === 'function') {
+                await updateBranchListWithUpstream();
+            }
             
         }else{
             
@@ -5997,11 +5995,10 @@ function gitFetch( longUpstreamBranch){ // Fetch
                 
                 setStatusBar('fetching from remote ' );
                 
-                simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch], onFetch);
-                function onFetch(err, result) {
-                    console.log(result);
-                    updateBranchListWithUpstream(); // Update ahead flags
-                };
+                await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch]);
+                if (typeof updateBranchListWithUpstream === 'function') {
+                    await updateBranchListWithUpstream(); // Update ahead flags
+                }
             }           
             
         }
@@ -6029,11 +6026,7 @@ function gitFetch( longUpstreamBranch){ // Fetch
         };
 
         // Fetch
-        simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw(['-c', 'core.askpass=', 'fetch', 'origin', 'refs/notes/*:refs/notes/*'], onFetch);
-        function onFetch(err, result) {
-            //console.log(result) 
-        };        
-        
+        await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw(['-c', 'core.askpass=', 'fetch', 'origin', 'refs/notes/*:refs/notes/*']);
         
     }catch(err){
         console.log('Error in gitFetch() -- failed getting notes');

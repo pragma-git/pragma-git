@@ -1,0 +1,264 @@
+name: "Merge Upstream - Upstream Detection, Merge Dialog, and Tree Synchronization"
+description: "Configures upstream remote on a fork, commits new changes to upstream, triggers upstream fetch detection, opens Merge Upstream confirmation dialog, executes merge, and verifies working tree and commit synchronization"
+
+steps:
+  # 1. Connect to Main Window
+  - name: "Connect to Main Window"
+    action: connect_window
+    target: "app.html"
+    verify: "Connected to Pragma-git main window DOM."
+
+  # Dismiss upgrade dialog if shown on version 0.0.0
+  - name: "Dismiss New Version Dialog (if present)"
+    action: click_if_present
+    selector: "#waitButton"
+    timeout: 2000
+
+  # Dismiss 'No repositories' Alert if shown on fresh profile
+  - name: "Dismiss 'No repositories' Alert (if present)"
+    action: click_if_present
+    selector: "#alertDialog button#no"
+    timeout: 2000
+
+  # 2. Set up bare upstream parent repo, bare origin fork repo, and clone fork locally into Pragma-git
+  - name: "Set Up Upstream Parent and Fork Origin Repositories"
+    action: eval
+    code: |-
+      (async () => {
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+
+        const baseDir = ${TMP_DIR_JSON};
+        const upstreamBare = path.join(baseDir, 'upstream_parent.git');
+        const originBare = path.join(baseDir, 'origin_fork.git');
+        const localClone = path.join(baseDir, 'local_fork_repo');
+        const seedDir = path.join(baseDir, 'upstream_seed');
+
+        // 2a. Create bare upstream parent repository with initial commit on main
+        execSync(`git init -b main --bare "${upstreamBare}"`);
+        execSync(`git -C "${upstreamBare}" symbolic-ref HEAD refs/heads/main`);
+
+        fs.mkdirSync(seedDir, { recursive: true });
+        execSync(`git init -b main "${seedDir}"`);
+        execSync(`git -C "${seedDir}" config user.name "Upstream Maintainer"`);
+        execSync(`git -C "${seedDir}" config user.email "maintainer@upstream.test"`);
+        fs.writeFileSync(path.join(seedDir, 'shared.txt'), 'Shared base feature line 1\n');
+        execSync(`git -C "${seedDir}" add shared.txt`);
+        execSync(`git -C "${seedDir}" commit -m "Initial upstream commit"`);
+        execSync(`git -C "${seedDir}" remote add origin "${upstreamBare}"`);
+        execSync(`git -C "${seedDir}" push -u origin main`);
+
+        // 2b. Fork into origin bare repository
+        execSync(`git clone --bare "${upstreamBare}" "${originBare}"`);
+        execSync(`git -C "${originBare}" symbolic-ref HEAD refs/heads/main`);
+
+        // 2c. Clone fork locally and register in Pragma-git
+        execSync(`git clone -b main "${originBare}" "${localClone}"`);
+        execSync(`git -C "${localClone}" config user.name "Fork Contributor"`);
+        execSync(`git -C "${localClone}" config user.email "contributor@fork.test"`);
+
+        // 2d. Configure upstream remote with NO-PUSH protection (mimicking Pragma-git addUpstream)
+        execSync(`git -C "${localClone}" remote add upstream "${upstreamBare}"`);
+        execSync(`git -C "${localClone}" remote set-url --push upstream NO-PUSH`);
+
+        // Register in Pragma-git
+        await addExistingRepo(localClone);
+        await _update();
+      })()
+    verify: |-
+      - Bare upstream parent repository created.
+      - Bare origin fork repository created.
+      - Local fork clone initialized and registered in Pragma-git with upstream remote configured.
+
+  # 3. Wait for clean initial state
+  - name: "Wait for Initial State Initialization"
+    action: wait
+    ms: 1200
+    verify: "Pragma-git initializes repository status and caches branch list."
+
+  # 4. Verify initial star badge is hidden (no upstream updates yet)
+  - name: "Verify Merge Badge is Hidden Initially"
+    action: eval
+    code: |-
+      (() => {
+        const badge = document.getElementById('top-titlebar-merge-badge');
+        if (badge && badge.style.display && badge.style.display !== 'none') {
+          throw new Error('Merge badge should be hidden when upstream is in sync');
+        }
+      })()
+    verify: "Top titlebar merge badge (★) is hidden because fork is up to date."
+
+  # 5. Commit new changes into upstream parent repository
+  - name: "Commit New Update to Upstream Parent Repository"
+    action: eval
+    code: |-
+      (() => {
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+
+        const seedDir = path.join(${TMP_DIR_JSON}, 'upstream_seed');
+        fs.appendFileSync(path.join(seedDir, 'shared.txt'), 'Upstream improvement line 2\n');
+        fs.writeFileSync(path.join(seedDir, 'upstream_feature.txt'), 'New feature delivered from upstream v2\n');
+        execSync(`git -C "${seedDir}" add shared.txt upstream_feature.txt`);
+        execSync(`git -C "${seedDir}" commit -m "Upstream release v2 with new feature"`);
+        execSync(`git -C "${seedDir}" push origin main`);
+      })()
+    verify: "New commit pushed to upstream parent repository on main branch."
+
+  # 6. Fetch updates in Pragma-git and verify upstream ahead detection
+  - name: "Fetch Updates and Detect Upstream Ahead"
+    action: eval
+    code: |-
+      (async () => {
+        await gitFetch();
+        if (typeof cacheBranchList === 'function') {
+          await cacheBranchList();
+        }
+        await _update();
+        if (typeof updateUpstreamBadge === 'function') {
+          updateUpstreamBadge();
+        }
+        if (typeof updateMergeTooltip === 'function') {
+          updateMergeTooltip();
+        }
+      })()
+    verify: "Pragma-git fetches remote tracking status and marks upstream/main ahead."
+
+  # 7. Wait for UI to update
+  - name: "Wait for UI Refresh"
+    action: wait
+    ms: 1000
+    verify: "UI updates with new branch tracking state."
+
+  # 8. Verify Star Badge (★) and Tooltip on Merge Icon
+  - name: "Verify Upstream Merge Indicator Badge and Tooltip"
+    action: eval
+    code: |-
+      (() => {
+        const badge = document.getElementById('top-titlebar-merge-badge');
+        if (!badge || badge.style.display === 'none') {
+          const branches = (cachedBranchList && cachedBranchList.branches) ? Object.keys(cachedBranchList.branches) : [];
+          throw new Error(`Expected merge badge (★) to be visible after upstream update. Badge display: "${badge ? badge.style.display : 'no badge'}", branches: ${JSON.stringify(branches)}`);
+        }
+        const wrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
+        const tooltip = wrapper ? wrapper.getAttribute('data-tooltip') : '';
+        if (!tooltip.includes('from upstream')) {
+          throw new Error(`Expected merge tooltip to mention upstream updates, got: "${tooltip}"`);
+        }
+      })()
+    verify: |-
+      - Merge icon displays star badge (★) on top-right corner.
+      - Merge button tooltip indicates updates from upstream.
+
+  # 9. Trigger Upstream Merge Confirmation Dialog (simulating badge click)
+  - name: "Trigger Upstream Merge Confirmation Dialog"
+    action: eval
+    code: |-
+      (async () => {
+        await _callback('clicked-upstream-badge');
+      })()
+    verify: |-
+      - 'confirmMergeUpstreamDialog' modal dialog opens.
+      - Prompt displays commit count and upstream branch name.
+
+  # 9. Verify Confirmation Dialog Content
+  - name: "Assert Upstream Merge Confirmation Dialog Text"
+    action: assert_text
+    selector: "#confirmMergeUpstreamMessage"
+    expected: "merge"
+    verify: "Dialog message asks for confirmation to merge upstream commits into current branch."
+
+  # 10. Click Merge button in confirmation dialog
+  - name: "Confirm Merge from Upstream"
+    action: click
+    selector: "#confirmMergeUpstreamOK"
+    verify: |-
+      - Dialog closes.
+      - 'confirmMergeUpstreamOK' callback executes.
+      - Pragma-git executes gitMerge, prepares the staged merge changes, and enters CHANGED_FILES_TEXT_ENTERED mode.
+
+  # 11. Wait for merge operation and UI refresh
+  - name: "Wait for Merge Staging Completion"
+    action: wait
+    ms: 2500
+    verify: "Git merge finishes staging files and populates suggested merge message in commit text box."
+
+  # 12. Verify merge description is in message textarea and Store button is active
+  - name: "Verify Merge Message and Store Button Ready"
+    action: eval
+    code: |-
+      (() => {
+        const msg = document.getElementById('message').value;
+        if (!msg.includes('Merge branch')) {
+          throw new Error(`Expected commit textarea to contain merge message, got: "${msg}"`);
+        }
+        const storeBtn = document.getElementById('store-button');
+        if (storeBtn && storeBtn.disabled) {
+          throw new Error('Store button should be enabled for committing merge');
+        }
+      })()
+    verify: |-
+      - Commit message area contains suggested merge description ("Merge branch 'upstream/main' into main").
+      - 'Store' button is enabled and ready to commit.
+
+  # 13. Click Store button to commit the merge
+  - name: "Click Store to Conclude Merge"
+    action: click
+    selector: "#store-button"
+    verify: |-
+      - Merge is stored/committed into local branch history.
+      - Pragma-git transitions back to clean state.
+
+  # 14. Wait for commit operation and UI refresh
+  - name: "Wait for Commit to Finish and Refresh"
+    action: wait
+    ms: 2000
+    verify: "Commit concludes, branch tracking is refreshed."
+
+  # 15. Verify Upstream Badge is Now Hidden
+  - name: "Verify Merge Badge Disappears After Merge is Stored"
+    action: eval
+    code: |-
+      (async () => {
+        if (typeof cacheBranchList === 'function') {
+          await cacheBranchList();
+        }
+        await _update();
+        if (typeof updateUpstreamBadge === 'function') {
+          updateUpstreamBadge();
+        }
+        const badge = document.getElementById('top-titlebar-merge-badge');
+        if (badge && badge.style.display && badge.style.display !== 'none') {
+          throw new Error('Merge badge should be hidden after upstream changes have been merged');
+        }
+      })()
+    verify: "Star badge (★) is hidden now that upstream commits are incorporated into HEAD."
+
+  # 16. Verify Git Tree and Files Match Upstream
+  - name: "Validate Local Cloned Files Contain Upstream Feature"
+    action: eval
+    code: |-
+      (() => {
+        const fs = require('fs');
+        const path = require('path');
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        const featureFile = path.join(localFolder, 'upstream_feature.txt');
+        if (!fs.existsSync(featureFile)) {
+          throw new Error(`Expected merged file ${featureFile} to exist in local repo`);
+        }
+        const content = fs.readFileSync(featureFile, 'utf8');
+        if (!content.includes('New feature delivered from upstream v2')) {
+          throw new Error(`File content mismatch in ${featureFile}: "${content}"`);
+        }
+      })()
+    verify: |-
+      - File 'upstream_feature.txt' from upstream exists in local working tree.
+      - Upstream content was successfully merged into local branch.
+
+  # 17. Mandatory Git Tree Validation
+  - name: "Validate Cloned Git Tree Matches Upstream Seed Tree"
+    action: assert_git_tree_match
+    source: "${TMP_DIR}/upstream_seed"
+    target: "${TMP_DIR}/local_fork_repo"

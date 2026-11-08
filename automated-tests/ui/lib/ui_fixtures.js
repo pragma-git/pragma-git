@@ -33,6 +33,13 @@ class UIFixtures {
         fs.mkdirSync(this.userDataDir, { recursive: true });
         fs.mkdirSync(this.testSettingsDir, { recursive: true });
 
+        // Prepopulate settings.json to always ignore upgrade prompts in test environments
+        const initialSettings = {
+            settingsVersion: '1.0.0',
+            ignoredVersion: '999.999.999'
+        };
+        fs.writeFileSync(path.join(this.testSettingsDir, 'settings.json'), JSON.stringify(initialSettings, null, 2));
+
         // 2. Start ephemeral SSH server via automated-tests/ssh_test_server.sh
         const repoRoot = path.resolve(__dirname, '../../..');
         const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
@@ -228,6 +235,9 @@ class UIFixtures {
             try { this.nwProcess.kill('SIGKILL'); } catch (e) {}
             this.nwProcess = null;
         }
+
+        // Ensure any lingering NW.js process on this test's CDP port is killed
+        try { execSync(`pkill -f "remote-debugging-port=${this.cdpPort}" 2>/dev/null || true`); } catch (e) {}
 
         if (this.sshdPid) {
             if (process.platform === 'win32') {

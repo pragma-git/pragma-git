@@ -222,6 +222,21 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
 
                     if (currentCDP) currentCDP.close();
                     currentCDP = client;
+
+                    // Always auto-dismiss upgrade dialog (#waitButton) if it pops up upon window connection
+                    try {
+                        const hasWaitButton = await client.eval(`(() => {
+                            const btn = document.getElementById('waitButton');
+                            const dlg = document.getElementById('newVersionDetectedInputDialog');
+                            return !!(btn && dlg && dlg.open);
+                        })()`);
+                        if (hasWaitButton) {
+                            await client.click('#waitButton', 1000);
+                            console.log('    Auto-dismissed upgrade dialog (#waitButton)');
+                        }
+                    } catch (e) {
+                        // Dialog was not open or window does not have waitButton
+                    }
                     break;
                 }
                 case 'eval': {
@@ -316,8 +331,14 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                     if (!fs.existsSync(target)) {
                         throw new Error(`Git tree validation failed: target repo does not exist at "${target}"`);
                     }
-                    const sourceTree = execSync(`git --git-dir="${source}" log -1 --format=%T HEAD`).toString().trim();
-                    const targetTree = execSync(`git -C "${target}" log -1 --format=%T HEAD`).toString().trim();
+                    const sourceGitCmd = fs.existsSync(path.join(source, '.git'))
+                        ? `git -C "${source}" log -1 --format=%T HEAD`
+                        : `git --git-dir="${source}" log -1 --format=%T HEAD`;
+                    const targetGitCmd = fs.existsSync(path.join(target, '.git'))
+                        ? `git -C "${target}" log -1 --format=%T HEAD`
+                        : `git --git-dir="${target}" log -1 --format=%T HEAD`;
+                    const sourceTree = execSync(sourceGitCmd).toString().trim();
+                    const targetTree = execSync(targetGitCmd).toString().trim();
                     if (sourceTree !== targetTree) {
                         throw new Error(`Git tree mismatch! Source tree (${sourceTree}) != Target tree (${targetTree})`);
                     }

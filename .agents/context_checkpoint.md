@@ -31,6 +31,37 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **gitFetch Async Promise Completion**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Converted `gitFetch()` to a proper `async` function awaiting `simpleGit().raw([...fetchCommands, '--all'])` and `updateBranchListWithUpstream()`.
+    - Previously, `gitFetch` executed raw fetch calls with a callback without awaiting, which caused callers (such as automated tests or fast UI flows) to return before remote references and upstream ahead flags were updated in `cachedBranchList`.
+* **Automated Upgrade Dialog Suppression in UI Tests**:
+  - In [automated-tests/ui/lib/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/ui_fixtures.js):
+    - Automatically prepopulates test sandbox `settings.json` with `ignoredVersion: "999.999.999"`, preventing `#newVersionDetectedInputDialog` from showing during testing.
+  - In [automated-tests/ui/lib/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js):
+    - Added automatic dismissal of `#waitButton` upon window connection as a fallback guard.
+  - In `teardown()`, added cleanup killing any lingering NW.js process on the configured test CDP port.
+* **UI Test Framework git Tree Validation Robustness**:
+  - In [automated-tests/ui/lib/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js):
+    - In `assert_git_tree_match`, dynamically checks whether source/target has a `.git` subdirectory (`git -C`) or is a bare git repository (`git --git-dir`), preventing failures when comparing working tree repos against non-bare source repositories.
+* **UI Test Scenario: Merge from Upstream**:
+  - Created [automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml):
+    - Configures an ephemeral bare upstream parent repo, a bare origin fork repo, and a local fork clone in Pragma-git with `upstream` remote set up (and `NO-PUSH` protected).
+    - Commits new changes into upstream parent and triggers `gitFetch()` in Pragma-git.
+    - Asserts star indicator badge (`★`) appears on top-right of the Merge icon (`#top-titlebar-merge-badge`) and verifies tooltip updates with upstream commit count.
+    - Simulates clicking the upstream badge / menu item, asserting that `#confirmMergeUpstreamDialog` opens.
+    - Confirms the merge via `#confirmMergeUpstreamOK`, verifying staged merge changes and commit text generation.
+    - Concludes the merge by clicking `#store-button`, asserting the star badge is hidden post-merge and checking working tree content.
+    - Concludes with mandatory `assert_git_tree_match` validating tree parity between the upstream seed repository and the merged local fork.
+  - Added runner scripts:
+    - [automated-tests/ui/scenarios/test_03_merge_upstream.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.js)
+    - [automated-tests/ui/_run_03_merge_upstream](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/_run_03_merge_upstream)
+  - Successfully verified end-to-end; all 3 UI test suites passing (3/3 passed).
+* **Settings Clone Tab Help Documentation Update (Forked Repositories)**:
+  - In [HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html):
+    - Explicitly clarified that a fork must first be created on the provider's website (GitHub, GitLab, Bitbucket) using their web interface before cloning.
+    - Documented the full fork workflow: creating the fork on the provider, cloning the fork repository URL in Pragma-git, and automatic detection/configuration of the `upstream` remote.
+    - Documented upstream merge notifications via the star indicator (`★`) on the Merge button and the confirmation dialog flow.
 * **Message Overlay Badge Dynamic Offset on Scrollbar**:
   - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
     - Added `adjustMessageOverlayOffset()` to calculate whether the `#message` textarea has a vertical scrollbar (`scrollHeight > clientHeight`) and measure the scrollbar width (`offsetWidth - clientWidth`).
