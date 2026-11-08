@@ -46,6 +46,8 @@
     - Added smart relevance filtering via `getUpstreamDefaultBranch()` and `isRelevantUpstreamBranch()`:
       - Added `hasUpstreamRemote()` check to bypass upstream checks entirely if no `upstream` remote is configured for the active repository, eliminating periodic `gitFetch` overhead on standard repos.
       - Suppressed stderr using Node.js child_process `stdio: ['pipe', 'pipe', 'ignore']` and Node `cwd` options across `git symbolic-ref`, `git branch -r`, and `git rev-list`, ensuring full cross-platform compatibility across Windows, macOS, and Linux without shell-specific redirection (`2>/dev/null` or `cd`).
+      - Added local filesystem and `file://` detection in `normalizeRepoUrl()`, ensuring local disk remotes (e.g. `/Users/jan/.../origin.git`) bypass CI status API lookup cleanly without triggering `unknown provider for URL` errors.
+      - Added 404 response handling (`status: 'none'`) in `github.com.js` for repositories without CI and debounced memory caching on 403 rate-limit/errors in `queryCommitCiStatus()`, eliminating repeating console warnings on interval updates.
       - The star badge, alert tooltip count `N`, and the direct Merge menu items strictly track the upstream default branch (`upstream/HEAD` -> `upstream/main` or `master`) and matching branches (e.g. `upstream/<currentBranch>`).
       - Completely prevents dozens or hundreds of irrelevant upstream experimental/feature branches from cluttering the menu or permanently holding the star badge on.
     - Updated `makeBranchMenu()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):

@@ -311,6 +311,9 @@ class github extends General_git_rest_api {
                                 out = { status: 'success', url: bestUrl };
                             } else if (statusRes.ok || checkRunsRes.ok) {
                                 out = { status: 'none', url: null };
+                            } else if (statusRes.status === 404 || checkRunsRes.status === 404) {
+                                // Repository or commit has no CI configured / not found
+                                out = { status: 'none', url: null };
                             } else {
                                 throw new Error(`GitHub check-runs API error (${checkRunsRes.status || statusRes.status || 'unknown'})`);
                             }

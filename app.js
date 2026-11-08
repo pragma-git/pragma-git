@@ -7846,6 +7846,11 @@ function normalizeRepoUrl(url) {
     if (!url || typeof url !== 'string') return '';
     let clean = url.trim();
 
+    // Local filesystem paths or file:// URLs are not remote hosting providers
+    if (clean.startsWith('/') || clean.startsWith('\\') || /^[a-zA-Z]:[\\\/]/.test(clean) || clean.startsWith('file://')) {
+        return '';
+    }
+
     // Convert scp-style SSH: git@host:owner/repo(.git) or ssh://git@host:owner/repo
     clean = clean.replace(/^ssh:\/\//, '');
     if (clean.startsWith('git@')) {
@@ -8110,7 +8115,7 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     if (ciQueryInProgress) return;
     ciQueryInProgress = true;
     try {
-        let provider = await gitProvider(rawRemoteUrl || remoteUrl, true);
+        let provider = await gitProvider(remoteUrl, true);
         let ciResult = await provider.getValue('ci-status', commitSha);
         if (ciResult && ciResult.status && ciResult.status !== 'none') {
             setCachedCiStatus(remoteUrl, commitSha, ciResult);
@@ -8150,11 +8155,19 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
         }
     } catch (err) {
         console.warn('Error querying CI status:', err);
-        // Do not cache 'none' on API or network errors!
+        // On error (e.g. rate limit 403 or server without CI), cache negative result in memory for 60 seconds
+        // so we don't repeatedly spam the server or console on every 1-second interval loop
+        localState.ciStatus = {
+            repoUrl: remoteUrl,
+            commitSha: commitSha,
+            status: 'none',
+            url: null,
+            lastChecked: Date.now()
+        };
         // Keep displaying the cached status if available; otherwise hide if commit changed
         if (cached && (cached.status === 'success' || cached.status === 'failure' || cached.status === 'pending')) {
             updateCiBadge(cached);
-        } else if (!localState.ciStatus || localState.ciStatus.commitSha !== commitSha) {
+        } else {
             updateCiBadge({ status: 'none', url: null });
         }
     } finally {
