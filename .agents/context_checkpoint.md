@@ -32,6 +32,14 @@
 
 ### 📋 Current Status & Tasks
 * **Fix for CI Failure on Linux and Windows (UI Test 03 and Windows Teardown)**:
+  - **Environment Guard Allowance in simple-git v4 Wrapper** ([lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js)):
+    - Added dynamic detection and whitelisting of all environment keys in `process.env` starting with `GIT_`, `SSH_`, or `PRAGMA_SSH_KEY` in `opts.allowEnvironment`.
+    - Fixes runtime error `Error: Use of "GIT_SSL_CAINFO" is blocked by the environment guard` on GitHub Actions Linux and Windows runners where custom Git CA bundles or credentials helper variables are injected into the runner environment.
+  - **Form Input & Textarea Value Access in CDP Test Client** ([automated-tests/ui/lib/cdp_client.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/cdp_client.js)):
+    - Updated `getText(selector)` to prioritize `el.value` when inspecting `<textarea>` or `<input>` elements before falling back to `el.innerText || el.textContent`.
+    - Resolves failure where `#message` commit description textarea returned empty string `""` because `textContent` in DOM remained empty while the active value resided in `el.value`.
+  - **Remote Upstream Branch Parsing Robustness in `gitFetch()`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Handled branch references regardless of whether prefixed with `remotes/` (e.g. `'remotes/upstream/main'` vs `'upstream/main'`), extracting remote name and branch cleanly.
   - **Merge Command Robustness in `gitMerge()`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
     - Switched from `.mergeFromTo(selectedBranchName, currentBranchName, options, onMerge)` to `.merge([selectedBranchName, ...options], onMerge)`.
     - In `simple-git` v4, `mergeFromTo(from, to, options)` synthesizes `git merge <from> <to> <options>`, which fails or misparses in git CLI because `git merge` merges commits/branches directly into the currently checked-out branch and does not accept a destination branch operand.

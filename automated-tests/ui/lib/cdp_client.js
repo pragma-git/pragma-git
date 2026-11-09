@@ -139,7 +139,11 @@ class CDPClient {
         await this.waitForSelector(selector, timeoutMs);
         return this.eval(`(() => {
             const el = document.querySelector(${JSON.stringify(selector)});
-            return el ? (el.textContent || el.innerText || el.value || '') : '';
+            if (!el) return '';
+            if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+                return (el.value !== undefined && el.value !== null) ? el.value : '';
+            }
+            return el.innerText || el.textContent || el.value || '';
         })()`);
     }
 

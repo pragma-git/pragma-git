@@ -5978,26 +5978,24 @@ async function gitFetch( longUpstreamBranch){ // Fetch
             
         }else{
             
-            // Fetch from longUpstreamBranch
-                
-            // "remotes/test5/child-process-with-timer" -> repo=test5, branch=child-process-with-timer"
-            let splitted = longUpstreamBranch.split('/');
-            let repo = splitted[1];
-            let branch = splitted[2];
+            // Fetch from longUpstreamBranch (e.g. 'remotes/upstream/main' or 'upstream/main')
+            let clean = longUpstreamBranch.replace(/^remotes\//, '');
+            let slashIdx = clean.indexOf('/');
+            if (slashIdx !== -1) {
+                let upstreamName = clean.substring(0, slashIdx);
+                let upstreamBranch = clean.substring(slashIdx + 1);
 
-            
-            // Shorten upstream branchname if remote ( remotes/upstream/main becomes upstream)
-
-            if ( longUpstreamBranch.startsWith( 'remotes' ) ){
-                let upstreamName = longUpstreamBranch.split('/')[1];
-                let upstreamBranch = longUpstreamBranch.split('/')[2];
-
-                
-                setStatusBar('fetching from remote ' );
+                setStatusBar('fetching from remote ' + upstreamName);
                 
                 await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch]);
                 if (typeof updateBranchListWithUpstream === 'function') {
                     await updateBranchListWithUpstream(); // Update ahead flags
+                }
+            } else {
+                setStatusBar('fetching from remote ' + clean);
+                await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, clean]);
+                if (typeof updateBranchListWithUpstream === 'function') {
+                    await updateBranchListWithUpstream();
                 }
             }           
             
