@@ -4278,6 +4278,42 @@ async function _setMode( inputModeName){
 
 var pragmaMergeOpenWindows = new Map(); // Map filePath -> nw.Window for direct editor instances
 
+function getSensibleMergeWindowSize(defaultWidth, defaultHeight) {
+    let idealWidth = defaultWidth;
+    let idealHeight = defaultHeight;
+    if (state.pragmaMerge && state.pragmaMerge.window) {
+        if (typeof state.pragmaMerge.window.width === 'number' && state.pragmaMerge.window.width > 200) {
+            idealWidth = state.pragmaMerge.window.width;
+        }
+        if (typeof state.pragmaMerge.window.height === 'number' && state.pragmaMerge.window.height > 200) {
+            idealHeight = state.pragmaMerge.window.height;
+        }
+    }
+    return getSensibleWindowSize(idealWidth, idealHeight);
+}
+
+function updatePragmaMergeWindowSize(win) {
+    if (!win) return;
+    try {
+        let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
+        let h = typeof win.height === 'number' ? win.height : (win.window && win.window.outerHeight);
+        if (typeof w === 'number' && typeof h === 'number' && w > 200 && h > 200) {
+            if (!state.pragmaMerge) {
+                state.pragmaMerge = {};
+            }
+            if (!state.pragmaMerge.window) {
+                state.pragmaMerge.window = {};
+            }
+            state.pragmaMerge.window.width = w;
+            state.pragmaMerge.window.height = h;
+            saveSettings();
+        }
+    } catch (e) {
+        console.warn('Failed to update pragmaMerge window size', e);
+    }
+}
+global.updatePragmaMergeWindowSize = updatePragmaMergeWindowSize;
+
 function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
     // Check if window already open for this exact filePath
     if (pragmaMergeOpenWindows.has(filePath)) {
@@ -4292,7 +4328,7 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
 
     let fileName = path.basename(filePath);
     let title = `File = ${fileName}`;
-    let mergeSize = getSensibleWindowSize(1200, 850);
+    let mergeSize = getSensibleMergeWindowSize(1200, 850);
     let rootFolder = options.root || (state.repos && state.repos[state.repoNumber] ? state.repos[state.repoNumber].localFolder : '');
 
     let query = `?first=${encodeURIComponent(filePath)}&second=--edit&third=${encodeURIComponent(mode)}&root=${encodeURIComponent(rootFolder)}`;
@@ -4326,7 +4362,12 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
             updateWindowMenu();
             showWindow(win);
 
+            win.on('resize', function() {
+                updatePragmaMergeWindowSize(win);
+            });
+
             win.on('close', function() {
+                updatePragmaMergeWindowSize(win);
                 pragmaMergeOpenWindows.delete(filePath);
                 if (merge_win === win) {
                     let remaining = Array.from(pragmaMergeOpenWindows.values());
@@ -4343,7 +4384,7 @@ global.openPragmaMergeDirect = openPragmaMergeDirect;
 function startPragmaMerge(sessionId, sessionDir){
     
     let title = "Pragma-merge";
-    let mergeSize = getSensibleWindowSize(2000, 1150);
+    let mergeSize = getSensibleMergeWindowSize(2000, 1150);
     let url = 'merge/pragma-merge.html';
     if (sessionId && sessionDir) {
         url += `?sessionId=${encodeURIComponent(sessionId)}&sessionDir=${encodeURIComponent(sessionDir)}`;
@@ -4382,7 +4423,12 @@ function startPragmaMerge(sessionId, sessionDir){
       			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
+                win.on('resize', function() {
+                    updatePragmaMergeWindowSize(win);
+                });
+
                 win.on('close', async function() { 
+                    updatePragmaMergeWindowSize(win);
                     if (sessionId) {
                         pragmaMergeOpenWindows.delete(sessionId);
                         activeMergeSessions.delete(sessionId);
@@ -9802,6 +9848,7 @@ function loadSettings(settingsFile){
             state.pragmaMerge.ignoreWhitespace = setting( state_in.pragmaMerge.ignoreWhitespace, false );
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
+            state.pragmaMerge.window = setting( state_in.pragmaMerge.window, {} );
             
         // Graph window 
             state.graph = setting( state_in.graph, {} );

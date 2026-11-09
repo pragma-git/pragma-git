@@ -1153,6 +1153,22 @@ async function closeWindowNicely(exitCode){
         global.state.pragmaMerge.ignoreWhitespace = ignoreWsEl.checked;
     }
     global.state.pragmaMerge.mergePanes = panes;
+    try {
+        if (win && (win.width || win.window)) {
+            let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
+            let h = typeof win.height === 'number' ? win.height : (win.window && win.window.outerHeight);
+            if (typeof w === 'number' && typeof h === 'number' && w > 200 && h > 200) {
+                if (!global.state.pragmaMerge.window) {
+                    global.state.pragmaMerge.window = {};
+                }
+                global.state.pragmaMerge.window.width = w;
+                global.state.pragmaMerge.window.height = h;
+            }
+        }
+        if (parent && parent.opener && typeof parent.opener.saveSettings === 'function') {
+            parent.opener.saveSettings();
+        }
+    } catch (e) {}
     
     
     // Remove from menu

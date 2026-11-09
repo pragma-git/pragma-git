@@ -63,6 +63,10 @@ function print_suite_description() {
             echo "   Tests repository-specific mental note / draft message persistence from app.js."
             echo "   Verifies getRepoDraftMessage, saveCurrentRepoDraftMessage, and restoreRepoDraftMessage."
             ;;
+        test_05_pragma_merge_window_size.js)
+            echo "   Tests pragma-merge window size persistence in state and settings.json."
+            echo "   Verifies getSensibleMergeWindowSize and updatePragmaMergeWindowSize."
+            ;;
     esac
 }
 

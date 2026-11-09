@@ -32,6 +32,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Pragma-Merge Window Size Persistence Across Instances (Implemented)**:
+  - Users resizing any `pragma-merge` editor/diff window now have those dimensions automatically remembered as the new default for all subsequent `pragma-merge` windows.
+  - Stored inside `state.pragmaMerge.window = { width, height }` and persisted to `~/.Pragma-git/settings.json` via `saveSettings()`.
+  - Added `getSensibleMergeWindowSize(defaultWidth, defaultHeight)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) that checks for configured `state.pragmaMerge.window` dimensions and clamps them within available screen dimensions via `getSensibleWindowSize()`.
+  - Added `updatePragmaMergeWindowSize(win)` listening to `win.on('resize')` and `win.on('close')` in both `openPragmaMergeDirect()` and `startPragmaMerge()`.
+  - Added window size sync and settings save in `closeWindowNicely()` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+  - Added unit test suite [`automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js) testing default fallback, dimension persistence, subsequent window adoption, bounds clamping, and validation (6/6 tests passed).
 * **Pragma-Merge Multi-Window Support & Session Isolation (Option 1 Done, Option 2 Step 1 Done)**:
   - **Option 1 (Direct URL Parameter Mode - Completed)**:
     - Allows multiple editor windows to open concurrently without interfering with lockfiles or signaling mechanisms.
