@@ -432,7 +432,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
        merge_watcher.on('add', 
            filePath => { 
                let base = path.basename(filePath);
-               if (base === 'pragma-merge-running' || base === 'pragma-merge-running-ssh') {
+               if (base === 'pragma-merge-running') {
                    let sessionDir = path.dirname(filePath);
                    let sessionId = path.basename(sessionDir);
                    if (sessionId && sessionId !== '.tmp' && !activeMergeSessions.has(sessionId)) {
@@ -4429,6 +4429,16 @@ function startPragmaMerge(sessionId, sessionDir){
 
                 win.on('close', async function() { 
                     updatePragmaMergeWindowSize(win);
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && !iframeWin.CLOSED && typeof iframeWin.closeWindowNicely === 'function') {
+                            await iframeWin.closeWindowNicely(iframeWin.SAVED ? 0 : 1);
+                        }
+                    } catch (e) {}
+                    if (sessionDir) {
+                        rmLocalFile(path.join(sessionDir, 'pragma-merge-running'));
+                    }
                     if (sessionId) {
                         pragmaMergeOpenWindows.delete(sessionId);
                         activeMergeSessions.delete(sessionId);

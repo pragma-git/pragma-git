@@ -197,4 +197,36 @@ else
     assert_fail "5.9: Independent exit codes" "S1 exit: $EXIT_1 (expected 1), S2 exit: $EXIT_2 (expected 2)"
 fi
 
+# Test 10: Verify SSH server mode ($5 == "ssh") creates pragma-merge-running-ssh and /tmp/git_diff_file_list.txt without polluting local sessions
+rm -rf "$TEST_TMP/sessions"/* "$TEST_TMP/pragma-merge-running-ssh" "/tmp/git_diff_file_list.txt"
+"$REPO_ROOT/pragma-merge" "" "/tmp/stored_head_file" ".gitignore" ".gitignore" ssh &
+PID_SSH=$!
+
+WAITED=0
+while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/pragma-merge-running-ssh" ]; do
+    sleep 0.1
+    ((WAITED++))
+done
+
+SESSION_COUNT=$(ls -1 "$TEST_TMP/sessions" 2>/dev/null | wc -l | tr -d ' ')
+DIFF_LIST_CONTENT=$(cat "/tmp/git_diff_file_list.txt" 2>/dev/null)
+
+if [ -f "$TEST_TMP/pragma-merge-running-ssh" ] && [ "$SESSION_COUNT" = "0" ] && \
+   [ "$DIFF_LIST_CONTENT" = "\"\" \"/tmp/stored_head_file\" \".gitignore\" \".gitignore\"" ]; then
+    assert_pass "5.10: SSH server mode creates pragma-merge-running-ssh and /tmp/git_diff_file_list.txt without polluting local GUI sessions"
+else
+    assert_fail "5.10: SSH server mode signal & file list" "Running: $(ls "$TEST_TMP/pragma-merge-running-ssh" 2>/dev/null), Sessions: $SESSION_COUNT, List: $DIFF_LIST_CONTENT"
+fi
+
+echo "0" > "$TEST_TMP/exit-pragma-merge"
+rm -f "$TEST_TMP/pragma-merge-running-ssh"
+wait $PID_SSH 2>/dev/null
+
+# Test 11: Verify ssh-get-merge-files preserves empty $1 ($BASE) without shifting $2 ($LOCAL / stored) and $3 ($REMOTE / new)
+if grep -q 'ABSOLUTE_FILE_LOCATIONS="\${ABSOLUTE_FILE_LOCATIONS} \\"\\""' "$REPO_ROOT/ssh_folder/ssh-get-merge-files"; then
+    assert_pass "5.11: ssh-get-merge-files preserves empty \$BASE positional slot without shifting \$LOCAL and \$REMOTE"
+else
+    assert_fail "5.11: ssh-get-merge-files empty argument preservation" "Missing empty slot preservation in getFiles"
+fi
+
 print_suite_result

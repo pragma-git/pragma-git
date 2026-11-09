@@ -979,7 +979,7 @@ function getMode( ){
         console.log('--edit');
         return 'EDITOR';
     }
-    if ( REMOTE == MERGED){
+    if ( REMOTE !== '' && REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
     }    
     if ( BASE == MERGED){

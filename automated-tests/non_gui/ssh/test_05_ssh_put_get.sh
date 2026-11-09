@@ -87,6 +87,36 @@ else
     assert_fail "5.6: ssh-ls subdirectory listing" "Exit: $EXIT_CODE, Output: $LS_SUB"
 fi
 
+# Test 7: ssh-put and ssh-get handle server paths containing spaces and '--' (e.g. 'testRepos -- local on ssh/cliHelpLine')
+SPACE_SERVER_DIR="${TEST_SERVER_DIR}/testRepos -- local on ssh/cliHelpLine"
+SPACE_SSH_URL="ssh://${CURRENT_USER}@localhost${SPACE_SERVER_DIR}"
+mkdir -p "$SPACE_SERVER_DIR"
+SPACE_REL_FILE=".gitignore"
+SPACE_LOCAL_FILE="${TEMP_FILE_LOCATION}/${SPACE_REL_FILE}"
+SPACE_CONTENT="# added hash line in gitignore $(date +%s)"
+echo "$SPACE_CONTENT" > "$SPACE_LOCAL_FILE"
+
+OUTPUT=$("$PUT_BIN" "$SPACE_SSH_URL" "$SPACE_REL_FILE" 2>&1)
+EXIT_CODE=$?
+SPACE_SERVER_FILE="${SPACE_SERVER_DIR}/${SPACE_REL_FILE}"
+
+if [ $EXIT_CODE -eq 0 ] && [ -f "$SPACE_SERVER_FILE" ] && [ "$(cat "$SPACE_SERVER_FILE")" = "$SPACE_CONTENT" ]; then
+    assert_pass "5.7: ssh-put transfers file accurately when server path contains spaces and '--'"
+else
+    assert_fail "5.7: ssh-put with spaces in server path" "Exit: $EXIT_CODE, Output: $OUTPUT"
+fi
+
+echo "${SPACE_CONTENT} - server edit" > "$SPACE_SERVER_FILE"
+rm -f "$SPACE_LOCAL_FILE"
+OUTPUT=$("$GET_BIN" "$SPACE_SSH_URL" "$SPACE_REL_FILE" 2>&1)
+EXIT_CODE=$?
+if [ $EXIT_CODE -eq 0 ] && [ -f "$SPACE_LOCAL_FILE" ] && [ "$(cat "$SPACE_LOCAL_FILE")" = "${SPACE_CONTENT} - server edit" ]; then
+    assert_pass "5.8: ssh-get retrieves file accurately when server path contains spaces and '--'"
+else
+    assert_fail "5.8: ssh-get with spaces in server path" "Exit: $EXIT_CODE, Output: $OUTPUT"
+fi
+rm -f "$SPACE_LOCAL_FILE"
+
 # Clean up
 if [ "$KEEP_TEMP" = "true" ] || [ "$KEEP_TEMP" = "1" ]; then
     echo "  [INFO] Preserved transfer dir in /tmp: $TEST_SERVER_DIR"

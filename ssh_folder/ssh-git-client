@@ -148,6 +148,9 @@ REMAINING_ARGUMENTS=''
         CLEANUP_OLD_MERGE=""
         if [ "$IS_MERGE_OR_DIFF_CMD" == true ]; then
             CLEANUP_OLD_MERGE="rm -f '/tmp/git_diff_file_list.txt' \"\$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh\""
+            if [ -f "${SCRIPT_FOLDER}/../pragma-merge" ]; then
+                ssh -T "$SERVER" -p ${PORT} $SSH_OPTIONS "mkdir -p \"\$HOME/.Pragma-git\" && cat > \"\$HOME/.Pragma-git/pragma-merge\" && chmod +x \"\$HOME/.Pragma-git/pragma-merge\"" < "${SCRIPT_FOLDER}/../pragma-merge" 2>/dev/null
+            fi
         fi
         ssh -T "$SERVER"  -p ${PORT} $SSH_OPTIONS bash -s <<EOF &
             export GIT_ASKPASS="\$HOME/.Pragma-git/pragma-askpass-ssh"  # Make $HOME work (does not expand in config)

@@ -744,6 +744,9 @@ async function _callback( name, event){
                 
                 // Use '/' for SSH URLs (even on Windows) and await async fs_existsSync before downloading .gitignore
                 let repoFolder = global.state.repos[global.state.repoNumber].localFolder;
+                if (repoFolder.startsWith('ssh:') && opener && typeof opener.setupSshServer === 'function') {
+                    await opener.setupSshServer();
+                }
                 let sep = repoFolder.startsWith('ssh:') ? '/' : pathsep;
                 let ignoreFileName = repoFolder + sep + '.gitignore'; 
                 if ( await fs_existsSync(ignoreFileName, repoKey) ){

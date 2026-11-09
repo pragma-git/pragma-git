@@ -31,13 +31,15 @@ if [ ! -f "$LOCAL_PATH" ]; then
 fi
 
 # Make folder on server
-echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS mkdir -p '$(dirname "$SERVER_PATH")'" >> "$MERGE_LOG"
-ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS mkdir -p "'$(dirname "$SERVER_PATH")'"
+SERVER_DIR=$(dirname "$SERVER_PATH")
+ESCAPED_DIR="${SERVER_DIR//\'/\'\\\'\'}"
+ESCAPED_SERVER_PATH="${SERVER_PATH//\'/\'\\\'\'}"
+echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS \"mkdir -p '${ESCAPED_DIR}'\"" >> "$MERGE_LOG"
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "mkdir -p '${ESCAPED_DIR}'"
 
-# Copy to server
-SCP="scp -P ${PORT} $SSH_OPTIONS \"$LOCAL_PATH\" \"${SERVER}:${SERVER_PATH}\" "
-echo "    $SCP" >> "$MERGE_LOG"
-eval $SCP
+# Copy to server (use cat over ssh to safely support spaces and special characters in SERVER_PATH across all OpenSSH versions)
+echo "    ssh -T \"$SERVER\" -p ${PORT} $SSH_OPTIONS \"cat > '${ESCAPED_SERVER_PATH}'\" < \"$LOCAL_PATH\"" >> "$MERGE_LOG"
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "cat > '${ESCAPED_SERVER_PATH}'" < "$LOCAL_PATH"
 
 # Check result
 if [ $? -eq 0 ]; then

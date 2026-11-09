@@ -32,8 +32,11 @@ function getFiles () {
     
     for var in "$@"
     do
-        # Skip empty argument
-        [ -z "$var" ] && continue
+        # Preserve empty argument in its positional slot (e.g. $BASE when empty in git difftool)
+        if [ -z "$var" ] ; then
+            ABSOLUTE_FILE_LOCATIONS="${ABSOLUTE_FILE_LOCATIONS} \"\""
+            continue
+        fi
         #echo ' '
         echo "    REMOTE FILE   = '${var}'"
         REMOTEFOLDER=$(dirname "${var}")
@@ -64,8 +67,9 @@ function getFiles () {
         fi
         
         # Transfer (-p "${PORT}" supports non-default SSH ports)
+        ESCAPED_REMOTE="${REMOTE//\'/\'\\\'\'}"
         echo "    SSH TRANSFER :  '${REMOTE}'  > '${LOCAL}'"
-        ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS  "cat '${REMOTE}'" > "${LOCAL}"
+        ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS  "cat '${ESCAPED_REMOTE}'" > "${LOCAL}"
         echo "    $?"
         
         #echo ' '
@@ -100,7 +104,7 @@ eval "getFiles ${FILE_LOCATIONS}"  # Get all files from server and store in $TEM
 echo "    ABSOLUTE_FILE_LOCATIONS = ${ABSOLUTE_FILE_LOCATIONS}"
 
 # Run pragma-merge locally
-command="${SCRIPT_FOLDER}/../pragma-merge ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
+command="\"${SCRIPT_FOLDER}/../pragma-merge\" ${ABSOLUTE_FILE_LOCATIONS} &" # TODO : Make absolute paths as in getFiles
 echo "    Call $command" >> "$MERGE_LOG"
 echo " " >> "$MERGE_LOG"
 eval $command

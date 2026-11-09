@@ -22,8 +22,14 @@ getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
 
 FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt'  
 
-# Get EXIT CODE (local) 
-EXITCODE=$(cat "$TMP/exit-pragma-merge")
+# Get EXIT CODE (local session or legacy fallback)
+SESSION_ID="$2"
+if [ -n "$SESSION_ID" ] && [ -f "$TMP/sessions/$SESSION_ID/exit-pragma-merge" ]; then
+    EXITCODE=$(cat "$TMP/sessions/$SESSION_ID/exit-pragma-merge" 2>/dev/null)
+elif [ -f "$TMP/exit-pragma-merge" ]; then
+    EXITCODE=$(cat "$TMP/exit-pragma-merge" 2>/dev/null)
+fi
+EXITCODE=${EXITCODE:-0}
 
 # Run git command on remote server (-p "${PORT}" supports non-default SSH ports)
 ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS bash -s <<EOF
@@ -45,6 +51,12 @@ ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS bash -s <<EOF
     # Copy EXIT status from local to server
     #
         echo $EXITCODE > "\$TMP/exit-pragma-merge"
+        for sdir in "\$TMP/sessions"/session_*; do
+            if [ -d "\$sdir" ] && [ -f "\$sdir/pragma-merge-running-ssh" ]; then
+                echo $EXITCODE > "\$sdir/exit-pragma-merge"
+                rm -f "\$sdir/pragma-merge-running-ssh"
+            fi
+        done
 
 
     
