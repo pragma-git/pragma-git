@@ -260,6 +260,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
+        var ssh_file_browser_win;
+        var sshFileBrowserWindows = {};
         
         // Windows opened from Settings
         var gitignore_win;
@@ -280,6 +282,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'Commit': 'graph_win',      
            'About': 'about_win',      
            'File': 'merge_win',
+           'SSH': 'ssh_file_browser_win',
            'Git-ignore': 'gitignore_win' ,
            'Create': 'createRemote_win' ,
            'Help': 'help_win',
@@ -3132,6 +3135,12 @@ async function _callback( name, event){
         console.log('Folder clicked');
         
         let folder = state.repos[state.repoNumber].localFolder;
+        
+        // Remote SSH repository -> open SSH File Browser
+        if (folder && folder.startsWith('ssh:')) {
+            showSshFileBrowser(folder);
+            return;
+        }
          
         // Override terminal command from settings
         if ( state.tools.fileBrowser.trim() !== '' ){
@@ -8467,6 +8476,83 @@ async function updateChangedListWindow(){
     //win.focus();
 }
 
+function showSshFileBrowser(sshFolder) {
+    if (!sshFolder) return;
+
+    if (sshFileBrowserWindows[sshFolder]) {
+        try {
+            sshFileBrowserWindows[sshFolder].focus();
+            return;
+        } catch (err) {
+            delete sshFileBrowserWindows[sshFolder];
+        }
+    }
+
+    let repoName = sshFolder.split('/').filter(Boolean).pop() || sshFolder;
+    let title = `SSH Server Files - ${repoName}`;
+    let browserSize = getSensibleWindowSize(850, 750);
+    let url = 'sshFileBrowser.html?repo=' + encodeURIComponent(sshFolder);
+
+    // If an SSH file browser is already open, offset the new window by ~20px down and right
+    let openCount = Object.keys(sshFileBrowserWindows).length;
+    let windowOptions = {
+        show: false,
+        width: browserSize.width,
+        height: browserSize.height,
+        title: title
+    };
+
+    let baseWin = ssh_file_browser_win;
+    if (openCount > 0 && baseWin) {
+        try {
+            let offset = 20 * openCount;
+            let screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+            let screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+            let targetX = baseWin.x + offset;
+            let targetY = baseWin.y + offset;
+            if (targetX + browserSize.width > screenW) targetX = Math.max(0, screenW - browserSize.width - 20);
+            if (targetY + browserSize.height > screenH) targetY = Math.max(0, screenH - browserSize.height - 20);
+            windowOptions.x = targetX;
+            windowOptions.y = targetY;
+        } catch (e) {
+            windowOptions.position = 'center';
+        }
+    } else {
+        windowOptions.position = 'center';
+    }
+
+    gui.Window.open(url, windowOptions,
+        win => win.on('loaded', () => {
+            ssh_file_browser_win = win;
+            sshFileBrowserWindows[sshFolder] = win;
+            updateWindowMenu(title, 'ssh_file_browser_win');
+            showWindow(win);
+
+            win.on('close', function() {
+                if (win.window && typeof win.window.requestCloseWithWarning === 'function') {
+                    win.window.requestCloseWithWarning();
+                } else {
+                    onSshFileBrowserClosed(sshFolder, win);
+                    fixNwjsBug7973(win);
+                }
+            });
+        })
+    );
+}
+
+function onSshFileBrowserClosed(sshFolder, closedWin) {
+    if (sshFolder && sshFileBrowserWindows[sshFolder]) {
+        delete sshFileBrowserWindows[sshFolder];
+    }
+    if (ssh_file_browser_win === closedWin) {
+        let remainingKeys = Object.keys(sshFileBrowserWindows);
+        ssh_file_browser_win = remainingKeys.length > 0 ? sshFileBrowserWindows[remainingKeys[remainingKeys.length - 1]] : undefined;
+    }
+    try {
+        updateWindowMenu();
+    } catch (e) {}
+}
+
 
 // Dialogs
 
@@ -9551,6 +9637,7 @@ function loadSettings(settingsFile){
             state.tools = setting( state_in.tools, {} ); 
             state.tools.difftool = setting( state_in.tools.difftool, "");
             state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            state.tools.editor = setting( state_in.tools.editor, "pragma-merge");
             state.tools.terminal = setting( state_in.tools.terminal, "");
             state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
@@ -9820,6 +9907,11 @@ function updateWithNewSettings(){                   // Call from window that mod
         state.tools.mergetool = "pragma-git";
     }   
 
+    // Blank external editor -> use built in pragma-merge
+    if ( !state.tools.editor || state.tools.editor.trim().length == 0 ){
+        state.tools.editor = "pragma-merge";
+    }
+
     // Set dark mode variable
     switch (state.darkmode) {
       case 'system': {
@@ -9899,6 +9991,13 @@ function updateWithNewSettings(){                   // Call from window that mod
                     if (win_handle.window.onThemeChanged) {
                         try {
                             win_handle.window.onThemeChanged();
+                        } catch(e) {}
+                    }
+
+                    // Update editor label in open SSH File Browser windows
+                    if (win_handle.window.updateEditorHeaderInfo) {
+                        try {
+                            win_handle.window.updateEditorHeaderInfo();
                         } catch(e) {}
                     }
                     
@@ -10093,6 +10192,22 @@ window.onload = async function() {
 
 };
 async function closeWindow(a){
+    // Check if any open SSH File Browser window has active watched files before closing Pragma-git
+    if (a !== true) {
+        for (let repoKey of Object.keys(sshFileBrowserWindows)) {
+            let browserWin = sshFileBrowserWindows[repoKey];
+            try {
+                if (browserWin && browserWin.window && typeof browserWin.window.hasOpenWatchedFiles === 'function' && browserWin.window.hasOpenWatchedFiles()) {
+                    browserWin.window.requestCloseWithWarning(() => {
+                        closeWindow(true);
+                    });
+                    return;
+                }
+            } catch (e) {
+                delete sshFileBrowserWindows[repoKey];
+            }
+        }
+    }
   
     win.hide(); // Close to make it swifter
     closeAllWindows();  // Close all except main window

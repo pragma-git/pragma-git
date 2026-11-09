@@ -6,6 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SSH_FOLDER_DIR="$REPO_ROOT/ssh_folder"
 PUT_BIN="$SSH_FOLDER_DIR/ssh-put"
 GET_BIN="$SSH_FOLDER_DIR/ssh-get"
+LS_BIN="$SSH_FOLDER_DIR/ssh-ls"
 
 source "$SSH_FOLDER_DIR/lib/ssh-functions"
 
@@ -64,6 +65,26 @@ if [ "$RETRIEVED_CONTENT" = "$MODIFIED_CONTENT" ]; then
     assert_pass "5.4: Retrieved local file content matches server modification"
 else
     assert_fail "5.4: Retrieved local file content matches server modification" "Expected: $MODIFIED_CONTENT, Got: $RETRIEVED_CONTENT"
+fi
+
+# Test 5: ssh-ls lists directories with trailing '/' and files at root and subdirectories
+mkdir -p "${TEST_SERVER_DIR}/.git"
+echo "root file" > "${TEST_SERVER_DIR}/README.md"
+LS_ROOT=$("$LS_BIN" "$SSH_URL" 2>&1)
+EXIT_CODE=$?
+if [ $EXIT_CODE -eq 0 ] && echo "$LS_ROOT" | grep -qx "test_sub/" && echo "$LS_ROOT" | grep -qx "README.md"; then
+    assert_pass "5.5: ssh-ls lists root folders (with trailing slash) and files"
+else
+    assert_fail "5.5: ssh-ls root listing" "Exit: $EXIT_CODE, Output: $LS_ROOT"
+fi
+
+# Test 6: ssh-ls lists contents of a relative subdirectory
+LS_SUB=$("$LS_BIN" "$SSH_URL" "test_sub" 2>&1)
+EXIT_CODE=$?
+if [ $EXIT_CODE -eq 0 ] && echo "$LS_SUB" | grep -qx "sample_$$.txt"; then
+    assert_pass "5.6: ssh-ls lists files inside relative subdirectory"
+else
+    assert_fail "5.6: ssh-ls subdirectory listing" "Exit: $EXIT_CODE, Output: $LS_SUB"
 fi
 
 # Clean up

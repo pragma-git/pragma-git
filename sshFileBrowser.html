@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SSH Server Files</title>
+
+    <link rel="stylesheet" type="text/css" href="color_styles.css" />
+    <script src="ssh_folder/ssh-folder-lib.js"></script>
+    <script src="sshFileBrowser.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            background: var(--body-background);
+            color: var(--body-text);
+        }
+
+        .browser-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 14px 18px;
+            box-sizing: border-box;
+            gap: 10px;
+        }
+
+        .browser-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0;
+        }
+
+        .browser-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .browser-header h2 {
+            margin: 0;
+            font-size: 15pt;
+            color: var(--header-color);
+        }
+
+        .repo-url-bar {
+            font-size: 9.5pt;
+            color: var(--code-text);
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: -4px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: nowrap;
+            padding: 6px 10px;
+            background-color: var(--input-background);
+            border: 1px solid #88888855;
+            border-radius: 5px;
+        }
+
+        .breadcrumb-area {
+            display: flex;
+            align-items: center;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .breadcrumb-trail {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 2px;
+            font-family: monospace;
+            font-size: 10.5pt;
+            white-space: nowrap;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .breadcrumb-ellipsis {
+            color: var(--dim-text);
+            padding: 2px 4px;
+            user-select: none;
+            font-weight: bold;
+        }
+
+        .breadcrumb-segment {
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: var(--link-color);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .breadcrumb-segment:hover {
+            background-color: var(--hoverBackGroundColor);
+            text-decoration: underline;
+        }
+
+        .breadcrumb-segment.active {
+            color: var(--body-text);
+            font-weight: bold;
+            cursor: default;
+            text-decoration: none;
+        }
+
+        .breadcrumb-sep {
+            color: var(--dim-text);
+            padding: 0 2px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .bottom-actions-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 4px 2px;
+            flex-shrink: 0;
+        }
+
+        .toolbar-btn {
+            padding: 4px 14px;
+            font-size: 10pt;
+            cursor: pointer;
+            flex-shrink: 0;
+            border-radius: 4px;
+            border: 1px solid #77777788;
+            background-color: var(--input-background);
+            color: var(--body-text);
+        }
+
+        .toolbar-btn:hover {
+            background-color: var(--hoverBackGroundColor);
+        }
+
+        button {
+            border-radius: 4px;
+        }
+
+        .file-list-wrapper {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            border: 1px solid #88888866;
+            border-radius: 5px;
+            background-color: var(--body-background);
+            min-height: 180px;
+        }
+
+        table.file-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table.file-table th {
+            position: sticky;
+            top: 0;
+            background-color: #444;
+            color: #fff;
+            text-align: left;
+            font-size: 10.5pt;
+            padding: 6px 10px;
+            z-index: 2;
+        }
+
+        table.file-table tr {
+            border-bottom: 1px solid #88888844;
+            font-size: 10.5pt;
+            user-select: none;
+        }
+
+        table.file-table td {
+            padding: 6px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .entry-row {
+            cursor: pointer;
+        }
+
+        .entry-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 6px;
+            text-align: center;
+        }
+
+        .folder-img-icon {
+            width: 17px;
+            height: 17px;
+            vertical-align: middle;
+            user-select: none;
+            -webkit-user-drag: none;
+            transition: filter 0.1s ease;
+        }
+
+        body.light .folder-img-icon {
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        body.light .entry-row:hover .folder-img-icon {
+            filter: var(--titlebar-icon-hover-filter, brightness(0.05));
+        }
+
+        body.dark .folder-img-icon {
+            filter: var(--titlebar-icon-filter, none);
+        }
+
+        body.dark .entry-row:hover .folder-img-icon {
+            filter: brightness(1.2);
+        }
+
+        /* Standing rectangle file icon (proportions of A4 paper 1:1.41) */
+        .file-svg-icon {
+            width: 13px;
+            height: 18px;
+            vertical-align: middle;
+            user-select: none;
+            -webkit-user-drag: none;
+            transition: filter 0.1s ease;
+        }
+
+        body.light .file-svg-icon {
+            filter: var(--titlebar-icon-filter, brightness(0.35));
+        }
+
+        body.light .entry-row:hover .file-svg-icon {
+            filter: var(--titlebar-icon-hover-filter, brightness(0.05));
+        }
+
+        body.dark .file-svg-icon {
+            filter: var(--titlebar-icon-filter, none);
+        }
+
+        body.dark .entry-row:hover .file-svg-icon {
+            filter: brightness(1.2);
+        }
+
+        .folder-name {
+            font-weight: bold;
+        }
+
+        .open-badge {
+            display: inline-block;
+            font-size: 8.5pt;
+            padding: 1px 6px;
+            margin-left: 8px;
+            border-radius: 3px;
+            background-color: var(--blockTextHighlight-background);
+            color: var(--blockTextHighlight-text);
+            border: 1px solid var(--blockTextHighlight-border);
+        }
+
+        .action-col {
+            width: 90px;
+            text-align: right;
+        }
+
+        .open-files-section {
+            flex: 0 0 auto;
+            max-height: 32vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #88888866;
+            border-radius: 5px;
+            background-color: var(--input-background);
+            overflow: hidden;
+        }
+
+        .open-files-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background-color: #444;
+            color: #fff;
+            font-size: 10.5pt;
+            font-weight: bold;
+        }
+
+        .open-files-list {
+            overflow-y: auto;
+            max-height: 24vh;
+        }
+
+        table.open-files-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table.open-files-table tr {
+            border-bottom: 1px solid #88888833;
+            font-size: 10pt;
+        }
+
+        table.open-files-table td {
+            padding: 5px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .open-file-path {
+            cursor: pointer;
+            color: var(--link-color);
+            font-family: monospace;
+        }
+
+        .open-file-path:hover {
+            text-decoration: underline;
+        }
+
+        .sync-status {
+            width: 185px;
+            font-size: 9.5pt;
+            text-align: right;
+        }
+
+        .sync-ok {
+            color: var(--green-text);
+        }
+
+        .sync-pending {
+            color: var(--warn-color);
+        }
+
+        .sync-err {
+            color: var(--red-text);
+        }
+
+        .remove-watch-btn {
+            padding: 1px 6px;
+            font-size: 9pt;
+            cursor: pointer;
+        }
+
+        .status-footer {
+            font-size: 9.5pt;
+            color: var(--dim-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .empty-msg {
+            padding: 14px;
+            color: var(--dim-text);
+            font-style: italic;
+        }
+
+        dialog {
+            min-width: 360px;
+            max-width: 540px;
+            padding: 16px 20px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+<body class="light">
+    <script>
+        if (global.localState && global.localState.dark) {
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+        if (global.state && global.state.zoom) {
+            window.document.body.style.zoom = global.state.zoom;
+        }
+    </script>
+
+    <div class="browser-layout">
+        <div class="browser-header">
+            <h2>File Browser &mdash; <span id="repoNameSpan"></span></h2>
+            <div class="browser-header-right">
+                <span class="status-footer" id="editorInfoSpan"></span>
+                <img id="about-icon" style="vertical-align: middle; cursor: pointer;" height="17" width="17"
+                    onclick="let evt = {}; evt.name='SSH File Browser'; if (MAIN && MAIN._callback) { MAIN._callback('help', evt); } else if (typeof opener !== 'undefined' && opener._callback) { opener._callback('help', evt); }"
+                    onmouseover="document.getElementById('about-icon').src='images/questionmark_hover.png'"
+                    onmouseout="document.getElementById('about-icon').src='images/questionmark_black.png'"
+                    src="images/questionmark_black.png"
+                    title="Help on SSH File Browser">
+            </div>
+        </div>
+        <div class="repo-url-bar" id="repoSshUrlSpan"></div>
+
+        <!-- Path / Breadcrumb Bar (Up button on the right) -->
+        <div class="toolbar">
+            <div class="breadcrumb-area">
+                <div id="breadcrumbTrail" class="breadcrumb-trail"></div>
+            </div>
+            <button type="button" id="upFolderBtn" class="toolbar-btn" onclick="navigateUp()" title="Go to parent folder">&#x2B06; Up</button>
+        </div>
+
+        <!-- Directory Contents -->
+        <div class="file-list-wrapper">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>Name (double-click to open folder or edit file)</th>
+                        <th class="action-col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fileTableBody">
+                    <tr><td colspan="2" class="empty-msg">Loading remote directory...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Action Buttons (New File, New Folder, Refresh) -->
+        <div class="bottom-actions-bar">
+            <button type="button" id="newFileBtn" class="toolbar-btn" onclick="showNewFileDialog()" title="Create a new file in this folder">+ New File</button>
+            <button type="button" id="newFolderBtn" class="toolbar-btn" onclick="showNewFolderDialog()" title="Create a new subfolder in this folder">+ New Folder</button>
+            <button type="button" id="refreshBtn" class="toolbar-btn" onclick="refreshCurrentDirectory()" title="Reload folder contents">&#x21BB; Refresh</button>
+        </div>
+
+        <!-- Open / Watched Files Section -->
+        <div class="open-files-section">
+            <div class="open-files-header">
+                <span>Open Files &mdash; Auto-synced to SSH server on save (<span id="openFilesCount">0</span>)</span>
+                <span style="font-weight: normal; font-size: 9pt; opacity: 0.85;">Click file to focus/re-open in editor</span>
+            </div>
+            <div class="open-files-list">
+                <table class="open-files-table">
+                    <tbody id="openFilesTableBody">
+                        <tr><td class="empty-msg" style="padding: 8px 10px;">No files currently open in this session.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Dialog -->
+    <dialog id="newFileDialog" class="warning">
+        <div style="font-weight: bold; margin-bottom: 10px;">Create New File on Server</div>
+        <div style="font-size: 10pt; margin-bottom: 6px;">
+            Folder: <code id="newFileFolderLabel"></code>
+        </div>
+        <input type="text" id="newFileNameInput" style="width: 100%; box-sizing: border-box; padding: 5px;" placeholder="Enter file name (e.g. notes.txt)" />
+        <div style="margin-top: 8px; font-size: 10pt;">
+            <input type="checkbox" id="openNewFileImmediately" checked />
+            <label for="openNewFileImmediately">Open in editor immediately</label>
+        </div>
+        <div id="newFileError" style="color: var(--red-text); font-size: 9.5pt; margin-top: 6px; display: none;"></div>
+        <div class="dialog-buttons">
+            <button type="button" id="confirmNewFileBtn" onclick="confirmCreateNewFile()">Create</button>
+            <button type="button" onclick="document.getElementById('newFileDialog').close()">Cancel</button>
+        </div>
+    </dialog>
+
+    <!-- New Folder Dialog -->
+    <dialog id="newFolderDialog" class="warning">
+        <div style="font-weight: bold; margin-bottom: 10px;">Create New Folder on Server</div>
+        <div style="font-size: 10pt; margin-bottom: 6px;">
+            Parent folder: <code id="newFolderParentLabel"></code>
+        </div>
+        <input type="text" id="newFolderNameInput" style="width: 100%; box-sizing: border-box; padding: 5px;" placeholder="Enter folder name" />
+        <div id="newFolderError" style="color: var(--red-text); font-size: 9.5pt; margin-top: 6px; display: none;"></div>
+        <div class="dialog-buttons">
+            <button type="button" id="confirmNewFolderBtn" onclick="confirmCreateNewFolder()">Create</button>
+            <button type="button" onclick="document.getElementById('newFolderDialog').close()">Cancel</button>
+        </div>
+    </dialog>
+
+    <!-- General Alert Dialog -->
+    <dialog id="browserAlertDialog" class="error">
+        <div id="browserAlertTitle" style="font-weight: bold; margin-bottom: 8px;"></div>
+        <div id="browserAlertMessage" style="font-size: 10pt; word-break: break-word;"></div>
+        <div class="dialog-buttons">
+            <button type="button" onclick="document.getElementById('browserAlertDialog').close()">OK</button>
+        </div>
+    </dialog>
+
+    <!-- Close Warning Dialog (shown when closing file browser or Pragma-git with open files) -->
+    <dialog id="closeWarningDialog" class="warning">
+        <div style="font-weight: bold; font-size: 11.5pt; margin-bottom: 8px;">Warning &mdash; Open files are being synced</div>
+        <div style="font-size: 10pt; line-height: 1.4;">
+            The following file(s) were opened from the remote SSH server:
+            <ul id="closeWarningFileList" style="margin: 8px 0; padding-left: 20px; font-family: monospace; max-height: 150px; overflow-y: auto;"></ul>
+            <p style="margin: 8px 0 0 0;">
+                <b>This is your last chance to save and close</b> these files in your editor.<br>
+                While this warning stays open, saving in your editor will still sync changes to the server. Once you close the file browser, automatic syncing stops.
+            </p>
+        </div>
+        <div class="dialog-buttons">
+            <button type="button" id="confirmCloseBrowserBtn" onclick="confirmForceCloseBrowser()">Close &amp; Stop Syncing</button>
+            <button type="button" id="cancelCloseBrowserBtn" onclick="cancelCloseBrowser()">Keep Open</button>
+        </div>
+    </dialog>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initSshFileBrowser();
+        });
+    </script>
+</body>
+</html>

@@ -1249,6 +1249,12 @@ async function _callback( name, event){
             state.tools.mergetool = event.value;
             break;
         }        
+        case 'editorTool': {
+            state.tools.editor = event.value.trim() === '' ? 'pragma-merge' : event.value.trim();
+            event.value = state.tools.editor;
+            opener.saveSettings();
+            break;
+        }        
         case 'fileBrowser': {
             state.tools.fileBrowser = event.value;
             break;
@@ -1585,6 +1591,10 @@ async function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    if (document.getElementById('editorTool')) {
+        let edVal = document.getElementById('editorTool').value.trim();
+        state.tools.editor = edVal === '' ? 'pragma-merge' : edVal;
+    }
     state.tools.terminal = document.getElementById('terminal').value;
     state.tools.fileBrowser = document.getElementById('fileBrowser').value;
     state.tools.addedPath = document.getElementById('pathAddition').value;
@@ -2221,6 +2231,9 @@ async function drawSoftwareTab(document){
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    if (document.getElementById('editorTool')) {
+        document.getElementById('editorTool').value = (state.tools.editor && state.tools.editor.trim() !== '') ? state.tools.editor : 'pragma-merge';
+    }
     document.getElementById('terminal').value = state.tools.terminal;
     document.getElementById('fileBrowser').value = state.tools.fileBrowser;
     document.getElementById('pathAddition').innerText = state.tools.addedPath;

@@ -195,6 +195,17 @@ try {
         } else {
             assertFail('6.13-6.14: sshKeyEnv', 'Function is not exported');
         }
+
+        // Test 10: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported
+        if (typeof sshLib.sshLs === 'function' &&
+            typeof sshLib.sshGet === 'function' &&
+            typeof sshLib.sshPut === 'function' &&
+            typeof sshLib.fs_existsSync === 'function' &&
+            typeof sshLib.fs_mkdir === 'function') {
+            assertPass('6.15: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported by ssh-folder-lib.js');
+        } else {
+            assertFail('6.15: Exported SSH File Browser helpers', 'Missing one or more exported functions');
+        }
     } catch (err) {
         assertFail('6.10-6.12: Execution error', err.message);
     }

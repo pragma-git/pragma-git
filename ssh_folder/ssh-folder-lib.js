@@ -170,6 +170,46 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {          //  Copy file fr
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
   await MAIN.multiPlatformExecSync( sshUrl, CMD);
 }
+async function sshLs( sshUrl, relativeSubPath = '' ) {          //  List files and directories on ssh server
+  //
+  //  Inputs :
+  //    sshUrl           -- git repo's base sshURL
+  //    relativeSubPath  -- subfolder path relative to git repo's base (empty string for root)
+  //  Output :
+  //    Array of { name, isDirectory, relativePath } sorted directories-first, then alphabetically
+
+  let cleanRel = (relativeSubPath || '').replace(/^\/+|\/+$/g, '');
+  let cwdInit = (typeof CWD_INIT !== 'undefined' && CWD_INIT) ? CWD_INIT : (global.CWD_INIT || '');
+  let CMD = `${cwdInit}/ssh_folder/ssh-ls "${sshUrl}" "${cleanRel}"`;
+  let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+  let output = await MAIN.multiPlatformExecSync( sshUrl, CMD);
+
+  if (!output || typeof output !== 'string') return [];
+
+  let lines = output.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let entries = [];
+  for (let line of lines) {
+      if (line === '.git/' || line === '.git') continue;
+      let isDirectory = line.endsWith('/');
+      let name = isDirectory ? line.slice(0, -1) : line;
+      if (!name || name === '.' || name === '..') continue;
+      let entryRelPath = cleanRel ? `${cleanRel}/${name}` : name;
+      entries.push({
+          name: name,
+          isDirectory: isDirectory,
+          relativePath: entryRelPath
+      });
+  }
+
+  entries.sort((a, b) => {
+      if (a.isDirectory !== b.isDirectory) {
+          return a.isDirectory ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
+  return entries;
+}
 async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file from absoluteLocalFilePath to ssh 
 	//  Copy file from ssh to absoluteLocalFilePath
 	//
@@ -1571,6 +1611,11 @@ function getAndCreateWinTempFolder(){                           // Returns windo
 
 // Export for Node.js environments / automated tests
 if (typeof module !== 'undefined' && module.exports) {
+	module.exports.fs_existsSync = fs_existsSync;
+	module.exports.fs_mkdir = fs_mkdir;
+	module.exports.sshGet = sshGet;
+	module.exports.sshPut = sshPut;
+	module.exports.sshLs = sshLs;
 	module.exports.parseSshUrl = parseSshUrl;
 	module.exports.getDefaultSshKey = getDefaultSshKey;
 	module.exports.getSelectedSshKey = getSelectedSshKey;
