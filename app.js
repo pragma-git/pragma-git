@@ -220,6 +220,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             
             let gitInst = simpleGitDefault( 
                 {   
+                    baseDir: STARTDIR,
                     spawnOptions: { env: gitSpawnEnv },
                     config: [   
                                 `include.path=${configFile}`, 
@@ -282,6 +283,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'Commit': 'graph_win',      
            'About': 'about_win',      
            'File': 'merge_win',
+           'Pragma-merge': 'merge_win',
            'SSH': 'ssh_file_browser_win',
            'Git-ignore': 'gitignore_win' ,
            'Create': 'createRemote_win' ,
@@ -318,6 +320,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         // Pragma-merge : Signaling files and folders 
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
         const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
+        const MERGESESSIONSDIR = SIGNALDIR + pathsep + 'sessions';
+        if (!fs.existsSync(MERGESESSIONSDIR)) {
+            try { fs.mkdirSync(MERGESESSIONSDIR, { recursive: true }); } catch (e) {}
+        }
         
         // Pragma-askpass : Signaling files and folders 
         const ASKPASSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running'; 
@@ -404,19 +410,47 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Inititate listening to Pragma-merge start signal
        
        rmLocalFile(MERGESIGNALFILE);
-       const merge_watcher = chokidar.watch(MERGESIGNALFILE, {
+       // Clean up any stale sessions on startup
+       if (fs.existsSync(MERGESESSIONSDIR)) {
+           try {
+               let staleDirs = fs.readdirSync(MERGESESSIONSDIR);
+               for (let s of staleDirs) {
+                   let fullPath = path.join(MERGESESSIONSDIR, s);
+                   try { fs.rmSync(fullPath, { recursive: true, force: true }); } catch (e) {}
+               }
+           } catch (e) {}
+       }
+       const merge_watcher = chokidar.watch([MERGESIGNALFILE, MERGESESSIONSDIR], {
             usePolling: true,
-            interval: 100, // Detta täcker alla ändringar på signalfilen
-            persistent: true
+            interval: 100, // Covers signal file changes and session directory creations
+            persistent: true,
+            depth: 2
        });
+
+       const activeMergeSessions = new Set();
        
        merge_watcher.on('add', 
-           path => { 
-               pragmaLog(`Pragma-git : File ${path} has been added`); 
-               pragmaLog(`Pragma-git : startPragmaMerge()`); 
-               startPragmaMerge();
+           filePath => { 
+               let base = path.basename(filePath);
+               if (base === 'pragma-merge-running' || base === 'pragma-merge-running-ssh') {
+                   let sessionDir = path.dirname(filePath);
+                   let sessionId = path.basename(sessionDir);
+                   if (sessionId && sessionId !== '.tmp' && !activeMergeSessions.has(sessionId)) {
+                       activeMergeSessions.add(sessionId);
+                       pragmaLog(`Pragma-git : Session detected (${sessionId}) at ${filePath}`);
+                       startPragmaMerge(sessionId, sessionDir);
+                   } else if (filePath === MERGESIGNALFILE) {
+                       // Only fallback to legacy handler if no session directories are found
+                       let hasSessions = fs.existsSync(MERGESESSIONSDIR) && fs.readdirSync(MERGESESSIONSDIR).length > 0;
+                       if (!hasSessions && activeMergeSessions.size === 0) {
+                           pragmaLog(`Pragma-git : Legacy signal file ${filePath} added`); 
+                           pragmaLog(`Pragma-git : startPragmaMerge()`); 
+                           startPragmaMerge();
+                       }
+                   }
+               }
            } 
-       )
+       );
 
 
     // Inititate listening to askpass start signal
@@ -4306,33 +4340,64 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
 }
 global.openPragmaMergeDirect = openPragmaMergeDirect;
 
-function startPragmaMerge(){
+function startPragmaMerge(sessionId, sessionDir){
     
     let title = "Pragma-merge";
     let mergeSize = getSensibleWindowSize(2000, 1150);
-    gui.Window.open('merge/pragma-merge.html', { 
-            id: 'mergeWindowId',
-            position: 'center',
-            show: false,
-            width: mergeSize.width,
-            height: mergeSize.height,
-            title: title
-        },
+    let url = 'merge/pragma-merge.html';
+    if (sessionId && sessionDir) {
+        url += `?sessionId=${encodeURIComponent(sessionId)}&sessionDir=${encodeURIComponent(sessionDir)}`;
+    }
+    
+    let windowOptions = {
+        position: 'center',
+        show: false,
+        width: mergeSize.width,
+        height: mergeSize.height,
+        title: title
+    };
+
+    // If a session ID is provided, allow distinct window cascading and tracking
+    if (sessionId) {
+        windowOptions.id = `mergeWindow_${sessionId}`;
+        let count = pragmaMergeOpenWindows.size;
+        let offset = (count * 25) % 200;
+        let screenW = (window.screen && window.screen.availWidth) || 1440;
+        let screenH = (window.screen && window.screen.availHeight) || 900;
+        windowOptions.x = Math.min(80 + offset, screenW - mergeSize.width - 20);
+        windowOptions.y = Math.min(80 + offset, screenH - mergeSize.height - 20);
+    } else {
+        windowOptions.id = 'mergeWindowId';
+    }
+
+    gui.Window.open(url, windowOptions,
             win=>win.on('loaded', () => {
                 
-                merge_win =win;
+                if (sessionId) {
+                    pragmaMergeOpenWindows.set(sessionId, win);
+                }
+                if (!merge_win) {
+                    merge_win = win;
+                }
       			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 win.on('close', async function() { 
+                    if (sessionId) {
+                        pragmaMergeOpenWindows.delete(sessionId);
+                        activeMergeSessions.delete(sessionId);
+                    }
+                    if (merge_win === win) {
+                        let remaining = Array.from(pragmaMergeOpenWindows.values());
+                        merge_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+                    }
                     fixNwjsBug7973( win);
                     updateWindowMenu();
-                    merge_win = undefined; 
                     
                     let folder = global.state.repos[global.state.repoNumber].localFolder;
                     if ( folder.startsWith('ssh:') ){
-						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
-                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
+						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
+                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
                     }
                     
                 } );
@@ -4537,7 +4602,7 @@ function configFilePath( folder = ''){
         try{
             const serverHost = urlParts.host || urlParts.hostname;
             const serverKey = `${urlParts.username}@${serverHost}`;
-            platform = cachedLocalStatus.platform[repoNumber] || (typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]);
+            let platform = (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[repoNumber]) || (typeof typeOfRepoServer !== 'undefined' && typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]);
             if (platform == 'Mac' || urlParts.pathname.startsWith('/Users/')){
                 sshHome = `/Users/${urlParts.username}`
             } else {
@@ -9150,16 +9215,22 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
                         let firstWordInTitle = title.split(' ')[0]
                         let winHandleNameAsString = windowNamesStartsWith[firstWordInTitle];  // Lookup name of handle-variable from first word in title
                         
-                        // Fix for Pragma-merge window, which does not have 'Pragma-merge' in title (but has 'File=...')
-                        if (firstWordInTitle == 'File'){
-                            title = 'Pragma-merge';
+                        // Fix for Pragma-merge window, which has title 'Pragma-merge (<filename>)' or 'File = <filename>'
+                        if (firstWordInTitle === 'File') {
+                            let fileName = path.basename(title.replace(/^File\s*=\s*/, ''));
+                            title = fileName ? `Pragma-merge (${fileName})` : 'Pragma-merge';
+                        } else if (title.startsWith('Pragma-merge (')) {
+                            // Already formatted as Pragma-merge (<filename>)
+                        } else if (title.startsWith('Pragma-merge -- ')) {
+                            let fileName = path.basename(title.substring('Pragma-merge -- '.length).replace(/\s*\( READ-ONLY VIEW \)\s*$/, ''));
+                            let isReadOnly = title.includes('( READ-ONLY VIEW )');
+                            title = fileName ? `Pragma-merge (${fileName})${isReadOnly ? ' (READ-ONLY)' : ''}` : title;
                         }
         
                         console.log('Adding to menu = ' + title);
                             
-                        // Add to menu 
-                        let click = `() => { ${winHandleNameAsString}.focus(); }`;
-                        newWindowMenu.append(  new gui.MenuItem( {  label: pad(title), click: eval(click)  }  )); 
+                        // Add to menu (focus the specific window instance directly)
+                        newWindowMenu.append( new gui.MenuItem( { label: pad(title), click: () => { win_handle.focus(); } } ) ); 
                         
                     }catch (err){
                         

@@ -90,30 +90,33 @@ echo "x$3x" >> "$MERGE_LOG"
 echo "x$4x" >> "$MERGE_LOG"
 echo "x$5x" >> "$MERGE_LOG"
 
-mkdir "$TMP" 2>/dev/null
+mkdir -p "$TMP" 2>/dev/null
+
+# Generate unique session ID and dedicated session folder
+SESSION_ID="session_${$}_$(date +%s)"
+SESSIONS_DIR="$TMP/sessions"
+SESSION_DIR="$SESSIONS_DIR/$SESSION_ID"
+mkdir -p "$SESSION_DIR" 2>/dev/null
 
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 EXIT="$TMP/exit-pragma-merge"        # Pragma-git closing saves exit-code here, which is transferred to exit code of this script
+
+SESSION_RUNNING="$SESSION_DIR/pragma-merge-running"
+SESSION_EXIT="$SESSION_DIR/exit-pragma-merge"
 
 # SSH folder -- special ($5 == 'ssh' or $3 == 'ssh' means that pragma-merge is running on server)
 echo "${LOG_INDENT}Argument \$5 = \"$5\", \$3 = \"$3\" (empty if local, 'ssh' if pragma-git from client to ssh folder on this server)" >> "$MERGE_LOG"
 if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     FILE_LIST_ON_SSH='/tmp/git_diff_file_list.txt' 
     RUNNING="$TMP/pragma-merge-running-ssh"  # Pragma-git looks for this file, and starts Pragma-merge
-fi
-
-# Bail out if already running
-if [  -f "$RUNNING" ] ; then
-    echo  " " >> "$MERGE_LOG"
-    echo  "${LOG_INDENT}$(date) Attempt to open pragma-merge, already open (indicated by existence of file : $RUNNING)" >> "$MERGE_LOG"
-    echo  "${LOG_INDENT}$(date) Bail out, already open (indicated by existence of file : $RUNNING)" >> "$MERGE_LOG"
-    exit
+    SESSION_RUNNING="$SESSION_DIR/pragma-merge-running-ssh"
 fi
 
 if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     # SSH folder -- special inventory to be picked up from server (this) by client (connecting to here with ssh)
     echo "\"$1\" \"$2\" \"$3\" \"$4\" $5" >>  "$MERGE_LOG" 
     echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
+    echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$SESSION_DIR/file_list.txt"
 fi
 
 # If started in WSL -- need to transform to Window file paths in signalling files
@@ -128,18 +131,25 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
 fi
 
 
-# Local repo : Store input parameters for Pragma-git to pick them up (these are only used on local computer 
+# Store input parameters in both legacy location and dedicated session directory
 echo "$1" > "$TMP/first"
 echo "$2" > "$TMP/second"
 echo "$3" > "$TMP/third"
 echo "$4" > "$TMP/fourth"    
 
+echo "$1" > "$SESSION_DIR/first"
+echo "$2" > "$SESSION_DIR/second"
+echo "$3" > "$SESSION_DIR/third"
+echo "$4" > "$SESSION_DIR/fourth"
+echo "$SESSION_ID" > "$SESSION_DIR/session_id"
+echo "$SESSION_ID" > "$TMP/last_session_id"
 
-# Run Pragma-merge while file $RUNNING exists (removed by Pragma-merge when closed)
+# Run Pragma-merge while running signal file exists in session directory
 echo  " " >> "$MERGE_LOG"
 
-touch "$RUNNING" 
-while [  -f "$RUNNING" ]
+touch "$SESSION_RUNNING"
+
+while [ -f "$SESSION_RUNNING" ]
 do
   sleep 1 
 done
@@ -148,8 +158,18 @@ done
 if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     rm -f "$FILE_LIST_ON_SSH" 2>/dev/null
 fi
-EXITCODE=$(cat "$EXIT")
-# rm "$EXIT"  # Don't remove -- needs this file so I can copy EXITCODE to server (when using ssh-folder)
+
+# Resolve exit code from session exit file
+if [ -f "$SESSION_EXIT" ]; then
+    EXITCODE=$(cat "$SESSION_EXIT")
+elif [ -f "$EXIT" ]; then
+    EXITCODE=$(cat "$EXIT")
+else
+    EXITCODE=0
+fi
+
+# Clean up session directory
+rm -rf "$SESSION_DIR" 2>/dev/null
 
 echo  " " >> "$MERGE_LOG"
 echo  "${LOG_INDENT}EXIT pragma-merge" >> "$MERGE_LOG"

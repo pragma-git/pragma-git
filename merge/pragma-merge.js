@@ -14,6 +14,7 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
+const path = require('path');
 const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
@@ -65,42 +66,43 @@ const urlParams = (typeof window !== 'undefined' && window.location && window.lo
     ? new URLSearchParams(window.location.search)
     : null;
 const DIRECT_MODE = Boolean(urlParams && urlParams.has('first'));
+const SESSION_ID = (urlParams && urlParams.has('sessionId')) ? urlParams.get('sessionId') : null;
+const SESSION_DIR = (urlParams && urlParams.has('sessionDir')) ? urlParams.get('sessionDir') : null;
 
 // Read paths
 
-// These three files are also defined in app.js
-const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+// Base signal directory in user profile / home directory
+const DEFAULT_SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+const SIGNALDIR = (SESSION_DIR && fs.existsSync(SESSION_DIR)) ? SESSION_DIR : DEFAULT_SIGNALDIR;
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
+const LEGACY_SIGNALFILE = DEFAULT_SIGNALDIR + pathsep + 'pragma-merge-running';
+const LEGACY_EXITSIGNALFILE = DEFAULT_SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 //const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
-try {
-    process.chdir( SIGNALDIR);
-} catch (e) {}
-
-// Read file names from URL parameters if present (direct mode), otherwise from .tmp files
+// Read file names from URL parameters if present (direct mode), otherwise from .tmp / session files
 const ROOT = (DIRECT_MODE && urlParams.get('root')) 
     ? urlParams.get('root') 
     : global.state.repos[global.state.repoNumber].localFolder;
 
 const BASE = (DIRECT_MODE && urlParams.has('first'))
     ? urlParams.get('first')
-    : loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge
+    : loadFile(path.join(SIGNALDIR, 'first')).replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge
 
 const SECOND = (DIRECT_MODE && urlParams.has('second'))
     ? urlParams.get('second')
-    : loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
+    : loadFile(path.join(SIGNALDIR, 'second')).replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
 const LOCAL = SECOND;
 
 const THIRD = (DIRECT_MODE && urlParams.has('third'))
-    ? urlParams.get('third')
-    : loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
+    ? urlParams.get('third').trim()
+    : loadFile(path.join(SIGNALDIR, 'third')).replace(/(\r\n|\n|\r)/gm, "").trim();  // name of a temporary file containing the contents of the file to be merged
 const REMOTE = THIRD;
 
 var MERGED = (DIRECT_MODE && urlParams.has('fourth'))
     ? urlParams.get('fourth')
-    : loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
+    : loadFile(path.join(SIGNALDIR, 'fourth')).replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
 var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
 
@@ -121,12 +123,14 @@ if (SECOND == '--edit'){
 
 // Set working folder (only for non-ssh, since ssh works with absolute paths)
 if (! ROOT.startsWith('ssh:')){
-    process.chdir( ROOT);  // Now all relative paths works
+    try { process.chdir( ROOT); } catch (e) {}  // Now all relative paths work
+} else if (parent && parent.opener && parent.opener.CWD_INIT) {
+    try { process.chdir( parent.opener.CWD_INIT); } catch (e) {}
 }
 
 
-// HTML Title
-var HTML_TITLE = 'File    =   ' + MERGED;
+// HTML Title (use only the basename of the file in the title)
+var HTML_TITLE = 'Pragma-merge (' + path.basename(MERGED) + ')';
         
 // Define help icon
 const helpIcon =     `  <!-- Help icon --> 
@@ -191,7 +195,8 @@ async function setupAsBinary(){
           
             // Override file with one from git
             let hash = global.localState.historyHash;
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
+            let folder = ROOT || global.state.repos[global.state.repoNumber].localFolder;
+            await simpleGit( folder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
                 cachedFile.BASE.FileContent = res;
             }
@@ -273,6 +278,7 @@ async function injectIntoJs(document) {
         await setupAsBinary();
         EDIT = true; 
         MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
+        HTML_TITLE = 'Pragma-merge (' + path.basename(MERGED) + ')';
     }
     
     
@@ -312,7 +318,8 @@ async function injectIntoJs(document) {
           
             // Override file with one from git
             let hash = global.localState.historyHash;
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
+            let folder = ROOT || global.state.repos[global.state.repoNumber].localFolder;
+            await simpleGit( folder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
                 cachedFile.BASE.FileContent = res;
             }
@@ -1126,6 +1133,9 @@ async function closeWindowNicely(exitCode){
     if (!DIRECT_MODE) {
         try{
             fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+            if (EXITSIGNALFILE !== LEGACY_EXITSIGNALFILE) {
+                try { fs.writeFileSync(LEGACY_EXITSIGNALFILE, exitCode+'', 'utf8'); } catch (e) {}
+            }
             pragmaLog('Pragma-merge exit code = ' + exitCode );
         }catch(err){
             console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
@@ -1152,7 +1162,16 @@ async function closeWindowNicely(exitCode){
     // Remove signal file to let bash script know it has stopped (only if not in direct mode)
     if (!DIRECT_MODE) {
         try {
-            fs.unlinkSync(SIGNALFILE)
+            if (fs.existsSync(SIGNALFILE)) {
+                fs.unlinkSync(SIGNALFILE);
+            }
+            let sshSignal = SIGNALDIR + pathsep + 'pragma-merge-running-ssh';
+            if (fs.existsSync(sshSignal)) {
+                try { fs.unlinkSync(sshSignal); } catch (e) {}
+            }
+            if (SIGNALFILE !== LEGACY_SIGNALFILE && fs.existsSync(LEGACY_SIGNALFILE)) {
+                try { fs.unlinkSync(LEGACY_SIGNALFILE); } catch (e) {}
+            }
         } catch(err) {
             console.error(err)
             pragmaLog('ERROR in closeWindowNicely : ');

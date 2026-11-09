@@ -107,8 +107,8 @@ async function _callback( name, event, event2){
     
     let folder = state.repos[state.repoNumber].localFolder;
     
-    // Bail out if pragma-merge is open and one of the listed callback-names
-    const importantCallback = 'diffLinkAll, diffLink, diffLinkHistory, editLinkHistory, '.includes( `${name},`); // Note: end name with ','
+    // Allow opening multiple merge/diff windows simultaneously via session IDs
+    const importantCallback = false; // Multi-window difftool/mergetool enabled
     if ( ( opener.merge_win !== undefined ) &&  importantCallback ){
         
         // Focus pragma-merge window
