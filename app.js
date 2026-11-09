@@ -6126,11 +6126,13 @@ async function gitMerge( currentBranchName, selectedBranchName){
         options = ['--no-ff', '--no-commit' ];
     }
     
-    // Merge
+    // Merge: use git.merge with array arguments ([selectedBranchName, ...options]) instead of mergeFromTo.
+    // In simple-git v4, mergeFromTo internally generates `git merge <from> <to> <options>`, which fails or misparses
+    // in git CLI because `git merge` only accepts commits/branches to merge INTO the current branch (not a target branch operand).
     try{
-        setStatusBar( 'mergeFromTo "' + selectedBranchName + '" -> "' + currentBranchName + '"');
+        setStatusBar( 'merge "' + selectedBranchName + '" -> "' + currentBranchName + '"');
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .mergeFromTo( selectedBranchName, currentBranchName, options, onMerge);
+            .merge( [ selectedBranchName, ...options ], onMerge);
             
         function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err;  };
        

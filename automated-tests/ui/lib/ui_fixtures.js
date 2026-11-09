@@ -237,7 +237,9 @@ class UIFixtures {
         }
 
         // Ensure any lingering NW.js process on this test's CDP port is killed
-        try { execSync(`pkill -f "remote-debugging-port=${this.cdpPort}" 2>/dev/null || true`); } catch (e) {}
+        if (process.platform !== 'win32') {
+            try { execSync(`pkill -f "remote-debugging-port=${this.cdpPort}" 2>/dev/null || true`); } catch (e) {}
+        }
 
         if (this.sshdPid) {
             if (process.platform === 'win32') {
@@ -258,7 +260,9 @@ class UIFixtures {
         }
 
         // Clean chrome crashpad handlers that might hold directory locks
-        try { execSync('pkill -f "nwjs Framework.*crashpad_handler" 2>/dev/null || true'); } catch (e) {}
+        if (process.platform !== 'win32') {
+            try { execSync('pkill -f "nwjs Framework.*crashpad_handler" 2>/dev/null || true'); } catch (e) {}
+        }
 
         if (this.tmpDir && fs.existsSync(this.tmpDir)) {
             if (!keepArtifacts) {

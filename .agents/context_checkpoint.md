@@ -31,6 +31,16 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix for CI Failure on Linux and Windows (UI Test 03 and Windows Teardown)**:
+  - **Merge Command Robustness in `gitMerge()`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Switched from `.mergeFromTo(selectedBranchName, currentBranchName, options, onMerge)` to `.merge([selectedBranchName, ...options], onMerge)`.
+    - In `simple-git` v4, `mergeFromTo(from, to, options)` synthesizes `git merge <from> <to> <options>`, which fails or misparses in git CLI because `git merge` merges commits/branches directly into the currently checked-out branch and does not accept a destination branch operand.
+    - Updated `gitMerge()` to use `merge([selectedBranchName, ...options])`, ensuring `--no-ff` and `--no-commit` merge correctly without CLI errors.
+  - **Dynamic Wait in UI Test Scenario 03** ([automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml)):
+    - Replaced static `wait: 2500` ms with `action: wait_for_text` polling `#message` for `"Merge branch"` with a 10s timeout, eliminating timing race conditions on slower CI runners (Linux Xvfb and Windows).
+  - **Platform-Safe Teardown on Windows** ([automated-tests/ui/lib/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/ui_fixtures.js)):
+    - Guarded Unix-specific `pkill` commands with `if (process.platform !== 'win32')`.
+    - On Windows CI runners, executing `pkill` from Node spawned `cmd.exe` which printed `"The system cannot find the path specified."`.
 * **gitFetch Async Promise Completion**:
   - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
     - Converted `gitFetch()` to a proper `async` function awaiting `simpleGit().raw([...fetchCommands, '--all'])` and `updateBranchListWithUpstream()`.

@@ -181,8 +181,10 @@ steps:
 
   # 11. Wait for merge operation and UI refresh
   - name: "Wait for Merge Staging Completion"
-    action: wait
-    ms: 2500
+    action: wait_for_text
+    selector: "#message"
+    text: "Merge branch"
+    timeout: 10000
     verify: "Git merge finishes staging files and populates suggested merge message in commit text box."
 
   # 12. Verify merge description is in message textarea and Store button is active
