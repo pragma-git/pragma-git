@@ -61,6 +61,10 @@ function print_suite_description() {
             echo "   Tests upstream parent configuration, fetch dry-run ahead detection, and NO-PUSH safety."
             echo "   Verifies fork push to origin is permitted while pushing to upstream is strictly blocked."
             ;;
+        test_05_difftool_mergetool_sessions.sh)
+            echo "   Tests git difftool and mergetool execution with pragma-merge signaling files."
+            echo "   Verifies parameter creation, process lifecycle, signal clearing, and exit code handling."
+            ;;
     esac
 }
 

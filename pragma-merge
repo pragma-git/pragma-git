@@ -10,7 +10,11 @@
 LOG_INDENT=""
 
 # Home dir
-if [ -z ${SYSTEMDRIVE+x} ]
+if [ -n "$PRAGMA_SIGNAL_DIR" ]; then
+    TMP="$PRAGMA_SIGNAL_DIR"
+    MERGE_LOG="$TMP/mergelog.txt"
+    date > "$MERGE_LOG" 2>/dev/null || true
+elif [ -z ${SYSTEMDRIVE+x} ]
 then
     # Mac or Linux or WSL 
     TMP="$HOME/.Pragma-git/.tmp"

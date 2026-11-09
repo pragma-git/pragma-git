@@ -32,6 +32,19 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Pragma-Merge Multi-Window Support & Session Isolation (Option 1 Done, Option 2 Step 1 Done)**:
+  - **Option 1 (Direct URL Parameter Mode - Completed)**:
+    - Allows multiple editor windows to open concurrently without interfering with lockfiles or signaling mechanisms.
+    - Updated [`merge/pragma-merge.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.html) and [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to support direct query parameters (`?first=...&second=...`).
+    - Added `openPragmaMergeDirect()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with window cascading and focus-if-already-open tracking.
+    - Integrated in [`sshFileBrowser.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.js) and [`listChanged.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js).
+  - **Option 2 (Per-Instance Session IDs - Universal for Local & SSH Server)**:
+    - Group all session files inside dedicated session folders: `.tmp/sessions/<SESSION_ID>/` containing `first`, `second`, `third`, `fourth`, `running`, `exit`.
+    - **Step 1 (Automated Test Validation - Completed)**:
+      - Added `PRAGMA_SIGNAL_DIR` override support in [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge) to allow sandboxed / isolated test execution.
+      - Created [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh) validating `git difftool` / `pragma-merge` file creation, signal files, and clean exit. Registered in [`automated-tests/non_gui/git_client/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/_run_tests).
+      - Verified all tests in suite 5 pass (4/4 passed).
+    - **Next Step (Step 2)**: Update [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge) script to create and isolate per-session directories (`.tmp/sessions/<SESSION_ID>/`).
 * **SSH Server File Browser (Implemented)**:
   - **1. `ssh_folder/ssh-ls` & `sshLs` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)**:
     - Created executable bash script [`ssh_folder/ssh-ls`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-ls) accepting `SSH_URL` (`$1`) and optional `RELATIVE_SUBPATH` (`$2`), sourcing `lib/ssh-functions` (`getSshUrlParts "$1"`) and running `ls -1Ap` over the multiplexed SSH connection.
