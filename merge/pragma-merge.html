@@ -54,7 +54,12 @@
         
         
         
-        <iframe id="iframe" src="pragma-merge_iframe.html"></iframe>
+        <iframe id="iframe"></iframe>
+            
+        <script>
+            // Forward query parameters from parent window to iframe
+            document.getElementById('iframe').src = 'pragma-merge_iframe.html' + (window.location.search || '');
+        </script>
             
             
             

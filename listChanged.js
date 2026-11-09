@@ -368,9 +368,14 @@ async function _callback( name, event, event2){
             }
             
 
-            // Setup running pragma-merge in edit mode.  Edit mode means one pane (not rw, which is another flag)
+            // Setup running pragma-merge in edit mode. Edit mode means one pane (not rw, which is another flag)
             try{
-                
+                if (opener && typeof opener.openPragmaMergeDirect === 'function') {
+                    opener.pragmaLog('Starting pragma-merge in edit mode (direct)');
+                    opener.openPragmaMergeDirect(file, rw_switch, { root: folder });
+                    break;
+                }
+
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 

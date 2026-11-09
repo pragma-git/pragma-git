@@ -4242,6 +4242,70 @@ async function _setMode( inputModeName){
     return newModeName;  // In case I want to use it with return variable
 }
 
+var pragmaMergeOpenWindows = new Map(); // Map filePath -> nw.Window for direct editor instances
+
+function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
+    // Check if window already open for this exact filePath
+    if (pragmaMergeOpenWindows.has(filePath)) {
+        let existingWin = pragmaMergeOpenWindows.get(filePath);
+        try {
+            existingWin.focus();
+            return existingWin;
+        } catch (e) {
+            pragmaMergeOpenWindows.delete(filePath);
+        }
+    }
+
+    let fileName = path.basename(filePath);
+    let title = `File = ${fileName}`;
+    let mergeSize = getSensibleWindowSize(1200, 850);
+    let rootFolder = options.root || (state.repos && state.repos[state.repoNumber] ? state.repos[state.repoNumber].localFolder : '');
+
+    let query = `?first=${encodeURIComponent(filePath)}&second=--edit&third=${encodeURIComponent(mode)}&root=${encodeURIComponent(rootFolder)}`;
+    let url = `merge/pragma-merge.html${query}`;
+
+    // Cascade offset if multiple merge/editor windows are open
+    let openCount = pragmaMergeOpenWindows.size;
+    let windowOptions = {
+        show: false,
+        width: mergeSize.width,
+        height: mergeSize.height,
+        title: title
+    };
+
+    if (openCount > 0) {
+        let offset = (openCount * 25) % 200;
+        let screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+        let screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+        windowOptions.x = Math.min(100 + offset, screenW - mergeSize.width - 20);
+        windowOptions.y = Math.min(100 + offset, screenH - mergeSize.height - 20);
+    } else {
+        windowOptions.position = 'center';
+    }
+
+    gui.Window.open(url, windowOptions, (win) => {
+        win.on('loaded', () => {
+            pragmaMergeOpenWindows.set(filePath, win);
+            if (!merge_win) {
+                merge_win = win;
+            }
+            updateWindowMenu();
+            showWindow(win);
+
+            win.on('close', function() {
+                pragmaMergeOpenWindows.delete(filePath);
+                if (merge_win === win) {
+                    let remaining = Array.from(pragmaMergeOpenWindows.values());
+                    merge_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+                }
+                fixNwjsBug7973(win);
+                updateWindowMenu();
+            });
+        });
+    });
+}
+global.openPragmaMergeDirect = openPragmaMergeDirect;
+
 function startPragmaMerge(){
     
     let title = "Pragma-merge";

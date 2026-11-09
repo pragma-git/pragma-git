@@ -45,6 +45,27 @@ var SAVED = false; // Flag to show that save has been performed.
 var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
 var EDIT = false;  // Flag if pragma-merge is used as editor instead of diff tool (called with args: file --edit)
 
+//
+// PARAMETER PASSING MODES:
+// 1) File-based mode (Standard Git diff/merge):
+//    Invoked by the 'pragma-merge' shell script via git difftool / mergetool.
+//    Parameters are written to ~/.Pragma-git/.tmp/ files: 'first', 'second', 'third', 'fourth'.
+//    A lockfile 'pragma-merge-running' is monitored by the script until the window closes.
+//
+// 2) Direct URL mode (Multi-window editor / viewer):
+//    Invoked directly from NW.js (e.g. from SSH File Browser or Modified Files list) via:
+//    pragma-merge.html?first=<path>&second=--edit&third=--rw&root=<repo>
+//    Parameters are read directly from URL query parameters without touching .tmp files or
+//    the 'pragma-merge-running' lockfile. This allows opening unlimited simultaneous editor
+//    windows without locking or colliding with Git diff/merge operations.
+//
+
+// Check if parameters are passed directly via URL query string (direct editor/viewer mode)
+const urlParams = (typeof window !== 'undefined' && window.location && window.location.search)
+    ? new URLSearchParams(window.location.search)
+    : null;
+const DIRECT_MODE = Boolean(urlParams && urlParams.has('first'));
+
 // Read paths
 
 // These three files are also defined in app.js
@@ -54,22 +75,32 @@ const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 //const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
-process.chdir( SIGNALDIR);
+try {
+    process.chdir( SIGNALDIR);
+} catch (e) {}
 
-// Read file names stored in different files (file names are stored in files :  'first', 'second', 'third', 'fourth' )
+// Read file names from URL parameters if present (direct mode), otherwise from .tmp files
+const ROOT = (DIRECT_MODE && urlParams.get('root')) 
+    ? urlParams.get('root') 
+    : global.state.repos[global.state.repoNumber].localFolder;
 
-const ROOT = global.state.repos[global.state.repoNumber].localFolder;
-//const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");    // TODO: Does not work for SSH -- will use pragma-git folder as repo_path 
+const BASE = (DIRECT_MODE && urlParams.has('first'))
+    ? urlParams.get('first')
+    : loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge
 
-const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
-
-const SECOND = loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
+const SECOND = (DIRECT_MODE && urlParams.has('second'))
+    ? urlParams.get('second')
+    : loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
 const LOCAL = SECOND;
 
-const THIRD = loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
+const THIRD = (DIRECT_MODE && urlParams.has('third'))
+    ? urlParams.get('third')
+    : loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
 const REMOTE = THIRD;
 
-var MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
+var MERGED = (DIRECT_MODE && urlParams.has('fourth'))
+    ? urlParams.get('fourth')
+    : loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
 var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
 
@@ -1091,14 +1122,16 @@ async function closeWindowNicely(exitCode){
     
     pragmaLog(`Pragma-merge  -- closeWindowNicely( ${exitCode}) called`);
     
-    // Write exit code to file for script to pick up
-    try{
-        fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
-        pragmaLog('Pragma-merge exit code = ' + exitCode );
-    }catch(err){
-        console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
-        console.log(err);
-        fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+    // Write exit code and remove lock file only if not in direct URL mode
+    if (!DIRECT_MODE) {
+        try{
+            fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+            pragmaLog('Pragma-merge exit code = ' + exitCode );
+        }catch(err){
+            console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
+            console.log(err);
+            fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+        }
     }
 
     
@@ -1116,14 +1149,15 @@ async function closeWindowNicely(exitCode){
     parent.opener.updateWindowMenu('Pragma-merge');
         
         
-    // Remove file, to let script know it has stopped
-    try {
-        fs.unlinkSync(SIGNALFILE)
-    
-    } catch(err) {
-        console.error(err)
-        pragmaLog('ERROR in closeWindowNicely : ');
-        pragmaLog(err);
+    // Remove signal file to let bash script know it has stopped (only if not in direct mode)
+    if (!DIRECT_MODE) {
+        try {
+            fs.unlinkSync(SIGNALFILE)
+        } catch(err) {
+            console.error(err)
+            pragmaLog('ERROR in closeWindowNicely : ');
+            pragmaLog(err);
+        }
     }
     
     CLOSED = true;

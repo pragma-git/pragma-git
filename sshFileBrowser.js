@@ -469,14 +469,12 @@ async function launchEditorForFile(localTempPath, relativePath) {
 
     // 1. Built-in Pragma-merge editor (when empty, "pragma-merge", or "pragma-git")
     if (lowerEditor === '' || lowerEditor === 'pragma-merge' || lowerEditor === 'pragma-git') {
-        // If pragma-merge is already open for this file, focus it
-        if (MAIN && MAIN.merge_win) {
-            try {
-                MAIN.merge_win.focus();
-                return;
-            } catch (e) {}
+        if (MAIN && typeof MAIN.openPragmaMergeDirect === 'function') {
+            MAIN.openPragmaMergeDirect(localTempPath, '--rw', { root: repoSshUrl });
+            return;
         }
 
+        // Fallback to bash script if main window helper not reachable
         let cwdInit = (MAIN && MAIN.CWD_INIT) ? MAIN.CWD_INIT : global.CWD_INIT;
         let command = '';
         if (process.platform === 'win32') {
