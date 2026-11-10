@@ -4278,21 +4278,31 @@ async function _setMode( inputModeName){
 
 var pragmaMergeOpenWindows = new Map(); // Map filePath -> nw.Window for direct editor instances
 
-function getSensibleMergeWindowSize(defaultWidth, defaultHeight) {
+function getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes = 2) {
     let idealWidth = defaultWidth;
     let idealHeight = defaultHeight;
-    if (state.pragmaMerge && state.pragmaMerge.window) {
-        if (typeof state.pragmaMerge.window.width === 'number' && state.pragmaMerge.window.width > 200) {
-            idealWidth = state.pragmaMerge.window.width;
+    let winSettings = null;
+    if (state.pragmaMerge) {
+        if (panes === 1 && state.pragmaMerge.windowSinglePane) {
+            winSettings = state.pragmaMerge.windowSinglePane;
+        } else if (panes > 1 && state.pragmaMerge.windowMultiPane) {
+            winSettings = state.pragmaMerge.windowMultiPane;
+        } else if (state.pragmaMerge.window) {
+            winSettings = state.pragmaMerge.window;
         }
-        if (typeof state.pragmaMerge.window.height === 'number' && state.pragmaMerge.window.height > 200) {
-            idealHeight = state.pragmaMerge.window.height;
+    }
+    if (winSettings) {
+        if (typeof winSettings.width === 'number' && winSettings.width > 200) {
+            idealWidth = winSettings.width;
+        }
+        if (typeof winSettings.height === 'number' && winSettings.height > 200) {
+            idealHeight = winSettings.height;
         }
     }
     return getSensibleWindowSize(idealWidth, idealHeight);
 }
 
-function updatePragmaMergeWindowSize(win) {
+function updatePragmaMergeWindowSize(win, panes = 2) {
     if (!win) return;
     try {
         let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
@@ -4301,11 +4311,25 @@ function updatePragmaMergeWindowSize(win) {
             if (!state.pragmaMerge) {
                 state.pragmaMerge = {};
             }
-            if (!state.pragmaMerge.window) {
-                state.pragmaMerge.window = {};
+            if (panes === 1) {
+                if (!state.pragmaMerge.windowSinglePane) {
+                    state.pragmaMerge.windowSinglePane = {};
+                }
+                state.pragmaMerge.windowSinglePane.width = w;
+                state.pragmaMerge.windowSinglePane.height = h;
+            } else {
+                if (!state.pragmaMerge.windowMultiPane) {
+                    state.pragmaMerge.windowMultiPane = {};
+                }
+                state.pragmaMerge.windowMultiPane.width = w;
+                state.pragmaMerge.windowMultiPane.height = h;
+                // Keep backward-compatible state.pragmaMerge.window updated
+                if (!state.pragmaMerge.window) {
+                    state.pragmaMerge.window = {};
+                }
+                state.pragmaMerge.window.width = w;
+                state.pragmaMerge.window.height = h;
             }
-            state.pragmaMerge.window.width = w;
-            state.pragmaMerge.window.height = h;
             saveSettings();
         }
     } catch (e) {
@@ -4328,7 +4352,7 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
 
     let fileName = path.basename(filePath);
     let title = `File = ${fileName}`;
-    let mergeSize = getSensibleMergeWindowSize(1200, 850);
+    let mergeSize = getSensibleMergeWindowSize(1200, 850, 1);
     let rootFolder = options.root || (state.repos && state.repos[state.repoNumber] ? state.repos[state.repoNumber].localFolder : '');
 
     let query = `?first=${encodeURIComponent(filePath)}&second=--edit&third=${encodeURIComponent(mode)}&root=${encodeURIComponent(rootFolder)}`;
@@ -4363,11 +4387,11 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
             showWindow(win);
 
             win.on('resize', function() {
-                updatePragmaMergeWindowSize(win);
+                updatePragmaMergeWindowSize(win, 1);
             });
 
             win.on('close', function() {
-                updatePragmaMergeWindowSize(win);
+                updatePragmaMergeWindowSize(win, 1);
                 pragmaMergeOpenWindows.delete(filePath);
                 if (merge_win === win) {
                     let remaining = Array.from(pragmaMergeOpenWindows.values());
@@ -4384,7 +4408,18 @@ global.openPragmaMergeDirect = openPragmaMergeDirect;
 function startPragmaMerge(sessionId, sessionDir){
     
     let title = "Pragma-merge";
-    let mergeSize = getSensibleMergeWindowSize(2000, 1150);
+    let panes = 2;
+    if (sessionDir && fs.existsSync(sessionDir)) {
+        try {
+            let secondParam = fs.readFileSync(path.join(sessionDir, 'second'), 'utf8').trim();
+            if (secondParam === '--edit') {
+                panes = 1;
+            }
+        } catch (e) {}
+    }
+    let defaultWidth = panes === 1 ? 1200 : 2000;
+    let defaultHeight = panes === 1 ? 850 : 1150;
+    let mergeSize = getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes);
     let url = 'merge/pragma-merge.html';
     if (sessionId && sessionDir) {
         url += `?sessionId=${encodeURIComponent(sessionId)}&sessionDir=${encodeURIComponent(sessionDir)}`;
@@ -4424,11 +4459,27 @@ function startPragmaMerge(sessionId, sessionDir){
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 win.on('resize', function() {
-                    updatePragmaMergeWindowSize(win);
+                    let activePanes = panes;
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && typeof iframeWin.getMode === 'function') {
+                            activePanes = iframeWin.getMode() === 'EDITOR' ? 1 : 2;
+                        }
+                    } catch (e) {}
+                    updatePragmaMergeWindowSize(win, activePanes);
                 });
 
                 win.on('close', async function() { 
-                    updatePragmaMergeWindowSize(win);
+                    let activePanes = panes;
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && typeof iframeWin.getMode === 'function') {
+                            activePanes = iframeWin.getMode() === 'EDITOR' ? 1 : 2;
+                        }
+                    } catch (e) {}
+                    updatePragmaMergeWindowSize(win, activePanes);
                     try {
                         let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
                         let iframeWin = iframeEl && iframeEl.contentWindow;
@@ -9859,6 +9910,8 @@ function loadSettings(settingsFile){
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
             state.pragmaMerge.window = setting( state_in.pragmaMerge.window, {} );
+            state.pragmaMerge.windowSinglePane = setting( state_in.pragmaMerge.windowSinglePane, {} );
+            state.pragmaMerge.windowMultiPane = setting( state_in.pragmaMerge.windowMultiPane, {} );
             
         // Graph window 
             state.graph = setting( state_in.graph, {} );

@@ -54,13 +54,15 @@
   - **Automated Tests Added & Verified**:
     - Added Tests 5.10 and 5.11 in [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh) verifying `pragma-merge` SSH server mode (`$5="ssh"`) and `ssh-get-merge-files` positional argument preservation and space/`--` path transfers (11/11 passed).
     - Added Tests 5.7 and 5.8 in [`automated-tests/non_gui/ssh/test_05_ssh_put_get.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_05_ssh_put_get.sh) verifying `ssh-put` and `ssh-get` with `testRepos -- local on ssh/cliHelpLine` paths (8/8 passed).
-* **Pragma-Merge Window Size Persistence Across Instances (Implemented)**:
-  - Users resizing any `pragma-merge` editor/diff window now have those dimensions automatically remembered as the new default for all subsequent `pragma-merge` windows.
-  - Stored inside `state.pragmaMerge.window = { width, height }` and persisted to `~/.Pragma-git/settings.json` via `saveSettings()`.
-  - Added `getSensibleMergeWindowSize(defaultWidth, defaultHeight)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) that checks for configured `state.pragmaMerge.window` dimensions and clamps them within available screen dimensions via `getSensibleWindowSize()`.
-  - Added `updatePragmaMergeWindowSize(win)` listening to `win.on('resize')` and `win.on('close')` in both `openPragmaMergeDirect()` and `startPragmaMerge()`.
-  - Added window size sync and settings save in `closeWindowNicely()` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
-  - Added unit test suite [`automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js) testing default fallback, dimension persistence, subsequent window adoption, bounds clamping, and validation (6/6 tests passed).
+* **Pragma-Merge Window Size Persistence Across Instances (Implemented - Dual Window Sizes for 1-Pane vs 2/3-Panes)**:
+  - Users resizing any `pragma-merge` editor/diff window now have those dimensions automatically remembered as the default for future windows, separated by pane mode:
+    - 1-pane mode (editor & file viewer, e.g. from File Browser or History View) remembers its own dimensions in `state.pragmaMerge.windowSinglePane`.
+    - 2-pane and 3-pane mode (diff & merge views) remember their own dimensions in `state.pragmaMerge.windowMultiPane` (and backward-compatible `state.pragmaMerge.window`).
+  - Added `getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes = 2)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) that checks the appropriate pane-specific stored dimensions and clamps them within available screen dimensions via `getSensibleWindowSize()`.
+  - Updated `updatePragmaMergeWindowSize(win, panes = 2)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) listening to `win.on('resize')` and `win.on('close')` in both `openPragmaMergeDirect()` and `startPragmaMerge()`, dynamically detecting single pane vs multi pane mode.
+  - Updated `closeWindowNicely()` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to store dimensions into `windowSinglePane` when in EDITOR mode and `windowMultiPane` / `window` when in 2- or 3-pane diff/merge mode.
+  - Updated settings initialization in `loadSettings()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with `windowSinglePane` and `windowMultiPane`.
+  - Expanded unit test suite [`automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js) testing default fallback, independent dimension persistence for 1-pane vs multi-pane, and preserving 1-pane dimensions when resizing 2- or 3-pane windows (10/10 tests passed).
 * **Pragma-Merge Multi-Window Support & Session Isolation (Option 1 Done, Option 2 Step 1 Done)**:
   - **Option 1 (Direct URL Parameter Mode - Completed)**:
     - Allows multiple editor windows to open concurrently without interfering with lockfiles or signaling mechanisms.
