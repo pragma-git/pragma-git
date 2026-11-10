@@ -1158,11 +1158,25 @@ async function closeWindowNicely(exitCode){
             let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
             let h = typeof win.height === 'number' ? win.height : (win.window && win.window.outerHeight);
             if (typeof w === 'number' && typeof h === 'number' && w > 200 && h > 200) {
-                if (!global.state.pragmaMerge.window) {
-                    global.state.pragmaMerge.window = {};
+                let isSinglePane = (getMode() === 'EDITOR');
+                if (isSinglePane) {
+                    if (!global.state.pragmaMerge.windowSinglePane) {
+                        global.state.pragmaMerge.windowSinglePane = {};
+                    }
+                    global.state.pragmaMerge.windowSinglePane.width = w;
+                    global.state.pragmaMerge.windowSinglePane.height = h;
+                } else {
+                    if (!global.state.pragmaMerge.windowMultiPane) {
+                        global.state.pragmaMerge.windowMultiPane = {};
+                    }
+                    global.state.pragmaMerge.windowMultiPane.width = w;
+                    global.state.pragmaMerge.windowMultiPane.height = h;
+                    if (!global.state.pragmaMerge.window) {
+                        global.state.pragmaMerge.window = {};
+                    }
+                    global.state.pragmaMerge.window.width = w;
+                    global.state.pragmaMerge.window.height = h;
                 }
-                global.state.pragmaMerge.window.width = w;
-                global.state.pragmaMerge.window.height = h;
             }
         }
         if (parent && parent.opener && typeof parent.opener.saveSettings === 'function') {

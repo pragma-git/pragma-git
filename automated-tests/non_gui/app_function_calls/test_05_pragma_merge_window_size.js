@@ -138,5 +138,36 @@ funcs.updatePragmaMergeWindowSize({ width: 50, height: 50 });
 assert(sandbox.state.pragmaMerge.window.width === 1500 && sandbox.state.pragmaMerge.window.height === 950,
     'updatePragmaMergeWindowSize ignores invalid or unreasonably small dimensions (< 200px)');
 
+// Reset screen size
+sandbox.window.screen.availWidth = 1920;
+sandbox.window.screen.availHeight = 1080;
+
+// Test 6: Separate window size persistence for 1-pane (editor/viewer) vs 2/3-panes (diff/merge)
+const mockSinglePaneWin = { width: 900, height: 800 };
+funcs.updatePragmaMergeWindowSize(mockSinglePaneWin, 1);
+
+assert(sandbox.state.pragmaMerge.windowSinglePane &&
+       sandbox.state.pragmaMerge.windowSinglePane.width === 900 &&
+       sandbox.state.pragmaMerge.windowSinglePane.height === 800,
+    'updatePragmaMergeWindowSize(win, 1) stores dimensions in state.pragmaMerge.windowSinglePane');
+
+const singlePaneSize = funcs.getSensibleMergeWindowSize(1200, 850, 1);
+assert(singlePaneSize.width === 900 && singlePaneSize.height === 800,
+    'getSensibleMergeWindowSize(..., 1) retrieves 1-pane size for editor/viewer mode');
+
+// Test 7: Multi-pane size remains independent
+const multiPaneSize = funcs.getSensibleMergeWindowSize(2000, 1150, 2);
+assert(multiPaneSize.width === 1500 && multiPaneSize.height === 950,
+    'getSensibleMergeWindowSize(..., 2) retrieves independent 2/3-pane size for diff/merge mode');
+
+// Test 8: Updating multi-pane with panes=3 preserves 1-pane size
+const mockThreePaneWin = { width: 1750, height: 1000 };
+funcs.updatePragmaMergeWindowSize(mockThreePaneWin, 3);
+assert(sandbox.state.pragmaMerge.windowMultiPane.width === 1750 &&
+       sandbox.state.pragmaMerge.windowMultiPane.height === 1000 &&
+       sandbox.state.pragmaMerge.windowSinglePane.width === 900 &&
+       sandbox.state.pragmaMerge.windowSinglePane.height === 800,
+    'Updating multi-pane size (3 panes) does not overwrite 1-pane size');
+
 console.log(`Suite Result: ${passed}/${passed + failed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
