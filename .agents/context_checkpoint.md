@@ -32,6 +32,8 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix CI Failure on Ubuntu (`.github/workflows/tests.yml`) (Fixed)**:
+  - Fixed apt-get dependency installation step for Linux runners: added explicit `sudo apt-get update` before installation and ensured fallback tries `libasound2` only if `libasound2t64` fails (preventing virtual package resolution failure on Ubuntu 24.04+/26.04+ runners).
 * **SSH Diff & File Transfer Fixes for Paths with Spaces & `localhost` SSH Repos (Implemented)**:
   - **Root Causes Identified & Fixed**:
     1. **Localhost SSH Session Collision (Why Pragma-git's own `.gitignore` appeared in the left `"new"` column on `ssh://jan@localhost/...`)**:

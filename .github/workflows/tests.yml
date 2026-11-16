@@ -47,8 +47,9 @@ jobs:
       - name: Install System Dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 libpango-1.0-0 || \
-            (sudo apt-get update && sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 || true)
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libasound2t64 || \
+            sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libasound2
           sudo systemctl start ssh
 
       - name: Set up WSL (Windows)
