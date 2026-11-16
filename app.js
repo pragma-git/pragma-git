@@ -2919,6 +2919,17 @@ async function _callback( name, event){
             
         }else{
             // Store
+            // Immediately hide draft badge and cancel inactivity timer
+            let editDiv = document.getElementById('edit_commit_text_div');
+            if (editDiv) {
+                editDiv.style.visibility = 'hidden';
+            }
+            if (typeof _draftInactivityTimer !== 'undefined' && _draftInactivityTimer) {
+                clearTimeout(_draftInactivityTimer);
+                _draftInactivityTimer = null;
+            }
+            _draftInactivityExpired = false;
+
             gitAddCommitAndPush( readMessage());
         }
         
@@ -5460,6 +5471,15 @@ async function gitAddCommitAndPush( message){
         if (state.repoNumber >= 0 && state.repos && state.repos[state.repoNumber]) {
             state.repos[state.repoNumber].draftMessage = '';
             saveSettings();
+        }
+        if (_draftInactivityTimer) {
+            clearTimeout(_draftInactivityTimer);
+            _draftInactivityTimer = null;
+        }
+        _draftInactivityExpired = false;
+        let editDiv = document.getElementById('edit_commit_text_div');
+        if (editDiv) {
+            editDiv.style.visibility = 'hidden';
         }
         if (typeof onMessageBlur === 'function') {
             onMessageBlur();

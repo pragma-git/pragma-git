@@ -32,6 +32,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Prevent `(draft)` Badge from Lighting Up After Pressing Store (`app.js`) (Fixed)**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Immediately hides `#edit_commit_text_div` and resets `_draftInactivityExpired = false` and `_draftInactivityTimer = null` when the Store button is clicked in `storeButtonClicked()`.
+    - Also clears `_draftInactivityTimer` and explicitly hides `#edit_commit_text_div` right after clearing `textOutput.value` and `draftMessage` before invoking `onMessageBlur()` in `gitAddCommitAndPush()`, preventing any flash of the `(draft)` indicator when saving/committing.
 * **Fix CI Failure on Ubuntu (`.github/workflows/tests.yml`) (Fixed)**:
   - Fixed apt-get dependency installation step for Linux runners: added explicit `sudo apt-get update` before installation and ensured fallback tries `libasound2` only if `libasound2t64` fails (preventing virtual package resolution failure on Ubuntu 24.04+/26.04+ runners).
 * **SSH Diff & File Transfer Fixes for Paths with Spaces & `localhost` SSH Repos (Implemented)**:
