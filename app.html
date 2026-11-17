@@ -596,11 +596,11 @@
             <span id="confirmMergeUpstreamMessage"></span>
             <br><br>
             <button id="confirmMergeUpstreamOK" style="float:right; margin-left: 10px;"
-                onclick="document.getElementById('confirmMergeUpstreamDialog').close(); _callback('confirmMergeUpstreamOK');">
+                onclick="_callback('confirmMergeUpstreamOK'); let dlg = document.getElementById('confirmMergeUpstreamDialog'); if (dlg && typeof dlg.close === 'function') { dlg.close(); }">
                 Merge
             </button>
             <button id="confirmMergeUpstreamCancel" style="float:right"
-                onclick="document.getElementById('confirmMergeUpstreamDialog').close();">
+                onclick="let dlg = document.getElementById('confirmMergeUpstreamDialog'); if (dlg && typeof dlg.close === 'function') { dlg.close(); }">
                 Cancel
             </button>
         </div>

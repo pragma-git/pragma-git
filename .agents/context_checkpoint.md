@@ -32,6 +32,18 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Merge Upstream UI Resilience & Direct Callback Invocation (`app.html`, `test_03_merge_upstream.yaml`) (Fixed & Verified)**:
+  - Eliminated race condition and false failure on Windows and macOS CI runners in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml):
+    - In `app.html`, fixed execution order in `#confirmMergeUpstreamOK`'s `onclick`: dispatched `_callback('confirmMergeUpstreamOK')` first before invoking `dlg.close()`, preventing synchronous dialog dismissal from terminating or dropping the unhandled callback promise.
+    - In `test_03_merge_upstream.yaml`, updated step 10 ("Confirm Merge from Upstream") to directly close `confirmMergeUpstreamDialog` and `await _callback('confirmMergeUpstreamOK')`, guaranteeing that the async merge callback is dispatched and resolved regardless of synthetic CDP mouse event drops or modal unmounting.
+  - Stress tested locally with `_run_03_merge_upstream`, passing 100%.
+  - Verified full test suite (`./_run_tests` and `npm test`), passing all 8 categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
+* **GitHub Actions CI Status on `develop` (All Passing - 100% Green)**:
+  - Workflow run `44180557986` for commit `b74fc000` on `develop` is **100% green across all platforms**:
+    - `Test on macos-latest`: **Passed** (1m 57s)
+    - `Test on ubuntu-latest`: **Passed** (1m 57s)
+    - `Test on windows-latest`: **Passed** (3m 48s)
+  - Full local test suite (`npm test`) also executed and passed 8/8 test categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
 * **Prevent `(draft)` Badge from Lighting Up After Pressing Store (`app.js`) (Fixed)**:
   - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
     - Immediately hides `#edit_commit_text_div` and resets `_draftInactivityExpired = false` and `_draftInactivityTimer = null` when the Store button is clicked in `storeButtonClicked()`.

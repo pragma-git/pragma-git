@@ -6406,15 +6406,16 @@ async function gitMerge( currentBranchName, selectedBranchName){
   
       
     // Finish up
-    //writeMessage('',false);  // Remove this message  
-    
-    //await _setMode('UNKNOWN');
-    await _setMode('CHANGED_FILES_TEXT_ENTERED');
-    await _update()
-    
     textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
     textOutput.readOnly = false;
-    //textOutput.placeholder = 'Write description of Merge here, and press Store';
+    writeTextOutput( textOutput);
+
+    await _setMode('CHANGED_FILES_TEXT_ENTERED');
+    await _update();
+
+    // Re-assert merge message in case _update() or mode transition reset it
+    textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
+    textOutput.readOnly = false;
     writeTextOutput( textOutput);
 }
 
