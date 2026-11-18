@@ -8719,7 +8719,7 @@ async function updateSettingsRepoTable(){  // Only update Repo table
 	    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
 	    await settings_win.window.createHtmlTable(settings_win.window.document)
 	    await updateSettingsWindow()  
-        win.focus();
+        //win.focus();
 	}catch(err){ 
 	}
 }

@@ -32,6 +32,11 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Prevent Unwanted `app.html` Focus Stealing in Background Status Checks (`app.js`) (Fixed & Verified)**:
+  - Identified and removed unintended `win.focus()` call in `updateSettingsRepoTable()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L8722).
+  - Background periodic checking (`cacheFolderStatus` -> `cacheLocalFolderExistStatus()` -> `updateSettingsRepoTable()`) was calling `win.focus()` whenever the Settings window was open, causing the main Pragma-git window to pop to the foreground and steal focus while working in unrelated applications.
+  - Commented out `win.focus()` in `updateSettingsRepoTable()` aligning it with `updateSettingsWindow()` and `updateChangedListWindow()`.
+  - Verified full test suite (`./_run_tests`), passing 8/8 test categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
 * **Merge Upstream UI Resilience & Direct Callback Invocation (`app.html`, `test_03_merge_upstream.yaml`) (Fixed & Verified)**:
   - Eliminated race condition and false failure on Windows and macOS CI runners in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml):
     - In `app.html`, fixed execution order in `#confirmMergeUpstreamOK`'s `onclick`: dispatched `_callback('confirmMergeUpstreamOK')` first before invoking `dlg.close()`, preventing synchronous dialog dismissal from terminating or dropping the unhandled callback promise.
