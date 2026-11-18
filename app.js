@@ -256,6 +256,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var main_win;
         var settings_win;
         var notes_win;
+        var notesOpenWindows = new Map(); // Map filePath -> nw.Window for Notes instances
         var changed_win;
         var resolve_win;
         var graph_win;
@@ -801,41 +802,67 @@ async function _callback( name, event){
         break;
       }
       case 'clicked-notes':{
-        if (localState.notesWindow.open == true) {
-            try{ notes_win.focus(); }catch(err){ localState.notesWindow.open = false}
-            return
-        }
-        let fileName = document.getElementById('top-titlebar-repo-text').innerText;
-        fileName = path.basename( state.repos[state.repoNumber].localFolder );
+        let repoText = (document.getElementById('top-titlebar-repo-text') && document.getElementById('top-titlebar-repo-text').innerText.trim())
+                       || path.basename(state.repos[state.repoNumber].localFolder);
+        let fileName = path.basename( state.repos[state.repoNumber].localFolder );
         let filePath = notesDir + pathsep + fileName + '.md';
+
+        // If Notes window is already open for this repository, focus it
+        if (notesOpenWindows.has(filePath)) {
+            let existingWin = notesOpenWindows.get(filePath);
+            try {
+                existingWin.focus();
+                return;
+            } catch(err) {
+                notesOpenWindows.delete(filePath);
+            }
+        }
+
         global.arguments = [ filePath ];  // send through global.arguments
-        let title = 'Notes';
+        let title = `Notes (${repoText})`;
         let notesSize = getSensibleWindowSize(1100, 1200);
+
+        let windowOptions = {
+            show: false,
+            width: notesSize.width,
+            height: notesSize.height,
+            title: title
+        };
+
+        // Offset subsequent notes windows so they cascade nicely
+        let openCount = notesOpenWindows.size;
+        if (openCount > 0) {
+            let offset = (openCount * 25) % 200;
+            let screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+            let screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+            windowOptions.x = Math.min(100 + offset, screenW - notesSize.width - 20);
+            windowOptions.y = Math.min(100 + offset, screenH - notesSize.height - 20);
+        } else {
+            windowOptions.position = 'center';
+        }
+
         gui.Window.open('notes.html',
-            {   
-                id: 'notesWindowId',
-                position: 'center',
-                show: false,
-                width: notesSize.width,
-                height: notesSize.height,
-                title: title
-            },  
+            windowOptions,  
             win=>win.on('loaded', async () => {
           
+                notesOpenWindows.set(filePath, win);
                 notes_win = win;
+                localState.notesWindow.open = true;
                 updateWindowMenu(title, 'notes_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
 
-                win.on('close', function() { fixNwjsBug7973( win)} );
-
-
-                
+                win.on('close', function() {
+                    notesOpenWindows.delete(filePath);
+                    if (notes_win === win) {
+                        let remaining = Array.from(notesOpenWindows.values());
+                        notes_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+                    }
+                    localState.notesWindow.open = (notesOpenWindows.size > 0);
+                    fixNwjsBug7973(win);
+                    updateWindowMenu();
+                });
             })
-  
-        )
-                    
-        
-        localState.notesWindow.open = true;
+        );
         break;
       }
       case 'clicked-ci-badge': {
@@ -10271,7 +10298,7 @@ function updateWithNewSettings(){                   // Call from window that mod
                 
                 // Zoom level
                 
-                    if ( (win_handle.title == 'Notes') || win_handle.title.startsWith('File') ) {
+                    if ( win_handle.title.startsWith('Notes') || win_handle.title.startsWith('File') ) {
                         
                         let root = win_handle.window.document.documentElement;
                         root.style.setProperty('--windowScaling', global.state.zoom);

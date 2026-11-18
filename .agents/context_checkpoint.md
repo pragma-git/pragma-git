@@ -32,6 +32,15 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Multi-Instance Notes Window Support with Repo Names in Title (`app.js`) (Implemented & Verified)**:
+  - Enabled multiple Notes windows to be open simultaneously (one per repository) completely within [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with zero changes to `notes.html` or `notes.js`:
+    - Tracked open instances with `notesOpenWindows = new Map()` mapping `filePath -> win`.
+    - If a Notes window for the current repository is already open, focuses that existing window instead of duplicating.
+    - Set dynamic title: `Notes (<repo-name>)` using the current repository name.
+    - Removed hardcoded window ID to allow multiple NW.js window instances and added cascading positioning offsets.
+    - Attached window lifecycle cleanup on close: updates `notesOpenWindows`, maintains fallback `notes_win` reference, and triggers `updateWindowMenu()`.
+    - Verified all Window menu items ("Show Windows", "Hide Windows", "Close Windows", and individual menu focus items) as well as zoom updates (`win_handle.title.startsWith('Notes')`) seamlessly manage all open Notes windows.
+  - Verified with `./_run_tests`: 8/8 test categories passed (66s total).
 * **Prevent Unwanted `app.html` Focus Stealing in Background Status Checks (`app.js`) (Fixed & Verified)**:
   - Identified and removed unintended `win.focus()` call in `updateSettingsRepoTable()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L8722).
   - Background periodic checking (`cacheFolderStatus` -> `cacheLocalFolderExistStatus()` -> `updateSettingsRepoTable()`) was calling `win.focus()` whenever the Settings window was open, causing the main Pragma-git window to pop to the foreground and steal focus while working in unrelated applications.
